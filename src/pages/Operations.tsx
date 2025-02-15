@@ -1,7 +1,7 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Search, Filter, Sparkles, ArrowUpCircle, ArrowDownCircle, RefreshCcw, AlertTriangle } from "lucide-react";
+import { Search, Sparkles, ArrowUpCircle, ArrowDownCircle, RefreshCcw, AlertTriangle } from "lucide-react";
 
 interface Operation {
   id: string;
@@ -18,7 +18,6 @@ interface Operation {
   amount: number;
   date: string;
   clientName: string;
-  status: "completed" | "pending" | "failed";
 }
 
 interface AISuggestion {
@@ -31,9 +30,8 @@ interface AISuggestion {
 const Operations = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  // Données de test avec statut garanti
+  // Données de test sans statut
   const operations: Operation[] = [
     {
       id: "1",
@@ -41,7 +39,6 @@ const Operations = () => {
       amount: 1500,
       date: "2024-02-20",
       clientName: "Jean Dupont",
-      status: "completed", // Statut par défaut
     },
     {
       id: "2",
@@ -49,7 +46,6 @@ const Operations = () => {
       amount: 500,
       date: "2024-02-19",
       clientName: "Marie Martin",
-      status: "completed",
     },
     {
       id: "3",
@@ -57,7 +53,6 @@ const Operations = () => {
       amount: 1000,
       date: "2024-02-18",
       clientName: "Pierre Durant",
-      status: "pending",
     },
     {
       id: "4",
@@ -65,7 +60,6 @@ const Operations = () => {
       amount: 2000,
       date: "2024-02-17",
       clientName: "Sophie Lefebvre",
-      status: "failed",
     }
   ];
 
@@ -84,19 +78,6 @@ const Operations = () => {
       action: "Vérification suggérée",
     },
   ];
-
-  const getStatusColor = (status: Operation["status"]) => {
-    switch (status) {
-      case "completed":
-        return "text-success bg-success/10";
-      case "pending":
-        return "text-yellow-500 bg-yellow-500/10";
-      case "failed":
-        return "text-danger bg-danger/10";
-      default:
-        return "text-success bg-success/10"; // Statut par défaut si non spécifié
-    }
-  };
 
   const getTypeIcon = (type: Operation["type"]) => {
     switch (type) {
@@ -133,8 +114,7 @@ const Operations = () => {
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
     const matchesType = typeFilter === "all" || op.type === typeFilter;
-    const matchesStatus = statusFilter === "all" || op.status === statusFilter;
-    return matchesSearch && matchesType && matchesStatus;
+    return matchesSearch && matchesType;
   });
 
   return (
@@ -200,35 +180,19 @@ const Operations = () => {
                   />
                 </div>
               </div>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Type d'opération</Label>
-                  <Select value={typeFilter} onValueChange={setTypeFilter}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Tous les types" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Tous les types</SelectItem>
-                      <SelectItem value="deposit">Versement</SelectItem>
-                      <SelectItem value="withdrawal">Retrait</SelectItem>
-                      <SelectItem value="transfer">Virement</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Statut</Label>
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Tous les statuts" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Tous les statuts</SelectItem>
-                      <SelectItem value="completed">Terminé</SelectItem>
-                      <SelectItem value="pending">En attente</SelectItem>
-                      <SelectItem value="failed">Échoué</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-2">
+                <Label>Type d'opération</Label>
+                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Tous les types" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous les types</SelectItem>
+                    <SelectItem value="deposit">Versement</SelectItem>
+                    <SelectItem value="withdrawal">Retrait</SelectItem>
+                    <SelectItem value="transfer">Virement</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </CardContent>
@@ -248,7 +212,6 @@ const Operations = () => {
                   <th className="p-3">Client</th>
                   <th className="p-3">Montant</th>
                   <th className="p-3">Date</th>
-                  <th className="p-3">Statut</th>
                 </tr>
               </thead>
               <tbody>
@@ -265,15 +228,6 @@ const Operations = () => {
                       {op.amount.toLocaleString()} €
                     </td>
                     <td className="p-3 text-muted-foreground">{op.date}</td>
-                    <td className="p-3">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                          op.status
-                        )}`}
-                      >
-                        {op.status.charAt(0).toUpperCase() + op.status.slice(1)}
-                      </span>
-                    </td>
                   </tr>
                 ))}
               </tbody>
