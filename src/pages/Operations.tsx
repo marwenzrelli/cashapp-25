@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -31,8 +30,8 @@ interface AISuggestion {
 
 const Operations = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [typeFilter, setTypeFilter] = useState<string>("");
-  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   // Données de test
   const operations: Operation[] = [
@@ -123,8 +122,8 @@ const Operations = () => {
     const matchesSearch = op.clientName
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
-    const matchesType = !typeFilter || op.type === typeFilter;
-    const matchesStatus = !statusFilter || op.status === statusFilter;
+    const matchesType = typeFilter === "all" || op.type === typeFilter;
+    const matchesStatus = statusFilter === "all" || op.status === statusFilter;
     return matchesSearch && matchesType && matchesStatus;
   });
 
@@ -199,7 +198,7 @@ const Operations = () => {
                       <SelectValue placeholder="Tous les types" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Tous les types</SelectItem>
+                      <SelectItem value="all">Tous les types</SelectItem>
                       <SelectItem value="deposit">Versement</SelectItem>
                       <SelectItem value="withdrawal">Retrait</SelectItem>
                       <SelectItem value="transfer">Virement</SelectItem>
@@ -213,7 +212,7 @@ const Operations = () => {
                       <SelectValue placeholder="Tous les statuts" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Tous les statuts</SelectItem>
+                      <SelectItem value="all">Tous les statuts</SelectItem>
                       <SelectItem value="completed">Terminé</SelectItem>
                       <SelectItem value="pending">En attente</SelectItem>
                       <SelectItem value="failed">Échoué</SelectItem>
