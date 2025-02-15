@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -10,7 +10,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Search, Sparkles, ArrowUpCircle, ArrowDownCircle, RefreshCcw, AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Search, Sparkles, ArrowUpCircle, ArrowDownCircle, RefreshCcw, AlertTriangle, ChevronDown } from "lucide-react";
+import { toast } from "sonner";
 
 interface Operation {
   id: string;
@@ -25,13 +27,15 @@ interface AISuggestion {
   message: string;
   type: "info" | "warning";
   action?: string;
+  insights?: string[];
 }
 
 const Operations = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [selectedOperation, setSelectedOperation] = useState<Operation | null>(null);
 
-  // Données de test sans statut
+  // Données de test enrichies
   const operations: Operation[] = [
     {
       id: "1",
@@ -63,19 +67,27 @@ const Operations = () => {
     }
   ];
 
-  // Suggestions IA
+  // Suggestions IA enrichies
   const aiSuggestions: AISuggestion[] = [
     {
       id: "1",
       message: "Pic d'activité détecté pour les transferts",
       type: "info",
       action: "Surveillance recommandée",
+      insights: [
+        "Augmentation de 25% des transferts ce mois-ci",
+        "Tendance similaire observée les années précédentes à cette période",
+      ],
     },
     {
       id: "2",
       message: "Opération inhabituelle identifiée",
       type: "warning",
       action: "Vérification suggérée",
+      insights: [
+        "Montant supérieur à la moyenne habituelle",
+        "Premier transfert vers ce bénéficiaire",
+      ],
     },
   ];
 
@@ -109,6 +121,20 @@ const Operations = () => {
       : "border-blue-200 bg-blue-50 dark:bg-blue-950/20";
   };
 
+  const handleOperationClick = (operation: Operation) => {
+    setSelectedOperation(operation);
+    const suggestion = aiSuggestions.find(s => 
+      (operation.type === "transfer" && s.message.includes("transfert")) ||
+      (operation.amount > 1000 && s.message.includes("inhabituelle"))
+    );
+    
+    if (suggestion) {
+      toast.info("Analyse IA disponible", {
+        description: suggestion.message,
+      });
+    }
+  };
+
   const filteredOperations = operations.filter((op) => {
     const matchesSearch = op.clientName
       .toLowerCase()
@@ -122,24 +148,27 @@ const Operations = () => {
       <div>
         <h1 className="text-3xl font-bold">Recherche d'opérations</h1>
         <p className="text-muted-foreground">
-          Recherchez et filtrez les opérations avec assistance IA
+          Recherchez et analysez vos opérations avec l'assistance IA
         </p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <Card>
+        <Card className="border-primary/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary" />
               Insights IA
             </CardTitle>
+            <CardDescription>
+              Analyses et recommandations basées sur l'intelligence artificielle
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {aiSuggestions.map((suggestion) => (
                 <div
                   key={suggestion.id}
-                  className={`p-4 rounded-lg border ${getSuggestionStyle(suggestion.type)}`}
+                  className={`p-4 rounded-lg border transition-all hover:scale-[1.02] ${getSuggestionStyle(suggestion.type)}`}
                 >
                   <div className="flex items-start gap-3">
                     {suggestion.type === "warning" ? (
@@ -147,12 +176,24 @@ const Operations = () => {
                     ) : (
                       <Sparkles className="h-5 w-5 text-primary shrink-0" />
                     )}
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium">{suggestion.message}</p>
-                      {suggestion.action && (
-                        <p className="text-sm text-muted-foreground">
-                          {suggestion.action}
-                        </p>
+                    <div className="space-y-2 w-full">
+                      <div>
+                        <p className="text-sm font-medium">{suggestion.message}</p>
+                        {suggestion.action && (
+                          <p className="text-sm text-muted-foreground">
+                            {suggestion.action}
+                          </p>
+                        )}
+                      </div>
+                      {suggestion.insights && (
+                        <div className="text-sm space-y-1 pt-2 border-t">
+                          {suggestion.insights.map((insight, index) => (
+                            <p key={index} className="text-muted-foreground flex items-center gap-2">
+                              <ChevronDown className="h-3 w-3" />
+                              {insight}
+                            </p>
+                          ))}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -164,16 +205,19 @@ const Operations = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Filtres</CardTitle>
+            <CardTitle>Filtres intelligents</CardTitle>
+            <CardDescription>
+              Affinez votre recherche avec des filtres contextuels
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4">
               <div className="space-y-2">
-                <Label>Recherche</Label>
+                <Label>Recherche contextuelle</Label>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
-                    placeholder="Nom du client..."
+                    placeholder="Rechercher par nom, montant..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-9"
@@ -202,6 +246,9 @@ const Operations = () => {
       <Card>
         <CardHeader>
           <CardTitle>Résultats ({filteredOperations.length})</CardTitle>
+          <CardDescription>
+            Cliquez sur une opération pour plus de détails
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="relative w-full overflow-auto">
@@ -212,11 +259,18 @@ const Operations = () => {
                   <th className="p-3">Client</th>
                   <th className="p-3">Montant</th>
                   <th className="p-3">Date</th>
+                  <th className="p-3">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredOperations.map((op) => (
-                  <tr key={op.id} className="border-b">
+                  <tr 
+                    key={op.id} 
+                    className={`border-b transition-colors hover:bg-muted/50 cursor-pointer ${
+                      selectedOperation?.id === op.id ? "bg-muted/30" : ""
+                    }`}
+                    onClick={() => handleOperationClick(op)}
+                  >
                     <td className="p-3">
                       <div className="flex items-center gap-2">
                         {getTypeIcon(op.type)}
@@ -228,6 +282,19 @@ const Operations = () => {
                       {op.amount.toLocaleString()} €
                     </td>
                     <td className="p-3 text-muted-foreground">{op.date}</td>
+                    <td className="p-3">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toast.info("Analyse détaillée en cours...");
+                        }}
+                      >
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        Analyser
+                      </Button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
