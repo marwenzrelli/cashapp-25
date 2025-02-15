@@ -33,7 +33,7 @@ const Operations = () => {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  // Données de test
+  // Données de test avec statut garanti
   const operations: Operation[] = [
     {
       id: "1",
@@ -41,7 +41,7 @@ const Operations = () => {
       amount: 1500,
       date: "2024-02-20",
       clientName: "Jean Dupont",
-      status: "completed",
+      status: "completed", // Statut par défaut
     },
     {
       id: "2",
@@ -59,6 +59,14 @@ const Operations = () => {
       clientName: "Pierre Durant",
       status: "pending",
     },
+    {
+      id: "4",
+      type: "transfer",
+      amount: 2000,
+      date: "2024-02-17",
+      clientName: "Sophie Lefebvre",
+      status: "failed",
+    }
   ];
 
   // Suggestions IA
@@ -85,6 +93,8 @@ const Operations = () => {
         return "text-yellow-500 bg-yellow-500/10";
       case "failed":
         return "text-danger bg-danger/10";
+      default:
+        return "text-success bg-success/10"; // Statut par défaut si non spécifié
     }
   };
 
@@ -227,7 +237,7 @@ const Operations = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Résultats</CardTitle>
+          <CardTitle>Résultats ({filteredOperations.length})</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="relative w-full overflow-auto">
