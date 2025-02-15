@@ -1,79 +1,142 @@
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from "recharts";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
+import { Sparkles, TrendingUp, Users, ArrowUpCircle, ArrowDownCircle, AlertTriangle } from "lucide-react";
 
-// Données de test (à remplacer par des données réelles)
-const monthlyData = [
-  { month: "Jan", deposits: 4000, withdrawals: 2400, transfers: 2400 },
-  { month: "Fév", deposits: 3000, withdrawals: 1398, transfers: 2210 },
-  { month: "Mar", deposits: 2000, withdrawals: 9800, transfers: 2290 },
-  { month: "Avr", deposits: 2780, withdrawals: 3908, transfers: 2000 },
-  { month: "Mai", deposits: 1890, withdrawals: 4800, transfers: 2181 },
-  { month: "Jun", deposits: 2390, withdrawals: 3800, transfers: 2500 },
+// Données simulées pour les graphiques
+const transactionData = [
+  { mois: "Jan", versements: 45000, retraits: 32000 },
+  { mois: "Fév", versements: 52000, retraits: 38000 },
+  { mois: "Mar", versements: 48000, retraits: 35000 },
+  { mois: "Avr", versements: 61000, retraits: 42000 },
+  { mois: "Mai", versements: 55000, retraits: 39000 },
+  { mois: "Jun", versements: 67000, retraits: 45000 },
 ];
 
-const dailyTransactions = [
-  { date: "Lun", count: 12 },
-  { date: "Mar", count: 19 },
-  { date: "Mer", count: 15 },
-  { date: "Jeu", count: 23 },
-  { date: "Ven", count: 28 },
-  { date: "Sam", count: 10 },
-  { date: "Dim", count: 5 },
+const clientActivity = [
+  { value: 35, name: "Très actifs" },
+  { value: 45, name: "Actifs" },
+  { value: 20, name: "Peu actifs" },
+];
+
+const COLORS = ["#10B981", "#3B82F6", "#6B7280"];
+
+const aiInsights = [
+  {
+    id: 1,
+    title: "Hausse des transactions",
+    message: "Augmentation de 15% des versements ce mois-ci",
+    type: "success",
+  },
+  {
+    id: 2,
+    title: "Pic d'activité prévu",
+    message: "Prévision d'une hausse d'activité pour la semaine prochaine",
+    type: "info",
+  },
+  {
+    id: 3,
+    title: "Attention",
+    message: "Volume inhabituel de retraits détecté",
+    type: "warning",
+  },
 ];
 
 const Statistics = () => {
+  const getInsightIcon = (type: string) => {
+    switch (type) {
+      case "success":
+        return <TrendingUp className="h-5 w-5 text-success" />;
+      case "warning":
+        return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
+      default:
+        return <Sparkles className="h-5 w-5 text-primary" />;
+    }
+  };
+
+  const getInsightStyle = (type: string) => {
+    switch (type) {
+      case "success":
+        return "border-green-200 bg-green-50 dark:bg-green-950/20";
+      case "warning":
+        return "border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20";
+      default:
+        return "border-blue-200 bg-blue-50 dark:bg-blue-950/20";
+    }
+  };
+
   return (
     <div className="space-y-8 animate-in">
       <div>
         <h1 className="text-3xl font-bold">Statistiques</h1>
         <p className="text-muted-foreground">
-          Visualisez les tendances et l'activité de votre système
+          Analyses et prévisions intelligentes
         </p>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-3">
+        <Card className="bg-gradient-to-br from-green-50 to-transparent dark:from-green-950/20">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Total Versements</CardTitle>
+            <ArrowUpCircle className="h-4 w-4 text-success" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">328,500 €</div>
+            <p className="text-xs text-muted-foreground">
+              +12.5% par rapport au mois dernier
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-red-50 to-transparent dark:from-red-950/20">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Total Retraits</CardTitle>
+            <ArrowDownCircle className="h-4 w-4 text-danger" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">231,000 €</div>
+            <p className="text-xs text-muted-foreground">
+              -3.2% par rapport au mois dernier
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-blue-50 to-transparent dark:from-blue-950/20">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Clients Actifs</CardTitle>
+            <Users className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">1,234</div>
+            <p className="text-xs text-muted-foreground">
+              +85 nouveaux clients ce mois
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Mouvements mensuels</CardTitle>
+            <CardTitle>Évolution des Transactions</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlyData}>
+                <LineChart data={transactionData}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
+                  <XAxis dataKey="mois" />
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="deposits" name="Versements" fill="#10B981" />
-                  <Bar dataKey="withdrawals" name="Retraits" fill="#EF4444" />
-                  <Bar dataKey="transfers" name="Virements" fill="#6B7280" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Activité journalière</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={dailyTransactions}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line 
-                    type="monotone" 
-                    dataKey="count" 
-                    name="Transactions" 
-                    stroke="#3B82F6" 
+                  <Line
+                    type="monotone"
+                    dataKey="versements"
+                    stroke="#10B981"
+                    strokeWidth={2}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="retraits"
+                    stroke="#EF4444"
                     strokeWidth={2}
                   />
                 </LineChart>
@@ -81,7 +144,65 @@ const Statistics = () => {
             </div>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Répartition de l'Activité Client</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={clientActivity}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={100}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {clientActivity.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-primary" />
+            Insights IA
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-3">
+            {aiInsights.map((insight) => (
+              <div
+                key={insight.id}
+                className={`p-4 rounded-lg border ${getInsightStyle(insight.type)}`}
+              >
+                <div className="flex items-start gap-3">
+                  {getInsightIcon(insight.type)}
+                  <div className="space-y-1">
+                    <p className="font-medium">{insight.title}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {insight.message}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
