@@ -8,6 +8,8 @@ import {
   RefreshCcw,
   Users,
   LogOut,
+  BarChart,
+  Search,
 } from "lucide-react";
 
 const Layout = () => {
@@ -20,6 +22,8 @@ const Layout = () => {
     { path: "/deposits", label: "Versements", icon: ArrowDownCircle },
     { path: "/withdrawals", label: "Retraits", icon: ArrowUpCircle },
     { path: "/transfers", label: "Virements", icon: RefreshCcw },
+    { path: "/statistics", label: "Statistiques", icon: BarChart },
+    { path: "/operations", label: "Recherche", icon: Search },
   ];
 
   const handleLogout = () => {

@@ -10,6 +10,8 @@ import Clients from "./pages/Clients";
 import Deposits from "./pages/Deposits";
 import Withdrawals from "./pages/Withdrawals";
 import Transfers from "./pages/Transfers";
+import Statistics from "./pages/Statistics";
+import Operations from "./pages/Operations";
 import NotFound from "./pages/NotFound";
 import Layout from "./components/Layout";
 
@@ -30,6 +32,8 @@ const App = () => (
             <Route path="/deposits" element={<Deposits />} />
             <Route path="/withdrawals" element={<Withdrawals />} />
             <Route path="/transfers" element={<Transfers />} />
+            <Route path="/statistics" element={<Statistics />} />
+            <Route path="/operations" element={<Operations />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
