@@ -6,6 +6,7 @@ import {
   ArrowDownCircle,
   ArrowUpCircle,
   RefreshCcw,
+  Users,
   LogOut,
 } from "lucide-react";
 
@@ -15,6 +16,7 @@ const Layout = () => {
 
   const navItems = [
     { path: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
+    { path: "/clients", label: "Clients", icon: Users },
     { path: "/deposits", label: "Versements", icon: ArrowDownCircle },
     { path: "/withdrawals", label: "Retraits", icon: ArrowUpCircle },
     { path: "/transfers", label: "Virements", icon: RefreshCcw },
