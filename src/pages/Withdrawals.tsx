@@ -3,10 +3,26 @@ import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, UserCircle, ArrowDownCircle, Pencil, Trash2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { 
+  Plus, 
+  Search, 
+  UserCircle, 
+  ArrowDownCircle, 
+  Pencil, 
+  Trash2, 
+  User,
+  BadgeDollarSign,
+  ScrollText,
+  Sparkles,
+  AlertCircle
+} from "lucide-react";
 
 const Withdrawals = () => {
-  const [withdrawals] = useState([
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [withdrawals, setWithdrawals] = useState([
     {
       id: "1",
       clientName: "Jean Dupont",
@@ -22,6 +38,29 @@ const Withdrawals = () => {
       notes: "Retrait exceptionnel",
     },
   ]);
+
+  const [newWithdrawal, setNewWithdrawal] = useState({
+    clientName: "",
+    amount: "",
+    notes: "",
+  });
+
+  const handleCreateWithdrawal = () => {
+    const withdrawal = {
+      id: Date.now().toString(),
+      clientName: newWithdrawal.clientName,
+      amount: parseFloat(newWithdrawal.amount),
+      date: new Date().toISOString().split('T')[0],
+      notes: newWithdrawal.notes,
+    };
+
+    setWithdrawals(prev => [withdrawal, ...prev]);
+    setIsDialogOpen(false);
+    toast.success("Retrait enregistré", {
+      description: `Le retrait de ${withdrawal.amount}€ pour ${withdrawal.clientName} a été enregistré.`
+    });
+    setNewWithdrawal({ clientName: "", amount: "", notes: "" });
+  };
 
   return (
     <div className="space-y-8 animate-in">
@@ -45,13 +84,127 @@ const Withdrawals = () => {
                 className="pl-9"
               />
             </div>
-            <Button>
+            <Button onClick={() => setIsDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Nouveau retrait
             </Button>
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-2xl">
+              <div className="rounded-xl bg-red-100 dark:bg-red-900/20 p-2">
+                <ArrowDownCircle className="h-6 w-6 text-red-600" />
+              </div>
+              Nouveau retrait
+            </DialogTitle>
+            <DialogDescription className="text-base">
+              Enregistrez un nouveau retrait pour un client
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-6 py-4">
+            <div className="relative overflow-hidden rounded-lg border bg-gradient-to-b from-background to-muted/50 p-6">
+              <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))]" />
+              <div className="relative grid gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="clientName">Client</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="clientName"
+                      placeholder="Nom du client"
+                      value={newWithdrawal.clientName}
+                      onChange={(e) => setNewWithdrawal({ ...newWithdrawal, clientName: e.target.value })}
+                      className="pl-9 transition-all focus-visible:ring-primary/50"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="amount">Montant</Label>
+                  <div className="relative">
+                    <BadgeDollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="amount"
+                      type="number"
+                      placeholder="0.00"
+                      value={newWithdrawal.amount}
+                      onChange={(e) => setNewWithdrawal({ ...newWithdrawal, amount: e.target.value })}
+                      className="pl-9 transition-all focus-visible:ring-primary/50"
+                    />
+                    <span className="absolute right-3 top-3 text-muted-foreground">€</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="notes">Notes</Label>
+                  <div className="relative">
+                    <ScrollText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="notes"
+                      placeholder="Motif du retrait..."
+                      value={newWithdrawal.notes}
+                      onChange={(e) => setNewWithdrawal({ ...newWithdrawal, notes: e.target.value })}
+                      className="pl-9 transition-all focus-visible:ring-primary/50"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <div className="flex-1 rounded-lg border bg-muted/50 p-4">
+                <div className="flex items-start gap-4">
+                  <div className="rounded-full bg-blue-100 dark:bg-blue-900/20 p-2">
+                    <Sparkles className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium">Recommandations IA</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Vérifiez le solde disponible et les limites de retrait avant de valider l'opération.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex-1 rounded-lg border bg-muted/50 p-4">
+                <div className="flex items-start gap-4">
+                  <div className="rounded-full bg-amber-100 dark:bg-amber-900/20 p-2">
+                    <AlertCircle className="h-5 w-5 text-amber-600" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium">Vérifications</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Une pièce d'identité valide est requise pour les retraits supérieurs à 1000€.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="sm:justify-between">
+            <Button
+              variant="ghost"
+              onClick={() => setIsDialogOpen(false)}
+              className="gap-2"
+            >
+              Annuler
+            </Button>
+            <Button 
+              onClick={handleCreateWithdrawal}
+              className="bg-red-600 hover:bg-red-700 text-white gap-2 min-w-[200px]"
+            >
+              <ArrowDownCircle className="h-4 w-4" />
+              Effectuer le retrait
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Card>
         <CardHeader>
