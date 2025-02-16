@@ -1,5 +1,5 @@
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,25 +15,30 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Vérifier si l'utilisateur est déjà connecté
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        navigate("/dashboard");
+      }
+    };
+    checkSession();
+  }, [navigate]);
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    console.log("Tentative de connexion...");
 
     try {
-      // On utilise toujours l'email pour l'authentification Supabase
       const email = login.toLowerCase() === "marwensuperviseur" ? "marwensupervisor@gmail.com" : login;
-      console.log("Email utilisé:", email);
-
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      console.log("Réponse de Supabase:", { data, error });
-
       if (error) {
-        console.error("Erreur de connexion:", error.message);
         toast.error("Identifiants invalides", {
           description: error.message,
         });
@@ -42,25 +47,17 @@ const Login = () => {
       }
 
       if (data.user) {
-        console.log("Connexion réussie, utilisateur:", data.user.email);
         toast.success("Connexion réussie", {
           description: "Bienvenue dans votre espace personnel",
         });
-        navigate("/dashboard");
-      } else {
-        console.error("Pas d'utilisateur dans la réponse");
-        toast.error("Erreur de connexion", {
-          description: "La connexion a échoué, veuillez réessayer",
-        });
+        navigate("/dashboard", { replace: true });
       }
     } catch (error) {
-      console.error("Erreur inattendue:", error);
       toast.error("Erreur de connexion", {
         description: "Une erreur inattendue est survenue",
       });
     } finally {
       setIsLoading(false);
-      console.log("Fin de la tentative de connexion");
     }
   };
 
