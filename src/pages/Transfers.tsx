@@ -1,12 +1,19 @@
-
 import { useState } from "react";
 import { toast } from "sonner";
+import { ListFilter } from "lucide-react";
 import { TransferForm } from "@/features/transfers/components/TransferForm";
 import { TransferSuggestions } from "@/features/transfers/components/TransferSuggestions";
 import { TransferList } from "@/features/transfers/components/TransferList";
 import { EditTransferDialog } from "@/features/transfers/components/EditTransferDialog";
 import { DeleteTransferDialog } from "@/features/transfers/components/DeleteTransferDialog";
 import { type Transfer, type Suggestion, type EditFormData } from "@/features/transfers/types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const defaultSuggestions: Suggestion[] = [
   {
@@ -58,6 +65,7 @@ const Transfers = () => {
   const [selectedTransfer, setSelectedTransfer] = useState<Transfer | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [itemsPerPage, setItemsPerPage] = useState("10");
   const [editForm, setEditForm] = useState<EditFormData>({
     fromClient: "",
     toClient: "",
@@ -122,6 +130,8 @@ const Transfers = () => {
     });
   };
 
+  const visibleTransfers = transfers.slice(0, parseInt(itemsPerPage));
+
   return (
     <div className="space-y-8 animate-in">
       <div>
@@ -139,8 +149,29 @@ const Transfers = () => {
         />
       </div>
 
+      <div className="flex items-center justify-end gap-4 mb-4">
+        <div className="text-sm text-muted-foreground">
+          Affichage de {Math.min(parseInt(itemsPerPage), transfers.length)} sur {transfers.length} virements
+        </div>
+        <Select
+          value={itemsPerPage}
+          onValueChange={setItemsPerPage}
+        >
+          <SelectTrigger className="w-[180px] bg-primary/5 border-primary/20 hover:bg-primary/10 transition-colors">
+            <ListFilter className="h-4 w-4 mr-2 text-primary" />
+            <SelectValue placeholder="Nombre d'éléments" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="10">10 éléments</SelectItem>
+            <SelectItem value="25">25 éléments</SelectItem>
+            <SelectItem value="50">50 éléments</SelectItem>
+            <SelectItem value="100">100 éléments</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       <TransferList
-        transfers={transfers}
+        transfers={visibleTransfers}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         onEdit={handleEdit}
