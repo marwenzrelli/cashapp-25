@@ -4,49 +4,37 @@ import { ClientInsights } from "@/features/clients/components/ClientInsights";
 import { ClientSearch } from "@/features/clients/components/ClientSearch";
 import { ClientList } from "@/features/clients/components/ClientList";
 import { ClientDialogs } from "@/features/clients/components/ClientDialogs";
-import { Client, AISuggestion } from "@/features/clients/types";
+import { AISuggestion } from "@/features/clients/types";
+import { useClients } from "@/features/clients/hooks/useClients";
+import { useClientDialogs } from "@/features/clients/hooks/useClientDialogs";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 
 const Clients = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [editForm, setEditForm] = useState({
-    nom: "",
-    prenom: "",
-    telephone: "",
-    email: "",
-  });
+  const { 
+    clients,
+    fetchClients,
+    updateClient,
+    deleteClient,
+    createClient
+  } = useClients();
 
-  const [newClient, setNewClient] = useState({
-    nom: "",
-    prenom: "",
-    telephone: "",
-    email: "",
-    solde: 0,
-  });
-
-  const [clients, setClients] = useState<Client[]>([]);
-
-  const fetchClients = async () => {
-    const { data, error } = await supabase
-      .from('clients')
-      .select('*')
-      .order('date_creation', { ascending: false });
-
-    if (error) {
-      toast.error("Erreur lors du chargement des clients");
-      console.error("Error fetching clients:", error);
-      return;
-    }
-
-    if (data) {
-      setClients(data);
-    }
-  };
+  const {
+    isDialogOpen,
+    isEditDialogOpen,
+    isDeleteDialogOpen,
+    selectedClient,
+    editForm,
+    newClient,
+    setIsDialogOpen,
+    setIsEditDialogOpen,
+    setIsDeleteDialogOpen,
+    setEditForm,
+    setNewClient,
+    handleEdit,
+    handleDelete,
+    resetNewClient
+  } = useClientDialogs();
 
   useEffect(() => {
     fetchClients();
@@ -67,92 +55,41 @@ const Clients = () => {
     },
   ];
 
-  const handleEdit = (client: Client) => {
-    setSelectedClient(client);
-    setEditForm({
-      nom: client.nom,
-      prenom: client.prenom,
-      telephone: client.telephone,
-      email: client.email,
-    });
-    setIsEditDialogOpen(true);
-  };
-
-  const handleDelete = (client: Client) => {
-    setSelectedClient(client);
-    setIsDeleteDialogOpen(true);
-  };
-
   const confirmEdit = async () => {
     if (!selectedClient) return;
 
-    const { error } = await supabase
-      .from('clients')
-      .update({
-        nom: editForm.nom,
-        prenom: editForm.prenom,
-        telephone: editForm.telephone,
-        email: editForm.email
-      })
-      .eq('id', selectedClient.id);
-
-    if (error) {
-      toast.error("Erreur lors de la modification du client");
-      console.error("Error updating client:", error);
-      return;
+    const success = await updateClient(selectedClient.id, editForm);
+    
+    if (success) {
+      setIsEditDialogOpen(false);
+      toast.success("Modifications enregistrées", {
+        description: `Les informations de ${editForm.prenom} ${editForm.nom} ont été mises à jour avec succès.`
+      });
     }
-
-    await fetchClients();
-    setIsEditDialogOpen(false);
-    toast.success("Modifications enregistrées", {
-      description: `Les informations de ${editForm.prenom} ${editForm.nom} ont été mises à jour avec succès.`
-    });
   };
 
   const confirmDelete = async () => {
     if (!selectedClient) return;
 
-    const { error } = await supabase
-      .from('clients')
-      .delete()
-      .eq('id', selectedClient.id);
-
-    if (error) {
-      toast.error("Erreur lors de la suppression du client");
-      console.error("Error deleting client:", error);
-      return;
+    const success = await deleteClient(selectedClient.id);
+    
+    if (success) {
+      setIsDeleteDialogOpen(false);
+      toast.success("Client supprimé", {
+        description: `${selectedClient.prenom} ${selectedClient.nom} a été retiré de la base de données.`
+      });
     }
-
-    await fetchClients();
-    setIsDeleteDialogOpen(false);
-    toast.success("Client supprimé", {
-      description: `${selectedClient.prenom} ${selectedClient.nom} a été retiré de la base de données.`
-    });
   };
 
   const handleCreateClient = async () => {
-    const { data, error } = await supabase
-      .from('clients')
-      .insert({
-        ...newClient,
-        created_by: (await supabase.auth.getUser()).data.user?.id
-      })
-      .select()
-      .single();
-
-    if (error) {
-      toast.error("Erreur lors de la création du client");
-      console.error("Error creating client:", error);
-      return;
-    }
-
-    if (data) {
-      await fetchClients();
+    const success = await createClient(newClient);
+    
+    if (success) {
       setIsDialogOpen(false);
       toast.success("Nouveau client créé", {
         description: `${newClient.prenom} ${newClient.nom} a été ajouté avec succès.`
       });
-      setNewClient({ nom: "", prenom: "", telephone: "", email: "", solde: 0 });
+      resetNewClient();
     }
   };
 
