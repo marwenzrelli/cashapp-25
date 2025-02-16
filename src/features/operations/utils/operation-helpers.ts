@@ -1,4 +1,5 @@
 
+import React from "react";
 import { ArrowUpCircle, ArrowDownCircle, RefreshCcw } from "lucide-react";
 import { Operation } from "../types";
 
@@ -13,7 +14,7 @@ export const getTypeStyle = (type: Operation["type"]) => {
   }
 };
 
-export const getTypeIcon = (type: Operation["type"]) => {
+export const getTypeIcon = (type: Operation["type"]): JSX.Element => {
   switch (type) {
     case "deposit":
       return <ArrowUpCircle className="h-4 w-4" />;
