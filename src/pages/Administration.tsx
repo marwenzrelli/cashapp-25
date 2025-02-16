@@ -72,6 +72,7 @@ const Administration = () => {
     id: "current-user",
     fullName: "Jean Dupont",
     email: "jean.dupont@example.com",
+    login: "jdupont", // Ajout de la propriété login manquante
     role: "supervisor",
     status: "active",
     permissions: [],
