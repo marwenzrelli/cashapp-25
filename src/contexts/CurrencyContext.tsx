@@ -21,7 +21,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const loadInitialSession = async () => {
       const { data: { session: initialSession } } = await supabase.auth.getSession();
-      console.log("Session initiale chargée:", initialSession?.user?.id);
+      console.log("[CurrencyContext] Session initiale chargée:", initialSession?.user?.id);
       setSession(initialSession);
       if (initialSession?.user?.id) {
         await loadCurrency(initialSession.user.id);
@@ -33,7 +33,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      console.log("Changement d'état d'authentification:", session?.user?.id);
+      console.log("[CurrencyContext] Changement d'état d'authentification:", session?.user?.id);
       setSession(session);
       if (session?.user?.id) {
         await loadCurrency(session.user.id);
@@ -44,18 +44,18 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loadCurrency = async (userId: string) => {
-    console.log("Chargement de la devise pour l'utilisateur:", userId);
+    console.log("[CurrencyContext] Chargement de la devise pour l'utilisateur:", userId);
     try {
-      const { data, error } = await supabase
+      const { data: userData, error: userError } = await supabase
         .from('profiles')
-        .select('currency')
+        .select('*')
         .eq('id', userId)
-        .maybeSingle();
+        .single();
 
-      console.log("Résultat du chargement de la devise:", { data, error });
+      console.log("[CurrencyContext] Données utilisateur complètes:", userData);
 
-      if (error) {
-        console.error('Erreur lors du chargement de la devise:', error);
+      if (userError) {
+        console.error('[CurrencyContext] Erreur lors du chargement du profil:', userError);
         toast({
           title: "Erreur",
           description: "Impossible de charger vos préférences de devise",
@@ -64,19 +64,19 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      if (data?.currency) {
-        console.log("Mise à jour de la devise dans l'état:", data.currency);
-        setCurrencyState(data.currency as Currency);
+      if (userData?.currency) {
+        console.log("[CurrencyContext] Mise à jour de la devise dans l'état:", userData.currency);
+        setCurrencyState(userData.currency as Currency);
       }
     } catch (error) {
-      console.error('Erreur lors du chargement de la devise:', error);
+      console.error('[CurrencyContext] Erreur lors du chargement de la devise:', error);
     }
   };
 
   const setCurrency = async (newCurrency: Currency) => {
-    console.log("Tentative de mise à jour de la devise vers:", newCurrency);
+    console.log("[CurrencyContext] Tentative de mise à jour de la devise vers:", newCurrency);
     if (!session?.user?.id) {
-      console.error("Pas de session utilisateur active");
+      console.error("[CurrencyContext] Pas de session utilisateur active");
       toast({
         title: "Erreur",
         description: "Vous devez être connecté pour changer de devise",
@@ -86,30 +86,53 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const { error } = await supabase
+      console.log("[CurrencyContext] Début de la mise à jour pour l'utilisateur:", session.user.id);
+      
+      const { data, error } = await supabase
         .from('profiles')
-        .update({ currency: newCurrency })
+        .update({ 
+          currency: newCurrency,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', session.user.id);
 
-      console.log("Résultat de la mise à jour:", { error });
+      console.log("[CurrencyContext] Résultat de la mise à jour:", { data, error });
 
       if (error) {
-        console.error('Erreur lors de la mise à jour:', error);
+        console.error('[CurrencyContext] Erreur lors de la mise à jour:', error);
         toast({
           title: "Erreur",
-          description: "Impossible de sauvegarder vos préférences de devise",
+          description: `Impossible de sauvegarder vos préférences de devise: ${error.message}`,
           variant: "destructive",
         });
         return;
       }
 
-      setCurrencyState(newCurrency);
-      toast({
-        title: "Succès",
-        description: "Vos préférences de devise ont été mises à jour",
-      });
+      // Vérifions immédiatement si la mise à jour a bien été prise en compte
+      const { data: verificationData, error: verificationError } = await supabase
+        .from('profiles')
+        .select('currency')
+        .eq('id', session.user.id)
+        .single();
+
+      console.log("[CurrencyContext] Vérification après mise à jour:", { verificationData, verificationError });
+
+      if (verificationData?.currency === newCurrency) {
+        setCurrencyState(newCurrency);
+        toast({
+          title: "Succès",
+          description: "Vos préférences de devise ont été mises à jour",
+        });
+      } else {
+        console.error('[CurrencyContext] La mise à jour na pas été correctement enregistrée');
+        toast({
+          title: "Avertissement",
+          description: "La mise à jour de la devise n'a pas pu être vérifiée",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
-      console.error('Erreur lors de la mise à jour de la devise:', error);
+      console.error('[CurrencyContext] Erreur lors de la mise à jour de la devise:', error);
       toast({
         title: "Erreur",
         description: "Une erreur est survenue lors de la mise à jour de la devise",
