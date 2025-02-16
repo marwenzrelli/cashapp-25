@@ -14,7 +14,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Search, UserCircle, ArrowDownCircle, Sparkles, Pencil, Trash2 } from "lucide-react";
+import { Plus, Search, UserCircle, ArrowDownCircle, Sparkles, Pencil, Trash2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 interface Withdrawal {
