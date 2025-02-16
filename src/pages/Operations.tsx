@@ -1,34 +1,15 @@
 
 import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Search, ArrowUpCircle, ArrowDownCircle, RefreshCcw, Edit2, Trash2, Filter, Check, Calendar, ArrowRight } from "lucide-react";
+import { Filter } from "lucide-react";
 import { toast } from "sonner";
 import { format, isWithinInterval, parseISO, subDays, startOfDay, endOfDay } from "date-fns";
-import { fr } from "date-fns/locale";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-
-interface Operation {
-  id: string;
-  type: "deposit" | "withdrawal" | "transfer";
-  amount: number;
-  date: string;
-  description: string;
-  fromClient?: string;
-  toClient?: string;
-}
-
-const TIME_RANGES = [
-  { label: "Aujourd'hui", days: 0 },
-  { label: "7 derniers jours", days: 7 },
-  { label: "30 derniers jours", days: 30 },
-  { label: "90 derniers jours", days: 90 },
-] as const;
+import { Operation } from "@/features/operations/types";
+import { mockOperations } from "@/features/operations/data/mock-operations";
+import { OperationCard } from "@/features/operations/components/OperationCard";
+import { OperationFilters } from "@/features/operations/components/OperationFilters";
+import { EditOperationDialog } from "@/features/operations/components/EditOperationDialog";
+import { DeleteOperationDialog } from "@/features/operations/components/DeleteOperationDialog";
 
 const Operations = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -41,149 +22,7 @@ const Operations = () => {
     to: new Date(),
   });
   const [isCustomRange, setIsCustomRange] = useState(false);
-  const [operations, setOperations] = useState<Operation[]>([
-    {
-      id: "1",
-      type: "deposit",
-      amount: 1000,
-      date: "2024-02-23",
-      description: "Dépôt initial",
-      fromClient: "Jean Dupont"
-    },
-    {
-      id: "2",
-      type: "withdrawal",
-      amount: 500,
-      date: "2024-02-22",
-      description: "Retrait ATM",
-      fromClient: "Marie Martin"
-    },
-    {
-      id: "3",
-      type: "transfer",
-      amount: 750,
-      date: "2024-02-21",
-      description: "Virement mensuel",
-      fromClient: "Pierre Durant",
-      toClient: "Sophie Lefebvre"
-    },
-    {
-      id: "4",
-      type: "deposit",
-      amount: 2500,
-      date: "2024-02-20",
-      description: "Versement salaire",
-      fromClient: "Lucas Bernard"
-    },
-    {
-      id: "5",
-      type: "transfer",
-      amount: 350,
-      date: "2024-02-19",
-      description: "Remboursement restaurant",
-      fromClient: "Emma Petit",
-      toClient: "Thomas Dubois"
-    },
-    {
-      id: "6",
-      type: "withdrawal",
-      amount: 200,
-      date: "2024-02-18",
-      description: "Retrait courses",
-      fromClient: "Julie Lambert"
-    },
-    {
-      id: "7",
-      type: "deposit",
-      amount: 5000,
-      date: "2024-02-17",
-      description: "Versement épargne",
-      fromClient: "François Moreau"
-    },
-    {
-      id: "8",
-      type: "transfer",
-      amount: 1200,
-      date: "2024-02-16",
-      description: "Paiement loyer",
-      fromClient: "Alice Roux",
-      toClient: "Immobilier SARL"
-    },
-    {
-      id: "9",
-      type: "withdrawal",
-      amount: 150,
-      date: "2024-02-15",
-      description: "Retrait weekend",
-      fromClient: "Marc Simon"
-    },
-    {
-      id: "10",
-      type: "deposit",
-      amount: 3000,
-      date: "2024-02-14",
-      description: "Prime annuelle",
-      fromClient: "Catherine Leroy"
-    },
-    {
-      id: "11",
-      type: "transfer",
-      amount: 450,
-      date: "2024-02-13",
-      description: "Paiement facture électricité",
-      fromClient: "Paul Girard",
-      toClient: "EDF"
-    },
-    {
-      id: "12",
-      type: "withdrawal",
-      amount: 300,
-      date: "2024-02-12",
-      description: "Retrait shopping",
-      fromClient: "Sophie Martin"
-    }
-  ]);
-
-  const handleDateRangeSelect = (days: number) => {
-    setDate({
-      from: subDays(new Date(), days),
-      to: new Date(),
-    });
-    setIsCustomRange(false);
-  };
-
-  const getTypeStyle = (type: Operation["type"]) => {
-    switch (type) {
-      case "deposit":
-        return "bg-green-50 text-green-600 dark:bg-green-950/50";
-      case "withdrawal":
-        return "bg-red-50 text-red-600 dark:bg-red-950/50";
-      case "transfer":
-        return "bg-purple-50 text-purple-600 dark:bg-purple-950/50";
-    }
-  };
-
-  const getTypeIcon = (type: Operation["type"]) => {
-    switch (type) {
-      case "deposit":
-        return <ArrowUpCircle className="h-4 w-4" />;
-      case "withdrawal":
-        return <ArrowDownCircle className="h-4 w-4" />;
-      case "transfer":
-        return <RefreshCcw className="h-4 w-4" />;
-    }
-  };
-
-  const getTypeLabel = (type: Operation["type"]) => {
-    switch (type) {
-      case "deposit":
-        return "Versement";
-      case "withdrawal":
-        return "Retrait";
-      case "transfer":
-        return "Virement";
-    }
-  };
+  const [operations, setOperations] = useState<Operation[]>(mockOperations);
 
   const handleEdit = (operation: Operation) => {
     setSelectedOperation(operation);
@@ -247,170 +86,27 @@ const Operations = () => {
               <Filter className="h-5 w-5 text-primary" />
               Filtres de recherche
             </CardTitle>
-            <div className="flex items-center gap-4">
-              <div className="flex gap-2">
-                {(["all", "deposit", "withdrawal", "transfer"] as const).map((type) => (
-                  <Button
-                    key={type}
-                    variant={selectedType === type ? "default" : "outline"}
-                    onClick={() => setSelectedType(type)}
-                    className={`gap-2 ${
-                      type === "all" ? "" : getTypeStyle(type as Operation["type"])
-                    }`}
-                  >
-                    {type === "all" ? (
-                      <Check className="h-4 w-4" />
-                    ) : (
-                      getTypeIcon(type as Operation["type"])
-                    )}
-                    {type === "all" ? "Tout" : getTypeLabel(type as Operation["type"])}
-                  </Button>
-                ))}
-              </div>
-              <div className="flex items-center gap-4">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="gap-2">
-                      <Calendar className="h-4 w-4" />
-                      <span>
-                        {isCustomRange
-                          ? `${format(date.from, "d MMM", { locale: fr })} - ${format(date.to, "d MMM", { locale: fr })}`
-                          : `${format(date.from, "d MMM", { locale: fr })} - ${format(date.to, "d MMM", { locale: fr })}`}
-                      </span>
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="end">
-                    <div className="grid gap-2 p-4">
-                      <div className="space-y-2">
-                        {TIME_RANGES.map((range) => (
-                          <Button
-                            key={range.days}
-                            variant="ghost"
-                            className="w-full justify-start gap-2"
-                            onClick={() => handleDateRangeSelect(range.days)}
-                          >
-                            <Calendar className="h-4 w-4" />
-                            {range.label}
-                          </Button>
-                        ))}
-                        <Button
-                          variant="ghost"
-                          className="w-full justify-start gap-2"
-                          onClick={() => setIsCustomRange(true)}
-                        >
-                          <Calendar className="h-4 w-4" />
-                          Plage personnalisée
-                        </Button>
-                      </div>
-                      {isCustomRange && (
-                        <div className="border-t pt-4 mt-2">
-                          <div className="flex gap-2 mb-2 items-center justify-center text-sm text-muted-foreground">
-                            <span>Du</span>
-                            <span>{format(date.from || new Date(), "d MMM", { locale: fr })}</span>
-                            <ArrowRight className="h-4 w-4" />
-                            <span>au</span>
-                            <span>{format(date.to || new Date(), "d MMM", { locale: fr })}</span>
-                          </div>
-                          <CalendarComponent
-                            mode="range"
-                            selected={{
-                              from: date.from,
-                              to: date.to,
-                            }}
-                            onSelect={(range) => {
-                              if (range && range.from && range.to) {
-                                setDate({ from: range.from, to: range.to });
-                              }
-                            }}
-                            numberOfMonths={2}
-                            locale={fr}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </PopoverContent>
-                </Popover>
-                <div className="relative w-64">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    placeholder="Rechercher..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
-              </div>
-            </div>
+            <OperationFilters
+              selectedType={selectedType}
+              searchTerm={searchTerm}
+              date={date}
+              isCustomRange={isCustomRange}
+              onTypeSelect={setSelectedType}
+              onSearch={setSearchTerm}
+              onDateChange={setDate}
+              onCustomRangeChange={setIsCustomRange}
+            />
           </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {filteredOperations.map((operation) => (
-              <div
+              <OperationCard
                 key={operation.id}
-                className="group relative rounded-lg border bg-card p-4 hover:shadow-md transition-all"
-              >
-                <div className="absolute -left-px top-4 bottom-4 w-1 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className={`px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2 ${getTypeStyle(operation.type)}`}>
-                      {getTypeIcon(operation.type)}
-                      {getTypeLabel(operation.type)}
-                    </div>
-                    <div className="space-y-1">
-                      <p className="font-medium">{operation.description}</p>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span>{operation.date}</span>
-                        {operation.type === "transfer" ? (
-                          <>
-                            <span>•</span>
-                            <span>De: {operation.fromClient}</span>
-                            <span>•</span>
-                            <span>À: {operation.toClient}</span>
-                          </>
-                        ) : (
-                          <>
-                            <span>•</span>
-                            <span>Client: {operation.fromClient}</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <div className="text-lg font-semibold">
-                        {operation.amount.toLocaleString()} €
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        ID: {operation.id}
-                      </div>
-                    </div>
-                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(operation)}
-                        className="relative hover:bg-blue-50 dark:hover:bg-blue-950/50 text-blue-600 hover:text-blue-600"
-                      >
-                        <Edit2 className="h-4 w-4 transition-transform hover:scale-110" />
-                        <span className="absolute inset-0 rounded-full bg-blue-100 dark:bg-blue-900/20 opacity-0 group-hover:opacity-100 animate-ping" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(operation)}
-                        className="relative hover:bg-red-50 dark:hover:bg-red-950/50 text-red-600 hover:text-red-600"
-                      >
-                        <Trash2 className="h-4 w-4 transition-transform hover:scale-110" />
-                        <span className="absolute inset-0 rounded-full bg-red-100 dark:bg-red-900/20 opacity-0 group-hover:opacity-100 animate-ping" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                operation={operation}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
             ))}
 
             {filteredOperations.length === 0 && (
@@ -428,73 +124,21 @@ const Operations = () => {
         </CardContent>
       </Card>
 
-      {/* Modal de modification */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Modifier l'opération</DialogTitle>
-            <DialogDescription>
-              Modifiez les détails de l'opération sélectionnée
-            </DialogDescription>
-          </DialogHeader>
-          {selectedOperation && (
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Input
-                  id="description"
-                  value={selectedOperation.description}
-                  onChange={(e) => setSelectedOperation({
-                    ...selectedOperation,
-                    description: e.target.value
-                  })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="amount">Montant</Label>
-                <Input
-                  id="amount"
-                  type="number"
-                  value={selectedOperation.amount}
-                  onChange={(e) => setSelectedOperation({
-                    ...selectedOperation,
-                    amount: parseFloat(e.target.value)
-                  })}
-                />
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              Annuler
-            </Button>
-            <Button onClick={handleConfirmEdit}>
-              Enregistrer les modifications
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <EditOperationDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        operation={selectedOperation}
+        onOperationChange={setSelectedOperation}
+        onConfirm={handleConfirmEdit}
+      />
 
-      {/* Modal de suppression */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
-            <AlertDialogDescription>
-              Êtes-vous sûr de vouloir supprimer cette opération ? Cette action est irréversible.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelete} className="bg-red-600 hover:bg-red-700">
-              Supprimer
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteOperationDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 };
 
 export default Operations;
-
