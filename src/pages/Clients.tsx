@@ -51,8 +51,7 @@ const Clients = () => {
     email: "",
   });
 
-  // Données de test enrichies avec scores IA
-  const clients: Client[] = [
+  const [clients, setClients] = useState<Client[]>([
     {
       id: "1",
       nom: "Dupont",
@@ -86,9 +85,8 @@ const Clients = () => {
       activite: "basse",
       score: 45,
     },
-  ];
+  ]);
 
-  // Suggestions IA enrichies avec insights
   const aiSuggestions: AISuggestion[] = [
     {
       id: "1",
