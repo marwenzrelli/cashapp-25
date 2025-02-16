@@ -12,6 +12,7 @@ export interface SystemUser {
   id: string;
   fullName: string;
   email: string;
+  login: string;
   role: UserRole;
   avatar?: string;
   status: "active" | "inactive";

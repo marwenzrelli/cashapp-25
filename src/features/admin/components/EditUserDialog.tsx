@@ -67,6 +67,15 @@ export const EditUserDialog = ({ isOpen, onClose, user, onUpdateUser }: EditUser
             />
           </div>
           <div className="space-y-2">
+            <label>Login</label>
+            <Input
+              value={editedUser.login || user.login}
+              onChange={(e) =>
+                setEditedUser({ ...editedUser, login: e.target.value })
+              }
+            />
+          </div>
+          <div className="space-y-2">
             <label>Email</label>
             <Input
               type="email"

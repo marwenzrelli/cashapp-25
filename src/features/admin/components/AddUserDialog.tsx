@@ -17,6 +17,7 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
   const [newUser, setNewUser] = useState({
     fullName: "",
     email: "",
+    login: "",
     role: "cashier" as UserRole,
     password: "",
     confirmPassword: "",
@@ -60,6 +61,7 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
     setNewUser({
       fullName: "",
       email: "",
+      login: "",
       role: "cashier",
       password: "",
       confirmPassword: "",
@@ -83,6 +85,16 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
               value={newUser.fullName}
               onChange={(e) =>
                 setNewUser({ ...newUser, fullName: e.target.value })
+              }
+            />
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="login">Login</label>
+            <Input
+              id="login"
+              value={newUser.login}
+              onChange={(e) =>
+                setNewUser({ ...newUser, login: e.target.value })
               }
             />
           </div>
