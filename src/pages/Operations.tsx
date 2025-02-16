@@ -4,7 +4,9 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Search, ArrowUpCircle, ArrowDownCircle, RefreshCcw } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Search, ArrowUpCircle, ArrowDownCircle, RefreshCcw, Edit2, Trash2, Filter, Check } from "lucide-react";
 import { toast } from "sonner";
 
 interface Operation {
@@ -13,10 +15,16 @@ interface Operation {
   amount: number;
   date: string;
   description: string;
+  fromClient?: string;
+  toClient?: string;
 }
 
 const Operations = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedType, setSelectedType] = useState<Operation["type"] | "all">("all");
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedOperation, setSelectedOperation] = useState<Operation | null>(null);
   const [operations, setOperations] = useState<Operation[]>([
     {
       id: "1",
@@ -24,6 +32,7 @@ const Operations = () => {
       amount: 1000,
       date: "2024-02-23",
       description: "Dépôt initial",
+      fromClient: "Jean Dupont"
     },
     {
       id: "2",
@@ -31,6 +40,7 @@ const Operations = () => {
       amount: 500,
       date: "2024-02-22",
       description: "Retrait ATM",
+      fromClient: "Marie Martin"
     },
     {
       id: "3",
@@ -38,6 +48,8 @@ const Operations = () => {
       amount: 750,
       date: "2024-02-21",
       description: "Virement mensuel",
+      fromClient: "Pierre Durant",
+      toClient: "Sophie Lefebvre"
     },
   ]);
 
@@ -74,33 +86,89 @@ const Operations = () => {
     }
   };
 
-  const filteredOperations = operations.filter(
-    (operation) =>
+  const handleEdit = (operation: Operation) => {
+    setSelectedOperation(operation);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDelete = (operation: Operation) => {
+    setSelectedOperation(operation);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmEdit = () => {
+    if (!selectedOperation) return;
+    
+    setOperations(prev => prev.map(op => 
+      op.id === selectedOperation.id ? selectedOperation : op
+    ));
+    
+    setIsEditDialogOpen(false);
+    toast.success("Opération modifiée avec succès");
+  };
+
+  const handleConfirmDelete = () => {
+    if (!selectedOperation) return;
+    
+    setOperations(prev => prev.filter(op => op.id !== selectedOperation.id));
+    setIsDeleteDialogOpen(false);
+    toast.success("Opération supprimée avec succès");
+  };
+
+  const filteredOperations = operations.filter(operation => {
+    const matchesSearch = 
       operation.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      getTypeLabel(operation.type).toLowerCase().includes(searchTerm.toLowerCase())
-  );
+      operation.fromClient?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      operation.toClient?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    return selectedType === "all" ? matchesSearch : operation.type === selectedType && matchesSearch;
+  });
 
   return (
     <div className="space-y-8 animate-in">
       <div>
-        <h1 className="text-3xl font-bold">Opérations</h1>
+        <h1 className="text-3xl font-bold">Recherche d'opérations</h1>
         <p className="text-muted-foreground">
-          Consultez l'historique des versements, retraits et virements
+          Consultez et gérez l'historique des versements, retraits et virements
         </p>
       </div>
 
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Liste des opérations</CardTitle>
-            <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Rechercher..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9"
-              />
+            <CardTitle className="flex items-center gap-2">
+              <Filter className="h-5 w-5 text-primary" />
+              Filtres de recherche
+            </CardTitle>
+            <div className="flex items-center gap-4">
+              <div className="flex gap-2">
+                {(["all", "deposit", "withdrawal", "transfer"] as const).map((type) => (
+                  <Button
+                    key={type}
+                    variant={selectedType === type ? "default" : "outline"}
+                    onClick={() => setSelectedType(type)}
+                    className={`gap-2 ${
+                      type === "all" ? "" : getTypeStyle(type as Operation["type"])
+                    }`}
+                  >
+                    {type === "all" ? (
+                      <Check className="h-4 w-4" />
+                    ) : (
+                      getTypeIcon(type as Operation["type"])
+                    )}
+                    {type === "all" ? "Tout" : getTypeLabel(type as Operation["type"])}
+                  </Button>
+                ))}
+              </div>
+              <div className="relative w-64">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Rechercher..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -121,18 +189,53 @@ const Operations = () => {
                     </div>
                     <div className="space-y-1">
                       <p className="font-medium">{operation.description}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {operation.date}
-                      </p>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>{operation.date}</span>
+                        {operation.type === "transfer" ? (
+                          <>
+                            <span>•</span>
+                            <span>De: {operation.fromClient}</span>
+                            <span>•</span>
+                            <span>À: {operation.toClient}</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>•</span>
+                            <span>Client: {operation.fromClient}</span>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="text-right">
-                    <div className="text-lg font-semibold">
-                      {operation.amount.toLocaleString()} €
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <div className="text-lg font-semibold">
+                        {operation.amount.toLocaleString()} €
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        ID: {operation.id}
+                      </div>
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      ID: {operation.id}
+                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEdit(operation)}
+                        className="relative hover:bg-blue-50 dark:hover:bg-blue-950/50 text-blue-600 hover:text-blue-600"
+                      >
+                        <Edit2 className="h-4 w-4 transition-transform hover:scale-110" />
+                        <span className="absolute inset-0 rounded-full bg-blue-100 dark:bg-blue-900/20 opacity-0 group-hover:opacity-100 animate-ping" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(operation)}
+                        className="relative hover:bg-red-50 dark:hover:bg-red-950/50 text-red-600 hover:text-red-600"
+                      >
+                        <Trash2 className="h-4 w-4 transition-transform hover:scale-110" />
+                        <span className="absolute inset-0 rounded-full bg-red-100 dark:bg-red-900/20 opacity-0 group-hover:opacity-100 animate-ping" />
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -153,6 +256,71 @@ const Operations = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Modal de modification */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifier l'opération</DialogTitle>
+            <DialogDescription>
+              Modifiez les détails de l'opération sélectionnée
+            </DialogDescription>
+          </DialogHeader>
+          {selectedOperation && (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Input
+                  id="description"
+                  value={selectedOperation.description}
+                  onChange={(e) => setSelectedOperation({
+                    ...selectedOperation,
+                    description: e.target.value
+                  })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="amount">Montant</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  value={selectedOperation.amount}
+                  onChange={(e) => setSelectedOperation({
+                    ...selectedOperation,
+                    amount: parseFloat(e.target.value)
+                  })}
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handleConfirmEdit}>
+              Enregistrer les modifications
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de suppression */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer cette opération ? Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete} className="bg-red-600 hover:bg-red-700">
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
