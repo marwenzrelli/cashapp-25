@@ -11,7 +11,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, ArrowRight, Sparkles, ArrowLeftRight, ClockIcon, Search } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { 
+  Loader2, 
+  ArrowRight, 
+  Sparkles, 
+  ArrowLeftRight, 
+  ClockIcon, 
+  Search,
+  Pencil,
+  Trash2
+} from "lucide-react";
 
 interface Transfer {
   id: string;
@@ -37,8 +64,17 @@ const Transfers = () => {
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTransfer, setSelectedTransfer] = useState<Transfer | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    fromClient: "",
+    toClient: "",
+    amount: "",
+    reason: "",
+  });
 
-  const [transfers] = useState<Transfer[]>([
+  const [transfers, setTransfers] = useState<Transfer[]>([
     {
       id: "1",
       fromClient: "Jean Dupont",
@@ -108,6 +144,54 @@ const Transfers = () => {
     setAmount(suggestion.amount.toString());
     setReason(suggestion.reason);
     toast.success("Suggestion appliquée !");
+  };
+
+  const handleEdit = (transfer: Transfer) => {
+    setSelectedTransfer(transfer);
+    setEditForm({
+      fromClient: transfer.fromClient,
+      toClient: transfer.toClient,
+      amount: transfer.amount.toString(),
+      reason: transfer.reason,
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDelete = (transfer: Transfer) => {
+    setSelectedTransfer(transfer);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmEdit = () => {
+    if (!selectedTransfer) return;
+
+    setTransfers((prev) =>
+      prev.map((transfer) =>
+        transfer.id === selectedTransfer.id
+          ? {
+              ...transfer,
+              fromClient: editForm.fromClient,
+              toClient: editForm.toClient,
+              amount: parseFloat(editForm.amount),
+              reason: editForm.reason,
+            }
+          : transfer
+      )
+    );
+
+    setIsEditDialogOpen(false);
+    toast.success("Virement modifié avec succès");
+  };
+
+  const confirmDelete = () => {
+    if (!selectedTransfer) return;
+
+    setTransfers((prev) =>
+      prev.filter((transfer) => transfer.id !== selectedTransfer.id)
+    );
+
+    setIsDeleteDialogOpen(false);
+    toast.success("Virement supprimé avec succès");
   };
 
   const filteredTransfers = transfers.filter(
@@ -283,20 +367,34 @@ const Transfers = () => {
                     </div>
                   </div>
                   
-                  <div className="flex flex-col items-end gap-1">
-                    <div className="text-lg font-semibold text-primary">
-                      {transfer.amount.toLocaleString()} €
+                  <div className="flex items-center gap-4">
+                    <div className="flex flex-col items-end gap-1">
+                      <div className="text-lg font-semibold text-primary">
+                        {transfer.amount.toLocaleString()} €
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        ID: {transfer.id}
+                      </div>
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      ID: {transfer.id}
+                    
+                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEdit(transfer)}
+                        className="h-8 w-8 bg-blue-50 hover:bg-blue-100 text-blue-600 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 dark:text-blue-500"
+                      >
+                        <Pencil className="h-4 w-4 rotate-12 transition-transform hover:rotate-45" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(transfer)}
+                        className="h-8 w-8 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/20 dark:hover:bg-red-900/40 dark:text-red-500"
+                      >
+                        <Trash2 className="h-4 w-4 transition-transform hover:-translate-y-1" />
+                      </Button>
                     </div>
-                  </div>
-                </div>
-                
-                <div className="absolute -right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="flex -space-x-2">
-                    <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900" />
-                    <div className="h-8 w-8 rounded-full bg-green-100 dark:bg-green-900" />
                   </div>
                 </div>
               </div>
@@ -316,6 +414,111 @@ const Transfers = () => {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifier le virement</DialogTitle>
+            <DialogDescription>
+              Modifiez les informations du virement ci-dessous.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Compte émetteur</Label>
+              <Select
+                value={editForm.fromClient}
+                onValueChange={(value) =>
+                  setEditForm({ ...editForm, fromClient: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un client" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Jean Dupont">Jean Dupont</SelectItem>
+                  <SelectItem value="Marie Martin">Marie Martin</SelectItem>
+                  <SelectItem value="Pierre Durant">Pierre Durant</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Compte bénéficiaire</Label>
+              <Select
+                value={editForm.toClient}
+                onValueChange={(value) =>
+                  setEditForm({ ...editForm, toClient: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un client" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Jean Dupont">Jean Dupont</SelectItem>
+                  <SelectItem value="Marie Martin">Marie Martin</SelectItem>
+                  <SelectItem value="Pierre Durant">Pierre Durant</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Montant</Label>
+              <Input
+                type="number"
+                value={editForm.amount}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, amount: e.target.value })
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Motif</Label>
+              <Input
+                value={editForm.reason}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, reason: e.target.value })
+                }
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button onClick={confirmEdit}>Enregistrer les modifications</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer ce virement ? Cette action est irréversible.
+              {selectedTransfer && (
+                <div className="mt-4 p-4 rounded-lg border bg-muted">
+                  <div className="font-medium">Détails du virement :</div>
+                  <div className="mt-2 space-y-1 text-sm">
+                    <p>De : {selectedTransfer.fromClient}</p>
+                    <p>À : {selectedTransfer.toClient}</p>
+                    <p>Montant : {selectedTransfer.amount.toLocaleString()} €</p>
+                    <p>Date : {selectedTransfer.date}</p>
+                  </div>
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
