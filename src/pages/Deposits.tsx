@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Search, ArrowRight, Pencil, Trash2, Store, User, ListFilter } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
+import { useClients } from "@/features/clients/hooks/useClients";
 
 interface Client {
   id: string;
@@ -43,8 +44,6 @@ interface Client {
   solde: number;
   dateCreation: string;
 }
-
-const mockClients: Client[] = [];
 
 interface Deposit {
   id: string;
@@ -89,21 +88,17 @@ const Deposits = () => {
     setSelectedDeposit(deposit);
     setIsDialogOpen(true);
     toast.info("Mode édition", {
-      description: `Modification du versement de ${deposit.amount}€`
+      description: `Modification du versement de ${deposit.amount} TND`
     });
   };
 
-  const filteredDeposits = deposits.filter((deposit) => {
-    const client = mockClients.find(client => client.id === deposit.client);
-    if (!client) return false;
-    return `${client.prenom} ${client.nom}`.toLowerCase().includes(searchTerm.toLowerCase());
-  });
+  const filteredDeposits = deposits;
 
   const handleCreateDeposit = (deposit: Deposit) => {
     setDeposits(prev => [...prev, deposit]);
     setIsDialogOpen(false);
     toast.success("Nouveau versement créé", {
-      description: `Un nouveau versement de ${deposit.amount}€ a été ajouté pour ${mockClients.find(c => c.id === deposit.client)?.prenom} ${mockClients.find(c => c.id === deposit.client)?.nom}.`
+      description: `Un nouveau versement de ${deposit.amount} TND a été ajouté.`
     });
   };
 
@@ -130,7 +125,7 @@ const Deposits = () => {
           <CardContent>
             <div className="space-y-4">
               <p className="font-medium">
-                Total des versements: {deposits.reduce((acc, deposit) => acc + deposit.amount, 0)}€
+                Total des versements: {deposits.reduce((acc, deposit) => acc + deposit.amount, 0)} TND
               </p>
             </div>
           </CardContent>
@@ -214,9 +209,6 @@ const Deposits = () => {
               </thead>
               <tbody>
                 {filteredDeposits.slice(0, parseInt(itemsPerPage)).map((deposit) => {
-                  const client = mockClients.find(client => client.id === deposit.client);
-                  if (!client) return null;
-
                   return (
                     <tr key={deposit.id} className="group border-b transition-colors hover:bg-muted/50">
                       <td className="p-3">
@@ -227,17 +219,17 @@ const Deposits = () => {
                           </div>
                           <div>
                             <p className="font-medium">
-                              {client.prenom} {client.nom}
+                              {deposit.client}
                             </p>
                             <p className="text-sm text-muted-foreground">
-                              ID: {client.id}
+                              ID: {deposit.client}
                             </p>
                           </div>
                         </div>
                       </td>
                       <td className="p-3">
                         <div className="font-medium tabular-nums">
-                          {deposit.amount.toLocaleString()} €
+                          {deposit.amount.toLocaleString()} TND
                         </div>
                       </td>
                       <td className="p-3 text-muted-foreground">
@@ -290,7 +282,7 @@ const Deposits = () => {
               <p>Êtes-vous sûr de vouloir supprimer ce versement ?</p>
               {selectedDeposit && (
                 <div className="rounded-lg border bg-muted/50 p-4 font-medium text-foreground">
-                  Versement de {selectedDeposit.amount}€
+                  Versement de {selectedDeposit.amount} TND
                 </div>
               )}
               <p className="text-destructive font-medium">Cette action est irréversible.</p>
@@ -322,6 +314,11 @@ const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogProps) =>
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState<Date>();
   const [description, setDescription] = useState("");
+  const { clients, fetchClients } = useClients();
+
+  useEffect(() => {
+    fetchClients();
+  }, [fetchClients]);
 
   const handleSubmit = () => {
     if (!selectedClient || !amount || !date || !description) {
@@ -365,8 +362,8 @@ const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogProps) =>
                 <SelectValue placeholder="Sélectionner un client" />
               </SelectTrigger>
               <SelectContent>
-                {mockClients.map((client) => (
-                  <SelectItem key={client.id} value={client.id}>
+                {clients.map((client) => (
+                  <SelectItem key={client.id} value={client.id.toString()}>
                     {client.prenom} {client.nom}
                   </SelectItem>
                 ))}
@@ -385,7 +382,7 @@ const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogProps) =>
                 className="pr-8"
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                €
+                TND
               </span>
             </div>
           </div>
