@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Plus, Search, UserCircle, Sparkles, AlertCircle, Pencil, Trash2, UserPlus, User, Mail, Phone, Coins } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
@@ -237,7 +238,10 @@ const Clients = () => {
                   className="pl-9"
                 />
               </div>
-              <Button className="w-full">
+              <Button 
+                className="w-full" 
+                onClick={() => setIsDialogOpen(true)}
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Nouveau client
               </Button>
