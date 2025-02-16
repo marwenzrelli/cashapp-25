@@ -55,13 +55,20 @@ export const useDeposits = () => {
 
   const createDeposit = async (deposit: Deposit) => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Vous devez être connecté pour créer un versement");
+        return false;
+      }
+
       const { error } = await supabase
         .from('deposits')
         .insert({
           client_name: deposit.client_name,
           amount: deposit.amount,
           operation_date: new Date(deposit.date).toISOString(),
-          notes: deposit.description
+          notes: deposit.description,
+          created_by: session.user.id
         });
 
       if (error) {
@@ -84,6 +91,12 @@ export const useDeposits = () => {
 
   const deleteDeposit = async (depositId: string) => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Vous devez être connecté pour supprimer un versement");
+        return false;
+      }
+
       const { error } = await supabase
         .from('deposits')
         .delete()
