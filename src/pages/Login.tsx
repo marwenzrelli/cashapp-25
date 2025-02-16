@@ -18,36 +18,49 @@ const Login = () => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    console.log("Tentative de connexion...");
 
     try {
       // On utilise toujours l'email pour l'authentification Supabase
-      const email = login === "marwensuperviseur" ? "marwensupervisor@gmail.com" : login;
+      const email = login.toLowerCase() === "marwensuperviseur" ? "marwensupervisor@gmail.com" : login;
+      console.log("Email utilisé:", email);
 
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
+      console.log("Réponse de Supabase:", { data, error });
+
       if (error) {
-        console.error("Erreur de connexion:", error);
+        console.error("Erreur de connexion:", error.message);
         toast.error("Identifiants invalides", {
-          description: "Veuillez vérifier vos informations de connexion",
+          description: error.message,
         });
         setIsLoading(false);
         return;
       }
 
-      toast.success("Connexion réussie", {
-        description: "Bienvenue dans votre espace personnel",
-      });
-      navigate("/dashboard");
+      if (data.user) {
+        console.log("Connexion réussie, utilisateur:", data.user.email);
+        toast.success("Connexion réussie", {
+          description: "Bienvenue dans votre espace personnel",
+        });
+        navigate("/dashboard");
+      } else {
+        console.error("Pas d'utilisateur dans la réponse");
+        toast.error("Erreur de connexion", {
+          description: "La connexion a échoué, veuillez réessayer",
+        });
+      }
     } catch (error) {
-      console.error("Erreur lors de la connexion:", error);
+      console.error("Erreur inattendue:", error);
       toast.error("Erreur de connexion", {
-        description: "Une erreur est survenue lors de la tentative de connexion",
+        description: "Une erreur inattendue est survenue",
       });
     } finally {
       setIsLoading(false);
+      console.log("Fin de la tentative de connexion");
     }
   };
 
@@ -74,13 +87,13 @@ const Login = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="login">Nom d'utilisateur</Label>
+                <Label htmlFor="login">Nom d'utilisateur ou email</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     id="login"
                     type="text"
-                    placeholder="Entrez votre nom d'utilisateur"
+                    placeholder="Entrez votre identifiant"
                     value={login}
                     onChange={(e) => setLogin(e.target.value)}
                     className="pl-9"
