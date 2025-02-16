@@ -3,28 +3,53 @@ import { useState } from "react";
 import { Client } from "../types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useEffect } from "react";
 
 export const useClients = () => {
   const [clients, setClients] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const fetchClients = async () => {
-    const { data, error } = await supabase
-      .from('clients')
-      .select('*')
-      .order('date_creation', { ascending: false });
+    try {
+      setLoading(true);
+      // Vérifier si l'utilisateur est authentifié
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error("Vous devez être connecté pour accéder aux clients");
+        return;
+      }
 
-    if (error) {
-      toast.error("Erreur lors du chargement des clients");
-      console.error("Error fetching clients:", error);
-      return;
-    }
+      const { data, error } = await supabase
+        .from('clients')
+        .select('*')
+        .order('date_creation', { ascending: false });
 
-    if (data) {
-      setClients(data);
+      if (error) {
+        console.error("Error fetching clients:", error);
+        toast.error("Erreur lors du chargement des clients");
+        return;
+      }
+
+      if (data) {
+        setClients(data);
+      }
+    } catch (error) {
+      console.error("Error in fetchClients:", error);
+      toast.error("Une erreur est survenue");
+    } finally {
+      setLoading(false);
     }
   };
 
   const updateClient = async (id: number, updates: Partial<Client>) => {
+    const { data: { session } } = await supabase.auth.getSession();
+      
+    if (!session) {
+      toast.error("Vous devez être connecté pour modifier un client");
+      return false;
+    }
+
     const { error } = await supabase
       .from('clients')
       .update(updates)
@@ -41,6 +66,13 @@ export const useClients = () => {
   };
 
   const deleteClient = async (id: number) => {
+    const { data: { session } } = await supabase.auth.getSession();
+      
+    if (!session) {
+      toast.error("Vous devez être connecté pour supprimer un client");
+      return false;
+    }
+
     const { error } = await supabase
       .from('clients')
       .delete()
@@ -57,11 +89,18 @@ export const useClients = () => {
   };
 
   const createClient = async (newClientData: Omit<Client, 'id' | 'date_creation' | 'status'>) => {
+    const { data: { session } } = await supabase.auth.getSession();
+      
+    if (!session) {
+      toast.error("Vous devez être connecté pour créer un client");
+      return false;
+    }
+
     const { data, error } = await supabase
       .from('clients')
       .insert({
         ...newClientData,
-        created_by: (await supabase.auth.getUser()).data.user?.id
+        created_by: session.user.id
       })
       .select()
       .single();
@@ -82,6 +121,7 @@ export const useClients = () => {
 
   return {
     clients,
+    loading,
     fetchClients,
     updateClient,
     deleteClient,
