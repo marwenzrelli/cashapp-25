@@ -50,22 +50,24 @@ export const DepositList = ({ deposits, onEdit, onDelete }: DepositListProps) =>
             <td className="p-3 text-muted-foreground">{deposit.date}</td>
             <td className="p-3 text-muted-foreground">{deposit.notes}</td>
             <td className="p-3">
-              <div className="flex gap-2 opacity-70 group-hover:opacity-100 transition-opacity">
+              <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 ease-in-out">
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => onEdit(deposit)}
-                  className="hover:bg-blue-50 dark:hover:bg-blue-950/50 text-blue-600 hover:text-blue-600 transition-all"
+                  className="relative hover:bg-blue-50 dark:hover:bg-blue-950/50 text-blue-600 hover:text-blue-600 transition-all duration-300"
                 >
-                  <Pencil className="h-4 w-4 rotate-12 transition-all hover:rotate-45 hover:scale-110" />
+                  <Pencil className="h-4 w-4 transition-all duration-300 ease-in-out transform hover:scale-125 hover:rotate-[360deg]" />
+                  <span className="absolute inset-0 rounded-full bg-blue-100 dark:bg-blue-900/20 opacity-0 group-hover:opacity-100 animate-ping" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => onDelete(deposit)}
-                  className="hover:bg-red-50 dark:hover:bg-red-950/50 text-red-600 hover:text-red-600 transition-all"
+                  className="relative hover:bg-red-50 dark:hover:bg-red-950/50 text-red-600 hover:text-red-600 transition-all duration-300"
                 >
-                  <Trash2 className="h-4 w-4 transition-all hover:-translate-y-1 hover:scale-110" />
+                  <Trash2 className="h-4 w-4 transition-all duration-300 ease-in-out transform hover:scale-125 hover:-translate-y-1" />
+                  <span className="absolute inset-0 rounded-full bg-red-100 dark:bg-red-900/20 opacity-0 group-hover:opacity-100 animate-ping" />
                 </Button>
               </div>
             </td>
