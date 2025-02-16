@@ -29,9 +29,11 @@ const Login = () => {
       });
 
       if (error) {
+        console.error("Erreur de connexion:", error);
         toast.error("Identifiants invalides", {
           description: "Veuillez vérifier vos informations de connexion",
         });
+        setIsLoading(false);
         return;
       }
 
