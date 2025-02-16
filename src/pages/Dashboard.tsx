@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from "recharts";
 import { ArrowUpCircle, ArrowDownCircle, RefreshCcw, TrendingUp, Users, AlertCircle, Sparkles, User, Settings, Bell, Shield, Building, Calendar, Coins } from "lucide-react";
@@ -10,6 +9,7 @@ import { EditProfileDialog } from "@/features/profile/EditProfileDialog";
 import { SettingsDialog } from "@/features/profile/SettingsDialog";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { SystemUser } from "@/types/admin";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 const data = [];
 const recentActivity = [];
@@ -20,16 +20,14 @@ const Dashboard = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { currency, setCurrency } = useCurrency();
   const [currentUser, setCurrentUser] = useState<SystemUser | null>(null);
+  const [selectedCurrency, setSelectedCurrency] = useState<"EUR" | "USD" | "TND" | "AED">(currency);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 
   useEffect(() => {
-    // Récupérer l'ID de l'utilisateur connecté
     const currentUserId = localStorage.getItem('currentUserId');
     if (currentUserId) {
-      // Récupérer les utilisateurs du localStorage
       const usersData = localStorage.getItem('admin_users');
       const users = JSON.parse(usersData || '[]');
-      
-      // Trouver l'utilisateur connecté
       const user = users.find((u: SystemUser) => u.id === currentUserId);
       if (user) {
         setCurrentUser(user);
@@ -37,28 +35,30 @@ const Dashboard = () => {
     }
   }, []);
 
+  const handleCurrencySelect = (value: "EUR" | "USD" | "TND" | "AED") => {
+    setSelectedCurrency(value);
+    setConfirmDialogOpen(true);
+  };
+
+  const handleConfirmCurrencyChange = async () => {
+    await setCurrency(selectedCurrency);
+    setConfirmDialogOpen(false);
+  };
+
   const handleUpdateProfile = (updatedUser: Partial<SystemUser>) => {
-    // Récupérer les utilisateurs du localStorage
     const usersData = localStorage.getItem('admin_users');
     let users = JSON.parse(usersData || '[]');
-    
-    // Mettre à jour l'utilisateur connecté
     const currentUserId = localStorage.getItem('currentUserId');
     if (currentUserId) {
       users = users.map((u: SystemUser) => 
         u.id === currentUserId ? { ...u, ...updatedUser } : u
       );
-      
-      // Sauvegarder dans le localStorage
       localStorage.setItem('admin_users', JSON.stringify(users));
-      
-      // Mettre à jour l'état local
       const updatedCurrentUser = users.find((u: SystemUser) => u.id === currentUserId);
       if (updatedCurrentUser) {
         setCurrentUser(updatedCurrentUser);
       }
     }
-    
     setIsEditProfileOpen(false);
   };
 
@@ -72,7 +72,7 @@ const Dashboard = () => {
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <Select value={currency} onValueChange={(value: "EUR" | "USD" | "TND" | "AED") => setCurrency(value)}>
+          <Select value={currency} onValueChange={handleCurrencySelect}>
             <SelectTrigger className="w-[180px]">
               <div className="flex items-center gap-2">
                 <Coins className="h-4 w-4 text-primary" />
@@ -188,6 +188,25 @@ const Dashboard = () => {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmer le changement de devise</DialogTitle>
+            <DialogDescription>
+              Êtes-vous sûr de vouloir changer la devise vers {selectedCurrency} ?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2">
+            <Button variant="outline" onClick={() => setConfirmDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handleConfirmCurrencyChange}>
+              Confirmer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <EditProfileDialog
         isOpen={isEditProfileOpen}
