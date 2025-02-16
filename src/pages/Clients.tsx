@@ -223,29 +223,35 @@ const Clients = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Liste des clients ({filteredClients.length})</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <UserCircle className="h-6 w-6 text-primary" />
+            Liste des clients ({filteredClients.length})
+          </CardTitle>
           <CardDescription>
             Gérez vos clients et accédez à leurs informations détaillées
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="relative w-full overflow-auto">
+          <div className="relative w-full overflow-auto rounded-lg border">
             <table className="w-full text-sm">
               <thead className="bg-muted/50">
                 <tr className="text-left">
-                  <th className="p-3">Client</th>
-                  <th className="p-3">Contact</th>
-                  <th className="p-3">Solde</th>
-                  <th className="p-3">Date de création</th>
-                  <th className="p-3">Actions</th>
+                  <th className="p-3 font-medium">Client</th>
+                  <th className="p-3 font-medium">Contact</th>
+                  <th className="p-3 font-medium">Solde</th>
+                  <th className="p-3 font-medium">Date de création</th>
+                  <th className="p-3 font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredClients.map((client) => (
-                  <tr key={client.id} className="border-b hover:bg-muted/50 transition-colors">
+                  <tr key={client.id} className="group border-b transition-colors hover:bg-muted/50">
                     <td className="p-3">
                       <div className="flex items-center gap-3">
-                        <UserCircle className="h-8 w-8 text-muted-foreground" />
+                        <div className="relative">
+                          <UserCircle className="h-10 w-10 text-primary/20 transition-colors group-hover:text-primary/40" />
+                          <div className="absolute inset-0 animate-pulse rounded-full bg-primary/5" />
+                        </div>
                         <div>
                           <p className="font-medium">
                             {client.prenom} {client.nom}
@@ -257,36 +263,40 @@ const Clients = () => {
                       </div>
                     </td>
                     <td className="p-3">
-                      <div>
-                        <p>{client.email}</p>
+                      <div className="space-y-1">
+                        <p className="font-medium group-hover:text-primary transition-colors">
+                          {client.email}
+                        </p>
                         <p className="text-sm text-muted-foreground">
                           {client.telephone}
                         </p>
                       </div>
                     </td>
-                    <td className="p-3 font-medium">
-                      {client.solde.toLocaleString()} €
+                    <td className="p-3">
+                      <div className="font-medium tabular-nums">
+                        {client.solde.toLocaleString()} €
+                      </div>
                     </td>
                     <td className="p-3 text-muted-foreground">
                       {client.dateCreation}
                     </td>
                     <td className="p-3">
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 opacity-70 group-hover:opacity-100 transition-opacity">
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => handleEdit(client)}
-                          className="hover:bg-blue-50 dark:hover:bg-blue-950/50 text-blue-600 hover:text-blue-600"
+                          className="hover:bg-blue-50 dark:hover:bg-blue-950/50 text-blue-600 hover:text-blue-600 transition-all"
                         >
-                          <Pencil className="h-4 w-4 rotate-12 transition-transform hover:rotate-45" />
+                          <Pencil className="h-4 w-4 rotate-12 transition-all hover:rotate-45 hover:scale-110" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => handleDelete(client)}
-                          className="hover:bg-red-50 dark:hover:bg-red-950/50 text-red-600 hover:text-red-600"
+                          className="hover:bg-red-50 dark:hover:bg-red-950/50 text-red-600 hover:text-red-600 transition-all"
                         >
-                          <Trash2 className="h-4 w-4 transition-transform hover:-translate-y-1" />
+                          <Trash2 className="h-4 w-4 transition-all hover:-translate-y-1 hover:scale-110" />
                         </Button>
                       </div>
                     </td>
@@ -299,23 +309,26 @@ const Clients = () => {
       </Card>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Pencil className="h-5 w-5 text-blue-600" />
+              <div className="rounded-lg bg-blue-50 dark:bg-blue-950/50 p-2 text-blue-600">
+                <Pencil className="h-5 w-5" />
+              </div>
               Modifier le client
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-base">
               Modifiez les informations de {selectedClient?.prenom} {selectedClient?.nom}.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="nom">Nom</Label>
               <Input
                 id="nom"
                 value={editForm.nom}
                 onChange={(e) => setEditForm({ ...editForm, nom: e.target.value })}
+                className="transition-all focus-visible:ring-blue-500"
               />
             </div>
             <div className="space-y-2">
@@ -324,6 +337,7 @@ const Clients = () => {
                 id="prenom"
                 value={editForm.prenom}
                 onChange={(e) => setEditForm({ ...editForm, prenom: e.target.value })}
+                className="transition-all focus-visible:ring-blue-500"
               />
             </div>
             <div className="space-y-2">
@@ -332,6 +346,7 @@ const Clients = () => {
                 id="telephone"
                 value={editForm.telephone}
                 onChange={(e) => setEditForm({ ...editForm, telephone: e.target.value })}
+                className="transition-all focus-visible:ring-blue-500"
               />
             </div>
             <div className="space-y-2">
@@ -341,6 +356,7 @@ const Clients = () => {
                 type="email"
                 value={editForm.email}
                 onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                className="transition-all focus-visible:ring-blue-500"
               />
             </div>
           </div>
@@ -348,7 +364,10 @@ const Clients = () => {
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
               Annuler
             </Button>
-            <Button onClick={confirmEdit}>
+            <Button 
+              onClick={confirmEdit}
+              className="bg-blue-600 hover:bg-blue-700 transition-colors"
+            >
               Enregistrer les modifications
             </Button>
           </DialogFooter>
@@ -356,34 +375,35 @@ const Clients = () => {
       </Dialog>
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="sm:max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
-              <Trash2 className="h-5 w-5 text-red-600" />
+              <div className="rounded-lg bg-red-50 dark:bg-red-950/50 p-2 text-red-600">
+                <Trash2 className="h-5 w-5" />
+              </div>
               Confirmer la suppression
             </AlertDialogTitle>
             <AlertDialogDescription className="space-y-2">
               <p>Êtes-vous sûr de vouloir supprimer ce client ?</p>
               {selectedClient && (
-                <div className="font-medium text-foreground">
+                <div className="rounded-lg border bg-muted/50 p-4 font-medium text-foreground">
                   {selectedClient.prenom} {selectedClient.nom}
                 </div>
               )}
-              <p className="text-destructive">Cette action est irréversible.</p>
+              <p className="text-destructive font-medium">Cette action est irréversible.</p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Annuler</AlertDialogCancel>
             <AlertDialogAction 
               onClick={confirmDelete} 
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
             >
               Supprimer
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
     </div>
   );
 };
