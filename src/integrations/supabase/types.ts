@@ -12,9 +12,9 @@ export type Database = {
       clients: {
         Row: {
           created_by: string | null
-          date_creation: string
+          date_creation: string | null
           email: string
-          id: string
+          id: number
           nom: string
           prenom: string
           solde: number
@@ -23,9 +23,9 @@ export type Database = {
         }
         Insert: {
           created_by?: string | null
-          date_creation?: string
+          date_creation?: string | null
           email: string
-          id?: string
+          id?: number
           nom: string
           prenom: string
           solde?: number
@@ -34,24 +34,16 @@ export type Database = {
         }
         Update: {
           created_by?: string | null
-          date_creation?: string
+          date_creation?: string | null
           email?: string
-          id?: string
+          id?: number
           nom?: string
           prenom?: string
           solde?: number
           status?: string
           telephone?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "clients_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       deposits: {
         Row: {

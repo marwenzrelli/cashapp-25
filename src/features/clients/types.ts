@@ -1,12 +1,12 @@
 
 export interface Client {
-  id: string;
+  id: number;
   nom: string;
   prenom: string;
   telephone: string;
   email: string;
   solde: number;
-  date_creation: string;
+  date_creation?: string;
   status: string;
 }
 
