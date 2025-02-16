@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { UserPlus, Users, Shield, Search, Building, UserCog } from "lucide-react";
 import { SystemUser, UserRole } from "@/types/admin";
@@ -13,12 +13,22 @@ import { UsersList } from "@/features/admin/components/UsersList";
 import { UserProfile } from "@/features/admin/components/UserProfile";
 import { ServiceExplanations } from "@/features/admin/components/ServiceExplanations";
 
+const USERS_STORAGE_KEY = 'admin_users';
+
 const Administration = () => {
-  const [users, setUsers] = useState<SystemUser[]>([]);
+  const [users, setUsers] = useState<SystemUser[]>(() => {
+    const savedUsers = localStorage.getItem(USERS_STORAGE_KEY);
+    return savedUsers ? JSON.parse(savedUsers) : [];
+  });
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
   const [selectedRole, setSelectedRole] = useState<UserRole | "all">("all");
+
+  // Sauvegarder les utilisateurs dans le localStorage à chaque modification
+  useEffect(() => {
+    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+  }, [users]);
 
   const toggleUserStatus = (userId: string) => {
     setUsers(
