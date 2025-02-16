@@ -55,6 +55,8 @@ const Administration = () => {
     email: "",
     role: "cashier" as UserRole,
     department: "",
+    password: "",
+    confirmPassword: "",
   });
 
   const serviceExplanations = [
@@ -91,6 +93,16 @@ const Administration = () => {
   ];
 
   const handleAddUser = () => {
+    if (newUser.password !== newUser.confirmPassword) {
+      toast.error("Les mots de passe ne correspondent pas");
+      return;
+    }
+
+    if (newUser.password.length < 8) {
+      toast.error("Le mot de passe doit contenir au moins 8 caractères");
+      return;
+    }
+
     const user: SystemUser = {
       id: Math.random().toString(36).substr(2, 9),
       ...newUser,
@@ -102,6 +114,15 @@ const Administration = () => {
     setUsers([user, ...users]);
     setIsAddUserOpen(false);
     toast.success("Utilisateur créé avec succès");
+    
+    setNewUser({
+      fullName: "",
+      email: "",
+      role: "cashier",
+      department: "",
+      password: "",
+      confirmPassword: "",
+    });
   };
 
   const toggleUserStatus = (userId: string) => {
@@ -404,6 +425,29 @@ const Administration = () => {
                 value={newUser.email}
                 onChange={(e) =>
                   setNewUser({ ...newUser, email: e.target.value })
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="password">Mot de passe</label>
+              <Input
+                id="password"
+                type="password"
+                value={newUser.password}
+                onChange={(e) =>
+                  setNewUser({ ...newUser, password: e.target.value })
+                }
+                placeholder="Minimum 8 caractères"
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="confirmPassword">Confirmer le mot de passe</label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={newUser.confirmPassword}
+                onChange={(e) =>
+                  setNewUser({ ...newUser, confirmPassword: e.target.value })
                 }
               />
             </div>
