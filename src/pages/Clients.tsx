@@ -1,10 +1,19 @@
-
 import { useState } from "react";
-import { Plus, Search, UserCircle, Sparkles, TrendingUp, AlertCircle } from "lucide-react";
+import { Plus, Search, UserCircle, Sparkles, TrendingUp, AlertCircle, Pencil, Trash2 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
@@ -29,7 +38,10 @@ interface AISuggestion {
 const Clients = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [newClient, setNewClient] = useState({
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [editForm, setEditForm] = useState({
     nom: "",
     prenom: "",
     telephone: "",
@@ -120,6 +132,55 @@ const Clients = () => {
       client.prenom.toLowerCase().includes(searchTerm.toLowerCase()) ||
       client.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleEdit = (client: Client) => {
+    setSelectedClient(client);
+    setEditForm({
+      nom: client.nom,
+      prenom: client.prenom,
+      telephone: client.telephone,
+      email: client.email,
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDelete = (client: Client) => {
+    setSelectedClient(client);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmEdit = () => {
+    if (!selectedClient) return;
+
+    setClients(prevClients =>
+      prevClients.map(client =>
+        client.id === selectedClient.id
+          ? { ...client, ...editForm }
+          : client
+      )
+    );
+
+    setIsEditDialogOpen(false);
+    toast.success("Client modifié avec succès");
+  };
+
+  const confirmDelete = () => {
+    if (!selectedClient) return;
+
+    setClients(prevClients =>
+      prevClients.filter(client => client.id !== selectedClient.id)
+    );
+
+    setIsDeleteDialogOpen(false);
+    toast.success("Client supprimé avec succès");
+  };
+
+  const [newClient, setNewClient] = useState({
+    nom: "",
+    prenom: "",
+    telephone: "",
+    email: "",
+  });
 
   return (
     <div className="space-y-8 animate-in">
@@ -245,6 +306,7 @@ const Clients = () => {
                   <th className="p-3">Solde</th>
                   <th className="p-3">Activité</th>
                   <th className="p-3">Date de création</th>
+                  <th className="p-3">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -282,18 +344,105 @@ const Clients = () => {
                     <td className="p-3 text-muted-foreground">
                       {client.dateCreation}
                     </td>
+                    <td className="p-3">
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(client)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive"
+                          onClick={() => handleDelete(client)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            {filteredClients.length === 0 && (
-              <p className="text-center text-muted-foreground p-4">
-                Aucun client trouvé
-              </p>
-            )}
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifier le client</DialogTitle>
+            <DialogDescription>
+              Modifiez les informations du client ci-dessous.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="nom">Nom</Label>
+              <Input
+                id="nom"
+                value={editForm.nom}
+                onChange={(e) => setEditForm({ ...editForm, nom: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="prenom">Prénom</Label>
+              <Input
+                id="prenom"
+                value={editForm.prenom}
+                onChange={(e) => setEditForm({ ...editForm, prenom: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="telephone">Téléphone</Label>
+              <Input
+                id="telephone"
+                value={editForm.telephone}
+                onChange={(e) => setEditForm({ ...editForm, telephone: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={editForm.email}
+                onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button onClick={confirmEdit}>
+              Enregistrer les modifications
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action ne peut pas être annulée. Le client sera définitivement supprimé 
+              de la base de données.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground">
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
     </div>
   );
 };
