@@ -1,46 +1,14 @@
-
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
 import { Sparkles, TrendingUp, Users, ArrowUpCircle, ArrowDownCircle, AlertTriangle } from "lucide-react";
 
-// Données simulées pour les graphiques
-const transactionData = [
-  { mois: "Jan", versements: 45000, retraits: 32000 },
-  { mois: "Fév", versements: 52000, retraits: 38000 },
-  { mois: "Mar", versements: 48000, retraits: 35000 },
-  { mois: "Avr", versements: 61000, retraits: 42000 },
-  { mois: "Mai", versements: 55000, retraits: 39000 },
-  { mois: "Jun", versements: 67000, retraits: 45000 },
-];
+const transactionData = [];
 
-const clientActivity = [
-  { value: 35, name: "Très actifs" },
-  { value: 45, name: "Actifs" },
-  { value: 20, name: "Peu actifs" },
-];
+const clientActivity = [];
 
 const COLORS = ["#10B981", "#3B82F6", "#6B7280"];
 
-const aiInsights = [
-  {
-    id: 1,
-    title: "Hausse des transactions",
-    message: "Augmentation de 15% des versements ce mois-ci",
-    type: "success",
-  },
-  {
-    id: 2,
-    title: "Pic d'activité prévu",
-    message: "Prévision d'une hausse d'activité pour la semaine prochaine",
-    type: "info",
-  },
-  {
-    id: 3,
-    title: "Attention",
-    message: "Volume inhabituel de retraits détecté",
-    type: "warning",
-  },
-];
+const aiInsights = [];
 
 const Statistics = () => {
   const getInsightIcon = (type: string) => {

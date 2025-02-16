@@ -44,35 +44,7 @@ interface Client {
   dateCreation: string;
 }
 
-const mockClients: Client[] = [
-  {
-    id: "1",
-    nom: "Dupont",
-    prenom: "Jean",
-    telephone: "0612345678",
-    email: "jean.dupont@email.com",
-    solde: 15000,
-    dateCreation: "2024-01-15",
-  },
-  {
-    id: "2",
-    nom: "Martin",
-    prenom: "Marie",
-    telephone: "0687654321",
-    email: "marie.martin@email.com",
-    solde: 8000,
-    dateCreation: "2024-02-01",
-  },
-  {
-    id: "3",
-    nom: "Durant",
-    prenom: "Pierre",
-    telephone: "0654321789",
-    email: "pierre.durant@email.com",
-    solde: 3000,
-    dateCreation: "2024-02-10",
-  },
-];
+const mockClients: Client[] = [];
 
 interface Deposit {
   id: string;
@@ -94,22 +66,7 @@ const Deposits = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedDeposit, setSelectedDeposit] = useState<Deposit | null>(null);
   const [itemsPerPage, setItemsPerPage] = useState("10");
-  const [deposits, setDeposits] = useState<Deposit[]>([
-    {
-      id: "1",
-      client: "1",
-      amount: 1000,
-      date: "2024-03-01",
-      description: "Versement initial",
-    },
-    {
-      id: "2",
-      client: "2",
-      amount: 500,
-      date: "2024-03-05",
-      description: "Versement mensuel",
-    },
-  ]);
+  const [deposits, setDeposits] = useState<Deposit[]>([]);
 
   const handleDelete = (deposit: Deposit) => {
     setSelectedDeposit(deposit);

@@ -47,56 +47,13 @@ interface Client {
   dateCreation: string;
 }
 
-const mockClients: Client[] = [
-  {
-    id: "1",
-    nom: "Dupont",
-    prenom: "Jean",
-    telephone: "0612345678",
-    email: "jean.dupont@email.com",
-    solde: 15000,
-    dateCreation: "2024-01-15",
-  },
-  {
-    id: "2",
-    nom: "Martin",
-    prenom: "Marie",
-    telephone: "0687654321",
-    email: "marie.martin@email.com",
-    solde: 8000,
-    dateCreation: "2024-02-01",
-  },
-  {
-    id: "3",
-    nom: "Durant",
-    prenom: "Pierre",
-    telephone: "0654321789",
-    email: "pierre.durant@email.com",
-    solde: 3000,
-    dateCreation: "2024-02-10",
-  },
-];
+const mockClients: Client[] = [];
 
 const Withdrawals = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedWithdrawal, setSelectedWithdrawal] = useState<any>(null);
-  const [withdrawals, setWithdrawals] = useState([
-    {
-      id: "1",
-      clientId: "1",
-      amount: 500,
-      date: "2024-02-22",
-      notes: "Retrait mensuel",
-    },
-    {
-      id: "2",
-      clientId: "2",
-      amount: 1000,
-      date: "2024-02-21",
-      notes: "Retrait exceptionnel",
-    },
-  ]);
+  const [withdrawals, setWithdrawals] = useState([]);
   const [itemsPerPage, setItemsPerPage] = useState("10");
   const [newWithdrawal, setNewWithdrawal] = useState({
     clientId: "",

@@ -7,51 +7,11 @@ import { useState } from "react";
 import { EditProfileDialog } from "@/features/profile/EditProfileDialog";
 import { SettingsDialog } from "@/features/profile/SettingsDialog";
 
-const data = [
-  { month: "Jan", transactions: 65 },
-  { month: "Fév", transactions: 85 },
-  { month: "Mar", transactions: 73 },
-  { month: "Avr", transactions: 95 },
-  { month: "Mai", transactions: 120 },
-  { month: "Jun", transactions: 110 },
-];
+const data = [];
 
-const recentActivity = [
-  {
-    id: 1,
-    type: "deposit",
-    amount: 1500,
-    client: "Jean Dupont",
-    time: "Il y a 5 minutes",
-  },
-  {
-    id: 2,
-    type: "withdrawal",
-    amount: 500,
-    client: "Marie Martin",
-    time: "Il y a 15 minutes",
-  },
-  {
-    id: 3,
-    type: "transfer",
-    amount: 750,
-    client: "Sophie Bernard",
-    time: "Il y a 30 minutes",
-  },
-];
+const recentActivity = [];
 
-const aiSuggestions = [
-  {
-    id: 1,
-    message: "Pic d'activité détecté : Augmentez temporairement les limites de retrait",
-    priority: "high",
-  },
-  {
-    id: 2,
-    message: "Tendance à la hausse des virements internationaux : Optimisez les taux de change",
-    priority: "medium",
-  },
-];
+const aiSuggestions = [];
 
 const Dashboard = () => {
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
