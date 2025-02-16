@@ -11,6 +11,7 @@ import {
   BarChart,
   Search,
   DollarSign,
+  Shield,
 } from "lucide-react";
 
 const Layout = () => {
@@ -25,6 +26,7 @@ const Layout = () => {
     { path: "/transfers", label: "Virements", icon: RefreshCcw },
     { path: "/statistics", label: "Statistiques", icon: BarChart },
     { path: "/operations", label: "Recherche", icon: Search },
+    { path: "/administration", label: "Administration", icon: Shield },
   ];
 
   const handleLogout = () => {

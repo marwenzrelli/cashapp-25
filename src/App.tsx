@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,6 +12,7 @@ import Withdrawals from "./pages/Withdrawals";
 import Transfers from "./pages/Transfers";
 import Statistics from "./pages/Statistics";
 import Operations from "./pages/Operations";
+import Administration from "./pages/Administration";
 import NotFound from "./pages/NotFound";
 import Layout from "./components/Layout";
 import { CurrencyProvider } from "./contexts/CurrencyContext";
@@ -36,6 +38,7 @@ function App() {
                 <Route path="/transfers" element={<Transfers />} />
                 <Route path="/statistics" element={<Statistics />} />
                 <Route path="/operations" element={<Operations />} />
+                <Route path="/administration" element={<Administration />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
