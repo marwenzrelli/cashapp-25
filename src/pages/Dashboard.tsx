@@ -1,8 +1,9 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from "recharts";
-import { ArrowUpCircle, ArrowDownCircle, RefreshCcw, TrendingUp, Users, AlertCircle, Sparkles } from "lucide-react";
+import { ArrowUpCircle, ArrowDownCircle, RefreshCcw, TrendingUp, Users, AlertCircle, Sparkles, User, Settings, Bell, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const data = [
   { month: "Jan", transactions: 65 },
@@ -65,6 +66,72 @@ const Dashboard = () => {
           Actualiser
         </Button>
       </div>
+
+      {/* Profile Section */}
+      <Card className="bg-gradient 
+        to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 
+        overflow-hidden relative">
+        <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))]" />
+        <CardContent className="p-6">
+          <div className="flex items-start gap-8">
+            <div className="relative group">
+              <Avatar className="h-24 w-24 ring-4 ring-background">
+                <AvatarImage src="/placeholder.svg" alt="Photo de profil" />
+                <AvatarFallback>JD</AvatarFallback>
+              </Avatar>
+              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button variant="secondary" size="sm" className="text-xs">
+                  Modifier
+                </Button>
+              </div>
+            </div>
+            
+            <div className="flex-1 space-y-4">
+              <div>
+                <h2 className="text-2xl font-bold">Jean Dupont</h2>
+                <p className="text-muted-foreground">Administrateur Principal</p>
+              </div>
+              
+              <div className="flex gap-6">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Shield className="h-4 w-4" />
+                  <span>Niveau de sécurité : Élevé</span>
+                </div>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Bell className="h-4 w-4" />
+                  <span>Notifications : Activées</span>
+                </div>
+              </div>
+              
+              <div className="flex gap-4">
+                <Button variant="outline" className="gap-2">
+                  <User className="h-4 w-4" />
+                  Éditer le profil
+                </Button>
+                <Button variant="outline" className="gap-2">
+                  <Settings className="h-4 w-4" />
+                  Paramètres
+                </Button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4 p-4 bg-white/50 dark:bg-white/5 rounded-lg backdrop-blur-sm">
+              <div className="text-center p-3 space-y-1">
+                <div className="text-2xl font-bold text-primary">152</div>
+                <div className="text-sm text-muted-foreground">Opérations</div>
+              </div>
+              <div className="text-center p-3 space-y-1 border-x">
+                <div className="text-2xl font-bold text-primary">45k€</div>
+                <div className="text-sm text-muted-foreground">Volume</div>
+              </div>
+              <div className="text-center p-3 space-y-1">
+                <div className="text-2xl font-bold text-primary">98%</div>
+                <div className="text-sm text-muted-foreground">Performance</div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-6 md:grid-cols-3">
         <Card className="bg-gradient-to-br from-green-50 to-transparent dark:from-green-950/20">
@@ -174,7 +241,7 @@ const Dashboard = () => {
             {recentActivity.map((activity) => (
               <div
                 key={activity.id}
-                className="flex items-center justify-between p-4 rounded-lg border bg-card"
+                className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
               >
                 <div className="flex items-center gap-4">
                   {activity.type === "deposit" && (
