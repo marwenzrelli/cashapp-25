@@ -77,6 +77,11 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     console.log("Tentative de mise à jour de la devise vers:", newCurrency);
     if (!session?.user?.id) {
       console.error("Pas de session utilisateur active");
+      toast({
+        title: "Erreur",
+        description: "Vous devez être connecté pour changer de devise",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -84,8 +89,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase
         .from('profiles')
         .update({ currency: newCurrency })
-        .eq('id', session.user.id)
-        .select();
+        .eq('id', session.user.id);
 
       console.log("Résultat de la mise à jour:", { error });
 
