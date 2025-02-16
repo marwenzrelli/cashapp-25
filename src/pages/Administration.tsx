@@ -1,48 +1,17 @@
+
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { toast } from "sonner";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Users,
-  UserPlus,
-  Shield,
-  Search,
-  Mail,
-  Building,
-  UserCog,
-  ChevronDown,
-  RefreshCcw,
-  AlertCircle,
-  Check,
-  X,
-} from "lucide-react";
+import { UserPlus, Users, Shield, Search, Building, UserCog } from "lucide-react";
 import { SystemUser, UserRole } from "@/types/admin";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
+import { StatCard } from "@/features/admin/components/StatCard";
+import { AddUserDialog } from "@/features/admin/components/AddUserDialog";
+import { UsersList } from "@/features/admin/components/UsersList";
+import { UserProfile } from "@/features/admin/components/UserProfile";
+import { ServiceExplanations } from "@/features/admin/components/ServiceExplanations";
 
 const Administration = () => {
   const [users, setUsers] = useState<SystemUser[]>([]);
@@ -50,80 +19,6 @@ const Administration = () => {
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
   const [selectedRole, setSelectedRole] = useState<UserRole | "all">("all");
-  const [newUser, setNewUser] = useState({
-    fullName: "",
-    email: "",
-    role: "cashier" as UserRole,
-    department: "",
-    password: "",
-    confirmPassword: "",
-  });
-
-  const serviceExplanations = [
-    {
-      name: "Finance",
-      description: "Gestion des ressources financières et budgets",
-      roles: {
-        supervisor: "Validation des opérations importantes",
-        manager: "Suivi des performances financières",
-        cashier: "Transactions quotidiennes"
-      },
-      icon: <Building className="h-6 w-6 text-blue-600" />
-    },
-    {
-      name: "Opérations",
-      description: "Exécution des processus opérationnels",
-      roles: {
-        supervisor: "Supervision des processus",
-        manager: "Coordination des équipes",
-        cashier: "Gestion des opérations"
-      },
-      icon: <Users className="h-6 w-6 text-green-600" />
-    },
-    {
-      name: "Comptabilité",
-      description: "Suivi comptable et reporting",
-      roles: {
-        supervisor: "Validation des bilans",
-        manager: "Contrôle des écritures",
-        cashier: "Saisie comptable"
-      },
-      icon: <UserCog className="h-6 w-6 text-purple-600" />
-    }
-  ];
-
-  const handleAddUser = () => {
-    if (newUser.password !== newUser.confirmPassword) {
-      toast.error("Les mots de passe ne correspondent pas");
-      return;
-    }
-
-    if (newUser.password.length < 8) {
-      toast.error("Le mot de passe doit contenir au moins 8 caractères");
-      return;
-    }
-
-    const user: SystemUser = {
-      id: Math.random().toString(36).substr(2, 9),
-      ...newUser,
-      status: "active",
-      permissions: [],
-      createdAt: new Date().toISOString(),
-    };
-
-    setUsers([user, ...users]);
-    setIsAddUserOpen(false);
-    toast.success("Utilisateur créé avec succès");
-    
-    setNewUser({
-      fullName: "",
-      email: "",
-      role: "cashier",
-      department: "",
-      password: "",
-      confirmPassword: "",
-    });
-  };
 
   const toggleUserStatus = (userId: string) => {
     setUsers(
@@ -134,6 +29,11 @@ const Administration = () => {
       )
     );
     toast.success("Statut de l'utilisateur mis à jour");
+  };
+
+  const handleAddUser = (user: SystemUser) => {
+    setUsers([user, ...users]);
+    toast.success("Utilisateur créé avec succès");
   };
 
   const filteredUsers = users.filter(
@@ -156,28 +56,6 @@ const Administration = () => {
     department: "finance",
   };
 
-  const getRoleColor = (role: UserRole) => {
-    switch (role) {
-      case "supervisor":
-        return "from-purple-50 to-purple-100 dark:from-purple-950/50 dark:to-purple-900/20";
-      case "manager":
-        return "from-green-50 to-green-100 dark:from-green-950/50 dark:to-green-900/20";
-      case "cashier":
-        return "from-orange-50 to-orange-100 dark:from-orange-950/50 dark:to-orange-900/20";
-    }
-  };
-
-  const getRoleIcon = (role: UserRole) => {
-    switch (role) {
-      case "supervisor":
-        return <Shield className="h-8 w-8 text-purple-600" />;
-      case "manager":
-        return <UserCog className="h-8 w-8 text-green-600" />;
-      case "cashier":
-        return <Users className="h-8 w-8 text-orange-600" />;
-    }
-  };
-
   return (
     <div className="space-y-8 animate-in">
       <div className="flex justify-between items-start">
@@ -197,53 +75,34 @@ const Administration = () => {
       </div>
 
       <div className="grid gap-6 md:grid-cols-4">
-        <Card className="bg-gradient-to-br from-blue-50 to-transparent dark:from-blue-950/20">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Utilisateurs
-            </CardTitle>
-            <Users className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{users.length}</div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-purple-50 to-transparent dark:from-purple-950/20">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Superviseurs</CardTitle>
-            <Shield className="h-4 w-4 text-purple-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {users.filter((u) => u.role === "supervisor").length}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-green-50 to-transparent dark:from-green-950/20">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Gestionnaires</CardTitle>
-            <UserCog className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {users.filter((u) => u.role === "manager").length}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-orange-50 to-transparent dark:from-orange-950/20">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Caissiers</CardTitle>
-            <Users className="h-4 w-4 text-orange-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {users.filter((u) => u.role === "cashier").length}
-            </div>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Total Utilisateurs"
+          value={users.length}
+          icon={Users}
+          iconColor="text-blue-600"
+          gradientFrom="blue-50"
+        />
+        <StatCard
+          title="Superviseurs"
+          value={users.filter((u) => u.role === "supervisor").length}
+          icon={Shield}
+          iconColor="text-purple-600"
+          gradientFrom="purple-50"
+        />
+        <StatCard
+          title="Gestionnaires"
+          value={users.filter((u) => u.role === "manager").length}
+          icon={UserCog}
+          iconColor="text-green-600"
+          gradientFrom="green-50"
+        />
+        <StatCard
+          title="Caissiers"
+          value={users.filter((u) => u.role === "cashier").length}
+          icon={Users}
+          iconColor="text-orange-600"
+          gradientFrom="orange-50"
+        />
       </div>
 
       <Card>
@@ -293,339 +152,23 @@ const Administration = () => {
                   <SelectItem value="cashier">Caissier</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline" className="gap-2">
-                <RefreshCcw className="h-4 w-4" />
-                Actualiser
-              </Button>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Utilisateur</TableHead>
-                <TableHead>Rôle</TableHead>
-                <TableHead>Service</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead>Dernière Connexion</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredUsers.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        {user.avatar ? (
-                          <img
-                            src={user.avatar}
-                            alt={user.fullName}
-                            className="h-10 w-10 rounded-full"
-                          />
-                        ) : (
-                          <Users className="h-5 w-5 text-primary" />
-                        )}
-                      </div>
-                      <div>
-                        <div className="font-medium">{user.fullName}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {user.email}
-                        </div>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={
-                        user.role === "supervisor"
-                          ? "bg-purple-50 text-purple-700 border-purple-200"
-                          : user.role === "manager"
-                          ? "bg-green-50 text-green-700 border-green-200"
-                          : "bg-orange-50 text-orange-700 border-orange-200"
-                      }
-                    >
-                      {user.role === "supervisor"
-                        ? "Superviseur"
-                        : user.role === "manager"
-                        ? "Gestionnaire"
-                        : "Caissier"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{user.department}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Switch
-                        checked={user.status === "active"}
-                        onCheckedChange={() => toggleUserStatus(user.id)}
-                      />
-                      <Badge
-                        variant="outline"
-                        className={
-                          user.status === "active"
-                            ? "bg-green-50 text-green-700 border-green-200"
-                            : "bg-red-50 text-red-700 border-red-200"
-                        }
-                      >
-                        {user.status === "active" ? (
-                          <Check className="h-4 w-4 mr-1" />
-                        ) : (
-                          <X className="h-4 w-4 mr-1" />
-                        )}
-                        {user.status === "active" ? "Actif" : "Inactif"}
-                      </Badge>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {user.lastLogin ? user.lastLogin : "Jamais connecté"}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="icon">
-                        <UserCog className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon">
-                        <Shield className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <UsersList users={filteredUsers} onToggleStatus={toggleUserStatus} />
         </CardContent>
       </Card>
 
-      <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Ajouter un utilisateur</DialogTitle>
-            <DialogDescription>
-              Créez un nouvel utilisateur et définissez ses autorisations
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <label htmlFor="fullName">Nom complet</label>
-              <Input
-                id="fullName"
-                value={newUser.fullName}
-                onChange={(e) =>
-                  setNewUser({ ...newUser, fullName: e.target.value })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <label htmlFor="email">Email</label>
-              <Input
-                id="email"
-                type="email"
-                value={newUser.email}
-                onChange={(e) =>
-                  setNewUser({ ...newUser, email: e.target.value })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <label htmlFor="password">Mot de passe</label>
-              <Input
-                id="password"
-                type="password"
-                value={newUser.password}
-                onChange={(e) =>
-                  setNewUser({ ...newUser, password: e.target.value })
-                }
-                placeholder="Minimum 8 caractères"
-              />
-            </div>
-            <div className="space-y-2">
-              <label htmlFor="confirmPassword">Confirmer le mot de passe</label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={newUser.confirmPassword}
-                onChange={(e) =>
-                  setNewUser({ ...newUser, confirmPassword: e.target.value })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <label>Rôle</label>
-              <Select
-                value={newUser.role}
-                onValueChange={(value: UserRole) =>
-                  setNewUser({ ...newUser, role: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un rôle" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="supervisor">Superviseur</SelectItem>
-                  <SelectItem value="manager">Gestionnaire</SelectItem>
-                  <SelectItem value="cashier">Caissier</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <label>Service</label>
-              <Select
-                value={newUser.department}
-                onValueChange={(value) =>
-                  setNewUser({ ...newUser, department: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un service" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="finance">Finance</SelectItem>
-                  <SelectItem value="operations">Opérations</SelectItem>
-                  <SelectItem value="accounting">Comptabilité</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setIsAddUserOpen(false)}>
-              Annuler
-            </Button>
-            <Button onClick={handleAddUser}>Créer l'utilisateur</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <AddUserDialog
+        isOpen={isAddUserOpen}
+        onClose={() => setIsAddUserOpen(false)}
+        onAddUser={handleAddUser}
+      />
 
-      <div className="mt-12">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-2xl font-bold">Votre Rôle dans le Système</h2>
-            <p className="text-muted-foreground">
-              Aperçu de vos responsabilités et autorisations
-            </p>
-          </div>
-        </div>
-
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card className={`group relative overflow-hidden bg-gradient-to-br ${getRoleColor(connectedUser.role)} hover:shadow-lg transition-all duration-300`}>
-            <div className="absolute top-0 right-0 p-4 opacity-10">
-              {getRoleIcon(connectedUser.role)}
-            </div>
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div>
-                  <CardTitle className="text-lg font-semibold">
-                    {connectedUser.fullName}
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {connectedUser.email}
-                  </p>
-                </div>
-                <div className="mt-1">
-                  {getRoleIcon(connectedUser.role)}
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <Badge 
-                    variant="outline" 
-                    className={`
-                      ${connectedUser.role === "supervisor" ? "bg-purple-50 text-purple-700 border-purple-200" :
-                        connectedUser.role === "manager" ? "bg-green-50 text-green-700 border-green-200" :
-                        "bg-orange-50 text-orange-700 border-orange-200"}
-                      px-3 py-1 text-sm font-medium
-                    `}
-                  >
-                    {connectedUser.role === "supervisor" ? "Superviseur" :
-                     connectedUser.role === "manager" ? "Gestionnaire" :
-                     "Caissier"}
-                  </Badge>
-                </div>
-                <div className="pt-4 border-t">
-                  <h3 className="font-medium mb-2">Informations</h3>
-                  <div className="grid gap-2 text-sm">
-                    <div className="flex items-center gap-2">
-                      <Building className="h-4 w-4 text-muted-foreground" />
-                      <span>Service: {connectedUser.department}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-500" />
-                      <span>Statut: Actif</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="pt-4 border-t">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-medium">Autorisations</h3>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <Shield className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {["Versements", "Retraits", "Virements", "Clients"].map((perm) => (
-                      <Badge key={perm} variant="secondary" className="text-xs">
-                        {perm}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      <div className="mt-12">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-2xl font-bold">Services et Rôles</h2>
-            <p className="text-muted-foreground">
-              Vue d'ensemble des responsabilités par service
-            </p>
-          </div>
-        </div>
-
-        <div className="grid gap-6 md:grid-cols-3">
-          {serviceExplanations.map((service) => (
-            <Card 
-              key={service.name}
-              className="group hover:shadow-lg transition-all duration-300 overflow-hidden"
-            >
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                  {service.icon}
-                  {service.name}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">
-                  {service.description}
-                </p>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-purple-600" />
-                    <span className="text-sm font-medium">Superviseur:</span>
-                    <span className="text-sm text-muted-foreground">{service.roles.supervisor}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <UserCog className="h-4 w-4 text-green-600" />
-                    <span className="text-sm font-medium">Gestionnaire:</span>
-                    <span className="text-sm text-muted-foreground">{service.roles.manager}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-orange-600" />
-                    <span className="text-sm font-medium">Caissier:</span>
-                    <span className="text-sm text-muted-foreground">{service.roles.cashier}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
+      <UserProfile user={connectedUser} />
+      
+      <ServiceExplanations />
     </div>
   );
 };
