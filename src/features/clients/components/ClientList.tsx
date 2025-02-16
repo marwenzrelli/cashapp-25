@@ -4,6 +4,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { UserCircle, Pencil, Trash2 } from "lucide-react";
 import { Client } from "../types";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { formatAmount } from "@/utils/formatCurrency";
 
 interface ClientListProps {
   clients: Client[];
@@ -12,6 +14,8 @@ interface ClientListProps {
 }
 
 export const ClientList = ({ clients, onEdit, onDelete }: ClientListProps) => {
+  const { currency } = useCurrency();
+
   return (
     <Card>
       <CardHeader>
@@ -31,7 +35,6 @@ export const ClientList = ({ clients, onEdit, onDelete }: ClientListProps) => {
                 <TableHead>Client</TableHead>
                 <TableHead>Contact</TableHead>
                 <TableHead>Solde</TableHead>
-                <TableHead>Date de création</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -66,11 +69,8 @@ export const ClientList = ({ clients, onEdit, onDelete }: ClientListProps) => {
                   </TableCell>
                   <TableCell>
                     <div className="font-medium tabular-nums">
-                      {client.solde.toLocaleString()} €
+                      {formatAmount(client.solde, currency)}
                     </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {client.date_creation}
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 ease-in-out">
