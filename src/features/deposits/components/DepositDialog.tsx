@@ -38,7 +38,6 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
   const [date, setDate] = useState<Date>(new Date());
   const [description, setDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const { clients, fetchClients } = useClients();
 
   useEffect(() => {
@@ -83,9 +82,16 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
     }
   };
 
+  const handleDateChange = (newDate: Date | undefined) => {
+    if (newDate) {
+      console.log("Nouvelle date sélectionnée:", newDate);
+      setDate(newDate);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Nouveau versement</DialogTitle>
           <DialogDescription>
@@ -123,36 +129,18 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
           </div>
           <div className="space-y-2">
             <Label>Date</Label>
-            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant={"outline"}
-                  className={cn(
-                    "w-[240px] justify-start text-left font-normal",
-                    !date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "PPP") : <span>Choisir une date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={(newDate) => {
-                    if (newDate) {
-                      setDate(newDate);
-                      setIsCalendarOpen(false); // Ferme le calendrier après la sélection
-                    }
-                  }}
-                  disabled={(date) =>
-                    date > new Date() || date < new Date("2023-01-01")
-                  }
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
+            <div className="grid gap-2">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={handleDateChange}
+                disabled={(date) =>
+                  date > new Date() || date < new Date("2023-01-01")
+                }
+                initialFocus
+                className="rounded-md border"
+              />
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
