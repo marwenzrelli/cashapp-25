@@ -38,6 +38,7 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
   const [date, setDate] = useState<Date>(new Date());
   const [description, setDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const { clients, fetchClients } = useClients();
 
   useEffect(() => {
@@ -82,12 +83,6 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
     }
   };
 
-  const handleDateSelect = (newDate: Date | undefined) => {
-    if (newDate) {
-      setDate(newDate);
-    }
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
@@ -128,7 +123,7 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
           </div>
           <div className="space-y-2">
             <Label>Date</Label>
-            <Popover>
+            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant={"outline"}
@@ -145,7 +140,12 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
                 <Calendar
                   mode="single"
                   selected={date}
-                  onSelect={handleDateSelect}
+                  onSelect={(newDate) => {
+                    if (newDate) {
+                      setDate(newDate);
+                      setIsCalendarOpen(false); // Ferme le calendrier après la sélection
+                    }
+                  }}
                   disabled={(date) =>
                     date > new Date() || date < new Date("2023-01-01")
                   }
