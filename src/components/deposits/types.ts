@@ -1,10 +1,10 @@
 
 export interface Deposit {
   id: string;
-  clientName: string;
+  client_name: string;
   amount: number;
   date: string;
-  notes: string;
+  description: string;
 }
 
 export interface AISuggestion {

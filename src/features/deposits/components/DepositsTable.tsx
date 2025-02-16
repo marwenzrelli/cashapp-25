@@ -1,7 +1,7 @@
 
 import { User, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { type Deposit } from "../types";
+import { type Deposit } from "@/components/deposits/types";
 
 interface DepositsTableProps {
   deposits: Deposit[];

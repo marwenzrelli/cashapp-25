@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { type DepositDialogProps } from "@/features/deposits/types";
+import { type Deposit } from "@/components/deposits/types";
 
 export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogProps) => {
   const [selectedClient, setSelectedClient] = useState("");
@@ -65,13 +66,15 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
         return;
       }
 
-      await onConfirm({
+      const newDeposit: Deposit = {
         id: "",
         client_name: `${selectedClientData.prenom} ${selectedClientData.nom}`,
         amount: Number(amount),
         date: format(date, "yyyy-MM-dd"),
         description
-      });
+      };
+
+      await onConfirm(newDeposit);
       
       setSelectedClient("");
       setAmount("");
