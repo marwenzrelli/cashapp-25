@@ -57,6 +57,39 @@ const Administration = () => {
     department: "",
   });
 
+  const serviceExplanations = [
+    {
+      name: "Finance",
+      description: "Gestion des ressources financières et budgets",
+      roles: {
+        supervisor: "Validation des opérations importantes",
+        manager: "Suivi des performances financières",
+        cashier: "Transactions quotidiennes"
+      },
+      icon: <Building className="h-6 w-6 text-blue-600" />
+    },
+    {
+      name: "Opérations",
+      description: "Exécution des processus opérationnels",
+      roles: {
+        supervisor: "Supervision des processus",
+        manager: "Coordination des équipes",
+        cashier: "Gestion des opérations"
+      },
+      icon: <Users className="h-6 w-6 text-green-600" />
+    },
+    {
+      name: "Comptabilité",
+      description: "Suivi comptable et reporting",
+      roles: {
+        supervisor: "Validation des bilans",
+        manager: "Contrôle des écritures",
+        cashier: "Saisie comptable"
+      },
+      icon: <UserCog className="h-6 w-6 text-purple-600" />
+    }
+  ];
+
   const handleAddUser = () => {
     const user: SystemUser = {
       id: Math.random().toString(36).substr(2, 9),
@@ -423,81 +456,49 @@ const Administration = () => {
       <div className="mt-12">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-2xl font-bold">Votre Rôle dans le Système</h2>
+            <h2 className="text-2xl font-bold">Services et Rôles</h2>
             <p className="text-muted-foreground">
-              Aperçu de vos responsabilités et autorisations
+              Vue d'ensemble des responsabilités par service
             </p>
           </div>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card className={`group relative overflow-hidden bg-gradient-to-br ${getRoleColor(connectedUser.role)} hover:shadow-lg transition-all duration-300`}>
-            <div className="absolute top-0 right-0 p-4 opacity-10">
-              {getRoleIcon(connectedUser.role)}
-            </div>
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div>
-                  <CardTitle className="text-lg font-semibold">
-                    {connectedUser.fullName}
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {connectedUser.email}
-                  </p>
-                </div>
-                <div className="mt-1">
-                  {getRoleIcon(connectedUser.role)}
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <Badge 
-                    variant="outline" 
-                    className={`
-                      ${connectedUser.role === "supervisor" ? "bg-purple-50 text-purple-700 border-purple-200" :
-                        connectedUser.role === "manager" ? "bg-green-50 text-green-700 border-green-200" :
-                        "bg-orange-50 text-orange-700 border-orange-200"}
-                      px-3 py-1 text-sm font-medium
-                    `}
-                  >
-                    {connectedUser.role === "supervisor" ? "Superviseur" :
-                     connectedUser.role === "manager" ? "Gestionnaire" :
-                     "Caissier"}
-                  </Badge>
-                </div>
-                <div className="pt-4 border-t">
-                  <h3 className="font-medium mb-2">Informations</h3>
-                  <div className="grid gap-2 text-sm">
-                    <div className="flex items-center gap-2">
-                      <Building className="h-4 w-4 text-muted-foreground" />
-                      <span>Service: {connectedUser.department}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-500" />
-                      <span>Statut: Actif</span>
-                    </div>
+        <div className="grid gap-6 md:grid-cols-3">
+          {serviceExplanations.map((service) => (
+            <Card 
+              key={service.name}
+              className="group hover:shadow-lg transition-all duration-300 overflow-hidden"
+            >
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                  {service.icon}
+                  {service.name}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  {service.description}
+                </p>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Shield className="h-4 w-4 text-purple-600" />
+                    <span className="text-sm font-medium">Superviseur:</span>
+                    <span className="text-sm text-muted-foreground">{service.roles.supervisor}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <UserCog className="h-4 w-4 text-green-600" />
+                    <span className="text-sm font-medium">Gestionnaire:</span>
+                    <span className="text-sm text-muted-foreground">{service.roles.manager}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-orange-600" />
+                    <span className="text-sm font-medium">Caissier:</span>
+                    <span className="text-sm text-muted-foreground">{service.roles.cashier}</span>
                   </div>
                 </div>
-                <div className="pt-4 border-t">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-medium">Autorisations</h3>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <Shield className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {["Versements", "Retraits", "Virements", "Clients"].map((perm) => (
-                      <Badge key={perm} variant="secondary" className="text-xs">
-                        {perm}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     </div>
