@@ -6,6 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { 
   Plus, 
   Search, 
@@ -20,19 +27,59 @@ import {
   AlertCircle
 } from "lucide-react";
 
+interface Client {
+  id: string;
+  nom: string;
+  prenom: string;
+  telephone: string;
+  email: string;
+  solde: number;
+  dateCreation: string;
+}
+
+const mockClients: Client[] = [
+  {
+    id: "1",
+    nom: "Dupont",
+    prenom: "Jean",
+    telephone: "0612345678",
+    email: "jean.dupont@email.com",
+    solde: 15000,
+    dateCreation: "2024-01-15",
+  },
+  {
+    id: "2",
+    nom: "Martin",
+    prenom: "Marie",
+    telephone: "0687654321",
+    email: "marie.martin@email.com",
+    solde: 8000,
+    dateCreation: "2024-02-01",
+  },
+  {
+    id: "3",
+    nom: "Durant",
+    prenom: "Pierre",
+    telephone: "0654321789",
+    email: "pierre.durant@email.com",
+    solde: 3000,
+    dateCreation: "2024-02-10",
+  },
+];
+
 const Withdrawals = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [withdrawals, setWithdrawals] = useState([
     {
       id: "1",
-      clientName: "Jean Dupont",
+      clientId: "1",
       amount: 500,
       date: "2024-02-22",
       notes: "Retrait mensuel",
     },
     {
       id: "2",
-      clientName: "Marie Martin",
+      clientId: "2",
       amount: 1000,
       date: "2024-02-21",
       notes: "Retrait exceptionnel",
@@ -40,15 +87,26 @@ const Withdrawals = () => {
   ]);
 
   const [newWithdrawal, setNewWithdrawal] = useState({
-    clientName: "",
+    clientId: "",
     amount: "",
     notes: "",
   });
 
   const handleCreateWithdrawal = () => {
+    if (!newWithdrawal.clientId || !newWithdrawal.amount || !newWithdrawal.notes) {
+      toast.error("Veuillez remplir tous les champs");
+      return;
+    }
+    
+    const selectedClient = mockClients.find(c => c.id === newWithdrawal.clientId);
+    if (!selectedClient) {
+      toast.error("Client non trouvé");
+      return;
+    }
+
     const withdrawal = {
       id: Date.now().toString(),
-      clientName: newWithdrawal.clientName,
+      clientId: newWithdrawal.clientId,
       amount: parseFloat(newWithdrawal.amount),
       date: new Date().toISOString().split('T')[0],
       notes: newWithdrawal.notes,
@@ -57,9 +115,9 @@ const Withdrawals = () => {
     setWithdrawals(prev => [withdrawal, ...prev]);
     setIsDialogOpen(false);
     toast.success("Retrait enregistré", {
-      description: `Le retrait de ${withdrawal.amount}€ pour ${withdrawal.clientName} a été enregistré.`
+      description: `Le retrait de ${withdrawal.amount}€ pour ${selectedClient.prenom} ${selectedClient.nom} a été enregistré.`
     });
-    setNewWithdrawal({ clientName: "", amount: "", notes: "" });
+    setNewWithdrawal({ clientId: "", amount: "", notes: "" });
   };
 
   return (
@@ -111,17 +169,22 @@ const Withdrawals = () => {
               <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))]" />
               <div className="relative grid gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="clientName">Client</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="clientName"
-                      placeholder="Nom du client"
-                      value={newWithdrawal.clientName}
-                      onChange={(e) => setNewWithdrawal({ ...newWithdrawal, clientName: e.target.value })}
-                      className="pl-9 transition-all focus-visible:ring-primary/50"
-                    />
-                  </div>
+                  <Label htmlFor="clientId">Client</Label>
+                  <Select
+                    value={newWithdrawal.clientId}
+                    onValueChange={(value) => setNewWithdrawal({ ...newWithdrawal, clientId: value })}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Sélectionner un client" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {mockClients.map((client) => (
+                        <SelectItem key={client.id} value={client.id}>
+                          {client.prenom} {client.nom}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
@@ -223,56 +286,61 @@ const Withdrawals = () => {
                 </tr>
               </thead>
               <tbody>
-                {withdrawals.map((withdrawal) => (
-                  <tr key={withdrawal.id} className="group border-b hover:bg-muted/50 transition-colors">
-                    <td className="p-3">
-                      <div className="flex items-center gap-3">
-                        <div className="relative">
-                          <UserCircle className="h-8 w-8 text-primary/20 transition-colors group-hover:text-primary/40" />
-                          <div className="absolute inset-0 animate-pulse rounded-full bg-primary/5" />
+                {withdrawals.map((withdrawal) => {
+                  const client = mockClients.find(c => c.id === withdrawal.clientId);
+                  if (!client) return null;
+                  
+                  return (
+                    <tr key={withdrawal.id} className="group border-b hover:bg-muted/50 transition-colors">
+                      <td className="p-3">
+                        <div className="flex items-center gap-3">
+                          <div className="relative">
+                            <UserCircle className="h-8 w-8 text-primary/20 transition-colors group-hover:text-primary/40" />
+                            <div className="absolute inset-0 animate-pulse rounded-full bg-primary/5" />
+                          </div>
+                          <div>
+                            <p className="font-medium">{client.prenom} {client.nom}</p>
+                            <p className="text-sm text-muted-foreground">
+                              ID: {client.id}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium">{withdrawal.clientName}</p>
-                          <p className="text-sm text-muted-foreground">
-                            ID: {withdrawal.id}
-                          </p>
+                      </td>
+                      <td className="p-3">
+                        <div className="flex items-center gap-2 text-danger">
+                          <ArrowDownCircle className="h-4 w-4" />
+                          <span className="font-medium">
+                            {withdrawal.amount.toLocaleString()} €
+                          </span>
                         </div>
-                      </div>
-                    </td>
-                    <td className="p-3">
-                      <div className="flex items-center gap-2 text-danger">
-                        <ArrowDownCircle className="h-4 w-4" />
-                        <span className="font-medium">
-                          {withdrawal.amount.toLocaleString()} €
-                        </span>
-                      </div>
-                    </td>
-                    <td className="p-3 text-muted-foreground">{withdrawal.date}</td>
-                    <td className="p-3 text-muted-foreground">{withdrawal.notes}</td>
-                    <td className="p-3">
-                      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 ease-in-out">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {}}
-                          className="relative hover:bg-blue-50 dark:hover:bg-blue-950/50 text-blue-600 hover:text-blue-600 transition-all duration-300"
-                        >
-                          <Pencil className="h-4 w-4 transition-all duration-300 ease-in-out transform hover:scale-125 hover:rotate-[360deg]" />
-                          <span className="absolute inset-0 rounded-full bg-blue-100 dark:bg-blue-900/20 opacity-0 group-hover:opacity-100 animate-ping" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {}}
-                          className="relative hover:bg-red-50 dark:hover:bg-red-950/50 text-red-600 hover:text-red-600 transition-all duration-300"
-                        >
-                          <Trash2 className="h-4 w-4 transition-all duration-300 ease-in-out transform hover:scale-125 hover:-translate-y-1" />
-                          <span className="absolute inset-0 rounded-full bg-red-100 dark:bg-red-900/20 opacity-0 group-hover:opacity-100 animate-ping" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="p-3 text-muted-foreground">{withdrawal.date}</td>
+                      <td className="p-3 text-muted-foreground">{withdrawal.notes}</td>
+                      <td className="p-3">
+                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 ease-in-out">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {}}
+                            className="relative hover:bg-blue-50 dark:hover:bg-blue-950/50 text-blue-600 hover:text-blue-600 transition-all duration-300"
+                          >
+                            <Pencil className="h-4 w-4 transition-all duration-300 ease-in-out transform hover:scale-125 hover:rotate-[360deg]" />
+                            <span className="absolute inset-0 rounded-full bg-blue-100 dark:bg-blue-900/20 opacity-0 group-hover:opacity-100 animate-ping" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {}}
+                            className="relative hover:bg-red-50 dark:hover:bg-red-950/50 text-red-600 hover:text-red-600 transition-all duration-300"
+                          >
+                            <Trash2 className="h-4 w-4 transition-all duration-300 ease-in-out transform hover:scale-125 hover:-translate-y-1" />
+                            <span className="absolute inset-0 rounded-full bg-red-100 dark:bg-red-900/20 opacity-0 group-hover:opacity-100 animate-ping" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
