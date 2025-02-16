@@ -1,65 +1,17 @@
+
 import { useState, useEffect } from "react";
-import { Plus, Search, ArrowRight, Pencil, Trash2, Store, User, ListFilter } from "lucide-react";
+import { ArrowRight, User } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Label } from "@/components/ui/label";
-import { Calendar as CalendarIcon } from "lucide-react";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
 import { toast } from "sonner";
 import { useClients } from "@/features/clients/hooks/useClients";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-
-interface Client {
-  id: string;
-  nom: string;
-  prenom: string;
-  telephone: string;
-  email: string;
-  solde: number;
-  dateCreation: string;
-}
-
-interface Deposit {
-  id: string;
-  client: string;
-  amount: number;
-  date: string;
-  description: string;
-}
-
-interface DepositDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onConfirm: (deposit: Deposit) => void;
-}
+import { StatsCard } from "@/features/deposits/components/StatsCard";
+import { SearchBar } from "@/features/deposits/components/SearchBar";
+import { DeleteDepositDialog } from "@/features/deposits/components/DeleteDepositDialog";
+import { type Deposit } from "@/features/deposits/types";
+import { DepositDialog } from "@/features/deposits/components/DepositDialog";
 
 const Deposits = () => {
   const navigate = useNavigate();
@@ -108,7 +60,9 @@ const Deposits = () => {
     });
   };
 
-  const filteredDeposits = deposits;
+  const filteredDeposits = deposits.filter(deposit => 
+    deposit.client.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleCreateDeposit = (deposit: Deposit) => {
     setDeposits(prev => [...prev, deposit]);
@@ -128,70 +82,15 @@ const Deposits = () => {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <Card className="border-primary/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Store className="h-5 w-5 text-primary" />
-              Statistiques
-            </CardTitle>
-            <CardDescription>
-              Suivez l'évolution des versements
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <p className="font-medium">
-                Total des versements: {deposits.reduce((acc, deposit) => acc + deposit.amount, 0)} TND
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Recherche intelligente</CardTitle>
-            <CardDescription>
-              Trouvez rapidement un versement
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    placeholder="Rechercher par nom du client..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
-                <Select
-                  value={itemsPerPage}
-                  onValueChange={setItemsPerPage}
-                >
-                  <SelectTrigger className="w-[180px] bg-primary/5 border-primary/20 hover:bg-primary/10 transition-colors">
-                    <ListFilter className="h-4 w-4 mr-2 text-primary" />
-                    <SelectValue placeholder="Nombre d'éléments" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="10">10 éléments</SelectItem>
-                    <SelectItem value="25">25 éléments</SelectItem>
-                    <SelectItem value="50">50 éléments</SelectItem>
-                    <SelectItem value="100">100 éléments</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button
-                className="w-full"
-                onClick={() => setIsDialogOpen(true)}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Nouveau versement
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <StatsCard deposits={deposits} />
+        <SearchBar
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          itemsPerPage={itemsPerPage}
+          onItemsPerPageChange={setItemsPerPage}
+          onNewDeposit={() => setIsDialogOpen(true)}
+          totalDeposits={filteredDeposits.length}
+        />
       </div>
 
       <Card>
@@ -224,97 +123,71 @@ const Deposits = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredDeposits.slice(0, parseInt(itemsPerPage)).map((deposit) => {
-                  return (
-                    <tr key={deposit.id} className="group border-b transition-colors hover:bg-muted/50">
-                      <td className="p-3">
-                        <div className="flex items-center gap-3">
-                          <div className="relative">
-                            <User className="h-10 w-10 text-primary/20 transition-colors group-hover:text-primary/40" />
-                            <div className="absolute inset-0 animate-pulse rounded-full bg-primary/5" />
-                          </div>
-                          <div>
-                            <p className="font-medium">
-                              {deposit.client}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              ID: {deposit.client}
-                            </p>
-                          </div>
+                {filteredDeposits.slice(0, parseInt(itemsPerPage)).map((deposit) => (
+                  <tr key={deposit.id} className="group border-b transition-colors hover:bg-muted/50">
+                    <td className="p-3">
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          <User className="h-10 w-10 text-primary/20 transition-colors group-hover:text-primary/40" />
+                          <div className="absolute inset-0 animate-pulse rounded-full bg-primary/5" />
                         </div>
-                      </td>
-                      <td className="p-3">
-                        <div className="font-medium tabular-nums">
-                          {deposit.amount.toLocaleString()} TND
+                        <div>
+                          <p className="font-medium">
+                            {deposit.client}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            ID: {deposit.client}
+                          </p>
                         </div>
-                      </td>
-                      <td className="p-3 text-muted-foreground">
-                        {deposit.date}
-                      </td>
-                      <td className="p-3 text-muted-foreground">
-                        {deposit.description}
-                      </td>
-                      <td className="p-3">
-                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 ease-in-out">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="relative hover:bg-blue-50 dark:hover:bg-blue-950/50 text-blue-600 hover:text-blue-600 transition-all duration-300"
-                            onClick={() => handleEdit(deposit)}
-                          >
-                            <Pencil className="h-4 w-4 transition-all duration-300 ease-in-out transform hover:scale-125 hover:rotate-[360deg]" />
-                            <span className="absolute inset-0 rounded-full bg-blue-100 dark:bg-blue-900/20 opacity-0 group-hover:opacity-100 animate-ping" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="relative hover:bg-red-50 dark:hover:bg-red-950/50 text-red-600 hover:text-red-600 transition-all duration-300"
-                            onClick={() => handleDelete(deposit)}
-                          >
-                            <Trash2 className="h-4 w-4 transition-all duration-300 ease-in-out transform hover:scale-125 hover:-translate-y-1" />
-                            <span className="absolute inset-0 rounded-full bg-red-100 dark:bg-red-900/20 opacity-0 group-hover:opacity-100 animate-ping" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
+                      </div>
+                    </td>
+                    <td className="p-3">
+                      <div className="font-medium tabular-nums">
+                        {deposit.amount.toLocaleString()} TND
+                      </div>
+                    </td>
+                    <td className="p-3 text-muted-foreground">
+                      {deposit.date}
+                    </td>
+                    <td className="p-3 text-muted-foreground">
+                      {deposit.description}
+                    </td>
+                    <td className="p-3">
+                      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 ease-in-out">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="relative hover:bg-blue-50 dark:hover:bg-blue-950/50 text-blue-600 hover:text-blue-600 transition-all duration-300"
+                          onClick={() => handleEdit(deposit)}
+                        >
+                          <Pencil className="h-4 w-4 transition-all duration-300 ease-in-out transform hover:scale-125 hover:rotate-[360deg]" />
+                          <span className="absolute inset-0 rounded-full bg-blue-100 dark:bg-blue-900/20 opacity-0 group-hover:opacity-100 animate-ping" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="relative hover:bg-red-50 dark:hover:bg-red-950/50 text-red-600 hover:text-red-600 transition-all duration-300"
+                          onClick={() => handleDelete(deposit)}
+                        >
+                          <Trash2 className="h-4 w-4 transition-all duration-300 ease-in-out transform hover:scale-125 hover:-translate-y-1" />
+                          <span className="absolute inset-0 rounded-full bg-red-100 dark:bg-red-900/20 opacity-0 group-hover:opacity-100 animate-ping" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
         </CardContent>
       </Card>
 
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent className="sm:max-w-md">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <div className="rounded-lg bg-red-50 dark:bg-red-950/50 p-2 text-red-600">
-                <Trash2 className="h-5 w-5" />
-              </div>
-              Confirmer la suppression
-            </AlertDialogTitle>
-            <AlertDialogDescription className="space-y-2">
-              <p>Êtes-vous sûr de vouloir supprimer ce versement ?</p>
-              {selectedDeposit && (
-                <div className="rounded-lg border bg-muted/50 p-4 font-medium text-foreground">
-                  Versement de {selectedDeposit.amount} TND
-                </div>
-              )}
-              <p className="text-destructive font-medium">Cette action est irréversible.</p>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
-            >
-              Supprimer
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteDepositDialog
+        isOpen={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        selectedDeposit={selectedDeposit}
+        onConfirm={confirmDelete}
+      />
 
       <DepositDialog
         open={isDialogOpen}
@@ -322,132 +195,6 @@ const Deposits = () => {
         onConfirm={handleCreateDeposit}
       />
     </div>
-  );
-};
-
-const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogProps) => {
-  const [selectedClient, setSelectedClient] = useState("");
-  const [amount, setAmount] = useState("");
-  const [date, setDate] = useState<Date>();
-  const [description, setDescription] = useState("");
-  const { clients, fetchClients } = useClients();
-
-  useEffect(() => {
-    fetchClients();
-  }, [fetchClients]);
-
-  const handleSubmit = () => {
-    if (!selectedClient || !amount || !date || !description) {
-      toast.error("Veuillez remplir tous les champs");
-      return;
-    }
-
-    const deposit = {
-      id: Math.random().toString(),
-      client: selectedClient,
-      amount: parseFloat(amount),
-      date: date.toISOString(),
-      description,
-    };
-
-    onConfirm(deposit);
-    
-    setSelectedClient("");
-    setAmount("");
-    setDate(undefined);
-    setDescription("");
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Nouveau versement</DialogTitle>
-          <DialogDescription>
-            Enregistrez un nouveau versement pour un client
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label>Client</Label>
-            <Select 
-              value={selectedClient} 
-              onValueChange={setSelectedClient}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un client" />
-              </SelectTrigger>
-              <SelectContent>
-                {clients.map((client) => (
-                  <SelectItem key={client.id} value={client.id.toString()}>
-                    {client.prenom} {client.nom}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Montant</Label>
-            <div className="relative">
-              <Input
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="0.00"
-                className="pr-8"
-              />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                TND
-              </span>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant={"outline"}
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "PPP", { locale: fr }) : <span>Choisir une date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={(newDate: Date | undefined) => setDate(newDate)}
-                  locale={fr}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Description</Label>
-            <Input
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Description du versement"
-            />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            Annuler
-          </Button>
-          <Button onClick={handleSubmit}>
-            Créer le versement
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 };
 
