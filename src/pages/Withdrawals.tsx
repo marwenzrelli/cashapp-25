@@ -13,7 +13,6 @@ interface Withdrawal {
   clientName: string;
   amount: number;
   date: string;
-  status: "completed" | "pending" | "rejected";
   notes: string;
 }
 
@@ -34,14 +33,12 @@ const Withdrawals = () => {
     notes: "",
   });
 
-  // Données de test
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([
     {
       id: "1",
       clientName: "Jean Dupont",
       amount: 500,
       date: "2024-02-22",
-      status: "completed",
       notes: "Retrait mensuel",
     },
     {
@@ -49,12 +46,10 @@ const Withdrawals = () => {
       clientName: "Marie Martin",
       amount: 1000,
       date: "2024-02-21",
-      status: "pending",
       notes: "Retrait exceptionnel",
     },
   ]);
 
-  // Suggestions IA
   const aiSuggestions: AISuggestion[] = [
     {
       id: "1",
@@ -79,7 +74,6 @@ const Withdrawals = () => {
       clientName: newWithdrawal.clientName,
       amount: parseFloat(newWithdrawal.amount),
       date: new Date().toISOString().split("T")[0],
-      status: "pending",
       notes: newWithdrawal.notes,
     };
 
@@ -87,17 +81,6 @@ const Withdrawals = () => {
     setNewWithdrawal({ clientName: "", amount: "", notes: "" });
     setIsDialogOpen(false);
     toast.success("Demande de retrait enregistrée avec succès");
-  };
-
-  const getStatusColor = (status: Withdrawal["status"]) => {
-    switch (status) {
-      case "completed":
-        return "text-success bg-success/10";
-      case "pending":
-        return "text-yellow-500 bg-yellow-500/10";
-      case "rejected":
-        return "text-danger bg-danger/10";
-    }
   };
 
   const getSuggestionStyle = (type: AISuggestion["type"]) => {
@@ -242,7 +225,6 @@ const Withdrawals = () => {
                 <tr className="text-left">
                   <th className="p-3">Client</th>
                   <th className="p-3">Montant</th>
-                  <th className="p-3">Statut</th>
                   <th className="p-3">Date</th>
                   <th className="p-3">Notes</th>
                 </tr>
@@ -268,11 +250,6 @@ const Withdrawals = () => {
                           {withdrawal.amount.toLocaleString()} €
                         </span>
                       </div>
-                    </td>
-                    <td className="p-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(withdrawal.status)}`}>
-                        {withdrawal.status.charAt(0).toUpperCase() + withdrawal.status.slice(1)}
-                      </span>
                     </td>
                     <td className="p-3 text-muted-foreground">{withdrawal.date}</td>
                     <td className="p-3 text-muted-foreground">{withdrawal.notes}</td>
