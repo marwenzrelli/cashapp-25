@@ -22,47 +22,49 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
+      if (session?.user?.id) {
+        loadCurrency(session.user.id);
+      }
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      if (session?.user?.id) {
+        loadCurrency(session.user.id);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  // Charger la devise depuis Supabase au démarrage
-  useEffect(() => {
-    const loadCurrency = async () => {
-      if (!session?.user?.id) return;
+  const loadCurrency = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('currency')
+        .eq('id', userId)
+        .single();
 
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('currency')
-          .eq('id', session.user.id)
-          .maybeSingle();
-
-        if (error) throw error;
-        if (data?.currency) {
-          setCurrencyState(data.currency as Currency);
-        }
-      } catch (error) {
+      if (error) {
         console.error('Erreur lors du chargement de la devise:', error);
         toast({
           title: "Erreur",
           description: "Impossible de charger vos préférences de devise",
           variant: "destructive",
         });
+        return;
       }
-    };
 
-    loadCurrency();
-  }, [session, toast]);
+      if (data?.currency) {
+        setCurrencyState(data.currency as Currency);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement de la devise:', error);
+    }
+  };
 
-  // Mettre à jour la devise dans Supabase
   const setCurrency = async (newCurrency: Currency) => {
     if (!session?.user?.id) return;
 
@@ -72,7 +74,14 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         .update({ currency: newCurrency })
         .eq('id', session.user.id);
 
-      if (error) throw error;
+      if (error) {
+        toast({
+          title: "Erreur",
+          description: "Impossible de sauvegarder vos préférences de devise",
+          variant: "destructive",
+        });
+        return;
+      }
 
       setCurrencyState(newCurrency);
       toast({
@@ -81,11 +90,6 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
       });
     } catch (error) {
       console.error('Erreur lors de la mise à jour de la devise:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de sauvegarder vos préférences de devise",
-        variant: "destructive",
-      });
     }
   };
 
