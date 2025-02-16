@@ -5,7 +5,7 @@ import { ArrowUpCircle, ArrowDownCircle, RefreshCcw, TrendingUp, Users, AlertCir
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { EditProfileDialog } from "@/features/profile/EditProfileDialog";
 import { SettingsDialog } from "@/features/profile/SettingsDialog";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -19,6 +19,23 @@ const Dashboard = () => {
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { currency, setCurrency } = useCurrency();
+  const [currentUser, setCurrentUser] = useState<SystemUser | null>(null);
+
+  useEffect(() => {
+    // Récupérer l'ID de l'utilisateur connecté
+    const currentUserId = localStorage.getItem('currentUserId');
+    if (currentUserId) {
+      // Récupérer les utilisateurs du localStorage
+      const usersData = localStorage.getItem('admin_users');
+      const users = JSON.parse(usersData || '[]');
+      
+      // Trouver l'utilisateur connecté
+      const user = users.find((u: SystemUser) => u.id === currentUserId);
+      if (user) {
+        setCurrentUser(user);
+      }
+    }
+  }, []);
 
   const handleUpdateProfile = (updatedUser: Partial<SystemUser>) => {
     // Récupérer les utilisateurs du localStorage
@@ -34,6 +51,12 @@ const Dashboard = () => {
       
       // Sauvegarder dans le localStorage
       localStorage.setItem('admin_users', JSON.stringify(users));
+      
+      // Mettre à jour l'état local
+      const updatedCurrentUser = users.find((u: SystemUser) => u.id === currentUserId);
+      if (updatedCurrentUser) {
+        setCurrentUser(updatedCurrentUser);
+      }
     }
     
     setIsEditProfileOpen(false);
@@ -170,13 +193,14 @@ const Dashboard = () => {
         isOpen={isEditProfileOpen}
         onOpenChange={setIsEditProfileOpen}
         currentUser={{
-          name: "",
-          email: "",
-          phone: "",
-          department: "",
-          role: "",
-          joinDate: "",
-          employeeId: ""
+          name: currentUser?.fullName || "",
+          email: currentUser?.email || "",
+          phone: currentUser?.phone || "",
+          department: currentUser?.department || "",
+          role: currentUser?.role === "supervisor" ? "Superviseur" : 
+                currentUser?.role === "manager" ? "Gestionnaire" : "Caissier",
+          joinDate: currentUser?.createdAt || "",
+          employeeId: currentUser?.id || ""
         }}
         onSubmit={handleUpdateProfile}
       />
