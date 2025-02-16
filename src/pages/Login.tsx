@@ -10,7 +10,7 @@ import { Sparkles, LogIn, Lock, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const Login = () => {
-  const [email, setEmail] = useState("");
+  const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -20,6 +20,9 @@ const Login = () => {
     setIsLoading(true);
 
     try {
+      // On utilise toujours l'email pour l'authentification Supabase
+      const email = login === "marwensuperviser" ? "marwensupervisor@gmail.com" : login;
+
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -69,18 +72,18 @@ const Login = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="login">Nom d'utilisateur</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
-                    id="email"
-                    type="email"
-                    placeholder="marwensupervisor@gmail.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    id="login"
+                    type="text"
+                    placeholder="marwensuperviser"
+                    value={login}
+                    onChange={(e) => setLogin(e.target.value)}
                     className="pl-9"
                     required
-                    autoComplete="email"
+                    autoComplete="username"
                   />
                 </div>
               </div>
@@ -123,7 +126,7 @@ const Login = () => {
 
         <div className="text-center text-sm text-muted-foreground">
           Identifiants de connexion par défaut :<br />
-          Email : marwensupervisor@gmail.com<br />
+          Nom d'utilisateur : marwensuperviser<br />
           Mot de passe : 12345678
         </div>
       </div>
