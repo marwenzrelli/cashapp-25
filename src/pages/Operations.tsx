@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,7 +29,6 @@ interface Operation {
   amount: number;
   date: string;
   description: string;
-  status: "completed" | "pending" | "failed";
 }
 
 const Operations = () => {
@@ -51,7 +49,6 @@ const Operations = () => {
       amount: 1000,
       date: "2024-02-23",
       description: "Dépôt initial",
-      status: "completed",
     },
     {
       id: "2",
@@ -59,7 +56,6 @@ const Operations = () => {
       amount: 500,
       date: "2024-02-22",
       description: "Retrait ATM",
-      status: "completed",
     },
     {
       id: "3",
@@ -67,7 +63,6 @@ const Operations = () => {
       amount: 750,
       date: "2024-02-21",
       description: "Virement mensuel",
-      status: "pending",
     },
   ]);
 
@@ -115,17 +110,6 @@ const Operations = () => {
 
     setIsDeleteDialogOpen(false);
     toast.success("Opération supprimée avec succès");
-  };
-
-  const getStatusStyle = (status: Operation["status"]) => {
-    switch (status) {
-      case "completed":
-        return "bg-green-50 text-green-600 dark:bg-green-950/50";
-      case "pending":
-        return "bg-yellow-50 text-yellow-600 dark:bg-yellow-950/50";
-      case "failed":
-        return "bg-red-50 text-red-600 dark:bg-red-950/50";
-    }
   };
 
   const getTypeStyle = (type: Operation["type"]) => {
@@ -201,9 +185,6 @@ const Operations = () => {
                     <div className="text-right">
                       <div className="text-lg font-semibold">
                         {operation.amount.toLocaleString()} €
-                      </div>
-                      <div className={`text-sm px-2 py-0.5 rounded ${getStatusStyle(operation.status)}`}>
-                        {operation.status}
                       </div>
                     </div>
 
