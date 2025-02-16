@@ -3,13 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SystemUser, UserRole } from "@/types/admin";
-import { Building, Check, Shield, Users, UserCog } from "lucide-react";
+import { Building, Check, Shield, Users, UserCog, Edit } from "lucide-react";
+import { useState } from "react";
+import { EditProfileDialog } from "@/features/profile/EditProfileDialog";
 
 interface UserProfileProps {
   user: SystemUser;
 }
 
 export const UserProfile = ({ user }: UserProfileProps) => {
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+
   const getRoleColor = (role: UserRole) => {
     switch (role) {
       case "supervisor":
@@ -32,6 +36,21 @@ export const UserProfile = ({ user }: UserProfileProps) => {
     }
   };
 
+  const handleUpdateProfile = (updatedUser: Partial<SystemUser>) => {
+    // Récupérer les utilisateurs du localStorage
+    const usersData = localStorage.getItem('admin_users');
+    let users = JSON.parse(usersData || '[]');
+    
+    // Mettre à jour l'utilisateur
+    users = users.map((u: SystemUser) => 
+      u.id === user.id ? { ...u, ...updatedUser } : u
+    );
+    
+    // Sauvegarder dans le localStorage
+    localStorage.setItem('admin_users', JSON.stringify(users));
+    setIsEditProfileOpen(false);
+  };
+
   return (
     <div className="mt-12">
       <div className="flex items-center justify-between mb-6">
@@ -41,6 +60,14 @@ export const UserProfile = ({ user }: UserProfileProps) => {
             Aperçu de vos responsabilités et autorisations
           </p>
         </div>
+        <Button 
+          onClick={() => setIsEditProfileOpen(true)}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <Edit className="h-4 w-4" />
+          Modifier mon profil
+        </Button>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -112,6 +139,22 @@ export const UserProfile = ({ user }: UserProfileProps) => {
           </CardContent>
         </Card>
       </div>
+
+      <EditProfileDialog
+        isOpen={isEditProfileOpen}
+        onOpenChange={setIsEditProfileOpen}
+        currentUser={{
+          name: user.fullName,
+          email: user.email,
+          phone: "",
+          department: user.department,
+          role: user.role === "supervisor" ? "Superviseur" : 
+                user.role === "manager" ? "Gestionnaire" : "Caissier",
+          joinDate: user.createdAt,
+          employeeId: user.id
+        }}
+        onSubmit={handleUpdateProfile}
+      />
     </div>
   );
 };

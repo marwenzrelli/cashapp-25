@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { User, Mail, Phone, Building, Calendar, Badge } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { SystemUser } from "@/types/admin";
 
 interface EditProfileDialogProps {
   isOpen: boolean;
@@ -19,22 +20,24 @@ interface EditProfileDialogProps {
     joinDate: string;
     employeeId: string;
   };
+  onSubmit: (updatedUser: Partial<SystemUser>) => void;
 }
 
 export const EditProfileDialog = ({
   isOpen,
   onOpenChange,
   currentUser,
+  onSubmit
 }: EditProfileDialogProps) => {
   const [formData, setFormData] = useState(currentUser);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Simuler la mise à jour du profil
-    setTimeout(() => {
-      toast.success("Profil professionnel mis à jour avec succès");
-      onOpenChange(false);
-    }, 500);
+    onSubmit({
+      fullName: formData.name,
+      email: formData.email
+    });
+    toast.success("Profil mis à jour avec succès");
   };
 
   return (
@@ -96,7 +99,6 @@ export const EditProfileDialog = ({
               <Input
                 id="department"
                 value={formData.department}
-                onChange={(e) => setFormData({ ...formData, department: e.target.value })}
                 className="pl-9"
                 readOnly
               />
