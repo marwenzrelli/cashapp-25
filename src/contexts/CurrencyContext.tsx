@@ -80,6 +80,8 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   };
 
   const setCurrency = async (newCurrency: Currency) => {
+    console.log("[CurrencyContext] Tentative de mise à jour vers:", newCurrency);
+    
     if (!isValidCurrency(newCurrency)) {
       console.error("[CurrencyContext] Tentative de définir une devise invalide:", newCurrency);
       toast({
@@ -101,13 +103,15 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     }
 
     try {
+      console.log("[CurrencyContext] Début de la mise à jour dans Supabase...");
+      
       const { error } = await supabase
         .from('profiles')
         .update({ currency: newCurrency })
         .eq('id', session.user.id);
 
       if (error) {
-        console.error('[CurrencyContext] Erreur lors de la mise à jour:', error);
+        console.error('[CurrencyContext] Erreur Supabase lors de la mise à jour:', error);
         toast({
           title: "Erreur",
           description: `Impossible de sauvegarder vos préférences de devise: ${error.message}`,
@@ -116,12 +120,23 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      console.log("[CurrencyContext] Mise à jour Supabase réussie, mise à jour du state local...");
       setCurrencyState(newCurrency);
-      console.log("[CurrencyContext] Devise mise à jour avec succès:", newCurrency);
+      
       toast({
         title: "Succès",
         description: "Vos préférences de devise ont été mises à jour",
       });
+      
+      // Vérifions immédiatement que la mise à jour a bien été prise en compte
+      const { data: verificationData } = await supabase
+        .from('profiles')
+        .select('currency')
+        .eq('id', session.user.id)
+        .single();
+      
+      console.log("[CurrencyContext] Vérification après mise à jour:", verificationData);
+      
     } catch (error) {
       console.error('[CurrencyContext] Erreur lors de la mise à jour de la devise:', error);
       toast({
