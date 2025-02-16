@@ -5,6 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { SystemUser } from "@/types/admin";
 import { Shield, UserCog, Users, Check, X } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface UsersListProps {
   users: SystemUser[];
@@ -12,6 +19,24 @@ interface UsersListProps {
 }
 
 export const UsersList = ({ users, onToggleStatus }: UsersListProps) => {
+  const { toast } = useToast();
+
+  const handleEditPermissions = (userId: string) => {
+    // Pour le moment, on affiche juste un toast
+    toast({
+      title: "Modification des permissions",
+      description: "Cette fonctionnalité sera bientôt disponible",
+    });
+  };
+
+  const handleEditUser = (userId: string) => {
+    // Pour le moment, on affiche juste un toast
+    toast({
+      title: "Modification de l'utilisateur",
+      description: "Cette fonctionnalité sera bientôt disponible",
+    });
+  };
+
   return (
     <Table>
       <TableHeader>
@@ -21,7 +46,7 @@ export const UsersList = ({ users, onToggleStatus }: UsersListProps) => {
           <TableHead>Service</TableHead>
           <TableHead>Statut</TableHead>
           <TableHead>Dernière Connexion</TableHead>
-          <TableHead>Actions</TableHead>
+          <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -93,15 +118,30 @@ export const UsersList = ({ users, onToggleStatus }: UsersListProps) => {
             <TableCell>
               {user.lastLogin ? user.lastLogin : "Jamais connecté"}
             </TableCell>
-            <TableCell>
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon">
-                  <UserCog className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon">
-                  <Shield className="h-4 w-4" />
-                </Button>
-              </div>
+            <TableCell className="text-right">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="hover:bg-accent">
+                    <UserCog className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem
+                    className="flex items-center gap-2 cursor-pointer"
+                    onClick={() => handleEditUser(user.id)}
+                  >
+                    <UserCog className="h-4 w-4" />
+                    <span>Modifier l'utilisateur</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="flex items-center gap-2 cursor-pointer"
+                    onClick={() => handleEditPermissions(user.id)}
+                  >
+                    <Shield className="h-4 w-4" />
+                    <span>Gérer les permissions</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </TableCell>
           </TableRow>
         ))}
