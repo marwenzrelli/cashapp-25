@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Search, ArrowRight, AlertCircle, Pencil, Trash2, Store, User } from "lucide-react";
+import { Plus, Search, ArrowRight, Pencil, Trash2, Store, User, ListFilter } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -93,6 +93,7 @@ const Deposits = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedDeposit, setSelectedDeposit] = useState<Deposit | null>(null);
+  const [itemsPerPage, setItemsPerPage] = useState("10");
   const [deposits, setDeposits] = useState<Deposit[]>([
     {
       id: "1",
@@ -130,7 +131,6 @@ const Deposits = () => {
   const filteredDeposits = deposits.filter((deposit) => {
     const client = mockClients.find(client => client.id === deposit.client);
     if (!client) return false;
-
     return `${client.prenom} ${client.nom}`.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
@@ -180,14 +180,31 @@ const Deposits = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder="Rechercher par nom du client..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9"
-                />
+              <div className="flex items-center gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Rechercher par nom du client..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+                <Select
+                  value={itemsPerPage}
+                  onValueChange={setItemsPerPage}
+                >
+                  <SelectTrigger className="w-[180px] bg-primary/5 border-primary/20 hover:bg-primary/10 transition-colors">
+                    <ListFilter className="h-4 w-4 mr-2 text-primary" />
+                    <SelectValue placeholder="Nombre d'éléments" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10 éléments</SelectItem>
+                    <SelectItem value="25">25 éléments</SelectItem>
+                    <SelectItem value="50">50 éléments</SelectItem>
+                    <SelectItem value="100">100 éléments</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <Button
                 className="w-full"
@@ -203,10 +220,17 @@ const Deposits = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ArrowRight className="h-6 w-6 text-primary" />
-            Liste des versements ({filteredDeposits.length})
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <ArrowRight className="h-6 w-6 text-primary" />
+              Liste des versements
+            </CardTitle>
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <span>
+                Affichage de {Math.min(parseInt(itemsPerPage), filteredDeposits.length)} sur {filteredDeposits.length} versements
+              </span>
+            </div>
+          </div>
           <CardDescription>
             Gérez les versements et accédez à leurs informations détaillées
           </CardDescription>
@@ -224,7 +248,7 @@ const Deposits = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredDeposits.map((deposit) => {
+                {filteredDeposits.slice(0, parseInt(itemsPerPage)).map((deposit) => {
                   const client = mockClients.find(client => client.id === deposit.client);
                   if (!client) return null;
 
