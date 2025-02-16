@@ -37,20 +37,14 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState<Date>(new Date());
   const [description, setDescription] = useState("");
-  const [dailyTotal, setDailyTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const { clients } = useClients();
+  const { clients, fetchClients } = useClients();
 
   useEffect(() => {
-    const calculateDailyTotal = () => {
-      const total = clients.reduce((acc, client) => {
-        return acc + client.solde;
-      }, 0);
-      setDailyTotal(total);
-    };
-
-    calculateDailyTotal();
-  }, [clients]);
+    if (open) {
+      fetchClients();
+    }
+  }, [open]);
 
   const handleSubmit = async () => {
     if (!selectedClient || !amount || !date) {
@@ -90,7 +84,7 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>Nouveau versement</DialogTitle>
           <DialogDescription>
@@ -98,18 +92,24 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
-          <Select onValueChange={setSelectedClient}>
-            <SelectTrigger>
-              <SelectValue placeholder="Sélectionner un client" />
-            </SelectTrigger>
-            <SelectContent>
-              {clients.map((client) => (
-                <SelectItem key={client.id} value={client.id.toString()}>
-                  {client.prenom} {client.nom}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="space-y-2">
+            <Label>Client</Label>
+            <Select 
+              value={selectedClient} 
+              onValueChange={setSelectedClient}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un client" />
+              </SelectTrigger>
+              <SelectContent>
+                {clients.map((client) => (
+                  <SelectItem key={client.id} value={client.id.toString()}>
+                    {client.prenom} {client.nom}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="space-y-2">
             <Label htmlFor="amount">Montant</Label>
             <Input
@@ -135,11 +135,15 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
                   {date ? format(date, "PPP") : <span>Choisir une date</span>}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="center">
+              <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
                   selected={date}
-                  onSelect={setDate}
+                  onSelect={(newDate) => {
+                    if (newDate) {
+                      setDate(newDate);
+                    }
+                  }}
                   disabled={(date) =>
                     date > new Date() || date < new Date("2023-01-01")
                   }
