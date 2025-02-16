@@ -82,6 +82,12 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
     }
   };
 
+  const handleDateSelect = (newDate: Date | undefined) => {
+    if (newDate) {
+      setDate(newDate);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
@@ -139,11 +145,7 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
                 <Calendar
                   mode="single"
                   selected={date}
-                  onSelect={(newDate) => {
-                    if (newDate) {
-                      setDate(newDate);
-                    }
-                  }}
+                  onSelect={handleDateSelect}
                   disabled={(date) =>
                     date > new Date() || date < new Date("2023-01-01")
                   }
