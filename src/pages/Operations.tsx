@@ -1,17 +1,27 @@
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Search, Sparkles, ArrowUpCircle, ArrowDownCircle, RefreshCcw, AlertTriangle, ChevronDown } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Search, Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface Operation {
@@ -19,294 +29,303 @@ interface Operation {
   type: "deposit" | "withdrawal" | "transfer";
   amount: number;
   date: string;
-  clientName: string;
-}
-
-interface AISuggestion {
-  id: string;
-  message: string;
-  type: "info" | "warning";
-  action?: string;
-  insights?: string[];
+  description: string;
+  status: "completed" | "pending" | "failed";
 }
 
 const Operations = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedOperation, setSelectedOperation] = useState<Operation | null>(null);
+  const [editForm, setEditForm] = useState({
+    type: "",
+    amount: "",
+    description: "",
+  });
 
-  // Données de test enrichies
-  const operations: Operation[] = [
+  const [operations, setOperations] = useState<Operation[]>([
     {
       id: "1",
       type: "deposit",
-      amount: 1500,
-      date: "2024-02-20",
-      clientName: "Jean Dupont",
+      amount: 1000,
+      date: "2024-02-23",
+      description: "Dépôt initial",
+      status: "completed",
     },
     {
       id: "2",
       type: "withdrawal",
       amount: 500,
-      date: "2024-02-19",
-      clientName: "Marie Martin",
+      date: "2024-02-22",
+      description: "Retrait ATM",
+      status: "completed",
     },
     {
       id: "3",
       type: "transfer",
-      amount: 1000,
-      date: "2024-02-18",
-      clientName: "Pierre Durant",
+      amount: 750,
+      date: "2024-02-21",
+      description: "Virement mensuel",
+      status: "pending",
     },
-    {
-      id: "4",
-      type: "transfer",
-      amount: 2000,
-      date: "2024-02-17",
-      clientName: "Sophie Lefebvre",
-    }
-  ];
+  ]);
 
-  // Suggestions IA enrichies
-  const aiSuggestions: AISuggestion[] = [
-    {
-      id: "1",
-      message: "Pic d'activité détecté pour les transferts",
-      type: "info",
-      action: "Surveillance recommandée",
-      insights: [
-        "Augmentation de 25% des transferts ce mois-ci",
-        "Tendance similaire observée les années précédentes à cette période",
-      ],
-    },
-    {
-      id: "2",
-      message: "Opération inhabituelle identifiée",
-      type: "warning",
-      action: "Vérification suggérée",
-      insights: [
-        "Montant supérieur à la moyenne habituelle",
-        "Premier transfert vers ce bénéficiaire",
-      ],
-    },
-  ];
-
-  const getTypeIcon = (type: Operation["type"]) => {
-    switch (type) {
-      case "deposit":
-        return <ArrowUpCircle className="h-4 w-4 text-success" />;
-      case "withdrawal":
-        return <ArrowDownCircle className="h-4 w-4 text-danger" />;
-      case "transfer":
-        return <RefreshCcw className="h-4 w-4 text-primary" />;
-    }
-  };
-
-  const getTypeLabel = (type: Operation["type"]) => {
-    switch (type) {
-      case "deposit":
-        return "Versement";
-      case "withdrawal":
-        return "Retrait";
-      case "transfer":
-        return "Virement";
-      default:
-        return type;
-    }
-  };
-
-  const getSuggestionStyle = (type: AISuggestion["type"]) => {
-    return type === "warning" 
-      ? "border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20" 
-      : "border-blue-200 bg-blue-50 dark:bg-blue-950/20";
-  };
-
-  const handleOperationClick = (operation: Operation) => {
+  const handleEdit = (operation: Operation) => {
     setSelectedOperation(operation);
-    const suggestion = aiSuggestions.find(s => 
-      (operation.type === "transfer" && s.message.includes("transfert")) ||
-      (operation.amount > 1000 && s.message.includes("inhabituelle"))
+    setEditForm({
+      type: operation.type,
+      amount: operation.amount.toString(),
+      description: operation.description,
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDelete = (operation: Operation) => {
+    setSelectedOperation(operation);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmEdit = () => {
+    if (!selectedOperation) return;
+
+    setOperations((prev) =>
+      prev.map((operation) =>
+        operation.id === selectedOperation.id
+          ? {
+              ...operation,
+              type: editForm.type as Operation["type"],
+              amount: parseFloat(editForm.amount),
+              description: editForm.description,
+            }
+          : operation
+      )
     );
-    
-    if (suggestion) {
-      toast.info("Analyse IA disponible", {
-        description: suggestion.message,
-      });
+
+    setIsEditDialogOpen(false);
+    toast.success("Opération modifiée avec succès");
+  };
+
+  const confirmDelete = () => {
+    if (!selectedOperation) return;
+
+    setOperations((prev) =>
+      prev.filter((operation) => operation.id !== selectedOperation.id)
+    );
+
+    setIsDeleteDialogOpen(false);
+    toast.success("Opération supprimée avec succès");
+  };
+
+  const getStatusStyle = (status: Operation["status"]) => {
+    switch (status) {
+      case "completed":
+        return "bg-green-50 text-green-600 dark:bg-green-950/50";
+      case "pending":
+        return "bg-yellow-50 text-yellow-600 dark:bg-yellow-950/50";
+      case "failed":
+        return "bg-red-50 text-red-600 dark:bg-red-950/50";
     }
   };
 
-  const filteredOperations = operations.filter((op) => {
-    const matchesSearch = op.clientName
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchesType = typeFilter === "all" || op.type === typeFilter;
-    return matchesSearch && matchesType;
-  });
+  const getTypeStyle = (type: Operation["type"]) => {
+    switch (type) {
+      case "deposit":
+        return "bg-blue-50 text-blue-600 dark:bg-blue-950/50";
+      case "withdrawal":
+        return "bg-purple-50 text-purple-600 dark:bg-purple-950/50";
+      case "transfer":
+        return "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50";
+    }
+  };
+
+  const filteredOperations = operations.filter(
+    (operation) =>
+      operation.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      operation.type.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="space-y-8 animate-in">
       <div>
-        <h1 className="text-3xl font-bold">Recherche d'opérations</h1>
+        <h1 className="text-3xl font-bold">Opérations</h1>
         <p className="text-muted-foreground">
-          Recherchez et analysez vos opérations avec l'assistance IA
+          Gérez toutes vos opérations bancaires
         </p>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card className="border-primary/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" />
-              Insights IA
-            </CardTitle>
-            <CardDescription>
-              Analyses et recommandations basées sur l'intelligence artificielle
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {aiSuggestions.map((suggestion) => (
-                <div
-                  key={suggestion.id}
-                  className={`p-4 rounded-lg border transition-all hover:scale-[1.02] ${getSuggestionStyle(suggestion.type)}`}
-                >
-                  <div className="flex items-start gap-3">
-                    {suggestion.type === "warning" ? (
-                      <AlertTriangle className="h-5 w-5 text-yellow-500 shrink-0" />
-                    ) : (
-                      <Sparkles className="h-5 w-5 text-primary shrink-0" />
-                    )}
-                    <div className="space-y-2 w-full">
-                      <div>
-                        <p className="text-sm font-medium">{suggestion.message}</p>
-                        {suggestion.action && (
-                          <p className="text-sm text-muted-foreground">
-                            {suggestion.action}
-                          </p>
-                        )}
-                      </div>
-                      {suggestion.insights && (
-                        <div className="text-sm space-y-1 pt-2 border-t">
-                          {suggestion.insights.map((insight, index) => (
-                            <p key={index} className="text-muted-foreground flex items-center gap-2">
-                              <ChevronDown className="h-3 w-3" />
-                              {insight}
-                            </p>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Filtres intelligents</CardTitle>
-            <CardDescription>
-              Affinez votre recherche avec des filtres contextuels
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4">
-              <div className="space-y-2">
-                <Label>Recherche contextuelle</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    placeholder="Rechercher par nom, montant..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Type d'opération</Label>
-                <Select value={typeFilter} onValueChange={setTypeFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Tous les types" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tous les types</SelectItem>
-                    <SelectItem value="deposit">Versement</SelectItem>
-                    <SelectItem value="withdrawal">Retrait</SelectItem>
-                    <SelectItem value="transfer">Virement</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Résultats ({filteredOperations.length})</CardTitle>
-          <CardDescription>
-            Cliquez sur une opération pour plus de détails
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <CardTitle>Liste des opérations</CardTitle>
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Rechercher..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9 w-64"
+                />
+              </div>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Nouvelle opération
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="relative w-full overflow-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50">
-                <tr className="text-left">
-                  <th className="p-3">Type</th>
-                  <th className="p-3">Client</th>
-                  <th className="p-3">Montant</th>
-                  <th className="p-3">Date</th>
-                  <th className="p-3">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredOperations.map((op) => (
-                  <tr 
-                    key={op.id} 
-                    className={`border-b transition-colors hover:bg-muted/50 cursor-pointer ${
-                      selectedOperation?.id === op.id ? "bg-muted/30" : ""
-                    }`}
-                    onClick={() => handleOperationClick(op)}
-                  >
-                    <td className="p-3">
-                      <div className="flex items-center gap-2">
-                        {getTypeIcon(op.type)}
-                        <span>{getTypeLabel(op.type)}</span>
+          <div className="space-y-4">
+            {filteredOperations.map((operation) => (
+              <div
+                key={operation.id}
+                className="group relative rounded-lg border bg-card p-4 hover:shadow-md transition-all"
+              >
+                <div className="absolute -left-px top-4 bottom-4 w-1 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className={`px-3 py-1 rounded-full text-sm font-medium ${getTypeStyle(operation.type)}`}>
+                      {operation.type}
+                    </div>
+                    <div className="space-y-1">
+                      <p className="font-medium">{operation.description}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {operation.date}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <div className="text-lg font-semibold">
+                        {operation.amount.toLocaleString()} €
                       </div>
-                    </td>
-                    <td className="p-3">{op.clientName}</td>
-                    <td className="p-3 font-medium">
-                      {op.amount.toLocaleString()} €
-                    </td>
-                    <td className="p-3 text-muted-foreground">{op.date}</td>
-                    <td className="p-3">
+                      <div className={`text-sm px-2 py-0.5 rounded ${getStatusStyle(operation.status)}`}>
+                        {operation.status}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button
                         variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toast.info("Analyse détaillée en cours...");
-                        }}
+                        size="icon"
+                        onClick={() => handleEdit(operation)}
+                        className="hover:bg-blue-50 dark:hover:bg-blue-950/50 text-blue-600 hover:text-blue-600 transition-all"
                       >
-                        <Sparkles className="h-4 w-4 mr-2" />
-                        Analyser
+                        <Pencil className="h-4 w-4 rotate-12 transition-all hover:rotate-45 hover:scale-110" />
                       </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(operation)}
+                        className="hover:bg-red-50 dark:hover:bg-red-950/50 text-red-600 hover:text-red-600 transition-all"
+                      >
+                        <Trash2 className="h-4 w-4 transition-all hover:-translate-y-1 hover:scale-110" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+
             {filteredOperations.length === 0 && (
-              <p className="text-center text-muted-foreground p-4">
-                Aucune opération trouvée
-              </p>
+              <div className="text-center py-12">
+                <div className="rounded-full bg-muted w-12 h-12 flex items-center justify-center mx-auto mb-4">
+                  <Search className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <h3 className="text-lg font-medium">Aucune opération trouvée</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Modifiez vos critères de recherche pour voir plus de résultats.
+                </p>
+              </div>
             )}
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="rounded-lg bg-blue-50 dark:bg-blue-950/50 p-2 text-blue-600">
+                <Pencil className="h-5 w-5" />
+              </div>
+              Modifier l'opération
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Description</Label>
+              <Input
+                value={editForm.description}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, description: e.target.value })
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Montant</Label>
+              <Input
+                type="number"
+                value={editForm.amount}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, amount: e.target.value })
+                }
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button onClick={confirmEdit}>Enregistrer les modifications</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <div className="rounded-lg bg-red-50 dark:bg-red-950/50 p-2 text-red-600">
+                <Trash2 className="h-5 w-5" />
+              </div>
+              Confirmer la suppression
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>Êtes-vous sûr de vouloir supprimer cette opération ?</p>
+              {selectedOperation && (
+                <div className="rounded-lg border bg-muted/50 p-4 space-y-2">
+                  <div className="font-medium text-foreground">
+                    Type : {selectedOperation.type}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Description : {selectedOperation.description}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Montant : {selectedOperation.amount.toLocaleString()} €
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Date : {selectedOperation.date}
+                  </div>
+                </div>
+              )}
+              <p className="text-destructive font-medium">Cette action est irréversible.</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete} 
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
