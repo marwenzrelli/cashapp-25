@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from "recharts";
-import { ArrowUpCircle, ArrowDownCircle, RefreshCcw, TrendingUp, Users, AlertCircle, Sparkles, User, Settings, Bell, Shield } from "lucide-react";
+import { ArrowUpCircle, ArrowDownCircle, RefreshCcw, TrendingUp, Users, AlertCircle, Sparkles, User, Settings, Bell, Shield, Building, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState } from "react";
@@ -58,10 +58,13 @@ const Dashboard = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const currentUser = {
-    name: "Jean Dupont",
-    email: "jean.dupont@example.com",
+    name: "Sophie Martin",
+    email: "sophie.martin@flowcash.fr",
     phone: "+33 6 12 34 56 78",
-    department: "Administration",
+    department: "Service Caisse",
+    role: "Superviseur",
+    joinDate: "15/01/2023",
+    employeeId: "SUP-2023-001"
   };
 
   const currentSettings = {
@@ -96,7 +99,7 @@ const Dashboard = () => {
             <div className="relative group">
               <Avatar className="h-24 w-24 ring-4 ring-background">
                 <AvatarImage src="/placeholder.svg" alt="Photo de profil" />
-                <AvatarFallback>JD</AvatarFallback>
+                <AvatarFallback>SM</AvatarFallback>
               </Avatar>
               <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
                 <Button variant="secondary" size="sm" className="text-xs">
@@ -108,17 +111,32 @@ const Dashboard = () => {
             <div className="flex-1 space-y-4">
               <div>
                 <h2 className="text-2xl font-bold">{currentUser.name}</h2>
-                <p className="text-muted-foreground">Administrateur Principal</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="bg-primary/10 text-primary px-2 py-1 rounded-full text-sm font-medium">
+                    {currentUser.role}
+                  </span>
+                  <span className="text-muted-foreground text-sm">
+                    ID: {currentUser.employeeId}
+                  </span>
+                </div>
               </div>
               
-              <div className="flex gap-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Building className="h-4 w-4" />
+                  <span>{currentUser.department}</span>
+                </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Shield className="h-4 w-4" />
-                  <span>Niveau de sécurité : Élevé</span>
+                  <span>Niveau d'accès : {currentUser.role === "Superviseur" ? "Complet" : "Restreint"}</span>
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Bell className="h-4 w-4" />
                   <span>Notifications : {currentSettings.notifications ? 'Activées' : 'Désactivées'}</span>
+                </div>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Calendar className="h-4 w-4" />
+                  <span>En poste depuis : {currentUser.joinDate}</span>
                 </div>
               </div>
               
@@ -145,15 +163,15 @@ const Dashboard = () => {
             <div className="grid grid-cols-3 gap-4 p-4 bg-white/50 dark:bg-white/5 rounded-lg backdrop-blur-sm">
               <div className="text-center p-3 space-y-1">
                 <div className="text-2xl font-bold text-primary">152</div>
-                <div className="text-sm text-muted-foreground">Opérations</div>
+                <div className="text-sm text-muted-foreground">Opérations supervisées</div>
               </div>
               <div className="text-center p-3 space-y-1 border-x">
                 <div className="text-2xl font-bold text-primary">45k€</div>
-                <div className="text-sm text-muted-foreground">Volume</div>
+                <div className="text-sm text-muted-foreground">Volume géré</div>
               </div>
               <div className="text-center p-3 space-y-1">
                 <div className="text-2xl font-bold text-primary">98%</div>
-                <div className="text-sm text-muted-foreground">Performance</div>
+                <div className="text-sm text-muted-foreground">Taux de validation</div>
               </div>
             </div>
           </div>

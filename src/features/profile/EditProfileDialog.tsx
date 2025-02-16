@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User, Mail, Phone, Building } from "lucide-react";
+import { User, Mail, Phone, Building, Calendar, Badge } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -15,6 +15,9 @@ interface EditProfileDialogProps {
     email: string;
     phone: string;
     department: string;
+    role: string;
+    joinDate: string;
+    employeeId: string;
   };
 }
 
@@ -29,7 +32,7 @@ export const EditProfileDialog = ({
     e.preventDefault();
     // Simuler la mise à jour du profil
     setTimeout(() => {
-      toast.success("Profil mis à jour avec succès");
+      toast.success("Profil professionnel mis à jour avec succès");
       onOpenChange(false);
     }, 500);
   };
@@ -38,9 +41,9 @@ export const EditProfileDialog = ({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Éditer le profil</DialogTitle>
+          <DialogTitle>Éditer le profil professionnel</DialogTitle>
           <DialogDescription>
-            Modifiez vos informations personnelles ci-dessous
+            Modifiez vos informations professionnelles ci-dessous
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
@@ -59,7 +62,7 @@ export const EditProfileDialog = ({
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">Email professionnel</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
@@ -74,7 +77,7 @@ export const EditProfileDialog = ({
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="phone">Téléphone</Label>
+            <Label htmlFor="phone">Téléphone professionnel</Label>
             <div className="relative">
               <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
@@ -87,7 +90,7 @@ export const EditProfileDialog = ({
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="department">Département</Label>
+            <Label htmlFor="department">Service</Label>
             <div className="relative">
               <Building className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
@@ -95,6 +98,33 @@ export const EditProfileDialog = ({
                 value={formData.department}
                 onChange={(e) => setFormData({ ...formData, department: e.target.value })}
                 className="pl-9"
+                readOnly
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="role">Poste</Label>
+            <div className="relative">
+              <Badge className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="role"
+                value={formData.role}
+                className="pl-9"
+                readOnly
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="employeeId">Identifiant employé</Label>
+            <div className="relative">
+              <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="employeeId"
+                value={formData.employeeId}
+                className="pl-9"
+                readOnly
               />
             </div>
           </div>
