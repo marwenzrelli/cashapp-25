@@ -1,89 +1,23 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { UserPlus, Users, Shield, Search, Building, UserCog } from "lucide-react";
-import { SystemUser, UserRole, mapProfileToSystemUser } from "@/types/admin";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { UserPlus, Users, Shield, UserCog } from "lucide-react";
+import { SystemUser, UserRole } from "@/types/admin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "sonner";
 import { StatCard } from "@/features/admin/components/StatCard";
 import { AddUserDialog } from "@/features/admin/components/AddUserDialog";
 import { UsersList } from "@/features/admin/components/UsersList";
 import { UserProfile } from "@/features/admin/components/UserProfile";
 import { ServiceExplanations } from "@/features/admin/components/ServiceExplanations";
-import { supabase } from "@/integrations/supabase/client";
+import { UserFilters } from "@/features/admin/components/UserFilters";
+import { useUsers } from "@/features/admin/hooks/useUsers";
 
 const Administration = () => {
-  const [users, setUsers] = useState<SystemUser[]>([]);
+  const { users, currentUser, toggleUserStatus, addUser, updateUser, updatePermissions } = useUsers();
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
   const [selectedRole, setSelectedRole] = useState<UserRole | "all">("all");
-  const [currentUser, setCurrentUser] = useState<SystemUser | null>(null);
-
-  useEffect(() => {
-    fetchUsers();
-    fetchCurrentUser();
-  }, []);
-
-  const fetchCurrentUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*, user_permissions(*)')
-        .eq('id', user.id)
-        .single();
-
-      if (profile) {
-        setCurrentUser(mapProfileToSystemUser(profile));
-      }
-    }
-  };
-
-  const fetchUsers = async () => {
-    const { data: profiles, error } = await supabase
-      .from('profiles')
-      .select('*, user_permissions(*)');
-
-    if (error) {
-      toast.error("Erreur lors du chargement des utilisateurs");
-      return;
-    }
-
-    const formattedUsers = profiles.map(mapProfileToSystemUser);
-    setUsers(formattedUsers);
-  };
-
-  const toggleUserStatus = (userId: string) => {
-    setUsers(
-      users.map((user) =>
-        user.id === userId
-          ? { ...user, status: user.status === "active" ? "inactive" : "active" }
-          : user
-      )
-    );
-    toast.success("Statut de l'utilisateur mis à jour");
-  };
-
-  const handleAddUser = (user: SystemUser) => {
-    setUsers([user, ...users]);
-    toast.success("Utilisateur créé avec succès");
-  };
-
-  const handleUpdateUser = (updatedUser: SystemUser) => {
-    setUsers(users.map(user => 
-      user.id === updatedUser.id ? updatedUser : user
-    ));
-    toast.success("Utilisateur mis à jour avec succès");
-  };
-
-  const handleUpdatePermissions = (userId: string, permissions: Permission[]) => {
-    setUsers(users.map(user =>
-      user.id === userId ? { ...user, permissions } : user
-    ));
-    toast.success("Permissions mises à jour avec succès");
-  };
 
   const filteredUsers = users.filter(
     (user) =>
@@ -150,55 +84,22 @@ const Administration = () => {
               <Shield className="h-5 w-5 text-primary" />
               Gestion des utilisateurs
             </CardTitle>
-            <div className="flex flex-wrap gap-4">
-              <div className="relative w-64">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder="Rechercher..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-              <Select
-                value={selectedDepartment}
-                onValueChange={setSelectedDepartment}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <Building className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Service" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous les services</SelectItem>
-                  <SelectItem value="finance">Finance</SelectItem>
-                  <SelectItem value="operations">Opérations</SelectItem>
-                  <SelectItem value="accounting">Comptabilité</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select 
-                value={selectedRole} 
-                onValueChange={(value: UserRole | "all") => setSelectedRole(value)}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <UserCog className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Rôle" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous les rôles</SelectItem>
-                  <SelectItem value="supervisor">Superviseur</SelectItem>
-                  <SelectItem value="manager">Gestionnaire</SelectItem>
-                  <SelectItem value="cashier">Caissier</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <UserFilters
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              selectedDepartment={selectedDepartment}
+              onDepartmentChange={setSelectedDepartment}
+              selectedRole={selectedRole}
+              onRoleChange={(value: UserRole | "all") => setSelectedRole(value)}
+            />
           </div>
         </CardHeader>
         <CardContent>
           <UsersList 
             users={filteredUsers} 
             onToggleStatus={toggleUserStatus}
-            onUpdateUser={handleUpdateUser}
-            onUpdatePermissions={handleUpdatePermissions}
+            onUpdateUser={updateUser}
+            onUpdatePermissions={updatePermissions}
           />
         </CardContent>
       </Card>
@@ -206,7 +107,7 @@ const Administration = () => {
       <AddUserDialog
         isOpen={isAddUserOpen}
         onClose={() => setIsAddUserOpen(false)}
-        onAddUser={handleAddUser}
+        onAddUser={addUser}
       />
 
       {currentUser && <UserProfile user={currentUser} />}

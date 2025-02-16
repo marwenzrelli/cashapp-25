@@ -19,7 +19,7 @@ export interface SystemUser {
   email: string;
   login?: string;
   role: UserRole;
-  status: 'active' | 'inactive';
+  status: ProfileRow['status'];
   permissions: Permission[];
   createdAt: string;
   department: string;
