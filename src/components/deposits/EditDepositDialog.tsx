@@ -34,7 +34,7 @@ export const EditDepositDialog = ({
             Modifier le versement
           </DialogTitle>
           <DialogDescription className="text-base">
-            Modifiez les informations du versement de {selectedDeposit?.clientName}.
+            Modifiez les informations du versement de {selectedDeposit?.client_name}.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">

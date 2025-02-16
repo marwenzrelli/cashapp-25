@@ -40,7 +40,7 @@ export const DeleteDepositDialog = ({
             {selectedDeposit && (
               <div className="rounded-lg border bg-muted/50 p-4 space-y-2">
                 <div className="font-medium text-foreground">
-                  Client : {selectedDeposit.clientName}
+                  Client : {selectedDeposit.client_name}
                 </div>
                 <div className="text-sm text-muted-foreground">
                   Montant : {selectedDeposit.amount.toLocaleString()} €

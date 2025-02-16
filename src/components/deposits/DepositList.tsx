@@ -32,7 +32,7 @@ export const DepositList = ({ deposits, onEdit, onDelete }: DepositListProps) =>
                   <div className="absolute inset-0 animate-pulse rounded-full bg-primary/5" />
                 </div>
                 <div>
-                  <p className="font-medium">{deposit.clientName}</p>
+                  <p className="font-medium">{deposit.client_name}</p>
                   <p className="text-sm text-muted-foreground">
                     ID: {deposit.id}
                   </p>
@@ -48,7 +48,7 @@ export const DepositList = ({ deposits, onEdit, onDelete }: DepositListProps) =>
               </div>
             </td>
             <td className="p-3 text-muted-foreground">{deposit.date}</td>
-            <td className="p-3 text-muted-foreground">{deposit.notes}</td>
+            <td className="p-3 text-muted-foreground">{deposit.description}</td>
             <td className="p-3">
               <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 ease-in-out">
                 <Button
