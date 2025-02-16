@@ -9,6 +9,7 @@ import { useState } from "react";
 import { EditProfileDialog } from "@/features/profile/EditProfileDialog";
 import { SettingsDialog } from "@/features/profile/SettingsDialog";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { SystemUser } from "@/types/admin";
 
 const data = [];
 const recentActivity = [];
@@ -18,6 +19,25 @@ const Dashboard = () => {
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { currency, setCurrency } = useCurrency();
+
+  const handleUpdateProfile = (updatedUser: Partial<SystemUser>) => {
+    // Récupérer les utilisateurs du localStorage
+    const usersData = localStorage.getItem('admin_users');
+    let users = JSON.parse(usersData || '[]');
+    
+    // Mettre à jour l'utilisateur connecté
+    const currentUserId = localStorage.getItem('currentUserId');
+    if (currentUserId) {
+      users = users.map((u: SystemUser) => 
+        u.id === currentUserId ? { ...u, ...updatedUser } : u
+      );
+      
+      // Sauvegarder dans le localStorage
+      localStorage.setItem('admin_users', JSON.stringify(users));
+    }
+    
+    setIsEditProfileOpen(false);
+  };
 
   return (
     <div className="space-y-8 animate-in">
@@ -158,6 +178,7 @@ const Dashboard = () => {
           joinDate: "",
           employeeId: ""
         }}
+        onSubmit={handleUpdateProfile}
       />
 
       <SettingsDialog
