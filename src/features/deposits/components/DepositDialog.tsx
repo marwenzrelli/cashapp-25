@@ -88,7 +88,7 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px]" onPointerDownOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-2xl">
             <div className="rounded-xl bg-green-100 dark:bg-green-900/20 p-2">
@@ -125,7 +125,7 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>Date</Label>
-                <Popover>
+                <Popover modal>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
@@ -138,12 +138,14 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
                       {date ? format(date, "PPP", { locale: fr }) : <span>Choisir une date</span>}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
+                  <PopoverContent className="w-auto p-0" onPointerDownOutside={(e) => e.preventDefault()}>
                     <Calendar
                       mode="single"
                       selected={date}
                       onSelect={(newDate) => {
-                        setDate(newDate || new Date());
+                        if (newDate) {
+                          setDate(newDate);
+                        }
                       }}
                       initialFocus
                     />
