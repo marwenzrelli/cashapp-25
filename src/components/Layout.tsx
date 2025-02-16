@@ -45,14 +45,9 @@ const Layout = () => {
                     <DollarSign className="h-6 w-6 text-white drop-shadow-[0_0_3px_rgba(255,255,255,0.5)]" />
                   </div>
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-xl font-bold bg-gradient-to-r from-[#9b87f5] to-[#8B5CF6] text-transparent bg-clip-text">
-                    Flow Cash Control
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    Gestion intelligente de trésorerie
-                  </span>
-                </div>
+                <span className="text-xl font-bold bg-gradient-to-r from-[#9b87f5] to-[#8B5CF6] text-transparent bg-clip-text">
+                  Flow Cash Control
+                </span>
               </div>
               <div className="flex items-center space-x-4">
                 {navItems.map(({ path, label, icon: Icon }) => (
