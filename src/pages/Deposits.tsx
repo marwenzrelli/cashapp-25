@@ -4,8 +4,18 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ArrowUpCircle, Plus, Sparkles, Search, UserCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { ArrowUpCircle, Plus, Sparkles, Search, UserCircle, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface Deposit {
@@ -25,14 +35,21 @@ interface AISuggestion {
 
 const Deposits = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedDeposit, setSelectedDeposit] = useState<Deposit | null>(null);
   const [newDeposit, setNewDeposit] = useState({
     clientName: "",
     amount: "",
     notes: "",
   });
+  const [editForm, setEditForm] = useState({
+    clientName: "",
+    amount: "",
+    notes: "",
+  });
 
-  // Données de test
   const [deposits, setDeposits] = useState<Deposit[]>([
     {
       id: "1",
@@ -50,7 +67,6 @@ const Deposits = () => {
     },
   ]);
 
-  // Suggestions IA simulées
   const aiSuggestions: AISuggestion[] = [
     {
       id: "1",
@@ -80,6 +96,54 @@ const Deposits = () => {
     setNewDeposit({ clientName: "", amount: "", notes: "" });
     setIsDialogOpen(false);
     toast.success("Versement enregistré avec succès");
+  };
+
+  const handleEdit = (deposit: Deposit) => {
+    setSelectedDeposit(deposit);
+    setEditForm({
+      clientName: deposit.clientName,
+      amount: deposit.amount.toString(),
+      notes: deposit.notes,
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDelete = (deposit: Deposit) => {
+    setSelectedDeposit(deposit);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmEdit = () => {
+    if (!selectedDeposit) return;
+    setDeposits(prevDeposits =>
+      prevDeposits.map(deposit =>
+        deposit.id === selectedDeposit.id
+          ? {
+              ...deposit,
+              clientName: editForm.clientName,
+              amount: parseFloat(editForm.amount),
+              notes: editForm.notes,
+            }
+          : deposit
+      )
+    );
+
+    setIsEditDialogOpen(false);
+    toast.success("Versement modifié", {
+      description: `Le versement de ${editForm.clientName} a été mis à jour avec succès.`
+    });
+  };
+
+  const confirmDelete = () => {
+    if (!selectedDeposit) return;
+    setDeposits(prevDeposits =>
+      prevDeposits.filter(deposit => deposit.id !== selectedDeposit.id)
+    );
+
+    setIsDeleteDialogOpen(false);
+    toast.success("Versement supprimé", {
+      description: `Le versement de ${selectedDeposit.clientName} a été supprimé avec succès.`
+    });
   };
 
   const applySuggestion = (suggestion: AISuggestion) => {
@@ -226,14 +290,18 @@ const Deposits = () => {
                   <th className="p-3">Montant</th>
                   <th className="p-3">Date</th>
                   <th className="p-3">Notes</th>
+                  <th className="p-3">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredDeposits.map((deposit) => (
-                  <tr key={deposit.id} className="border-b">
+                  <tr key={deposit.id} className="group border-b hover:bg-muted/50 transition-colors">
                     <td className="p-3">
                       <div className="flex items-center gap-3">
-                        <UserCircle className="h-8 w-8 text-muted-foreground" />
+                        <div className="relative">
+                          <UserCircle className="h-8 w-8 text-primary/20 transition-colors group-hover:text-primary/40" />
+                          <div className="absolute inset-0 animate-pulse rounded-full bg-primary/5" />
+                        </div>
                         <div>
                           <p className="font-medium">{deposit.clientName}</p>
                           <p className="text-sm text-muted-foreground">
@@ -252,6 +320,26 @@ const Deposits = () => {
                     </td>
                     <td className="p-3 text-muted-foreground">{deposit.date}</td>
                     <td className="p-3 text-muted-foreground">{deposit.notes}</td>
+                    <td className="p-3">
+                      <div className="flex gap-2 opacity-70 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(deposit)}
+                          className="hover:bg-blue-50 dark:hover:bg-blue-950/50 text-blue-600 hover:text-blue-600 transition-all"
+                        >
+                          <Pencil className="h-4 w-4 rotate-12 transition-all hover:rotate-45 hover:scale-110" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(deposit)}
+                          className="hover:bg-red-50 dark:hover:bg-red-950/50 text-red-600 hover:text-red-600 transition-all"
+                        >
+                          <Trash2 className="h-4 w-4 transition-all hover:-translate-y-1 hover:scale-110" />
+                        </Button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -264,6 +352,106 @@ const Deposits = () => {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="rounded-lg bg-blue-50 dark:bg-blue-950/50 p-2 text-blue-600">
+                <Pencil className="h-5 w-5" />
+              </div>
+              Modifier le versement
+            </DialogTitle>
+            <DialogDescription className="text-base">
+              Modifiez les informations du versement de {selectedDeposit?.clientName}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-clientName">Client</Label>
+              <Input
+                id="edit-clientName"
+                value={editForm.clientName}
+                onChange={(e) => setEditForm({ ...editForm, clientName: e.target.value })}
+                className="transition-all focus-visible:ring-blue-500"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-amount">Montant</Label>
+              <Input
+                id="edit-amount"
+                type="number"
+                min="0"
+                step="0.01"
+                value={editForm.amount}
+                onChange={(e) => setEditForm({ ...editForm, amount: e.target.value })}
+                className="transition-all focus-visible:ring-blue-500"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-notes">Notes</Label>
+              <Input
+                id="edit-notes"
+                value={editForm.notes}
+                onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                className="transition-all focus-visible:ring-blue-500"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button 
+              onClick={confirmEdit}
+              className="bg-blue-600 hover:bg-blue-700 transition-colors"
+            >
+              Enregistrer les modifications
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent className="sm:max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <div className="rounded-lg bg-red-50 dark:bg-red-950/50 p-2 text-red-600">
+                <Trash2 className="h-5 w-5" />
+              </div>
+              Confirmer la suppression
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>Êtes-vous sûr de vouloir supprimer ce versement ?</p>
+              {selectedDeposit && (
+                <div className="rounded-lg border bg-muted/50 p-4 space-y-2">
+                  <div className="font-medium text-foreground">
+                    Client : {selectedDeposit.clientName}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Montant : {selectedDeposit.amount.toLocaleString()} €
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Date : {selectedDeposit.date}
+                  </div>
+                </div>
+              )}
+              <p className="text-destructive font-medium">Cette action est irréversible.</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete} 
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
