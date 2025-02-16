@@ -65,6 +65,23 @@ const Transfers = () => {
     },
   ]);
 
+  const suggestions: Suggestion[] = [
+    {
+      id: "1",
+      fromClient: "Jean Dupont",
+      toClient: "Marie Martin",
+      amount: 1500,
+      reason: "Paiement mensuel récurrent",
+    },
+    {
+      id: "2",
+      fromClient: "Marie Martin",
+      toClient: "Pierre Durant",
+      amount: 800,
+      reason: "Remboursement prévu",
+    },
+  ];
+
   const handleTransfer = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
