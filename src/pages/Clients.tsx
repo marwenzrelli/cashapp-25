@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Search, UserCircle, Sparkles, AlertCircle, Pencil, Trash2 } from "lucide-react";
+import { Plus, Search, UserCircle, Sparkles, AlertCircle, Pencil, Trash2, UserPlus, User, Mail, Phone, Coins } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +45,14 @@ const Clients = () => {
     prenom: "",
     telephone: "",
     email: "",
+  });
+
+  const [newClient, setNewClient] = useState({
+    nom: "",
+    prenom: "",
+    telephone: "",
+    email: "",
+    solde: 0,
   });
 
   const [clients, setClients] = useState<Client[]>([
@@ -152,6 +160,23 @@ const Clients = () => {
     client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     client.telephone.includes(searchTerm)
   );
+
+  const handleCreateClient = () => {
+    const id = (clients.length + 1).toString();
+    const dateCreation = new Date().toISOString().split('T')[0];
+    
+    setClients(prev => [...prev, {
+      ...newClient,
+      id,
+      dateCreation,
+    }]);
+
+    setIsDialogOpen(false);
+    toast.success("Nouveau client créé", {
+      description: `${newClient.prenom} ${newClient.nom} a été ajouté avec succès.`
+    });
+    setNewClient({ nom: "", prenom: "", telephone: "", email: "", solde: 0 });
+  };
 
   return (
     <div className="space-y-8 animate-in">
@@ -371,6 +396,130 @@ const Clients = () => {
               className="bg-blue-600 hover:bg-blue-700 transition-colors"
             >
               Enregistrer les modifications
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-2xl">
+              <div className="rounded-xl bg-primary/10 p-2">
+                <UserPlus className="h-6 w-6 text-primary" />
+              </div>
+              Nouveau client
+            </DialogTitle>
+            <DialogDescription className="text-base">
+              Créez un nouveau compte client en remplissant le formulaire ci-dessous
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-6 py-4">
+            <div className="relative overflow-hidden rounded-lg border bg-gradient-to-b from-muted/50 to-muted p-6">
+              <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))]" />
+              <div className="relative grid gap-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="prenom">Prénom</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="prenom"
+                        placeholder="Jean"
+                        value={newClient.prenom}
+                        onChange={(e) => setNewClient({ ...newClient, prenom: e.target.value })}
+                        className="pl-9 transition-all focus-visible:ring-primary/50"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="nom">Nom</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="nom"
+                        placeholder="Dupont"
+                        value={newClient.nom}
+                        onChange={(e) => setNewClient({ ...newClient, nom: e.target.value })}
+                        className="pl-9 transition-all focus-visible:ring-primary/50"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="jean.dupont@example.com"
+                      value={newClient.email}
+                      onChange={(e) => setNewClient({ ...newClient, email: e.target.value })}
+                      className="pl-9 transition-all focus-visible:ring-primary/50"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="telephone">Téléphone</Label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="telephone"
+                        placeholder="06 12 34 56 78"
+                        value={newClient.telephone}
+                        onChange={(e) => setNewClient({ ...newClient, telephone: e.target.value })}
+                        className="pl-9 transition-all focus-visible:ring-primary/50"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="solde">Solde initial</Label>
+                    <div className="relative">
+                      <Coins className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="solde"
+                        type="number"
+                        placeholder="0.00"
+                        value={newClient.solde}
+                        onChange={(e) => setNewClient({ ...newClient, solde: parseFloat(e.target.value) })}
+                        className="pl-9 transition-all focus-visible:ring-primary/50"
+                      />
+                      <span className="absolute right-3 top-3 text-muted-foreground">€</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-lg border bg-muted/50 p-4">
+              <div className="flex items-start gap-4">
+                <div className="rounded-full bg-primary/10 p-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-sm font-medium">Recommandations IA</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Les champs sont validés en temps réel pour assurer la qualité des données. 
+                    L'IA suggère un solde initial minimum de 50€ pour les nouveaux comptes.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setIsDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button 
+              onClick={handleCreateClient}
+              className="bg-primary hover:bg-primary/90 text-white gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Créer le compte
             </Button>
           </DialogFooter>
         </DialogContent>
