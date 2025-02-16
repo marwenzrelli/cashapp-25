@@ -113,7 +113,10 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
                   </SelectTrigger>
                   <SelectContent>
                     {clients.map((client) => (
-                      <SelectItem key={client.id} value={`${client.prenom} ${client.nom}`}>
+                      <SelectItem 
+                        key={client.id} 
+                        value={client.id.toString()}
+                      >
                         {client.prenom} {client.nom}
                       </SelectItem>
                     ))}
