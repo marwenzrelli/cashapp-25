@@ -4,14 +4,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { Session } from "@supabase/supabase-js";
 
-type Currency = "EUR" | "USD" | "TND" | "AED";
+export type Currency = "EUR" | "USD" | "TND" | "AED";
 
 interface CurrencyContextType {
   currency: Currency;
-  setCurrency: (currency: Currency) => void;
+  setCurrency: (currency: Currency) => Promise<void>;
 }
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
+
+const isValidCurrency = (value: any): value is Currency => {
+  return ["EUR", "USD", "TND", "AED"].includes(value);
+};
 
 export function CurrencyProvider({ children }: { children: ReactNode }) {
   const [currency, setCurrencyState] = useState<Currency>("EUR");
@@ -48,11 +52,11 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     try {
       const { data: userData, error: userError } = await supabase
         .from('profiles')
-        .select('*')
+        .select('currency')
         .eq('id', userId)
         .single();
 
-      console.log("[CurrencyContext] Données utilisateur complètes:", userData);
+      console.log("[CurrencyContext] Données de devise reçues:", userData);
 
       if (userError) {
         console.error('[CurrencyContext] Erreur lors du chargement du profil:', userError);
@@ -64,9 +68,11 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      if (userData?.currency) {
+      if (userData?.currency && isValidCurrency(userData.currency)) {
         console.log("[CurrencyContext] Mise à jour de la devise dans l'état:", userData.currency);
-        setCurrencyState(userData.currency as Currency);
+        setCurrencyState(userData.currency);
+      } else {
+        console.warn("[CurrencyContext] Devise invalide reçue:", userData?.currency);
       }
     } catch (error) {
       console.error('[CurrencyContext] Erreur lors du chargement de la devise:', error);
@@ -74,7 +80,16 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   };
 
   const setCurrency = async (newCurrency: Currency) => {
-    console.log("[CurrencyContext] Tentative de mise à jour de la devise vers:", newCurrency);
+    if (!isValidCurrency(newCurrency)) {
+      console.error("[CurrencyContext] Tentative de définir une devise invalide:", newCurrency);
+      toast({
+        title: "Erreur",
+        description: "Devise non valide",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!session?.user?.id) {
       console.error("[CurrencyContext] Pas de session utilisateur active");
       toast({
@@ -86,17 +101,10 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      console.log("[CurrencyContext] Début de la mise à jour pour l'utilisateur:", session.user.id);
-      
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('profiles')
-        .update({ 
-          currency: newCurrency,
-          updated_at: new Date().toISOString()
-        })
+        .update({ currency: newCurrency })
         .eq('id', session.user.id);
-
-      console.log("[CurrencyContext] Résultat de la mise à jour:", { data, error });
 
       if (error) {
         console.error('[CurrencyContext] Erreur lors de la mise à jour:', error);
@@ -108,29 +116,12 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Vérifions immédiatement si la mise à jour a bien été prise en compte
-      const { data: verificationData, error: verificationError } = await supabase
-        .from('profiles')
-        .select('currency')
-        .eq('id', session.user.id)
-        .single();
-
-      console.log("[CurrencyContext] Vérification après mise à jour:", { verificationData, verificationError });
-
-      if (verificationData?.currency === newCurrency) {
-        setCurrencyState(newCurrency);
-        toast({
-          title: "Succès",
-          description: "Vos préférences de devise ont été mises à jour",
-        });
-      } else {
-        console.error('[CurrencyContext] La mise à jour na pas été correctement enregistrée');
-        toast({
-          title: "Avertissement",
-          description: "La mise à jour de la devise n'a pas pu être vérifiée",
-          variant: "destructive",
-        });
-      }
+      setCurrencyState(newCurrency);
+      console.log("[CurrencyContext] Devise mise à jour avec succès:", newCurrency);
+      toast({
+        title: "Succès",
+        description: "Vos préférences de devise ont été mises à jour",
+      });
     } catch (error) {
       console.error('[CurrencyContext] Erreur lors de la mise à jour de la devise:', error);
       toast({
