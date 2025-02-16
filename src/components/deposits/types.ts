@@ -5,6 +5,9 @@ export interface Deposit {
   amount: number;
   date: string;
   description: string;
+  status?: string;
+  created_at?: string;
+  created_by?: string;
 }
 
 export interface AISuggestion {

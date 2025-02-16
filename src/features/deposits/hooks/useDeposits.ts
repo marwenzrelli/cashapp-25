@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { type Deposit } from "../types";
+import { type Deposit } from "@/components/deposits/types";
 import { useNavigate } from "react-router-dom";
 
 export const useDeposits = () => {
@@ -38,7 +38,10 @@ export const useDeposits = () => {
         amount: Number(d.amount),
         date: new Date(d.operation_date).toLocaleDateString(),
         description: d.notes || '',
-        client_name: d.client_name
+        client_name: d.client_name,
+        status: d.status,
+        created_at: d.created_at,
+        created_by: d.created_by
       }));
 
       setDeposits(formattedDeposits);

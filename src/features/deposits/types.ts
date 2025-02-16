@@ -1,11 +1,5 @@
 
-export interface Deposit {
-  id: string;
-  amount: number;
-  date: string;
-  description: string;
-  client_name: string;
-}
+import { type Deposit } from "@/components/deposits/types";
 
 export interface DepositDialogProps {
   open: boolean;
