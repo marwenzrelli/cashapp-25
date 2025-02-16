@@ -34,6 +34,8 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
 import { useClients } from "@/features/clients/hooks/useClients";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 interface Client {
   id: string;
@@ -60,12 +62,26 @@ interface DepositDialogProps {
 }
 
 const Deposits = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedDeposit, setSelectedDeposit] = useState<Deposit | null>(null);
   const [itemsPerPage, setItemsPerPage] = useState("10");
   const [deposits, setDeposits] = useState<Deposit[]>([]);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Vous devez être connecté pour accéder à cette page");
+        navigate("/login");
+        return;
+      }
+    };
+
+    checkAuth();
+  }, [navigate]);
 
   const handleDelete = (deposit: Deposit) => {
     setSelectedDeposit(deposit);
