@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Filter } from "lucide-react";
+import { Filter, Search } from "lucide-react";
 import { toast } from "sonner";
 import { format, isWithinInterval, parseISO, subDays, startOfDay, endOfDay } from "date-fns";
 import { Operation } from "@/features/operations/types";
