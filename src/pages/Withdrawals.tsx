@@ -1,11 +1,20 @@
-
 import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ArrowDownCircle, Plus, Sparkles, Search, UserCircle, AlertTriangle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Plus, Search, UserCircle, ArrowDownCircle, Sparkles, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface Withdrawal {
@@ -28,6 +37,14 @@ const Withdrawals = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [newWithdrawal, setNewWithdrawal] = useState({
+    clientName: "",
+    amount: "",
+    notes: "",
+  });
+  const [selectedWithdrawal, setSelectedWithdrawal] = useState<Withdrawal | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
     clientName: "",
     amount: "",
     notes: "",
@@ -87,6 +104,52 @@ const Withdrawals = () => {
     return type === "warning" 
       ? "border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20" 
       : "border-blue-200 bg-blue-50 dark:bg-blue-950/20";
+  };
+
+  const handleEdit = (withdrawal: Withdrawal) => {
+    setSelectedWithdrawal(withdrawal);
+    setEditForm({
+      clientName: withdrawal.clientName,
+      amount: withdrawal.amount.toString(),
+      notes: withdrawal.notes,
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDelete = (withdrawal: Withdrawal) => {
+    setSelectedWithdrawal(withdrawal);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmEdit = () => {
+    if (!selectedWithdrawal) return;
+
+    setWithdrawals((prev) =>
+      prev.map((withdrawal) =>
+        withdrawal.id === selectedWithdrawal.id
+          ? {
+              ...withdrawal,
+              clientName: editForm.clientName,
+              amount: parseFloat(editForm.amount),
+              notes: editForm.notes,
+            }
+          : withdrawal
+      )
+    );
+
+    setIsEditDialogOpen(false);
+    toast.success("Retrait modifié avec succès");
+  };
+
+  const confirmDelete = () => {
+    if (!selectedWithdrawal) return;
+
+    setWithdrawals((prev) =>
+      prev.filter((withdrawal) => withdrawal.id !== selectedWithdrawal.id)
+    );
+
+    setIsDeleteDialogOpen(false);
+    toast.success("Retrait supprimé avec succès");
   };
 
   const filteredWithdrawals = withdrawals.filter(
@@ -216,7 +279,18 @@ const Withdrawals = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Historique des retraits</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Historique des retraits</CardTitle>
+            <div className="relative w-64">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Rechercher..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="relative w-full overflow-auto">
@@ -227,14 +301,18 @@ const Withdrawals = () => {
                   <th className="p-3">Montant</th>
                   <th className="p-3">Date</th>
                   <th className="p-3">Notes</th>
+                  <th className="p-3">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredWithdrawals.map((withdrawal) => (
-                  <tr key={withdrawal.id} className="border-b">
+                  <tr key={withdrawal.id} className="group border-b hover:bg-muted/50 transition-colors">
                     <td className="p-3">
                       <div className="flex items-center gap-3">
-                        <UserCircle className="h-8 w-8 text-muted-foreground" />
+                        <div className="relative">
+                          <UserCircle className="h-8 w-8 text-primary/20 transition-colors group-hover:text-primary/40" />
+                          <div className="absolute inset-0 animate-pulse rounded-full bg-primary/5" />
+                        </div>
                         <div>
                           <p className="font-medium">{withdrawal.clientName}</p>
                           <p className="text-sm text-muted-foreground">
@@ -253,18 +331,123 @@ const Withdrawals = () => {
                     </td>
                     <td className="p-3 text-muted-foreground">{withdrawal.date}</td>
                     <td className="p-3 text-muted-foreground">{withdrawal.notes}</td>
+                    <td className="p-3">
+                      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(withdrawal)}
+                          className="hover:bg-blue-50 dark:hover:bg-blue-950/50 text-blue-600 hover:text-blue-600 transition-all"
+                        >
+                          <Pencil className="h-4 w-4 rotate-12 transition-all hover:rotate-45 hover:scale-110" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(withdrawal)}
+                          className="hover:bg-red-50 dark:hover:bg-red-950/50 text-red-600 hover:text-red-600 transition-all"
+                        >
+                          <Trash2 className="h-4 w-4 transition-all hover:-translate-y-1 hover:scale-110" />
+                        </Button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
             {filteredWithdrawals.length === 0 && (
-              <p className="text-center text-muted-foreground p-4">
+              <div className="text-center text-muted-foreground p-4">
                 Aucun retrait trouvé
-              </p>
+              </div>
             )}
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="rounded-lg bg-blue-50 dark:bg-blue-950/50 p-2 text-blue-600">
+                <Pencil className="h-5 w-5" />
+              </div>
+              Modifier le retrait
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Client</Label>
+              <Input
+                value={editForm.clientName}
+                onChange={(e) => setEditForm({ ...editForm, clientName: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Montant</Label>
+              <Input
+                type="number"
+                value={editForm.amount}
+                onChange={(e) => setEditForm({ ...editForm, amount: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Notes</Label>
+              <Input
+                value={editForm.notes}
+                onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button onClick={confirmEdit}>Enregistrer les modifications</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <div className="rounded-lg bg-red-50 dark:bg-red-950/50 p-2 text-red-600">
+                <Trash2 className="h-5 w-5" />
+              </div>
+              Confirmer la suppression
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>Êtes-vous sûr de vouloir supprimer ce retrait ?</p>
+              {selectedWithdrawal && (
+                <div className="rounded-lg border bg-muted/50 p-4 space-y-2">
+                  <div className="font-medium text-foreground">
+                    Client : {selectedWithdrawal.clientName}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Montant : {selectedWithdrawal.amount.toLocaleString()} €
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Date : {selectedWithdrawal.date}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Notes : {selectedWithdrawal.notes}
+                  </div>
+                </div>
+              )}
+              <p className="text-destructive font-medium">Cette action est irréversible.</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete} 
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
