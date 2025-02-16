@@ -5,12 +5,13 @@ export interface Deposit {
   amount: number;
   date: string;
   description: string;
+  client_name: string;
 }
 
 export interface DepositDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (deposit: Deposit) => void;
+  onConfirm: (deposit: Deposit) => Promise<void>;
 }
 
 export interface DeleteDepositDialogProps {

@@ -18,6 +18,7 @@ import { type DepositDialogProps } from "../types";
 
 export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogProps) => {
   const [selectedClient, setSelectedClient] = useState("");
+  const [selectedClientName, setSelectedClientName] = useState("");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState<Date>(new Date());
   const [description, setDescription] = useState("");
@@ -57,6 +58,14 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
     }
   }, [date]);
 
+  const handleClientChange = (value: string) => {
+    setSelectedClient(value);
+    const client = clients.find(c => c.id.toString() === value);
+    if (client) {
+      setSelectedClientName(`${client.prenom} ${client.nom}`);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!selectedClient || !amount || !date) {
       toast.error("Veuillez remplir tous les champs obligatoires");
@@ -68,12 +77,14 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
       await onConfirm({
         id: "",
         client: selectedClient,
+        client_name: selectedClientName,
         amount: Number(amount),
         date: format(date, "yyyy-MM-dd"),
         description
       });
       
       setSelectedClient("");
+      setSelectedClientName("");
       setAmount("");
       setDescription("");
       fetchDailyTotal(date);
@@ -107,7 +118,7 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
               <Label htmlFor="client">Client</Label>
               <div className="relative">
                 <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Select value={selectedClient} onValueChange={setSelectedClient}>
+                <Select value={selectedClient} onValueChange={handleClientChange}>
                   <SelectTrigger className="w-full pl-9">
                     <SelectValue placeholder="Sélectionner un client" />
                   </SelectTrigger>
