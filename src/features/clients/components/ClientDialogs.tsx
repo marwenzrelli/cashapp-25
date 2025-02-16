@@ -7,32 +7,37 @@ import { Label } from "@/components/ui/label";
 import { Plus, UserPlus, User, Mail, Phone, Coins, Pencil, Trash2 } from "lucide-react";
 import { Client } from "../types";
 
+// Définition des types pour les formulaires
+type NewClientForm = {
+  nom: string;
+  prenom: string;
+  telephone: string;
+  email: string;
+  solde: number;
+};
+
+type EditClientForm = {
+  nom: string;
+  prenom: string;
+  telephone: string;
+  email: string;
+};
+
 interface ClientDialogsProps {
   isCreateOpen: boolean;
   isEditOpen: boolean;
   isDeleteOpen: boolean;
   selectedClient: Client | null;
-  newClient: {
-    nom: string;
-    prenom: string;
-    telephone: string;
-    email: string;
-    solde: number;
-  };
-  editForm: {
-    nom: string;
-    prenom: string;
-    telephone: string;
-    email: string;
-  };
+  newClient: NewClientForm;
+  editForm: EditClientForm;
   onCreateClose: () => void;
   onEditClose: () => void;
   onDeleteClose: () => void;
   onCreateSubmit: () => void;
   onEditSubmit: () => void;
   onDeleteSubmit: () => void;
-  onNewClientChange: (client: typeof newClient) => void;
-  onEditFormChange: (form: typeof editForm) => void;
+  onNewClientChange: (client: NewClientForm) => void;
+  onEditFormChange: (form: EditClientForm) => void;
 }
 
 export const ClientDialogs = ({
