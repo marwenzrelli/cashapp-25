@@ -17,11 +17,11 @@ export const getTypeStyle = (type: Operation["type"]) => {
 export const getTypeIcon = (type: Operation["type"]): JSX.Element => {
   switch (type) {
     case "deposit":
-      return <ArrowUpCircle className="h-4 w-4" />;
+      return React.createElement(ArrowUpCircle, { size: 16 });
     case "withdrawal":
-      return <ArrowDownCircle className="h-4 w-4" />;
+      return React.createElement(ArrowDownCircle, { size: 16 });
     case "transfer":
-      return <RefreshCcw className="h-4 w-4" />;
+      return React.createElement(RefreshCcw, { size: 16 });
   }
 };
 
