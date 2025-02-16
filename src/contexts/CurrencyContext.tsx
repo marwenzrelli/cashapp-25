@@ -18,21 +18,23 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const [session, setSession] = useState<Session | null>(null);
 
-  // Gérer la session
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session?.user?.id) {
-        loadCurrency(session.user.id);
+    const loadInitialSession = async () => {
+      const { data: { session: initialSession } } = await supabase.auth.getSession();
+      setSession(initialSession);
+      if (initialSession?.user?.id) {
+        await loadCurrency(initialSession.user.id);
       }
-    });
+    };
+
+    loadInitialSession();
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       if (session?.user?.id) {
-        loadCurrency(session.user.id);
+        await loadCurrency(session.user.id);
       }
     });
 
@@ -45,7 +47,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         .from('profiles')
         .select('currency')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Erreur lors du chargement de la devise:', error);
