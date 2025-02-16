@@ -125,12 +125,6 @@ const Login = () => {
             </form>
           </CardContent>
         </Card>
-
-        <div className="text-center text-sm text-muted-foreground">
-          Identifiants de connexion par défaut :<br />
-          Nom d'utilisateur : marwensuperviseur<br />
-          Mot de passe : 12345678
-        </div>
       </div>
     </div>
   );
