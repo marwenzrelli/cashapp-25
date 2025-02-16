@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { UserPlus, Users, Shield, Search, Building, UserCog } from "lucide-react";
@@ -15,6 +14,54 @@ import { ServiceExplanations } from "@/features/admin/components/ServiceExplanat
 
 const USERS_STORAGE_KEY = 'admin_users';
 
+const setupSupervisorUser = () => {
+  const usersData = localStorage.getItem(USERS_STORAGE_KEY);
+  let users = usersData ? JSON.parse(usersData) : [];
+  
+  let marwenUser = users.find((u: SystemUser) => u.login === "marwensuperviseur");
+  
+  const allPermissions: Permission[] = [
+    { id: "1", name: "Gestion des versements", description: "Autoriser la gestion des versements", module: "deposits" },
+    { id: "2", name: "Gestion des retraits", description: "Autoriser la gestion des retraits", module: "withdrawals" },
+    { id: "3", name: "Gestion des virements", description: "Autoriser la gestion des virements", module: "transfers" },
+    { id: "4", name: "Gestion des clients", description: "Autoriser la gestion des clients", module: "clients" },
+    { id: "5", name: "Accès aux rapports", description: "Autoriser l'accès aux rapports", module: "reports" },
+    { id: "6", name: "Configuration système", description: "Autoriser la configuration du système", module: "settings" },
+  ];
+
+  if (marwenUser) {
+    marwenUser = {
+      ...marwenUser,
+      role: "supervisor",
+      permissions: allPermissions,
+      status: "active",
+    };
+
+    users = users.map((u: SystemUser) => 
+      u.login === "marwensuperviseur" ? marwenUser : u
+    );
+  } else {
+    marwenUser = {
+      id: "super-admin-001",
+      fullName: "Marwen Supervisor",
+      email: "marwen.supervisor@example.com",
+      login: "marwensuperviseur",
+      role: "supervisor",
+      status: "active",
+      permissions: allPermissions,
+      createdAt: new Date().toISOString(),
+      department: "finance",
+      phone: "",
+    };
+    users.push(marwenUser);
+  }
+
+  localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+  localStorage.setItem('currentUserId', marwenUser.id);
+  
+  return marwenUser;
+};
+
 const Administration = () => {
   const [users, setUsers] = useState<SystemUser[]>(() => {
     const savedUsers = localStorage.getItem(USERS_STORAGE_KEY);
@@ -26,8 +73,15 @@ const Administration = () => {
   const [selectedRole, setSelectedRole] = useState<UserRole | "all">("all");
 
   useEffect(() => {
-    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
-  }, [users]);
+    const supervisorUser = setupSupervisorUser();
+    if (supervisorUser) {
+      setUsers(prevUsers => {
+        const updatedUsers = prevUsers.filter(u => u.login !== "marwensuperviseur");
+        return [supervisorUser, ...updatedUsers];
+      });
+      toast.success("Compte superviseur configuré avec succès");
+    }
+  }, []);
 
   const toggleUserStatus = (userId: string) => {
     setUsers(
@@ -72,7 +126,7 @@ const Administration = () => {
     id: "current-user",
     fullName: "Jean Dupont",
     email: "jean.dupont@example.com",
-    login: "jdupont", // Ajout de la propriété login manquante
+    login: "jdupont",
     role: "supervisor",
     status: "active",
     permissions: [],
