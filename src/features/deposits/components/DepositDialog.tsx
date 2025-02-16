@@ -32,9 +32,15 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
       return;
     }
 
+    const selectedClientData = clients.find(c => c.id.toString() === selectedClient);
+    if (!selectedClientData) {
+      toast.error("Client invalide");
+      return;
+    }
+
     const deposit = {
-      id: Math.random().toString(),
-      client: selectedClient,
+      id: crypto.randomUUID(),
+      client: `${selectedClientData.prenom} ${selectedClientData.nom}`,
       amount: parseFloat(amount),
       date: date.toISOString(),
       description,

@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { ArrowRight, User } from "lucide-react";
+import { ArrowRight, User, Pencil, Trash2 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -33,23 +33,69 @@ const Deposits = () => {
     };
 
     checkAuth();
+    fetchDeposits();
   }, [navigate]);
+
+  const fetchDeposits = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('deposits')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        toast.error("Erreur lors du chargement des versements");
+        console.error("Erreur:", error);
+        return;
+      }
+
+      const formattedDeposits: Deposit[] = data.map(d => ({
+        id: d.id,
+        client: d.client_name,
+        amount: Number(d.amount),
+        date: new Date(d.operation_date).toLocaleDateString(),
+        description: d.notes || ''
+      }));
+
+      setDeposits(formattedDeposits);
+    } catch (error) {
+      console.error("Erreur lors du chargement des versements:", error);
+      toast.error("Erreur lors du chargement des versements");
+    }
+  };
 
   const handleDelete = (deposit: Deposit) => {
     setSelectedDeposit(deposit);
     setIsDeleteDialogOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!selectedDeposit) return;
-    setDeposits(prevDeposits =>
-      prevDeposits.filter(deposit => deposit.id !== selectedDeposit.id)
-    );
 
-    setIsDeleteDialogOpen(false);
-    toast.success("Versement supprimé", {
-      description: `Le versement a été retiré de la base de données.`
-    });
+    try {
+      const { error } = await supabase
+        .from('deposits')
+        .delete()
+        .eq('id', selectedDeposit.id);
+
+      if (error) {
+        toast.error("Erreur lors de la suppression du versement");
+        console.error("Erreur:", error);
+        return;
+      }
+
+      setDeposits(prevDeposits =>
+        prevDeposits.filter(deposit => deposit.id !== selectedDeposit.id)
+      );
+
+      setIsDeleteDialogOpen(false);
+      toast.success("Versement supprimé", {
+        description: `Le versement a été retiré de la base de données.`
+      });
+    } catch (error) {
+      console.error("Erreur lors de la suppression:", error);
+      toast.error("Erreur lors de la suppression du versement");
+    }
   };
 
   const handleEdit = (deposit: Deposit) => {
@@ -64,12 +110,32 @@ const Deposits = () => {
     deposit.client.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleCreateDeposit = (deposit: Deposit) => {
-    setDeposits(prev => [...prev, deposit]);
-    setIsDialogOpen(false);
-    toast.success("Nouveau versement créé", {
-      description: `Un nouveau versement de ${deposit.amount} TND a été ajouté.`
-    });
+  const handleCreateDeposit = async (deposit: Deposit) => {
+    try {
+      const { error } = await supabase
+        .from('deposits')
+        .insert({
+          client_name: deposit.client,
+          amount: deposit.amount,
+          operation_date: new Date(deposit.date).toISOString(),
+          notes: deposit.description
+        });
+
+      if (error) {
+        toast.error("Erreur lors de la création du versement");
+        console.error("Erreur:", error);
+        return;
+      }
+
+      await fetchDeposits();
+      setIsDialogOpen(false);
+      toast.success("Nouveau versement créé", {
+        description: `Un nouveau versement de ${deposit.amount} TND a été ajouté.`
+      });
+    } catch (error) {
+      console.error("Erreur lors de la création:", error);
+      toast.error("Erreur lors de la création du versement");
+    }
   };
 
   return (
@@ -136,7 +202,7 @@ const Deposits = () => {
                             {deposit.client}
                           </p>
                           <p className="text-sm text-muted-foreground">
-                            ID: {deposit.client}
+                            ID: {deposit.id}
                           </p>
                         </div>
                       </div>
