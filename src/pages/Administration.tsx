@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { UserPlus, Users, Shield, Search, Building, UserCog } from "lucide-react";
-import { SystemUser, UserRole } from "@/types/admin";
+import { SystemUser, UserRole, Permission } from "@/types/admin";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

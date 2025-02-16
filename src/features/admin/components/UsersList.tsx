@@ -1,4 +1,3 @@
-
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,22 +17,14 @@ import { PermissionsDialog } from "./PermissionsDialog";
 interface UsersListProps {
   users: SystemUser[];
   onToggleStatus: (userId: string) => void;
+  onUpdateUser: (updatedUser: SystemUser) => void;
+  onUpdatePermissions: (userId: string, permissions: Permission[]) => void;
 }
 
-export const UsersList = ({ users, onToggleStatus }: UsersListProps) => {
+export const UsersList = ({ users, onToggleStatus, onUpdateUser, onUpdatePermissions }: UsersListProps) => {
   const [selectedUser, setSelectedUser] = useState<SystemUser | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isPermissionsDialogOpen, setIsPermissionsDialogOpen] = useState(false);
-
-  const handleUpdateUser = (updatedUser: SystemUser) => {
-    // Implement the update logic in the parent component
-    console.log("Updated user:", updatedUser);
-  };
-
-  const handleUpdatePermissions = (userId: string, permissions: Permission[]) => {
-    // Implement the permissions update logic in the parent component
-    console.log("Updated permissions for user:", userId, permissions);
-  };
 
   return (
     <>
@@ -160,7 +151,7 @@ export const UsersList = ({ users, onToggleStatus }: UsersListProps) => {
           setSelectedUser(null);
         }}
         user={selectedUser}
-        onUpdateUser={handleUpdateUser}
+        onUpdateUser={onUpdateUser}
       />
 
       <PermissionsDialog
@@ -170,7 +161,7 @@ export const UsersList = ({ users, onToggleStatus }: UsersListProps) => {
           setSelectedUser(null);
         }}
         user={selectedUser}
-        onUpdatePermissions={handleUpdatePermissions}
+        onUpdatePermissions={onUpdatePermissions}
       />
     </>
   );
