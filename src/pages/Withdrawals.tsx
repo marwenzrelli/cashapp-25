@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,7 +23,8 @@ import {
   BadgeDollarSign,
   ScrollText,
   Sparkles,
-  AlertCircle
+  AlertCircle,
+  ListFilter
 } from "lucide-react";
 
 interface Client {
@@ -85,7 +85,7 @@ const Withdrawals = () => {
       notes: "Retrait exceptionnel",
     },
   ]);
-
+  const [itemsPerPage, setItemsPerPage] = useState("10");
   const [newWithdrawal, setNewWithdrawal] = useState({
     clientId: "",
     amount: "",
@@ -135,12 +135,34 @@ const Withdrawals = () => {
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Rechercher un retrait..."
-                className="pl-9"
-              />
+            <div className="flex items-center gap-4 flex-1">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Rechercher un retrait..."
+                  className="pl-9"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Select
+                  value={itemsPerPage}
+                  onValueChange={setItemsPerPage}
+                >
+                  <SelectTrigger className="w-[180px] bg-primary/5 border-primary/20 hover:bg-primary/10 transition-colors">
+                    <ListFilter className="h-4 w-4 mr-2 text-primary" />
+                    <SelectValue placeholder="Nombre d'éléments" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10 éléments</SelectItem>
+                    <SelectItem value="25">25 éléments</SelectItem>
+                    <SelectItem value="50">50 éléments</SelectItem>
+                    <SelectItem value="100">100 éléments</SelectItem>
+                  </SelectContent>
+                </Select>
+                <div className="text-sm text-muted-foreground">
+                  {withdrawals.length} résultats
+                </div>
+              </div>
             </div>
             <Button onClick={() => setIsDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
@@ -271,7 +293,12 @@ const Withdrawals = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Liste des retraits</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Liste des retraits</CardTitle>
+            <div className="text-sm text-muted-foreground">
+              Affichage de {Math.min(parseInt(itemsPerPage), withdrawals.length)} sur {withdrawals.length} retraits
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="relative w-full overflow-auto">
@@ -286,7 +313,7 @@ const Withdrawals = () => {
                 </tr>
               </thead>
               <tbody>
-                {withdrawals.map((withdrawal) => {
+                {withdrawals.slice(0, parseInt(itemsPerPage)).map((withdrawal) => {
                   const client = mockClients.find(c => c.id === withdrawal.clientId);
                   if (!client) return null;
                   
