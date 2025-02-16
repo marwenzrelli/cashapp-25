@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Search, ArrowRight, AlertCircle, Pencil, Trash2, Store, Calendar, User } from "lucide-react";
+import { Plus, Search, ArrowRight, AlertCircle, Pencil, Trash2, Store, User } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -319,12 +319,6 @@ const Deposits = () => {
   );
 };
 
-interface DepositDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onConfirm: (deposit: Deposit) => void;
-}
-
 const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogProps) => {
   const [selectedClient, setSelectedClient] = useState("");
   const [amount, setAmount] = useState("");
@@ -332,13 +326,11 @@ const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogProps) =>
   const [description, setDescription] = useState("");
 
   const handleSubmit = () => {
-    // Validate form
     if (!selectedClient || !amount || !date || !description) {
       toast.error("Veuillez remplir tous les champs");
       return;
     }
 
-    // Create new deposit
     const deposit = {
       id: Math.random().toString(),
       client: selectedClient,
@@ -349,7 +341,6 @@ const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogProps) =>
 
     onConfirm(deposit);
     
-    // Reset form
     setSelectedClient("");
     setAmount("");
     setDate(undefined);
@@ -420,7 +411,7 @@ const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogProps) =>
                 <Calendar
                   mode="single"
                   selected={date}
-                  onSelect={setDate}
+                  onSelect={(newDate: Date | undefined) => setDate(newDate)}
                   locale={fr}
                 />
               </PopoverContent>
