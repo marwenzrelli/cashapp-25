@@ -19,10 +19,25 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      // Simuler une vérification d'authentification
-      if (username === "admin" && password === "admin") {
+      // Récupérer les utilisateurs du localStorage
+      const users = JSON.parse(localStorage.getItem('admin_users') || '[]');
+      
+      // Chercher l'utilisateur avec le login correspondant
+      const user = users.find((u: any) => u.login === username);
+
+      if (user && password === "password123") { // Mot de passe par défaut pour tous les utilisateurs
         // Simuler un délai de traitement
         await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Vérifier si l'utilisateur est actif
+        if (user.status === "inactive") {
+          toast.error("Compte désactivé", {
+            description: "Votre compte a été désactivé. Contactez un administrateur.",
+          });
+          setIsLoading(false);
+          return;
+        }
+
         toast.success("Connexion réussie", {
           description: "Bienvenue dans votre espace personnel",
         });
@@ -60,13 +75,13 @@ const Login = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="username">Nom d'utilisateur</Label>
+                <Label htmlFor="username">Login</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     id="username"
                     type="text"
-                    placeholder="Entrez votre identifiant"
+                    placeholder="Entrez votre login"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     className="pl-9"
@@ -113,7 +128,7 @@ const Login = () => {
         </Card>
 
         <div className="text-center text-sm text-muted-foreground">
-          Propulsé par l'intelligence artificielle pour une expérience optimale
+          Mot de passe par défaut pour tous les utilisateurs : password123
         </div>
       </div>
     </div>
