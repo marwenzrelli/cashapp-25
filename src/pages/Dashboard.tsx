@@ -72,7 +72,7 @@ const Dashboard = () => {
             <ArrowUpCircle className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0 د.ت</div>
+            <div className="text-2xl font-bold">0 TND</div>
             <p className="text-xs text-muted-foreground">
               +0% par rapport au mois dernier
             </p>
@@ -84,7 +84,7 @@ const Dashboard = () => {
             <ArrowDownCircle className="h-4 w-4 text-danger" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0 د.ت</div>
+            <div className="text-2xl font-bold">0 TND</div>
             <p className="text-xs text-muted-foreground">
               +0% par rapport au mois dernier
             </p>
