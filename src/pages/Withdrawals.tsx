@@ -69,6 +69,8 @@ const mockClients: Client[] = [
 
 const Withdrawals = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedWithdrawal, setSelectedWithdrawal] = useState<any>(null);
   const [withdrawals, setWithdrawals] = useState([
     {
       id: "1",
@@ -91,6 +93,30 @@ const Withdrawals = () => {
     amount: "",
     notes: "",
   });
+
+  const handleDelete = (withdrawal: any) => {
+    setSelectedWithdrawal(withdrawal);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (!selectedWithdrawal) return;
+    setWithdrawals(prevWithdrawals =>
+      prevWithdrawals.filter(w => w.id !== selectedWithdrawal.id)
+    );
+    setIsDeleteDialogOpen(false);
+    toast.success("Retrait supprimé", {
+      description: `Le retrait a été retiré de la base de données.`
+    });
+  };
+
+  const handleEdit = (withdrawal: any) => {
+    setSelectedWithdrawal(withdrawal);
+    setIsDialogOpen(true);
+    toast.info("Mode édition", {
+      description: `Modification du retrait de ${withdrawal.amount}€`
+    });
+  };
 
   const handleCreateWithdrawal = () => {
     if (!newWithdrawal.clientId || !newWithdrawal.amount || !newWithdrawal.notes) {
@@ -348,7 +374,7 @@ const Withdrawals = () => {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => {}}
+                            onClick={() => handleEdit(withdrawal)}
                             className="relative hover:bg-blue-50 dark:hover:bg-blue-950/50 text-blue-600 hover:text-blue-600 transition-all duration-300"
                           >
                             <Pencil className="h-4 w-4 transition-all duration-300 ease-in-out transform hover:scale-125 hover:rotate-[360deg]" />
@@ -357,7 +383,7 @@ const Withdrawals = () => {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => {}}
+                            onClick={() => handleDelete(withdrawal)}
                             className="relative hover:bg-red-50 dark:hover:bg-red-950/50 text-red-600 hover:text-red-600 transition-all duration-300"
                           >
                             <Trash2 className="h-4 w-4 transition-all duration-300 ease-in-out transform hover:scale-125 hover:-translate-y-1" />
@@ -373,6 +399,37 @@ const Withdrawals = () => {
           </div>
         </CardContent>
       </Card>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent className="sm:max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <div className="rounded-lg bg-red-50 dark:bg-red-950/50 p-2 text-red-600">
+                <Trash2 className="h-5 w-5" />
+              </div>
+              Confirmer la suppression
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>Êtes-vous sûr de vouloir supprimer ce retrait ?</p>
+              {selectedWithdrawal && (
+                <div className="rounded-lg border bg-muted/50 p-4 font-medium text-foreground">
+                  Retrait de {selectedWithdrawal.amount}€
+                </div>
+              )}
+              <p className="text-destructive font-medium">Cette action est irréversible.</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
