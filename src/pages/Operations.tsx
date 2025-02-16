@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,8 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Search, ArrowUpCircle, ArrowDownCircle, RefreshCcw, Edit2, Trash2, Filter, Check } from "lucide-react";
+import { Search, ArrowUpCircle, ArrowDownCircle, RefreshCcw, Edit2, Trash2, Filter, Check, Calendar, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
+import { format, isWithinInterval, parseISO, subDays, startOfDay, endOfDay } from "date-fns";
+import { fr } from "date-fns/locale";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 
 interface Operation {
   id: string;
@@ -19,12 +22,24 @@ interface Operation {
   toClient?: string;
 }
 
+const TIME_RANGES = [
+  { label: "Aujourd'hui", days: 0 },
+  { label: "7 derniers jours", days: 7 },
+  { label: "30 derniers jours", days: 30 },
+  { label: "90 derniers jours", days: 90 },
+] as const;
+
 const Operations = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState<Operation["type"] | "all">("all");
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedOperation, setSelectedOperation] = useState<Operation | null>(null);
+  const [date, setDate] = useState<{ from: Date; to: Date }>({
+    from: subDays(new Date(), 30),
+    to: new Date(),
+  });
+  const [isCustomRange, setIsCustomRange] = useState(false);
   const [operations, setOperations] = useState<Operation[]>([
     {
       id: "1",
@@ -52,6 +67,14 @@ const Operations = () => {
       toClient: "Sophie Lefebvre"
     },
   ]);
+
+  const handleDateRangeSelect = (days: number) => {
+    setDate({
+      from: subDays(new Date(), days),
+      to: new Date(),
+    });
+    setIsCustomRange(false);
+  };
 
   const getTypeStyle = (type: Operation["type"]) => {
     switch (type) {
@@ -116,12 +139,20 @@ const Operations = () => {
   };
 
   const filteredOperations = operations.filter(operation => {
+    const operationDate = parseISO(operation.date);
     const matchesSearch = 
       operation.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       operation.fromClient?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       operation.toClient?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    return selectedType === "all" ? matchesSearch : operation.type === selectedType && matchesSearch;
+    const matchesType = selectedType === "all" ? true : operation.type === selectedType;
+    
+    const matchesDate = isWithinInterval(operationDate, {
+      start: startOfDay(date.from),
+      end: endOfDay(date.to)
+    });
+
+    return matchesSearch && matchesType && matchesDate;
   });
 
   return (
@@ -160,14 +191,78 @@ const Operations = () => {
                   </Button>
                 ))}
               </div>
-              <div className="relative w-64">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder="Rechercher..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9"
-                />
+              <div className="flex items-center gap-4">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="gap-2">
+                      <Calendar className="h-4 w-4" />
+                      <span>
+                        {isCustomRange
+                          ? `${format(date.from, "d MMM", { locale: fr })} - ${format(date.to, "d MMM", { locale: fr })}`
+                          : `${format(date.from, "d MMM", { locale: fr })} - ${format(date.to, "d MMM", { locale: fr })}`}
+                      </span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="end">
+                    <div className="grid gap-2 p-4">
+                      <div className="space-y-2">
+                        {TIME_RANGES.map((range) => (
+                          <Button
+                            key={range.days}
+                            variant="ghost"
+                            className="w-full justify-start gap-2"
+                            onClick={() => handleDateRangeSelect(range.days)}
+                          >
+                            <Calendar className="h-4 w-4" />
+                            {range.label}
+                          </Button>
+                        ))}
+                        <Button
+                          variant="ghost"
+                          className="w-full justify-start gap-2"
+                          onClick={() => setIsCustomRange(true)}
+                        >
+                          <Calendar className="h-4 w-4" />
+                          Plage personnalisée
+                        </Button>
+                      </div>
+                      {isCustomRange && (
+                        <div className="border-t pt-4 mt-2">
+                          <div className="flex gap-2 mb-2 items-center justify-center text-sm text-muted-foreground">
+                            <span>Du</span>
+                            <span>{format(date.from || new Date(), "d MMM", { locale: fr })}</span>
+                            <ArrowRight className="h-4 w-4" />
+                            <span>au</span>
+                            <span>{format(date.to || new Date(), "d MMM", { locale: fr })}</span>
+                          </div>
+                          <CalendarComponent
+                            mode="range"
+                            selected={{
+                              from: date.from,
+                              to: date.to,
+                            }}
+                            onSelect={(range) => {
+                              if (range && range.from && range.to) {
+                                setDate({ from: range.from, to: range.to });
+                              }
+                            }}
+                            numberOfMonths={2}
+                            locale={fr}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                <div className="relative w-64">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Rechercher..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
               </div>
             </div>
           </div>
