@@ -2,6 +2,7 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { Session } from "@supabase/supabase-js";
 
 type Currency = "EUR" | "USD" | "TND" | "AED";
 
@@ -15,14 +16,29 @@ const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined
 export function CurrencyProvider({ children }: { children: ReactNode }) {
   const [currency, setCurrencyState] = useState<Currency>("EUR");
   const { toast } = useToast();
+  const [session, setSession] = useState<Session | null>(null);
+
+  // Gérer la session
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Charger la devise depuis Supabase au démarrage
   useEffect(() => {
     const loadCurrency = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.user?.id) return;
+      if (!session?.user?.id) return;
 
+      try {
         const { data, error } = await supabase
           .from('profiles')
           .select('currency')
@@ -44,14 +60,13 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     };
 
     loadCurrency();
-  }, [toast]);
+  }, [session, toast]);
 
   // Mettre à jour la devise dans Supabase
   const setCurrency = async (newCurrency: Currency) => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user?.id) return;
+    if (!session?.user?.id) return;
 
+    try {
       const { error } = await supabase
         .from('profiles')
         .update({ currency: newCurrency })
