@@ -37,8 +37,11 @@ const Clients = () => {
   } = useClientDialogs();
 
   useEffect(() => {
+    console.log("Chargement des clients...");
     fetchClients();
   }, []);
+
+  console.log("Clients actuels:", clients);
 
   const aiSuggestions: AISuggestion[] = [
     {
@@ -82,6 +85,7 @@ const Clients = () => {
   };
 
   const handleCreateClient = async () => {
+    console.log("Création d'un nouveau client:", newClient);
     const success = await createClient(newClient);
     
     if (success) {
