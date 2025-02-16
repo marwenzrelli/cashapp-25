@@ -6,7 +6,7 @@ import { StatsCard } from "@/features/deposits/components/StatsCard";
 import { SearchBar } from "@/features/deposits/components/SearchBar";
 import { DeleteDepositDialog } from "@/features/deposits/components/DeleteDepositDialog";
 import { DepositsTable } from "@/features/deposits/components/DepositsTable";
-import { type Deposit } from "@/features/deposits/types";
+import { type Deposit } from "@/components/deposits/types";
 import { DepositDialog } from "@/features/deposits/components/DepositDialog";
 import { useDeposits } from "@/features/deposits/hooks/useDeposits";
 import { toast } from "sonner";

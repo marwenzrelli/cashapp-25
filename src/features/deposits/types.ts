@@ -1,6 +1,8 @@
 
 import { type Deposit } from "@/components/deposits/types";
 
+export type { Deposit };
+
 export interface DepositDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
