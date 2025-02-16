@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { UserPlus, Users, Shield, Search, Building, UserCog } from "lucide-react";
@@ -25,7 +24,6 @@ const Administration = () => {
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
   const [selectedRole, setSelectedRole] = useState<UserRole | "all">("all");
 
-  // Sauvegarder les utilisateurs dans le localStorage à chaque modification
   useEffect(() => {
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
   }, [users]);
@@ -44,6 +42,20 @@ const Administration = () => {
   const handleAddUser = (user: SystemUser) => {
     setUsers([user, ...users]);
     toast.success("Utilisateur créé avec succès");
+  };
+
+  const handleUpdateUser = (updatedUser: SystemUser) => {
+    setUsers(users.map(user => 
+      user.id === updatedUser.id ? updatedUser : user
+    ));
+    toast.success("Utilisateur mis à jour avec succès");
+  };
+
+  const handleUpdatePermissions = (userId: string, permissions: Permission[]) => {
+    setUsers(users.map(user =>
+      user.id === userId ? { ...user, permissions } : user
+    ));
+    toast.success("Permissions mises à jour avec succès");
   };
 
   const filteredUsers = users.filter(
@@ -166,7 +178,12 @@ const Administration = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <UsersList users={filteredUsers} onToggleStatus={toggleUserStatus} />
+          <UsersList 
+            users={filteredUsers} 
+            onToggleStatus={toggleUserStatus}
+            onUpdateUser={handleUpdateUser}
+            onUpdatePermissions={handleUpdatePermissions}
+          />
         </CardContent>
       </Card>
 
