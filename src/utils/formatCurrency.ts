@@ -1,19 +1,8 @@
 
-export type Currency = "EUR" | "USD" | "TND" | "AED";
+export type Currency = "TND";
 
 export const getCurrencySymbol = (currency: Currency): string => {
-  switch (currency) {
-    case "EUR":
-      return "€";
-    case "USD":
-      return "$";
-    case "TND":
-      return "د.ت";
-    case "AED":
-      return "د.إ";
-    default:
-      return "€";
-  }
+  return "د.ت";
 };
 
 export const formatAmount = (amount: number, currency: Currency): string => {

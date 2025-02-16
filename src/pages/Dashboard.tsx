@@ -1,16 +1,13 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from "recharts";
-import { ArrowUpCircle, ArrowDownCircle, RefreshCcw, TrendingUp, Users, AlertCircle, Sparkles, User, Settings, Bell, Shield, Building, Calendar, Coins, Check } from "lucide-react";
+import { ArrowUpCircle, ArrowDownCircle, RefreshCcw, TrendingUp, Users, AlertCircle, Sparkles, User, Settings, Bell, Shield, Building, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect } from "react";
 import { EditProfileDialog } from "@/features/profile/EditProfileDialog";
 import { SettingsDialog } from "@/features/profile/SettingsDialog";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { SystemUser } from "@/types/admin";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 const data = [];
 const recentActivity = [];
@@ -19,10 +16,8 @@ const aiSuggestions = [];
 const Dashboard = () => {
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const { currency, setCurrency } = useCurrency();
+  const { currency } = useCurrency();
   const [currentUser, setCurrentUser] = useState<SystemUser | null>(null);
-  const [selectedCurrency, setSelectedCurrency] = useState<"EUR" | "USD" | "TND" | "AED">(currency);
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 
   useEffect(() => {
     const currentUserId = localStorage.getItem('currentUserId');
@@ -35,14 +30,6 @@ const Dashboard = () => {
       }
     }
   }, []);
-
-  const handleCurrencySelect = (value: "EUR" | "USD" | "TND" | "AED") => {
-    setSelectedCurrency(value);
-  };
-
-  const handleConfirmCurrency = async () => {
-    await setCurrency(selectedCurrency);
-  };
 
   const handleUpdateProfile = (updatedUser: Partial<SystemUser>) => {
     const usersData = localStorage.getItem('admin_users');
@@ -71,30 +58,6 @@ const Dashboard = () => {
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Select value={selectedCurrency} onValueChange={handleCurrencySelect}>
-              <SelectTrigger className="w-[180px]">
-                <div className="flex items-center gap-2">
-                  <Coins className="h-4 w-4 text-primary" />
-                  <SelectValue placeholder="Sélectionner la devise" />
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="EUR">EUR (€)</SelectItem>
-                <SelectItem value="USD">USD ($)</SelectItem>
-                <SelectItem value="TND">TND (د.ت)</SelectItem>
-                <SelectItem value="AED">AED (د.إ)</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button 
-              variant="outline" 
-              size="icon"
-              onClick={handleConfirmCurrency}
-              disabled={selectedCurrency === currency}
-            >
-              <Check className="h-4 w-4" />
-            </Button>
-          </div>
           <Button variant="outline" className="flex items-center gap-2">
             <RefreshCcw className="h-4 w-4" />
             Actualiser
@@ -109,9 +72,7 @@ const Dashboard = () => {
             <ArrowUpCircle className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              0 {currency === "EUR" ? "€" : currency === "USD" ? "$" : currency === "TND" ? "د.ت" : "د.إ"}
-            </div>
+            <div className="text-2xl font-bold">0 د.ت</div>
             <p className="text-xs text-muted-foreground">
               +0% par rapport au mois dernier
             </p>
@@ -123,9 +84,7 @@ const Dashboard = () => {
             <ArrowDownCircle className="h-4 w-4 text-danger" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              0 {currency === "EUR" ? "€" : currency === "USD" ? "$" : currency === "TND" ? "د.ت" : "د.إ"}
-            </div>
+            <div className="text-2xl font-bold">0 د.ت</div>
             <p className="text-xs text-muted-foreground">
               +0% par rapport au mois dernier
             </p>
