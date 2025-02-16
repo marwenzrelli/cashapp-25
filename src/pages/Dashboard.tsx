@@ -1,6 +1,7 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from "recharts";
-import { ArrowUpCircle, ArrowDownCircle, RefreshCcw, TrendingUp, Users, AlertCircle, Sparkles, User, Settings, Bell, Shield, Building, Calendar, Coins } from "lucide-react";
+import { ArrowUpCircle, ArrowDownCircle, RefreshCcw, TrendingUp, Users, AlertCircle, Sparkles, User, Settings, Bell, Shield, Building, Calendar, Coins, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -37,12 +38,10 @@ const Dashboard = () => {
 
   const handleCurrencySelect = (value: "EUR" | "USD" | "TND" | "AED") => {
     setSelectedCurrency(value);
-    setConfirmDialogOpen(true);
   };
 
-  const handleConfirmCurrencyChange = async () => {
+  const handleConfirmCurrency = async () => {
     await setCurrency(selectedCurrency);
-    setConfirmDialogOpen(false);
   };
 
   const handleUpdateProfile = (updatedUser: Partial<SystemUser>) => {
@@ -72,20 +71,30 @@ const Dashboard = () => {
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <Select value={currency} onValueChange={handleCurrencySelect}>
-            <SelectTrigger className="w-[180px]">
-              <div className="flex items-center gap-2">
-                <Coins className="h-4 w-4 text-primary" />
-                <SelectValue placeholder="Sélectionner la devise" />
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="EUR">EUR (€)</SelectItem>
-              <SelectItem value="USD">USD ($)</SelectItem>
-              <SelectItem value="TND">TND (د.ت)</SelectItem>
-              <SelectItem value="AED">AED (د.إ)</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2">
+            <Select value={selectedCurrency} onValueChange={handleCurrencySelect}>
+              <SelectTrigger className="w-[180px]">
+                <div className="flex items-center gap-2">
+                  <Coins className="h-4 w-4 text-primary" />
+                  <SelectValue placeholder="Sélectionner la devise" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="EUR">EUR (€)</SelectItem>
+                <SelectItem value="USD">USD ($)</SelectItem>
+                <SelectItem value="TND">TND (د.ت)</SelectItem>
+                <SelectItem value="AED">AED (د.إ)</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={handleConfirmCurrency}
+              disabled={selectedCurrency === currency}
+            >
+              <Check className="h-4 w-4" />
+            </Button>
+          </div>
           <Button variant="outline" className="flex items-center gap-2">
             <RefreshCcw className="h-4 w-4" />
             Actualiser
