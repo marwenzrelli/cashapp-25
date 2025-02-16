@@ -9,10 +9,220 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      deposits: {
+        Row: {
+          amount: number
+          client_name: string
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          operation_date: string
+          status: string
+        }
+        Insert: {
+          amount: number
+          client_name: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          operation_date?: string
+          status?: string
+        }
+        Update: {
+          amount?: number
+          client_name?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          operation_date?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deposits_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          department: string
+          email: string
+          full_name: string
+          id: string
+          last_login: string | null
+          phone: string | null
+          role: string
+          status: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          department: string
+          email: string
+          full_name: string
+          id: string
+          last_login?: string | null
+          phone?: string | null
+          role: string
+          status?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          department?: string
+          email?: string
+          full_name?: string
+          id?: string
+          last_login?: string | null
+          phone?: string | null
+          role?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      transfers: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          from_client: string
+          id: string
+          operation_date: string
+          reason: string
+          status: string
+          to_client: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          from_client: string
+          id?: string
+          operation_date?: string
+          reason: string
+          status?: string
+          to_client: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          from_client?: string
+          id?: string
+          operation_date?: string
+          reason?: string
+          status?: string
+          to_client?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transfers_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_permissions: {
+        Row: {
+          created_at: string
+          id: string
+          module: string
+          permission_description: string | null
+          permission_name: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          module: string
+          permission_description?: string | null
+          permission_name: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          module?: string
+          permission_description?: string | null
+          permission_name?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_permissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      withdrawals: {
+        Row: {
+          amount: number
+          client_name: string
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          operation_date: string
+          status: string
+        }
+        Insert: {
+          amount: number
+          client_name: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          operation_date?: string
+          status?: string
+        }
+        Update: {
+          amount?: number
+          client_name?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          operation_date?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "withdrawals_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
-      [_ in never]: never
+      operation_statistics: {
+        Row: {
+          day: string | null
+          deposit_count: number | null
+          total_deposits: number | null
+          total_transfers: number | null
+          total_withdrawals: number | null
+          transfer_count: number | null
+          withdrawal_count: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never

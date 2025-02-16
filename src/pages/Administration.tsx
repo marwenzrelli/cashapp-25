@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { UserPlus, Users, Shield, Search, Building, UserCog } from "lucide-react";
-import { SystemUser, UserRole, Permission } from "@/types/admin";
+import { SystemUser, UserRole, mapProfileToSystemUser } from "@/types/admin";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,77 +11,49 @@ import { AddUserDialog } from "@/features/admin/components/AddUserDialog";
 import { UsersList } from "@/features/admin/components/UsersList";
 import { UserProfile } from "@/features/admin/components/UserProfile";
 import { ServiceExplanations } from "@/features/admin/components/ServiceExplanations";
-
-const USERS_STORAGE_KEY = 'admin_users';
-
-const setupSupervisorUser = () => {
-  const usersData = localStorage.getItem(USERS_STORAGE_KEY);
-  let users = usersData ? JSON.parse(usersData) : [];
-  
-  let marwenUser = users.find((u: SystemUser) => u.login === "marwensuperviseur");
-  
-  const allPermissions: Permission[] = [
-    { id: "1", name: "Gestion des versements", description: "Autoriser la gestion des versements", module: "deposits" },
-    { id: "2", name: "Gestion des retraits", description: "Autoriser la gestion des retraits", module: "withdrawals" },
-    { id: "3", name: "Gestion des virements", description: "Autoriser la gestion des virements", module: "transfers" },
-    { id: "4", name: "Gestion des clients", description: "Autoriser la gestion des clients", module: "clients" },
-    { id: "5", name: "Accès aux rapports", description: "Autoriser l'accès aux rapports", module: "reports" },
-    { id: "6", name: "Configuration système", description: "Autoriser la configuration du système", module: "settings" },
-  ];
-
-  if (marwenUser) {
-    marwenUser = {
-      ...marwenUser,
-      role: "supervisor",
-      permissions: allPermissions,
-      status: "active",
-    };
-
-    users = users.map((u: SystemUser) => 
-      u.login === "marwensuperviseur" ? marwenUser : u
-    );
-  } else {
-    marwenUser = {
-      id: "super-admin-001",
-      fullName: "Marwen Supervisor",
-      email: "marwen.supervisor@example.com",
-      login: "marwensuperviseur",
-      role: "supervisor",
-      status: "active",
-      permissions: allPermissions,
-      createdAt: new Date().toISOString(),
-      department: "finance",
-      phone: "",
-    };
-    users.push(marwenUser);
-  }
-
-  localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
-  localStorage.setItem('currentUserId', marwenUser.id);
-  
-  return marwenUser;
-};
+import { supabase } from "@/integrations/supabase/client";
 
 const Administration = () => {
-  const [users, setUsers] = useState<SystemUser[]>(() => {
-    const savedUsers = localStorage.getItem(USERS_STORAGE_KEY);
-    return savedUsers ? JSON.parse(savedUsers) : [];
-  });
+  const [users, setUsers] = useState<SystemUser[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
   const [selectedRole, setSelectedRole] = useState<UserRole | "all">("all");
+  const [currentUser, setCurrentUser] = useState<SystemUser | null>(null);
 
   useEffect(() => {
-    const supervisorUser = setupSupervisorUser();
-    if (supervisorUser) {
-      setUsers(prevUsers => {
-        const updatedUsers = prevUsers.filter(u => u.login !== "marwensuperviseur");
-        return [supervisorUser, ...updatedUsers];
-      });
-      toast.success("Compte superviseur configuré avec succès");
-    }
+    fetchUsers();
+    fetchCurrentUser();
   }, []);
+
+  const fetchCurrentUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*, user_permissions(*)')
+        .eq('id', user.id)
+        .single();
+
+      if (profile) {
+        setCurrentUser(mapProfileToSystemUser(profile));
+      }
+    }
+  };
+
+  const fetchUsers = async () => {
+    const { data: profiles, error } = await supabase
+      .from('profiles')
+      .select('*, user_permissions(*)');
+
+    if (error) {
+      toast.error("Erreur lors du chargement des utilisateurs");
+      return;
+    }
+
+    const formattedUsers = profiles.map(mapProfileToSystemUser);
+    setUsers(formattedUsers);
+  };
 
   const toggleUserStatus = (userId: string) => {
     setUsers(
@@ -121,18 +93,6 @@ const Administration = () => {
         user.department === selectedDepartment) &&
       (selectedRole === "all" || user.role === selectedRole)
   );
-
-  const connectedUser: SystemUser = {
-    id: "current-user",
-    fullName: "Jean Dupont",
-    email: "jean.dupont@example.com",
-    login: "jdupont",
-    role: "supervisor",
-    status: "active",
-    permissions: [],
-    createdAt: new Date().toISOString(),
-    department: "finance",
-  };
 
   return (
     <div className="space-y-8 animate-in">
@@ -249,7 +209,7 @@ const Administration = () => {
         onAddUser={handleAddUser}
       />
 
-      <UserProfile user={connectedUser} />
+      {currentUser && <UserProfile user={currentUser} />}
       
       <ServiceExplanations />
     </div>
