@@ -18,7 +18,7 @@ export const DepositList = ({ deposits, onEdit, onDelete }: DepositListProps) =>
           <th className="p-3">Client</th>
           <th className="p-3">Montant</th>
           <th className="p-3">Date</th>
-          <th className="p-3">Notes</th>
+          <th className="p-3">Description</th>
           <th className="p-3">Actions</th>
         </tr>
       </thead>
