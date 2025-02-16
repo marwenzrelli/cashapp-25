@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Plus, Search, UserCircle, Sparkles, AlertCircle, Pencil, Trash2 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
@@ -131,8 +130,8 @@ const Clients = () => {
     );
 
     setIsEditDialogOpen(false);
-    toast.success("Client modifié avec succès", {
-      description: "Les modifications ont été enregistrées"
+    toast.success("Modifications enregistrées", {
+      description: `Les informations de ${editForm.prenom} ${editForm.nom} ont été mises à jour avec succès.`
     });
   };
 
@@ -143,8 +142,8 @@ const Clients = () => {
     );
 
     setIsDeleteDialogOpen(false);
-    toast.success("Client supprimé avec succès", {
-      description: "Le client a été retiré de la base de données"
+    toast.success("Client supprimé", {
+      description: `${selectedClient.prenom} ${selectedClient.nom} a été retiré de la base de données.`
     });
   };
 
@@ -277,16 +276,17 @@ const Clients = () => {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleEdit(client)}
+                          className="hover:bg-blue-50 dark:hover:bg-blue-950/50 text-blue-600 hover:text-blue-600"
                         >
-                          <Pencil className="h-4 w-4" />
+                          <Pencil className="h-4 w-4 rotate-12 transition-transform hover:rotate-45" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="text-destructive hover:text-destructive"
                           onClick={() => handleDelete(client)}
+                          className="hover:bg-red-50 dark:hover:bg-red-950/50 text-red-600 hover:text-red-600"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4 transition-transform hover:-translate-y-1" />
                         </Button>
                       </div>
                     </td>
@@ -301,9 +301,12 @@ const Clients = () => {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Modifier le client</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Pencil className="h-5 w-5 text-blue-600" />
+              Modifier le client
+            </DialogTitle>
             <DialogDescription>
-              Modifiez les informations du client ci-dessous.
+              Modifiez les informations de {selectedClient?.prenom} {selectedClient?.nom}.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -355,15 +358,26 @@ const Clients = () => {
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Cette action ne peut pas être annulée. Le client sera définitivement supprimé 
-              de la base de données.
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Trash2 className="h-5 w-5 text-red-600" />
+              Confirmer la suppression
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>Êtes-vous sûr de vouloir supprimer ce client ?</p>
+              {selectedClient && (
+                <div className="font-medium text-foreground">
+                  {selectedClient.prenom} {selectedClient.nom}
+                </div>
+              )}
+              <p className="text-destructive">Cette action est irréversible.</p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground">
+            <AlertDialogAction 
+              onClick={confirmDelete} 
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               Supprimer
             </AlertDialogAction>
           </AlertDialogFooter>
