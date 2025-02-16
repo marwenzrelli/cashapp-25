@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -192,7 +191,10 @@ const Administration = () => {
                   <SelectItem value="accounting">Comptabilité</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={selectedRole} onValueChange={setSelectedRole}>
+              <Select 
+                value={selectedRole} 
+                onValueChange={(value: UserRole | "all") => setSelectedRole(value)}
+              >
                 <SelectTrigger className="w-[180px]">
                   <UserCog className="h-4 w-4 mr-2" />
                   <SelectValue placeholder="Rôle" />
