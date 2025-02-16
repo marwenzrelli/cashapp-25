@@ -43,24 +43,45 @@ const Layout = () => {
                   <Link
                     key={path}
                     to={path}
-                    className={`flex items-center space-x-2 px-3 py-2 rounded-md transition-colors ${
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-md transition-all duration-300 ${
                       location.pathname === path
-                        ? "bg-primary text-primary-foreground"
-                        : "hover:bg-accent"
+                        ? "bg-primary text-primary-foreground shadow-lg transform hover:scale-105 hover:-translate-y-1"
+                        : "hover:bg-accent hover:shadow-md hover:-translate-y-0.5 transform"
                     }`}
                   >
-                    <Icon className="h-5 w-5" />
-                    <span>{label}</span>
+                    <Icon 
+                      className={`h-5 w-5 transform transition-transform duration-300 ${
+                        location.pathname === path 
+                          ? "drop-shadow-[0_0_3px_rgba(59,130,246,0.5)]"
+                          : "hover:drop-shadow-[0_0_2px_rgba(59,130,246,0.3)]"
+                      }`}
+                      style={{
+                        color: location.pathname === path
+                          ? "#FFFFFF"
+                          : path === "/dashboard" ? "#9b87f5"
+                          : path === "/clients" ? "#0EA5E9"
+                          : path === "/deposits" ? "#10B981"
+                          : path === "/withdrawals" ? "#EF4444"
+                          : path === "/transfers" ? "#8B5CF6"
+                          : path === "/statistics" ? "#F97316"
+                          : "#D946EF"
+                      }}
+                      strokeWidth={location.pathname === path ? 2.5 : 2}
+                    />
+                    <span className="font-medium">{label}</span>
                   </Link>
                 ))}
               </div>
             </div>
             <Button
               variant="ghost"
-              className="flex items-center space-x-2"
+              className="flex items-center space-x-2 px-4 py-2 transition-all duration-300 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/20"
               onClick={handleLogout}
             >
-              <LogOut className="h-5 w-5" />
+              <LogOut 
+                className="h-5 w-5 transform transition-all duration-300 hover:scale-110 hover:rotate-12"
+                style={{ color: "#EF4444" }}
+              />
               <span>Déconnexion</span>
             </Button>
           </div>
