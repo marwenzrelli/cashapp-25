@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -19,15 +18,14 @@ export const EditUserDialog = ({ isOpen, onClose, user, onUpdateUser }: EditUser
 
   if (!user) return null;
 
-  const handleSubmit = () => {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     const updatedUser = {
       ...user,
       ...editedUser,
       department: getDepartmentByRole(editedUser.role as UserRole || user.role),
     };
     onUpdateUser(updatedUser);
-    onClose();
-    toast.success("Utilisateur mis à jour avec succès");
   };
 
   const getDepartmentByRole = (role: UserRole): string => {
@@ -44,7 +42,11 @@ export const EditUserDialog = ({ isOpen, onClose, user, onUpdateUser }: EditUser
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) {
+        onClose();
+      }
+    }}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Modifier l'utilisateur</DialogTitle>

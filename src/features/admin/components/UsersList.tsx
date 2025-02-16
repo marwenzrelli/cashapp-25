@@ -1,3 +1,4 @@
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +26,26 @@ export const UsersList = ({ users, onToggleStatus, onUpdateUser, onUpdatePermiss
   const [selectedUser, setSelectedUser] = useState<SystemUser | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isPermissionsDialogOpen, setIsPermissionsDialogOpen] = useState(false);
+
+  const handleCloseEditDialog = () => {
+    setIsEditDialogOpen(false);
+    setSelectedUser(null);
+  };
+
+  const handleClosePermissionsDialog = () => {
+    setIsPermissionsDialogOpen(false);
+    setSelectedUser(null);
+  };
+
+  const handleUpdateUserAndClose = (updatedUser: SystemUser) => {
+    onUpdateUser(updatedUser);
+    handleCloseEditDialog();
+  };
+
+  const handleUpdatePermissionsAndClose = (userId: string, permissions: Permission[]) => {
+    onUpdatePermissions(userId, permissions);
+    handleClosePermissionsDialog();
+  };
 
   return (
     <>
@@ -146,22 +167,16 @@ export const UsersList = ({ users, onToggleStatus, onUpdateUser, onUpdatePermiss
 
       <EditUserDialog
         isOpen={isEditDialogOpen}
-        onClose={() => {
-          setIsEditDialogOpen(false);
-          setSelectedUser(null);
-        }}
+        onClose={handleCloseEditDialog}
         user={selectedUser}
-        onUpdateUser={onUpdateUser}
+        onUpdateUser={handleUpdateUserAndClose}
       />
 
       <PermissionsDialog
         isOpen={isPermissionsDialogOpen}
-        onClose={() => {
-          setIsPermissionsDialogOpen(false);
-          setSelectedUser(null);
-        }}
+        onClose={handleClosePermissionsDialog}
         user={selectedUser}
-        onUpdatePermissions={onUpdatePermissions}
+        onUpdatePermissions={handleUpdatePermissionsAndClose}
       />
     </>
   );

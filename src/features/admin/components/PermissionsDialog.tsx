@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -29,15 +28,18 @@ export const PermissionsDialog = ({ isOpen, onClose, user, onUpdatePermissions }
 
   if (!user) return null;
 
-  const handleSubmit = () => {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     const permissions = availablePermissions.filter(p => selectedPermissions.includes(p.id));
     onUpdatePermissions(user.id, permissions);
-    onClose();
-    toast.success("Permissions mises à jour avec succès");
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) {
+        onClose();
+      }
+    }}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Gérer les permissions</DialogTitle>
