@@ -31,7 +31,7 @@ const Login = () => {
       const user = users.find((u: any) => u.login === username);
       console.log("Utilisateur trouvé:", user);
 
-      if (user && password === "password123") {
+      if (user && password === user.password) {
         console.log("Mot de passe correct, vérification du statut");
         
         // Vérifier si l'utilisateur est actif
@@ -53,7 +53,7 @@ const Login = () => {
       } else {
         console.log("Authentification échouée:", {
           userFound: !!user,
-          passwordMatch: password === "password123"
+          passwordMatch: password === user?.password
         });
         toast.error("Identifiants invalides", {
           description: "Veuillez vérifier vos informations de connexion",
