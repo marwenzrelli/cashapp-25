@@ -78,7 +78,7 @@ const Login = () => {
                   <Input
                     id="login"
                     type="text"
-                    placeholder="marwensuperviser"
+                    placeholder="Entrez votre nom d'utilisateur"
                     value={login}
                     onChange={(e) => setLogin(e.target.value)}
                     className="pl-9"
@@ -94,7 +94,7 @@ const Login = () => {
                   <Input
                     id="password"
                     type="password"
-                    placeholder="••••••••"
+                    placeholder="Entrez votre mot de passe"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-9"
