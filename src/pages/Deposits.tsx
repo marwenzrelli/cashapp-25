@@ -49,7 +49,7 @@ const Deposits = () => {
   };
 
   const filteredDeposits = deposits.filter(deposit => 
-    deposit.client.toLowerCase().includes(searchTerm.toLowerCase())
+    deposit.client_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (

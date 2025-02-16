@@ -1,10 +1,10 @@
+
 export interface Deposit {
   id: string;
-  client: string;
-  client_name?: string;
   amount: number;
   date: string;
   description: string;
+  client_name: string;
 }
 
 export interface DepositDialogProps {

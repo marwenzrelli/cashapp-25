@@ -35,10 +35,10 @@ export const useDeposits = () => {
 
       const formattedDeposits: Deposit[] = data.map(d => ({
         id: d.id,
-        client: d.client_name,
         amount: Number(d.amount),
         date: new Date(d.operation_date).toLocaleDateString(),
-        description: d.notes || ''
+        description: d.notes || '',
+        client_name: d.client_name
       }));
 
       setDeposits(formattedDeposits);
@@ -55,7 +55,7 @@ export const useDeposits = () => {
       const { error } = await supabase
         .from('deposits')
         .insert({
-          client_name: deposit.client,
+          client_name: deposit.client_name,
           amount: deposit.amount,
           operation_date: new Date(deposit.date).toISOString(),
           notes: deposit.description
