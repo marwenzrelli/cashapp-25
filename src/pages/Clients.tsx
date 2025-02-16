@@ -1,5 +1,6 @@
+
 import { useState } from "react";
-import { Plus, Search, UserCircle, Sparkles, TrendingUp, AlertCircle, Pencil, Trash2, Star, ChevronDown } from "lucide-react";
+import { Plus, Search, UserCircle, Sparkles, AlertCircle, Pencil, Trash2 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,8 +26,6 @@ interface Client {
   email: string;
   solde: number;
   dateCreation: string;
-  activite: "haute" | "moyenne" | "basse";
-  score?: number;
 }
 
 interface AISuggestion {
@@ -34,8 +33,6 @@ interface AISuggestion {
   message: string;
   type: "info" | "warning" | "success";
   clientId: string;
-  insights?: string[];
-  action?: string;
 }
 
 const Clients = () => {
@@ -60,8 +57,6 @@ const Clients = () => {
       email: "jean.dupont@email.com",
       solde: 15000,
       dateCreation: "2024-01-15",
-      activite: "haute",
-      score: 92,
     },
     {
       id: "2",
@@ -71,8 +66,6 @@ const Clients = () => {
       email: "marie.martin@email.com",
       solde: 8000,
       dateCreation: "2024-02-01",
-      activite: "moyenne",
-      score: 78,
     },
     {
       id: "3",
@@ -82,54 +75,23 @@ const Clients = () => {
       email: "pierre.durant@email.com",
       solde: 3000,
       dateCreation: "2024-02-10",
-      activite: "basse",
-      score: 45,
     },
   ]);
 
   const aiSuggestions: AISuggestion[] = [
     {
       id: "1",
-      message: "Client à fort potentiel détecté",
+      message: "Nouveau client potentiel détecté",
       type: "success",
       clientId: "1",
-      insights: [
-        "Score de fidélité élevé (92/100)",
-        "Activité en hausse de 25% ce mois-ci",
-        "Profil similaire aux meilleurs clients"
-      ],
-      action: "Proposer des services premium",
     },
     {
       id: "2",
-      message: "Risque de désengagement détecté",
-      type: "warning",
+      message: "Mise à jour des informations recommandée",
+      type: "info",
       clientId: "3",
-      insights: [
-        "Baisse d'activité de 40% sur 3 mois",
-        "Diminution des interactions",
-        "Profil à risque selon l'analyse prédictive"
-      ],
-      action: "Programme de rétention recommandé",
     },
   ];
-
-  const getActivityColor = (activite: Client["activite"]) => {
-    switch (activite) {
-      case "haute":
-        return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
-      case "moyenne":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400";
-      case "basse":
-        return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
-    }
-  };
-
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return "text-green-600";
-    if (score >= 60) return "text-yellow-600";
-    return "text-red-600";
-  };
 
   const getSuggestionStyle = (type: AISuggestion["type"]) => {
     switch (type) {
@@ -219,32 +181,13 @@ const Clients = () => {
                   key={suggestion.id}
                   className={`p-4 rounded-lg border transition-all hover:scale-[1.02] ${getSuggestionStyle(suggestion.type)}`}
                 >
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-3">
-                      {suggestion.type === "warning" ? (
-                        <AlertCircle className="h-5 w-5 text-yellow-500 shrink-0" />
-                      ) : (
-                        <Star className="h-5 w-5 text-green-500 shrink-0" />
-                      )}
-                      <div>
-                        <p className="font-medium">{suggestion.message}</p>
-                        {suggestion.action && (
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {suggestion.action}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    {suggestion.insights && (
-                      <div className="ml-8 space-y-1 text-sm">
-                        {suggestion.insights.map((insight, index) => (
-                          <p key={index} className="text-muted-foreground flex items-center gap-2">
-                            <ChevronDown className="h-3 w-3" />
-                            {insight}
-                          </p>
-                        ))}
-                      </div>
+                  <div className="flex items-start gap-3">
+                    {suggestion.type === "warning" ? (
+                      <AlertCircle className="h-5 w-5 text-yellow-500 shrink-0" />
+                    ) : (
+                      <Sparkles className="h-5 w-5 text-green-500 shrink-0" />
                     )}
+                    <p className="font-medium">{suggestion.message}</p>
                   </div>
                 </div>
               ))}
@@ -293,9 +236,7 @@ const Clients = () => {
                 <tr className="text-left">
                   <th className="p-3">Client</th>
                   <th className="p-3">Contact</th>
-                  <th className="p-3">Score IA</th>
                   <th className="p-3">Solde</th>
-                  <th className="p-3">Activité</th>
                   <th className="p-3">Date de création</th>
                   <th className="p-3">Actions</th>
                 </tr>
@@ -324,20 +265,8 @@ const Clients = () => {
                         </p>
                       </div>
                     </td>
-                    <td className="p-3">
-                      {client.score && (
-                        <div className={`font-semibold ${getScoreColor(client.score)}`}>
-                          {client.score}/100
-                        </div>
-                      )}
-                    </td>
                     <td className="p-3 font-medium">
                       {client.solde.toLocaleString()} €
-                    </td>
-                    <td className="p-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getActivityColor(client.activite)}`}>
-                        {client.activite.charAt(0).toUpperCase() + client.activite.slice(1)}
-                      </span>
                     </td>
                     <td className="p-3 text-muted-foreground">
                       {client.dateCreation}
