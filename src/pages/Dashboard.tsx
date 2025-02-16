@@ -1,9 +1,11 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from "recharts";
 import { ArrowUpCircle, ArrowDownCircle, RefreshCcw, TrendingUp, Users, AlertCircle, Sparkles, User, Settings, Bell, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useState } from "react";
+import { EditProfileDialog } from "@/features/profile/EditProfileDialog";
+import { SettingsDialog } from "@/features/profile/SettingsDialog";
 
 const data = [
   { month: "Jan", transactions: 65 },
@@ -52,6 +54,23 @@ const aiSuggestions = [
 ];
 
 const Dashboard = () => {
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  const currentUser = {
+    name: "Jean Dupont",
+    email: "jean.dupont@example.com",
+    phone: "+33 6 12 34 56 78",
+    department: "Administration",
+  };
+
+  const currentSettings = {
+    notifications: true,
+    darkMode: false,
+    twoFactor: true,
+    language: "fr",
+  };
+
   return (
     <div className="space-y-8 animate-in">
       <div className="flex justify-between items-start">
@@ -88,7 +107,7 @@ const Dashboard = () => {
             
             <div className="flex-1 space-y-4">
               <div>
-                <h2 className="text-2xl font-bold">Jean Dupont</h2>
+                <h2 className="text-2xl font-bold">{currentUser.name}</h2>
                 <p className="text-muted-foreground">Administrateur Principal</p>
               </div>
               
@@ -99,16 +118,24 @@ const Dashboard = () => {
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Bell className="h-4 w-4" />
-                  <span>Notifications : Activées</span>
+                  <span>Notifications : {currentSettings.notifications ? 'Activées' : 'Désactivées'}</span>
                 </div>
               </div>
               
               <div className="flex gap-4">
-                <Button variant="outline" className="gap-2">
+                <Button 
+                  variant="outline" 
+                  className="gap-2 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-950/50"
+                  onClick={() => setIsEditProfileOpen(true)}
+                >
                   <User className="h-4 w-4" />
                   Éditer le profil
                 </Button>
-                <Button variant="outline" className="gap-2">
+                <Button 
+                  variant="outline" 
+                  className="gap-2 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-950/50"
+                  onClick={() => setIsSettingsOpen(true)}
+                >
                   <Settings className="h-4 w-4" />
                   Paramètres
                 </Button>
@@ -275,6 +302,18 @@ const Dashboard = () => {
           </div>
         </CardContent>
       </Card>
+
+      <EditProfileDialog
+        isOpen={isEditProfileOpen}
+        onOpenChange={setIsEditProfileOpen}
+        currentUser={currentUser}
+      />
+
+      <SettingsDialog
+        isOpen={isSettingsOpen}
+        onOpenChange={setIsSettingsOpen}
+        currentSettings={currentSettings}
+      />
     </div>
   );
 };
