@@ -198,25 +198,6 @@ const Dashboard = () => {
         </CardContent>
       </Card>
 
-      <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirmer le changement de devise</DialogTitle>
-            <DialogDescription>
-              Êtes-vous sûr de vouloir changer la devise vers {selectedCurrency} ?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex gap-2">
-            <Button variant="outline" onClick={() => setConfirmDialogOpen(false)}>
-              Annuler
-            </Button>
-            <Button onClick={handleConfirmCurrencyChange}>
-              Confirmer
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       <EditProfileDialog
         isOpen={isEditProfileOpen}
         onOpenChange={setIsEditProfileOpen}
