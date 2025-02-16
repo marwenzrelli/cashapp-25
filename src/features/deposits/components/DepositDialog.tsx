@@ -64,21 +64,26 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
     }
 
     setIsLoading(true);
-    const success = await onConfirm({
-      id: "",
-      client: selectedClient,
-      amount: Number(amount),
-      date: format(date, "yyyy-MM-dd"),
-      description
-    });
-
-    if (success) {
+    try {
+      await onConfirm({
+        id: "",
+        client: selectedClient,
+        amount: Number(amount),
+        date: format(date, "yyyy-MM-dd"),
+        description
+      });
+      
       setSelectedClient("");
       setAmount("");
       setDescription("");
       fetchDailyTotal(date);
+      
+    } catch (error) {
+      console.error("Error submitting deposit:", error);
+      toast.error("Une erreur s'est produite lors de l'enregistrement du versement");
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   return (
@@ -203,4 +208,3 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
     </Dialog>
   );
 };
-
