@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,7 @@ export const EditUserDialog = ({ isOpen, onClose, user, onUpdateUser }: EditUser
       department: getDepartmentByRole(editedUser.role as UserRole || user.role),
     };
     onUpdateUser(updatedUser);
+    toast.success("Utilisateur mis à jour avec succès");
   };
 
   const getDepartmentByRole = (role: UserRole): string => {

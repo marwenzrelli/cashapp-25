@@ -1,4 +1,3 @@
-
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,16 +34,6 @@ export const UsersList = ({ users, onToggleStatus, onUpdateUser, onUpdatePermiss
   const handleClosePermissionsDialog = () => {
     setIsPermissionsDialogOpen(false);
     setSelectedUser(null);
-  };
-
-  const handleUpdateUserAndClose = (updatedUser: SystemUser) => {
-    onUpdateUser(updatedUser);
-    handleCloseEditDialog();
-  };
-
-  const handleUpdatePermissionsAndClose = (userId: string, permissions: Permission[]) => {
-    onUpdatePermissions(userId, permissions);
-    handleClosePermissionsDialog();
   };
 
   return (
@@ -169,14 +158,14 @@ export const UsersList = ({ users, onToggleStatus, onUpdateUser, onUpdatePermiss
         isOpen={isEditDialogOpen}
         onClose={handleCloseEditDialog}
         user={selectedUser}
-        onUpdateUser={handleUpdateUserAndClose}
+        onUpdateUser={onUpdateUser}
       />
 
       <PermissionsDialog
         isOpen={isPermissionsDialogOpen}
         onClose={handleClosePermissionsDialog}
         user={selectedUser}
-        onUpdatePermissions={handleUpdatePermissionsAndClose}
+        onUpdatePermissions={onUpdatePermissions}
       />
     </>
   );
