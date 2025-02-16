@@ -21,7 +21,7 @@ const Login = () => {
 
     try {
       // On utilise toujours l'email pour l'authentification Supabase
-      const email = login === "marwensuperviser" ? "marwensupervisor@gmail.com" : login;
+      const email = login === "marwensuperviseur" ? "marwensupervisor@gmail.com" : login;
 
       const { error } = await supabase.auth.signInWithPassword({
         email,
@@ -126,7 +126,7 @@ const Login = () => {
 
         <div className="text-center text-sm text-muted-foreground">
           Identifiants de connexion par défaut :<br />
-          Nom d'utilisateur : marwensuperviser<br />
+          Nom d'utilisateur : marwensuperviseur<br />
           Mot de passe : 12345678
         </div>
       </div>
