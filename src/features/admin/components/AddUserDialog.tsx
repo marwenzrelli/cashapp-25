@@ -18,10 +18,22 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
     fullName: "",
     email: "",
     role: "cashier" as UserRole,
-    department: "",
     password: "",
     confirmPassword: "",
   });
+
+  const getDepartmentByRole = (role: UserRole): string => {
+    switch (role) {
+      case "supervisor":
+        return "finance";
+      case "manager":
+        return "operations";
+      case "cashier":
+        return "accounting";
+      default:
+        return "accounting";
+    }
+  };
 
   const handleSubmit = () => {
     if (newUser.password !== newUser.confirmPassword) {
@@ -37,6 +49,7 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
     const user: SystemUser = {
       id: Math.random().toString(36).substr(2, 9),
       ...newUser,
+      department: getDepartmentByRole(newUser.role),
       status: "active",
       permissions: [],
       createdAt: new Date().toISOString(),
@@ -48,7 +61,6 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
       fullName: "",
       email: "",
       role: "cashier",
-      department: "",
       password: "",
       confirmPassword: "",
     });
@@ -120,27 +132,9 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
                 <SelectValue placeholder="Sélectionner un rôle" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="supervisor">Superviseur</SelectItem>
-                <SelectItem value="manager">Gestionnaire</SelectItem>
-                <SelectItem value="cashier">Caissier</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <label>Service</label>
-            <Select
-              value={newUser.department}
-              onValueChange={(value) =>
-                setNewUser({ ...newUser, department: value })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un service" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="finance">Finance</SelectItem>
-                <SelectItem value="operations">Opérations</SelectItem>
-                <SelectItem value="accounting">Comptabilité</SelectItem>
+                <SelectItem value="supervisor">Superviseur (Finance)</SelectItem>
+                <SelectItem value="manager">Gestionnaire (Opérations)</SelectItem>
+                <SelectItem value="cashier">Caissier (Comptabilité)</SelectItem>
               </SelectContent>
             </Select>
           </div>
