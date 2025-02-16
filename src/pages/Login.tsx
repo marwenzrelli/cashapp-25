@@ -7,9 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Sparkles, LogIn, Lock, User } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Login = () => {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -19,46 +20,22 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      // Récupérer les utilisateurs du localStorage
-      const usersData = localStorage.getItem('admin_users');
-      console.log("Données brutes du localStorage:", usersData);
-      
-      const users = JSON.parse(usersData || '[]');
-      console.log("Utilisateurs trouvés:", users);
-      console.log("Tentative de connexion avec:", { username, password });
-      
-      // Chercher l'utilisateur avec le login correspondant
-      const user = users.find((u: any) => u.login === username);
-      console.log("Utilisateur trouvé:", user);
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-      if (user && password === user.password) {
-        console.log("Mot de passe correct, vérification du statut");
-        
-        // Vérifier si l'utilisateur est actif
-        if (user.status === "inactive") {
-          toast.error("Compte désactivé", {
-            description: "Votre compte a été désactivé. Contactez un administrateur.",
-          });
-          setIsLoading(false);
-          return;
-        }
-
-        // Simuler un délai de traitement
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        toast.success("Connexion réussie", {
-          description: "Bienvenue dans votre espace personnel",
-        });
-        navigate("/dashboard");
-      } else {
-        console.log("Authentification échouée:", {
-          userFound: !!user,
-          passwordMatch: password === user?.password
-        });
+      if (error) {
         toast.error("Identifiants invalides", {
           description: "Veuillez vérifier vos informations de connexion",
         });
+        return;
       }
+
+      toast.success("Connexion réussie", {
+        description: "Bienvenue dans votre espace personnel",
+      });
+      navigate("/dashboard");
     } catch (error) {
       console.error("Erreur lors de la connexion:", error);
       toast.error("Erreur de connexion", {
@@ -92,18 +69,18 @@ const Login = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="username">Login</Label>
+                <Label htmlFor="email">Email</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
-                    id="username"
-                    type="text"
-                    placeholder="Entrez votre login"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    id="email"
+                    type="email"
+                    placeholder="marwensupervisor@gmail.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     className="pl-9"
                     required
-                    autoComplete="username"
+                    autoComplete="email"
                   />
                 </div>
               </div>
@@ -114,7 +91,7 @@ const Login = () => {
                   <Input
                     id="password"
                     type="password"
-                    placeholder="Entrez votre mot de passe"
+                    placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-9"
@@ -145,7 +122,9 @@ const Login = () => {
         </Card>
 
         <div className="text-center text-sm text-muted-foreground">
-          Mot de passe par défaut pour tous les utilisateurs : password123
+          Identifiants de connexion par défaut :<br />
+          Email : marwensupervisor@gmail.com<br />
+          Mot de passe : 12345678
         </div>
       </div>
     </div>
