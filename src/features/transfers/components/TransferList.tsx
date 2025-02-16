@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { type Transfer } from "../types";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface TransferListProps {
   transfers: Transfer[];
@@ -20,6 +21,7 @@ export const TransferList = ({
   onEdit,
   onDelete,
 }: TransferListProps) => {
+  const { currency } = useCurrency();
   const filteredTransfers = transfers.filter(
     (transfer) =>
       transfer.fromClient.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -79,7 +81,7 @@ export const TransferList = ({
                 <div className="flex items-center gap-4">
                   <div className="flex flex-col items-end gap-1">
                     <div className="text-lg font-semibold text-primary">
-                      {transfer.amount.toLocaleString()} €
+                      {transfer.amount.toLocaleString()} {currency === "EUR" ? "€" : currency === "USD" ? "$" : currency === "TND" ? "د.ت" : "د.إ"}
                     </div>
                     <div className="text-xs text-muted-foreground">
                       ID: {transfer.id}

@@ -1,5 +1,6 @@
 
 import { type Transfer } from "../types";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,6 +25,8 @@ export const DeleteTransferDialog = ({
   transfer,
   onConfirm,
 }: DeleteTransferDialogProps) => {
+  const { currency } = useCurrency();
+  
   if (!transfer) return null;
 
   return (
@@ -38,7 +41,7 @@ export const DeleteTransferDialog = ({
               <div className="mt-2 space-y-1 text-sm">
                 <p>De : {transfer.fromClient}</p>
                 <p>À : {transfer.toClient}</p>
-                <p>Montant : {transfer.amount.toLocaleString()} €</p>
+                <p>Montant : {transfer.amount.toLocaleString()} {currency === "EUR" ? "€" : currency === "USD" ? "$" : currency === "TND" ? "د.ت" : "د.إ"}</p>
                 <p>Date : {transfer.date}</p>
               </div>
             </div>

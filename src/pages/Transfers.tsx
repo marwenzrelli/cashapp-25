@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { toast } from "sonner";
 import { ListFilter } from "lucide-react";
@@ -7,6 +8,7 @@ import { TransferList } from "@/features/transfers/components/TransferList";
 import { EditTransferDialog } from "@/features/transfers/components/EditTransferDialog";
 import { DeleteTransferDialog } from "@/features/transfers/components/DeleteTransferDialog";
 import { type Transfer, type Suggestion, type EditFormData } from "@/features/transfers/types";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import {
   Select,
   SelectContent,
@@ -15,49 +17,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const defaultSuggestions: Suggestion[] = [
-  {
-    id: "1",
-    fromClient: "Jean Dupont",
-    toClient: "Marie Martin",
-    amount: 1500,
-    reason: "Paiement mensuel récurrent",
-  },
-  {
-    id: "2",
-    fromClient: "Marie Martin",
-    toClient: "Pierre Durant",
-    amount: 800,
-    reason: "Remboursement prévu",
-  },
-];
-
-const defaultTransfers: Transfer[] = [
-  {
-    id: "1",
-    fromClient: "Jean Dupont",
-    toClient: "Marie Martin",
-    amount: 1500,
-    date: "2024-02-23",
-    reason: "Paiement mensuel",
-  },
-  {
-    id: "2",
-    fromClient: "Marie Martin",
-    toClient: "Pierre Durant",
-    amount: 750,
-    date: "2024-02-22",
-    reason: "Remboursement",
-  },
-  {
-    id: "3",
-    fromClient: "Pierre Durant",
-    toClient: "Jean Dupont",
-    amount: 2000,
-    date: "2024-02-21",
-    reason: "Investissement",
-  },
-];
+const defaultSuggestions: Suggestion[] = [];
+const defaultTransfers: Transfer[] = [];
 
 const Transfers = () => {
   const [transfers, setTransfers] = useState<Transfer[]>(defaultTransfers);
@@ -72,6 +33,7 @@ const Transfers = () => {
     amount: "",
     reason: "",
   });
+  const { currency } = useCurrency();
 
   const handleEdit = (transfer: Transfer) => {
     setSelectedTransfer(transfer);
