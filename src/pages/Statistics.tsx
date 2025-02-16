@@ -1,9 +1,11 @@
-
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
 import { Sparkles, TrendingUp, Users, ArrowUpCircle, ArrowDownCircle, AlertTriangle } from "lucide-react";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 const Statistics = () => {
+  const { currency } = useCurrency();
+  
   const getInsightIcon = (type: string) => {
     switch (type) {
       case "success":
@@ -42,7 +44,9 @@ const Statistics = () => {
             <ArrowUpCircle className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0 €</div>
+            <div className="text-2xl font-bold">
+              0 {currency === "EUR" ? "€" : currency === "USD" ? "$" : currency === "TND" ? "د.ت" : "د.إ"}
+            </div>
             <p className="text-xs text-muted-foreground">
               +0% par rapport au mois dernier
             </p>
@@ -54,7 +58,9 @@ const Statistics = () => {
             <ArrowDownCircle className="h-4 w-4 text-danger" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0 €</div>
+            <div className="text-2xl font-bold">
+              0 {currency === "EUR" ? "€" : currency === "USD" ? "$" : currency === "TND" ? "د.ت" : "د.إ"}
+            </div>
             <p className="text-xs text-muted-foreground">
               +0% par rapport au mois dernier
             </p>

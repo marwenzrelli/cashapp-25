@@ -1,12 +1,14 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from "recharts";
-import { ArrowUpCircle, ArrowDownCircle, RefreshCcw, TrendingUp, Users, AlertCircle, Sparkles, User, Settings, Bell, Shield, Building, Calendar } from "lucide-react";
+import { ArrowUpCircle, ArrowDownCircle, RefreshCcw, TrendingUp, Users, AlertCircle, Sparkles, User, Settings, Bell, Shield, Building, Calendar, Coins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { EditProfileDialog } from "@/features/profile/EditProfileDialog";
 import { SettingsDialog } from "@/features/profile/SettingsDialog";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 const data = [];
 const recentActivity = [];
@@ -15,6 +17,7 @@ const aiSuggestions = [];
 const Dashboard = () => {
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const { currency, setCurrency } = useCurrency();
 
   return (
     <div className="space-y-8 animate-in">
@@ -25,10 +28,26 @@ const Dashboard = () => {
             Vue d'ensemble et analyses en temps réel
           </p>
         </div>
-        <Button variant="outline" className="flex items-center gap-2">
-          <RefreshCcw className="h-4 w-4" />
-          Actualiser
-        </Button>
+        <div className="flex items-center gap-4">
+          <Select value={currency} onValueChange={(value: "EUR" | "USD" | "TND" | "AED") => setCurrency(value)}>
+            <SelectTrigger className="w-[180px]">
+              <div className="flex items-center gap-2">
+                <Coins className="h-4 w-4 text-primary" />
+                <SelectValue placeholder="Sélectionner la devise" />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="EUR">EUR (€)</SelectItem>
+              <SelectItem value="USD">USD ($)</SelectItem>
+              <SelectItem value="TND">TND (د.ت)</SelectItem>
+              <SelectItem value="AED">AED (د.إ)</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="outline" className="flex items-center gap-2">
+            <RefreshCcw className="h-4 w-4" />
+            Actualiser
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
@@ -38,7 +57,9 @@ const Dashboard = () => {
             <ArrowUpCircle className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0 €</div>
+            <div className="text-2xl font-bold">
+              0 {currency === "EUR" ? "€" : currency === "USD" ? "$" : currency === "TND" ? "د.ت" : "د.إ"}
+            </div>
             <p className="text-xs text-muted-foreground">
               +0% par rapport au mois dernier
             </p>
@@ -50,7 +71,9 @@ const Dashboard = () => {
             <ArrowDownCircle className="h-4 w-4 text-danger" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0 €</div>
+            <div className="text-2xl font-bold">
+              0 {currency === "EUR" ? "€" : currency === "USD" ? "$" : currency === "TND" ? "د.ت" : "د.إ"}
+            </div>
             <p className="text-xs text-muted-foreground">
               +0% par rapport au mois dernier
             </p>

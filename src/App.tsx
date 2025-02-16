@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,32 +13,37 @@ import Statistics from "./pages/Statistics";
 import Operations from "./pages/Operations";
 import NotFound from "./pages/NotFound";
 import Layout from "./components/Layout";
+import { CurrencyProvider } from "./contexts/CurrencyContext";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="/login" element={<Login />} />
-          <Route element={<Layout />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/clients" element={<Clients />} />
-            <Route path="/deposits" element={<Deposits />} />
-            <Route path="/withdrawals" element={<Withdrawals />} />
-            <Route path="/transfers" element={<Transfers />} />
-            <Route path="/statistics" element={<Statistics />} />
-            <Route path="/operations" element={<Operations />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <CurrencyProvider>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Navigate to="/login" replace />} />
+              <Route path="/login" element={<Login />} />
+              <Route element={<Layout />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/clients" element={<Clients />} />
+                <Route path="/deposits" element={<Deposits />} />
+                <Route path="/withdrawals" element={<Withdrawals />} />
+                <Route path="/transfers" element={<Transfers />} />
+                <Route path="/statistics" element={<Statistics />} />
+                <Route path="/operations" element={<Operations />} />
+              </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </CurrencyProvider>
+  );
+}
 
 export default App;
