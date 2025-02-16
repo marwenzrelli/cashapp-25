@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Plus, Search, UserCircle, Sparkles, TrendingUp, AlertCircle, Pencil, Trash2 } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Plus, Search, UserCircle, Sparkles, TrendingUp, AlertCircle, Pencil, Trash2, Star, ChevronDown } from "lucide-react";
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -26,6 +26,7 @@ interface Client {
   solde: number;
   dateCreation: string;
   activite: "haute" | "moyenne" | "basse";
+  score?: number;
 }
 
 interface AISuggestion {
@@ -33,6 +34,8 @@ interface AISuggestion {
   message: string;
   type: "info" | "warning" | "success";
   clientId: string;
+  insights?: string[];
+  action?: string;
 }
 
 const Clients = () => {
@@ -48,90 +51,98 @@ const Clients = () => {
     email: "",
   });
 
-  // Données de test enrichies avec l'activité client
-  const [clients, setClients] = useState<Client[]>([
+  // Données de test enrichies avec scores IA
+  const clients: Client[] = [
     {
       id: "1",
       nom: "Dupont",
       prenom: "Jean",
-      telephone: "0123456789",
+      telephone: "0612345678",
       email: "jean.dupont@email.com",
-      solde: 1500,
-      dateCreation: "2024-02-20",
+      solde: 15000,
+      dateCreation: "2024-01-15",
       activite: "haute",
+      score: 92,
     },
     {
       id: "2",
       nom: "Martin",
       prenom: "Marie",
-      telephone: "0987654321",
+      telephone: "0687654321",
       email: "marie.martin@email.com",
-      solde: 2500,
-      dateCreation: "2024-02-15",
+      solde: 8000,
+      dateCreation: "2024-02-01",
       activite: "moyenne",
-    },
-  ]);
-
-  // Suggestions IA simulées
-  const aiSuggestions: AISuggestion[] = [
-    {
-      id: "1",
-      message: "Jean Dupont montre un potentiel élevé pour des services premium",
-      type: "success",
-      clientId: "1",
+      score: 78,
     },
     {
-      id: "2",
-      message: "Marie Martin pourrait bénéficier d'une offre de fidélité",
-      type: "info",
-      clientId: "2",
+      id: "3",
+      nom: "Durant",
+      prenom: "Pierre",
+      telephone: "0654321789",
+      email: "pierre.durant@email.com",
+      solde: 3000,
+      dateCreation: "2024-02-10",
+      activite: "basse",
+      score: 45,
     },
   ];
 
-  const handleCreateClient = (e: React.FormEvent) => {
-    e.preventDefault();
-    const newClientData: Client = {
-      id: Date.now().toString(),
-      ...newClient,
-      solde: 0,
-      dateCreation: new Date().toISOString().split("T")[0],
-      activite: "basse",
-    };
-    
-    setClients((prev) => [...prev, newClientData]);
-    setNewClient({ nom: "", prenom: "", telephone: "", email: "" });
-    setIsDialogOpen(false);
-    toast.success("Client créé avec succès");
-  };
+  // Suggestions IA enrichies avec insights
+  const aiSuggestions: AISuggestion[] = [
+    {
+      id: "1",
+      message: "Client à fort potentiel détecté",
+      type: "success",
+      clientId: "1",
+      insights: [
+        "Score de fidélité élevé (92/100)",
+        "Activité en hausse de 25% ce mois-ci",
+        "Profil similaire aux meilleurs clients"
+      ],
+      action: "Proposer des services premium",
+    },
+    {
+      id: "2",
+      message: "Risque de désengagement détecté",
+      type: "warning",
+      clientId: "3",
+      insights: [
+        "Baisse d'activité de 40% sur 3 mois",
+        "Diminution des interactions",
+        "Profil à risque selon l'analyse prédictive"
+      ],
+      action: "Programme de rétention recommandé",
+    },
+  ];
 
   const getActivityColor = (activite: Client["activite"]) => {
     switch (activite) {
       case "haute":
-        return "text-success bg-success/10";
+        return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
       case "moyenne":
-        return "text-yellow-500 bg-yellow-500/10";
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400";
       case "basse":
-        return "text-muted-foreground bg-muted";
+        return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
     }
   };
 
-  const getSuggestionIcon = (type: AISuggestion["type"]) => {
+  const getScoreColor = (score: number) => {
+    if (score >= 80) return "text-green-600";
+    if (score >= 60) return "text-yellow-600";
+    return "text-red-600";
+  };
+
+  const getSuggestionStyle = (type: AISuggestion["type"]) => {
     switch (type) {
       case "success":
-        return <TrendingUp className="h-5 w-5 text-success" />;
+        return "border-green-200 bg-green-50 dark:bg-green-950/20";
       case "warning":
-        return <AlertCircle className="h-5 w-5 text-warning" />;
+        return "border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20";
       case "info":
-        return <Sparkles className="h-5 w-5 text-primary" />;
+        return "border-blue-200 bg-blue-50 dark:bg-blue-950/20";
     }
   };
-
-  const filteredClients = clients.filter(
-    (client) =>
-      client.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.prenom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   const handleEdit = (client: Client) => {
     setSelectedClient(client);
@@ -151,7 +162,6 @@ const Clients = () => {
 
   const confirmEdit = () => {
     if (!selectedClient) return;
-
     setClients(prevClients =>
       prevClients.map(client =>
         client.id === selectedClient.id
@@ -161,54 +171,82 @@ const Clients = () => {
     );
 
     setIsEditDialogOpen(false);
-    toast.success("Client modifié avec succès");
+    toast.success("Client modifié avec succès", {
+      description: "Les modifications ont été enregistrées"
+    });
   };
 
   const confirmDelete = () => {
     if (!selectedClient) return;
-
     setClients(prevClients =>
       prevClients.filter(client => client.id !== selectedClient.id)
     );
 
     setIsDeleteDialogOpen(false);
-    toast.success("Client supprimé avec succès");
+    toast.success("Client supprimé avec succès", {
+      description: "Le client a été retiré de la base de données"
+    });
   };
 
-  const [newClient, setNewClient] = useState({
-    nom: "",
-    prenom: "",
-    telephone: "",
-    email: "",
-  });
+  const filteredClients = clients.filter((client) =>
+    `${client.prenom} ${client.nom}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.telephone.includes(searchTerm)
+  );
 
   return (
     <div className="space-y-8 animate-in">
       <div>
-        <h1 className="text-3xl font-bold">Clients</h1>
+        <h1 className="text-3xl font-bold">Gestion des clients</h1>
         <p className="text-muted-foreground">
-          Gérez vos comptes clients avec assistance IA
+          Gérez vos clients avec l'aide de l'intelligence artificielle
         </p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <Card>
+        <Card className="border-primary/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary" />
-              Suggestions IA
+              Insights IA
             </CardTitle>
+            <CardDescription>
+              Analyses et recommandations personnalisées
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {aiSuggestions.map((suggestion) => (
                 <div
                   key={suggestion.id}
-                  className="p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                  className={`p-4 rounded-lg border transition-all hover:scale-[1.02] ${getSuggestionStyle(suggestion.type)}`}
                 >
-                  <div className="flex gap-2">
-                    {getSuggestionIcon(suggestion.type)}
-                    <p className="text-sm">{suggestion.message}</p>
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      {suggestion.type === "warning" ? (
+                        <AlertCircle className="h-5 w-5 text-yellow-500 shrink-0" />
+                      ) : (
+                        <Star className="h-5 w-5 text-green-500 shrink-0" />
+                      )}
+                      <div>
+                        <p className="font-medium">{suggestion.message}</p>
+                        {suggestion.action && (
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {suggestion.action}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    {suggestion.insights && (
+                      <div className="ml-8 space-y-1 text-sm">
+                        {suggestion.insights.map((insight, index) => (
+                          <p key={index} className="text-muted-foreground flex items-center gap-2">
+                            <ChevronDown className="h-3 w-3" />
+                            {insight}
+                          </p>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -218,75 +256,26 @@ const Clients = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Actions rapides</CardTitle>
+            <CardTitle>Recherche intelligente</CardTitle>
+            <CardDescription>
+              Trouvez rapidement vos clients avec la recherche contextuelle
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between gap-4">
-              <div className="relative flex-1">
+            <div className="space-y-4">
+              <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="Rechercher un client..."
+                  placeholder="Rechercher par nom, email ou téléphone..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-9"
                 />
               </div>
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Nouveau client
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Créer un nouveau client</DialogTitle>
-                  </DialogHeader>
-                  <form onSubmit={handleCreateClient} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="nom">Nom</Label>
-                      <Input
-                        id="nom"
-                        value={newClient.nom}
-                        onChange={(e) => setNewClient({ ...newClient, nom: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="prenom">Prénom</Label>
-                      <Input
-                        id="prenom"
-                        value={newClient.prenom}
-                        onChange={(e) => setNewClient({ ...newClient, prenom: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="telephone">Téléphone</Label>
-                      <Input
-                        id="telephone"
-                        type="tel"
-                        value={newClient.telephone}
-                        onChange={(e) => setNewClient({ ...newClient, telephone: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={newClient.email}
-                        onChange={(e) => setNewClient({ ...newClient, email: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <Button type="submit" className="w-full">
-                      Créer le client
-                    </Button>
-                  </form>
-                </DialogContent>
-              </Dialog>
+              <Button className="w-full">
+                <Plus className="h-4 w-4 mr-2" />
+                Nouveau client
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -294,7 +283,10 @@ const Clients = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Liste des clients</CardTitle>
+          <CardTitle>Liste des clients ({filteredClients.length})</CardTitle>
+          <CardDescription>
+            Gérez vos clients et accédez à leurs informations détaillées
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="relative w-full overflow-auto">
@@ -303,6 +295,7 @@ const Clients = () => {
                 <tr className="text-left">
                   <th className="p-3">Client</th>
                   <th className="p-3">Contact</th>
+                  <th className="p-3">Score IA</th>
                   <th className="p-3">Solde</th>
                   <th className="p-3">Activité</th>
                   <th className="p-3">Date de création</th>
@@ -311,7 +304,7 @@ const Clients = () => {
               </thead>
               <tbody>
                 {filteredClients.map((client) => (
-                  <tr key={client.id} className="border-b">
+                  <tr key={client.id} className="border-b hover:bg-muted/50 transition-colors">
                     <td className="p-3">
                       <div className="flex items-center gap-3">
                         <UserCircle className="h-8 w-8 text-muted-foreground" />
@@ -332,6 +325,13 @@ const Clients = () => {
                           {client.telephone}
                         </p>
                       </div>
+                    </td>
+                    <td className="p-3">
+                      {client.score && (
+                        <div className={`font-semibold ${getScoreColor(client.score)}`}>
+                          {client.score}/100
+                        </div>
+                      )}
                     </td>
                     <td className="p-3 font-medium">
                       {client.solde.toLocaleString()} €
@@ -356,7 +356,7 @@ const Clients = () => {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="text-destructive"
+                          className="text-destructive hover:text-destructive"
                           onClick={() => handleDelete(client)}
                         >
                           <Trash2 className="h-4 w-4" />
