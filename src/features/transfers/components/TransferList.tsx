@@ -81,7 +81,7 @@ export const TransferList = ({
                 <div className="flex items-center gap-4">
                   <div className="flex flex-col items-end gap-1">
                     <div className="text-lg font-semibold text-primary">
-                      {transfer.amount.toLocaleString()} د.ت
+                      {transfer.amount.toLocaleString()} TND
                     </div>
                     <div className="text-xs text-muted-foreground">
                       ID: {transfer.id}
