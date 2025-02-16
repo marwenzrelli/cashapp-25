@@ -20,14 +20,19 @@ const Login = () => {
 
     try {
       // Récupérer les utilisateurs du localStorage
-      const users = JSON.parse(localStorage.getItem('admin_users') || '[]');
+      const usersData = localStorage.getItem('admin_users');
+      console.log("Données brutes du localStorage:", usersData);
+      
+      const users = JSON.parse(usersData || '[]');
+      console.log("Utilisateurs trouvés:", users);
+      console.log("Tentative de connexion avec:", { username, password });
       
       // Chercher l'utilisateur avec le login correspondant
       const user = users.find((u: any) => u.login === username);
+      console.log("Utilisateur trouvé:", user);
 
-      if (user && password === "password123") { // Mot de passe par défaut pour tous les utilisateurs
-        // Simuler un délai de traitement
-        await new Promise(resolve => setTimeout(resolve, 1000));
+      if (user && password === "password123") {
+        console.log("Mot de passe correct, vérification du statut");
         
         // Vérifier si l'utilisateur est actif
         if (user.status === "inactive") {
@@ -38,15 +43,27 @@ const Login = () => {
           return;
         }
 
+        // Simuler un délai de traitement
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
         toast.success("Connexion réussie", {
           description: "Bienvenue dans votre espace personnel",
         });
         navigate("/dashboard");
       } else {
+        console.log("Authentification échouée:", {
+          userFound: !!user,
+          passwordMatch: password === "password123"
+        });
         toast.error("Identifiants invalides", {
           description: "Veuillez vérifier vos informations de connexion",
         });
       }
+    } catch (error) {
+      console.error("Erreur lors de la connexion:", error);
+      toast.error("Erreur de connexion", {
+        description: "Une erreur est survenue lors de la tentative de connexion",
+      });
     } finally {
       setIsLoading(false);
     }
