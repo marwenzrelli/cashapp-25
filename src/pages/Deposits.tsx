@@ -128,6 +128,14 @@ const Deposits = () => {
     });
   };
 
+  const handleEdit = (deposit: Deposit) => {
+    setSelectedDeposit(deposit);
+    setIsDialogOpen(true);
+    toast.info("Mode édition", {
+      description: `Modification du versement de ${deposit.amount}€`
+    });
+  };
+
   const filteredDeposits = deposits.filter((deposit) => {
     const client = mockClients.find(client => client.id === deposit.client);
     if (!client) return false;
@@ -283,6 +291,15 @@ const Deposits = () => {
                       </td>
                       <td className="p-3">
                         <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 ease-in-out">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="relative hover:bg-blue-50 dark:hover:bg-blue-950/50 text-blue-600 hover:text-blue-600 transition-all duration-300"
+                            onClick={() => handleEdit(deposit)}
+                          >
+                            <Pencil className="h-4 w-4 transition-all duration-300 ease-in-out transform hover:scale-125 hover:rotate-[360deg]" />
+                            <span className="absolute inset-0 rounded-full bg-blue-100 dark:bg-blue-900/20 opacity-0 group-hover:opacity-100 animate-ping" />
+                          </Button>
                           <Button
                             variant="ghost"
                             size="icon"
