@@ -1,14 +1,7 @@
+
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
 import { Sparkles, TrendingUp, Users, ArrowUpCircle, ArrowDownCircle, AlertTriangle } from "lucide-react";
-
-const transactionData = [];
-
-const clientActivity = [];
-
-const COLORS = ["#10B981", "#3B82F6", "#6B7280"];
-
-const aiInsights = [];
 
 const Statistics = () => {
   const getInsightIcon = (type: string) => {
@@ -49,9 +42,9 @@ const Statistics = () => {
             <ArrowUpCircle className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">328,500 €</div>
+            <div className="text-2xl font-bold">0 €</div>
             <p className="text-xs text-muted-foreground">
-              +12.5% par rapport au mois dernier
+              +0% par rapport au mois dernier
             </p>
           </CardContent>
         </Card>
@@ -61,9 +54,9 @@ const Statistics = () => {
             <ArrowDownCircle className="h-4 w-4 text-danger" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">231,000 €</div>
+            <div className="text-2xl font-bold">0 €</div>
             <p className="text-xs text-muted-foreground">
-              -3.2% par rapport au mois dernier
+              +0% par rapport au mois dernier
             </p>
           </CardContent>
         </Card>
@@ -73,9 +66,9 @@ const Statistics = () => {
             <Users className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1,234</div>
+            <div className="text-2xl font-bold">0</div>
             <p className="text-xs text-muted-foreground">
-              +85 nouveaux clients ce mois
+              +0 nouveaux clients ce mois
             </p>
           </CardContent>
         </Card>
@@ -89,7 +82,7 @@ const Statistics = () => {
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={transactionData}>
+                <LineChart data={[]}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="mois" />
                   <YAxis />
@@ -122,7 +115,7 @@ const Statistics = () => {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={clientActivity}
+                    data={[]}
                     cx="50%"
                     cy="50%"
                     labelLine={false}
@@ -131,9 +124,6 @@ const Statistics = () => {
                     fill="#8884d8"
                     dataKey="value"
                   >
-                    {clientActivity.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
                   </Pie>
                   <Tooltip />
                 </PieChart>
@@ -152,22 +142,6 @@ const Statistics = () => {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
-            {aiInsights.map((insight) => (
-              <div
-                key={insight.id}
-                className={`p-4 rounded-lg border ${getInsightStyle(insight.type)}`}
-              >
-                <div className="flex items-start gap-3">
-                  {getInsightIcon(insight.type)}
-                  <div className="space-y-1">
-                    <p className="font-medium">{insight.title}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {insight.message}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
           </div>
         </CardContent>
       </Card>

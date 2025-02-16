@@ -8,9 +8,7 @@ import { EditProfileDialog } from "@/features/profile/EditProfileDialog";
 import { SettingsDialog } from "@/features/profile/SettingsDialog";
 
 const data = [];
-
 const recentActivity = [];
-
 const aiSuggestions = [];
 
 const Dashboard = () => {
@@ -18,19 +16,19 @@ const Dashboard = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const currentUser = {
-    name: "Sophie Martin",
-    email: "sophie.martin@flowcash.fr",
-    phone: "+33 6 12 34 56 78",
-    department: "Service Caisse",
-    role: "Superviseur",
-    joinDate: "15/01/2023",
-    employeeId: "SUP-2023-001"
+    name: "",
+    email: "",
+    phone: "",
+    department: "",
+    role: "",
+    joinDate: "",
+    employeeId: ""
   };
 
   const currentSettings = {
-    notifications: true,
+    notifications: false,
     darkMode: false,
-    twoFactor: true,
+    twoFactor: false,
     language: "fr",
   };
 
