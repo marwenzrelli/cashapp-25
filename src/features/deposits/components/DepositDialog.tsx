@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -66,7 +67,7 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
 
       await onConfirm({
         id: "",
-        client: `${selectedClientData.prenom} ${selectedClientData.nom}`,
+        client_name: `${selectedClientData.prenom} ${selectedClientData.nom}`,
         amount: Number(amount),
         date: format(date, "yyyy-MM-dd"),
         description

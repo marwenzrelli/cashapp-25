@@ -34,7 +34,7 @@ export const DepositsTable = ({ deposits, itemsPerPage, onEdit, onDelete }: Depo
                   </div>
                   <div>
                     <p className="font-medium">
-                      {deposit.client}
+                      {deposit.client_name}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       ID: {deposit.id}
