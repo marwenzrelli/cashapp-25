@@ -20,4 +20,5 @@ export interface SystemUser {
   lastLogin?: string;
   createdAt: string;
   department: string;
+  phone?: string;  // Ajout de la propriété phone comme optionnelle
 }
