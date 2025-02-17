@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -79,7 +78,7 @@ const PublicClientProfile = () => {
         const { data: transfers, error: transfersError } = await supabase
           .from('transfers')
           .select('*')
-          .or(`from_client.eq.${clientFullName},to_client.eq.${clientFullName}`)
+          .or(`from_client.eq."${clientFullName}",to_client.eq."${clientFullName}"`)
           .order('operation_date', { ascending: false });
 
         if (transfersError) {
