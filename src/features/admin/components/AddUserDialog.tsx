@@ -17,6 +17,7 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
   const [newUser, setNewUser] = useState({
     fullName: "",
     username: "",
+    email: "",
     password: "",
     role: "cashier" as UserRole,
   });
@@ -35,7 +36,7 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
   };
 
   const handleSubmit = () => {
-    if (!newUser.fullName || !newUser.username || !newUser.password) {
+    if (!newUser.fullName || !newUser.username || !newUser.password || !newUser.email) {
       toast.error("Veuillez remplir tous les champs obligatoires");
       return;
     }
@@ -52,10 +53,16 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
       return;
     }
 
+    // Validation de l'email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newUser.email)) {
+      toast.error("Veuillez entrer une adresse email valide");
+      return;
+    }
+
     const user: SystemUser = {
       id: Math.random().toString(36).substr(2, 9),
       ...newUser,
-      email: `${newUser.username}@system.local`,
       department: getDepartmentByRole(newUser.role),
       status: "active",
       permissions: [],
@@ -66,6 +73,7 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
     setNewUser({
       fullName: "",
       username: "",
+      email: "",
       password: "",
       role: "cashier",
     });
@@ -104,6 +112,18 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
             <p className="text-sm text-muted-foreground">
               Lettres, chiffres, tirets et underscores uniquement (3-20 caractères)
             </p>
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="email">Email</label>
+            <Input
+              id="email"
+              type="email"
+              value={newUser.email}
+              onChange={(e) =>
+                setNewUser({ ...newUser, email: e.target.value })
+              }
+              placeholder="exemple@domaine.com"
+            />
           </div>
           <div className="space-y-2">
             <label htmlFor="password">Mot de passe</label>
