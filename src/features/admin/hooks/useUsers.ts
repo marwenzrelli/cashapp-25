@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { SystemUser, UserRole, mapProfileToSystemUser } from '@/types/admin';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,31 +13,33 @@ export function useUsers() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+      // Récupérer le profil et les permissions en parallèle
+      const [profileResult, permissionsResult] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .maybeSingle(),
+        supabase
+          .from('user_permissions')
+          .select('*')
+          .eq('user_id', user.id)
+      ]);
 
-      if (profileError) {
-        console.error("Erreur lors du chargement du profil:", profileError);
+      if (profileResult.error) {
+        console.error("Erreur lors du chargement du profil:", profileResult.error);
         return;
       }
 
-      if (!profile) return;
+      if (!profileResult.data) return;
 
-      const { data: permissions, error: permissionsError } = await supabase
-        .from('user_permissions')
-        .select('*')
-        .eq('user_id', user.id);
-
-      if (permissionsError) {
-        console.error("Erreur lors du chargement des permissions:", permissionsError);
+      if (permissionsResult.error) {
+        console.error("Erreur lors du chargement des permissions:", permissionsResult.error);
       }
 
       const fullProfile = {
-        ...profile,
-        user_permissions: permissions || []
+        ...profileResult.data,
+        user_permissions: permissionsResult.data || []
       };
 
       setCurrentUser(mapProfileToSystemUser(fullProfile));
@@ -47,27 +50,29 @@ export function useUsers() {
 
   const fetchUsers = async () => {
     try {
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*');
+      // Récupérer les profils et les permissions en parallèle
+      const [profilesResult, permissionsResult] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('*'),
+        supabase
+          .from('user_permissions')
+          .select('*')
+      ]);
 
-      if (profilesError) {
-        console.error("Erreur lors du chargement des utilisateurs:", profilesError);
+      if (profilesResult.error) {
+        console.error("Erreur lors du chargement des utilisateurs:", profilesResult.error);
         toast.error("Erreur lors du chargement des utilisateurs");
         return;
       }
 
-      const { data: allPermissions, error: permissionsError } = await supabase
-        .from('user_permissions')
-        .select('*');
-
-      if (permissionsError) {
-        console.error("Erreur lors du chargement des permissions:", permissionsError);
+      if (permissionsResult.error) {
+        console.error("Erreur lors du chargement des permissions:", permissionsResult.error);
       }
 
-      const fullProfiles = profiles.map(profile => ({
+      const fullProfiles = profilesResult.data.map(profile => ({
         ...profile,
-        user_permissions: allPermissions?.filter(p => p.user_id === profile.id) || []
+        user_permissions: permissionsResult.data?.filter(p => p.user_id === profile.id) || []
       }));
 
       setUsers(fullProfiles.map(mapProfileToSystemUser));
@@ -143,6 +148,7 @@ export function useUsers() {
 
       if (signUpError) throw signUpError;
 
+      // Attendre que le trigger crée le profil
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       if (data.user) {
@@ -183,6 +189,7 @@ export function useUsers() {
 
   const updatePermissions = async (userId: string, permissions: SystemUser["permissions"]) => {
     try {
+      // Supprimer d'abord toutes les permissions existantes
       const { error: deleteError } = await supabase
         .from('user_permissions')
         .delete()
