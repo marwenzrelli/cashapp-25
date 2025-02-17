@@ -1,14 +1,16 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Transfer } from "../types";
 
 export const useTransfersList = () => {
   const [transfers, setTransfers] = useState<Transfer[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const fetchTransfers = async () => {
     try {
+      setIsLoading(true);
       const { data, error } = await supabase
         .from('transfers')
         .select('*')
@@ -26,19 +28,33 @@ export const useTransfersList = () => {
           fromClient: transfer.from_client,
           toClient: transfer.to_client,
           amount: transfer.amount,
-          date: new Date(transfer.operation_date).toLocaleDateString(),
+          date: new Date(transfer.operation_date).toLocaleDateString('fr-FR', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+          }),
           reason: transfer.reason
         }));
+        console.log("Virements récupérés:", formattedTransfers);
         setTransfers(formattedTransfers);
       }
     } catch (error) {
       console.error("Error in fetchTransfers:", error);
       toast.error("Une erreur est survenue");
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchTransfers();
+  }, []);
+
   return {
     transfers,
+    isLoading,
     fetchTransfers
   };
 };
