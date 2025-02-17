@@ -21,6 +21,7 @@ export interface SystemUser {
   permissions: Permission[];
   createdAt: string;
   lastLogin: string | null;
+  phone?: string; // Ajout du champ phone optionnel
 }
 
 export const mapProfileToSystemUser = (profile: any): SystemUser => {
@@ -36,5 +37,6 @@ export const mapProfileToSystemUser = (profile: any): SystemUser => {
     createdAt: profile.created_at,
     lastLogin: profile.last_login,
     avatar: profile.avatar_url,
+    phone: profile.phone,
   };
 };
