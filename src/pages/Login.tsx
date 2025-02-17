@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -21,19 +20,24 @@ const Login = () => {
       setIsLoading(true);
       console.log("Début de la création du compte superviseur...");
 
+      // Vérifier si le profil existe déjà
       const { data: existingUser, error: checkError } = await supabase
         .from('profiles')
         .select('*')
         .eq('email', 'marwenzrelli.pro@icloud.com')
-        .single();
+        .maybeSingle();
 
       if (existingUser) {
         console.log("Le compte existe déjà:", existingUser);
         toast({
           title: "Information",
-          description: "Le compte existe déjà. Essayez de vous connecter.",
+          description: "Le compte existe déjà. Essayez de vous connecter avec marwensuperviseur/12345678",
         });
         return;
+      }
+
+      if (checkError) {
+        console.error("Erreur lors de la vérification du profil existant:", checkError);
       }
 
       console.log("Création du compte...");
@@ -52,9 +56,28 @@ const Login = () => {
 
       if (signUpError) {
         console.error("Erreur lors de la création:", signUpError);
+        
+        if (signUpError.message === "Signups not allowed for this instance") {
+          toast({
+            title: "Configuration requise",
+            description: "L'inscription est désactivée. Veuillez activer les inscriptions dans les paramètres Supabase.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Erreur",
+            description: signUpError.message,
+            variant: "destructive",
+          });
+        }
+        return;
+      }
+
+      if (!authData.user) {
+        console.error("Pas de données utilisateur reçues");
         toast({
           title: "Erreur",
-          description: signUpError.message,
+          description: "Erreur lors de la création du compte",
           variant: "destructive",
         });
         return;
@@ -62,21 +85,25 @@ const Login = () => {
 
       console.log("Compte créé avec succès, attente de la création du profil...");
       
-      // Attendre un peu pour laisser le trigger créer le profil
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Attendre un peu plus longtemps pour laisser le trigger créer le profil
+      await new Promise(resolve => setTimeout(resolve, 3000));
 
       // Vérifier que le profil a bien été créé
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('email', 'marwenzrelli.pro@icloud.com')
-        .single();
+        .maybeSingle();
 
-      if (profileError || !profile) {
+      if (profileError) {
         console.error("Erreur lors de la vérification du profil:", profileError);
+      }
+
+      if (!profile) {
+        console.log("Profil non trouvé après création");
         toast({
           title: "Attention",
-          description: "Compte créé mais le profil pourrait ne pas être complet. Réessayez de vous connecter dans quelques secondes.",
+          description: "Compte créé mais le profil n'est pas encore disponible. Attendez quelques secondes avant de vous connecter.",
           variant: "destructive",
         });
         return;
@@ -85,14 +112,14 @@ const Login = () => {
       console.log("Profil créé avec succès:", profile);
       toast({
         title: "Succès",
-        description: "Compte superviseur créé avec succès. Vous pouvez maintenant vous connecter.",
+        description: "Compte superviseur créé avec succès. Vous pouvez maintenant vous connecter avec marwensuperviseur/12345678",
       });
 
     } catch (error: any) {
       console.error("Erreur inattendue:", error);
       toast({
         title: "Erreur",
-        description: error.message,
+        description: error.message || "Une erreur inattendue est survenue",
         variant: "destructive",
       });
     } finally {
