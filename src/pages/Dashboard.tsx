@@ -8,44 +8,94 @@ import { EditProfileDialog } from "@/features/profile/EditProfileDialog";
 import { SettingsDialog } from "@/features/profile/SettingsDialog";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { SystemUser } from "@/types/admin";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-const data = [];
-const recentActivity = [];
-const aiSuggestions = [];
+interface DashboardStats {
+  total_deposits: number;
+  total_withdrawals: number;
+  client_count: number;
+  transfer_count: number;
+  monthly_stats: any[];
+}
 
 const Dashboard = () => {
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [stats, setStats] = useState<DashboardStats>({
+    total_deposits: 0,
+    total_withdrawals: 0,
+    client_count: 0,
+    transfer_count: 0,
+    monthly_stats: []
+  });
+  const [isLoading, setIsLoading] = useState(true);
   const { currency } = useCurrency();
   const [currentUser, setCurrentUser] = useState<SystemUser | null>(null);
 
-  useEffect(() => {
-    const currentUserId = localStorage.getItem('currentUserId');
-    if (currentUserId) {
-      const usersData = localStorage.getItem('admin_users');
-      const users = JSON.parse(usersData || '[]');
-      const user = users.find((u: SystemUser) => u.id === currentUserId);
-      if (user) {
-        setCurrentUser(user);
-      }
+  const fetchStats = async () => {
+    try {
+      // Récupérer le total des versements
+      const { data: deposits, error: depositsError } = await supabase
+        .from('deposits')
+        .select('amount')
+        .eq('status', 'completed');
+
+      if (depositsError) throw depositsError;
+
+      // Récupérer le total des retraits
+      const { data: withdrawals, error: withdrawalsError } = await supabase
+        .from('withdrawals')
+        .select('amount')
+        .eq('status', 'completed');
+
+      if (withdrawalsError) throw withdrawalsError;
+
+      // Récupérer le nombre de clients actifs
+      const { count: clientCount, error: clientsError } = await supabase
+        .from('clients')
+        .select('*', { count: 'exact' })
+        .eq('status', 'active');
+
+      if (clientsError) throw clientsError;
+
+      // Récupérer les statistiques mensuelles
+      const { data: monthlyStats, error: statsError } = await supabase
+        .from('operation_statistics')
+        .select('*')
+        .order('day', { ascending: true })
+        .limit(12);
+
+      if (statsError) throw statsError;
+
+      const total_deposits = deposits?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
+      const total_withdrawals = withdrawals?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
+
+      setStats({
+        total_deposits,
+        total_withdrawals,
+        client_count: clientCount || 0,
+        transfer_count: monthlyStats?.[0]?.transfer_count || 0,
+        monthly_stats: monthlyStats || []
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+      toast.error("Erreur lors du chargement des statistiques");
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  useEffect(() => {
+    fetchStats();
+    const interval = setInterval(fetchStats, 30000); // Rafraîchir toutes les 30 secondes
+    return () => clearInterval(interval);
   }, []);
 
-  const handleUpdateProfile = (updatedUser: Partial<SystemUser>) => {
-    const usersData = localStorage.getItem('admin_users');
-    let users = JSON.parse(usersData || '[]');
-    const currentUserId = localStorage.getItem('currentUserId');
-    if (currentUserId) {
-      users = users.map((u: SystemUser) => 
-        u.id === currentUserId ? { ...u, ...updatedUser } : u
-      );
-      localStorage.setItem('admin_users', JSON.stringify(users));
-      const updatedCurrentUser = users.find((u: SystemUser) => u.id === currentUserId);
-      if (updatedCurrentUser) {
-        setCurrentUser(updatedCurrentUser);
-      }
-    }
-    setIsEditProfileOpen(false);
+  const handleRefresh = () => {
+    setIsLoading(true);
+    fetchStats();
+    toast.success("Statistiques actualisées");
   };
 
   return (
@@ -58,8 +108,13 @@ const Dashboard = () => {
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <Button variant="outline" className="flex items-center gap-2">
-            <RefreshCcw className="h-4 w-4" />
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-2"
+            onClick={handleRefresh}
+            disabled={isLoading}
+          >
+            <RefreshCcw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
             Actualiser
           </Button>
         </div>
@@ -72,9 +127,11 @@ const Dashboard = () => {
             <ArrowUpCircle className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0 TND</div>
+            <div className="text-2xl font-bold">
+              {stats.total_deposits.toLocaleString()} {currency}
+            </div>
             <p className="text-xs text-muted-foreground">
-              +0% par rapport au mois dernier
+              {stats.monthly_stats[0]?.deposit_count || 0} versements ce mois
             </p>
           </CardContent>
         </Card>
@@ -84,9 +141,11 @@ const Dashboard = () => {
             <ArrowDownCircle className="h-4 w-4 text-danger" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0 TND</div>
+            <div className="text-2xl font-bold">
+              {stats.total_withdrawals.toLocaleString()} {currency}
+            </div>
             <p className="text-xs text-muted-foreground">
-              +0% par rapport au mois dernier
+              {stats.monthly_stats[0]?.withdrawal_count || 0} retraits ce mois
             </p>
           </CardContent>
         </Card>
@@ -96,9 +155,9 @@ const Dashboard = () => {
             <Users className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">{stats.client_count}</div>
             <p className="text-xs text-muted-foreground">
-              +0 nouveaux clients cette semaine
+              {stats.transfer_count} transferts effectués
             </p>
           </CardContent>
         </Card>
@@ -115,16 +174,29 @@ const Dashboard = () => {
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={[]}>
+                <LineChart data={stats.monthly_stats}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
+                  <XAxis dataKey="day" tickFormatter={(value) => {
+                    return new Date(value).toLocaleDateString('fr-FR', { month: 'short' });
+                  }} />
                   <YAxis />
-                  <Tooltip />
+                  <Tooltip 
+                    formatter={(value: number) => [`${value.toLocaleString()} ${currency}`, '']}
+                    labelFormatter={(label) => new Date(label).toLocaleDateString('fr-FR')}
+                  />
                   <Legend />
                   <Line 
                     type="monotone" 
-                    dataKey="transactions" 
-                    stroke="#3B82F6" 
+                    name="Versements"
+                    dataKey="total_deposits" 
+                    stroke="#10B981" 
+                    strokeWidth={2}
+                  />
+                  <Line 
+                    type="monotone" 
+                    name="Retraits"
+                    dataKey="total_withdrawals" 
+                    stroke="#EF4444" 
                     strokeWidth={2}
                   />
                 </LineChart>
@@ -142,6 +214,17 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
+              <div className="flex items-start gap-4 p-4 rounded-lg border bg-muted/50">
+                <AlertCircle className="h-6 w-6 text-blue-500 mt-1" />
+                <div>
+                  <h4 className="font-medium mb-1">Analyse des tendances</h4>
+                  <p className="text-sm text-muted-foreground">
+                    {stats.total_deposits > stats.total_withdrawals 
+                      ? "Les versements sont supérieurs aux retraits, ce qui indique une bonne santé financière."
+                      : "Les retraits sont supérieurs aux versements, surveillez les flux de trésorerie."}
+                  </p>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
