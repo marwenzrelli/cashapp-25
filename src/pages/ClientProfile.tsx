@@ -312,7 +312,7 @@ const ClientProfile = () => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">
-                {client.solde.toLocaleString('fr-FR', { style: 'decimal', maximumFractionDigits: 0 })} TND
+                {Math.round(client.solde)} TND
               </div>
               <p className="text-sm text-muted-foreground mt-2">
                 Mis à jour le {format(new Date(), 'dd/MM/yyyy HH:mm')}
