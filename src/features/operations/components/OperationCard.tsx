@@ -1,7 +1,7 @@
 
 import { Operation } from "../types";
 import { Button } from "@/components/ui/button";
-import { Edit2, Trash2, ArrowUpCircle, ArrowDownCircle, RefreshCcw } from "lucide-react";
+import { Edit2, Trash2, ArrowUpCircle, ArrowDownCircle, RefreshCcw, User } from "lucide-react";
 import { format } from "date-fns";
 
 interface OperationCardProps {
@@ -18,6 +18,17 @@ const getTypeStyle = (type: Operation["type"]) => {
       return "bg-red-50 text-red-600 dark:bg-red-950/50";
     case "transfer":
       return "bg-purple-50 text-purple-600 dark:bg-purple-950/50";
+  }
+};
+
+const getAmountColor = (type: Operation["type"]) => {
+  switch (type) {
+    case "deposit":
+      return "text-green-600 dark:text-green-400";
+    case "withdrawal":
+      return "text-red-600 dark:text-red-400";
+    case "transfer":
+      return "text-purple-600 dark:text-purple-400";
   }
 };
 
@@ -54,26 +65,29 @@ export const OperationCard = ({ operation, onEdit, onDelete }: OperationCardProp
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <span className="font-medium truncate">{operation.description}</span>
-            <span className="text-xs text-muted-foreground">#{operation.id}</span>
+            <span className="text-xs text-muted-foreground">#{operation.id.slice(0, 8)}</span>
           </div>
           <div className="text-sm text-muted-foreground flex items-center gap-1.5 overflow-hidden">
             <span className="whitespace-nowrap">{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</span>
-            {operation.type === "transfer" ? (
-              <span className="truncate">
-                • De: {operation.fromClient} • À: {operation.toClient}
-              </span>
-            ) : (
-              <span className="truncate">
-                • {operation.fromClient}
-              </span>
-            )}
+            <div className="flex items-center gap-1">
+              <User className="h-3 w-3" />
+              {operation.type === "transfer" ? (
+                <span className="truncate">
+                  De: {operation.fromClient} • À: {operation.toClient}
+                </span>
+              ) : (
+                <span className="truncate">
+                  {operation.fromClient}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
       <div className="flex items-center gap-3">
-        <span className="text-right font-semibold whitespace-nowrap">
-          {Math.round(operation.amount)} TND
+        <span className={`text-right font-semibold whitespace-nowrap ${getAmountColor(operation.type)}`}>
+          {operation.type === "withdrawal" ? "-" : ""}{Math.round(operation.amount)} TND
         </span>
         
         {(onEdit || onDelete) && (
