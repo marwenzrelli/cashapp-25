@@ -89,7 +89,7 @@ export const useDeposits = () => {
     }
   };
 
-  const deleteDeposit = async (depositId: string) => {
+  const deleteDeposit = async (depositId: number) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
