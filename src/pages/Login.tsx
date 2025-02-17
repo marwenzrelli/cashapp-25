@@ -20,14 +20,20 @@ const Login = () => {
     setIsLoading(true);
 
     try {
+      console.log("Tentative de connexion avec username:", username);
+      
       // 1. D'abord, récupérer l'email associé au nom d'utilisateur
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('email')
-        .eq('username', username)
+        .select('email, id')
+        .eq('username', username.trim().toLowerCase()) // Normalisation du nom d'utilisateur
         .maybeSingle();
 
+      console.log("Résultat de la recherche du profil:", { profile, profileError });
+
       if (profileError || !profile) {
+        console.error("Erreur ou profil non trouvé:", profileError);
+        setIsLoading(false);
         toast({
           title: "Erreur",
           description: "Nom d'utilisateur introuvable",
@@ -36,14 +42,19 @@ const Login = () => {
         return;
       }
 
+      console.log("Email trouvé:", profile.email);
+
       // 2. Tentative de connexion avec l'email récupéré
       const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
         email: profile.email,
         password,
       });
 
+      console.log("Résultat de la tentative de connexion:", { authData, signInError });
+
       if (signInError) {
         console.error("Erreur de connexion:", signInError);
+        setIsLoading(false);
         toast({
           title: "Erreur de connexion",
           description: "Nom d'utilisateur ou mot de passe incorrect",
@@ -53,6 +64,7 @@ const Login = () => {
       }
 
       if (!authData.user) {
+        setIsLoading(false);
         toast({
           title: "Erreur",
           description: "Erreur lors de la connexion",
@@ -68,9 +80,12 @@ const Login = () => {
         .eq('id', authData.user.id)
         .single();
 
+      console.log("Vérification du statut:", { userProfile, userProfileError });
+
       if (userProfileError || !userProfile) {
         console.error("Erreur lors de la vérification du profil:", userProfileError);
         await supabase.auth.signOut();
+        setIsLoading(false);
         toast({
           title: "Erreur",
           description: "Erreur lors de la vérification du statut du compte",
@@ -81,6 +96,7 @@ const Login = () => {
 
       if (userProfile.status === 'inactive') {
         await supabase.auth.signOut();
+        setIsLoading(false);
         toast({
           title: "Compte inactif",
           description: "Votre compte a été désactivé. Veuillez contacter l'administrateur.",
