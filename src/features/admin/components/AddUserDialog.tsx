@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { SystemUser, UserRole } from "@/types/admin";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AddUserDialogProps {
   isOpen: boolean;
@@ -22,6 +23,30 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
     role: "cashier" as UserRole,
   });
 
+  // Vérification du rôle de l'utilisateur actuel
+  const checkUserRole = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("Vous devez être connecté pour créer un utilisateur");
+      onClose();
+      return false;
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (!profile || profile.role !== 'supervisor') {
+      toast.error("Seul le superviseur peut créer des utilisateurs");
+      onClose();
+      return false;
+    }
+
+    return true;
+  };
+
   const getDepartmentByRole = (role: UserRole): string => {
     switch (role) {
       case "supervisor":
@@ -35,7 +60,11 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    // Vérifier d'abord si l'utilisateur est autorisé
+    const isAuthorized = await checkUserRole();
+    if (!isAuthorized) return;
+
     if (!newUser.fullName || !newUser.username || !newUser.password || !newUser.email) {
       toast.error("Veuillez remplir tous les champs obligatoires");
       return;
