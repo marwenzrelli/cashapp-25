@@ -20,9 +20,29 @@ export const ClientQRCode = ({ clientId, clientName }: ClientQRCodeProps) => {
   const [qrUrl, setQrUrl] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const [session, setSession] = useState<any>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (!session) {
+        navigate('/login');
+      }
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (!session) {
+        navigate('/login');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
 
   const checkUserRole = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       toast({
         title: "Accès non autorisé",
@@ -52,6 +72,8 @@ export const ClientQRCode = ({ clientId, clientName }: ClientQRCodeProps) => {
   };
 
   const generateQRAccess = async () => {
+    if (!session) return;
+    
     try {
       setIsLoading(true);
       
@@ -99,8 +121,10 @@ export const ClientQRCode = ({ clientId, clientName }: ClientQRCodeProps) => {
   };
 
   useEffect(() => {
-    generateQRAccess();
-  }, [clientId, clientName]);
+    if (session) {
+      generateQRAccess();
+    }
+  }, [clientId, clientName, session]);
 
   const handleCopyLink = async () => {
     try {
@@ -122,6 +146,10 @@ export const ClientQRCode = ({ clientId, clientName }: ClientQRCodeProps) => {
   const handleRegenerateQR = () => {
     generateQRAccess();
   };
+
+  if (!session) {
+    return null;
+  }
 
   return (
     <Card className="p-6 bg-white shadow-lg">
