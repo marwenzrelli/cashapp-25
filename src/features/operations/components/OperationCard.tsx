@@ -73,7 +73,7 @@ export const OperationCard = ({ operation, onEdit, onDelete }: OperationCardProp
 
       <div className="flex items-center gap-3">
         <span className="text-right font-semibold whitespace-nowrap">
-          {operation.amount.toLocaleString()} €
+          {operation.amount.toLocaleString('fr-FR')} TND
         </span>
         
         {(onEdit || onDelete) && (
