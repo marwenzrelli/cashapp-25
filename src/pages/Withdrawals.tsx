@@ -29,13 +29,14 @@ import {
   ArrowDownCircle, 
   Pencil, 
   Trash2, 
-  User,
   BadgeDollarSign,
   ScrollText,
   Sparkles,
   AlertCircle,
   ListFilter
 } from "lucide-react";
+import { useClients } from "@/features/clients/hooks/useClients";
+import { useEffect } from "react";
 
 interface Client {
   id: string;
@@ -46,8 +47,6 @@ interface Client {
   solde: number;
   dateCreation: string;
 }
-
-const mockClients: Client[] = [];
 
 const Withdrawals = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -60,6 +59,12 @@ const Withdrawals = () => {
     amount: "",
     notes: "",
   });
+
+  const { clients, fetchClients } = useClients();
+
+  useEffect(() => {
+    fetchClients();
+  }, []);
 
   const handleDelete = (withdrawal: any) => {
     setSelectedWithdrawal(withdrawal);
@@ -91,7 +96,7 @@ const Withdrawals = () => {
       return;
     }
     
-    const selectedClient = mockClients.find(c => c.id === newWithdrawal.clientId);
+    const selectedClient = clients.find(c => c.id.toString() === newWithdrawal.clientId);
     if (!selectedClient) {
       toast.error("Client non trouvé");
       return;
@@ -166,7 +171,7 @@ const Withdrawals = () => {
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-2xl">
               <div className="rounded-xl bg-red-100 dark:bg-red-900/20 p-2">
@@ -193,8 +198,8 @@ const Withdrawals = () => {
                       <SelectValue placeholder="Sélectionner un client" />
                     </SelectTrigger>
                     <SelectContent>
-                      {mockClients.map((client) => (
-                        <SelectItem key={client.id} value={client.id}>
+                      {clients.map((client) => (
+                        <SelectItem key={client.id} value={client.id.toString()}>
                           {client.prenom} {client.nom}
                         </SelectItem>
                       ))}
@@ -307,7 +312,7 @@ const Withdrawals = () => {
               </thead>
               <tbody>
                 {withdrawals.slice(0, parseInt(itemsPerPage)).map((withdrawal) => {
-                  const client = mockClients.find(c => c.id === withdrawal.clientId);
+                  const client = clients.find(c => c.id.toString() === withdrawal.clientId);
                   if (!client) return null;
                   
                   return (
