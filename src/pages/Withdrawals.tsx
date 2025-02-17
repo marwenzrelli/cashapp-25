@@ -75,7 +75,7 @@ const Withdrawals = () => {
     date: new Date().toISOString().split('T')[0],
   });
 
-  const { clients, fetchClients } = useClients();
+  const { clients, fetchClients, refreshClientBalance } = useClients();
 
   useEffect(() => {
     fetchClients();
@@ -230,6 +230,17 @@ const Withdrawals = () => {
         return;
       }
 
+      // Trouver le client associé au retrait
+      const clientName = selectedWithdrawal.client_name.split(' ');
+      const client = clients.find(c => 
+        c.prenom === clientName[0] && c.nom === clientName[1]
+      );
+
+      if (!client) {
+        toast.error("Client non trouvé");
+        return;
+      }
+
       const { error } = await supabase
         .from('withdrawals')
         .delete()
@@ -240,6 +251,9 @@ const Withdrawals = () => {
         console.error("Error deleting withdrawal:", error);
         return;
       }
+
+      // Mise à jour du solde du client
+      await refreshClientBalance(client.id);
 
       setIsDeleteDialogOpen(false);
       toast.success("Retrait supprimé", {

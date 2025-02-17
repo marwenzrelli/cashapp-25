@@ -119,12 +119,32 @@ export const useClients = () => {
     return false;
   };
 
+  // Fonction pour mettre à jour le solde après une opération
+  const refreshClientBalance = async (id: number) => {
+    try {
+      const { data, error } = await supabase
+        .rpc('calculate_client_balance', { client_id: id });
+
+      if (error) {
+        console.error("Error calculating balance:", error);
+        return;
+      }
+
+      if (data !== null) {
+        await updateClient(id, { solde: data });
+      }
+    } catch (error) {
+      console.error("Error refreshing balance:", error);
+    }
+  };
+
   return {
     clients,
     loading,
     fetchClients,
     updateClient,
     deleteClient,
-    createClient
+    createClient,
+    refreshClientBalance
   };
 };
