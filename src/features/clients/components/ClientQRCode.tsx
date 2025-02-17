@@ -3,9 +3,10 @@ import { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Copy, RefreshCw } from 'lucide-react';
+import { Copy, RefreshCw, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 
 interface ClientQRCodeProps {
   clientId: number;
@@ -18,21 +19,44 @@ export const ClientQRCode = ({ clientId, clientName }: ClientQRCodeProps) => {
   const { toast } = useToast();
   const [qrUrl, setQrUrl] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const checkUserRole = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast({
+        title: "Accès non autorisé",
+        description: "Vous devez être connecté pour accéder à cette fonctionnalité",
+        variant: "destructive",
+      });
+      navigate('/login');
+      return false;
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', session.user.id)
+      .single();
+
+    if (!profile || !['supervisor', 'manager'].includes(profile.role)) {
+      toast({
+        title: "Accès non autorisé",
+        description: "Vous n'avez pas les permissions nécessaires pour cette action",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    return true;
+  };
 
   const generateQRAccess = async () => {
     try {
       setIsLoading(true);
-      // Vérifier la session
-      const { data: { session } } = await supabase.auth.getSession();
       
-      if (!session) {
-        toast({
-          title: "Erreur d'authentification",
-          description: "Vous devez être connecté pour générer un QR code",
-          variant: "destructive",
-        });
-        return;
-      }
+      const hasPermission = await checkUserRole();
+      if (!hasPermission) return;
 
       const { data, error } = await supabase
         .from('qr_access')
@@ -62,11 +86,11 @@ export const ClientQRCode = ({ clientId, clientName }: ClientQRCodeProps) => {
           }
         );
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erreur lors de la génération du QR code:", error);
       toast({
         title: "Erreur",
-        description: "Impossible de générer le QR code",
+        description: error.message || "Impossible de générer le QR code",
         variant: "destructive",
       });
     } finally {
@@ -107,6 +131,13 @@ export const ClientQRCode = ({ clientId, clientName }: ClientQRCodeProps) => {
             <div className="absolute inset-0 flex items-center justify-center bg-white/80">
               <RefreshCw className="h-6 w-6 animate-spin text-primary" />
             </div>
+          ) : !accessToken ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/80 gap-2">
+              <Shield className="h-8 w-8 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground text-center">
+                Accès restreint aux superviseurs et managers
+              </p>
+            </div>
           ) : null}
           <canvas ref={canvasRef} className="rounded-lg" />
         </div>
@@ -120,6 +151,7 @@ export const ClientQRCode = ({ clientId, clientName }: ClientQRCodeProps) => {
               size="sm" 
               className="gap-2"
               onClick={handleCopyLink}
+              disabled={!accessToken || isLoading}
             >
               <Copy className="h-4 w-4" />
               Copier le lien
