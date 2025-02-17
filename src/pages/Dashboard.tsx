@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from "recharts";
-import { ArrowUpCircle, ArrowDownCircle, RefreshCcw, TrendingUp, Users, AlertCircle, Sparkles, User, Settings, Bell, Shield, Building, Calendar } from "lucide-react";
+import { ArrowUpCircle, ArrowDownCircle, RefreshCcw, TrendingUp, Users, AlertCircle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { EditProfileDialog } from "@/features/profile/EditProfileDialog";
@@ -83,6 +83,29 @@ const Dashboard = () => {
       toast.error("Erreur lors du chargement des statistiques");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleUpdateProfile = async (updatedUser: Partial<SystemUser>) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: updatedUser.fullName,
+          email: updatedUser.email,
+          department: updatedUser.department,
+          phone: updatedUser.phone
+        })
+        .eq('id', currentUser?.id);
+
+      if (error) throw error;
+
+      setCurrentUser(prev => prev ? { ...prev, ...updatedUser } : null);
+      setIsEditProfileOpen(false);
+      toast.success("Profil mis à jour avec succès");
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error("Erreur lors de la mise à jour du profil");
     }
   };
 
