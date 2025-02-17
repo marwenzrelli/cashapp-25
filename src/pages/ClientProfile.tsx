@@ -9,7 +9,7 @@ import { OperationCard } from "@/features/operations/components/OperationCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ChevronLeft, User, Phone, Mail, Calendar, Wallet, ArrowUpCircle, ArrowDownCircle, RefreshCcw, FileSpreadsheet, FilePdf } from "lucide-react";
+import { ChevronLeft, User, Phone, Mail, Calendar, Wallet, ArrowUpCircle, ArrowDownCircle, RefreshCcw, FileSpreadsheet, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { useOperations } from "@/features/operations/hooks/useOperations";
 import * as XLSX from 'xlsx';
@@ -328,7 +328,7 @@ const ClientProfile = () => {
                   className="w-full"
                   onClick={exportToPDF}
                 >
-                  <FilePdf className="h-4 w-4 mr-2" />
+                  <FileText className="h-4 w-4 mr-2" />
                   Export PDF
                 </Button>
               </div>
