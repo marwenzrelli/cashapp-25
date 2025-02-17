@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { SystemUser, UserRole, mapProfileToSystemUser } from '@/types/admin';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { PostgrestResponse } from '@supabase/supabase-js';
 
 export function useUsers() {
   const [users, setUsers] = useState<SystemUser[]>([]);
@@ -13,7 +14,6 @@ export function useUsers() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Récupérer uniquement le profil d'abord
       const profileResult = await supabase
         .from('profiles')
         .select('*')
@@ -27,7 +27,6 @@ export function useUsers() {
 
       if (!profileResult.data) return;
 
-      // Si l'utilisateur est un superviseur, récupérer ses permissions
       if (profileResult.data.role === 'supervisor') {
         const permissionsResult = await supabase
           .from('user_permissions')
@@ -44,7 +43,6 @@ export function useUsers() {
         };
         setCurrentUser(mapProfileToSystemUser(fullProfile));
       } else {
-        // Pour les non-superviseurs, pas besoin de charger les permissions
         const fullProfile = {
           ...profileResult.data,
           user_permissions: []
@@ -58,7 +56,6 @@ export function useUsers() {
 
   const fetchUsers = async () => {
     try {
-      // Récupérer d'abord tous les profils
       const profilesResult = await supabase
         .from('profiles')
         .select('*');
@@ -69,12 +66,12 @@ export function useUsers() {
         return;
       }
 
-      // Récupérer les permissions uniquement pour les superviseurs
       const supervisorIds = profilesResult.data
         .filter(profile => profile.role === 'supervisor')
         .map(profile => profile.id);
 
-      let permissionsResult = { data: [] };
+      let permissionsResult: PostgrestResponse<any> = { data: [], error: null, count: null, status: 200, statusText: 'OK' };
+      
       if (supervisorIds.length > 0) {
         permissionsResult = await supabase
           .from('user_permissions')
@@ -207,7 +204,6 @@ export function useUsers() {
 
   const updatePermissions = async (userId: string, permissions: SystemUser["permissions"]) => {
     try {
-      // Vérifier d'abord si l'utilisateur est un superviseur
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role')
@@ -225,7 +221,6 @@ export function useUsers() {
         return;
       }
 
-      // Supprimer d'abord toutes les permissions existantes
       const { error: deleteError } = await supabase
         .from('user_permissions')
         .delete()
