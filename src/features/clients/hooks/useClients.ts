@@ -122,21 +122,35 @@ export const useClients = () => {
   // Fonction pour mettre à jour le solde après une opération
   const refreshClientBalance = async (id: number) => {
     try {
+      console.log("Rafraîchissement du solde pour le client:", id);
+      
       const { data, error } = await supabase
         .rpc('calculate_client_balance', { client_id: id });
 
       if (error) {
-        console.error("Error calculating balance:", error);
+        console.error("Erreur lors du calcul du solde:", error);
+        toast.error("Erreur lors de la mise à jour du solde");
         return;
       }
 
       if (data !== null) {
+        console.log("Nouveau solde calculé:", data);
         await updateClient(id, { solde: data });
       }
+
+      // Force le rechargement des clients pour mettre à jour l'affichage
+      await fetchClients();
+      
     } catch (error) {
-      console.error("Error refreshing balance:", error);
+      console.error("Erreur lors du rafraîchissement du solde:", error);
+      toast.error("Une erreur est survenue lors de la mise à jour du solde");
     }
   };
+
+  // Recharger les clients au montage du composant
+  useEffect(() => {
+    fetchClients();
+  }, []);
 
   return {
     clients,
