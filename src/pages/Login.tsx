@@ -10,7 +10,6 @@ import { DollarSign } from "lucide-react";
 
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
@@ -21,100 +20,32 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      if (isSignUp) {
-        // Pour l'inscription
-        const { data, error } = await supabase.auth.signUp({
-          email: identifier,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/login`,
-          },
-        });
+      // Pour la connexion
+      const isEmail = identifier.includes('@');
+      let email = identifier;
 
-        if (error) throw error;
+      if (!isEmail) {
+        // Recherche par nom d'utilisateur
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('email, status')
+          .eq('username', identifier)
+          .maybeSingle();
 
-        // Vérifier si l'email a été confirmé immédiatement
-        if (data?.user && !data.user.confirmed_at) {
-          toast({
-            title: "Inscription réussie !",
-            description: "Veuillez vérifier votre email pour confirmer votre compte.",
-          });
-        } else {
-          toast({
-            title: "Compte créé avec succès !",
-            description: "Vous pouvez maintenant vous connecter.",
-          });
-        }
-      } else {
-        // Pour la connexion
-        const isEmail = identifier.includes('@');
-        let email = identifier;
-
-        if (!isEmail) {
-          // Recherche par nom d'utilisateur
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('email, status')
-            .eq('username', identifier)
-            .maybeSingle();
-
-          if (profileError) {
-            throw new Error("Erreur lors de la recherche de l'utilisateur");
-          }
-
-          if (!profile) {
-            toast({
-              title: "Erreur",
-              description: "Nom d'utilisateur introuvable",
-              variant: "destructive",
-            });
-            return;
-          }
-
-          if (profile.status === 'inactive') {
-            toast({
-              title: "Compte inactif",
-              description: "Votre compte a été désactivé. Veuillez contacter l'administrateur.",
-              variant: "destructive",
-            });
-            return;
-          }
-
-          email = profile.email;
+        if (profileError) {
+          throw new Error("Erreur lors de la recherche de l'utilisateur");
         }
 
-        // Tentative de connexion
-        const { error: signInError, data } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (signInError) {
-          if (signInError.message.includes("Email not confirmed")) {
-            toast({
-              title: "Email non confirmé",
-              description: "Veuillez confirmer votre email avant de vous connecter.",
-              variant: "destructive",
-            });
-          } else {
-            toast({
-              title: "Erreur de connexion",
-              description: "Email ou mot de passe incorrect",
-              variant: "destructive",
-            });
-          }
+        if (!profile) {
+          toast({
+            title: "Erreur",
+            description: "Nom d'utilisateur introuvable",
+            variant: "destructive",
+          });
           return;
         }
 
-        // Si la connexion réussit, vérifier le statut du profil
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('status')
-          .eq('id', data.user.id)
-          .single();
-
-        if (profile?.status === 'inactive') {
-          await supabase.auth.signOut();
+        if (profile.status === 'inactive') {
           toast({
             title: "Compte inactif",
             description: "Votre compte a été désactivé. Veuillez contacter l'administrateur.",
@@ -123,9 +54,43 @@ const Login = () => {
           return;
         }
 
-        // Tout est bon, rediriger vers le dashboard
-        navigate("/dashboard");
+        email = profile.email;
       }
+
+      // Tentative de connexion
+      const { error: signInError, data } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError) {
+        toast({
+          title: "Erreur de connexion",
+          description: "Email ou mot de passe incorrect",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Si la connexion réussit, vérifier le statut du profil
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('status')
+        .eq('id', data.user.id)
+        .single();
+
+      if (profile?.status === 'inactive') {
+        await supabase.auth.signOut();
+        toast({
+          title: "Compte inactif",
+          description: "Votre compte a été désactivé. Veuillez contacter l'administrateur.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Tout est bon, rediriger vers le dashboard
+      navigate("/dashboard");
     } catch (error: any) {
       console.error("Erreur d'authentification:", error);
       toast({
@@ -152,14 +117,14 @@ const Login = () => {
           </div>
           <h1 className="text-2xl font-bold">Flow Cash Control</h1>
           <p className="text-gray-500">
-            {isSignUp ? "Créez votre compte" : "Connectez-vous à votre compte"}
+            Connectez-vous à votre compte
           </p>
         </div>
 
         <form onSubmit={handleAuth} className="space-y-4">
           <div className="space-y-2">
             <Input
-              placeholder={isSignUp ? "Email" : "Email ou nom d'utilisateur"}
+              placeholder="Email ou nom d'utilisateur"
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
               required
@@ -179,25 +144,9 @@ const Login = () => {
             className="w-full"
             disabled={isLoading}
           >
-            {isLoading
-              ? "Chargement..."
-              : isSignUp
-              ? "S'inscrire"
-              : "Se connecter"}
+            {isLoading ? "Chargement..." : "Se connecter"}
           </Button>
         </form>
-
-        <div className="text-center">
-          <button
-            type="button"
-            onClick={() => setIsSignUp(!isSignUp)}
-            className="text-sm text-primary hover:underline"
-          >
-            {isSignUp
-              ? "Déjà un compte ? Connectez-vous"
-              : "Pas de compte ? Inscrivez-vous"}
-          </button>
-        </div>
       </Card>
     </div>
   );
