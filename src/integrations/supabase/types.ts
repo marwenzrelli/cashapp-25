@@ -264,7 +264,12 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      calculate_client_balance: {
+        Args: {
+          client_id: number
+        }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never

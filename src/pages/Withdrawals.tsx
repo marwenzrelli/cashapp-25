@@ -38,9 +38,10 @@ import {
 import { useClients } from "@/features/clients/hooks/useClients";
 import { useEffect } from "react";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { supabase } from "@/lib/supabase";
 
 interface Client {
-  id: string;
+  id: number;
   nom: string;
   prenom: string;
   telephone: string;
@@ -49,12 +50,22 @@ interface Client {
   dateCreation: string;
 }
 
+interface Withdrawal {
+  id: string;
+  client_name: string;
+  amount: number;
+  date: string;
+  notes: string;
+  status: string;
+  created_at: string;
+}
+
 const Withdrawals = () => {
   const { currency } = useCurrency();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedWithdrawal, setSelectedWithdrawal] = useState<any>(null);
-  const [withdrawals, setWithdrawals] = useState([]);
+  const [selectedWithdrawal, setSelectedWithdrawal] = useState<Withdrawal | null>(null);
+  const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [itemsPerPage, setItemsPerPage] = useState("10");
   const [newWithdrawal, setNewWithdrawal] = useState({
     clientId: "",
@@ -67,25 +78,44 @@ const Withdrawals = () => {
 
   useEffect(() => {
     fetchClients();
+    fetchWithdrawals();
   }, []);
 
-  const handleDelete = (withdrawal: any) => {
+  const fetchWithdrawals = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error("Vous devez être connecté pour accéder aux retraits");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('withdrawals')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        toast.error("Erreur lors du chargement des retraits");
+        console.error("Error fetching withdrawals:", error);
+        return;
+      }
+
+      if (data) {
+        setWithdrawals(data);
+      }
+    } catch (error) {
+      console.error("Error in fetchWithdrawals:", error);
+      toast.error("Une erreur est survenue");
+    }
+  };
+
+  const handleDelete = (withdrawal: Withdrawal) => {
     setSelectedWithdrawal(withdrawal);
     setIsDeleteDialogOpen(true);
   };
 
-  const confirmDelete = () => {
-    if (!selectedWithdrawal) return;
-    setWithdrawals(prevWithdrawals =>
-      prevWithdrawals.filter(w => w.id !== selectedWithdrawal.id)
-    );
-    setIsDeleteDialogOpen(false);
-    toast.success("Retrait supprimé", {
-      description: `Le retrait a été retiré de la base de données.`
-    });
-  };
-
-  const handleEdit = (withdrawal: any) => {
+  const handleEdit = (withdrawal: Withdrawal) => {
     setSelectedWithdrawal(withdrawal);
     setIsDialogOpen(true);
     toast.info("Mode édition", {
@@ -93,32 +123,98 @@ const Withdrawals = () => {
     });
   };
 
-  const handleCreateWithdrawal = () => {
-    if (!newWithdrawal.clientId || !newWithdrawal.amount || !newWithdrawal.notes || !newWithdrawal.date) {
-      toast.error("Veuillez remplir tous les champs");
-      return;
-    }
-    
-    const selectedClient = clients.find(c => c.id.toString() === newWithdrawal.clientId);
-    if (!selectedClient) {
-      toast.error("Client non trouvé");
-      return;
-    }
+  const handleCreateWithdrawal = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error("Vous devez être connecté pour effectuer un retrait");
+        return;
+      }
 
-    const withdrawal = {
-      id: Date.now().toString(),
-      clientId: newWithdrawal.clientId,
-      amount: parseFloat(newWithdrawal.amount),
-      date: newWithdrawal.date,
-      notes: newWithdrawal.notes,
-    };
+      if (!newWithdrawal.clientId || !newWithdrawal.amount || !newWithdrawal.notes || !newWithdrawal.date) {
+        toast.error("Veuillez remplir tous les champs");
+        return;
+      }
+      
+      const selectedClient = clients.find(c => c.id.toString() === newWithdrawal.clientId);
+      if (!selectedClient) {
+        toast.error("Client non trouvé");
+        return;
+      }
 
-    setWithdrawals(prev => [withdrawal, ...prev]);
-    setIsDialogOpen(false);
-    toast.success("Retrait enregistré", {
-      description: `Le retrait de ${withdrawal.amount} ${currency} pour ${selectedClient.prenom} ${selectedClient.nom} a été enregistré.`
-    });
-    setNewWithdrawal({ clientId: "", amount: "", notes: "", date: new Date().toISOString().split('T')[0] });
+      const clientFullName = `${selectedClient.prenom} ${selectedClient.nom}`;
+      
+      const { error } = await supabase
+        .from('withdrawals')
+        .insert({
+          client_name: clientFullName,
+          amount: parseFloat(newWithdrawal.amount),
+          operation_date: new Date(newWithdrawal.date).toISOString(),
+          notes: newWithdrawal.notes,
+          created_by: session.user.id,
+          status: 'completed'
+        });
+
+      if (error) {
+        toast.error("Erreur lors de l'enregistrement du retrait");
+        console.error("Error creating withdrawal:", error);
+        return;
+      }
+
+      setIsDialogOpen(false);
+      toast.success("Retrait enregistré", {
+        description: `Le retrait de ${parseFloat(newWithdrawal.amount)} ${currency} pour ${clientFullName} a été enregistré.`
+      });
+      
+      setNewWithdrawal({
+        clientId: "",
+        amount: "",
+        notes: "",
+        date: new Date().toISOString().split('T')[0]
+      });
+      
+      await fetchWithdrawals();
+      await fetchClients(); // Rafraîchir la liste des clients pour avoir les soldes à jour
+    } catch (error) {
+      console.error("Error in handleCreateWithdrawal:", error);
+      toast.error("Une erreur est survenue");
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!selectedWithdrawal) return;
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error("Vous devez être connecté pour supprimer un retrait");
+        return;
+      }
+
+      const { error } = await supabase
+        .from('withdrawals')
+        .delete()
+        .eq('id', selectedWithdrawal.id);
+
+      if (error) {
+        toast.error("Erreur lors de la suppression du retrait");
+        console.error("Error deleting withdrawal:", error);
+        return;
+      }
+
+      setIsDeleteDialogOpen(false);
+      toast.success("Retrait supprimé", {
+        description: `Le retrait a été retiré de la base de données.`
+      });
+      
+      await fetchWithdrawals();
+      await fetchClients(); // Rafraîchir la liste des clients pour avoir les soldes à jour
+    } catch (error) {
+      console.error("Error in confirmDelete:", error);
+      toast.error("Une erreur est survenue");
+    }
   };
 
   return (
