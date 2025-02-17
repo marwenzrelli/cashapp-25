@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -120,26 +121,30 @@ const ClientProfile = () => {
 
     const doc = new jsPDF();
     
+    // Ajouter le titre
     doc.setFontSize(20);
     doc.text(`Profil de ${client.prenom} ${client.nom}`, 15, 15);
     
+    // Informations client
     doc.setFontSize(12);
-    doc.text(`Solde: ${client.solde.toLocaleString()} €`, 15, 25);
+    doc.text(`Solde: ${client.solde.toLocaleString('fr-FR')} €`, 15, 25);
     doc.text(`Téléphone: ${client.telephone}`, 15, 32);
     doc.text(`Email: ${client.email}`, 15, 39);
     doc.text(`Date de création: ${format(new Date(client.date_creation || ''), 'dd/MM/yyyy')}`, 15, 46);
 
+    // Ajouter le QR code s'il est disponible
     if (qrCodeRef.current) {
       const canvas = await html2canvas(qrCodeRef.current);
       const imgData = canvas.toDataURL('image/png');
       doc.addImage(imgData, 'PNG', 150, 15, 40, 40);
     }
 
+    // Tableau des opérations
     const operationsData = clientOperations.map(op => [
       op.type === 'deposit' ? 'Versement' : op.type === 'withdrawal' ? 'Retrait' : 'Virement',
       format(new Date(op.date), 'dd/MM/yyyy HH:mm'),
       op.description,
-      `${op.amount.toLocaleString()} €`,
+      op.amount.toLocaleString('fr-FR') + ' €',
       op.fromClient,
       op.toClient || '-'
     ]);
