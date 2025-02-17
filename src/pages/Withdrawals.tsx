@@ -38,7 +38,7 @@ import {
 import { useClients } from "@/features/clients/hooks/useClients";
 import { useEffect } from "react";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Client {
   id: number;
@@ -54,10 +54,11 @@ interface Withdrawal {
   id: string;
   client_name: string;
   amount: number;
-  date: string;
-  notes: string;
+  operation_date: string;
+  notes: string | null;
   status: string;
   created_at: string;
+  created_by: string | null;
 }
 
 const Withdrawals = () => {
@@ -175,7 +176,7 @@ const Withdrawals = () => {
       });
       
       await fetchWithdrawals();
-      await fetchClients(); // Rafraîchir la liste des clients pour avoir les soldes à jour
+      await fetchClients();
     } catch (error) {
       console.error("Error in handleCreateWithdrawal:", error);
       toast.error("Une erreur est survenue");
@@ -210,7 +211,7 @@ const Withdrawals = () => {
       });
       
       await fetchWithdrawals();
-      await fetchClients(); // Rafraîchir la liste des clients pour avoir les soldes à jour
+      await fetchClients();
     } catch (error) {
       console.error("Error in confirmDelete:", error);
       toast.error("Une erreur est survenue");
