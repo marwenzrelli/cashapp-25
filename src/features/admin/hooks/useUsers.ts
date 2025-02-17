@@ -62,26 +62,42 @@ export function useUsers() {
   };
 
   const addUser = async (user: SystemUser) => {
-    const { data, error } = await supabase.auth.signUp({
-      email: user.email,
-      password: 'temporary-password',
-      options: {
-        data: {
-          full_name: user.fullName,
-          role: user.role,
-          department: user.department
+    try {
+      // 1. Créer l'utilisateur dans auth.users
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: user.email,
+        password: 'temp-' + Math.random().toString(36).slice(-8),
+        options: {
+          data: {
+            full_name: user.fullName,
+            role: user.role,
+            department: user.department
+          }
         }
+      });
+
+      if (signUpError) throw signUpError;
+
+      // 2. Attendre que le trigger crée le profil
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // 3. Mettre à jour les informations additionnelles du profil
+      if (data.user) {
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({
+            department: user.department,
+          })
+          .eq('id', data.user.id);
+
+        if (updateError) throw updateError;
       }
-    });
 
-    if (error) {
-      toast.error("Erreur lors de la création de l'utilisateur");
-      return;
+      await fetchUsers();
+      toast.success("Utilisateur créé avec succès");
+    } catch (error: any) {
+      toast.error("Erreur lors de la création de l'utilisateur: " + error.message);
     }
-
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    await fetchUsers();
-    toast.success("Utilisateur créé avec succès");
   };
 
   const updateUser = async (updatedUser: SystemUser) => {
@@ -92,7 +108,6 @@ export function useUsers() {
         email: updatedUser.email,
         role: updatedUser.role,
         department: updatedUser.department,
-        phone: updatedUser.phone
       })
       .eq('id', updatedUser.id);
 
