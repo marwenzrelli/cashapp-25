@@ -163,7 +163,7 @@ const ClientProfile = () => {
     
     // Informations client
     doc.setFontSize(12);
-    doc.text(`Solde: ${client.solde.toLocaleString()} TND`, 15, 25);
+    doc.text(`Solde: ${formatAmount(client.solde)}`, 15, 25);
     doc.text(`Téléphone: ${client.telephone}`, 15, 32);
     doc.text(`Email: ${client.email}`, 15, 39);
     doc.text(`Date de création: ${format(new Date(client.date_creation || ''), 'dd/MM/yyyy')}`, 15, 46);
@@ -175,24 +175,112 @@ const ClientProfile = () => {
       doc.addImage(imgData, 'PNG', 150, 15, 40, 40);
     }
 
-    // Tableau des opérations
-    const operationsData = clientOperations.map(op => [
-      op.type === 'deposit' ? 'Versement' : op.type === 'withdrawal' ? 'Retrait' : 'Virement',
-      format(new Date(op.date), 'dd/MM/yyyy HH:mm'),
-      op.description,
-      op.amount.toLocaleString() + ' TND',
-      op.fromClient,
-      op.toClient || '-'
-    ]);
+    let yPosition = 60;
 
-    autoTable(doc, {
-      startY: 60,
-      head: [['Type', 'Date', 'Description', 'Montant', 'De', 'À']],
-      body: operationsData,
-      theme: 'grid',
-      styles: { fontSize: 8, cellPadding: 1 },
-      headStyles: { fillColor: [63, 63, 70] }
-    });
+    // Versements
+    const deposits = clientOperations.filter(op => op.type === "deposit");
+    if (deposits.length > 0) {
+      doc.setFontSize(16);
+      doc.setTextColor(34, 197, 94); // text-green-600
+      doc.text("Versements", 15, yPosition);
+      yPosition += 10;
+
+      autoTable(doc, {
+        startY: yPosition,
+        head: [['Date', 'Description', 'Montant']],
+        body: deposits.map(op => [
+          format(new Date(op.date), 'dd/MM/yyyy HH:mm'),
+          op.description,
+          formatAmount(op.amount)
+        ]),
+        theme: 'grid',
+        headStyles: { 
+          fillColor: [240, 240, 240],
+          textColor: [0, 0, 0],
+          fontSize: 10
+        },
+        styles: { 
+          fontSize: 9,
+          cellPadding: 2,
+          textColor: [0, 0, 0]
+        },
+        columnStyles: {
+          2: { halign: 'right' }
+        }
+      });
+
+      yPosition = (doc as any).lastAutoTable.finalY + 15;
+    }
+
+    // Retraits
+    const withdrawals = clientOperations.filter(op => op.type === "withdrawal");
+    if (withdrawals.length > 0) {
+      doc.setFontSize(16);
+      doc.setTextColor(239, 68, 68); // text-red-600
+      doc.text("Retraits", 15, yPosition);
+      yPosition += 10;
+
+      autoTable(doc, {
+        startY: yPosition,
+        head: [['Date', 'Description', 'Montant']],
+        body: withdrawals.map(op => [
+          format(new Date(op.date), 'dd/MM/yyyy HH:mm'),
+          op.description,
+          formatAmount(op.amount)
+        ]),
+        theme: 'grid',
+        headStyles: { 
+          fillColor: [240, 240, 240],
+          textColor: [0, 0, 0],
+          fontSize: 10
+        },
+        styles: { 
+          fontSize: 9,
+          cellPadding: 2,
+          textColor: [0, 0, 0]
+        },
+        columnStyles: {
+          2: { halign: 'right' }
+        }
+      });
+
+      yPosition = (doc as any).lastAutoTable.finalY + 15;
+    }
+
+    // Virements
+    const transfers = clientOperations.filter(op => op.type === "transfer");
+    if (transfers.length > 0) {
+      doc.setFontSize(16);
+      doc.setTextColor(147, 51, 234); // text-purple-600
+      doc.text("Virements", 15, yPosition);
+      yPosition += 10;
+
+      autoTable(doc, {
+        startY: yPosition,
+        head: [['Date', 'Description', 'Montant', 'De', 'À']],
+        body: transfers.map(op => [
+          format(new Date(op.date), 'dd/MM/yyyy HH:mm'),
+          op.description,
+          formatAmount(op.amount),
+          op.fromClient,
+          op.toClient || '-'
+        ]),
+        theme: 'grid',
+        headStyles: { 
+          fillColor: [240, 240, 240],
+          textColor: [0, 0, 0],
+          fontSize: 10
+        },
+        styles: { 
+          fontSize: 9,
+          cellPadding: 2,
+          textColor: [0, 0, 0]
+        },
+        columnStyles: {
+          2: { halign: 'right' }
+        }
+      });
+    }
 
     doc.save(`profil_${client.prenom}_${client.nom}.pdf`);
     toast.success("Export PDF réussi");
