@@ -128,6 +128,45 @@ export type Database = {
         }
         Relationships: []
       }
+      qr_access: {
+        Row: {
+          access_token: string
+          client_id: number
+          created_at: string
+          expires_at: string | null
+          id: string
+        }
+        Insert: {
+          access_token?: string
+          client_id: number
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+        }
+        Update: {
+          access_token?: string
+          client_id?: number
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_client"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qr_access_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transfers: {
         Row: {
           amount: number

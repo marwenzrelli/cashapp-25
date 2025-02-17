@@ -1,7 +1,8 @@
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import { Card } from '@/components/ui/card';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ClientQRCodeProps {
   clientId: number;
@@ -10,26 +11,42 @@ interface ClientQRCodeProps {
 
 export const ClientQRCode = ({ clientId, clientName }: ClientQRCodeProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
 
   useEffect(() => {
-    if (canvasRef.current) {
-      QRCode.toCanvas(
-        canvasRef.current,
-        JSON.stringify({
-          id: clientId,
-          name: clientName,
-          timestamp: new Date().toISOString()
-        }),
-        {
-          width: 200,
-          margin: 2,
-          color: {
-            dark: '#000000',
-            light: '#FFFFFF'
-          }
+    const generateQRAccess = async () => {
+      try {
+        // Créer un nouvel accès QR
+        const { data, error } = await supabase
+          .from('qr_access')
+          .insert([{ client_id: clientId }])
+          .select('access_token')
+          .single();
+
+        if (error) throw error;
+        setAccessToken(data.access_token);
+
+        if (canvasRef.current && data.access_token) {
+          const url = `${window.location.origin}/public/client/${data.access_token}`;
+          await QRCode.toCanvas(
+            canvasRef.current,
+            url,
+            {
+              width: 200,
+              margin: 2,
+              color: {
+                dark: '#000000',
+                light: '#FFFFFF'
+              }
+            }
+          );
         }
-      );
-    }
+      } catch (error) {
+        console.error("Erreur lors de la génération du QR code:", error);
+      }
+    };
+
+    generateQRAccess();
   }, [clientId, clientName]);
 
   return (
@@ -42,6 +59,11 @@ export const ClientQRCode = ({ clientId, clientName }: ClientQRCodeProps) => {
         <p className="text-sm text-center text-muted-foreground">
           Code QR unique du client
         </p>
+        {accessToken && (
+          <p className="text-xs text-center text-muted-foreground">
+            URL: {window.location.origin}/public/client/{accessToken}
+          </p>
+        )}
       </div>
     </Card>
   );
