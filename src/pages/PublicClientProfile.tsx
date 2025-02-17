@@ -3,13 +3,17 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Client } from "@/features/clients/types";
+import { Operation } from "@/features/operations/types";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, Phone, Mail, Calendar } from "lucide-react";
+import { User, Phone, Mail, Calendar, Wallet, ArrowUpCircle, ArrowDownCircle, RefreshCcw } from "lucide-react";
+import { OperationCard } from "@/features/operations/components/OperationCard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const PublicClientProfile = () => {
   const { token } = useParams();
   const [client, setClient] = useState<Client | null>(null);
+  const [operations, setOperations] = useState<Operation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,6 +44,61 @@ const PublicClientProfile = () => {
 
         if (clientError) throw clientError;
         setClient(clientData);
+
+        // Récupérer toutes les opérations
+        const clientFullName = `${clientData.prenom} ${clientData.nom}`;
+
+        // Récupérer les versements
+        const { data: deposits } = await supabase
+          .from('deposits')
+          .select('*')
+          .eq('client_name', clientFullName)
+          .order('operation_date', { ascending: false });
+
+        // Récupérer les retraits
+        const { data: withdrawals } = await supabase
+          .from('withdrawals')
+          .select('*')
+          .eq('client_name', clientFullName)
+          .order('operation_date', { ascending: false });
+
+        // Récupérer les virements
+        const { data: transfers } = await supabase
+          .from('transfers')
+          .select('*')
+          .or(`from_client.eq.${clientFullName},to_client.eq.${clientFullName}`)
+          .order('operation_date', { ascending: false });
+
+        // Transformer les données en format unifié
+        const allOperations: Operation[] = [
+          ...(deposits || []).map((d): Operation => ({
+            id: d.id.toString(),
+            type: "deposit",
+            amount: d.amount,
+            date: d.operation_date,
+            description: `Versement de ${d.client_name}`,
+            fromClient: d.client_name
+          })),
+          ...(withdrawals || []).map((w): Operation => ({
+            id: w.id,
+            type: "withdrawal",
+            amount: w.amount,
+            date: w.operation_date,
+            description: `Retrait par ${w.client_name}`,
+            fromClient: w.client_name
+          })),
+          ...(transfers || []).map((t): Operation => ({
+            id: t.id,
+            type: "transfer",
+            amount: t.amount,
+            date: t.operation_date,
+            description: t.reason,
+            fromClient: t.from_client,
+            toClient: t.to_client
+          }))
+        ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+        setOperations(allOperations);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Une erreur est survenue");
       } finally {
@@ -50,7 +109,7 @@ const PublicClientProfile = () => {
     fetchClientData();
 
     // Mettre en place la souscription en temps réel
-    const subscription = supabase
+    const clientSubscription = supabase
       .channel('public_client_changes')
       .on('postgres_changes', {
         event: '*',
@@ -62,8 +121,45 @@ const PublicClientProfile = () => {
       })
       .subscribe();
 
+    // Souscriptions pour les opérations
+    const depositsSubscription = supabase
+      .channel('deposits_changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'deposits',
+      }, () => {
+        fetchClientData(); // Recharger toutes les données
+      })
+      .subscribe();
+
+    const withdrawalsSubscription = supabase
+      .channel('withdrawals_changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'withdrawals',
+      }, () => {
+        fetchClientData();
+      })
+      .subscribe();
+
+    const transfersSubscription = supabase
+      .channel('transfers_changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'transfers',
+      }, () => {
+        fetchClientData();
+      })
+      .subscribe();
+
     return () => {
-      subscription.unsubscribe();
+      clientSubscription.unsubscribe();
+      depositsSubscription.unsubscribe();
+      withdrawalsSubscription.unsubscribe();
+      transfersSubscription.unsubscribe();
     };
   }, [token, client?.id]);
 
@@ -140,6 +236,82 @@ const PublicClientProfile = () => {
             <p className="text-sm text-muted-foreground mt-2">
               Mis à jour le {format(new Date(), 'dd/MM/yyyy HH:mm')}
             </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Historique des opérations</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="all" className="w-full">
+              <TabsList className="mb-4">
+                <TabsTrigger value="all" className="flex items-center gap-2">
+                  Toutes les opérations
+                </TabsTrigger>
+                <TabsTrigger value="deposits" className="flex items-center gap-2">
+                  <ArrowUpCircle className="h-4 w-4" />
+                  Versements
+                </TabsTrigger>
+                <TabsTrigger value="withdrawals" className="flex items-center gap-2">
+                  <ArrowDownCircle className="h-4 w-4" />
+                  Retraits
+                </TabsTrigger>
+                <TabsTrigger value="transfers" className="flex items-center gap-2">
+                  <RefreshCcw className="h-4 w-4" />
+                  Virements
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="all" className="space-y-4">
+                {operations.map((operation) => (
+                  <OperationCard
+                    key={operation.id}
+                    operation={operation}
+                    onEdit={() => {}}
+                    onDelete={() => {}}
+                  />
+                ))}
+                {operations.length === 0 && (
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground">Aucune opération trouvée</p>
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="deposits" className="space-y-4">
+                {operations.filter(op => op.type === "deposit").map((operation) => (
+                  <OperationCard
+                    key={operation.id}
+                    operation={operation}
+                    onEdit={() => {}}
+                    onDelete={() => {}}
+                  />
+                ))}
+              </TabsContent>
+
+              <TabsContent value="withdrawals" className="space-y-4">
+                {operations.filter(op => op.type === "withdrawal").map((operation) => (
+                  <OperationCard
+                    key={operation.id}
+                    operation={operation}
+                    onEdit={() => {}}
+                    onDelete={() => {}}
+                  />
+                ))}
+              </TabsContent>
+
+              <TabsContent value="transfers" className="space-y-4">
+                {operations.filter(op => op.type === "transfer").map((operation) => (
+                  <OperationCard
+                    key={operation.id}
+                    operation={operation}
+                    onEdit={() => {}}
+                    onDelete={() => {}}
+                  />
+                ))}
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       </div>
