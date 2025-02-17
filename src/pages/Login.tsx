@@ -11,7 +11,7 @@ import { DollarSign } from "lucide-react";
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState(""); // Pour l'email ou le nom d'utilisateur
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -22,8 +22,9 @@ const Login = () => {
 
     try {
       if (isSignUp) {
+        // Pour l'inscription, on utilise toujours l'email
         const { error } = await supabase.auth.signUp({
-          email,
+          email: identifier,
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/login`,
@@ -36,10 +37,35 @@ const Login = () => {
           description: "Veuillez vérifier votre email pour confirmer votre compte.",
         });
       } else {
+        // Pour la connexion, vérifier si l'identifiant est un email
+        const isEmail = identifier.includes('@');
+        
+        let email = identifier;
+        if (!isEmail) {
+          // Si ce n'est pas un email, chercher l'utilisateur par son nom d'utilisateur
+          const { data: profiles, error } = await supabase
+            .from('profiles')
+            .select('email')
+            .eq('username', identifier)
+            .single();
+
+          if (error || !profiles) {
+            toast({
+              title: "Erreur",
+              description: "Nom d'utilisateur ou mot de passe incorrect",
+              variant: "destructive",
+            });
+            setIsLoading(false);
+            return;
+          }
+          email = profiles.email;
+        }
+
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
+
         if (error) throw error;
         
         navigate("/dashboard");
@@ -76,10 +102,9 @@ const Login = () => {
         <form onSubmit={handleAuth} className="space-y-4">
           <div className="space-y-2">
             <Input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              placeholder={isSignUp ? "Email" : "Email ou nom d'utilisateur"}
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
               required
             />
           </div>
