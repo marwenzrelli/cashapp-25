@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { ListFilter } from "lucide-react";
@@ -109,39 +108,38 @@ const Transfers = () => {
 
       setIsEditDialogOpen(false);
       toast.success("Virement modifié avec succès");
-      fetchTransfers(); // Refresh the list
+      fetchTransfers();
     } catch (error) {
       console.error("Error in confirmEdit:", error);
       toast.error("Une erreur est survenue");
     }
   };
 
+  const findClientByName = async (fullName: string) => {
+    const { data, error } = await supabase
+      .from('clients')
+      .select('id, prenom, nom')
+      .or(`prenom.ilike.${fullName}%,nom.ilike.${fullName}%`)
+      .single();
+
+    if (error) {
+      console.error("Error finding client:", error);
+      return null;
+    }
+
+    return data;
+  };
+
   const confirmDelete = async () => {
     if (!selectedTransfer) return;
 
     try {
-      // Search for clients using textual search
-      const { data: fromClientData, error: fromError } = await supabase
-        .from('clients')
-        .select('id')
-        .textSearch('prenom || \' \' || nom', `'${selectedTransfer.fromClient}'`)
-        .single();
+      const fromClient = await findClientByName(selectedTransfer.fromClient);
+      const toClient = await findClientByName(selectedTransfer.toClient);
 
-      const { data: toClientData, error: toError } = await supabase
-        .from('clients')
-        .select('id')
-        .textSearch('prenom || \' \' || nom', `'${selectedTransfer.toClient}'`)
-        .single();
-
-      if (fromError || toError) {
-        console.error("Error finding clients:", { fromError, toError });
-        toast.error("Erreur lors de la recherche des clients");
-        return;
-      }
-
-      if (!fromClientData || !toClientData) {
-        console.error("Clients not found");
-        toast.error("Clients introuvables");
+      if (!fromClient || !toClient) {
+        console.error("Could not find one or both clients");
+        toast.error("Impossible de trouver un ou plusieurs clients");
         return;
       }
 
@@ -157,8 +155,8 @@ const Transfers = () => {
       }
 
       await Promise.all([
-        refreshClientBalance(fromClientData.id),
-        refreshClientBalance(toClientData.id)
+        refreshClientBalance(fromClient.id),
+        refreshClientBalance(toClient.id)
       ]);
 
       setIsDeleteDialogOpen(false);
