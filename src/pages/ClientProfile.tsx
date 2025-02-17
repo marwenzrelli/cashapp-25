@@ -78,6 +78,39 @@ const ClientProfile = () => {
     );
   }
 
+  const getTypeStyle = (type: Operation["type"]) => {
+    switch (type) {
+      case "deposit":
+        return "bg-green-50 text-green-600 dark:bg-green-950/50";
+      case "withdrawal":
+        return "bg-red-50 text-red-600 dark:bg-red-950/50";
+      case "transfer":
+        return "bg-purple-50 text-purple-600 dark:bg-purple-950/50";
+    }
+  };
+
+  const getTypeIcon = (type: Operation["type"]) => {
+    switch (type) {
+      case "deposit":
+        return <ArrowUpCircle className="h-4 w-4" />;
+      case "withdrawal":
+        return <ArrowDownCircle className="h-4 w-4" />;
+      case "transfer":
+        return <RefreshCcw className="h-4 w-4" />;
+    }
+  };
+
+  const getTypeLabel = (type: Operation["type"]) => {
+    switch (type) {
+      case "deposit":
+        return "Versement";
+      case "withdrawal":
+        return "Retrait";
+      case "transfer":
+        return "Virement";
+    }
+  };
+
   const exportToExcel = () => {
     if (!client || !clientOperations.length) {
       toast.error("Aucune donnée à exporter");
@@ -242,60 +275,96 @@ const ClientProfile = () => {
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="all" className="space-y-4">
-                  {clientOperations.map((operation) => (
-                    <OperationCard
-                      key={operation.id}
-                      operation={{
-                        ...operation,
-                        id: operation.id.slice(-6)
-                      }}
-                      onEdit={() => {}}
-                      onDelete={() => {}}
-                    />
-                  ))}
+                <TabsContent value="all">
+                  <div className="rounded-md border">
+                    <div className="grid grid-cols-5 gap-4 p-4 bg-muted/50 font-medium text-sm">
+                      <div>Type</div>
+                      <div>Date</div>
+                      <div>Description</div>
+                      <div className="text-right">Montant</div>
+                      <div>Client</div>
+                    </div>
+                    {clientOperations.map((operation) => (
+                      <div key={operation.id} className="grid grid-cols-5 gap-4 p-4 border-t">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center ${getTypeStyle(operation.type)}`}>
+                            {getTypeIcon(operation.type)}
+                          </div>
+                          <span>{getTypeLabel(operation.type)}</span>
+                        </div>
+                        <div>{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</div>
+                        <div className="truncate">{operation.description}</div>
+                        <div className="text-right font-medium">{Math.round(operation.amount)} TND</div>
+                        <div className="truncate">
+                          {operation.type === "transfer" ? (
+                            <>{operation.fromClient} → {operation.toClient}</>
+                          ) : (
+                            operation.fromClient
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </TabsContent>
 
-                <TabsContent value="deposits" className="space-y-4">
-                  {clientOperations.filter(op => op.type === "deposit").map((operation) => (
-                    <OperationCard
-                      key={operation.id}
-                      operation={{
-                        ...operation,
-                        id: operation.id.slice(-6)
-                      }}
-                      onEdit={() => {}}
-                      onDelete={() => {}}
-                    />
-                  ))}
+                {/* Répéter la même structure pour les autres onglets mais avec les données filtrées */}
+                <TabsContent value="deposits">
+                  <div className="rounded-md border">
+                    <div className="grid grid-cols-4 gap-4 p-4 bg-muted/50 font-medium text-sm">
+                      <div>Date</div>
+                      <div>Description</div>
+                      <div className="text-right">Montant</div>
+                      <div>Client</div>
+                    </div>
+                    {clientOperations.filter(op => op.type === "deposit").map((operation) => (
+                      <div key={operation.id} className="grid grid-cols-4 gap-4 p-4 border-t">
+                        <div>{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</div>
+                        <div className="truncate">{operation.description}</div>
+                        <div className="text-right font-medium">{Math.round(operation.amount)} TND</div>
+                        <div className="truncate">{operation.fromClient}</div>
+                      </div>
+                    ))}
+                  </div>
                 </TabsContent>
 
-                <TabsContent value="withdrawals" className="space-y-4">
-                  {clientOperations.filter(op => op.type === "withdrawal").map((operation) => (
-                    <OperationCard
-                      key={operation.id}
-                      operation={{
-                        ...operation,
-                        id: operation.id.slice(-6)
-                      }}
-                      onEdit={() => {}}
-                      onDelete={() => {}}
-                    />
-                  ))}
+                <TabsContent value="withdrawals">
+                  <div className="rounded-md border">
+                    <div className="grid grid-cols-4 gap-4 p-4 bg-muted/50 font-medium text-sm">
+                      <div>Date</div>
+                      <div>Description</div>
+                      <div className="text-right">Montant</div>
+                      <div>Client</div>
+                    </div>
+                    {clientOperations.filter(op => op.type === "withdrawal").map((operation) => (
+                      <div key={operation.id} className="grid grid-cols-4 gap-4 p-4 border-t">
+                        <div>{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</div>
+                        <div className="truncate">{operation.description}</div>
+                        <div className="text-right font-medium">{Math.round(operation.amount)} TND</div>
+                        <div className="truncate">{operation.fromClient}</div>
+                      </div>
+                    ))}
+                  </div>
                 </TabsContent>
 
-                <TabsContent value="transfers" className="space-y-4">
-                  {clientOperations.filter(op => op.type === "transfer").map((operation) => (
-                    <OperationCard
-                      key={operation.id}
-                      operation={{
-                        ...operation,
-                        id: operation.id.slice(-6)
-                      }}
-                      onEdit={() => {}}
-                      onDelete={() => {}}
-                    />
-                  ))}
+                <TabsContent value="transfers">
+                  <div className="rounded-md border">
+                    <div className="grid grid-cols-5 gap-4 p-4 bg-muted/50 font-medium text-sm">
+                      <div>Date</div>
+                      <div>Description</div>
+                      <div className="text-right">Montant</div>
+                      <div>De</div>
+                      <div>À</div>
+                    </div>
+                    {clientOperations.filter(op => op.type === "transfer").map((operation) => (
+                      <div key={operation.id} className="grid grid-cols-5 gap-4 p-4 border-t">
+                        <div>{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</div>
+                        <div className="truncate">{operation.description}</div>
+                        <div className="text-right font-medium">{Math.round(operation.amount)} TND</div>
+                        <div className="truncate">{operation.fromClient}</div>
+                        <div className="truncate">{operation.toClient}</div>
+                      </div>
+                    ))}
+                  </div>
                 </TabsContent>
               </Tabs>
             </CardContent>
@@ -320,7 +389,7 @@ const ClientProfile = () => {
               <div className="mt-6" ref={qrCodeRef}>
                 <ClientQRCode clientId={clientId} clientName={`${client.prenom} ${client.nom}`} />
               </div>
-              <div className="flex gap-2 mt-4">
+              <div className="flex gap-2 mt-6">
                 <Button
                   variant="outline"
                   className="w-full"

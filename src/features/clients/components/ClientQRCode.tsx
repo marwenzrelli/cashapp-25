@@ -16,7 +16,6 @@ export const ClientQRCode = ({ clientId, clientName }: ClientQRCodeProps) => {
   useEffect(() => {
     const generateQRAccess = async () => {
       try {
-        // Créer un nouvel accès QR
         const { data, error } = await supabase
           .from('qr_access')
           .insert([{ client_id: clientId }])
@@ -32,8 +31,8 @@ export const ClientQRCode = ({ clientId, clientName }: ClientQRCodeProps) => {
             canvasRef.current,
             url,
             {
-              width: 200,
-              margin: 2,
+              width: 256,
+              margin: 1,
               color: {
                 dark: '#000000',
                 light: '#FFFFFF'
@@ -50,11 +49,10 @@ export const ClientQRCode = ({ clientId, clientName }: ClientQRCodeProps) => {
   }, [clientId, clientName]);
 
   return (
-    <Card className="p-4 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950/50 dark:to-blue-950/50 backdrop-blur-xl border-none shadow-xl">
-      <div className="flex flex-col items-center gap-3">
-        <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-blue-500/20 blur-2xl rounded-full" />
-          <canvas ref={canvasRef} className="relative z-10 rounded-2xl shadow-inner" />
+    <Card className="p-6 bg-white shadow-lg">
+      <div className="flex flex-col items-center gap-4">
+        <div className="bg-white p-2 rounded-lg shadow-inner">
+          <canvas ref={canvasRef} className="rounded-lg" />
         </div>
         <p className="text-sm text-center text-muted-foreground">
           Code QR unique du client
