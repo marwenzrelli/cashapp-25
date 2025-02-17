@@ -15,6 +15,48 @@ const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Fonction temporaire pour créer le compte superviseur
+  const createSupervisor = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase.auth.signUp({
+        email: 'marwenzrelli.pro@icloud.com',
+        password: '12345678',
+        options: {
+          data: {
+            full_name: 'Marwen Superviseur',
+            role: 'supervisor',
+            department: 'finance',
+            username: 'marwensuperviseur'
+          }
+        }
+      });
+
+      if (error) {
+        toast({
+          title: "Erreur",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Succès",
+        description: "Compte superviseur créé avec succès",
+      });
+
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -147,6 +189,17 @@ const Login = () => {
             {isLoading ? "Chargement..." : "Se connecter"}
           </Button>
         </form>
+
+        {/* Bouton temporaire pour créer le compte superviseur - À SUPPRIMER APRÈS UTILISATION */}
+        <Button
+          type="button"
+          variant="outline"
+          onClick={createSupervisor}
+          disabled={isLoading}
+          className="w-full mt-4"
+        >
+          Créer le compte superviseur
+        </Button>
       </Card>
     </div>
   );
