@@ -16,7 +16,7 @@ interface AddUserDialogProps {
 export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps) => {
   const [newUser, setNewUser] = useState({
     fullName: "",
-    email: "",
+    username: "",
     role: "cashier" as UserRole,
   });
 
@@ -34,19 +34,21 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
   };
 
   const handleSubmit = () => {
-    if (!newUser.fullName || !newUser.email) {
+    if (!newUser.fullName || !newUser.username) {
       toast.error("Veuillez remplir tous les champs obligatoires");
       return;
     }
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newUser.email)) {
-      toast.error("Veuillez entrer une adresse email valide");
+    // Validation du nom d'utilisateur (pas d'espaces, caractères spéciaux limités)
+    if (!/^[a-zA-Z0-9_-]{3,20}$/.test(newUser.username)) {
+      toast.error("Le nom d'utilisateur doit contenir entre 3 et 20 caractères et ne peut contenir que des lettres, chiffres, tirets et underscores");
       return;
     }
 
     const user: SystemUser = {
       id: Math.random().toString(36).substr(2, 9),
       ...newUser,
+      email: `${newUser.username}@system.local`, // Email généré automatiquement
       department: getDepartmentByRole(newUser.role),
       status: "active",
       permissions: [],
@@ -56,7 +58,7 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
     onAddUser(user);
     setNewUser({
       fullName: "",
-      email: "",
+      username: "",
       role: "cashier",
     });
   };
@@ -67,7 +69,7 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
         <DialogHeader>
           <DialogTitle>Ajouter un utilisateur</DialogTitle>
           <DialogDescription>
-            Créez un nouvel utilisateur et définissez ses autorisations
+            Créez un nouvel utilisateur du système avec son nom d'utilisateur
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
@@ -82,15 +84,18 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
             />
           </div>
           <div className="space-y-2">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="username">Nom d'utilisateur</label>
             <Input
-              id="email"
-              type="email"
-              value={newUser.email}
+              id="username"
+              value={newUser.username}
               onChange={(e) =>
-                setNewUser({ ...newUser, email: e.target.value })
+                setNewUser({ ...newUser, username: e.target.value })
               }
+              placeholder="Exemple: jean_dupont"
             />
+            <p className="text-sm text-muted-foreground">
+              Lettres, chiffres, tirets et underscores uniquement (3-20 caractères)
+            </p>
           </div>
           <div className="space-y-2">
             <label>Rôle</label>

@@ -72,7 +72,8 @@ export function useUsers() {
           data: {
             full_name: user.fullName,
             role: user.role,
-            department: user.department
+            department: user.department,
+            username: user.username
           }
         }
       });
@@ -83,9 +84,15 @@ export function useUsers() {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       if (data.user) {
-        toast.success(`Utilisateur créé avec succès. \nMot de passe temporaire: ${tempPassword}\nVeuillez communiquer ce mot de passe à l'utilisateur de manière sécurisée.`, {
-          duration: 10000, // Afficher plus longtemps pour que l'admin puisse noter le mot de passe
-        });
+        toast.success(
+          `Utilisateur créé avec succès\n` +
+          `Nom d'utilisateur: ${user.username}\n` +
+          `Mot de passe temporaire: ${tempPassword}\n\n` +
+          `Veuillez communiquer ces informations à l'utilisateur de manière sécurisée.`, 
+          {
+            duration: 10000,
+          }
+        );
       }
 
       await fetchUsers();
