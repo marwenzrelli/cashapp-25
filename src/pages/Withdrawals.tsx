@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import { useClients } from "@/features/clients/hooks/useClients";
 import { useEffect } from "react";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface Client {
   id: string;
@@ -49,6 +50,7 @@ interface Client {
 }
 
 const Withdrawals = () => {
+  const { currency } = useCurrency();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedWithdrawal, setSelectedWithdrawal] = useState<any>(null);
@@ -87,7 +89,7 @@ const Withdrawals = () => {
     setSelectedWithdrawal(withdrawal);
     setIsDialogOpen(true);
     toast.info("Mode édition", {
-      description: `Modification du retrait de ${withdrawal.amount}€`
+      description: `Modification du retrait de ${withdrawal.amount} ${currency}`
     });
   };
 
@@ -114,7 +116,7 @@ const Withdrawals = () => {
     setWithdrawals(prev => [withdrawal, ...prev]);
     setIsDialogOpen(false);
     toast.success("Retrait enregistré", {
-      description: `Le retrait de ${withdrawal.amount}€ pour ${selectedClient.prenom} ${selectedClient.nom} a été enregistré.`
+      description: `Le retrait de ${withdrawal.amount} ${currency} pour ${selectedClient.prenom} ${selectedClient.nom} a été enregistré.`
     });
     setNewWithdrawal({ clientId: "", amount: "", notes: "", date: new Date().toISOString().split('T')[0] });
   };
@@ -212,7 +214,7 @@ const Withdrawals = () => {
                     <SelectContent>
                       {clients.map((client) => (
                         <SelectItem key={client.id} value={client.id.toString()}>
-                          {client.prenom} {client.nom}
+                          {client.prenom} {client.nom} - Solde: {client.solde} {currency}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -231,7 +233,7 @@ const Withdrawals = () => {
                       onChange={(e) => setNewWithdrawal({ ...newWithdrawal, amount: e.target.value })}
                       className="pl-9 transition-all focus-visible:ring-primary/50"
                     />
-                    <span className="absolute right-3 top-3 text-muted-foreground">€</span>
+                    <span className="absolute right-3 top-3 text-muted-foreground">{currency}</span>
                   </div>
                 </div>
 
@@ -347,7 +349,7 @@ const Withdrawals = () => {
                         <div className="flex items-center gap-2 text-danger">
                           <ArrowDownCircle className="h-4 w-4" />
                           <span className="font-medium">
-                            {withdrawal.amount.toLocaleString()} €
+                            {withdrawal.amount.toLocaleString()} {currency}
                           </span>
                         </div>
                       </td>
@@ -397,7 +399,7 @@ const Withdrawals = () => {
               <p>Êtes-vous sûr de vouloir supprimer ce retrait ?</p>
               {selectedWithdrawal && (
                 <div className="rounded-lg border bg-muted/50 p-4 font-medium text-foreground">
-                  Retrait de {selectedWithdrawal.amount}€
+                  Retrait de {selectedWithdrawal.amount} {currency}
                 </div>
               )}
               <p className="text-destructive font-medium">Cette action est irréversible.</p>
