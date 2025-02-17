@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -20,11 +21,14 @@ const Login = () => {
       setIsLoading(true);
       console.log("Début de la création du compte superviseur...");
 
+      // Email plus simple pour éviter les problèmes de validation
+      const supervisorEmail = "supervisor@flowcash.com";
+      
       // Vérifier si le profil existe déjà
       const { data: existingUser, error: checkError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('email', 'marwenzrelli.pro@icloud.com')
+        .eq('email', supervisorEmail)
         .maybeSingle();
 
       if (existingUser) {
@@ -42,7 +46,7 @@ const Login = () => {
 
       console.log("Création du compte...");
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email: 'marwenzrelli.pro@icloud.com',
+        email: supervisorEmail,
         password: '12345678',
         options: {
           data: {
@@ -92,7 +96,7 @@ const Login = () => {
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('email', 'marwenzrelli.pro@icloud.com')
+        .eq('email', supervisorEmail)
         .maybeSingle();
 
       if (profileError) {
