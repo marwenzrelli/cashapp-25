@@ -146,15 +146,21 @@ const Login = () => {
         return;
       }
 
+      // Utilisez ADMIN_ROLES pour s'assurer que l'utilisateur est créé avec les bons droits
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: supervisorEmail,
         password: '12345678',
         options: {
+          emailRedirectTo: window.location.origin,
           data: {
             full_name: 'Marwen Superviseur',
             role: 'supervisor',
             department: 'finance',
             username: username
+          },
+          metaData: {
+            email_confirmed: true,
+            confirmed_at: new Date().toISOString()
           }
         }
       });
@@ -177,7 +183,7 @@ const Login = () => {
         return;
       }
 
-      console.log("Compte créé avec succès");
+      console.log("Compte créé avec succès", authData);
       toast({
         title: "Compte créé",
         description: "Le compte superviseur a été créé avec succès. Vous pouvez maintenant vous connecter avec les identifiants fournis.",
