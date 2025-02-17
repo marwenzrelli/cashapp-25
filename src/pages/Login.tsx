@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -15,7 +14,99 @@ const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Fonction temporaire pour créer le compte superviseur
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      // Pour la connexion
+      const isEmail = identifier.includes('@');
+      let email = identifier;
+
+      if (!isEmail) {
+        console.log("Recherche par nom d'utilisateur:", identifier);
+        // Recherche par nom d'utilisateur
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('email, status')
+          .eq('username', identifier)
+          .maybeSingle();
+
+        console.log("Résultat de la recherche:", profile, profileError);
+
+        if (profileError) {
+          throw new Error("Erreur lors de la recherche de l'utilisateur");
+        }
+
+        if (!profile) {
+          toast({
+            title: "Erreur",
+            description: "Nom d'utilisateur introuvable",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (profile.status === 'inactive') {
+          toast({
+            title: "Compte inactif",
+            description: "Votre compte a été désactivé. Veuillez contacter l'administrateur.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        email = profile.email;
+      }
+
+      console.log("Tentative de connexion avec email:", email);
+      // Tentative de connexion
+      const { error: signInError, data } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError) {
+        console.error("Erreur de connexion:", signInError);
+        toast({
+          title: "Erreur de connexion",
+          description: "Email ou mot de passe incorrect",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Si la connexion réussit, vérifier le statut du profil
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('status')
+        .eq('id', data.user.id)
+        .single();
+
+      if (profile?.status === 'inactive') {
+        await supabase.auth.signOut();
+        toast({
+          title: "Compte inactif",
+          description: "Votre compte a été désactivé. Veuillez contacter l'administrateur.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Tout est bon, rediriger vers le dashboard
+      navigate("/dashboard");
+    } catch (error: any) {
+      console.error("Erreur d'authentification:", error);
+      toast({
+        title: "Erreur",
+        description: error.message || "Une erreur est survenue",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const createSupervisor = async () => {
     try {
       setIsLoading(true);
@@ -125,99 +216,6 @@ const Login = () => {
       toast({
         title: "Erreur",
         description: error.message || "Une erreur inattendue est survenue",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      // Pour la connexion
-      const isEmail = identifier.includes('@');
-      let email = identifier;
-
-      if (!isEmail) {
-        console.log("Recherche par nom d'utilisateur:", identifier);
-        // Recherche par nom d'utilisateur
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('email, status')
-          .eq('username', identifier)
-          .maybeSingle();
-
-        console.log("Résultat de la recherche:", profile, profileError);
-
-        if (profileError) {
-          throw new Error("Erreur lors de la recherche de l'utilisateur");
-        }
-
-        if (!profile) {
-          toast({
-            title: "Erreur",
-            description: "Nom d'utilisateur introuvable",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        if (profile.status === 'inactive') {
-          toast({
-            title: "Compte inactif",
-            description: "Votre compte a été désactivé. Veuillez contacter l'administrateur.",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        email = profile.email;
-      }
-
-      console.log("Tentative de connexion avec email:", email);
-      // Tentative de connexion
-      const { error: signInError, data } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (signInError) {
-        console.error("Erreur de connexion:", signInError);
-        toast({
-          title: "Erreur de connexion",
-          description: "Email ou mot de passe incorrect",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Si la connexion réussit, vérifier le statut du profil
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('status')
-        .eq('id', data.user.id)
-        .single();
-
-      if (profile?.status === 'inactive') {
-        await supabase.auth.signOut();
-        toast({
-          title: "Compte inactif",
-          description: "Votre compte a été désactivé. Veuillez contacter l'administrateur.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Tout est bon, rediriger vers le dashboard
-      navigate("/dashboard");
-    } catch (error: any) {
-      console.error("Erreur d'authentification:", error);
-      toast({
-        title: "Erreur",
-        description: error.message || "Une erreur est survenue",
         variant: "destructive",
       });
     } finally {
