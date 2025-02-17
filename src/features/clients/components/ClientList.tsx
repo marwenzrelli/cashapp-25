@@ -6,6 +6,7 @@ import { UserCircle, Pencil, Trash2 } from "lucide-react";
 import { Client } from "../types";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatAmount } from "@/utils/formatCurrency";
+import { cn } from "@/lib/utils";
 
 interface ClientListProps {
   clients: Client[];
@@ -15,6 +16,12 @@ interface ClientListProps {
 
 export const ClientList = ({ clients, onEdit, onDelete }: ClientListProps) => {
   const { currency } = useCurrency();
+
+  const getBalanceColor = (solde: number) => {
+    if (solde > 0) return "text-green-600 dark:text-green-400";
+    if (solde < 0) return "text-red-600 dark:text-red-400";
+    return "text-gray-600 dark:text-gray-400";
+  };
 
   return (
     <Card>
@@ -68,7 +75,10 @@ export const ClientList = ({ clients, onEdit, onDelete }: ClientListProps) => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="font-medium tabular-nums">
+                    <div className={cn(
+                      "font-medium tabular-nums transition-colors",
+                      getBalanceColor(client.solde)
+                    )}>
                       {formatAmount(client.solde, currency)}
                     </div>
                   </TableCell>
