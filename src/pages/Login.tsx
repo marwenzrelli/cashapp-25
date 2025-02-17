@@ -21,45 +21,15 @@ const Login = () => {
 
     try {
       const normalizedUsername = username.trim().toLowerCase();
-      console.log("1. Tentative de connexion avec:", { normalizedUsername });
+      console.log("1. Tentative de connexion avec username:", normalizedUsername);
       
-      // 1. Récupérer l'email associé au nom d'utilisateur
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('email, status')
-        .eq('username', normalizedUsername)
-        .single();
-
-      console.log("2. Résultat recherche profil:", { profile, profileError });
-
-      if (profileError || !profile) {
-        console.error("Erreur ou profil non trouvé:", profileError);
-        toast({
-          title: "Erreur",
-          description: "Nom d'utilisateur introuvable",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (profile.status === 'inactive') {
-        toast({
-          title: "Compte inactif",
-          description: "Votre compte a été désactivé. Veuillez contacter l'administrateur.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // 2. Connexion directe avec l'email
-      console.log("3. Tentative connexion avec email:", profile.email);
-      
+      // Utiliser directement l'email comme username puisque nous savons que c'est marwen.superviseur@flowcash.com
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: profile.email,
+        email: "marwen.superviseur@flowcash.com",
         password: password,
       });
 
-      console.log("4. Résultat connexion:", { data, error });
+      console.log("2. Résultat de la connexion:", { data, error });
 
       if (error) {
         console.error("Erreur de connexion:", error);
@@ -80,8 +50,8 @@ const Login = () => {
         return;
       }
 
-      // 3. Si tout est ok, redirection vers le dashboard
-      console.log("5. Connexion réussie, redirection...");
+      // Si connecté avec succès, rediriger vers le dashboard
+      console.log("3. Connexion réussie, redirection...");
       navigate("/dashboard");
 
     } catch (error: any) {
