@@ -56,37 +56,6 @@ const Login = () => {
 
       if (signInError) {
         console.error("Erreur de connexion:", signInError);
-        
-        if (signInError.message === "Email not confirmed") {
-          console.log("Email non confirmé, tentative de connexion automatique...");
-          
-          // Tentative de création/connexion automatique sans confirmation
-          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-              data: {
-                email_confirmed: true
-              }
-            }
-          });
-
-          if (signUpError) {
-            toast({
-              title: "Erreur d'authentification",
-              description: "Impossible de confirmer votre email automatiquement",
-              variant: "destructive",
-            });
-            return;
-          }
-
-          // Si nous arrivons ici, l'utilisateur devrait être connecté
-          if (signUpData.user) {
-            console.log("Connexion réussie après confirmation automatique");
-            navigate("/dashboard");
-            return;
-          }
-        }
 
         if (signInError.message === "Invalid login credentials") {
           toast({
@@ -185,8 +154,7 @@ const Login = () => {
             full_name: 'Marwen Superviseur',
             role: 'supervisor',
             department: 'finance',
-            username: username,
-            email_confirmed: true
+            username: username
           }
         }
       });
