@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -156,9 +155,7 @@ const Login = () => {
             full_name: 'Marwen Superviseur',
             role: 'supervisor',
             department: 'finance',
-            username: username
-          },
-          metaData: {
+            username: username,
             email_confirmed: true,
             confirmed_at: new Date().toISOString()
           }
