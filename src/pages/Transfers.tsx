@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { ListFilter } from "lucide-react";
@@ -119,21 +120,28 @@ const Transfers = () => {
     if (!selectedTransfer) return;
 
     try {
-      const { data: fromClient, error: fromError } = await supabase
+      // Search for clients using textual search
+      const { data: fromClientData, error: fromError } = await supabase
         .from('clients')
         .select('id')
-        .eq('prenom || \' \' || nom', selectedTransfer.fromClient)
+        .textSearch('prenom || \' \' || nom', `'${selectedTransfer.fromClient}'`)
         .single();
 
-      const { data: toClient, error: toError } = await supabase
+      const { data: toClientData, error: toError } = await supabase
         .from('clients')
         .select('id')
-        .eq('prenom || \' \' || nom', selectedTransfer.toClient)
+        .textSearch('prenom || \' \' || nom', `'${selectedTransfer.toClient}'`)
         .single();
 
       if (fromError || toError) {
-        console.error("Error finding clients:", fromError || toError);
+        console.error("Error finding clients:", { fromError, toError });
         toast.error("Erreur lors de la recherche des clients");
+        return;
+      }
+
+      if (!fromClientData || !toClientData) {
+        console.error("Clients not found");
+        toast.error("Clients introuvables");
         return;
       }
 
@@ -149,13 +157,13 @@ const Transfers = () => {
       }
 
       await Promise.all([
-        refreshClientBalance(fromClient.id),
-        refreshClientBalance(toClient.id)
+        refreshClientBalance(fromClientData.id),
+        refreshClientBalance(toClientData.id)
       ]);
 
       setIsDeleteDialogOpen(false);
       toast.success("Virement supprimé avec succès");
-      fetchTransfers(); // Refresh the list
+      fetchTransfers();
     } catch (error) {
       console.error("Error in confirmDelete:", error);
       toast.error("Une erreur est survenue");
