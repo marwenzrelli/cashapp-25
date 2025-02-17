@@ -30,6 +30,10 @@ export const TransferList = ({
     return "text-gray-600 dark:text-gray-400";
   };
 
+  const formatTransferId = (id: string) => {
+    return id.slice(0, 8) + "...";
+  };
+
   const filteredTransfers = transfers.filter(
     (transfer) =>
       transfer.fromClient.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -92,10 +96,10 @@ export const TransferList = ({
                       "text-lg font-semibold",
                       getAmountColor(transfer.amount)
                     )}>
-                      {transfer.amount.toLocaleString()} TND
+                      {transfer.amount.toLocaleString()} {currency}
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      ID: {transfer.id}
+                      ID: {formatTransferId(transfer.id)}
                     </div>
                   </div>
                   
