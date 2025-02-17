@@ -9,6 +9,10 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { SystemUser } from "@/types/admin";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 interface DashboardStats {
   total_deposits: number;
@@ -19,6 +23,15 @@ interface DashboardStats {
   sent_transfers: number;
   received_transfers: number;
   monthly_stats: any[];
+}
+
+interface RecentActivity {
+  id: string;
+  type: 'deposit' | 'withdrawal' | 'transfer';
+  amount: number;
+  date: string;
+  client_name: string;
+  status: string;
 }
 
 const Dashboard = () => {
@@ -37,6 +50,7 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { currency } = useCurrency();
   const [currentUser, setCurrentUser] = useState<SystemUser | null>(null);
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
 
   const fetchStats = async () => {
     try {
@@ -107,6 +121,71 @@ const Dashboard = () => {
     }
   };
 
+  const fetchRecentActivity = async () => {
+    try {
+      // Récupérer les versements récents
+      const { data: deposits, error: depositsError } = await supabase
+        .from('deposits')
+        .select('id, amount, operation_date, client_name, status')
+        .order('operation_date', { ascending: false })
+        .limit(3);
+
+      if (depositsError) throw depositsError;
+
+      // Récupérer les retraits récents
+      const { data: withdrawals, error: withdrawalsError } = await supabase
+        .from('withdrawals')
+        .select('id, amount, operation_date, client_name, status')
+        .order('operation_date', { ascending: false })
+        .limit(3);
+
+      if (withdrawalsError) throw withdrawalsError;
+
+      // Récupérer les transferts récents
+      const { data: transfers, error: transfersError } = await supabase
+        .from('transfers')
+        .select('id, amount, operation_date, from_client, to_client, status')
+        .order('operation_date', { ascending: false })
+        .limit(3);
+
+      if (transfersError) throw transfersError;
+
+      // Combiner et formater les résultats
+      const allActivity = [
+        ...(deposits?.map(d => ({
+          id: d.id.toString(),
+          type: 'deposit' as const,
+          amount: d.amount,
+          date: d.operation_date,
+          client_name: d.client_name,
+          status: d.status
+        })) || []),
+        ...(withdrawals?.map(w => ({
+          id: w.id.toString(),
+          type: 'withdrawal' as const,
+          amount: w.amount,
+          date: w.operation_date,
+          client_name: w.client_name,
+          status: w.status
+        })) || []),
+        ...(transfers?.map(t => ({
+          id: t.id.toString(),
+          type: 'transfer' as const,
+          amount: t.amount,
+          date: t.operation_date,
+          client_name: `${t.from_client} → ${t.to_client}`,
+          status: t.status
+        })) || [])
+      ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, 5);
+
+      setRecentActivity(allActivity);
+    } catch (error) {
+      console.error('Error fetching recent activity:', error);
+      toast.error("Erreur lors du chargement de l'activité récente");
+    }
+  };
+
   const handleUpdateProfile = async (updatedUser: Partial<SystemUser>) => {
     try {
       const { error } = await supabase
@@ -132,7 +211,11 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchStats();
-    const interval = setInterval(fetchStats, 30000);
+    fetchRecentActivity();
+    const interval = setInterval(() => {
+      fetchStats();
+      fetchRecentActivity();
+    }, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -325,6 +408,56 @@ const Dashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
+            {recentActivity.map((activity) => (
+              <div
+                key={activity.id}
+                className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/10 transition-colors"
+              >
+                <div className="flex items-center gap-4">
+                  {activity.type === 'deposit' && (
+                    <div className="p-2 rounded-full bg-green-100 dark:bg-green-900/20">
+                      <ArrowUpCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    </div>
+                  )}
+                  {activity.type === 'withdrawal' && (
+                    <div className="p-2 rounded-full bg-red-100 dark:bg-red-900/20">
+                      <ArrowDownCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
+                    </div>
+                  )}
+                  {activity.type === 'transfer' && (
+                    <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/20">
+                      <ArrowLeftRight className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    </div>
+                  )}
+                  <div>
+                    <p className="font-medium">
+                      {activity.type === 'deposit' && 'Versement'}
+                      {activity.type === 'withdrawal' && 'Retrait'}
+                      {activity.type === 'transfer' && 'Virement'}
+                    </p>
+                    <p className="text-sm text-muted-foreground">{activity.client_name}</p>
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-1">
+                  <p className={cn(
+                    "font-medium",
+                    activity.type === 'deposit' ? "text-green-600 dark:text-green-400" :
+                    activity.type === 'withdrawal' ? "text-red-600 dark:text-red-400" :
+                    "text-blue-600 dark:text-blue-400"
+                  )}>
+                    {activity.type === 'withdrawal' ? '-' : ''}{activity.amount.toLocaleString()} {currency}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {format(new Date(activity.date), "dd MMM yyyy HH:mm", { locale: fr })}
+                  </p>
+                </div>
+              </div>
+            ))}
+            {recentActivity.length === 0 && (
+              <p className="text-center text-muted-foreground py-4">
+                Aucune activité récente
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>
