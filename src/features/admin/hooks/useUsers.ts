@@ -14,40 +14,19 @@ export function useUsers() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const profileResult = await supabase
+      const { data: profile, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('*, user_permissions(*)')
         .eq('id', user.id)
-        .maybeSingle();
+        .single();
 
-      if (profileResult.error) {
-        console.error("Erreur lors du chargement du profil:", profileResult.error);
+      if (error) {
+        console.error("Erreur lors du chargement du profil:", error);
         return;
       }
 
-      if (!profileResult.data) return;
-
-      if (profileResult.data.role === 'supervisor') {
-        const permissionsResult = await supabase
-          .from('user_permissions')
-          .select('*')
-          .eq('user_id', user.id);
-
-        if (permissionsResult.error) {
-          console.error("Erreur lors du chargement des permissions:", permissionsResult.error);
-        }
-
-        const fullProfile = {
-          ...profileResult.data,
-          user_permissions: permissionsResult.data || []
-        };
-        setCurrentUser(mapProfileToSystemUser(fullProfile));
-      } else {
-        const fullProfile = {
-          ...profileResult.data,
-          user_permissions: []
-        };
-        setCurrentUser(mapProfileToSystemUser(fullProfile));
+      if (profile) {
+        setCurrentUser(mapProfileToSystemUser(profile));
       }
     } catch (error) {
       console.error("Erreur lors du chargement du profil:", error);
@@ -56,41 +35,20 @@ export function useUsers() {
 
   const fetchUsers = async () => {
     try {
-      const profilesResult = await supabase
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('*');
+        .select('*, user_permissions(*)');
 
-      if (profilesResult.error) {
-        console.error("Erreur lors du chargement des utilisateurs:", profilesResult.error);
+      if (profilesError) {
+        console.error("Erreur lors du chargement des utilisateurs:", profilesError);
         toast.error("Erreur lors du chargement des utilisateurs");
         return;
       }
 
-      const supervisorIds = profilesResult.data
-        .filter(profile => profile.role === 'supervisor')
-        .map(profile => profile.id);
-
-      let permissionsResult: PostgrestResponse<any> = { data: [], error: null, count: null, status: 200, statusText: 'OK' };
-      
-      if (supervisorIds.length > 0) {
-        permissionsResult = await supabase
-          .from('user_permissions')
-          .select('*')
-          .in('user_id', supervisorIds);
-
-        if (permissionsResult.error) {
-          console.error("Erreur lors du chargement des permissions:", permissionsResult.error);
-        }
-      }
-
-      const fullProfiles = profilesResult.data.map(profile => ({
+      setUsers(profiles.map(profile => mapProfileToSystemUser({
         ...profile,
-        user_permissions: profile.role === 'supervisor'
-          ? permissionsResult.data?.filter(p => p.user_id === profile.id) || []
-          : []
-      }));
-
-      setUsers(fullProfiles.map(mapProfileToSystemUser));
+        user_permissions: profile.user_permissions || []
+      })));
     } catch (error) {
       console.error("Erreur lors du chargement des utilisateurs:", error);
       toast.error("Une erreur est survenue lors du chargement des utilisateurs");
