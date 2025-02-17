@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { DollarSign } from "lucide-react";
 
@@ -12,90 +12,76 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [fullName, setFullName] = useState("");
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   // Vérifier l'état de la session au chargement
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      console.log("Session actuelle:", session, "Erreur:", error);
+      const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        console.log("Utilisateur déjà connecté, redirection...");
         navigate("/dashboard");
       }
     };
     checkSession();
   }, [navigate]);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
       const normalizedEmail = email.trim().toLowerCase();
-      console.log("1. Tentative de connexion avec email:", normalizedEmail);
       
-      // Test de connexion avec la session actuelle
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-      console.log("Session avant connexion:", currentSession);
-
-      // Tentative de connexion
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: normalizedEmail,
-        password: password,
-      });
-
-      console.log("2. Résultat complet de la connexion:", {
-        data,
-        error,
-        session: data?.session,
-        user: data?.user
-      });
-
-      if (error) {
-        console.error("Erreur détaillée de connexion:", {
-          message: error.message,
-          status: error.status,
-          name: error.name,
-          stack: error.stack
+      if (isSignUp) {
+        // Inscription d'un nouveau compte
+        const { data, error } = await supabase.auth.signUp({
+          email: normalizedEmail,
+          password,
+          options: {
+            data: {
+              full_name: fullName,
+              role: 'supervisor', // Le premier utilisateur sera superviseur
+              username: normalizedEmail.split('@')[0]
+            }
+          }
         });
-        toast({
-          title: "Erreur de connexion",
-          description: `${error.message}`,
-          variant: "destructive",
+
+        if (error) throw error;
+
+        if (data.user) {
+          toast.success("Compte créé avec succès ! Vous pouvez maintenant vous connecter.");
+          setIsSignUp(false);
+        }
+      } else {
+        // Connexion avec un compte existant
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: normalizedEmail,
+          password,
         });
-        return;
+
+        if (error) throw error;
+
+        if (data.user) {
+          toast.success("Connexion réussie !");
+          navigate("/dashboard");
+        }
       }
-
-      if (!data.user || !data.session) {
-        console.error("Données de connexion incomplètes:", { data });
-        toast({
-          title: "Erreur",
-          description: "Données de connexion incomplètes",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Vérification de la session après connexion
-      const { data: { session: newSession } } = await supabase.auth.getSession();
-      console.log("3. Session après connexion réussie:", newSession);
-      
-      console.log("4. Connexion réussie, redirection...");
-      navigate("/dashboard");
-
     } catch (error: any) {
-      console.error("Erreur technique détaillée:", {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
-      toast({
-        title: "Erreur technique",
-        description: error.message || "Une erreur inattendue est survenue",
-        variant: "destructive",
-      });
+      console.error("Erreur d'authentification:", error);
+      
+      // Messages d'erreur personnalisés
+      let errorMessage = "Une erreur est survenue";
+      if (error.message.includes("Email not confirmed")) {
+        errorMessage = "Veuillez confirmer votre email avant de vous connecter";
+      } else if (error.message.includes("Invalid login credentials")) {
+        errorMessage = "Email ou mot de passe incorrect";
+      } else if (error.message.includes("User already registered")) {
+        errorMessage = "Un compte existe déjà avec cet email";
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -115,11 +101,22 @@ const Login = () => {
           </div>
           <h1 className="text-2xl font-bold">Flow Cash Control</h1>
           <p className="text-gray-500">
-            Connectez-vous à votre compte
+            {isSignUp ? "Créer un nouveau compte" : "Connectez-vous à votre compte"}
           </p>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleAuth} className="space-y-4">
+          {isSignUp && (
+            <div className="space-y-2">
+              <Input
+                type="text"
+                placeholder="Nom complet"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                required
+              />
+            </div>
+          )}
           <div className="space-y-2">
             <Input
               type="email"
@@ -143,8 +140,18 @@ const Login = () => {
             className="w-full"
             disabled={isLoading}
           >
-            {isLoading ? "Chargement..." : "Se connecter"}
+            {isLoading ? "Chargement..." : (isSignUp ? "Créer un compte" : "Se connecter")}
           </Button>
+          <p className="text-center text-sm text-gray-500">
+            {isSignUp ? "Déjà un compte ?" : "Pas encore de compte ?"}{" "}
+            <button
+              type="button"
+              className="text-primary hover:underline"
+              onClick={() => setIsSignUp(!isSignUp)}
+            >
+              {isSignUp ? "Se connecter" : "Créer un compte"}
+            </button>
+          </p>
         </form>
       </Card>
     </div>
@@ -152,3 +159,4 @@ const Login = () => {
 };
 
 export default Login;
+
