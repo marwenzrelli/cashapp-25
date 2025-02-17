@@ -26,10 +26,9 @@ const Login = () => {
       // Afficher tous les profils pour debug
       const { data: allProfiles, error: allProfilesError } = await supabase
         .from('profiles')
-        .select('username, email')
-        .eq('status', 'active');
+        .select('username, email');
       
-      console.log("Tous les profils actifs:", allProfiles);
+      console.log("Tous les profils:", allProfiles);
       console.log("Erreur éventuelle:", allProfilesError);
 
       // 1. D'abord, récupérer l'email associé au nom d'utilisateur
