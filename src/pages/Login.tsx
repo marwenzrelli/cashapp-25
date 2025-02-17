@@ -57,39 +57,17 @@ const Login = () => {
       if (signInError) {
         console.error("Erreur de connexion:", signInError);
 
+        // Si l'erreur est "Invalid login credentials", c'est soit l'email soit le mot de passe qui est incorrect
         if (signInError.message === "Invalid login credentials") {
           toast({
             title: "Erreur de connexion",
-            description: "Le mot de passe est incorrect",
+            description: "Email ou mot de passe incorrect",
             variant: "destructive",
           });
           return;
         }
 
-        if (signInError.message === "Email not confirmed") {
-          console.log("Email non confirmé, envoi d'un nouveau mail de confirmation");
-          
-          const { error: resendError } = await supabase.auth.resend({
-            type: 'signup',
-            email: email,
-          });
-
-          if (resendError) {
-            console.error("Erreur lors du renvoi:", resendError);
-            toast({
-              title: "Erreur",
-              description: "Impossible de renvoyer l'email de confirmation",
-              variant: "destructive",
-            });
-          } else {
-            toast({
-              title: "Email non confirmé",
-              description: "Un nouvel email de confirmation vous a été envoyé",
-            });
-          }
-          return;
-        }
-
+        // On ne gère plus le cas "Email not confirmed" car nous avons désactivé la confirmation d'email
         toast({
           title: "Erreur de connexion",
           description: signInError.message,
@@ -204,7 +182,7 @@ const Login = () => {
       console.log("Compte créé avec succès");
       toast({
         title: "Compte créé",
-        description: "Le compte superviseur a été créé avec succès. Vous pouvez maintenant vous connecter.",
+        description: "Le compte superviseur a été créé avec succès. Vous pouvez maintenant vous connecter avec les identifiants fournis.",
       });
 
     } catch (error: any) {
@@ -263,10 +241,6 @@ const Login = () => {
             {isLoading ? "Chargement..." : "Se connecter"}
           </Button>
         </form>
-
-        <p className="text-sm text-gray-500 text-center">
-          Si vous n'avez pas reçu l'email de confirmation, essayez de vous connecter pour le renvoyer
-        </p>
 
         <Button
           type="button"
