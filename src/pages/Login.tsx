@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -26,14 +25,15 @@ const Login = () => {
       if (!isEmail) {
         const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
-          .select('*')
-          .eq('username', identifier);
+          .select('email')
+          .eq('username', identifier)
+          .single();
 
         if (profilesError) {
           throw new Error("Erreur lors de la recherche de l'utilisateur");
         }
 
-        if (!profiles || profiles.length === 0) {
+        if (!profiles) {
           toast({
             title: "Erreur",
             description: "Nom d'utilisateur introuvable",
@@ -43,8 +43,10 @@ const Login = () => {
           return;
         }
 
-        email = profiles[0].email;
+        email = profiles.email;
       }
+
+      console.log("Tentative de connexion avec email:", email);
 
       const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
         email,
@@ -52,14 +54,27 @@ const Login = () => {
       });
 
       if (signInError) {
-        // Gestion spécifique de l'erreur "email non confirmé"
+        console.error("Erreur de connexion:", signInError);
+
+        if (signInError.message === "Invalid login credentials") {
+          toast({
+            title: "Erreur de connexion",
+            description: "Le mot de passe est incorrect",
+            variant: "destructive",
+          });
+          return;
+        }
+
         if (signInError.message === "Email not confirmed") {
+          console.log("Email non confirmé, envoi d'un nouveau mail de confirmation");
+          
           const { error: resendError } = await supabase.auth.resend({
             type: 'signup',
             email: email,
           });
 
           if (resendError) {
+            console.error("Erreur lors du renvoi:", resendError);
             toast({
               title: "Erreur",
               description: "Impossible de renvoyer l'email de confirmation",
@@ -68,7 +83,7 @@ const Login = () => {
           } else {
             toast({
               title: "Email non confirmé",
-              description: "Un nouvel email de confirmation vous a été envoyé. Veuillez vérifier votre boîte de réception.",
+              description: "Un nouvel email de confirmation vous a été envoyé",
             });
           }
           return;
@@ -76,7 +91,7 @@ const Login = () => {
 
         toast({
           title: "Erreur de connexion",
-          description: "Email ou mot de passe incorrect",
+          description: signInError.message,
           variant: "destructive",
         });
         return;
@@ -97,7 +112,18 @@ const Login = () => {
         .eq('id', authData.user.id)
         .single();
 
-      if (profileError || profile?.status === 'inactive') {
+      if (profileError) {
+        console.error("Erreur lors de la vérification du profil:", profileError);
+        await supabase.auth.signOut();
+        toast({
+          title: "Erreur",
+          description: "Erreur lors de la vérification du statut du compte",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (profile?.status === 'inactive') {
         await supabase.auth.signOut();
         toast({
           title: "Compte inactif",
@@ -107,11 +133,13 @@ const Login = () => {
         return;
       }
 
+      console.log("Connexion réussie, redirection vers le dashboard");
       navigate("/dashboard");
     } catch (error: any) {
+      console.error("Erreur inattendue:", error);
       toast({
         title: "Erreur",
-        description: error.message || "Une erreur est survenue",
+        description: error.message || "Une erreur inattendue est survenue",
         variant: "destructive",
       });
     } finally {
@@ -126,16 +154,29 @@ const Login = () => {
       const supervisorEmail = "supervisor@flowcash.com";
       const username = "superviseur2024";
 
-      const { data: existingUser } = await supabase
+      const { data: { users }, error: authCheckError } = await supabase.auth.admin.listUsers();
+      const existingAuthUser = users?.find(user => user.email === supervisorEmail);
+
+      if (existingAuthUser) {
+        console.log("Le compte existe déjà dans auth.users");
+        toast({
+          title: "Information",
+          description: "Le compte existe déjà. Utilisez les identifiants fournis pour vous connecter.",
+        });
+        return;
+      }
+
+      const { data: existingProfile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('email', supervisorEmail)
         .maybeSingle();
 
-      if (existingUser) {
+      if (existingProfile) {
+        console.log("Le profil existe déjà dans la table profiles");
         toast({
           title: "Information",
-          description: `Le compte existe déjà. Si vous n'avez pas reçu l'email de confirmation, essayez de vous connecter pour le renvoyer.`,
+          description: "Le compte existe déjà. Utilisez les identifiants fournis pour vous connecter.",
         });
         return;
       }
@@ -149,12 +190,12 @@ const Login = () => {
             role: 'supervisor',
             department: 'finance',
             username: username
-          },
-          emailRedirectTo: window.location.origin + '/login'
+          }
         }
       });
 
       if (signUpError) {
+        console.error("Erreur lors de la création du compte:", signUpError);
         if (signUpError.message === "Signups not allowed for this instance") {
           toast({
             title: "Configuration requise",
@@ -171,21 +212,14 @@ const Login = () => {
         return;
       }
 
-      if (!authData.user) {
-        toast({
-          title: "Erreur",
-          description: "Erreur lors de la création du compte",
-          variant: "destructive",
-        });
-        return;
-      }
-
+      console.log("Compte créé avec succès");
       toast({
         title: "Compte créé",
-        description: "Un email de confirmation vous a été envoyé. Veuillez vérifier votre boîte de réception.",
+        description: "Le compte superviseur a été créé avec succès. Vous pouvez maintenant vous connecter.",
       });
 
     } catch (error: any) {
+      console.error("Erreur inattendue lors de la création du compte:", error);
       toast({
         title: "Erreur",
         description: error.message || "Une erreur inattendue est survenue",
