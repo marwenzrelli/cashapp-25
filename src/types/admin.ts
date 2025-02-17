@@ -17,7 +17,7 @@ export interface SystemUser {
   id: string;
   fullName: string;
   email: string;
-  login?: string;
+  username?: string; // Ajout du champ username
   role: UserRole;
   status: ProfileRow['status'];
   permissions: Permission[];
@@ -35,6 +35,7 @@ export const mapProfileToSystemUser = (
   id: profile.id,
   fullName: profile.full_name,
   email: profile.email,
+  username: profile.username || undefined,
   role: profile.role,
   status: profile.status,
   permissions: profile.user_permissions?.map(p => ({
