@@ -1,11 +1,38 @@
+
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
 import { Sparkles, TrendingUp, Users, ArrowUpCircle, ArrowDownCircle, AlertTriangle } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useDeposits } from "@/features/deposits/hooks/useDeposits";
+import { cn } from "@/lib/utils";
 
 const Statistics = () => {
+  const { deposits, isLoading } = useDeposits();
   const { currency } = useCurrency();
+
+  // Calcul des totaux
+  const totalDeposits = deposits.reduce((acc, dep) => acc + (dep.amount > 0 ? dep.amount : 0), 0);
+  const totalWithdrawals = deposits.reduce((acc, dep) => acc + (dep.amount < 0 ? Math.abs(dep.amount) : 0), 0);
+  const activeClients = new Set(deposits.map(dep => dep.client_name)).size;
+
+  // Calcul des pourcentages de variation
+  const currentMonth = new Date().getMonth();
+  const currentMonthDeposits = deposits.filter(dep => new Date(dep.created_at).getMonth() === currentMonth);
+  const lastMonthDeposits = deposits.filter(dep => new Date(dep.created_at).getMonth() === currentMonth - 1);
   
+  const currentMonthTotal = currentMonthDeposits.reduce((acc, dep) => acc + dep.amount, 0);
+  const lastMonthTotal = lastMonthDeposits.reduce((acc, dep) => acc + dep.amount, 0);
+  
+  const percentageChange = lastMonthTotal !== 0 
+    ? ((currentMonthTotal - lastMonthTotal) / lastMonthTotal) * 100 
+    : 0;
+
+  const getAmountColor = (amount: number) => {
+    if (amount > 0) return "text-green-600 dark:text-green-400";
+    if (amount < 0) return "text-red-600 dark:text-red-400";
+    return "text-gray-600 dark:text-gray-400";
+  };
+
   const getInsightIcon = (type: string) => {
     switch (type) {
       case "success":
@@ -28,6 +55,10 @@ const Statistics = () => {
     }
   };
 
+  if (isLoading) {
+    return <div>Chargement des statistiques...</div>;
+  }
+
   return (
     <div className="space-y-8 animate-in">
       <div>
@@ -44,33 +75,45 @@ const Statistics = () => {
             <ArrowUpCircle className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0 TND</div>
+            <div className={cn(
+              "text-2xl font-bold",
+              getAmountColor(totalDeposits)
+            )}>
+              {totalDeposits.toLocaleString()} TND
+            </div>
             <p className="text-xs text-muted-foreground">
-              +0% par rapport au mois dernier
+              {percentageChange > 0 ? '+' : ''}{percentageChange.toFixed(1)}% par rapport au mois dernier
             </p>
           </CardContent>
         </Card>
+        
         <Card className="bg-gradient-to-br from-red-50 to-transparent dark:from-red-950/20">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Total Retraits</CardTitle>
             <ArrowDownCircle className="h-4 w-4 text-danger" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0 TND</div>
+            <div className={cn(
+              "text-2xl font-bold",
+              getAmountColor(-totalWithdrawals)
+            )}>
+              {totalWithdrawals.toLocaleString()} TND
+            </div>
             <p className="text-xs text-muted-foreground">
-              +0% par rapport au mois dernier
+              {percentageChange > 0 ? '+' : ''}{percentageChange.toFixed(1)}% par rapport au mois dernier
             </p>
           </CardContent>
         </Card>
+        
         <Card className="bg-gradient-to-br from-blue-50 to-transparent dark:from-blue-950/20">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Clients Actifs</CardTitle>
             <Users className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">{activeClients}</div>
             <p className="text-xs text-muted-foreground">
-              +0 nouveaux clients ce mois
+              Clients avec des transactions ce mois
             </p>
           </CardContent>
         </Card>
@@ -84,22 +127,19 @@ const Statistics = () => {
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={[]}>
+                <LineChart data={currentMonthDeposits.map(dep => ({
+                  date: new Date(dep.created_at).toLocaleDateString(),
+                  montant: dep.amount,
+                }))}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="mois" />
+                  <XAxis dataKey="date" />
                   <YAxis />
                   <Tooltip />
                   <Legend />
                   <Line
                     type="monotone"
-                    dataKey="versements"
+                    dataKey="montant"
                     stroke="#10B981"
-                    strokeWidth={2}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="retraits"
-                    stroke="#EF4444"
                     strokeWidth={2}
                   />
                 </LineChart>
@@ -110,14 +150,21 @@ const Statistics = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Répartition de l'Activité Client</CardTitle>
+            <CardTitle>Répartition par Client</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={[]}
+                    data={
+                      Object.entries(
+                        deposits.reduce((acc, dep) => {
+                          acc[dep.client_name] = (acc[dep.client_name] || 0) + dep.amount;
+                          return acc;
+                        }, {} as Record<string, number>)
+                      ).map(([name, value]) => ({ name, value }))
+                    }
                     cx="50%"
                     cy="50%"
                     labelLine={false}
@@ -126,6 +173,11 @@ const Statistics = () => {
                     fill="#8884d8"
                     dataKey="value"
                   >
+                    {
+                      deposits.map((_, index) => (
+                        <Cell key={`cell-${index}`} fill={`hsl(${index * 45}, 70%, 50%)`} />
+                      ))
+                    }
                   </Pie>
                   <Tooltip />
                 </PieChart>
@@ -144,6 +196,7 @@ const Statistics = () => {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
+            {/* Les insights seront ajoutés ici dans une prochaine mise à jour */}
           </div>
         </CardContent>
       </Card>
