@@ -311,7 +311,9 @@ const ClientProfile = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{client.solde.toLocaleString()} TND</div>
+              <div className="text-3xl font-bold">
+                {client.solde.toLocaleString('fr-FR', { style: 'decimal', maximumFractionDigits: 0 })} TND
+              </div>
               <p className="text-sm text-muted-foreground mt-2">
                 Mis à jour le {format(new Date(), 'dd/MM/yyyy HH:mm')}
               </p>
