@@ -21,13 +21,16 @@ const Login = () => {
 
     try {
       const normalizedUsername = username.trim().toLowerCase();
+      console.log("1. Tentative de connexion avec:", { normalizedUsername });
       
       // 1. Récupérer l'email associé au nom d'utilisateur
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('email')
+        .select('email, status')
         .eq('username', normalizedUsername)
         .single();
+
+      console.log("2. Résultat recherche profil:", { profile, profileError });
 
       if (profileError || !profile) {
         console.error("Erreur ou profil non trouvé:", profileError);
@@ -39,11 +42,24 @@ const Login = () => {
         return;
       }
 
-      // 2. Connexion avec l'email
+      if (profile.status === 'inactive') {
+        toast({
+          title: "Compte inactif",
+          description: "Votre compte a été désactivé. Veuillez contacter l'administrateur.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // 2. Connexion directe avec l'email
+      console.log("3. Tentative connexion avec email:", profile.email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email: profile.email,
         password: password,
       });
+
+      console.log("4. Résultat connexion:", { data, error });
 
       if (error) {
         console.error("Erreur de connexion:", error);
@@ -64,34 +80,8 @@ const Login = () => {
         return;
       }
 
-      // 3. Vérifier le statut du compte
-      const { data: userProfile, error: userProfileError } = await supabase
-        .from('profiles')
-        .select('status')
-        .eq('id', data.user.id)
-        .single();
-
-      if (userProfileError || !userProfile) {
-        await supabase.auth.signOut();
-        toast({
-          title: "Erreur",
-          description: "Erreur lors de la vérification du compte",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (userProfile.status === 'inactive') {
-        await supabase.auth.signOut();
-        toast({
-          title: "Compte inactif",
-          description: "Votre compte a été désactivé. Veuillez contacter l'administrateur.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // 4. Redirection vers le dashboard
+      // 3. Si tout est ok, redirection vers le dashboard
+      console.log("5. Connexion réussie, redirection...");
       navigate("/dashboard");
 
     } catch (error: any) {
