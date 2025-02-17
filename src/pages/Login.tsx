@@ -11,7 +11,7 @@ import { DollarSign } from "lucide-react";
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
-  const [identifier, setIdentifier] = useState(""); // Pour l'email ou le nom d'utilisateur
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -22,55 +22,112 @@ const Login = () => {
 
     try {
       if (isSignUp) {
-        // Pour l'inscription, on utilise toujours l'email
-        const { error } = await supabase.auth.signUp({
+        // Pour l'inscription
+        const { data, error } = await supabase.auth.signUp({
           email: identifier,
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/login`,
           },
         });
+
         if (error) throw error;
 
-        toast({
-          title: "Inscription réussie !",
-          description: "Veuillez vérifier votre email pour confirmer votre compte.",
-        });
+        // Vérifier si l'email a été confirmé immédiatement
+        if (data?.user && !data.user.confirmed_at) {
+          toast({
+            title: "Inscription réussie !",
+            description: "Veuillez vérifier votre email pour confirmer votre compte.",
+          });
+        } else {
+          toast({
+            title: "Compte créé avec succès !",
+            description: "Vous pouvez maintenant vous connecter.",
+          });
+        }
       } else {
-        // Pour la connexion, vérifier si l'identifiant est un email
+        // Pour la connexion
         const isEmail = identifier.includes('@');
-        
         let email = identifier;
+
         if (!isEmail) {
-          // Si ce n'est pas un email, chercher l'utilisateur par son nom d'utilisateur
-          const { data: profile, error } = await supabase
+          // Recherche par nom d'utilisateur
+          const { data: profile, error: profileError } = await supabase
             .from('profiles')
-            .select('email')
+            .select('email, status')
             .eq('username', identifier)
             .maybeSingle();
 
-          if (error || !profile) {
+          if (profileError) {
+            throw new Error("Erreur lors de la recherche de l'utilisateur");
+          }
+
+          if (!profile) {
             toast({
               title: "Erreur",
-              description: "Nom d'utilisateur ou mot de passe incorrect",
+              description: "Nom d'utilisateur introuvable",
               variant: "destructive",
             });
-            setIsLoading(false);
             return;
           }
+
+          if (profile.status === 'inactive') {
+            toast({
+              title: "Compte inactif",
+              description: "Votre compte a été désactivé. Veuillez contacter l'administrateur.",
+              variant: "destructive",
+            });
+            return;
+          }
+
           email = profile.email;
         }
 
-        const { error } = await supabase.auth.signInWithPassword({
+        // Tentative de connexion
+        const { error: signInError, data } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
 
-        if (error) throw error;
-        
+        if (signInError) {
+          if (signInError.message.includes("Email not confirmed")) {
+            toast({
+              title: "Email non confirmé",
+              description: "Veuillez confirmer votre email avant de vous connecter.",
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "Erreur de connexion",
+              description: "Email ou mot de passe incorrect",
+              variant: "destructive",
+            });
+          }
+          return;
+        }
+
+        // Si la connexion réussit, vérifier le statut du profil
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('status')
+          .eq('id', data.user.id)
+          .single();
+
+        if (profile?.status === 'inactive') {
+          await supabase.auth.signOut();
+          toast({
+            title: "Compte inactif",
+            description: "Votre compte a été désactivé. Veuillez contacter l'administrateur.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        // Tout est bon, rediriger vers le dashboard
         navigate("/dashboard");
       }
     } catch (error: any) {
+      console.error("Erreur d'authentification:", error);
       toast({
         title: "Erreur",
         description: error.message || "Une erreur est survenue",
