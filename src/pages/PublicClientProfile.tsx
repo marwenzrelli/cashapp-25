@@ -47,27 +47,46 @@ const PublicClientProfile = () => {
 
         // Récupérer toutes les opérations
         const clientFullName = `${clientData.prenom} ${clientData.nom}`;
+        console.log("Recherche des opérations pour:", clientFullName);
 
         // Récupérer les versements
-        const { data: deposits } = await supabase
+        const { data: deposits, error: depositsError } = await supabase
           .from('deposits')
           .select('*')
           .eq('client_name', clientFullName)
           .order('operation_date', { ascending: false });
 
+        if (depositsError) {
+          console.error("Erreur lors de la récupération des versements:", depositsError);
+        } else {
+          console.log("Versements trouvés:", deposits?.length);
+        }
+
         // Récupérer les retraits
-        const { data: withdrawals } = await supabase
+        const { data: withdrawals, error: withdrawalsError } = await supabase
           .from('withdrawals')
           .select('*')
           .eq('client_name', clientFullName)
           .order('operation_date', { ascending: false });
 
+        if (withdrawalsError) {
+          console.error("Erreur lors de la récupération des retraits:", withdrawalsError);
+        } else {
+          console.log("Retraits trouvés:", withdrawals?.length);
+        }
+
         // Récupérer les virements
-        const { data: transfers } = await supabase
+        const { data: transfers, error: transfersError } = await supabase
           .from('transfers')
           .select('*')
           .or(`from_client.eq.${clientFullName},to_client.eq.${clientFullName}`)
           .order('operation_date', { ascending: false });
+
+        if (transfersError) {
+          console.error("Erreur lors de la récupération des virements:", transfersError);
+        } else {
+          console.log("Virements trouvés:", transfers?.length);
+        }
 
         // Transformer les données en format unifié
         const allOperations: Operation[] = [
@@ -92,14 +111,16 @@ const PublicClientProfile = () => {
             type: "transfer",
             amount: t.amount,
             date: t.operation_date,
-            description: t.reason,
+            description: t.reason || "Virement",
             fromClient: t.from_client,
             toClient: t.to_client
           }))
         ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
+        console.log("Nombre total d'opérations:", allOperations.length);
         setOperations(allOperations);
       } catch (err) {
+        console.error("Erreur complète:", err);
         setError(err instanceof Error ? err.message : "Une erreur est survenue");
       } finally {
         setIsLoading(false);
