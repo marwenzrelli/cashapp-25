@@ -1,7 +1,6 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from "recharts";
-import { ArrowUpCircle, ArrowDownCircle, RefreshCcw, TrendingUp, Users, AlertCircle, Sparkles } from "lucide-react";
+import { ArrowUpCircle, ArrowDownCircle, RefreshCcw, TrendingUp, Users, AlertCircle, Sparkles, Send, ArrowLeftRight, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { EditProfileDialog } from "@/features/profile/EditProfileDialog";
@@ -16,6 +15,9 @@ interface DashboardStats {
   total_withdrawals: number;
   client_count: number;
   transfer_count: number;
+  total_balance: number;
+  sent_transfers: number;
+  received_transfers: number;
   monthly_stats: any[];
 }
 
@@ -27,6 +29,9 @@ const Dashboard = () => {
     total_withdrawals: 0,
     client_count: 0,
     transfer_count: 0,
+    total_balance: 0,
+    sent_transfers: 0,
+    received_transfers: 0,
     monthly_stats: []
   });
   const [isLoading, setIsLoading] = useState(true);
@@ -35,7 +40,6 @@ const Dashboard = () => {
 
   const fetchStats = async () => {
     try {
-      // Récupérer le total des versements
       const { data: deposits, error: depositsError } = await supabase
         .from('deposits')
         .select('amount')
@@ -43,7 +47,6 @@ const Dashboard = () => {
 
       if (depositsError) throw depositsError;
 
-      // Récupérer le total des retraits
       const { data: withdrawals, error: withdrawalsError } = await supabase
         .from('withdrawals')
         .select('amount')
@@ -51,7 +54,6 @@ const Dashboard = () => {
 
       if (withdrawalsError) throw withdrawalsError;
 
-      // Récupérer le nombre de clients actifs
       const { count: clientCount, error: clientsError } = await supabase
         .from('clients')
         .select('*', { count: 'exact' })
@@ -59,7 +61,6 @@ const Dashboard = () => {
 
       if (clientsError) throw clientsError;
 
-      // Récupérer les statistiques mensuelles
       const { data: monthlyStats, error: statsError } = await supabase
         .from('operation_statistics')
         .select('*')
@@ -68,15 +69,35 @@ const Dashboard = () => {
 
       if (statsError) throw statsError;
 
+      const { data: balanceData, error: balanceError } = await supabase
+        .from('clients')
+        .select('solde')
+        .eq('status', 'active');
+
+      if (balanceError) throw balanceError;
+
+      const { data: transfers, error: transfersError } = await supabase
+        .from('transfers')
+        .select('amount, from_client, to_client')
+        .eq('status', 'completed');
+
+      if (transfersError) throw transfersError;
+
       const total_deposits = deposits?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
       const total_withdrawals = withdrawals?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
+      const total_balance = balanceData?.reduce((sum, client) => sum + Number(client.solde), 0) || 0;
+      const sent_transfers = transfers?.reduce((sum, t) => sum + Number(t.amount), 0) || 0;
+      const received_transfers = transfers?.reduce((sum, t) => sum + Number(t.amount), 0) || 0;
 
       setStats({
         total_deposits,
         total_withdrawals,
         client_count: clientCount || 0,
         transfer_count: monthlyStats?.[0]?.transfer_count || 0,
-        monthly_stats: monthlyStats || []
+        monthly_stats: monthlyStats || [],
+        total_balance,
+        sent_transfers,
+        received_transfers
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -111,7 +132,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchStats();
-    const interval = setInterval(fetchStats, 30000); // Rafraîchir toutes les 30 secondes
+    const interval = setInterval(fetchStats, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -144,6 +165,51 @@ const Dashboard = () => {
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
+        <Card className="bg-gradient-to-br from-blue-50 to-transparent dark:from-blue-950/20">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Solde Général</CardTitle>
+            <Wallet className="h-4 w-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {stats.total_balance.toLocaleString()} {currency}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Total des soldes clients
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-amber-50 to-transparent dark:from-amber-950/20">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Virements Émis</CardTitle>
+            <Send className="h-4 w-4 text-amber-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {stats.sent_transfers.toLocaleString()} {currency}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Total des virements envoyés
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-purple-50 to-transparent dark:from-purple-950/20">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Virements Reçus</CardTitle>
+            <ArrowLeftRight className="h-4 w-4 text-purple-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {stats.received_transfers.toLocaleString()} {currency}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Total des virements reçus
+            </p>
+          </CardContent>
+        </Card>
+
         <Card className="bg-gradient-to-br from-green-50 to-transparent dark:from-green-950/20">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Total Versements</CardTitle>
