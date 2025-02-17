@@ -20,19 +20,40 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      console.log("Tentative de connexion avec username:", username);
+      const normalizedUsername = username.trim().toLowerCase();
+      console.log("Tentative de connexion avec username normalisé:", normalizedUsername);
       
+      // Afficher tous les profils pour debug
+      const { data: allProfiles, error: allProfilesError } = await supabase
+        .from('profiles')
+        .select('username, email')
+        .eq('status', 'active');
+      
+      console.log("Tous les profils actifs:", allProfiles);
+      console.log("Erreur éventuelle:", allProfilesError);
+
       // 1. D'abord, récupérer l'email associé au nom d'utilisateur
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('email, id')
-        .eq('username', username.trim().toLowerCase()) // Normalisation du nom d'utilisateur
+        .select('email, id, username, status')
+        .eq('username', normalizedUsername)
         .maybeSingle();
 
       console.log("Résultat de la recherche du profil:", { profile, profileError });
 
-      if (profileError || !profile) {
-        console.error("Erreur ou profil non trouvé:", profileError);
+      if (profileError) {
+        console.error("Erreur lors de la recherche du profil:", profileError);
+        setIsLoading(false);
+        toast({
+          title: "Erreur",
+          description: "Erreur lors de la recherche du profil",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!profile) {
+        console.error("Profil non trouvé pour le username:", normalizedUsername);
         setIsLoading(false);
         toast({
           title: "Erreur",
