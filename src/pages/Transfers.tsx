@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { ListFilter } from "lucide-react";
@@ -17,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useClients } from "@/features/clients/hooks/useClients";
 
 const defaultSuggestions: Suggestion[] = [];
 
@@ -34,6 +34,7 @@ const Transfers = () => {
     reason: "",
   });
   const { currency } = useCurrency();
+  const { refreshClientBalance } = useClients();
 
   const fetchTransfers = async () => {
     try {
@@ -118,16 +119,39 @@ const Transfers = () => {
     if (!selectedTransfer) return;
 
     try {
-      const { error } = await supabase
+      const { data: fromClient, error: fromError } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('prenom || \' \' || nom', selectedTransfer.fromClient)
+        .single();
+
+      const { data: toClient, error: toError } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('prenom || \' \' || nom', selectedTransfer.toClient)
+        .single();
+
+      if (fromError || toError) {
+        console.error("Error finding clients:", fromError || toError);
+        toast.error("Erreur lors de la recherche des clients");
+        return;
+      }
+
+      const { error: deleteError } = await supabase
         .from('transfers')
         .delete()
         .eq('id', selectedTransfer.id);
 
-      if (error) {
-        console.error("Error deleting transfer:", error);
+      if (deleteError) {
+        console.error("Error deleting transfer:", deleteError);
         toast.error("Erreur lors de la suppression du virement");
         return;
       }
+
+      await Promise.all([
+        refreshClientBalance(fromClient.id),
+        refreshClientBalance(toClient.id)
+      ]);
 
       setIsDeleteDialogOpen(false);
       toast.success("Virement supprimé avec succès");
