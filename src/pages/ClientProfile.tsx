@@ -1,5 +1,4 @@
-
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Client } from "@/features/clients/types";
@@ -10,9 +9,13 @@ import { OperationCard } from "@/features/operations/components/OperationCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ChevronLeft, User, Phone, Mail, Calendar, Wallet, ArrowUpCircle, ArrowDownCircle, RefreshCcw } from "lucide-react";
+import { ChevronLeft, User, Phone, Mail, Calendar, Wallet, ArrowUpCircle, ArrowDownCircle, RefreshCcw, FileSpreadsheet, FilePdf } from "lucide-react";
 import { toast } from "sonner";
 import { useOperations } from "@/features/operations/hooks/useOperations";
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import html2canvas from 'html2canvas';
 
 const ClientProfile = () => {
   const { id } = useParams();
@@ -20,10 +23,10 @@ const ClientProfile = () => {
   const [client, setClient] = useState<Client | null>(null);
   const { operations } = useOperations();
   const [isLoading, setIsLoading] = useState(true);
+  const qrCodeRef = useRef<HTMLDivElement>(null);
 
   const clientId = id ? Number(id) : null;
 
-  // Filtrer les opérations pour ce client
   const clientOperations = operations.filter(op => {
     if (client) {
       const clientFullName = `${client.prenom} ${client.nom}`;
@@ -74,6 +77,85 @@ const ClientProfile = () => {
       </div>
     );
   }
+
+  const exportToExcel = () => {
+    if (!client || !clientOperations.length) {
+      toast.error("Aucune donnée à exporter");
+      return;
+    }
+
+    const operationsData = clientOperations.map(op => ({
+      'Type': op.type === 'deposit' ? 'Versement' : op.type === 'withdrawal' ? 'Retrait' : 'Virement',
+      'Date': format(new Date(op.date), 'dd/MM/yyyy HH:mm'),
+      'Description': op.description,
+      'Montant': op.amount,
+      'De': op.fromClient,
+      'À': op.toClient || '-'
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(operationsData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Opérations");
+    
+    const clientInfo = [
+      ['Client:', `${client.prenom} ${client.nom}`],
+      ['Solde:', `${client.solde.toLocaleString()} €`],
+      ['Téléphone:', client.telephone],
+      ['Email:', client.email],
+      ['Date de création:', format(new Date(client.date_creation || ''), 'dd/MM/yyyy')]
+    ];
+    
+    const wsClient = XLSX.utils.aoa_to_sheet(clientInfo);
+    XLSX.utils.book_append_sheet(wb, wsClient, "Informations Client");
+
+    XLSX.writeFile(wb, `operations_${client.prenom}_${client.nom}.xlsx`);
+    toast.success("Export Excel réussi");
+  };
+
+  const exportToPDF = async () => {
+    if (!client || !clientOperations.length) {
+      toast.error("Aucune donnée à exporter");
+      return;
+    }
+
+    const doc = new jsPDF();
+    
+    doc.setFontSize(20);
+    doc.text(`Profil de ${client.prenom} ${client.nom}`, 15, 15);
+    
+    doc.setFontSize(12);
+    doc.text(`Solde: ${client.solde.toLocaleString()} €`, 15, 25);
+    doc.text(`Téléphone: ${client.telephone}`, 15, 32);
+    doc.text(`Email: ${client.email}`, 15, 39);
+    doc.text(`Date de création: ${format(new Date(client.date_creation || ''), 'dd/MM/yyyy')}`, 15, 46);
+
+    if (qrCodeRef.current) {
+      const canvas = await html2canvas(qrCodeRef.current);
+      const imgData = canvas.toDataURL('image/png');
+      doc.addImage(imgData, 'PNG', 150, 15, 40, 40);
+    }
+
+    const operationsData = clientOperations.map(op => [
+      op.type === 'deposit' ? 'Versement' : op.type === 'withdrawal' ? 'Retrait' : 'Virement',
+      format(new Date(op.date), 'dd/MM/yyyy HH:mm'),
+      op.description,
+      `${op.amount.toLocaleString()} €`,
+      op.fromClient,
+      op.toClient || '-'
+    ]);
+
+    autoTable(doc, {
+      startY: 60,
+      head: [['Type', 'Date', 'Description', 'Montant', 'De', 'À']],
+      body: operationsData,
+      theme: 'grid',
+      styles: { fontSize: 8, cellPadding: 1 },
+      headStyles: { fillColor: [63, 63, 70] }
+    });
+
+    doc.save(`profil_${client.prenom}_${client.nom}.pdf`);
+    toast.success("Export PDF réussi");
+  };
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -162,7 +244,7 @@ const ClientProfile = () => {
                       key={operation.id}
                       operation={{
                         ...operation,
-                        id: operation.id.slice(-6) // Prendre uniquement les 6 derniers caractères
+                        id: operation.id.slice(-6)
                       }}
                       onEdit={() => {}}
                       onDelete={() => {}}
@@ -229,8 +311,26 @@ const ClientProfile = () => {
               <p className="text-sm text-muted-foreground mt-2">
                 Mis à jour le {format(new Date(), 'dd/MM/yyyy HH:mm')}
               </p>
-              <div className="mt-6">
+              <div className="mt-6" ref={qrCodeRef}>
                 <ClientQRCode clientId={clientId} clientName={`${client.prenom} ${client.nom}`} />
+              </div>
+              <div className="flex gap-2 mt-4">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={exportToExcel}
+                >
+                  <FileSpreadsheet className="h-4 w-4 mr-2" />
+                  Export Excel
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={exportToPDF}
+                >
+                  <FilePdf className="h-4 w-4 mr-2" />
+                  Export PDF
+                </Button>
               </div>
             </CardContent>
           </Card>
