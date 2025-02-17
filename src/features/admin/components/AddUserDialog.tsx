@@ -17,6 +17,7 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
   const [newUser, setNewUser] = useState({
     fullName: "",
     username: "",
+    password: "",
     role: "cashier" as UserRole,
   });
 
@@ -34,7 +35,7 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
   };
 
   const handleSubmit = () => {
-    if (!newUser.fullName || !newUser.username) {
+    if (!newUser.fullName || !newUser.username || !newUser.password) {
       toast.error("Veuillez remplir tous les champs obligatoires");
       return;
     }
@@ -45,10 +46,16 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
       return;
     }
 
+    // Validation du mot de passe (au moins 8 caractères)
+    if (newUser.password.length < 8) {
+      toast.error("Le mot de passe doit contenir au moins 8 caractères");
+      return;
+    }
+
     const user: SystemUser = {
       id: Math.random().toString(36).substr(2, 9),
       ...newUser,
-      email: `${newUser.username}@system.local`, // Email généré automatiquement
+      email: `${newUser.username}@system.local`,
       department: getDepartmentByRole(newUser.role),
       status: "active",
       permissions: [],
@@ -59,6 +66,7 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
     setNewUser({
       fullName: "",
       username: "",
+      password: "",
       role: "cashier",
     });
   };
@@ -69,7 +77,7 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
         <DialogHeader>
           <DialogTitle>Ajouter un utilisateur</DialogTitle>
           <DialogDescription>
-            Créez un nouvel utilisateur du système avec son nom d'utilisateur
+            Créez un nouvel utilisateur du système avec son nom d'utilisateur et mot de passe
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
@@ -96,6 +104,18 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
             <p className="text-sm text-muted-foreground">
               Lettres, chiffres, tirets et underscores uniquement (3-20 caractères)
             </p>
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="password">Mot de passe</label>
+            <Input
+              id="password"
+              type="password"
+              value={newUser.password}
+              onChange={(e) =>
+                setNewUser({ ...newUser, password: e.target.value })
+              }
+              placeholder="Minimum 8 caractères"
+            />
           </div>
           <div className="space-y-2">
             <label>Rôle</label>

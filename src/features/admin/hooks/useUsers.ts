@@ -61,13 +61,11 @@ export function useUsers() {
     toast.success("Statut de l'utilisateur mis à jour");
   };
 
-  const addUser = async (user: SystemUser) => {
+  const addUser = async (user: SystemUser & { password: string }) => {
     try {
-      const tempPassword = 'temp-' + Math.random().toString(36).slice(-8);
-      
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: user.email,
-        password: tempPassword,
+        password: user.password,
         options: {
           data: {
             full_name: user.fullName,
@@ -84,15 +82,7 @@ export function useUsers() {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       if (data.user) {
-        toast.success(
-          `Utilisateur créé avec succès\n` +
-          `Nom d'utilisateur: ${user.username}\n` +
-          `Mot de passe temporaire: ${tempPassword}\n\n` +
-          `Veuillez communiquer ces informations à l'utilisateur de manière sécurisée.`, 
-          {
-            duration: 10000,
-          }
-        );
+        toast.success("Utilisateur créé avec succès");
       }
 
       await fetchUsers();
