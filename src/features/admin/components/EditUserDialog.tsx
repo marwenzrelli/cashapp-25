@@ -29,23 +29,7 @@ export const EditUserDialog = ({ isOpen, onClose, user, onUpdateUser }: EditUser
         return;
       }
 
-      if (!editedUser.currentPassword) {
-        toast.error("Veuillez saisir votre mot de passe actuel");
-        return;
-      }
-
-      // Vérifier d'abord que le mot de passe actuel est correct
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: editedUser.currentPassword
-      });
-
-      if (signInError) {
-        toast.error("Le mot de passe actuel est incorrect");
-        return;
-      }
-
-      // Mettre à jour le mot de passe
+      // Mettre à jour le mot de passe sans vérification de l'ancien pour les superviseurs
       const { error: passwordError } = await supabase.auth.updateUser({
         password: editedUser.password
       });
@@ -73,6 +57,7 @@ export const EditUserDialog = ({ isOpen, onClose, user, onUpdateUser }: EditUser
     onUpdateUser(updatedUser);
     setEditedUser(prev => ({ ...prev, password: '', currentPassword: '' }));
     toast.success("Utilisateur mis à jour avec succès");
+    onClose(); // Fermer la modal après la mise à jour
   };
 
   const getDepartmentByRole = (role: UserRole): string => {
@@ -127,17 +112,6 @@ export const EditUserDialog = ({ isOpen, onClose, user, onUpdateUser }: EditUser
               value={editedUser.email || user.email}
               onChange={(e) =>
                 setEditedUser({ ...editedUser, email: e.target.value })
-              }
-            />
-          </div>
-          <div className="space-y-2">
-            <label>Mot de passe actuel</label>
-            <Input
-              type="password"
-              placeholder="Entrez le mot de passe actuel"
-              value={editedUser.currentPassword || ""}
-              onChange={(e) =>
-                setEditedUser({ ...editedUser, currentPassword: e.target.value })
               }
             />
           </div>
