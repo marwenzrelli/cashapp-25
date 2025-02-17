@@ -17,10 +17,7 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
   const [newUser, setNewUser] = useState({
     fullName: "",
     email: "",
-    login: "",
     role: "cashier" as UserRole,
-    password: "",
-    confirmPassword: "",
   });
 
   const getDepartmentByRole = (role: UserRole): string => {
@@ -37,13 +34,13 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
   };
 
   const handleSubmit = () => {
-    if (newUser.password !== newUser.confirmPassword) {
-      toast.error("Les mots de passe ne correspondent pas");
+    if (!newUser.fullName || !newUser.email) {
+      toast.error("Veuillez remplir tous les champs obligatoires");
       return;
     }
 
-    if (newUser.password.length < 8) {
-      toast.error("Le mot de passe doit contenir au moins 8 caractères");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newUser.email)) {
+      toast.error("Veuillez entrer une adresse email valide");
       return;
     }
 
@@ -57,14 +54,10 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
     };
 
     onAddUser(user);
-    onClose();
     setNewUser({
       fullName: "",
       email: "",
-      login: "",
       role: "cashier",
-      password: "",
-      confirmPassword: "",
     });
   };
 
@@ -89,16 +82,6 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
             />
           </div>
           <div className="space-y-2">
-            <label htmlFor="login">Login</label>
-            <Input
-              id="login"
-              value={newUser.login}
-              onChange={(e) =>
-                setNewUser({ ...newUser, login: e.target.value })
-              }
-            />
-          </div>
-          <div className="space-y-2">
             <label htmlFor="email">Email</label>
             <Input
               id="email"
@@ -106,29 +89,6 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
               value={newUser.email}
               onChange={(e) =>
                 setNewUser({ ...newUser, email: e.target.value })
-              }
-            />
-          </div>
-          <div className="space-y-2">
-            <label htmlFor="password">Mot de passe</label>
-            <Input
-              id="password"
-              type="password"
-              value={newUser.password}
-              onChange={(e) =>
-                setNewUser({ ...newUser, password: e.target.value })
-              }
-              placeholder="Minimum 8 caractères"
-            />
-          </div>
-          <div className="space-y-2">
-            <label htmlFor="confirmPassword">Confirmer le mot de passe</label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              value={newUser.confirmPassword}
-              onChange={(e) =>
-                setNewUser({ ...newUser, confirmPassword: e.target.value })
               }
             />
           </div>

@@ -63,10 +63,11 @@ export function useUsers() {
 
   const addUser = async (user: SystemUser) => {
     try {
-      // 1. Créer l'utilisateur dans auth.users
+      const tempPassword = 'temp-' + Math.random().toString(36).slice(-8);
+      
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: user.email,
-        password: 'temp-' + Math.random().toString(36).slice(-8),
+        password: tempPassword,
         options: {
           data: {
             full_name: user.fullName,
@@ -78,23 +79,16 @@ export function useUsers() {
 
       if (signUpError) throw signUpError;
 
-      // 2. Attendre que le trigger crée le profil
+      // Attendre que le trigger crée le profil
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // 3. Mettre à jour les informations additionnelles du profil
       if (data.user) {
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({
-            department: user.department,
-          })
-          .eq('id', data.user.id);
-
-        if (updateError) throw updateError;
+        toast.success(`Utilisateur créé avec succès. \nMot de passe temporaire: ${tempPassword}\nVeuillez communiquer ce mot de passe à l'utilisateur de manière sécurisée.`, {
+          duration: 10000, // Afficher plus longtemps pour que l'admin puisse noter le mot de passe
+        });
       }
 
       await fetchUsers();
-      toast.success("Utilisateur créé avec succès");
     } catch (error: any) {
       toast.error("Erreur lors de la création de l'utilisateur: " + error.message);
     }
