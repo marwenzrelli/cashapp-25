@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { ListFilter } from "lucide-react";
 import { TransferForm } from "@/features/transfers/components/TransferForm";
@@ -9,6 +9,7 @@ import { EditTransferDialog } from "@/features/transfers/components/EditTransfer
 import { DeleteTransferDialog } from "@/features/transfers/components/DeleteTransferDialog";
 import { type Transfer, type Suggestion, type EditFormData } from "@/features/transfers/types";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Select,
   SelectContent,
@@ -18,10 +19,9 @@ import {
 } from "@/components/ui/select";
 
 const defaultSuggestions: Suggestion[] = [];
-const defaultTransfers: Transfer[] = [];
 
 const Transfers = () => {
-  const [transfers, setTransfers] = useState<Transfer[]>(defaultTransfers);
+  const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTransfer, setSelectedTransfer] = useState<Transfer | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -34,6 +34,40 @@ const Transfers = () => {
     reason: "",
   });
   const { currency } = useCurrency();
+
+  const fetchTransfers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('transfers')
+        .select('*')
+        .order('operation_date', { ascending: false });
+
+      if (error) {
+        console.error("Error fetching transfers:", error);
+        toast.error("Erreur lors du chargement des virements");
+        return;
+      }
+
+      if (data) {
+        const formattedTransfers: Transfer[] = data.map(transfer => ({
+          id: transfer.id,
+          fromClient: transfer.from_client,
+          toClient: transfer.to_client,
+          amount: transfer.amount,
+          date: new Date(transfer.operation_date).toLocaleDateString(),
+          reason: transfer.reason
+        }));
+        setTransfers(formattedTransfers);
+      }
+    } catch (error) {
+      console.error("Error in fetchTransfers:", error);
+      toast.error("Une erreur est survenue");
+    }
+  };
+
+  useEffect(() => {
+    fetchTransfers();
+  }, []);
 
   const handleEdit = (transfer: Transfer) => {
     setSelectedTransfer(transfer);
@@ -51,36 +85,57 @@ const Transfers = () => {
     setIsDeleteDialogOpen(true);
   };
 
-  const confirmEdit = () => {
+  const confirmEdit = async () => {
     if (!selectedTransfer) return;
 
-    setTransfers((prev) =>
-      prev.map((transfer) =>
-        transfer.id === selectedTransfer.id
-          ? {
-              ...transfer,
-              fromClient: editForm.fromClient,
-              toClient: editForm.toClient,
-              amount: parseFloat(editForm.amount),
-              reason: editForm.reason,
-            }
-          : transfer
-      )
-    );
+    try {
+      const { error } = await supabase
+        .from('transfers')
+        .update({
+          from_client: editForm.fromClient,
+          to_client: editForm.toClient,
+          amount: parseFloat(editForm.amount),
+          reason: editForm.reason
+        })
+        .eq('id', selectedTransfer.id);
 
-    setIsEditDialogOpen(false);
-    toast.success("Virement modifié avec succès");
+      if (error) {
+        console.error("Error updating transfer:", error);
+        toast.error("Erreur lors de la modification du virement");
+        return;
+      }
+
+      setIsEditDialogOpen(false);
+      toast.success("Virement modifié avec succès");
+      fetchTransfers(); // Refresh the list
+    } catch (error) {
+      console.error("Error in confirmEdit:", error);
+      toast.error("Une erreur est survenue");
+    }
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!selectedTransfer) return;
 
-    setTransfers((prev) =>
-      prev.filter((transfer) => transfer.id !== selectedTransfer.id)
-    );
+    try {
+      const { error } = await supabase
+        .from('transfers')
+        .delete()
+        .eq('id', selectedTransfer.id);
 
-    setIsDeleteDialogOpen(false);
-    toast.success("Virement supprimé avec succès");
+      if (error) {
+        console.error("Error deleting transfer:", error);
+        toast.error("Erreur lors de la suppression du virement");
+        return;
+      }
+
+      setIsDeleteDialogOpen(false);
+      toast.success("Virement supprimé avec succès");
+      fetchTransfers(); // Refresh the list
+    } catch (error) {
+      console.error("Error in confirmDelete:", error);
+      toast.error("Une erreur est survenue");
+    }
   };
 
   const applySuggestion = (suggestion: Suggestion) => {
@@ -104,7 +159,7 @@ const Transfers = () => {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <TransferForm onSuccess={() => {}} />
+        <TransferForm onSuccess={fetchTransfers} />
         <TransferSuggestions
           suggestions={defaultSuggestions}
           onApply={applySuggestion}
