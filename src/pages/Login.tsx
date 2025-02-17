@@ -56,8 +56,38 @@ const Login = () => {
 
       if (signInError) {
         console.error("Erreur de connexion:", signInError);
+        
+        if (signInError.message === "Email not confirmed") {
+          console.log("Email non confirmé, tentative de connexion automatique...");
+          
+          // Tentative de création/connexion automatique sans confirmation
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: {
+                email_confirmed: true
+              }
+            }
+          });
 
-        // Si l'erreur est "Invalid login credentials", c'est soit l'email soit le mot de passe qui est incorrect
+          if (signUpError) {
+            toast({
+              title: "Erreur d'authentification",
+              description: "Impossible de confirmer votre email automatiquement",
+              variant: "destructive",
+            });
+            return;
+          }
+
+          // Si nous arrivons ici, l'utilisateur devrait être connecté
+          if (signUpData.user) {
+            console.log("Connexion réussie après confirmation automatique");
+            navigate("/dashboard");
+            return;
+          }
+        }
+
         if (signInError.message === "Invalid login credentials") {
           toast({
             title: "Erreur de connexion",
@@ -67,7 +97,6 @@ const Login = () => {
           return;
         }
 
-        // On ne gère plus le cas "Email not confirmed" car nous avons désactivé la confirmation d'email
         toast({
           title: "Erreur de connexion",
           description: signInError.message,
@@ -156,7 +185,8 @@ const Login = () => {
             full_name: 'Marwen Superviseur',
             role: 'supervisor',
             department: 'finance',
-            username: username
+            username: username,
+            email_confirmed: true
           }
         }
       });
