@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,19 @@ const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Vérifier l'état de la session au chargement
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      console.log("Session actuelle:", session, "Erreur:", error);
+      if (session) {
+        console.log("Utilisateur déjà connecté, redirection...");
+        navigate("/dashboard");
+      }
+    };
+    checkSession();
+  }, [navigate]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -23,40 +36,64 @@ const Login = () => {
       const normalizedEmail = email.trim().toLowerCase();
       console.log("1. Tentative de connexion avec email:", normalizedEmail);
       
+      // Test de connexion avec la session actuelle
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      console.log("Session avant connexion:", currentSession);
+
+      // Tentative de connexion
       const { data, error } = await supabase.auth.signInWithPassword({
         email: normalizedEmail,
         password: password,
       });
 
-      console.log("2. Résultat de la connexion:", { data, error });
+      console.log("2. Résultat complet de la connexion:", {
+        data,
+        error,
+        session: data?.session,
+        user: data?.user
+      });
 
       if (error) {
-        console.error("Erreur de connexion:", error);
+        console.error("Erreur détaillée de connexion:", {
+          message: error.message,
+          status: error.status,
+          name: error.name,
+          stack: error.stack
+        });
         toast({
           title: "Erreur de connexion",
-          description: "Email ou mot de passe incorrect",
+          description: `${error.message}`,
           variant: "destructive",
         });
         return;
       }
 
-      if (!data.user) {
+      if (!data.user || !data.session) {
+        console.error("Données de connexion incomplètes:", { data });
         toast({
           title: "Erreur",
-          description: "Erreur lors de la connexion",
+          description: "Données de connexion incomplètes",
           variant: "destructive",
         });
         return;
       }
 
-      console.log("3. Connexion réussie, redirection...");
+      // Vérification de la session après connexion
+      const { data: { session: newSession } } = await supabase.auth.getSession();
+      console.log("3. Session après connexion réussie:", newSession);
+      
+      console.log("4. Connexion réussie, redirection...");
       navigate("/dashboard");
 
     } catch (error: any) {
-      console.error("Erreur inattendue:", error);
+      console.error("Erreur technique détaillée:", {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
       toast({
-        title: "Erreur",
-        description: "Une erreur inattendue est survenue",
+        title: "Erreur technique",
+        description: error.message || "Une erreur inattendue est survenue",
         variant: "destructive",
       });
     } finally {
