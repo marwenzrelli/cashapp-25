@@ -3,9 +3,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Client } from "@/features/clients/types";
 import { Operation } from "@/features/operations/types";
-import { format } from "date-fns";
+import { format, isWithinInterval, parseISO, startOfDay, endOfDay } from "date-fns";
 import { ClientQRCode } from "@/features/clients/components/ClientQRCode";
 import { OperationCard } from "@/features/operations/components/OperationCard";
+import { OperationFilters } from "@/features/operations/components/OperationFilters";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -24,6 +25,13 @@ const ClientProfile = () => {
   const { operations } = useOperations();
   const [isLoading, setIsLoading] = useState(true);
   const qrCodeRef = useRef<HTMLDivElement>(null);
+  const [selectedType, setSelectedType] = useState<Operation["type"] | "all">("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
+    from: startOfDay(new Date(new Date().setDate(new Date().getDate() - 30))),
+    to: endOfDay(new Date())
+  });
+  const [isCustomRange, setIsCustomRange] = useState(false);
 
   const clientId = id ? Number(id) : null;
 
@@ -34,6 +42,29 @@ const ClientProfile = () => {
     }
     return false;
   });
+
+  const filteredOperations = clientOperations
+    .filter(op => {
+      const operationDate = parseISO(op.date);
+      return isWithinInterval(operationDate, {
+        start: dateRange.from,
+        end: dateRange.to
+      });
+    })
+    .filter(op => {
+      if (selectedType === "all") return true;
+      return op.type === selectedType;
+    })
+    .filter(op => {
+      if (!searchTerm) return true;
+      const searchLower = searchTerm.toLowerCase();
+      return (
+        op.description.toLowerCase().includes(searchLower) ||
+        op.fromClient?.toLowerCase().includes(searchLower) ||
+        op.toClient?.toLowerCase().includes(searchLower) ||
+        op.amount.toString().includes(searchLower)
+      );
+    });
 
   useEffect(() => {
     const fetchClient = async () => {
@@ -348,6 +379,19 @@ const ClientProfile = () => {
               <CardTitle>Historique des opérations</CardTitle>
             </CardHeader>
             <CardContent>
+              <div className="mb-6">
+                <OperationFilters
+                  selectedType={selectedType}
+                  searchTerm={searchTerm}
+                  date={dateRange}
+                  isCustomRange={isCustomRange}
+                  onTypeSelect={setSelectedType}
+                  onSearch={setSearchTerm}
+                  onDateChange={setDateRange}
+                  onCustomRangeChange={setIsCustomRange}
+                />
+              </div>
+
               <Tabs defaultValue="all" className="w-full">
                 <TabsList className="mb-4 flex flex-wrap gap-2">
                   <TabsTrigger value="all" className="flex items-center gap-2">
@@ -376,7 +420,7 @@ const ClientProfile = () => {
                       <div className="text-right">Montant</div>
                       <div>Client</div>
                     </div>
-                    {clientOperations.map((operation) => (
+                    {filteredOperations.map((operation) => (
                       <div key={operation.id} className="grid grid-cols-5 gap-4 p-4 border-t">
                         <div className="flex items-center gap-2">
                           <div className={`w-6 h-6 rounded-full flex items-center justify-center ${getTypeStyle(operation.type)}`}>
@@ -407,7 +451,7 @@ const ClientProfile = () => {
                       <div className="text-right">Montant</div>
                       <div>Client</div>
                     </div>
-                    {clientOperations.filter(op => op.type === "deposit").map((operation) => (
+                    {filteredOperations.filter(op => op.type === "deposit").map((operation) => (
                       <div key={operation.id} className="grid grid-cols-4 gap-4 p-4 border-t">
                         <div>{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</div>
                         <div className="truncate">{operation.description}</div>
@@ -426,7 +470,7 @@ const ClientProfile = () => {
                       <div className="text-right">Montant</div>
                       <div>Client</div>
                     </div>
-                    {clientOperations.filter(op => op.type === "withdrawal").map((operation) => (
+                    {filteredOperations.filter(op => op.type === "withdrawal").map((operation) => (
                       <div key={operation.id} className="grid grid-cols-4 gap-4 p-4 border-t">
                         <div>{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</div>
                         <div className="truncate">{operation.description}</div>
@@ -446,7 +490,7 @@ const ClientProfile = () => {
                       <div>De</div>
                       <div>À</div>
                     </div>
-                    {clientOperations.filter(op => op.type === "transfer").map((operation) => (
+                    {filteredOperations.filter(op => op.type === "transfer").map((operation) => (
                       <div key={operation.id} className="grid grid-cols-5 gap-4 p-4 border-t">
                         <div>{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</div>
                         <div className="truncate">{operation.description}</div>
