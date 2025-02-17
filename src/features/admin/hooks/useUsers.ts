@@ -15,7 +15,7 @@ export function useUsers() {
         .from('profiles')
         .select('*, user_permissions(*)')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (profile) {
         setCurrentUser(mapProfileToSystemUser(profile));
@@ -29,12 +29,15 @@ export function useUsers() {
       .select('*, user_permissions(*)');
 
     if (error) {
+      console.error("Erreur lors du chargement des utilisateurs:", error);
       toast.error("Erreur lors du chargement des utilisateurs");
       return;
     }
 
-    const formattedUsers = profiles.map(mapProfileToSystemUser);
-    setUsers(formattedUsers);
+    if (profiles) {
+      const formattedUsers = profiles.map(mapProfileToSystemUser);
+      setUsers(formattedUsers);
+    }
   };
 
   const deleteUser = async (userId: string) => {
@@ -42,6 +45,7 @@ export function useUsers() {
       .auth.admin.deleteUser(userId);
 
     if (error) {
+      console.error("Erreur lors de la suppression de l'utilisateur:", error);
       toast.error("Erreur lors de la suppression de l'utilisateur");
       return;
     }
@@ -62,6 +66,7 @@ export function useUsers() {
       .eq('id', userId);
 
     if (error) {
+      console.error("Erreur lors de la mise à jour du statut:", error);
       toast.error("Erreur lors de la mise à jour du statut");
       return;
     }
@@ -76,6 +81,18 @@ export function useUsers() {
 
   const addUser = async (user: SystemUser & { password: string }) => {
     try {
+      // Vérifier si l'utilisateur actuel est superviseur
+      const { data: currentProfile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', (await supabase.auth.getUser()).data.user?.id)
+        .single();
+
+      if (!currentProfile || currentProfile.role !== 'supervisor') {
+        toast.error("Seuls les superviseurs peuvent créer des utilisateurs");
+        return;
+      }
+
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: user.email,
         password: user.password,
@@ -96,10 +113,10 @@ export function useUsers() {
 
       if (data.user) {
         toast.success("Utilisateur créé avec succès");
+        await fetchUsers();
       }
-
-      await fetchUsers();
     } catch (error: any) {
+      console.error("Erreur lors de la création de l'utilisateur:", error);
       toast.error("Erreur lors de la création de l'utilisateur: " + error.message);
     }
   };
@@ -116,6 +133,7 @@ export function useUsers() {
       .eq('id', updatedUser.id);
 
     if (error) {
+      console.error("Erreur lors de la mise à jour de l'utilisateur:", error);
       toast.error("Erreur lors de la mise à jour de l'utilisateur");
       return;
     }
@@ -125,10 +143,17 @@ export function useUsers() {
   };
 
   const updatePermissions = async (userId: string, permissions: SystemUser["permissions"]) => {
-    await supabase
+    // Supprimer d'abord toutes les permissions existantes
+    const { error: deleteError } = await supabase
       .from('user_permissions')
       .delete()
       .eq('user_id', userId);
+
+    if (deleteError) {
+      console.error("Erreur lors de la suppression des permissions:", deleteError);
+      toast.error("Erreur lors de la mise à jour des permissions");
+      return;
+    }
 
     if (permissions.length > 0) {
       const { error } = await supabase
@@ -141,6 +166,7 @@ export function useUsers() {
         })));
 
       if (error) {
+        console.error("Erreur lors de l'ajout des permissions:", error);
         toast.error("Erreur lors de la mise à jour des permissions");
         return;
       }

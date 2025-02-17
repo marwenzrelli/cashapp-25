@@ -285,6 +285,12 @@ export type Database = {
         }
         Returns: number
       }
+      get_user_role: {
+        Args: {
+          user_id: string
+        }
+        Returns: Database["public"]["Enums"]["user_role"]
+      }
     }
     Enums: {
       user_role: "supervisor" | "manager" | "cashier"
