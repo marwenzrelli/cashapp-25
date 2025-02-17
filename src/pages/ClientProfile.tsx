@@ -20,6 +20,8 @@ const ClientProfile = () => {
   const { operations } = useOperations();
   const [isLoading, setIsLoading] = useState(true);
 
+  const clientId = id ? Number(id) : null;
+
   const clientOperations = operations.filter(op => {
     if (client) {
       const clientFullName = `${client.prenom} ${client.nom}`;
@@ -31,11 +33,11 @@ const ClientProfile = () => {
   useEffect(() => {
     const fetchClient = async () => {
       try {
-        if (!id) return;
+        if (!clientId) return;
         const { data, error } = await supabase
           .from('clients')
           .select('*')
-          .eq('id', id)
+          .eq('id', clientId)
           .single();
 
         if (error) throw error;
@@ -49,7 +51,7 @@ const ClientProfile = () => {
     };
 
     fetchClient();
-  }, [id]);
+  }, [clientId]);
 
   if (isLoading) {
     return (
@@ -59,7 +61,7 @@ const ClientProfile = () => {
     );
   }
 
-  if (!client) {
+  if (!client || !clientId) {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)]">
         <h2 className="text-2xl font-bold mb-4">Client non trouvé</h2>
@@ -84,7 +86,7 @@ const ClientProfile = () => {
             Détails et historique des opérations
           </p>
         </div>
-        <ClientQRCode clientId={parseInt(id!)} clientName={`${client.prenom} ${client.nom}`} />
+        <ClientQRCode clientId={clientId} clientName={`${client.prenom} ${client.nom}`} />
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
