@@ -76,57 +76,46 @@ export type Database = {
           operation_date?: string
           status?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "deposits_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       profiles: {
         Row: {
           avatar_url: string | null
           created_at: string
-          currency: string
           department: string
           email: string
           full_name: string
           id: string
           last_login: string | null
           phone: string | null
-          role: string
-          status: string
+          role: Database["public"]["Enums"]["user_role"]
+          status: Database["public"]["Enums"]["user_status"]
           username: string | null
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
-          currency?: string
-          department: string
+          department?: string
           email: string
           full_name: string
           id: string
           last_login?: string | null
           phone?: string | null
-          role: string
-          status?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          status?: Database["public"]["Enums"]["user_status"]
           username?: string | null
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
-          currency?: string
           department?: string
           email?: string
           full_name?: string
           id?: string
           last_login?: string | null
           phone?: string | null
-          role?: string
-          status?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          status?: Database["public"]["Enums"]["user_status"]
           username?: string | null
         }
         Relationships: []
@@ -204,15 +193,7 @@ export type Database = {
           status?: string
           to_client?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "transfers_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       user_permissions: {
         Row: {
@@ -280,15 +261,7 @@ export type Database = {
           operation_date?: string
           status?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "withdrawals_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Views: {
@@ -314,7 +287,8 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      user_role: "supervisor" | "manager" | "cashier"
+      user_status: "active" | "inactive"
     }
     CompositeTypes: {
       [_ in never]: never

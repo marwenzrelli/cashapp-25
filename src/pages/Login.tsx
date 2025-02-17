@@ -43,13 +43,13 @@ const Login = () => {
         let email = identifier;
         if (!isEmail) {
           // Si ce n'est pas un email, chercher l'utilisateur par son nom d'utilisateur
-          const { data: profiles, error } = await supabase
+          const { data: profile, error } = await supabase
             .from('profiles')
             .select('email')
             .eq('username', identifier)
-            .single();
+            .maybeSingle();
 
-          if (error || !profiles) {
+          if (error || !profile) {
             toast({
               title: "Erreur",
               description: "Nom d'utilisateur ou mot de passe incorrect",
@@ -58,7 +58,7 @@ const Login = () => {
             setIsLoading(false);
             return;
           }
-          email = profiles.email;
+          email = profile.email;
         }
 
         const { error } = await supabase.auth.signInWithPassword({
