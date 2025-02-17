@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
@@ -25,7 +24,7 @@ const Deposits = () => {
     notes: ""
   });
   
-  const { deposits, createDeposit, deleteDeposit } = useDeposits();
+  const { deposits, createDeposit, deleteDeposit, updateDeposit } = useDeposits();
 
   const handleDelete = (deposit: Deposit) => {
     setSelectedDeposit(deposit);
@@ -61,11 +60,21 @@ const Deposits = () => {
   };
 
   const handleConfirmEdit = async () => {
-    // TODO: Implémenter la mise à jour du versement
-    setIsEditDialogOpen(false);
-    toast.success("Versement mis à jour", {
-      description: `Le versement a été modifié avec succès.`
-    });
+    if (!selectedDeposit) return;
+
+    const updates = {
+      client_name: editForm.clientName,
+      amount: Number(editForm.amount),
+      notes: editForm.notes
+    };
+
+    const success = await updateDeposit(selectedDeposit.id, updates);
+    if (success) {
+      setIsEditDialogOpen(false);
+      toast.success("Versement mis à jour", {
+        description: `Le versement a été modifié avec succès.`
+      });
+    }
   };
 
   const handleCreateDeposit = async (deposit: Deposit) => {
