@@ -1,11 +1,11 @@
 
 import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Filter, Search, ListFilter } from "lucide-react";
+import { Search, ListFilter } from "lucide-react";
 import { toast } from "sonner";
 import { format, isWithinInterval, parseISO, subDays, startOfDay, endOfDay } from "date-fns";
+import { useOperations } from "@/features/operations/hooks/useOperations";
 import { Operation } from "@/features/operations/types";
-import { mockOperations } from "@/features/operations/data/mock-operations";
 import { OperationCard } from "@/features/operations/components/OperationCard";
 import { OperationFilters } from "@/features/operations/components/OperationFilters";
 import { EditOperationDialog } from "@/features/operations/components/EditOperationDialog";
@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 
 const Operations = () => {
+  const { operations, isLoading } = useOperations();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState<Operation["type"] | "all">("all");
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -30,7 +31,6 @@ const Operations = () => {
     to: new Date(),
   });
   const [isCustomRange, setIsCustomRange] = useState(false);
-  const [operations, setOperations] = useState<Operation[]>(mockOperations);
 
   const handleEdit = (operation: Operation) => {
     setSelectedOperation(operation);
@@ -44,19 +44,14 @@ const Operations = () => {
 
   const handleConfirmEdit = () => {
     if (!selectedOperation) return;
-    
-    setOperations(prev => prev.map(op => 
-      op.id === selectedOperation.id ? selectedOperation : op
-    ));
-    
+    // À implémenter selon le type d'opération
     setIsEditDialogOpen(false);
     toast.success("Opération modifiée avec succès");
   };
 
   const handleConfirmDelete = () => {
     if (!selectedOperation) return;
-    
-    setOperations(prev => prev.filter(op => op.id !== selectedOperation.id));
+    // À implémenter selon le type d'opération
     setIsDeleteDialogOpen(false);
     toast.success("Opération supprimée avec succès");
   };
@@ -80,6 +75,14 @@ const Operations = () => {
 
   const visibleOperations = filteredOperations.slice(0, parseInt(itemsPerPage));
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 animate-in">
       <div>
@@ -93,7 +96,7 @@ const Operations = () => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5 text-primary" />
+              <Search className="h-5 w-5 text-primary" />
               Filtres de recherche
             </CardTitle>
             <div className="flex items-center gap-4">

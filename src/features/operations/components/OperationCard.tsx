@@ -56,7 +56,7 @@ export const OperationCard = ({ operation, onEdit, onDelete }: OperationCardProp
           <div className="space-y-1">
             <p className="font-medium">{operation.description}</p>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>{operation.date}</span>
+              <span>{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</span>
               {operation.type === "transfer" ? (
                 <>
                   <span>•</span>
