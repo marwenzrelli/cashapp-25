@@ -303,8 +303,8 @@ const PublicClientProfile = () => {
                         <OperationCard
                           key={operation.id}
                           operation={operation}
-                          onEdit={() => {}}
-                          onDelete={() => {}}
+                          onEdit={undefined}
+                          onDelete={undefined}
                         />
                       ))}
                       {operations.length === 0 && (
@@ -319,8 +319,8 @@ const PublicClientProfile = () => {
                         <OperationCard
                           key={operation.id}
                           operation={operation}
-                          onEdit={() => {}}
-                          onDelete={() => {}}
+                          onEdit={undefined}
+                          onDelete={undefined}
                         />
                       ))}
                       {operations.filter(op => op.type === "deposit").length === 0 && (
@@ -335,8 +335,8 @@ const PublicClientProfile = () => {
                         <OperationCard
                           key={operation.id}
                           operation={operation}
-                          onEdit={() => {}}
-                          onDelete={() => {}}
+                          onEdit={undefined}
+                          onDelete={undefined}
                         />
                       ))}
                       {operations.filter(op => op.type === "withdrawal").length === 0 && (
@@ -351,8 +351,8 @@ const PublicClientProfile = () => {
                         <OperationCard
                           key={operation.id}
                           operation={operation}
-                          onEdit={() => {}}
-                          onDelete={() => {}}
+                          onEdit={undefined}
+                          onDelete={undefined}
                         />
                       ))}
                       {operations.filter(op => op.type === "transfer").length === 0 && (
