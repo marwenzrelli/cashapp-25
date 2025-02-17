@@ -62,13 +62,15 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
 
     const user: SystemUser = {
       id: Math.random().toString(36).substr(2, 9),
-      ...newUser,
+      email: newUser.email,
+      username: newUser.username,
+      fullName: newUser.fullName,
+      role: newUser.role,
       department: getDepartmentByRole(newUser.role),
       status: "active",
       permissions: [],
       createdAt: new Date().toISOString(),
-      lastLogin: null,
-      password: newUser.password // Ce champ sera géré par Supabase
+      lastLogin: null
     };
 
     onAddUser(user);
