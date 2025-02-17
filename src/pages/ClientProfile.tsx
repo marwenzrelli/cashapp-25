@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -85,7 +84,7 @@ const ClientProfile = () => {
             Détails et historique des opérations
           </p>
         </div>
-        <ClientQRCode clientId={client.id} clientName={`${client.prenom} ${client.nom}`} />
+        <ClientQRCode clientId={parseInt(id!)} clientName={`${client.prenom} ${client.nom}`} />
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
