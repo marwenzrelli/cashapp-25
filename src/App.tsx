@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Clients from "./pages/Clients";
+import ClientProfile from "./pages/ClientProfile";
 import Deposits from "./pages/Deposits";
 import Withdrawals from "./pages/Withdrawals";
 import Transfers from "./pages/Transfers";
@@ -47,7 +48,7 @@ function App() {
   }, []);
 
   if (isLoading) {
-    return null; // ou un composant de chargement si vous préférez
+    return null;
   }
 
   return (
@@ -63,6 +64,7 @@ function App() {
               <Route element={<Layout />}>
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/clients" element={<Clients />} />
+                <Route path="/clients/:id" element={<ClientProfile />} />
                 <Route path="/deposits" element={<Deposits />} />
                 <Route path="/withdrawals" element={<Withdrawals />} />
                 <Route path="/transfers" element={<Transfers />} />
