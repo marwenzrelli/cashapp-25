@@ -1,4 +1,3 @@
-
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, Area, AreaChart } from "recharts";
 import { 
@@ -8,18 +7,25 @@ import {
 } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useDeposits } from "@/features/deposits/hooks/useDeposits";
+import { useTransfersList } from "@/features/transfers/hooks/useTransfersList";
 import { cn } from "@/lib/utils";
 import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
 import { fr } from "date-fns/locale";
 
 const Statistics = () => {
   const { deposits, isLoading } = useDeposits();
+  const { transfers } = useTransfersList();
   const { currency } = useCurrency();
 
   // Calculs des totaux
-  const totalDeposits = deposits.reduce((acc, dep) => acc + (dep.amount > 0 ? dep.amount : 0), 0);
-  const totalWithdrawals = deposits.reduce((acc, dep) => acc + (dep.amount < 0 ? Math.abs(dep.amount) : 0), 0);
-  const activeClients = new Set(deposits.map(dep => dep.client_name)).size;
+  const totalDeposits = deposits.reduce((acc, dep) => acc + Math.max(dep.amount, 0), 0);
+  const totalWithdrawals = Math.abs(deposits.reduce((acc, dep) => acc + Math.min(dep.amount, 0), 0));
+  const totalTransfers = transfers.reduce((acc, transfer) => acc + transfer.amount, 0);
+  const activeClients = new Set([
+    ...deposits.map(dep => dep.client_name),
+    ...transfers.map(transfer => transfer.fromClient),
+    ...transfers.map(transfer => transfer.toClient)
+  ]).size;
   const netFlow = totalDeposits - totalWithdrawals;
 
   // Analyse temporelle
@@ -32,6 +38,11 @@ const Statistics = () => {
     new Date(dep.created_at) <= endOfCurrentMonth
   );
 
+  const currentMonthTransfers = transfers.filter(transfer => 
+    new Date(transfer.date) >= startOfCurrentMonth && 
+    new Date(transfer.date) <= endOfCurrentMonth
+  );
+
   const lastMonth = subDays(startOfCurrentMonth, 1);
   const startOfLastMonth = startOfMonth(lastMonth);
   const endOfLastMonth = endOfMonth(lastMonth);
@@ -41,16 +52,36 @@ const Statistics = () => {
     new Date(dep.created_at) <= endOfLastMonth
   );
 
+  const lastMonthTransfers = transfers.filter(transfer => 
+    new Date(transfer.date) >= startOfLastMonth && 
+    new Date(transfer.date) <= endOfLastMonth
+  );
+
   // Calcul des tendances
-  const currentMonthTotal = currentMonthDeposits.reduce((acc, dep) => acc + dep.amount, 0);
-  const lastMonthTotal = lastMonthDeposits.reduce((acc, dep) => acc + dep.amount, 0);
+  const currentMonthTotal = currentMonthDeposits.reduce((acc, dep) => acc + dep.amount, 0) +
+    currentMonthTransfers.reduce((acc, transfer) => acc + transfer.amount, 0);
+  
+  const lastMonthTotal = lastMonthDeposits.reduce((acc, dep) => acc + dep.amount, 0) +
+    lastMonthTransfers.reduce((acc, transfer) => acc + transfer.amount, 0);
+  
   const percentageChange = lastMonthTotal !== 0 
     ? ((currentMonthTotal - lastMonthTotal) / lastMonthTotal) * 100 
     : 0;
 
   // Analyse des transactions par jour
-  const dailyTransactions = deposits.reduce((acc, dep) => {
+  const dailyTransactionsBase = deposits.reduce((acc, dep) => {
     const date = format(new Date(dep.created_at), 'dd/MM/yyyy');
+    acc[date] = (acc[date] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  // Analyse des transactions par jour incluant les virements
+  const dailyTransactions = [...deposits, ...transfers.map(t => ({
+    created_at: t.date,
+    amount: t.amount,
+    client_name: t.fromClient
+  }))].reduce((acc, op) => {
+    const date = format(new Date(op.created_at), 'dd/MM/yyyy');
     acc[date] = (acc[date] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
@@ -63,17 +94,24 @@ const Statistics = () => {
   const last30DaysData = Array.from({ length: 30 }, (_, i) => {
     const date = subDays(new Date(), i);
     const formattedDate = format(date, 'dd/MM');
+    
     const dayDeposits = deposits.filter(dep => 
       format(new Date(dep.created_at), 'dd/MM') === formattedDate
     );
+    
+    const dayTransfers = transfers.filter(transfer => 
+      format(new Date(transfer.date), 'dd/MM') === formattedDate
+    );
+    
     return {
       date: formattedDate,
-      montant: dayDeposits.reduce((acc, dep) => acc + dep.amount, 0),
-      transactions: dayDeposits.length
+      versements: dayDeposits.reduce((acc, dep) => acc + Math.max(dep.amount, 0), 0),
+      retraits: Math.abs(dayDeposits.reduce((acc, dep) => acc + Math.min(dep.amount, 0), 0)),
+      virements: dayTransfers.reduce((acc, transfer) => acc + transfer.amount, 0),
+      transactions: dayDeposits.length + dayTransfers.length
     };
   }).reverse();
 
-  // Analyse des clients
   const clientStats = deposits.reduce((acc, dep) => {
     if (!acc[dep.client_name]) {
       acc[dep.client_name] = {
@@ -166,6 +204,24 @@ const Statistics = () => {
           </CardContent>
         </Card>
 
+        <Card className="bg-gradient-to-br from-indigo-50 to-transparent dark:from-indigo-950/20">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Total Virements</CardTitle>
+            <ArrowLeftRight className="h-4 w-4 text-indigo-500" />
+          </CardHeader>
+          <CardContent>
+            <div className={cn(
+              "text-2xl font-bold",
+              getAmountColor(totalTransfers)
+            )}>
+              {totalTransfers.toLocaleString()} TND
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {transfers.length} virements effectués
+            </p>
+          </CardContent>
+        </Card>
+
         <Card className="bg-gradient-to-br from-blue-50 to-transparent dark:from-blue-950/20">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Flux Net</CardTitle>
@@ -216,9 +272,17 @@ const Statistics = () => {
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={last30DaysData}>
                   <defs>
-                    <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
+                    <linearGradient id="colorVersements" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
                       <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorRetraits" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#EF4444" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#EF4444" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorVirements" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#6366F1" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#6366F1" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -228,10 +292,27 @@ const Statistics = () => {
                   <Legend />
                   <Area
                     type="monotone"
-                    dataKey="montant"
+                    dataKey="versements"
+                    name="Versements"
                     stroke="#10B981"
-                    fillOpacity={1}
-                    fill="url(#colorAmount)"
+                    fill="url(#colorVersements)"
+                    stackId="1"
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="retraits"
+                    name="Retraits"
+                    stroke="#EF4444"
+                    fill="url(#colorRetraits)"
+                    stackId="2"
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="virements"
+                    name="Virements"
+                    stroke="#6366F1"
+                    fill="url(#colorVirements)"
+                    stackId="3"
                   />
                 </AreaChart>
               </ResponsiveContainer>
