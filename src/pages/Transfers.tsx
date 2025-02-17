@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { ListFilter } from "lucide-react";
@@ -120,19 +119,16 @@ const Transfers = () => {
     if (!selectedTransfer) return;
 
     try {
-      // Recherche des clients avec une requête optimisée
       const { data: fromClient, error: fromError } = await supabase
         .from('clients')
         .select('id')
-        .filter('prenom', 'ilike', selectedTransfer.fromClient.split(' ')[0])
-        .filter('nom', 'ilike', selectedTransfer.fromClient.split(' ')[1])
+        .eq('prenom || \' \' || nom', selectedTransfer.fromClient)
         .single();
 
       const { data: toClient, error: toError } = await supabase
         .from('clients')
         .select('id')
-        .filter('prenom', 'ilike', selectedTransfer.toClient.split(' ')[0])
-        .filter('nom', 'ilike', selectedTransfer.toClient.split(' ')[1])
+        .eq('prenom || \' \' || nom', selectedTransfer.toClient)
         .single();
 
       if (fromError || toError) {
@@ -141,7 +137,6 @@ const Transfers = () => {
         return;
       }
 
-      // Supprimer le transfert
       const { error: deleteError } = await supabase
         .from('transfers')
         .delete()
@@ -153,7 +148,6 @@ const Transfers = () => {
         return;
       }
 
-      // Mettre à jour les soldes
       await Promise.all([
         refreshClientBalance(fromClient.id),
         refreshClientBalance(toClient.id)
