@@ -111,6 +111,10 @@ const ClientProfile = () => {
     }
   };
 
+  const formatAmount = (amount: number) => {
+    return `${amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "")} TND`;
+  };
+
   const exportToExcel = () => {
     if (!client || !clientOperations.length) {
       toast.error("Aucune donnée à exporter");
@@ -307,7 +311,6 @@ const ClientProfile = () => {
                   </div>
                 </TabsContent>
 
-                {/* Répéter la même structure pour les autres onglets mais avec les données filtrées */}
                 <TabsContent value="deposits">
                   <div className="rounded-md border">
                     <div className="grid grid-cols-4 gap-4 p-4 bg-muted/50 font-medium text-sm">
@@ -369,6 +372,127 @@ const ClientProfile = () => {
               </Tabs>
             </CardContent>
           </Card>
+
+          {/* Versements */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ArrowUpCircle className="h-5 w-5 text-green-600" />
+                Versements
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-md border">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b bg-muted/50">
+                      <th className="text-left p-4 font-medium text-sm">Date</th>
+                      <th className="text-left p-4 font-medium text-sm">Description</th>
+                      <th className="text-right p-4 font-medium text-sm">Montant</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {clientOperations
+                      .filter(op => op.type === "deposit")
+                      .map((operation) => (
+                        <tr key={operation.id} className="border-b last:border-0">
+                          <td className="p-4">{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</td>
+                          <td className="p-4">{operation.description}</td>
+                          <td className="p-4 text-right font-medium text-green-600">{formatAmount(operation.amount)}</td>
+                        </tr>
+                    ))}
+                    {clientOperations.filter(op => op.type === "deposit").length === 0 && (
+                      <tr>
+                        <td colSpan={3} className="text-center p-4 text-muted-foreground">Aucun versement</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Retraits */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ArrowDownCircle className="h-5 w-5 text-red-600" />
+                Retraits
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-md border">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b bg-muted/50">
+                      <th className="text-left p-4 font-medium text-sm">Date</th>
+                      <th className="text-left p-4 font-medium text-sm">Description</th>
+                      <th className="text-right p-4 font-medium text-sm">Montant</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {clientOperations
+                      .filter(op => op.type === "withdrawal")
+                      .map((operation) => (
+                        <tr key={operation.id} className="border-b last:border-0">
+                          <td className="p-4">{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</td>
+                          <td className="p-4">{operation.description}</td>
+                          <td className="p-4 text-right font-medium text-red-600">{formatAmount(operation.amount)}</td>
+                        </tr>
+                    ))}
+                    {clientOperations.filter(op => op.type === "withdrawal").length === 0 && (
+                      <tr>
+                        <td colSpan={3} className="text-center p-4 text-muted-foreground">Aucun retrait</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Virements */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <RefreshCcw className="h-5 w-5 text-purple-600" />
+                Virements
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-md border">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b bg-muted/50">
+                      <th className="text-left p-4 font-medium text-sm">Date</th>
+                      <th className="text-left p-4 font-medium text-sm">Description</th>
+                      <th className="text-right p-4 font-medium text-sm">Montant</th>
+                      <th className="text-left p-4 font-medium text-sm">De</th>
+                      <th className="text-left p-4 font-medium text-sm">À</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {clientOperations
+                      .filter(op => op.type === "transfer")
+                      .map((operation) => (
+                        <tr key={operation.id} className="border-b last:border-0">
+                          <td className="p-4">{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</td>
+                          <td className="p-4">{operation.description}</td>
+                          <td className="p-4 text-right font-medium text-purple-600">{formatAmount(operation.amount)}</td>
+                          <td className="p-4">{operation.fromClient}</td>
+                          <td className="p-4">{operation.toClient}</td>
+                        </tr>
+                    ))}
+                    {clientOperations.filter(op => op.type === "transfer").length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="text-center p-4 text-muted-foreground">Aucun virement</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="w-full md:w-1/3 space-y-6">
@@ -381,7 +505,7 @@ const ClientProfile = () => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">
-                {Math.round(client.solde)} TND
+                {formatAmount(client.solde)}
               </div>
               <p className="text-sm text-muted-foreground mt-2">
                 Mis à jour le {format(new Date(), 'dd/MM/yyyy HH:mm')}
