@@ -423,8 +423,10 @@ const Withdrawals = () => {
               </thead>
               <tbody>
                 {withdrawals.slice(0, parseInt(itemsPerPage)).map((withdrawal) => {
-                  const client = clients.find(c => c.id.toString() === withdrawal.clientId);
-                  if (!client) return null;
+                  const clientName = withdrawal.client_name.split(' ');
+                  const client = clients.find(c => 
+                    c.prenom === clientName[0] && c.nom === clientName[1]
+                  );
                   
                   return (
                     <tr key={withdrawal.id} className="group border-b hover:bg-muted/50 transition-colors">
@@ -435,9 +437,9 @@ const Withdrawals = () => {
                             <div className="absolute inset-0 animate-pulse rounded-full bg-primary/5" />
                           </div>
                           <div>
-                            <p className="font-medium">{client.prenom} {client.nom}</p>
+                            <p className="font-medium">{withdrawal.client_name}</p>
                             <p className="text-sm text-muted-foreground">
-                              ID: {client.id}
+                              ID: {client?.id || 'N/A'}
                             </p>
                           </div>
                         </div>
@@ -450,7 +452,9 @@ const Withdrawals = () => {
                           </span>
                         </div>
                       </td>
-                      <td className="p-3 text-muted-foreground">{withdrawal.date}</td>
+                      <td className="p-3 text-muted-foreground">
+                        {new Date(withdrawal.operation_date).toLocaleDateString()}
+                      </td>
                       <td className="p-3 text-muted-foreground">{withdrawal.notes}</td>
                       <td className="p-3">
                         <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 ease-in-out">
