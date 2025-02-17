@@ -215,154 +215,153 @@ const PublicClientProfile = () => {
   }
 
   return (
-    <div className="container mx-auto min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950/50 dark:to-blue-950/50 p-4 sm:p-8">
-      <div className="max-w-4xl mx-auto space-y-8">
-        <h1 className="text-3xl font-bold text-center">Informations Client</h1>
-
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950/50 dark:to-blue-950/50 p-2 sm:p-8">
+      <div className="max-w-md mx-auto space-y-4">
         {client && (
           <>
-            <Card className="backdrop-blur-xl bg-white/50 dark:bg-gray-950/50">
-              <CardHeader>
-                <CardTitle>Informations personnelles</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-6 sm:grid-cols-2">
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <User className="h-5 w-5 text-primary" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">Nom complet</p>
-                        <p className="font-medium">{client.prenom} {client.nom}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Phone className="h-5 w-5 text-primary" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">Téléphone</p>
-                        <p className="font-medium">{client.telephone}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <Mail className="h-5 w-5 text-primary" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">Email</p>
-                        <p className="font-medium">{client.email}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Calendar className="h-5 w-5 text-primary" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">Date de création</p>
-                        <p className="font-medium">{format(new Date(client.date_creation || ''), 'dd/MM/yyyy')}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
+            {/* Solde */}
             <Card className="relative overflow-hidden backdrop-blur-xl bg-white/50 dark:bg-gray-950/50">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/10 pointer-events-none" />
               <CardHeader>
-                <CardTitle>Solde actuel</CardTitle>
+                <CardTitle className="text-2xl">Solde actuel</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">{client.solde.toLocaleString()} €</div>
+                <div className="text-4xl font-bold">{client.solde.toLocaleString()} €</div>
                 <p className="text-sm text-muted-foreground mt-2">
                   Mis à jour le {format(new Date(), 'dd/MM/yyyy HH:mm')}
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
+            {/* Informations personnelles */}
+            <Card className="backdrop-blur-xl bg-white/50 dark:bg-gray-950/50">
               <CardHeader>
-                <CardTitle>Historique des opérations</CardTitle>
+                <CardTitle className="text-lg">Informations personnelles</CardTitle>
               </CardHeader>
               <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <User className="h-5 w-5 text-primary" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Nom complet</p>
+                      <p className="font-medium">{client.prenom} {client.nom}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Phone className="h-5 w-5 text-primary" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Téléphone</p>
+                      <p className="font-medium">{client.telephone}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Mail className="h-5 w-5 text-primary" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Email</p>
+                      <p className="font-medium">{client.email}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Calendar className="h-5 w-5 text-primary" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Date de création</p>
+                      <p className="font-medium">{format(new Date(client.date_creation || ''), 'dd/MM/yyyy')}</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Historique des opérations */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl">Historique des opérations</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0 sm:p-6">
                 <Tabs defaultValue="all" className="w-full">
-                  <TabsList className="mb-4 flex flex-wrap gap-2">
-                    <TabsTrigger value="all" className="flex items-center gap-2">
-                      Toutes les opérations
+                  <TabsList className="w-full flex overflow-x-auto no-scrollbar p-0 rounded-none border-b">
+                    <TabsTrigger value="all" className="flex-1 text-sm">
+                      Tout
                     </TabsTrigger>
-                    <TabsTrigger value="deposits" className="flex items-center gap-2">
-                      <ArrowUpCircle className="h-4 w-4" />
+                    <TabsTrigger value="deposits" className="flex-1 text-sm">
+                      <ArrowUpCircle className="h-4 w-4 mr-1" />
                       Versements
                     </TabsTrigger>
-                    <TabsTrigger value="withdrawals" className="flex items-center gap-2">
-                      <ArrowDownCircle className="h-4 w-4" />
+                    <TabsTrigger value="withdrawals" className="flex-1 text-sm">
+                      <ArrowDownCircle className="h-4 w-4 mr-1" />
                       Retraits
                     </TabsTrigger>
-                    <TabsTrigger value="transfers" className="flex items-center gap-2">
-                      <RefreshCcw className="h-4 w-4" />
+                    <TabsTrigger value="transfers" className="flex-1 text-sm">
+                      <RefreshCcw className="h-4 w-4 mr-1" />
                       Virements
                     </TabsTrigger>
                   </TabsList>
 
-                  <TabsContent value="all" className="space-y-4">
-                    {operations.map((operation) => (
-                      <OperationCard
-                        key={operation.id}
-                        operation={operation}
-                        onEdit={() => {}}
-                        onDelete={() => {}}
-                      />
-                    ))}
-                    {operations.length === 0 && (
-                      <div className="text-center py-12">
-                        <p className="text-muted-foreground">Aucune opération trouvée</p>
-                      </div>
-                    )}
-                  </TabsContent>
+                  <div className="px-2 sm:px-0">
+                    <TabsContent value="all" className="space-y-2 mt-2">
+                      {operations.map((operation) => (
+                        <OperationCard
+                          key={operation.id}
+                          operation={operation}
+                          onEdit={() => {}}
+                          onDelete={() => {}}
+                        />
+                      ))}
+                      {operations.length === 0 && (
+                        <div className="text-center py-8">
+                          <p className="text-muted-foreground">Aucune opération trouvée</p>
+                        </div>
+                      )}
+                    </TabsContent>
 
-                  <TabsContent value="deposits" className="space-y-4">
-                    {operations.filter(op => op.type === "deposit").map((operation) => (
-                      <OperationCard
-                        key={operation.id}
-                        operation={operation}
-                        onEdit={() => {}}
-                        onDelete={() => {}}
-                      />
-                    ))}
-                    {operations.filter(op => op.type === "deposit").length === 0 && (
-                      <div className="text-center py-12">
-                        <p className="text-muted-foreground">Aucun versement trouvé</p>
-                      </div>
-                    )}
-                  </TabsContent>
+                    <TabsContent value="deposits" className="space-y-2 mt-2">
+                      {operations.filter(op => op.type === "deposit").map((operation) => (
+                        <OperationCard
+                          key={operation.id}
+                          operation={operation}
+                          onEdit={() => {}}
+                          onDelete={() => {}}
+                        />
+                      ))}
+                      {operations.filter(op => op.type === "deposit").length === 0 && (
+                        <div className="text-center py-8">
+                          <p className="text-muted-foreground">Aucun versement trouvé</p>
+                        </div>
+                      )}
+                    </TabsContent>
 
-                  <TabsContent value="withdrawals" className="space-y-4">
-                    {operations.filter(op => op.type === "withdrawal").map((operation) => (
-                      <OperationCard
-                        key={operation.id}
-                        operation={operation}
-                        onEdit={() => {}}
-                        onDelete={() => {}}
-                      />
-                    ))}
-                    {operations.filter(op => op.type === "withdrawal").length === 0 && (
-                      <div className="text-center py-12">
-                        <p className="text-muted-foreground">Aucun retrait trouvé</p>
-                      </div>
-                    )}
-                  </TabsContent>
+                    <TabsContent value="withdrawals" className="space-y-2 mt-2">
+                      {operations.filter(op => op.type === "withdrawal").map((operation) => (
+                        <OperationCard
+                          key={operation.id}
+                          operation={operation}
+                          onEdit={() => {}}
+                          onDelete={() => {}}
+                        />
+                      ))}
+                      {operations.filter(op => op.type === "withdrawal").length === 0 && (
+                        <div className="text-center py-8">
+                          <p className="text-muted-foreground">Aucun retrait trouvé</p>
+                        </div>
+                      )}
+                    </TabsContent>
 
-                  <TabsContent value="transfers" className="space-y-4">
-                    {operations.filter(op => op.type === "transfer").map((operation) => (
-                      <OperationCard
-                        key={operation.id}
-                        operation={operation}
-                        onEdit={() => {}}
-                        onDelete={() => {}}
-                      />
-                    ))}
-                    {operations.filter(op => op.type === "transfer").length === 0 && (
-                      <div className="text-center py-12">
-                        <p className="text-muted-foreground">Aucun virement trouvé</p>
-                      </div>
-                    )}
-                  </TabsContent>
+                    <TabsContent value="transfers" className="space-y-2 mt-2">
+                      {operations.filter(op => op.type === "transfer").map((operation) => (
+                        <OperationCard
+                          key={operation.id}
+                          operation={operation}
+                          onEdit={() => {}}
+                          onDelete={() => {}}
+                        />
+                      ))}
+                      {operations.filter(op => op.type === "transfer").length === 0 && (
+                        <div className="text-center py-8">
+                          <p className="text-muted-foreground">Aucun virement trouvé</p>
+                        </div>
+                      )}
+                    </TabsContent>
+                  </div>
                 </Tabs>
               </CardContent>
             </Card>
@@ -370,14 +369,14 @@ const PublicClientProfile = () => {
         )}
 
         {isLoading && (
-          <div className="flex items-center justify-center min-h-[40vh]">
+          <div className="flex items-center justify-center h-screen">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
           </div>
         )}
 
         {error && (
-          <div className="flex flex-col items-center justify-center min-h-[40vh]">
-            <h2 className="text-2xl font-bold mb-4 text-destructive">{error}</h2>
+          <div className="flex flex-col items-center justify-center h-screen">
+            <h2 className="text-xl font-bold mb-4 text-destructive text-center">{error}</h2>
           </div>
         )}
       </div>
