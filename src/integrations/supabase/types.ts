@@ -291,6 +291,12 @@ export type Database = {
         }
         Returns: Database["public"]["Enums"]["user_role"]
       }
+      is_supervisor: {
+        Args: {
+          user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       user_role: "supervisor" | "manager" | "cashier"
