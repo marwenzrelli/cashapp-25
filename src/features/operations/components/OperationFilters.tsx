@@ -8,13 +8,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { Operation } from "@/features/operations/types";
 
 interface OperationFiltersProps {
-  selectedType: string;
+  selectedType: Operation["type"] | "all";
   searchTerm: string;
   date: { from: Date; to: Date };
   isCustomRange: boolean;
-  onTypeSelect: (type: string) => void;
+  onTypeSelect: (type: Operation["type"] | "all") => void;
   onSearch: (term: string) => void;
   onDateChange: (range: { from: Date; to: Date }) => void;
   onCustomRangeChange: (isCustom: boolean) => void;
