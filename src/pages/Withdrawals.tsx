@@ -58,6 +58,7 @@ const Withdrawals = () => {
     clientId: "",
     amount: "",
     notes: "",
+    date: new Date().toISOString().split('T')[0],
   });
 
   const { clients, fetchClients } = useClients();
@@ -91,7 +92,7 @@ const Withdrawals = () => {
   };
 
   const handleCreateWithdrawal = () => {
-    if (!newWithdrawal.clientId || !newWithdrawal.amount || !newWithdrawal.notes) {
+    if (!newWithdrawal.clientId || !newWithdrawal.amount || !newWithdrawal.notes || !newWithdrawal.date) {
       toast.error("Veuillez remplir tous les champs");
       return;
     }
@@ -106,7 +107,7 @@ const Withdrawals = () => {
       id: Date.now().toString(),
       clientId: newWithdrawal.clientId,
       amount: parseFloat(newWithdrawal.amount),
-      date: new Date().toISOString().split('T')[0],
+      date: newWithdrawal.date,
       notes: newWithdrawal.notes,
     };
 
@@ -115,7 +116,7 @@ const Withdrawals = () => {
     toast.success("Retrait enregistré", {
       description: `Le retrait de ${withdrawal.amount}€ pour ${selectedClient.prenom} ${selectedClient.nom} a été enregistré.`
     });
-    setNewWithdrawal({ clientId: "", amount: "", notes: "" });
+    setNewWithdrawal({ clientId: "", amount: "", notes: "", date: new Date().toISOString().split('T')[0] });
   };
 
   return (
@@ -188,6 +189,17 @@ const Withdrawals = () => {
             <div className="relative overflow-hidden rounded-lg border bg-gradient-to-b from-background to-muted/50 p-6">
               <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))]" />
               <div className="relative grid gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="date">Date du retrait</Label>
+                  <Input
+                    id="date"
+                    type="date"
+                    value={newWithdrawal.date}
+                    onChange={(e) => setNewWithdrawal({ ...newWithdrawal, date: e.target.value })}
+                    className="transition-all focus-visible:ring-primary/50"
+                  />
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="clientId">Client</Label>
                   <Select
