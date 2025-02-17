@@ -47,6 +47,7 @@ export const EditTransferDialog = ({
                 <SelectValue placeholder="Sélectionner un client" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value={transfer.fromClient}>{transfer.fromClient}</SelectItem>
                 <SelectItem value="Jean Dupont">Jean Dupont</SelectItem>
                 <SelectItem value="Marie Martin">Marie Martin</SelectItem>
                 <SelectItem value="Pierre Durant">Pierre Durant</SelectItem>
@@ -65,6 +66,7 @@ export const EditTransferDialog = ({
                 <SelectValue placeholder="Sélectionner un client" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value={transfer.toClient}>{transfer.toClient}</SelectItem>
                 <SelectItem value="Jean Dupont">Jean Dupont</SelectItem>
                 <SelectItem value="Marie Martin">Marie Martin</SelectItem>
                 <SelectItem value="Pierre Durant">Pierre Durant</SelectItem>
@@ -75,6 +77,7 @@ export const EditTransferDialog = ({
             <Label>Montant</Label>
             <Input
               type="number"
+              defaultValue={transfer.amount}
               value={editForm.amount}
               onChange={(e) =>
                 onEditFormChange({ ...editForm, amount: e.target.value })
@@ -84,6 +87,7 @@ export const EditTransferDialog = ({
           <div className="space-y-2">
             <Label>Motif</Label>
             <Input
+              defaultValue={transfer.reason}
               value={editForm.reason}
               onChange={(e) =>
                 onEditFormChange({ ...editForm, reason: e.target.value })
