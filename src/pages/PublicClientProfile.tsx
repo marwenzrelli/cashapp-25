@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -106,7 +105,7 @@ const PublicClientProfile = () => {
         // Transformer les données en format unifié
         const allOperations: Operation[] = [
           ...(deposits || []).map((d): Operation => ({
-            id: d.id.toString(),
+            id: d.id.toString().slice(-6),
             type: "deposit",
             amount: d.amount,
             date: d.operation_date,
@@ -114,7 +113,7 @@ const PublicClientProfile = () => {
             fromClient: d.client_name
           })),
           ...(withdrawals || []).map((w): Operation => ({
-            id: w.id,
+            id: w.id.toString().slice(-6),
             type: "withdrawal",
             amount: w.amount,
             date: w.operation_date,
@@ -122,7 +121,7 @@ const PublicClientProfile = () => {
             fromClient: w.client_name
           })),
           ...(transfers || []).map((t): Operation => ({
-            id: t.id,
+            id: t.id.toString().slice(-6),
             type: "transfer",
             amount: t.amount,
             date: t.operation_date,
@@ -216,8 +215,8 @@ const PublicClientProfile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950/50 dark:to-blue-950/50 p-4 sm:p-8">
-      <div className="max-w-3xl mx-auto space-y-8">
+    <div className="container mx-auto min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950/50 dark:to-blue-950/50 p-4 sm:p-8">
+      <div className="max-w-4xl mx-auto space-y-8">
         <h1 className="text-3xl font-bold text-center">Informations Client</h1>
 
         {client && (
@@ -227,7 +226,7 @@ const PublicClientProfile = () => {
                 <CardTitle>Informations personnelles</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid gap-6 md:grid-cols-2">
+                <div className="grid gap-6 sm:grid-cols-2">
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
                       <User className="h-5 w-5 text-primary" />
@@ -283,7 +282,7 @@ const PublicClientProfile = () => {
               </CardHeader>
               <CardContent>
                 <Tabs defaultValue="all" className="w-full">
-                  <TabsList className="mb-4">
+                  <TabsList className="mb-4 flex flex-wrap gap-2">
                     <TabsTrigger value="all" className="flex items-center gap-2">
                       Toutes les opérations
                     </TabsTrigger>
@@ -371,13 +370,13 @@ const PublicClientProfile = () => {
         )}
 
         {isLoading && (
-          <div className="flex items-center justify-center min-h-screen">
+          <div className="flex items-center justify-center min-h-[40vh]">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
           </div>
         )}
 
         {error && (
-          <div className="flex flex-col items-center justify-center min-h-screen">
+          <div className="flex flex-col items-center justify-center min-h-[40vh]">
             <h2 className="text-2xl font-bold mb-4 text-destructive">{error}</h2>
           </div>
         )}
