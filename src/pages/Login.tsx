@@ -1,60 +1,54 @@
 
-import { FormEvent, useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Sparkles, LogIn, Lock, User } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { DollarSign } from "lucide-react";
 
 const Login = () => {
-  const [login, setLogin] = useState("");
-  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const { toast } = useToast();
 
-  // Vérifier si l'utilisateur est déjà connecté
-  useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate("/dashboard");
-      }
-    };
-    checkSession();
-  }, [navigate]);
-
-  const handleSubmit = async (e: FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const email = login.toLowerCase() === "marwensuperviseur" ? "marwensupervisor@gmail.com" : login;
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        toast.error("Identifiants invalides", {
-          description: error.message,
+      if (isSignUp) {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/login`,
+          },
         });
-        setIsLoading(false);
-        return;
-      }
+        if (error) throw error;
 
-      if (data.user) {
-        toast.success("Connexion réussie", {
-          description: "Bienvenue dans votre espace personnel",
+        toast({
+          title: "Inscription réussie !",
+          description: "Veuillez vérifier votre email pour confirmer votre compte.",
         });
-        navigate("/dashboard", { replace: true });
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (error) throw error;
+        
+        navigate("/dashboard");
       }
-    } catch (error) {
-      toast.error("Erreur de connexion", {
-        description: "Une erreur inattendue est survenue",
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message || "Une erreur est survenue",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -62,80 +56,67 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-background to-muted/50 px-4">
-      <div className="w-full max-w-md space-y-8 animate-in">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <Card className="w-full max-w-md p-8 space-y-6">
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center gap-2 text-primary">
-            <Sparkles className="h-8 w-8" />
+          <div className="flex justify-center">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-[#9b87f5] to-[#8B5CF6] rounded-lg blur opacity-50"></div>
+              <div className="relative bg-gradient-to-r from-[#9b87f5] to-[#8B5CF6] p-3 rounded-lg">
+                <DollarSign className="h-8 w-8 text-white drop-shadow-[0_0_3px_rgba(255,255,255,0.5)]" />
+              </div>
+            </div>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">Flow Cash Control</h1>
-          <p className="text-muted-foreground">
-            Connectez-vous pour accéder à votre espace intelligent
+          <h1 className="text-2xl font-bold">Flow Cash Control</h1>
+          <p className="text-gray-500">
+            {isSignUp ? "Créez votre compte" : "Connectez-vous à votre compte"}
           </p>
         </div>
 
-        <Card className="border-muted/50">
-          <CardHeader>
-            <CardTitle>Connexion sécurisée</CardTitle>
-            <CardDescription>
-              Authentification avec assistance IA
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="login">Nom d'utilisateur ou email</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    id="login"
-                    type="text"
-                    placeholder="Entrez votre identifiant"
-                    value={login}
-                    onChange={(e) => setLogin(e.target.value)}
-                    className="pl-9"
-                    required
-                    autoComplete="username"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Mot de passe</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Entrez votre mot de passe"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-9"
-                    required
-                    autoComplete="current-password"
-                  />
-                </div>
-              </div>
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-foreground" />
-                    <span>Connexion en cours...</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <LogIn className="h-4 w-4" />
-                    <span>Se connecter</span>
-                  </div>
-                )}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
+        <form onSubmit={handleAuth} className="space-y-4">
+          <div className="space-y-2">
+            <Input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Input
+              type="password"
+              placeholder="Mot de passe"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isLoading}
+          >
+            {isLoading
+              ? "Chargement..."
+              : isSignUp
+              ? "S'inscrire"
+              : "Se connecter"}
+          </Button>
+        </form>
+
+        <div className="text-center">
+          <button
+            type="button"
+            onClick={() => setIsSignUp(!isSignUp)}
+            className="text-sm text-primary hover:underline"
+          >
+            {isSignUp
+              ? "Déjà un compte ? Connectez-vous"
+              : "Pas de compte ? Inscrivez-vous"}
+          </button>
+        </div>
+      </Card>
     </div>
   );
 };
