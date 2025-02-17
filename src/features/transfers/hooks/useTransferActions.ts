@@ -35,6 +35,7 @@ export const useTransferActions = (onSuccess: () => void) => {
   };
 
   const findClientByFullName = async (fullName: string) => {
+    console.log("Recherche du client:", fullName);
     const [prenom, ...nomParts] = fullName.split(' ');
     const nom = nomParts.join(' ');
 
@@ -46,10 +47,11 @@ export const useTransferActions = (onSuccess: () => void) => {
       .single();
 
     if (error) {
-      console.error("Error finding client:", error);
+      console.error("Erreur lors de la recherche du client:", error);
       return null;
     }
 
+    console.log("Client trouvé:", data);
     return data;
   };
 
@@ -68,7 +70,7 @@ export const useTransferActions = (onSuccess: () => void) => {
         .eq('id', selectedTransfer.id);
 
       if (error) {
-        console.error("Error updating transfer:", error);
+        console.error("Erreur lors de la modification du virement:", error);
         toast.error("Erreur lors de la modification du virement");
         return;
       }
@@ -77,7 +79,7 @@ export const useTransferActions = (onSuccess: () => void) => {
       toast.success("Virement modifié avec succès");
       onSuccess();
     } catch (error) {
-      console.error("Error in confirmEdit:", error);
+      console.error("Erreur dans confirmEdit:", error);
       toast.error("Une erreur est survenue");
     }
   };
@@ -86,14 +88,18 @@ export const useTransferActions = (onSuccess: () => void) => {
     if (!selectedTransfer) return;
 
     try {
+      console.log("Début de la suppression du virement:", selectedTransfer);
+
       const fromClient = await findClientByFullName(selectedTransfer.fromClient);
       const toClient = await findClientByFullName(selectedTransfer.toClient);
 
       if (!fromClient || !toClient) {
-        console.error("Could not find one or both clients");
+        console.error("Impossible de trouver un ou plusieurs clients");
         toast.error("Impossible de trouver un ou plusieurs clients");
         return;
       }
+
+      console.log("Clients trouvés - De:", fromClient.id, "À:", toClient.id);
 
       const { error: deleteError } = await supabase
         .from('transfers')
@@ -101,23 +107,29 @@ export const useTransferActions = (onSuccess: () => void) => {
         .eq('id', selectedTransfer.id);
 
       if (deleteError) {
-        console.error("Error deleting transfer:", deleteError);
+        console.error("Erreur lors de la suppression du virement:", deleteError);
         toast.error("Erreur lors de la suppression du virement");
         return;
       }
 
-      await Promise.all([
-        refreshClientBalance(fromClient.id),
-        refreshClientBalance(toClient.id)
-      ]);
+      console.log("Virement supprimé, mise à jour des soldes...");
 
-      await fetchClients();
+      // Mise à jour des soldes avec un délai pour laisser le temps aux triggers de s'exécuter
+      setTimeout(async () => {
+        await Promise.all([
+          refreshClientBalance(fromClient.id),
+          refreshClientBalance(toClient.id)
+        ]);
+
+        await fetchClients();
+        console.log("Soldes mis à jour");
+      }, 1000);
 
       setIsDeleteDialogOpen(false);
       toast.success("Virement supprimé avec succès");
       onSuccess();
     } catch (error) {
-      console.error("Error in confirmDelete:", error);
+      console.error("Erreur dans confirmDelete:", error);
       toast.error("Une erreur est survenue");
     }
   };
