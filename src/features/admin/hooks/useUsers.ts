@@ -13,18 +13,12 @@ export function useUsers() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Récupérer le profil et les permissions en parallèle
-      const [profileResult, permissionsResult] = await Promise.all([
-        supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .maybeSingle(),
-        supabase
-          .from('user_permissions')
-          .select('*')
-          .eq('user_id', user.id)
-      ]);
+      // Récupérer uniquement le profil d'abord
+      const profileResult = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
 
       if (profileResult.error) {
         console.error("Erreur lors du chargement du profil:", profileResult.error);
@@ -33,16 +27,30 @@ export function useUsers() {
 
       if (!profileResult.data) return;
 
-      if (permissionsResult.error) {
-        console.error("Erreur lors du chargement des permissions:", permissionsResult.error);
+      // Si l'utilisateur est un superviseur, récupérer ses permissions
+      if (profileResult.data.role === 'supervisor') {
+        const permissionsResult = await supabase
+          .from('user_permissions')
+          .select('*')
+          .eq('user_id', user.id);
+
+        if (permissionsResult.error) {
+          console.error("Erreur lors du chargement des permissions:", permissionsResult.error);
+        }
+
+        const fullProfile = {
+          ...profileResult.data,
+          user_permissions: permissionsResult.data || []
+        };
+        setCurrentUser(mapProfileToSystemUser(fullProfile));
+      } else {
+        // Pour les non-superviseurs, pas besoin de charger les permissions
+        const fullProfile = {
+          ...profileResult.data,
+          user_permissions: []
+        };
+        setCurrentUser(mapProfileToSystemUser(fullProfile));
       }
-
-      const fullProfile = {
-        ...profileResult.data,
-        user_permissions: permissionsResult.data || []
-      };
-
-      setCurrentUser(mapProfileToSystemUser(fullProfile));
     } catch (error) {
       console.error("Erreur lors du chargement du profil:", error);
     }
@@ -50,15 +58,10 @@ export function useUsers() {
 
   const fetchUsers = async () => {
     try {
-      // Récupérer les profils et les permissions en parallèle
-      const [profilesResult, permissionsResult] = await Promise.all([
-        supabase
-          .from('profiles')
-          .select('*'),
-        supabase
-          .from('user_permissions')
-          .select('*')
-      ]);
+      // Récupérer d'abord tous les profils
+      const profilesResult = await supabase
+        .from('profiles')
+        .select('*');
 
       if (profilesResult.error) {
         console.error("Erreur lors du chargement des utilisateurs:", profilesResult.error);
@@ -66,13 +69,28 @@ export function useUsers() {
         return;
       }
 
-      if (permissionsResult.error) {
-        console.error("Erreur lors du chargement des permissions:", permissionsResult.error);
+      // Récupérer les permissions uniquement pour les superviseurs
+      const supervisorIds = profilesResult.data
+        .filter(profile => profile.role === 'supervisor')
+        .map(profile => profile.id);
+
+      let permissionsResult = { data: [] };
+      if (supervisorIds.length > 0) {
+        permissionsResult = await supabase
+          .from('user_permissions')
+          .select('*')
+          .in('user_id', supervisorIds);
+
+        if (permissionsResult.error) {
+          console.error("Erreur lors du chargement des permissions:", permissionsResult.error);
+        }
       }
 
       const fullProfiles = profilesResult.data.map(profile => ({
         ...profile,
-        user_permissions: permissionsResult.data?.filter(p => p.user_id === profile.id) || []
+        user_permissions: profile.role === 'supervisor'
+          ? permissionsResult.data?.filter(p => p.user_id === profile.id) || []
+          : []
       }));
 
       setUsers(fullProfiles.map(mapProfileToSystemUser));
@@ -189,6 +207,24 @@ export function useUsers() {
 
   const updatePermissions = async (userId: string, permissions: SystemUser["permissions"]) => {
     try {
+      // Vérifier d'abord si l'utilisateur est un superviseur
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .single();
+
+      if (profileError) {
+        console.error("Erreur lors de la vérification du rôle:", profileError);
+        toast.error("Erreur lors de la mise à jour des permissions");
+        return;
+      }
+
+      if (profile.role !== 'supervisor') {
+        toast.error("Seuls les superviseurs peuvent avoir des permissions");
+        return;
+      }
+
       // Supprimer d'abord toutes les permissions existantes
       const { error: deleteError } = await supabase
         .from('user_permissions')
