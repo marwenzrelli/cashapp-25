@@ -23,20 +23,16 @@ import { supabase } from "./integrations/supabase/client";
 
 const queryClient = new QueryClient();
 
-function App() {
+// Composant de protection des routes authentifiées
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setIsAuthenticated(!!session);
-      } catch (error) {
-        console.error("Erreur lors de la vérification de l'authentification:", error);
-      } finally {
-        setIsLoading(false);
-      }
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+      setIsLoading(false);
     };
 
     checkAuth();
@@ -49,9 +45,17 @@ function App() {
   }, []);
 
   if (isLoading) {
-    return null;
+    return <div>Chargement...</div>;
   }
 
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+function App() {
   return (
     <CurrencyProvider>
       <QueryClientProvider client={queryClient}>
@@ -60,10 +64,16 @@ function App() {
           <Sonner />
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />} />
-              <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} />
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/login" element={<Login />} />
               <Route path="/public/client/:token" element={<PublicClientProfile />} />
-              <Route element={<Layout />}>
+              
+              {/* Routes protégées */}
+              <Route element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }>
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/clients" element={<Clients />} />
                 <Route path="/clients/:id" element={<ClientProfile />} />
