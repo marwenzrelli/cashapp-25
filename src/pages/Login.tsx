@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -27,7 +28,7 @@ const Login = () => {
           .from('profiles')
           .select('email')
           .eq('username', identifier)
-          .single();
+          .maybeSingle();
 
         if (profilesError) {
           throw new Error("Erreur lors de la recherche de l'utilisateur");
@@ -110,7 +111,7 @@ const Login = () => {
         .from('profiles')
         .select('status')
         .eq('id', authData.user.id)
-        .single();
+        .maybeSingle();
 
       if (profileError) {
         console.error("Erreur lors de la vérification du profil:", profileError);
@@ -154,25 +155,13 @@ const Login = () => {
       const supervisorEmail = "supervisor@flowcash.com";
       const username = "superviseur2024";
 
-      const { data: { users }, error: authCheckError } = await supabase.auth.admin.listUsers();
-      const existingAuthUser = users?.find(user => user.email === supervisorEmail);
-
-      if (existingAuthUser) {
-        console.log("Le compte existe déjà dans auth.users");
-        toast({
-          title: "Information",
-          description: "Le compte existe déjà. Utilisez les identifiants fournis pour vous connecter.",
-        });
-        return;
-      }
-
-      const { data: existingProfile, error: profileError } = await supabase
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
         .eq('email', supervisorEmail)
         .maybeSingle();
 
-      if (existingProfile) {
+      if (profiles) {
         console.log("Le profil existe déjà dans la table profiles");
         toast({
           title: "Information",
