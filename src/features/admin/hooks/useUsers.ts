@@ -13,37 +13,28 @@ export function useUsers() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Récupérer d'abord le profil de base
-      const { data: profile, error: profileError } = await supabase
+      const { data: profile, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          *,
+          user_permissions (
+            id,
+            permission_name,
+            permission_description,
+            module
+          )
+        `)
         .eq('id', user.id)
         .single();
 
-      if (profileError) {
-        console.error("Erreur lors du chargement du profil:", profileError);
+      if (error) {
+        console.error("Erreur lors du chargement du profil:", error);
         return;
       }
 
-      if (!profile) return;
-
-      // Ensuite, récupérer les permissions séparément
-      const { data: permissions, error: permissionsError } = await supabase
-        .from('user_permissions')
-        .select('*')
-        .eq('user_id', user.id);
-
-      if (permissionsError) {
-        console.error("Erreur lors du chargement des permissions:", permissionsError);
+      if (profile) {
+        setCurrentUser(mapProfileToSystemUser(profile));
       }
-
-      // Combiner le profil et les permissions
-      const fullProfile = {
-        ...profile,
-        user_permissions: permissions || []
-      };
-
-      setCurrentUser(mapProfileToSystemUser(fullProfile));
     } catch (error) {
       console.error("Erreur lors du chargement du profil:", error);
     }
@@ -51,33 +42,27 @@ export function useUsers() {
 
   const fetchUsers = async () => {
     try {
-      // Récupérer d'abord tous les profils
-      const { data: profiles, error: profilesError } = await supabase
+      const { data: profiles, error } = await supabase
         .from('profiles')
-        .select('*');
+        .select(`
+          *,
+          user_permissions (
+            id,
+            permission_name,
+            permission_description,
+            module
+          )
+        `);
 
-      if (profilesError) {
-        console.error("Erreur lors du chargement des utilisateurs:", profilesError);
+      if (error) {
+        console.error("Erreur lors du chargement des utilisateurs:", error);
         toast.error("Erreur lors du chargement des utilisateurs");
         return;
       }
 
-      // Ensuite, récupérer toutes les permissions
-      const { data: allPermissions, error: permissionsError } = await supabase
-        .from('user_permissions')
-        .select('*');
-
-      if (permissionsError) {
-        console.error("Erreur lors du chargement des permissions:", permissionsError);
+      if (profiles) {
+        setUsers(profiles.map(mapProfileToSystemUser));
       }
-
-      // Combiner les profils avec leurs permissions respectives
-      const fullProfiles = profiles.map(profile => ({
-        ...profile,
-        user_permissions: allPermissions?.filter(p => p.user_id === profile.id) || []
-      }));
-
-      setUsers(fullProfiles.map(mapProfileToSystemUser));
     } catch (error) {
       console.error("Erreur lors du chargement des utilisateurs:", error);
       toast.error("Une erreur est survenue lors du chargement des utilisateurs");
@@ -150,9 +135,6 @@ export function useUsers() {
 
       if (signUpError) throw signUpError;
 
-      // Attendre que le trigger crée le profil
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
       if (data.user) {
         toast.success("Utilisateur créé avec succès");
         await fetchUsers();
@@ -191,7 +173,6 @@ export function useUsers() {
 
   const updatePermissions = async (userId: string, permissions: SystemUser["permissions"]) => {
     try {
-      // Supprimer d'abord toutes les permissions existantes
       const { error: deleteError } = await supabase
         .from('user_permissions')
         .delete()
