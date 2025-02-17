@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -9,65 +10,43 @@ import { DollarSign } from "lucide-react";
 
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [identifier, setIdentifier] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleAuth = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const isEmail = identifier.includes('@');
-      let email = identifier;
+      // 1. D'abord, récupérer l'email associé au nom d'utilisateur
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('username', username)
+        .maybeSingle();
 
-      if (!isEmail) {
-        const { data: profiles, error: profilesError } = await supabase
-          .from('profiles')
-          .select('email')
-          .eq('username', identifier)
-          .maybeSingle();
-
-        if (profilesError) {
-          throw new Error("Erreur lors de la recherche de l'utilisateur");
-        }
-
-        if (!profiles) {
-          toast({
-            title: "Erreur",
-            description: "Nom d'utilisateur introuvable",
-            variant: "destructive",
-          });
-          setIsLoading(false);
-          return;
-        }
-
-        email = profiles.email;
+      if (profileError || !profile) {
+        toast({
+          title: "Erreur",
+          description: "Nom d'utilisateur introuvable",
+          variant: "destructive",
+        });
+        return;
       }
 
-      console.log("Tentative de connexion avec email:", email);
-
+      // 2. Tentative de connexion avec l'email récupéré
       const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
+        email: profile.email,
         password,
       });
 
       if (signInError) {
         console.error("Erreur de connexion:", signInError);
-
-        if (signInError.message === "Invalid login credentials") {
-          toast({
-            title: "Erreur de connexion",
-            description: "Email ou mot de passe incorrect",
-            variant: "destructive",
-          });
-          return;
-        }
-
         toast({
           title: "Erreur de connexion",
-          description: signInError.message,
+          description: "Nom d'utilisateur ou mot de passe incorrect",
           variant: "destructive",
         });
         return;
@@ -82,14 +61,15 @@ const Login = () => {
         return;
       }
 
-      const { data: profile, error: profileError } = await supabase
+      // 3. Vérification du statut du compte
+      const { data: userProfile, error: userProfileError } = await supabase
         .from('profiles')
         .select('status')
         .eq('id', authData.user.id)
-        .maybeSingle();
+        .single();
 
-      if (profileError) {
-        console.error("Erreur lors de la vérification du profil:", profileError);
+      if (userProfileError || !userProfile) {
+        console.error("Erreur lors de la vérification du profil:", userProfileError);
         await supabase.auth.signOut();
         toast({
           title: "Erreur",
@@ -99,7 +79,7 @@ const Login = () => {
         return;
       }
 
-      if (profile?.status === 'inactive') {
+      if (userProfile.status === 'inactive') {
         await supabase.auth.signOut();
         toast({
           title: "Compte inactif",
@@ -109,85 +89,12 @@ const Login = () => {
         return;
       }
 
+      // 4. Connexion réussie, redirection vers le dashboard
       console.log("Connexion réussie, redirection vers le dashboard");
       navigate("/dashboard");
+
     } catch (error: any) {
       console.error("Erreur inattendue:", error);
-      toast({
-        title: "Erreur",
-        description: error.message || "Une erreur inattendue est survenue",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const createSupervisor = async () => {
-    try {
-      setIsLoading(true);
-
-      const supervisorEmail = "supervisor@flowcash.com";
-      const username = "superviseur2024";
-
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('email', supervisorEmail)
-        .maybeSingle();
-
-      if (profiles) {
-        console.log("Le profil existe déjà dans la table profiles");
-        toast({
-          title: "Information",
-          description: "Le compte existe déjà. Utilisez les identifiants fournis pour vous connecter.",
-        });
-        return;
-      }
-
-      // Utilisez ADMIN_ROLES pour s'assurer que l'utilisateur est créé avec les bons droits
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email: supervisorEmail,
-        password: '12345678',
-        options: {
-          emailRedirectTo: window.location.origin,
-          data: {
-            full_name: 'Marwen Superviseur',
-            role: 'supervisor',
-            department: 'finance',
-            username: username,
-            email_confirmed: true,
-            confirmed_at: new Date().toISOString()
-          }
-        }
-      });
-
-      if (signUpError) {
-        console.error("Erreur lors de la création du compte:", signUpError);
-        if (signUpError.message === "Signups not allowed for this instance") {
-          toast({
-            title: "Configuration requise",
-            description: "L'inscription est désactivée dans Supabase. Veuillez l'activer dans les paramètres.",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Erreur",
-            description: signUpError.message,
-            variant: "destructive",
-          });
-        }
-        return;
-      }
-
-      console.log("Compte créé avec succès", authData);
-      toast({
-        title: "Compte créé",
-        description: "Le compte superviseur a été créé avec succès. Vous pouvez maintenant vous connecter avec les identifiants fournis.",
-      });
-
-    } catch (error: any) {
-      console.error("Erreur inattendue lors de la création du compte:", error);
       toast({
         title: "Erreur",
         description: error.message || "Une erreur inattendue est survenue",
@@ -216,12 +123,12 @@ const Login = () => {
           </p>
         </div>
 
-        <form onSubmit={handleAuth} className="space-y-4">
+        <form onSubmit={handleLogin} className="space-y-4">
           <div className="space-y-2">
             <Input
-              placeholder="Email ou nom d'utilisateur"
-              value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
+              placeholder="Nom d'utilisateur"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               required
             />
           </div>
@@ -242,16 +149,6 @@ const Login = () => {
             {isLoading ? "Chargement..." : "Se connecter"}
           </Button>
         </form>
-
-        <Button
-          type="button"
-          variant="outline"
-          onClick={createSupervisor}
-          disabled={isLoading}
-          className="w-full mt-4"
-        >
-          Créer le compte superviseur
-        </Button>
       </Card>
     </div>
   );
