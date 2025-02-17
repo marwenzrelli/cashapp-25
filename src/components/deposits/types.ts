@@ -9,3 +9,16 @@ export interface Deposit {
   created_at: string;
   created_by: string | null;
 }
+
+export interface AISuggestion {
+  id: string;
+  message: string;
+  amount: number;
+  clientName: string;
+}
+
+export interface EditFormData {
+  clientName: string;
+  amount: string;
+  notes: string;
+}

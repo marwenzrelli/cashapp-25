@@ -60,15 +60,14 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
         return;
       }
 
-      const newDeposit: Deposit = {
-        id: "",
+      const newDeposit: Omit<Deposit, 'id' | 'status' | 'created_at' | 'created_by'> = {
         client_name: `${selectedClientData.prenom} ${selectedClientData.nom}`,
         amount: Number(amount),
         date: format(date, "yyyy-MM-dd"),
         description
       };
 
-      await onConfirm(newDeposit);
+      await onConfirm(newDeposit as Deposit);
       
       setSelectedClient("");
       setAmount("");
