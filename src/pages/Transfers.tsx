@@ -34,7 +34,7 @@ const Transfers = () => {
     reason: "",
   });
   const { currency } = useCurrency();
-  const { refreshClientBalance } = useClients();
+  const { refreshClientBalance, fetchClients } = useClients();
 
   const fetchTransfers = async () => {
     try {
@@ -115,11 +115,15 @@ const Transfers = () => {
     }
   };
 
-  const findClientByName = async (fullName: string) => {
+  const findClientByFullName = async (fullName: string) => {
+    const [prenom, ...nomParts] = fullName.split(' ');
+    const nom = nomParts.join(' ');
+
     const { data, error } = await supabase
       .from('clients')
-      .select('id, prenom, nom')
-      .or(`prenom.ilike.${fullName}%,nom.ilike.${fullName}%`)
+      .select('id')
+      .eq('prenom', prenom)
+      .eq('nom', nom)
       .single();
 
     if (error) {
@@ -134,8 +138,8 @@ const Transfers = () => {
     if (!selectedTransfer) return;
 
     try {
-      const fromClient = await findClientByName(selectedTransfer.fromClient);
-      const toClient = await findClientByName(selectedTransfer.toClient);
+      const fromClient = await findClientByFullName(selectedTransfer.fromClient);
+      const toClient = await findClientByFullName(selectedTransfer.toClient);
 
       if (!fromClient || !toClient) {
         console.error("Could not find one or both clients");
@@ -158,6 +162,8 @@ const Transfers = () => {
         refreshClientBalance(fromClient.id),
         refreshClientBalance(toClient.id)
       ]);
+
+      await fetchClients();
 
       setIsDeleteDialogOpen(false);
       toast.success("Virement supprimé avec succès");
