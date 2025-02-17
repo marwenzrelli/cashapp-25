@@ -10,7 +10,7 @@ import { DollarSign } from "lucide-react";
 
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -20,12 +20,11 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const normalizedUsername = username.trim().toLowerCase();
-      console.log("1. Tentative de connexion avec username:", normalizedUsername);
+      const normalizedEmail = email.trim().toLowerCase();
+      console.log("1. Tentative de connexion avec email:", normalizedEmail);
       
-      // Utiliser directement l'email comme username puisque nous savons que c'est marwen.superviseur@flowcash.com
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: "marwen.superviseur@flowcash.com",
+        email: normalizedEmail,
         password: password,
       });
 
@@ -35,7 +34,7 @@ const Login = () => {
         console.error("Erreur de connexion:", error);
         toast({
           title: "Erreur de connexion",
-          description: "Nom d'utilisateur ou mot de passe incorrect",
+          description: "Email ou mot de passe incorrect",
           variant: "destructive",
         });
         return;
@@ -50,7 +49,6 @@ const Login = () => {
         return;
       }
 
-      // Si connecté avec succès, rediriger vers le dashboard
       console.log("3. Connexion réussie, redirection...");
       navigate("/dashboard");
 
@@ -87,9 +85,10 @@ const Login = () => {
         <form onSubmit={handleLogin} className="space-y-4">
           <div className="space-y-2">
             <Input
-              placeholder="Nom d'utilisateur"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
