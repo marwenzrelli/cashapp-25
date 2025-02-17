@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -5,7 +6,7 @@ import { Client } from "@/features/clients/types";
 import { Operation } from "@/features/operations/types";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, Phone, Mail, Calendar, Wallet, ArrowUpCircle, ArrowDownCircle, RefreshCcw } from "lucide-react";
+import { User, Phone, Mail, Calendar, ArrowUpCircle, ArrowDownCircle, RefreshCcw } from "lucide-react";
 import { OperationCard } from "@/features/operations/components/OperationCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -21,6 +22,8 @@ const PublicClientProfile = () => {
       try {
         if (!token) return;
 
+        console.log("Début de la récupération des données avec le token:", token);
+
         // Récupérer d'abord l'accès QR
         const { data: qrAccess, error: qrError } = await supabase
           .from('qr_access')
@@ -28,7 +31,12 @@ const PublicClientProfile = () => {
           .eq('access_token', token)
           .single();
 
-        if (qrError) throw new Error("Token d'accès invalide");
+        if (qrError) {
+          console.error("Erreur QR Access:", qrError);
+          throw new Error("Token d'accès invalide");
+        }
+        
+        console.log("QR Access trouvé:", qrAccess);
         
         if (qrAccess.expires_at && new Date(qrAccess.expires_at) < new Date()) {
           throw new Error("Le lien a expiré");
@@ -41,7 +49,12 @@ const PublicClientProfile = () => {
           .eq('id', qrAccess.client_id)
           .single();
 
-        if (clientError) throw clientError;
+        if (clientError) {
+          console.error("Erreur Client:", clientError);
+          throw clientError;
+        }
+
+        console.log("Client trouvé:", clientData);
         setClient(clientData);
 
         // Récupérer toutes les opérations
@@ -53,12 +66,13 @@ const PublicClientProfile = () => {
           .from('deposits')
           .select('*')
           .eq('client_name', clientFullName)
+          .eq('status', 'completed')
           .order('operation_date', { ascending: false });
 
         if (depositsError) {
           console.error("Erreur lors de la récupération des versements:", depositsError);
         } else {
-          console.log("Versements trouvés:", deposits?.length);
+          console.log("Versements trouvés:", deposits);
         }
 
         // Récupérer les retraits
@@ -66,12 +80,13 @@ const PublicClientProfile = () => {
           .from('withdrawals')
           .select('*')
           .eq('client_name', clientFullName)
+          .eq('status', 'completed')
           .order('operation_date', { ascending: false });
 
         if (withdrawalsError) {
           console.error("Erreur lors de la récupération des retraits:", withdrawalsError);
         } else {
-          console.log("Retraits trouvés:", withdrawals?.length);
+          console.log("Retraits trouvés:", withdrawals);
         }
 
         // Récupérer les virements
@@ -79,12 +94,13 @@ const PublicClientProfile = () => {
           .from('transfers')
           .select('*')
           .or(`from_client.eq."${clientFullName}",to_client.eq."${clientFullName}"`)
+          .eq('status', 'completed')
           .order('operation_date', { ascending: false });
 
         if (transfersError) {
           console.error("Erreur lors de la récupération des virements:", transfersError);
         } else {
-          console.log("Virements trouvés:", transfers?.length);
+          console.log("Virements trouvés:", transfers);
         }
 
         // Transformer les données en format unifié
@@ -116,7 +132,7 @@ const PublicClientProfile = () => {
           }))
         ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-        console.log("Nombre total d'opérations:", allOperations.length);
+        console.log("Opérations transformées:", allOperations);
         setOperations(allOperations);
       } catch (err) {
         console.error("Erreur complète:", err);
@@ -149,7 +165,7 @@ const PublicClientProfile = () => {
         schema: 'public',
         table: 'deposits',
       }, () => {
-        fetchClientData(); // Recharger toutes les données
+        fetchClientData();
       })
       .subscribe();
 
@@ -204,136 +220,167 @@ const PublicClientProfile = () => {
       <div className="max-w-3xl mx-auto space-y-8">
         <h1 className="text-3xl font-bold text-center">Informations Client</h1>
 
-        <Card className="backdrop-blur-xl bg-white/50 dark:bg-gray-950/50">
-          <CardHeader>
-            <CardTitle>Informations personnelles</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-6 md:grid-cols-2">
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <User className="h-5 w-5 text-primary" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Nom complet</p>
-                    <p className="font-medium">{client.prenom} {client.nom}</p>
+        {client && (
+          <>
+            <Card className="backdrop-blur-xl bg-white/50 dark:bg-gray-950/50">
+              <CardHeader>
+                <CardTitle>Informations personnelles</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <User className="h-5 w-5 text-primary" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Nom complet</p>
+                        <p className="font-medium">{client.prenom} {client.nom}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Phone className="h-5 w-5 text-primary" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Téléphone</p>
+                        <p className="font-medium">{client.telephone}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <Mail className="h-5 w-5 text-primary" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Email</p>
+                        <p className="font-medium">{client.email}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Calendar className="h-5 w-5 text-primary" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Date de création</p>
+                        <p className="font-medium">{format(new Date(client.date_creation || ''), 'dd/MM/yyyy')}</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <Phone className="h-5 w-5 text-primary" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Téléphone</p>
-                    <p className="font-medium">{client.telephone}</p>
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <Mail className="h-5 w-5 text-primary" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Email</p>
-                    <p className="font-medium">{client.email}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Calendar className="h-5 w-5 text-primary" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Date de création</p>
-                    <p className="font-medium">{format(new Date(client.date_creation || ''), 'dd/MM/yyyy')}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
 
-        <Card className="relative overflow-hidden backdrop-blur-xl bg-white/50 dark:bg-gray-950/50">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/10 pointer-events-none" />
-          <CardHeader>
-            <CardTitle>Solde actuel</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{client.solde.toLocaleString()} €</div>
-            <p className="text-sm text-muted-foreground mt-2">
-              Mis à jour le {format(new Date(), 'dd/MM/yyyy HH:mm')}
-            </p>
-          </CardContent>
-        </Card>
+            <Card className="relative overflow-hidden backdrop-blur-xl bg-white/50 dark:bg-gray-950/50">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/10 pointer-events-none" />
+              <CardHeader>
+                <CardTitle>Solde actuel</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{client.solde.toLocaleString()} €</div>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Mis à jour le {format(new Date(), 'dd/MM/yyyy HH:mm')}
+                </p>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Historique des opérations</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="all" className="w-full">
-              <TabsList className="mb-4">
-                <TabsTrigger value="all" className="flex items-center gap-2">
-                  Toutes les opérations
-                </TabsTrigger>
-                <TabsTrigger value="deposits" className="flex items-center gap-2">
-                  <ArrowUpCircle className="h-4 w-4" />
-                  Versements
-                </TabsTrigger>
-                <TabsTrigger value="withdrawals" className="flex items-center gap-2">
-                  <ArrowDownCircle className="h-4 w-4" />
-                  Retraits
-                </TabsTrigger>
-                <TabsTrigger value="transfers" className="flex items-center gap-2">
-                  <RefreshCcw className="h-4 w-4" />
-                  Virements
-                </TabsTrigger>
-              </TabsList>
+            <Card>
+              <CardHeader>
+                <CardTitle>Historique des opérations</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue="all" className="w-full">
+                  <TabsList className="mb-4">
+                    <TabsTrigger value="all" className="flex items-center gap-2">
+                      Toutes les opérations
+                    </TabsTrigger>
+                    <TabsTrigger value="deposits" className="flex items-center gap-2">
+                      <ArrowUpCircle className="h-4 w-4" />
+                      Versements
+                    </TabsTrigger>
+                    <TabsTrigger value="withdrawals" className="flex items-center gap-2">
+                      <ArrowDownCircle className="h-4 w-4" />
+                      Retraits
+                    </TabsTrigger>
+                    <TabsTrigger value="transfers" className="flex items-center gap-2">
+                      <RefreshCcw className="h-4 w-4" />
+                      Virements
+                    </TabsTrigger>
+                  </TabsList>
 
-              <TabsContent value="all" className="space-y-4">
-                {operations.map((operation) => (
-                  <OperationCard
-                    key={operation.id}
-                    operation={operation}
-                    onEdit={() => {}}
-                    onDelete={() => {}}
-                  />
-                ))}
-                {operations.length === 0 && (
-                  <div className="text-center py-12">
-                    <p className="text-muted-foreground">Aucune opération trouvée</p>
-                  </div>
-                )}
-              </TabsContent>
+                  <TabsContent value="all" className="space-y-4">
+                    {operations.map((operation) => (
+                      <OperationCard
+                        key={operation.id}
+                        operation={operation}
+                        onEdit={() => {}}
+                        onDelete={() => {}}
+                      />
+                    ))}
+                    {operations.length === 0 && (
+                      <div className="text-center py-12">
+                        <p className="text-muted-foreground">Aucune opération trouvée</p>
+                      </div>
+                    )}
+                  </TabsContent>
 
-              <TabsContent value="deposits" className="space-y-4">
-                {operations.filter(op => op.type === "deposit").map((operation) => (
-                  <OperationCard
-                    key={operation.id}
-                    operation={operation}
-                    onEdit={() => {}}
-                    onDelete={() => {}}
-                  />
-                ))}
-              </TabsContent>
+                  <TabsContent value="deposits" className="space-y-4">
+                    {operations.filter(op => op.type === "deposit").map((operation) => (
+                      <OperationCard
+                        key={operation.id}
+                        operation={operation}
+                        onEdit={() => {}}
+                        onDelete={() => {}}
+                      />
+                    ))}
+                    {operations.filter(op => op.type === "deposit").length === 0 && (
+                      <div className="text-center py-12">
+                        <p className="text-muted-foreground">Aucun versement trouvé</p>
+                      </div>
+                    )}
+                  </TabsContent>
 
-              <TabsContent value="withdrawals" className="space-y-4">
-                {operations.filter(op => op.type === "withdrawal").map((operation) => (
-                  <OperationCard
-                    key={operation.id}
-                    operation={operation}
-                    onEdit={() => {}}
-                    onDelete={() => {}}
-                  />
-                ))}
-              </TabsContent>
+                  <TabsContent value="withdrawals" className="space-y-4">
+                    {operations.filter(op => op.type === "withdrawal").map((operation) => (
+                      <OperationCard
+                        key={operation.id}
+                        operation={operation}
+                        onEdit={() => {}}
+                        onDelete={() => {}}
+                      />
+                    ))}
+                    {operations.filter(op => op.type === "withdrawal").length === 0 && (
+                      <div className="text-center py-12">
+                        <p className="text-muted-foreground">Aucun retrait trouvé</p>
+                      </div>
+                    )}
+                  </TabsContent>
 
-              <TabsContent value="transfers" className="space-y-4">
-                {operations.filter(op => op.type === "transfer").map((operation) => (
-                  <OperationCard
-                    key={operation.id}
-                    operation={operation}
-                    onEdit={() => {}}
-                    onDelete={() => {}}
-                  />
-                ))}
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+                  <TabsContent value="transfers" className="space-y-4">
+                    {operations.filter(op => op.type === "transfer").map((operation) => (
+                      <OperationCard
+                        key={operation.id}
+                        operation={operation}
+                        onEdit={() => {}}
+                        onDelete={() => {}}
+                      />
+                    ))}
+                    {operations.filter(op => op.type === "transfer").length === 0 && (
+                      <div className="text-center py-12">
+                        <p className="text-muted-foreground">Aucun virement trouvé</p>
+                      </div>
+                    )}
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          </>
+        )}
+
+        {isLoading && (
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+          </div>
+        )}
+
+        {error && (
+          <div className="flex flex-col items-center justify-center min-h-screen">
+            <h2 className="text-2xl font-bold mb-4 text-destructive">{error}</h2>
+          </div>
+        )}
       </div>
     </div>
   );
