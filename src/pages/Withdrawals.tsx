@@ -117,7 +117,18 @@ const Withdrawals = () => {
   };
 
   const handleEdit = (withdrawal: Withdrawal) => {
+    const clientName = withdrawal.client_name.split(' ');
+    const client = clients.find(c => 
+      c.prenom === clientName[0] && c.nom === clientName[1]
+    );
+    
     setSelectedWithdrawal(withdrawal);
+    setNewWithdrawal({
+      clientId: client?.id.toString() || "",
+      amount: withdrawal.amount.toString(),
+      notes: withdrawal.notes || "",
+      date: new Date(withdrawal.operation_date).toISOString().split('T')[0]
+    });
     setIsDialogOpen(true);
     toast.info("Mode édition", {
       description: `Modification du retrait de ${withdrawal.amount} ${currency}`
@@ -146,28 +157,53 @@ const Withdrawals = () => {
 
       const clientFullName = `${selectedClient.prenom} ${selectedClient.nom}`;
       
-      const { error } = await supabase
-        .from('withdrawals')
-        .insert({
-          client_name: clientFullName,
-          amount: parseFloat(newWithdrawal.amount),
-          operation_date: new Date(newWithdrawal.date).toISOString(),
-          notes: newWithdrawal.notes,
-          created_by: session.user.id,
-          status: 'completed'
-        });
+      if (selectedWithdrawal) {
+        const { error } = await supabase
+          .from('withdrawals')
+          .update({
+            client_name: clientFullName,
+            amount: parseFloat(newWithdrawal.amount),
+            operation_date: new Date(newWithdrawal.date).toISOString(),
+            notes: newWithdrawal.notes,
+            created_by: session.user.id,
+            status: 'completed'
+          })
+          .eq('id', selectedWithdrawal.id);
 
-      if (error) {
-        toast.error("Erreur lors de l'enregistrement du retrait");
-        console.error("Error creating withdrawal:", error);
-        return;
+        if (error) {
+          toast.error("Erreur lors de la modification du retrait");
+          console.error("Error updating withdrawal:", error);
+          return;
+        }
+
+        toast.success("Retrait modifié", {
+          description: `Le retrait de ${parseFloat(newWithdrawal.amount)} ${currency} pour ${clientFullName} a été modifié.`
+        });
+      } else {
+        const { error } = await supabase
+          .from('withdrawals')
+          .insert({
+            client_name: clientFullName,
+            amount: parseFloat(newWithdrawal.amount),
+            operation_date: new Date(newWithdrawal.date).toISOString(),
+            notes: newWithdrawal.notes,
+            created_by: session.user.id,
+            status: 'completed'
+          });
+
+        if (error) {
+          toast.error("Erreur lors de l'enregistrement du retrait");
+          console.error("Error creating withdrawal:", error);
+          return;
+        }
+
+        toast.success("Retrait enregistré", {
+          description: `Le retrait de ${parseFloat(newWithdrawal.amount)} ${currency} pour ${clientFullName} a été enregistré.`
+        });
       }
 
       setIsDialogOpen(false);
-      toast.success("Retrait enregistré", {
-        description: `Le retrait de ${parseFloat(newWithdrawal.amount)} ${currency} pour ${clientFullName} a été enregistré.`
-      });
-      
+      setSelectedWithdrawal(null);
       setNewWithdrawal({
         clientId: "",
         amount: "",
@@ -277,10 +313,12 @@ const Withdrawals = () => {
               <div className="rounded-xl bg-red-100 dark:bg-red-900/20 p-2">
                 <ArrowDownCircle className="h-6 w-6 text-red-600" />
               </div>
-              Nouveau retrait
+              {selectedWithdrawal ? "Modifier le retrait" : "Nouveau retrait"}
             </DialogTitle>
             <DialogDescription className="text-base">
-              Enregistrez un nouveau retrait pour un client
+              {selectedWithdrawal 
+                ? "Modifiez les informations du retrait" 
+                : "Enregistrez un nouveau retrait pour un client"}
             </DialogDescription>
           </DialogHeader>
 
@@ -384,7 +422,16 @@ const Withdrawals = () => {
           <DialogFooter className="sm:justify-between">
             <Button
               variant="ghost"
-              onClick={() => setIsDialogOpen(false)}
+              onClick={() => {
+                setIsDialogOpen(false);
+                setSelectedWithdrawal(null);
+                setNewWithdrawal({
+                  clientId: "",
+                  amount: "",
+                  notes: "",
+                  date: new Date().toISOString().split('T')[0]
+                });
+              }}
               className="gap-2"
             >
               Annuler
@@ -394,7 +441,7 @@ const Withdrawals = () => {
               className="bg-red-600 hover:bg-red-700 text-white gap-2 min-w-[200px]"
             >
               <ArrowDownCircle className="h-4 w-4" />
-              Effectuer le retrait
+              {selectedWithdrawal ? "Modifier le retrait" : "Effectuer le retrait"}
             </Button>
           </DialogFooter>
         </DialogContent>
