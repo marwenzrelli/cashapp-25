@@ -59,11 +59,6 @@ export const ClientQRCode = ({ clientId, clientName }: ClientQRCodeProps) => {
         <p className="text-sm text-center text-muted-foreground">
           Code QR unique du client
         </p>
-        {accessToken && (
-          <p className="text-xs text-center text-muted-foreground">
-            URL: {window.location.origin}/public/client/{accessToken}
-          </p>
-        )}
       </div>
     </Card>
   );
