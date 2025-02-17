@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -14,6 +13,122 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const createSupervisor = async () => {
+    try {
+      setIsLoading(true);
+      console.log("Début de la création du compte superviseur...");
+
+      // Email plus simple pour éviter les problèmes de validation
+      const supervisorEmail = "supervisor@flowcash.com";
+      const username = "superviseur2024";  // Nouveau nom d'utilisateur
+      
+      // Vérifier si le profil existe déjà
+      const { data: existingUser, error: checkError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('email', supervisorEmail)
+        .maybeSingle();
+
+      if (existingUser) {
+        console.log("Le compte existe déjà:", existingUser);
+        toast({
+          title: "Information",
+          description: `Le compte existe déjà. Essayez de vous connecter avec ${username}/12345678`,
+        });
+        return;
+      }
+
+      if (checkError) {
+        console.error("Erreur lors de la vérification du profil existant:", checkError);
+      }
+
+      console.log("Création du compte...");
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+        email: supervisorEmail,
+        password: '12345678',
+        options: {
+          data: {
+            full_name: 'Marwen Superviseur',
+            role: 'supervisor',
+            department: 'finance',
+            username: username
+          }
+        }
+      });
+
+      if (signUpError) {
+        console.error("Erreur lors de la création:", signUpError);
+        
+        if (signUpError.message === "Signups not allowed for this instance") {
+          toast({
+            title: "Configuration requise",
+            description: "L'inscription est désactivée. Veuillez activer les inscriptions dans les paramètres Supabase.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Erreur",
+            description: signUpError.message,
+            variant: "destructive",
+          });
+        }
+        return;
+      }
+
+      if (!authData.user) {
+        console.error("Pas de données utilisateur reçues");
+        toast({
+          title: "Erreur",
+          description: "Erreur lors de la création du compte",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log("Compte créé avec succès, attente de la création du profil...");
+      
+      // Attendre un peu plus longtemps pour laisser le trigger créer le profil
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+      // Vérifier que le profil a bien été créé
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('email', supervisorEmail)
+        .maybeSingle();
+
+      if (profileError) {
+        console.error("Erreur lors de la vérification du profil:", profileError);
+      }
+
+      if (!profile) {
+        console.log("Profil non trouvé après création");
+        toast({
+          title: "Attention",
+          description: "Compte créé mais le profil n'est pas encore disponible. Attendez quelques secondes avant de vous connecter.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log("Profil créé avec succès:", profile);
+      toast({
+        title: "Succès",
+        description: `Compte superviseur créé avec succès. Vous pouvez maintenant vous connecter avec ${username}/12345678`,
+      });
+
+    } catch (error: any) {
+      console.error("Erreur inattendue:", error);
+      toast({
+        title: "Erreur",
+        description: error.message || "Une erreur inattendue est survenue",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,122 +257,6 @@ const Login = () => {
     }
   };
 
-  const createSupervisor = async () => {
-    try {
-      setIsLoading(true);
-      console.log("Début de la création du compte superviseur...");
-
-      // Email plus simple pour éviter les problèmes de validation
-      const supervisorEmail = "supervisor@flowcash.com";
-      const username = "superviseur2024";  // Nouveau nom d'utilisateur
-      
-      // Vérifier si le profil existe déjà
-      const { data: existingUser, error: checkError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('email', supervisorEmail)
-        .maybeSingle();
-
-      if (existingUser) {
-        console.log("Le compte existe déjà:", existingUser);
-        toast({
-          title: "Information",
-          description: `Le compte existe déjà. Essayez de vous connecter avec ${username}/12345678`,
-        });
-        return;
-      }
-
-      if (checkError) {
-        console.error("Erreur lors de la vérification du profil existant:", checkError);
-      }
-
-      console.log("Création du compte...");
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email: supervisorEmail,
-        password: '12345678',
-        options: {
-          data: {
-            full_name: 'Marwen Superviseur',
-            role: 'supervisor',
-            department: 'finance',
-            username: username
-          }
-        }
-      });
-
-      if (signUpError) {
-        console.error("Erreur lors de la création:", signUpError);
-        
-        if (signUpError.message === "Signups not allowed for this instance") {
-          toast({
-            title: "Configuration requise",
-            description: "L'inscription est désactivée. Veuillez activer les inscriptions dans les paramètres Supabase.",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Erreur",
-            description: signUpError.message,
-            variant: "destructive",
-          });
-        }
-        return;
-      }
-
-      if (!authData.user) {
-        console.error("Pas de données utilisateur reçues");
-        toast({
-          title: "Erreur",
-          description: "Erreur lors de la création du compte",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      console.log("Compte créé avec succès, attente de la création du profil...");
-      
-      // Attendre un peu plus longtemps pour laisser le trigger créer le profil
-      await new Promise(resolve => setTimeout(resolve, 3000));
-
-      // Vérifier que le profil a bien été créé
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('email', supervisorEmail)
-        .maybeSingle();
-
-      if (profileError) {
-        console.error("Erreur lors de la vérification du profil:", profileError);
-      }
-
-      if (!profile) {
-        console.log("Profil non trouvé après création");
-        toast({
-          title: "Attention",
-          description: "Compte créé mais le profil n'est pas encore disponible. Attendez quelques secondes avant de vous connecter.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      console.log("Profil créé avec succès:", profile);
-      toast({
-        title: "Succès",
-        description: `Compte superviseur créé avec succès. Vous pouvez maintenant vous connecter avec ${username}/12345678`,
-      });
-
-    } catch (error: any) {
-      console.error("Erreur inattendue:", error);
-      toast({
-        title: "Erreur",
-        description: error.message || "Une erreur inattendue est survenue",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <Card className="w-full max-w-md p-8 space-y-6">
@@ -302,6 +301,10 @@ const Login = () => {
             {isLoading ? "Chargement..." : "Se connecter"}
           </Button>
         </form>
+
+        <p className="text-sm text-gray-500 text-center">
+          Vous pouvez utiliser votre email ou votre nom d'utilisateur pour vous connecter
+        </p>
 
         {/* Bouton temporaire pour créer le compte superviseur - À SUPPRIMER APRÈS UTILISATION */}
         <Button
