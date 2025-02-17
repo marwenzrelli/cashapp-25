@@ -21,39 +21,16 @@ const Login = () => {
 
     try {
       const normalizedUsername = username.trim().toLowerCase();
-      console.log("Tentative de connexion avec username normalisé:", normalizedUsername);
       
-      // Afficher tous les profils pour debug
-      const { data: allProfiles, error: allProfilesError } = await supabase
-        .from('profiles')
-        .select('username, email');
-      
-      console.log("Tous les profils:", allProfiles);
-      console.log("Erreur éventuelle:", allProfilesError);
-
-      // 1. D'abord, récupérer l'email associé au nom d'utilisateur
+      // 1. Récupérer l'email associé au nom d'utilisateur
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('email, id, username, status')
+        .select('email')
         .eq('username', normalizedUsername)
-        .maybeSingle();
+        .single();
 
-      console.log("Résultat de la recherche du profil:", { profile, profileError });
-
-      if (profileError) {
-        console.error("Erreur lors de la recherche du profil:", profileError);
-        setIsLoading(false);
-        toast({
-          title: "Erreur",
-          description: "Erreur lors de la recherche du profil",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (!profile) {
-        console.error("Profil non trouvé pour le username:", normalizedUsername);
-        setIsLoading(false);
+      if (profileError || !profile) {
+        console.error("Erreur ou profil non trouvé:", profileError);
         toast({
           title: "Erreur",
           description: "Nom d'utilisateur introuvable",
@@ -62,19 +39,14 @@ const Login = () => {
         return;
       }
 
-      console.log("Email trouvé:", profile.email);
-
-      // 2. Tentative de connexion avec l'email récupéré
-      const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
+      // 2. Connexion avec l'email
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: profile.email,
-        password,
+        password: password,
       });
 
-      console.log("Résultat de la tentative de connexion:", { authData, signInError });
-
-      if (signInError) {
-        console.error("Erreur de connexion:", signInError);
-        setIsLoading(false);
+      if (error) {
+        console.error("Erreur de connexion:", error);
         toast({
           title: "Erreur de connexion",
           description: "Nom d'utilisateur ou mot de passe incorrect",
@@ -83,8 +55,7 @@ const Login = () => {
         return;
       }
 
-      if (!authData.user) {
-        setIsLoading(false);
+      if (!data.user) {
         toast({
           title: "Erreur",
           description: "Erreur lors de la connexion",
@@ -93,22 +64,18 @@ const Login = () => {
         return;
       }
 
-      // 3. Vérification du statut du compte
+      // 3. Vérifier le statut du compte
       const { data: userProfile, error: userProfileError } = await supabase
         .from('profiles')
         .select('status')
-        .eq('id', authData.user.id)
+        .eq('id', data.user.id)
         .single();
 
-      console.log("Vérification du statut:", { userProfile, userProfileError });
-
       if (userProfileError || !userProfile) {
-        console.error("Erreur lors de la vérification du profil:", userProfileError);
         await supabase.auth.signOut();
-        setIsLoading(false);
         toast({
           title: "Erreur",
-          description: "Erreur lors de la vérification du statut du compte",
+          description: "Erreur lors de la vérification du compte",
           variant: "destructive",
         });
         return;
@@ -116,7 +83,6 @@ const Login = () => {
 
       if (userProfile.status === 'inactive') {
         await supabase.auth.signOut();
-        setIsLoading(false);
         toast({
           title: "Compte inactif",
           description: "Votre compte a été désactivé. Veuillez contacter l'administrateur.",
@@ -125,15 +91,14 @@ const Login = () => {
         return;
       }
 
-      // 4. Connexion réussie, redirection vers le dashboard
-      console.log("Connexion réussie, redirection vers le dashboard");
+      // 4. Redirection vers le dashboard
       navigate("/dashboard");
 
     } catch (error: any) {
       console.error("Erreur inattendue:", error);
       toast({
         title: "Erreur",
-        description: error.message || "Une erreur inattendue est survenue",
+        description: "Une erreur inattendue est survenue",
         variant: "destructive",
       });
     } finally {
