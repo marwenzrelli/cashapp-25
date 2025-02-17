@@ -23,6 +23,7 @@ const Login = () => {
 
       // Email plus simple pour éviter les problèmes de validation
       const supervisorEmail = "supervisor@flowcash.com";
+      const username = "superviseur2024";  // Nouveau nom d'utilisateur
       
       // Vérifier si le profil existe déjà
       const { data: existingUser, error: checkError } = await supabase
@@ -35,7 +36,7 @@ const Login = () => {
         console.log("Le compte existe déjà:", existingUser);
         toast({
           title: "Information",
-          description: "Le compte existe déjà. Essayez de vous connecter avec marwensuperviseur/12345678",
+          description: `Le compte existe déjà. Essayez de vous connecter avec ${username}/12345678`,
         });
         return;
       }
@@ -53,7 +54,7 @@ const Login = () => {
             full_name: 'Marwen Superviseur',
             role: 'supervisor',
             department: 'finance',
-            username: 'marwensuperviseur'
+            username: username
           }
         }
       });
@@ -116,7 +117,7 @@ const Login = () => {
       console.log("Profil créé avec succès:", profile);
       toast({
         title: "Succès",
-        description: "Compte superviseur créé avec succès. Vous pouvez maintenant vous connecter avec marwensuperviseur/12345678",
+        description: `Compte superviseur créé avec succès. Vous pouvez maintenant vous connecter avec ${username}/12345678`,
       });
 
     } catch (error: any) {
