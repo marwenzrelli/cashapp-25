@@ -36,39 +36,39 @@ const Statistics = () => {
   const startOfCurrentMonth = startOfMonth(currentMonth);
   const endOfCurrentMonth = endOfMonth(currentMonth);
 
-  const currentMonthDeposits = deposits.filter(dep => 
-    new Date(dep.created_at) >= startOfCurrentMonth && 
-    new Date(dep.created_at) <= endOfCurrentMonth
-  );
+  const currentMonthDeposits = deposits.filter(dep => {
+    const depositDate = new Date(dep.created_at);
+    return depositDate >= startOfCurrentMonth && depositDate <= endOfCurrentMonth;
+  });
 
-  const currentMonthWithdrawals = withdrawals.filter(w => 
-    new Date(w.created_at) >= startOfCurrentMonth && 
-    new Date(w.created_at) <= endOfCurrentMonth
-  );
+  const currentMonthWithdrawals = withdrawals.filter(w => {
+    const withdrawalDate = new Date(w.created_at);
+    return withdrawalDate >= startOfCurrentMonth && withdrawalDate <= endOfCurrentMonth;
+  });
 
-  const currentMonthTransfers = transfers.filter(transfer => 
-    new Date(transfer.date) >= startOfCurrentMonth && 
-    new Date(transfer.date) <= endOfCurrentMonth
-  );
+  const currentMonthTransfers = transfers.filter(transfer => {
+    const transferDate = new Date(transfer.date);
+    return !isNaN(transferDate.getTime()) && transferDate >= startOfCurrentMonth && transferDate <= endOfCurrentMonth;
+  });
 
   const lastMonth = subDays(startOfCurrentMonth, 1);
   const startOfLastMonth = startOfMonth(lastMonth);
   const endOfLastMonth = endOfMonth(lastMonth);
 
-  const lastMonthDeposits = deposits.filter(dep => 
-    new Date(dep.created_at) >= startOfLastMonth && 
-    new Date(dep.created_at) <= endOfLastMonth
-  );
+  const lastMonthDeposits = deposits.filter(dep => {
+    const depositDate = new Date(dep.created_at);
+    return depositDate >= startOfLastMonth && depositDate <= endOfLastMonth;
+  });
 
-  const lastMonthWithdrawals = withdrawals.filter(w => 
-    new Date(w.created_at) >= startOfLastMonth && 
-    new Date(w.created_at) <= endOfLastMonth
-  );
+  const lastMonthWithdrawals = withdrawals.filter(w => {
+    const withdrawalDate = new Date(w.created_at);
+    return withdrawalDate >= startOfLastMonth && withdrawalDate <= endOfLastMonth;
+  });
 
-  const lastMonthTransfers = transfers.filter(transfer => 
-    new Date(transfer.date) >= startOfLastMonth && 
-    new Date(transfer.date) <= endOfLastMonth
-  );
+  const lastMonthTransfers = transfers.filter(transfer => {
+    const transferDate = new Date(transfer.date);
+    return !isNaN(transferDate.getTime()) && transferDate >= startOfLastMonth && transferDate <= endOfLastMonth;
+  });
 
   // Calcul des tendances
   const currentMonthTotal = currentMonthDeposits.reduce((acc, dep) => acc + dep.amount, 0) -
@@ -85,38 +85,66 @@ const Statistics = () => {
 
   // Analyse des transactions par jour
   const dailyTransactionsBase = deposits.reduce((acc, dep) => {
-    const date = format(new Date(dep.created_at), 'dd/MM/yyyy');
-    acc[date] = (acc[date] || 0) + 1;
+    try {
+      const date = format(new Date(dep.created_at), 'dd/MM/yyyy');
+      acc[date] = (acc[date] || 0) + 1;
+    } catch (error) {
+      console.error("Error formatting date:", dep.created_at);
+    }
     return acc;
   }, {} as Record<string, number>);
 
   // Analyse des transactions par jour incluant les virements
   const dailyTransactions = [...deposits, ...withdrawals, ...transfers].reduce((acc, op) => {
-    const date = format(new Date('created_at' in op ? op.created_at : op.date), 'dd/MM/yyyy');
-    acc[date] = (acc[date] || 0) + 1;
+    try {
+      const date = format(
+        new Date('created_at' in op ? op.created_at : op.date), 
+        'dd/MM/yyyy'
+      );
+      acc[date] = (acc[date] || 0) + 1;
+    } catch (error) {
+      console.error("Error formatting date for operation:", op);
+    }
     return acc;
   }, {} as Record<string, number>);
 
   // Moyenne des transactions par jour
   const averageTransactionsPerDay = Object.values(dailyTransactions).reduce((a, b) => a + b, 0) / 
-    Object.keys(dailyTransactions).length || 0;
+    Math.max(Object.keys(dailyTransactions).length, 1);
 
   // Données pour le graphique d'évolution
   const last30DaysData = Array.from({ length: 30 }, (_, i) => {
     const date = subDays(new Date(), i);
     const formattedDate = format(date, 'dd/MM');
     
-    const dayDeposits = deposits.filter(dep => 
-      format(new Date(dep.created_at), 'dd/MM') === formattedDate
-    );
+    const dayDeposits = deposits.filter(dep => {
+      try {
+        return format(new Date(dep.created_at), 'dd/MM') === formattedDate;
+      } catch (error) {
+        console.error("Error filtering deposit date:", dep.created_at);
+        return false;
+      }
+    });
     
-    const dayWithdrawals = withdrawals.filter(w => 
-      format(new Date(w.created_at), 'dd/MM') === formattedDate
-    );
+    const dayWithdrawals = withdrawals.filter(w => {
+      try {
+        return format(new Date(w.created_at), 'dd/MM') === formattedDate;
+      } catch (error) {
+        console.error("Error filtering withdrawal date:", w.created_at);
+        return false;
+      }
+    });
     
-    const dayTransfers = transfers.filter(transfer => 
-      format(new Date(transfer.date), 'dd/MM') === formattedDate
-    );
+    const dayTransfers = transfers.filter(transfer => {
+      try {
+        const transferDate = new Date(transfer.date);
+        return !isNaN(transferDate.getTime()) && 
+          format(transferDate, 'dd/MM') === formattedDate;
+      } catch (error) {
+        console.error("Error filtering transfer date:", transfer.date);
+        return false;
+      }
+    });
     
     return {
       date: formattedDate,
