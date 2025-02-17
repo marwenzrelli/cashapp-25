@@ -2,6 +2,7 @@
 import { User, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { type Deposit } from "@/components/deposits/types";
+import { cn } from "@/lib/utils";
 
 interface DepositsTableProps {
   deposits: Deposit[];
@@ -11,6 +12,12 @@ interface DepositsTableProps {
 }
 
 export const DepositsTable = ({ deposits, itemsPerPage, onEdit, onDelete }: DepositsTableProps) => {
+  const getAmountColor = (amount: number) => {
+    if (amount > 0) return "text-green-600 dark:text-green-400";
+    if (amount < 0) return "text-red-600 dark:text-red-400";
+    return "text-gray-600 dark:text-gray-400";
+  };
+
   return (
     <div className="relative w-full overflow-auto rounded-lg border">
       <table className="w-full text-sm">
@@ -43,7 +50,10 @@ export const DepositsTable = ({ deposits, itemsPerPage, onEdit, onDelete }: Depo
                 </div>
               </td>
               <td className="p-3">
-                <div className="font-medium tabular-nums">
+                <div className={cn(
+                  "font-medium tabular-nums",
+                  getAmountColor(deposit.amount)
+                )}>
                   {deposit.amount.toLocaleString()} TND
                 </div>
               </td>

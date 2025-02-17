@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { type Transfer } from "../types";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { cn } from "@/lib/utils";
 
 interface TransferListProps {
   transfers: Transfer[];
@@ -22,6 +23,13 @@ export const TransferList = ({
   onDelete,
 }: TransferListProps) => {
   const { currency } = useCurrency();
+
+  const getAmountColor = (amount: number) => {
+    if (amount > 0) return "text-green-600 dark:text-green-400";
+    if (amount < 0) return "text-red-600 dark:text-red-400";
+    return "text-gray-600 dark:text-gray-400";
+  };
+
   const filteredTransfers = transfers.filter(
     (transfer) =>
       transfer.fromClient.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -80,7 +88,10 @@ export const TransferList = ({
                 
                 <div className="flex items-center gap-4">
                   <div className="flex flex-col items-end gap-1">
-                    <div className="text-lg font-semibold text-primary">
+                    <div className={cn(
+                      "text-lg font-semibold",
+                      getAmountColor(transfer.amount)
+                    )}>
                       {transfer.amount.toLocaleString()} TND
                     </div>
                     <div className="text-xs text-muted-foreground">

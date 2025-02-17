@@ -3,6 +3,7 @@ import { Table } from "@/components/ui/table";
 import { UserCircle, ArrowUpCircle, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { type Deposit } from "./types";
+import { cn } from "@/lib/utils";
 
 interface DepositListProps {
   deposits: Deposit[];
@@ -11,6 +12,12 @@ interface DepositListProps {
 }
 
 export const DepositList = ({ deposits, onEdit, onDelete }: DepositListProps) => {
+  const getAmountColor = (amount: number) => {
+    if (amount > 0) return "text-green-600 dark:text-green-400";
+    if (amount < 0) return "text-red-600 dark:text-red-400";
+    return "text-gray-600 dark:text-gray-400";
+  };
+
   return (
     <table className="w-full text-sm">
       <thead className="bg-muted/50">
@@ -40,7 +47,10 @@ export const DepositList = ({ deposits, onEdit, onDelete }: DepositListProps) =>
               </div>
             </td>
             <td className="p-3">
-              <div className="flex items-center gap-2 text-success">
+              <div className={cn(
+                "flex items-center gap-2",
+                getAmountColor(deposit.amount)
+              )}>
                 <ArrowUpCircle className="h-4 w-4" />
                 <span className="font-medium">
                   {deposit.amount.toLocaleString()} €
