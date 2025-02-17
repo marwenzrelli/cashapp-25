@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Loader2, ArrowRight } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { Client } from "@/features/clients/types";
 
 interface TransferFormProps {
   onSuccess?: () => void;
@@ -24,14 +26,88 @@ export const TransferForm = ({ onSuccess }: TransferFormProps) => {
   const [toClient, setToClient] = useState("");
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
+  const [clients, setClients] = useState<Client[]>([]);
+
+  useEffect(() => {
+    fetchClients();
+  }, []);
+
+  const fetchClients = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error("Vous devez être connecté pour accéder aux clients");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('clients')
+        .select('*')
+        .eq('status', 'active')
+        .order('nom', { ascending: true });
+
+      if (error) {
+        console.error("Error fetching clients:", error);
+        toast.error("Erreur lors du chargement des clients");
+        return;
+      }
+
+      if (data) {
+        setClients(data);
+      }
+    } catch (error) {
+      console.error("Error in fetchClients:", error);
+      toast.error("Une erreur est survenue");
+    }
+  };
 
   const handleTransfer = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      toast.success("Transfert effectué avec succès !");
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error("Vous devez être connecté pour effectuer un virement");
+        return;
+      }
+
+      if (!fromClient || !toClient || !amount || !reason) {
+        toast.error("Veuillez remplir tous les champs");
+        return;
+      }
+
+      const fromClientData = clients.find(c => c.id.toString() === fromClient);
+      const toClientData = clients.find(c => c.id.toString() === toClient);
+
+      if (!fromClientData || !toClientData) {
+        toast.error("Client non trouvé");
+        return;
+      }
+
+      const fromClientFullName = `${fromClientData.prenom} ${fromClientData.nom}`;
+      const toClientFullName = `${toClientData.prenom} ${toClientData.nom}`;
+
+      const { error } = await supabase
+        .from('transfers')
+        .insert({
+          from_client: fromClientFullName,
+          to_client: toClientFullName,
+          amount: parseFloat(amount),
+          reason,
+          created_by: session.user.id,
+          status: 'completed'
+        });
+
+      if (error) {
+        toast.error("Erreur lors de l'enregistrement du virement");
+        console.error("Error creating transfer:", error);
+        return;
+      }
+
+      toast.success("Virement effectué avec succès !");
       
       setFromClient("");
       setToClient("");
@@ -39,7 +115,8 @@ export const TransferForm = ({ onSuccess }: TransferFormProps) => {
       setReason("");
       onSuccess?.();
     } catch (error) {
-      toast.error("Erreur lors du transfert");
+      console.error("Error in handleTransfer:", error);
+      toast.error("Une erreur est survenue");
     } finally {
       setIsLoading(false);
     }
@@ -59,9 +136,14 @@ export const TransferForm = ({ onSuccess }: TransferFormProps) => {
                 <SelectValue placeholder="Sélectionner un client" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Jean Dupont">Jean Dupont</SelectItem>
-                <SelectItem value="Marie Martin">Marie Martin</SelectItem>
-                <SelectItem value="Pierre Durant">Pierre Durant</SelectItem>
+                {clients.map((client) => (
+                  <SelectItem 
+                    key={client.id} 
+                    value={client.id.toString()}
+                  >
+                    {client.prenom} {client.nom} ({client.solde} TND)
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -73,9 +155,15 @@ export const TransferForm = ({ onSuccess }: TransferFormProps) => {
                 <SelectValue placeholder="Sélectionner un client" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Jean Dupont">Jean Dupont</SelectItem>
-                <SelectItem value="Marie Martin">Marie Martin</SelectItem>
-                <SelectItem value="Pierre Durant">Pierre Durant</SelectItem>
+                {clients.map((client) => (
+                  <SelectItem 
+                    key={client.id} 
+                    value={client.id.toString()}
+                    disabled={client.id.toString() === fromClient}
+                  >
+                    {client.prenom} {client.nom} ({client.solde} TND)
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
