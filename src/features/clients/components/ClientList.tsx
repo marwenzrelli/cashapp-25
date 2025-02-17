@@ -7,6 +7,7 @@ import { Client } from "../types";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatAmount } from "@/utils/formatCurrency";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 interface ClientListProps {
   clients: Client[];
@@ -16,6 +17,7 @@ interface ClientListProps {
 
 export const ClientList = ({ clients, onEdit, onDelete }: ClientListProps) => {
   const { currency } = useCurrency();
+  const navigate = useNavigate();
 
   const getBalanceColor = (solde: number) => {
     if (solde > 0) return "text-green-600 dark:text-green-400";
@@ -49,7 +51,10 @@ export const ClientList = ({ clients, onEdit, onDelete }: ClientListProps) => {
               {clients.map((client) => (
                 <TableRow key={client.id} className="group">
                   <TableCell>
-                    <div className="flex items-center gap-3">
+                    <div 
+                      className="flex items-center gap-3 cursor-pointer hover:text-primary transition-colors"
+                      onClick={() => navigate(`/clients/${client.id}`)}
+                    >
                       <div className="relative">
                         <UserCircle className="h-10 w-10 text-primary/20 transition-colors group-hover:text-primary/40" />
                         <div className="absolute inset-0 animate-pulse rounded-full bg-primary/5" />
