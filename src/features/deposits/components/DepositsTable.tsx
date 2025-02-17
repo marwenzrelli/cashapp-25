@@ -37,7 +37,7 @@ export const DepositsTable = ({ deposits, itemsPerPage, onEdit, onDelete }: Depo
                       {deposit.client_name}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      #{deposit.id.toString().padStart(4, '0')}
+                      #{deposit.id.toString().slice(-2).padStart(2, '0')}
                     </p>
                   </div>
                 </div>
@@ -82,4 +82,3 @@ export const DepositsTable = ({ deposits, itemsPerPage, onEdit, onDelete }: Depo
     </div>
   );
 };
-
