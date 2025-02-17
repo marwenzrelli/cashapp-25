@@ -1,10 +1,9 @@
-
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { SystemUser, Permission } from "@/types/admin";
-import { Shield, UserCog, Users, Check, X } from "lucide-react";
+import { Shield, UserCog, Users, Check, X, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,18 +15,22 @@ import { EditUserDialog } from "./EditUserDialog";
 import { PermissionsDialog } from "./PermissionsDialog";
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface UsersListProps {
   users: SystemUser[];
+  currentUser: SystemUser | null;
   onToggleStatus: (userId: string) => void;
   onUpdateUser: (updatedUser: SystemUser) => void;
   onUpdatePermissions: (userId: string, permissions: Permission[]) => void;
+  onDeleteUser: (userId: string) => void;
 }
 
-export const UsersList = ({ users, onToggleStatus, onUpdateUser, onUpdatePermissions }: UsersListProps) => {
+export const UsersList = ({ users, currentUser, onToggleStatus, onUpdateUser, onUpdatePermissions, onDeleteUser }: UsersListProps) => {
   const [selectedUser, setSelectedUser] = useState<SystemUser | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isPermissionsDialogOpen, setIsPermissionsDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const handleCloseEditDialog = () => {
     setIsEditDialogOpen(false);
@@ -39,10 +42,20 @@ export const UsersList = ({ users, onToggleStatus, onUpdateUser, onUpdatePermiss
     setSelectedUser(null);
   };
 
+  const handleDelete = () => {
+    if (selectedUser) {
+      onDeleteUser(selectedUser.id);
+      setIsDeleteDialogOpen(false);
+      setSelectedUser(null);
+    }
+  };
+
   const formatLastLogin = (lastLogin: string | null) => {
     if (!lastLogin) return "Jamais connecté";
     return `Il y a ${formatDistanceToNow(new Date(lastLogin), { locale: fr })}`;
   };
+
+  const isSupervisor = currentUser?.role === "supervisor";
 
   return (
     <>
@@ -157,6 +170,18 @@ export const UsersList = ({ users, onToggleStatus, onUpdateUser, onUpdatePermiss
                       <Shield className="h-4 w-4" />
                       <span>Gérer les permissions</span>
                     </DropdownMenuItem>
+                    {isSupervisor && user.id !== currentUser?.id && (
+                      <DropdownMenuItem
+                        className="flex items-center gap-2 cursor-pointer text-red-600"
+                        onClick={() => {
+                          setSelectedUser(user);
+                          setIsDeleteDialogOpen(true);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span>Supprimer l'utilisateur</span>
+                      </DropdownMenuItem>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>
@@ -178,6 +203,23 @@ export const UsersList = ({ users, onToggleStatus, onUpdateUser, onUpdatePermiss
         user={selectedUser}
         onUpdatePermissions={onUpdatePermissions}
       />
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };

@@ -13,7 +13,7 @@ import { UserFilters } from "@/features/admin/components/UserFilters";
 import { useUsers } from "@/features/admin/hooks/useUsers";
 
 const Administration = () => {
-  const { users, currentUser, toggleUserStatus, addUser, updateUser, updatePermissions } = useUsers();
+  const { users, currentUser, toggleUserStatus, addUser, updateUser, updatePermissions, deleteUser } = useUsers();
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
@@ -97,9 +97,11 @@ const Administration = () => {
         <CardContent>
           <UsersList 
             users={filteredUsers} 
+            currentUser={currentUser}
             onToggleStatus={toggleUserStatus}
             onUpdateUser={updateUser}
             onUpdatePermissions={updatePermissions}
+            onDeleteUser={deleteUser}
           />
         </CardContent>
       </Card>

@@ -37,6 +37,19 @@ export function useUsers() {
     setUsers(formattedUsers);
   };
 
+  const deleteUser = async (userId: string) => {
+    const { error } = await supabase
+      .auth.admin.deleteUser(userId);
+
+    if (error) {
+      toast.error("Erreur lors de la suppression de l'utilisateur");
+      return;
+    }
+
+    setUsers(users.filter(user => user.id !== userId));
+    toast.success("Utilisateur supprimé avec succès");
+  };
+
   const toggleUserStatus = async (userId: string) => {
     const user = users.find(u => u.id === userId);
     if (!user) return;
@@ -149,5 +162,6 @@ export function useUsers() {
     addUser,
     updateUser,
     updatePermissions,
+    deleteUser,
   };
 }
