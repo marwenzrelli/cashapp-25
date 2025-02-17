@@ -1,3 +1,4 @@
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +14,8 @@ import {
 import { useState } from "react";
 import { EditUserDialog } from "./EditUserDialog";
 import { PermissionsDialog } from "./PermissionsDialog";
+import { formatDistanceToNow } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 interface UsersListProps {
   users: SystemUser[];
@@ -34,6 +37,11 @@ export const UsersList = ({ users, onToggleStatus, onUpdateUser, onUpdatePermiss
   const handleClosePermissionsDialog = () => {
     setIsPermissionsDialogOpen(false);
     setSelectedUser(null);
+  };
+
+  const formatLastLogin = (lastLogin: string | null) => {
+    if (!lastLogin) return "Jamais connecté";
+    return `Il y a ${formatDistanceToNow(new Date(lastLogin), { locale: fr })}`;
   };
 
   return (
@@ -69,6 +77,9 @@ export const UsersList = ({ users, onToggleStatus, onUpdateUser, onUpdatePermiss
                     <div className="font-medium">{user.fullName}</div>
                     <div className="text-sm text-muted-foreground">
                       {user.email}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      @{user.username}
                     </div>
                   </div>
                 </div>
@@ -116,7 +127,7 @@ export const UsersList = ({ users, onToggleStatus, onUpdateUser, onUpdatePermiss
                 </div>
               </TableCell>
               <TableCell>
-                {user.lastLogin ? user.lastLogin : "Jamais connecté"}
+                {formatLastLogin(user.lastLogin)}
               </TableCell>
               <TableCell className="text-right">
                 <DropdownMenu>

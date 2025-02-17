@@ -1,52 +1,40 @@
 
-import type { Database } from '@/integrations/supabase/types'
-
-type Tables = Database['public']['Tables']
-type ProfileRow = Tables['profiles']['Row']
-
-export type UserRole = ProfileRow['role']
+export type UserStatus = "active" | "inactive";
+export type UserRole = "supervisor" | "manager" | "cashier";
 
 export interface Permission {
-  id: string;
+  id?: string;
   name: string;
   description: string;
-  module: "transfers" | "deposits" | "withdrawals" | "clients" | "reports" | "settings";
+  module: string;
 }
 
 export interface SystemUser {
   id: string;
-  fullName: string;
   email: string;
-  username?: string; // Ajout du champ username
+  username: string;
+  fullName: string;
+  avatar?: string;
   role: UserRole;
-  status: ProfileRow['status'];
+  status: UserStatus;
+  department: string;
   permissions: Permission[];
   createdAt: string;
-  department: string;
-  phone?: string;
-  avatar?: string;
-  lastLogin?: string;
+  lastLogin: string | null;
 }
 
-// Utilitaire pour convertir un profil Supabase en SystemUser
-export const mapProfileToSystemUser = (
-  profile: ProfileRow & { user_permissions?: Tables['user_permissions']['Row'][] }
-): SystemUser => ({
-  id: profile.id,
-  fullName: profile.full_name,
-  email: profile.email,
-  username: profile.username || undefined,
-  role: profile.role,
-  status: profile.status,
-  permissions: profile.user_permissions?.map(p => ({
-    id: p.id,
-    name: p.permission_name,
-    description: p.permission_description || '',
-    module: p.module as Permission['module']
-  })) || [],
-  createdAt: profile.created_at,
-  department: profile.department,
-  phone: profile.phone || undefined,
-  avatar: profile.avatar_url || undefined,
-  lastLogin: profile.last_login || undefined
-});
+export const mapProfileToSystemUser = (profile: any): SystemUser => {
+  return {
+    id: profile.id,
+    email: profile.email,
+    username: profile.username || '',
+    fullName: profile.full_name || '',
+    role: profile.role || 'cashier',
+    status: profile.status || 'active',
+    department: profile.department || 'accounting',
+    permissions: profile.user_permissions || [],
+    createdAt: profile.created_at,
+    lastLogin: profile.last_login,
+    avatar: profile.avatar_url,
+  };
+};
