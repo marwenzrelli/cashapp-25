@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { SystemUser, UserRole, mapProfileToSystemUser } from '@/types/admin';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { PostgrestResponse } from '@supabase/supabase-js';
 
 export function useUsers() {
   const [users, setUsers] = useState<SystemUser[]>([]);
@@ -14,10 +13,18 @@ export function useUsers() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // D'abord, récupérer le profil de base
+      // Récupérer le profil avec une seule requête
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          *,
+          user_permissions (
+            id,
+            permission_name,
+            permission_description,
+            module
+          )
+        `)
         .eq('id', user.id)
         .single();
 
@@ -28,25 +35,7 @@ export function useUsers() {
 
       if (!profile) return;
 
-      // Ensuite, récupérer les permissions si c'est un superviseur
-      let permissions = [];
-      if (profile.role === 'supervisor') {
-        const { data: userPermissions, error: permissionsError } = await supabase
-          .from('user_permissions')
-          .select('*')
-          .eq('user_id', user.id);
-
-        if (permissionsError) {
-          console.error("Erreur lors du chargement des permissions:", permissionsError);
-        } else {
-          permissions = userPermissions || [];
-        }
-      }
-
-      setCurrentUser(mapProfileToSystemUser({
-        ...profile,
-        user_permissions: permissions
-      }));
+      setCurrentUser(mapProfileToSystemUser(profile));
     } catch (error) {
       console.error("Erreur lors du chargement du profil:", error);
     }
@@ -54,10 +43,18 @@ export function useUsers() {
 
   const fetchUsers = async () => {
     try {
-      // D'abord, récupérer tous les profils
+      // Récupérer tous les profils avec leurs permissions en une seule requête
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('*');
+        .select(`
+          *,
+          user_permissions (
+            id,
+            permission_name,
+            permission_description,
+            module
+          )
+        `);
 
       if (profilesError) {
         console.error("Erreur lors du chargement des utilisateurs:", profilesError);
@@ -65,34 +62,12 @@ export function useUsers() {
         return;
       }
 
-      // Ensuite, récupérer toutes les permissions pour les superviseurs
-      const supervisorIds = profiles
-        .filter(profile => profile.role === 'supervisor')
-        .map(profile => profile.id);
+      if (!profiles) return;
 
-      let allPermissions = [];
-      if (supervisorIds.length > 0) {
-        const { data: permissions, error: permissionsError } = await supabase
-          .from('user_permissions')
-          .select('*')
-          .in('user_id', supervisorIds);
-
-        if (permissionsError) {
-          console.error("Erreur lors du chargement des permissions:", permissionsError);
-        } else {
-          allPermissions = permissions || [];
-        }
-      }
-
-      // Mapper les permissions à leurs profils respectifs
-      const usersWithPermissions = profiles.map(profile => ({
+      setUsers(profiles.map(profile => mapProfileToSystemUser({
         ...profile,
-        user_permissions: profile.role === 'supervisor'
-          ? allPermissions.filter(p => p.user_id === profile.id)
-          : []
-      }));
-
-      setUsers(usersWithPermissions.map(mapProfileToSystemUser));
+        user_permissions: profile.user_permissions || []
+      })));
     } catch (error) {
       console.error("Erreur lors du chargement des utilisateurs:", error);
       toast.error("Une erreur est survenue lors du chargement des utilisateurs");
@@ -165,9 +140,6 @@ export function useUsers() {
 
       if (signUpError) throw signUpError;
 
-      // Attendre que le trigger crée le profil
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
       if (data.user) {
         toast.success("Utilisateur créé avec succès");
         await fetchUsers();
@@ -206,23 +178,6 @@ export function useUsers() {
 
   const updatePermissions = async (userId: string, permissions: SystemUser["permissions"]) => {
     try {
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', userId)
-        .single();
-
-      if (profileError) {
-        console.error("Erreur lors de la vérification du rôle:", profileError);
-        toast.error("Erreur lors de la mise à jour des permissions");
-        return;
-      }
-
-      if (profile.role !== 'supervisor') {
-        toast.error("Seuls les superviseurs peuvent avoir des permissions");
-        return;
-      }
-
       const { error: deleteError } = await supabase
         .from('user_permissions')
         .delete()
