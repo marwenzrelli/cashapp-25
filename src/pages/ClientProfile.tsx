@@ -126,7 +126,7 @@ const ClientProfile = () => {
     
     // Informations client
     doc.setFontSize(12);
-    doc.text(`Solde: ${client.solde.toLocaleString('fr-FR')} TND`, 15, 25);
+    doc.text(`Solde: ${client.solde.toLocaleString()} TND`, 15, 25);
     doc.text(`Téléphone: ${client.telephone}`, 15, 32);
     doc.text(`Email: ${client.email}`, 15, 39);
     doc.text(`Date de création: ${format(new Date(client.date_creation || ''), 'dd/MM/yyyy')}`, 15, 46);
@@ -143,7 +143,7 @@ const ClientProfile = () => {
       op.type === 'deposit' ? 'Versement' : op.type === 'withdrawal' ? 'Retrait' : 'Virement',
       format(new Date(op.date), 'dd/MM/yyyy HH:mm'),
       op.description,
-      op.amount.toLocaleString('fr-FR') + ' TND',
+      op.amount.toLocaleString() + ' TND',
       op.fromClient,
       op.toClient || '-'
     ]);
@@ -311,7 +311,7 @@ const ClientProfile = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{client.solde.toLocaleString('fr-FR')} TND</div>
+              <div className="text-3xl font-bold">{client.solde.toLocaleString()} TND</div>
               <p className="text-sm text-muted-foreground mt-2">
                 Mis à jour le {format(new Date(), 'dd/MM/yyyy HH:mm')}
               </p>
