@@ -11,18 +11,21 @@ import { useTransfersList } from "@/features/transfers/hooks/useTransfersList";
 import { cn } from "@/lib/utils";
 import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
 import { fr } from "date-fns/locale";
+import { useWithdrawals } from "@/features/withdrawals/hooks/useWithdrawals";
 
 const Statistics = () => {
-  const { deposits, isLoading } = useDeposits();
+  const { deposits, isLoading: isLoadingDeposits } = useDeposits();
+  const { withdrawals, isLoading: isLoadingWithdrawals } = useWithdrawals();
   const { transfers } = useTransfersList();
   const { currency } = useCurrency();
 
   // Calculs des totaux
   const totalDeposits = deposits.reduce((acc, dep) => acc + Math.max(dep.amount, 0), 0);
-  const totalWithdrawals = Math.abs(deposits.reduce((acc, dep) => acc + Math.min(dep.amount, 0), 0));
+  const totalWithdrawals = withdrawals.reduce((acc, withdrawal) => acc + withdrawal.amount, 0);
   const totalTransfers = transfers.reduce((acc, transfer) => acc + transfer.amount, 0);
   const activeClients = new Set([
     ...deposits.map(dep => dep.client_name),
+    ...withdrawals.map(w => w.client_name),
     ...transfers.map(transfer => transfer.fromClient),
     ...transfers.map(transfer => transfer.toClient)
   ]).size;
@@ -36,6 +39,11 @@ const Statistics = () => {
   const currentMonthDeposits = deposits.filter(dep => 
     new Date(dep.created_at) >= startOfCurrentMonth && 
     new Date(dep.created_at) <= endOfCurrentMonth
+  );
+
+  const currentMonthWithdrawals = withdrawals.filter(w => 
+    new Date(w.created_at) >= startOfCurrentMonth && 
+    new Date(w.created_at) <= endOfCurrentMonth
   );
 
   const currentMonthTransfers = transfers.filter(transfer => 
@@ -52,16 +60,23 @@ const Statistics = () => {
     new Date(dep.created_at) <= endOfLastMonth
   );
 
+  const lastMonthWithdrawals = withdrawals.filter(w => 
+    new Date(w.created_at) >= startOfLastMonth && 
+    new Date(w.created_at) <= endOfLastMonth
+  );
+
   const lastMonthTransfers = transfers.filter(transfer => 
     new Date(transfer.date) >= startOfLastMonth && 
     new Date(transfer.date) <= endOfLastMonth
   );
 
   // Calcul des tendances
-  const currentMonthTotal = currentMonthDeposits.reduce((acc, dep) => acc + dep.amount, 0) +
+  const currentMonthTotal = currentMonthDeposits.reduce((acc, dep) => acc + dep.amount, 0) -
+    currentMonthWithdrawals.reduce((acc, w) => acc + w.amount, 0) +
     currentMonthTransfers.reduce((acc, transfer) => acc + transfer.amount, 0);
   
-  const lastMonthTotal = lastMonthDeposits.reduce((acc, dep) => acc + dep.amount, 0) +
+  const lastMonthTotal = lastMonthDeposits.reduce((acc, dep) => acc + dep.amount, 0) -
+    lastMonthWithdrawals.reduce((acc, w) => acc + w.amount, 0) +
     lastMonthTransfers.reduce((acc, transfer) => acc + transfer.amount, 0);
   
   const percentageChange = lastMonthTotal !== 0 
@@ -76,12 +91,8 @@ const Statistics = () => {
   }, {} as Record<string, number>);
 
   // Analyse des transactions par jour incluant les virements
-  const dailyTransactions = [...deposits, ...transfers.map(t => ({
-    created_at: t.date,
-    amount: t.amount,
-    client_name: t.fromClient
-  }))].reduce((acc, op) => {
-    const date = format(new Date(op.created_at), 'dd/MM/yyyy');
+  const dailyTransactions = [...deposits, ...withdrawals, ...transfers].reduce((acc, op) => {
+    const date = format(new Date('created_at' in op ? op.created_at : op.date), 'dd/MM/yyyy');
     acc[date] = (acc[date] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
@@ -99,6 +110,10 @@ const Statistics = () => {
       format(new Date(dep.created_at), 'dd/MM') === formattedDate
     );
     
+    const dayWithdrawals = withdrawals.filter(w => 
+      format(new Date(w.created_at), 'dd/MM') === formattedDate
+    );
+    
     const dayTransfers = transfers.filter(transfer => 
       format(new Date(transfer.date), 'dd/MM') === formattedDate
     );
@@ -106,9 +121,9 @@ const Statistics = () => {
     return {
       date: formattedDate,
       versements: dayDeposits.reduce((acc, dep) => acc + Math.max(dep.amount, 0), 0),
-      retraits: Math.abs(dayDeposits.reduce((acc, dep) => acc + Math.min(dep.amount, 0), 0)),
+      retraits: dayWithdrawals.reduce((acc, w) => acc + w.amount, 0),
       virements: dayTransfers.reduce((acc, transfer) => acc + transfer.amount, 0),
-      transactions: dayDeposits.length + dayTransfers.length
+      transactions: dayDeposits.length + dayWithdrawals.length + dayTransfers.length
     };
   }).reverse();
 
@@ -143,7 +158,7 @@ const Statistics = () => {
     return "text-gray-600 dark:text-gray-400";
   };
 
-  if (isLoading) {
+  if (isLoadingDeposits || isLoadingWithdrawals) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
