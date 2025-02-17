@@ -6,8 +6,8 @@ import { format } from "date-fns";
 
 interface OperationCardProps {
   operation: Operation;
-  onEdit: (operation: Operation) => void;
-  onDelete: (operation: Operation) => void;
+  onEdit?: (operation: Operation) => void;
+  onDelete?: (operation: Operation) => void;
 }
 
 const getTypeStyle = (type: Operation["type"]) => {
@@ -84,26 +84,32 @@ export const OperationCard = ({ operation, onEdit, onDelete }: OperationCardProp
               ID: {operation.id}
             </div>
           </div>
-          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onEdit(operation)}
-              className="relative hover:bg-blue-50 dark:hover:bg-blue-950/50 text-blue-600 hover:text-blue-600"
-            >
-              <Edit2 className="h-4 w-4 transition-transform hover:scale-110" />
-              <span className="absolute inset-0 rounded-full bg-blue-100 dark:bg-blue-900/20 opacity-0 group-hover:opacity-100 animate-ping" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onDelete(operation)}
-              className="relative hover:bg-red-50 dark:hover:bg-red-950/50 text-red-600 hover:text-red-600"
-            >
-              <Trash2 className="h-4 w-4 transition-transform hover:scale-110" />
-              <span className="absolute inset-0 rounded-full bg-red-100 dark:bg-red-900/20 opacity-0 group-hover:opacity-100 animate-ping" />
-            </Button>
-          </div>
+          {(onEdit || onDelete) && (
+            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
+              {onEdit && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onEdit(operation)}
+                  className="relative hover:bg-blue-50 dark:hover:bg-blue-950/50 text-blue-600 hover:text-blue-600"
+                >
+                  <Edit2 className="h-4 w-4 transition-transform hover:scale-110" />
+                  <span className="absolute inset-0 rounded-full bg-blue-100 dark:bg-blue-900/20 opacity-0 group-hover:opacity-100 animate-ping" />
+                </Button>
+              )}
+              {onDelete && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onDelete(operation)}
+                  className="relative hover:bg-red-50 dark:hover:bg-red-950/50 text-red-600 hover:text-red-600"
+                >
+                  <Trash2 className="h-4 w-4 transition-transform hover:scale-110" />
+                  <span className="absolute inset-0 rounded-full bg-red-100 dark:bg-red-900/20 opacity-0 group-hover:opacity-100 animate-ping" />
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
