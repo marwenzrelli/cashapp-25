@@ -15,7 +15,7 @@ export function useUsers() {
         .from('profiles')
         .select('*, user_permissions(*)')
         .eq('id', user.id)
-        .maybeSingle();
+        .single();
 
       if (profile) {
         setCurrentUser(mapProfileToSystemUser(profile));
@@ -24,32 +24,29 @@ export function useUsers() {
   };
 
   const fetchUsers = async () => {
-    const { data: profiles, error } = await supabase
-      .from('profiles')
-      .select('*, user_permissions(*)');
+    try {
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('*, user_permissions(*)');
 
-    if (error) {
+      if (error) {
+        console.error("Erreur lors du chargement des utilisateurs:", error);
+        toast.error("Erreur lors du chargement des utilisateurs");
+        return;
+      }
+
+      if (profiles) {
+        const formattedUsers = profiles.map(mapProfileToSystemUser);
+        setUsers(formattedUsers);
+      }
+    } catch (error) {
       console.error("Erreur lors du chargement des utilisateurs:", error);
-      toast.error("Erreur lors du chargement des utilisateurs");
-      return;
-    }
-
-    if (profiles) {
-      const formattedUsers = profiles.map(mapProfileToSystemUser);
-      setUsers(formattedUsers);
+      toast.error("Une erreur est survenue lors du chargement des utilisateurs");
     }
   };
 
   const deleteUser = async (userId: string) => {
     try {
-      const { data: currentProfile } = await supabase
-        .rpc('get_user_role', { user_id: (await supabase.auth.getUser()).data.user?.id });
-
-      if (currentProfile !== 'supervisor') {
-        toast.error("Seuls les superviseurs peuvent supprimer des utilisateurs");
-        return;
-      }
-
       const { error } = await supabase
         .auth.admin.deleteUser(userId);
 
@@ -62,21 +59,13 @@ export function useUsers() {
       setUsers(users.filter(user => user.id !== userId));
       toast.success("Utilisateur supprimé avec succès");
     } catch (error) {
-      console.error("Erreur lors de la vérification des permissions:", error);
-      toast.error("Erreur lors de la vérification des permissions");
+      console.error("Erreur lors de la suppression de l'utilisateur:", error);
+      toast.error("Erreur lors de la suppression de l'utilisateur");
     }
   };
 
   const toggleUserStatus = async (userId: string) => {
     try {
-      const { data: currentProfile } = await supabase
-        .rpc('get_user_role', { user_id: (await supabase.auth.getUser()).data.user?.id });
-
-      if (currentProfile !== 'supervisor') {
-        toast.error("Seuls les superviseurs peuvent modifier le statut des utilisateurs");
-        return;
-      }
-
       const user = users.find(u => u.id === userId);
       if (!user) return;
 
@@ -100,21 +89,13 @@ export function useUsers() {
       ));
       toast.success("Statut de l'utilisateur mis à jour");
     } catch (error) {
-      console.error("Erreur lors de la vérification des permissions:", error);
-      toast.error("Erreur lors de la vérification des permissions");
+      console.error("Erreur lors de la mise à jour du statut:", error);
+      toast.error("Erreur lors de la mise à jour du statut");
     }
   };
 
   const addUser = async (user: SystemUser & { password: string }) => {
     try {
-      const { data: currentProfile } = await supabase
-        .rpc('get_user_role', { user_id: (await supabase.auth.getUser()).data.user?.id });
-
-      if (currentProfile !== 'supervisor') {
-        toast.error("Seuls les superviseurs peuvent créer des utilisateurs");
-        return;
-      }
-
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: user.email,
         password: user.password,
@@ -145,14 +126,6 @@ export function useUsers() {
 
   const updateUser = async (updatedUser: SystemUser) => {
     try {
-      const { data: currentProfile } = await supabase
-        .rpc('get_user_role', { user_id: (await supabase.auth.getUser()).data.user?.id });
-
-      if (currentProfile !== 'supervisor') {
-        toast.error("Seuls les superviseurs peuvent modifier les utilisateurs");
-        return;
-      }
-
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -172,21 +145,13 @@ export function useUsers() {
       await fetchUsers();
       toast.success("Utilisateur mis à jour avec succès");
     } catch (error) {
-      console.error("Erreur lors de la vérification des permissions:", error);
-      toast.error("Erreur lors de la vérification des permissions");
+      console.error("Erreur lors de la mise à jour de l'utilisateur:", error);
+      toast.error("Erreur lors de la mise à jour de l'utilisateur");
     }
   };
 
   const updatePermissions = async (userId: string, permissions: SystemUser["permissions"]) => {
     try {
-      const { data: currentProfile } = await supabase
-        .rpc('get_user_role', { user_id: (await supabase.auth.getUser()).data.user?.id });
-
-      if (currentProfile !== 'supervisor') {
-        toast.error("Seuls les superviseurs peuvent modifier les permissions");
-        return;
-      }
-
       // Supprimer d'abord toutes les permissions existantes
       const { error: deleteError } = await supabase
         .from('user_permissions')
@@ -219,8 +184,8 @@ export function useUsers() {
       await fetchUsers();
       toast.success("Permissions mises à jour avec succès");
     } catch (error) {
-      console.error("Erreur lors de la vérification des permissions:", error);
-      toast.error("Erreur lors de la vérification des permissions");
+      console.error("Erreur lors de la mise à jour des permissions:", error);
+      toast.error("Erreur lors de la mise à jour des permissions");
     }
   };
 
