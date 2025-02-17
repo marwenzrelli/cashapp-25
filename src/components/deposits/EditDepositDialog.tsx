@@ -31,10 +31,10 @@ export const EditDepositDialog = ({
             <div className="rounded-lg bg-blue-50 dark:bg-blue-950/50 p-2 text-blue-600">
               <Pencil className="h-5 w-5" />
             </div>
-            Modifier le versement
+            Modifier le versement #{selectedDeposit?.id.toString().padStart(6, '0')}
           </DialogTitle>
           <DialogDescription className="text-base">
-            Modifiez les informations du versement de {selectedDeposit?.client_name}.
+            Modifiez les informations du versement effectué le {selectedDeposit?.date}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
@@ -60,15 +60,25 @@ export const EditDepositDialog = ({
               className="transition-all focus-visible:ring-blue-500"
               required
             />
+            <p className="text-sm text-muted-foreground">
+              Montant actuel : {selectedDeposit?.amount.toLocaleString()} TND
+            </p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="edit-notes">Notes</Label>
+            <Label htmlFor="edit-notes">Description</Label>
             <Input
               id="edit-notes"
               value={editForm.notes}
               onChange={(e) => onEditFormChange("notes", e.target.value)}
               className="transition-all focus-visible:ring-blue-500"
+              placeholder={selectedDeposit?.description || "Ajouter une description"}
             />
+          </div>
+          <div className="mt-4 rounded-lg bg-muted p-4">
+            <div className="text-sm text-muted-foreground">
+              <p><strong>Statut :</strong> {selectedDeposit?.status}</p>
+              <p><strong>Date de création :</strong> {new Date(selectedDeposit?.created_at || "").toLocaleDateString()}</p>
+            </div>
           </div>
         </div>
         <DialogFooter>
