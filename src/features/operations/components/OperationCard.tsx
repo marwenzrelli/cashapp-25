@@ -2,6 +2,7 @@
 import { Operation } from "../types";
 import { Button } from "@/components/ui/button";
 import { Edit2, Trash2, ArrowUpCircle, ArrowDownCircle, RefreshCcw } from "lucide-react";
+import { format } from "date-fns";
 
 interface OperationCardProps {
   operation: Operation;
