@@ -16,26 +16,46 @@ interface EditUserDialogProps {
 }
 
 export const EditUserDialog = ({ isOpen, onClose, user, onUpdateUser }: EditUserDialogProps) => {
-  const [editedUser, setEditedUser] = useState<Partial<SystemUser> & { password?: string }>(user || {});
+  const [editedUser, setEditedUser] = useState<Partial<SystemUser> & { password?: string; currentPassword?: string }>(user || {});
 
   if (!user) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (editedUser.password && editedUser.password.length < 8) {
-      toast.error("Le mot de passe doit contenir au moins 8 caractères");
-      return;
-    }
-
-    // Si un nouveau mot de passe est fourni, le mettre à jour
     if (editedUser.password) {
+      if (editedUser.password.length < 8) {
+        toast.error("Le nouveau mot de passe doit contenir au moins 8 caractères");
+        return;
+      }
+
+      if (!editedUser.currentPassword) {
+        toast.error("Veuillez saisir votre mot de passe actuel");
+        return;
+      }
+
+      // Vérifier d'abord que le mot de passe actuel est correct
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: editedUser.currentPassword
+      });
+
+      if (signInError) {
+        toast.error("Le mot de passe actuel est incorrect");
+        return;
+      }
+
+      // Mettre à jour le mot de passe
       const { error: passwordError } = await supabase.auth.updateUser({
         password: editedUser.password
       });
 
       if (passwordError) {
-        toast.error("Erreur lors de la mise à jour du mot de passe");
+        if (passwordError.message.includes("same_password")) {
+          toast.error("Le nouveau mot de passe doit être différent de l'ancien");
+        } else {
+          toast.error("Erreur lors de la mise à jour du mot de passe");
+        }
         return;
       }
     }
@@ -46,10 +66,12 @@ export const EditUserDialog = ({ isOpen, onClose, user, onUpdateUser }: EditUser
       department: getDepartmentByRole(editedUser.role as UserRole || user.role),
     };
     
-    // Supprimer le mot de passe de l'objet avant de l'envoyer à onUpdateUser
+    // Supprimer les mots de passe de l'objet avant de l'envoyer à onUpdateUser
     delete (updatedUser as any).password;
+    delete (updatedUser as any).currentPassword;
     
     onUpdateUser(updatedUser);
+    setEditedUser(prev => ({ ...prev, password: '', currentPassword: '' }));
     toast.success("Utilisateur mis à jour avec succès");
   };
 
@@ -109,6 +131,17 @@ export const EditUserDialog = ({ isOpen, onClose, user, onUpdateUser }: EditUser
             />
           </div>
           <div className="space-y-2">
+            <label>Mot de passe actuel</label>
+            <Input
+              type="password"
+              placeholder="Entrez le mot de passe actuel"
+              value={editedUser.currentPassword || ""}
+              onChange={(e) =>
+                setEditedUser({ ...editedUser, currentPassword: e.target.value })
+              }
+            />
+          </div>
+          <div className="space-y-2">
             <label>Nouveau mot de passe</label>
             <Input
               type="password"
@@ -119,7 +152,7 @@ export const EditUserDialog = ({ isOpen, onClose, user, onUpdateUser }: EditUser
               }
             />
             <p className="text-sm text-muted-foreground">
-              Minimum 8 caractères. Laissez vide si vous ne souhaitez pas modifier le mot de passe.
+              Minimum 8 caractères. Doit être différent du mot de passe actuel.
             </p>
           </div>
           <div className="space-y-2">
