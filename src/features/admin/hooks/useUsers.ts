@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { SystemUser, UserRole, mapProfileToSystemUser } from '@/types/admin';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,18 +6,18 @@ import { toast } from 'sonner';
 export function useUsers() {
   const [users, setUsers] = useState<SystemUser[]>([]);
   const [currentUser, setCurrentUser] = useState<SystemUser | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const fetchCurrentUser = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Récupérer le profil avec une seule requête
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select(`
           *,
-          user_permissions (
+          user_permissions!inner (
             id,
             permission_name,
             permission_description,
@@ -42,13 +41,13 @@ export function useUsers() {
   };
 
   const fetchUsers = async () => {
+    setIsLoading(true);
     try {
-      // Récupérer tous les profils avec leurs permissions en une seule requête
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select(`
           *,
-          user_permissions (
+          user_permissions!left (
             id,
             permission_name,
             permission_description,
@@ -71,6 +70,8 @@ export function useUsers() {
     } catch (error) {
       console.error("Erreur lors du chargement des utilisateurs:", error);
       toast.error("Une erreur est survenue lors du chargement des utilisateurs");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -133,7 +134,8 @@ export function useUsers() {
             full_name: user.fullName,
             role: user.role,
             department: user.department,
-            username: user.username
+            username: user.username,
+            status: 'active'
           }
         }
       });
@@ -141,6 +143,7 @@ export function useUsers() {
       if (signUpError) throw signUpError;
 
       if (data.user) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
         toast.success("Utilisateur créé avec succès");
         await fetchUsers();
       }
@@ -159,6 +162,7 @@ export function useUsers() {
           email: updatedUser.email,
           role: updatedUser.role,
           department: updatedUser.department,
+          status: updatedUser.status
         })
         .eq('id', updatedUser.id);
 
@@ -178,16 +182,10 @@ export function useUsers() {
 
   const updatePermissions = async (userId: string, permissions: SystemUser["permissions"]) => {
     try {
-      const { error: deleteError } = await supabase
+      await supabase
         .from('user_permissions')
         .delete()
         .eq('user_id', userId);
-
-      if (deleteError) {
-        console.error("Erreur lors de la suppression des permissions:", deleteError);
-        toast.error("Erreur lors de la mise à jour des permissions");
-        return;
-      }
 
       if (permissions.length > 0) {
         const { error } = await supabase
@@ -222,6 +220,7 @@ export function useUsers() {
   return {
     users,
     currentUser,
+    isLoading,
     toggleUserStatus,
     addUser,
     updateUser,
