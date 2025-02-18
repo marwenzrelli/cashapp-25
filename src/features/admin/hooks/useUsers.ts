@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { SystemUser, UserRole, mapProfileToSystemUser } from '@/types/admin';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,17 +14,10 @@ export function useUsers() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // D'abord récupérer le profil
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          user_permissions!inner (
-            id,
-            permission_name,
-            permission_description,
-            module
-          )
-        `)
+        .select('*')
         .eq('id', user.id)
         .single();
 
@@ -34,7 +28,21 @@ export function useUsers() {
 
       if (!profile) return;
 
-      setCurrentUser(mapProfileToSystemUser(profile));
+      // Ensuite récupérer les permissions séparément
+      const { data: permissions, error: permissionsError } = await supabase
+        .from('user_permissions')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (permissionsError) {
+        console.error("Erreur lors du chargement des permissions:", permissionsError);
+        return;
+      }
+
+      setCurrentUser(mapProfileToSystemUser({
+        ...profile,
+        user_permissions: permissions || []
+      }));
     } catch (error) {
       console.error("Erreur lors du chargement du profil:", error);
     }
@@ -43,17 +51,10 @@ export function useUsers() {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
+      // D'abord récupérer tous les profils
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          user_permissions!left (
-            id,
-            permission_name,
-            permission_description,
-            module
-          )
-        `);
+        .select('*');
 
       if (profilesError) {
         console.error("Erreur lors du chargement des utilisateurs:", profilesError);
@@ -63,10 +64,23 @@ export function useUsers() {
 
       if (!profiles) return;
 
-      setUsers(profiles.map(profile => mapProfileToSystemUser({
+      // Ensuite récupérer toutes les permissions
+      const { data: allPermissions, error: permissionsError } = await supabase
+        .from('user_permissions')
+        .select('*');
+
+      if (permissionsError) {
+        console.error("Erreur lors du chargement des permissions:", permissionsError);
+        return;
+      }
+
+      // Mapper les permissions à chaque profil
+      const usersWithPermissions = profiles.map(profile => ({
         ...profile,
-        user_permissions: profile.user_permissions || []
-      })));
+        user_permissions: allPermissions?.filter(p => p.user_id === profile.id) || []
+      }));
+
+      setUsers(usersWithPermissions.map(profile => mapProfileToSystemUser(profile)));
     } catch (error) {
       console.error("Erreur lors du chargement des utilisateurs:", error);
       toast.error("Une erreur est survenue lors du chargement des utilisateurs");
