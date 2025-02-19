@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { SystemUser, UserRole, mapProfileToSystemUser } from '@/types/admin';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,26 +12,35 @@ export function useUsers() {
   const fetchCurrentUser = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        console.log("Pas d'utilisateur authentifié");
+        return;
+      }
 
+      console.log("Récupération du profil pour l'utilisateur:", user.id);
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (profileError) {
         console.error("Erreur lors du chargement du profil:", profileError);
         return;
       }
 
-      if (!profile) return;
+      if (!profile) {
+        console.log("Aucun profil trouvé pour l'utilisateur");
+        return;
+      }
 
+      console.log("Profil récupéré:", profile);
       const { data: permissions } = await supabase
         .from('user_permissions')
         .select('id, permission_name, permission_description, module')
         .eq('user_id', user.id);
 
+      console.log("Permissions récupérées:", permissions);
       setCurrentUser(mapProfileToSystemUser({
         ...profile,
         user_permissions: permissions || []
@@ -43,7 +53,7 @@ export function useUsers() {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      // Récupérer tous les profils - les politiques RLS s'appliqueront automatiquement
+      console.log("Début de la récupération des profils");
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*');
@@ -56,15 +66,18 @@ export function useUsers() {
       }
 
       if (!profiles?.length) {
+        console.log("Aucun profil trouvé");
         setUsers([]);
         setIsLoading(false);
         return;
       }
 
+      console.log("Profils récupérés:", profiles);
       const { data: allPermissions } = await supabase
         .from('user_permissions')
         .select('*');
 
+      console.log("Permissions récupérées:", allPermissions);
       const usersWithPermissions = profiles.map(profile => ({
         ...profile,
         user_permissions: allPermissions?.filter(p => p.user_id === profile.id) || []
