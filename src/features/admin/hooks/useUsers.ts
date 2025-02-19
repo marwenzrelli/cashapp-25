@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { SystemUser, UserRole, mapProfileToSystemUser } from '@/types/admin';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,18 +26,15 @@ export function useUsers() {
 
       if (!profile) return;
 
-      // Récupération des permissions avec une requête distincte
       const { data: permissions } = await supabase
         .from('user_permissions')
         .select('id, permission_name, permission_description, module')
         .eq('user_id', user.id);
 
-      const userWithPermissions = {
+      setCurrentUser(mapProfileToSystemUser({
         ...profile,
         user_permissions: permissions || []
-      };
-
-      setCurrentUser(mapProfileToSystemUser(userWithPermissions));
+      }));
     } catch (error) {
       console.error("Erreur lors du chargement du profil:", error);
     }
@@ -47,26 +43,7 @@ export function useUsers() {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      // Vérifier d'abord si l'utilisateur est un superviseur
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setIsLoading(false);
-        return;
-      }
-
-      const { data: currentUserProfile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-
-      if (currentUserProfile?.role !== 'supervisor') {
-        setIsLoading(false);
-        toast.error("Accès non autorisé");
-        return;
-      }
-
-      // Si c'est un superviseur, récupérer tous les profils
+      // Récupérer tous les profils - les politiques RLS s'appliqueront automatiquement
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*');
@@ -78,17 +55,22 @@ export function useUsers() {
         return;
       }
 
-      // Récupérer toutes les permissions
+      if (!profiles?.length) {
+        setUsers([]);
+        setIsLoading(false);
+        return;
+      }
+
       const { data: allPermissions } = await supabase
         .from('user_permissions')
         .select('*');
 
-      const usersWithPermissions = profiles?.map(profile => ({
+      const usersWithPermissions = profiles.map(profile => ({
         ...profile,
         user_permissions: allPermissions?.filter(p => p.user_id === profile.id) || []
-      })) || [];
+      }));
 
-      setUsers(usersWithPermissions.map(profile => mapProfileToSystemUser(profile)));
+      setUsers(usersWithPermissions.map(mapProfileToSystemUser));
     } catch (error) {
       console.error("Erreur lors du chargement des utilisateurs:", error);
       toast.error("Une erreur est survenue lors du chargement des utilisateurs");
