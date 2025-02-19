@@ -1,5 +1,5 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { UserPlus, Users, Shield, UserCog } from "lucide-react";
 import { SystemUser, UserRole } from "@/types/admin";
@@ -11,6 +11,7 @@ import { UserProfile } from "@/features/admin/components/UserProfile";
 import { ServiceExplanations } from "@/features/admin/components/ServiceExplanations";
 import { UserFilters } from "@/features/admin/components/UserFilters";
 import { useUsers } from "@/features/admin/hooks/useUsers";
+import { supabase } from "@/integrations/supabase/client";
 
 const Administration = () => {
   const { users, currentUser, isLoading, toggleUserStatus, addUser, updateUser, updatePermissions, deleteUser } = useUsers();
@@ -18,8 +19,31 @@ const Administration = () => {
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
   const [selectedRole, setSelectedRole] = useState<UserRole | "all">("all");
+  const navigate = useNavigate();
 
   const isSupervisor = currentUser?.role === "supervisor";
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/login");
+      }
+    };
+
+    checkAuth();
+
+    // Écouter les changements de session
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT' || !session) {
+        navigate("/login");
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
 
   const filteredUsers = users.filter(
     (user) =>
@@ -31,7 +55,14 @@ const Administration = () => {
   );
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-screen">Chargement...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold mb-2">Chargement...</h2>
+          <p className="text-muted-foreground">Veuillez patienter pendant le chargement des données.</p>
+        </div>
+      </div>
+    );
   }
 
   if (!currentUser) {
