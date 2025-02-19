@@ -43,19 +43,53 @@ const Administration = () => {
         navigate("/login");
         return;
       }
+
+      // Vérifier le rôle de l'utilisateur
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profileError) {
+        console.error("Error checking user role:", profileError);
+        setIsAuthenticated(false);
+        return;
+      }
+
+      if (!profile || profile.role !== 'supervisor') {
+        console.log("User is not a supervisor:", profile?.role);
+        setIsAuthenticated(false);
+        return;
+      }
+
+      console.log("User authenticated as supervisor");
       setIsAuthenticated(true);
     };
 
     checkAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event);
       if (event === 'SIGNED_OUT' || !session) {
-        console.log("User signed out or no session, redirecting to login");
+        console.log("User signed out or no session");
         setIsAuthenticated(false);
         navigate("/login");
       } else {
-        setIsAuthenticated(true);
+        // Revérifier le rôle quand l'état d'authentification change
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profile?.role === 'supervisor') {
+          console.log("User re-authenticated as supervisor");
+          setIsAuthenticated(true);
+        } else {
+          console.log("User not authorized as supervisor");
+          setIsAuthenticated(false);
+        }
       }
     });
 
@@ -64,16 +98,16 @@ const Administration = () => {
     };
   }, [navigate]);
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !currentUser || currentUser.role !== 'supervisor') {
     return (
       <div className="flex flex-col items-center justify-center h-screen">
         <h2 className="text-2xl font-semibold mb-2">Accès non autorisé</h2>
-        <p className="text-muted-foreground">Vous devez être connecté pour accéder à cette page.</p>
+        <p className="text-muted-foreground">Cette page est réservée aux superviseurs.</p>
         <Button 
           className="mt-4"
-          onClick={() => navigate("/login")}
+          onClick={() => navigate("/")}
         >
-          Se connecter
+          Retour à l'accueil
         </Button>
       </div>
     );
