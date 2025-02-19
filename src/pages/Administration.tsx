@@ -13,7 +13,7 @@ import { UserFilters } from "@/features/admin/components/UserFilters";
 import { useUsers } from "@/features/admin/hooks/useUsers";
 
 const Administration = () => {
-  const { users, currentUser, toggleUserStatus, addUser, updateUser, updatePermissions, deleteUser } = useUsers();
+  const { users, currentUser, isLoading, toggleUserStatus, addUser, updateUser, updatePermissions, deleteUser } = useUsers();
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
@@ -30,8 +30,17 @@ const Administration = () => {
       (selectedRole === "all" || user.role === selectedRole)
   );
 
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-screen">Chargement...</div>;
+  }
+
   if (!currentUser) {
-    return null; // Ne rien afficher si l'utilisateur n'est pas chargé
+    return (
+      <div className="flex flex-col items-center justify-center h-screen">
+        <h2 className="text-2xl font-semibold mb-2">Accès non autorisé</h2>
+        <p className="text-muted-foreground">Vous devez être connecté pour accéder à cette page.</p>
+      </div>
+    );
   }
 
   return (
@@ -54,65 +63,69 @@ const Administration = () => {
         )}
       </div>
 
-      <div className="grid gap-6 md:grid-cols-4">
-        <StatCard
-          title="Total Utilisateurs"
-          value={users.length}
-          icon={Users}
-          iconColor="text-blue-600"
-          gradientFrom="blue-50"
-        />
-        <StatCard
-          title="Superviseurs"
-          value={users.filter((u) => u.role === "supervisor").length}
-          icon={Shield}
-          iconColor="text-purple-600"
-          gradientFrom="purple-50"
-        />
-        <StatCard
-          title="Gestionnaires"
-          value={users.filter((u) => u.role === "manager").length}
-          icon={UserCog}
-          iconColor="text-green-600"
-          gradientFrom="green-50"
-        />
-        <StatCard
-          title="Caissiers"
-          value={users.filter((u) => u.role === "cashier").length}
-          icon={Users}
-          iconColor="text-orange-600"
-          gradientFrom="orange-50"
-        />
-      </div>
-
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-primary" />
-              Gestion des utilisateurs
-            </CardTitle>
-            <UserFilters
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              selectedDepartment={selectedDepartment}
-              onDepartmentChange={setSelectedDepartment}
-              selectedRole={selectedRole}
-              onRoleChange={(value: UserRole | "all") => setSelectedRole(value)}
+      {isSupervisor && (
+        <>
+          <div className="grid gap-6 md:grid-cols-4">
+            <StatCard
+              title="Total Utilisateurs"
+              value={users.length}
+              icon={Users}
+              iconColor="text-blue-600"
+              gradientFrom="blue-50"
+            />
+            <StatCard
+              title="Superviseurs"
+              value={users.filter((u) => u.role === "supervisor").length}
+              icon={Shield}
+              iconColor="text-purple-600"
+              gradientFrom="purple-50"
+            />
+            <StatCard
+              title="Gestionnaires"
+              value={users.filter((u) => u.role === "manager").length}
+              icon={UserCog}
+              iconColor="text-green-600"
+              gradientFrom="green-50"
+            />
+            <StatCard
+              title="Caissiers"
+              value={users.filter((u) => u.role === "cashier").length}
+              icon={Users}
+              iconColor="text-orange-600"
+              gradientFrom="orange-50"
             />
           </div>
-        </CardHeader>
-        <CardContent>
-          <UsersList 
-            users={filteredUsers} 
-            currentUser={currentUser}
-            onToggleStatus={toggleUserStatus}
-            onUpdateUser={updateUser}
-            onUpdatePermissions={updatePermissions}
-            onDeleteUser={deleteUser}
-          />
-        </CardContent>
-      </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-primary" />
+                  Gestion des utilisateurs
+                </CardTitle>
+                <UserFilters
+                  searchTerm={searchTerm}
+                  onSearchChange={setSearchTerm}
+                  selectedDepartment={selectedDepartment}
+                  onDepartmentChange={setSelectedDepartment}
+                  selectedRole={selectedRole}
+                  onRoleChange={(value: UserRole | "all") => setSelectedRole(value)}
+                />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <UsersList 
+                users={filteredUsers} 
+                currentUser={currentUser}
+                onToggleStatus={toggleUserStatus}
+                onUpdateUser={updateUser}
+                onUpdatePermissions={updatePermissions}
+                onDeleteUser={deleteUser}
+              />
+            </CardContent>
+          </Card>
+        </>
+      )}
 
       {isSupervisor && (
         <AddUserDialog
@@ -122,9 +135,9 @@ const Administration = () => {
         />
       )}
 
-      {currentUser && <UserProfile user={currentUser} />}
+      <UserProfile user={currentUser} />
       
-      <ServiceExplanations />
+      {isSupervisor && <ServiceExplanations />}
     </div>
   );
 };
