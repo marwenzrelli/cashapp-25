@@ -19,6 +19,8 @@ const Administration = () => {
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
   const [selectedRole, setSelectedRole] = useState<UserRole | "all">("all");
 
+  const isSupervisor = currentUser?.role === "supervisor";
+
   const filteredUsers = users.filter(
     (user) =>
       (user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -27,6 +29,10 @@ const Administration = () => {
         user.department === selectedDepartment) &&
       (selectedRole === "all" || user.role === selectedRole)
   );
+
+  if (!currentUser) {
+    return null; // Ne rien afficher si l'utilisateur n'est pas chargé
+  }
 
   return (
     <div className="space-y-8 animate-in">
@@ -37,13 +43,15 @@ const Administration = () => {
             Gestion des utilisateurs et des autorisations
           </p>
         </div>
-        <Button
-          onClick={() => setIsAddUserOpen(true)}
-          className="flex items-center gap-2"
-        >
-          <UserPlus className="h-4 w-4" />
-          Ajouter un utilisateur
-        </Button>
+        {isSupervisor && (
+          <Button
+            onClick={() => setIsAddUserOpen(true)}
+            className="flex items-center gap-2"
+          >
+            <UserPlus className="h-4 w-4" />
+            Ajouter un utilisateur
+          </Button>
+        )}
       </div>
 
       <div className="grid gap-6 md:grid-cols-4">
@@ -106,11 +114,13 @@ const Administration = () => {
         </CardContent>
       </Card>
 
-      <AddUserDialog
-        isOpen={isAddUserOpen}
-        onClose={() => setIsAddUserOpen(false)}
-        onAddUser={addUser}
-      />
+      {isSupervisor && (
+        <AddUserDialog
+          isOpen={isAddUserOpen}
+          onClose={() => setIsAddUserOpen(false)}
+          onAddUser={addUser}
+        />
+      )}
 
       {currentUser && <UserProfile user={currentUser} />}
       
