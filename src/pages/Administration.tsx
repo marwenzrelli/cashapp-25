@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -14,12 +15,13 @@ import { useUsers } from "@/features/admin/hooks/useUsers";
 import { supabase } from "@/integrations/supabase/client";
 
 const Administration = () => {
+  const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { users, currentUser, isLoading, toggleUserStatus, addUser, updateUser, updatePermissions, deleteUser } = useUsers();
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
   const [selectedRole, setSelectedRole] = useState<UserRole | "all">("all");
-  const navigate = useNavigate();
 
   const isSupervisor = currentUser?.role === "supervisor";
 
@@ -27,16 +29,23 @@ const Administration = () => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
+        console.log("No session found, redirecting to login");
         navigate("/login");
+        return;
       }
+      setIsAuthenticated(true);
     };
 
     checkAuth();
 
-    // Écouter les changements de session
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed:", event);
       if (event === 'SIGNED_OUT' || !session) {
+        console.log("User signed out or no session, redirecting to login");
+        setIsAuthenticated(false);
         navigate("/login");
+      } else {
+        setIsAuthenticated(true);
       }
     });
 
@@ -45,14 +54,20 @@ const Administration = () => {
     };
   }, [navigate]);
 
-  const filteredUsers = users.filter(
-    (user) =>
-      (user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase())) &&
-      (selectedDepartment === "all" ||
-        user.department === selectedDepartment) &&
-      (selectedRole === "all" || user.role === selectedRole)
-  );
+  if (!isAuthenticated) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen">
+        <h2 className="text-2xl font-semibold mb-2">Accès non autorisé</h2>
+        <p className="text-muted-foreground">Vous devez être connecté pour accéder à cette page.</p>
+        <Button 
+          className="mt-4"
+          onClick={() => navigate("/login")}
+        >
+          Se connecter
+        </Button>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -69,7 +84,13 @@ const Administration = () => {
     return (
       <div className="flex flex-col items-center justify-center h-screen">
         <h2 className="text-2xl font-semibold mb-2">Accès non autorisé</h2>
-        <p className="text-muted-foreground">Vous devez être connecté pour accéder à cette page.</p>
+        <p className="text-muted-foreground">Vous n'avez pas les permissions nécessaires pour accéder à cette page.</p>
+        <Button 
+          className="mt-4"
+          onClick={() => navigate("/")}
+        >
+          Retour à l'accueil
+        </Button>
       </div>
     );
   }
