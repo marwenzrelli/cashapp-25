@@ -11,26 +11,29 @@ export function useUsers() {
 
   const fetchCurrentUser = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.log("Pas d'utilisateur authentifié");
+      console.log("Début de la récupération de l'utilisateur courant");
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        console.log("Pas de session active");
         return;
       }
 
-      console.log("Récupération du profil pour l'utilisateur:", user.id);
+      console.log("Session trouvée, ID utilisateur:", session.user.id);
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user.id)
-        .maybeSingle();
+        .eq('id', session.user.id)
+        .single();
 
       if (profileError) {
-        console.error("Erreur lors du chargement du profil:", profileError);
+        console.error("Erreur lors de la récupération du profil:", profileError);
+        toast.error("Erreur lors du chargement du profil");
         return;
       }
 
       if (!profile) {
-        console.log("Aucun profil trouvé pour l'utilisateur");
+        console.log("Aucun profil trouvé");
         return;
       }
 
@@ -38,7 +41,7 @@ export function useUsers() {
       const { data: permissions } = await supabase
         .from('user_permissions')
         .select('id, permission_name, permission_description, module')
-        .eq('user_id', user.id);
+        .eq('user_id', session.user.id);
 
       console.log("Permissions récupérées:", permissions);
       setCurrentUser(mapProfileToSystemUser({
@@ -47,13 +50,21 @@ export function useUsers() {
       }));
     } catch (error) {
       console.error("Erreur lors du chargement du profil:", error);
+      toast.error("Erreur lors du chargement du profil");
     }
   };
 
   const fetchUsers = async () => {
-    setIsLoading(true);
     try {
-      console.log("Début de la récupération des profils");
+      setIsLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        console.log("Pas de session active pour récupérer les utilisateurs");
+        return;
+      }
+
+      console.log("Récupération des profils utilisateurs");
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*');
@@ -61,14 +72,12 @@ export function useUsers() {
       if (profilesError) {
         console.error("Erreur lors du chargement des utilisateurs:", profilesError);
         toast.error("Erreur lors du chargement des utilisateurs");
-        setIsLoading(false);
         return;
       }
 
-      if (!profiles?.length) {
+      if (!profiles) {
         console.log("Aucun profil trouvé");
         setUsers([]);
-        setIsLoading(false);
         return;
       }
 
@@ -78,12 +87,14 @@ export function useUsers() {
         .select('*');
 
       console.log("Permissions récupérées:", allPermissions);
-      const usersWithPermissions = profiles.map(profile => ({
+      
+      const mappedUsers = profiles.map(profile => mapProfileToSystemUser({
         ...profile,
         user_permissions: allPermissions?.filter(p => p.user_id === profile.id) || []
       }));
 
-      setUsers(usersWithPermissions.map(mapProfileToSystemUser));
+      console.log("Utilisateurs mappés:", mappedUsers);
+      setUsers(mappedUsers);
     } catch (error) {
       console.error("Erreur lors du chargement des utilisateurs:", error);
       toast.error("Une erreur est survenue lors du chargement des utilisateurs");
@@ -94,8 +105,7 @@ export function useUsers() {
 
   const deleteUser = async (userId: string) => {
     try {
-      const { error } = await supabase
-        .auth.admin.deleteUser(userId);
+      const { error } = await supabase.auth.admin.deleteUser(userId);
 
       if (error) {
         console.error("Erreur lors de la suppression de l'utilisateur:", error);
@@ -160,9 +170,8 @@ export function useUsers() {
       if (signUpError) throw signUpError;
 
       if (data.user) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        toast.success("Utilisateur créé avec succès");
         await fetchUsers();
+        toast.success("Utilisateur créé avec succès");
       }
     } catch (error: any) {
       console.error("Erreur lors de la création de l'utilisateur:", error);
@@ -199,6 +208,7 @@ export function useUsers() {
 
   const updatePermissions = async (userId: string, permissions: SystemUser["permissions"]) => {
     try {
+      // Supprimer d'abord toutes les permissions existantes
       await supabase
         .from('user_permissions')
         .delete()
@@ -230,8 +240,12 @@ export function useUsers() {
   };
 
   useEffect(() => {
-    fetchUsers();
-    fetchCurrentUser();
+    console.log("Initialisation du hook useUsers");
+    const initialize = async () => {
+      await fetchCurrentUser();
+      await fetchUsers();
+    };
+    initialize();
   }, []);
 
   return {
