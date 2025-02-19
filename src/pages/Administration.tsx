@@ -25,6 +25,16 @@ const Administration = () => {
 
   const isSupervisor = currentUser?.role === "supervisor";
 
+  // Filtrage des utilisateurs en fonction des critères de recherche
+  const filteredUsers = users.filter(
+    (user) =>
+      (user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase())) &&
+      (selectedDepartment === "all" ||
+        user.department === selectedDepartment) &&
+      (selectedRole === "all" || user.role === selectedRole)
+  );
+
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
