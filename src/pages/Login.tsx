@@ -19,8 +19,8 @@ const Login = () => {
   useEffect(() => {
     const getSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log("Session check:", session);
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        console.log("Session check:", { session, error: sessionError });
         if (session?.user?.id) {
           navigate("/dashboard");
         }
@@ -33,13 +33,24 @@ const Login = () => {
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email || !password) {
+      toast.error("Veuillez remplir tous les champs");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       const normalizedEmail = email.trim().toLowerCase();
-      console.log("Tentative de connexion avec:", normalizedEmail);
+      console.log("Tentative d'authentification avec:", { email: normalizedEmail, isSignUp });
       
       if (isSignUp) {
+        if (!fullName) {
+          toast.error("Le nom complet est requis pour l'inscription");
+          setIsLoading(false);
+          return;
+        }
+
         const { data, error } = await supabase.auth.signUp({
           email: normalizedEmail,
           password,
@@ -47,13 +58,20 @@ const Login = () => {
             data: {
               full_name: fullName,
               role: 'supervisor'
-            }
+            },
+            emailRedirectTo: window.location.origin
           }
         });
 
+        console.log("Réponse inscription:", { data, error });
+
         if (error) {
           console.error("Erreur détaillée d'inscription:", error);
-          toast.error(error.message);
+          let errorMessage = "Erreur lors de l'inscription";
+          if (error.message.includes("already registered")) {
+            errorMessage = "Cet email est déjà utilisé";
+          }
+          toast.error(errorMessage);
           return;
         }
 
@@ -68,15 +86,17 @@ const Login = () => {
           password,
         });
 
-        console.log("Réponse de la connexion:", { data, error });
+        console.log("Réponse connexion:", { data, error });
 
         if (error) {
           console.error("Erreur détaillée de connexion:", error);
+          let errorMessage = "Erreur de connexion";
           if (error.message.includes("Invalid login credentials")) {
-            toast.error("Email ou mot de passe incorrect");
-          } else {
-            toast.error(`Erreur de connexion: ${error.message}`);
+            errorMessage = "Email ou mot de passe incorrect";
+          } else if (error.message.includes("Email not confirmed")) {
+            errorMessage = "Veuillez confirmer votre email avant de vous connecter";
           }
+          toast.error(errorMessage);
           return;
         }
 
@@ -140,6 +160,7 @@ const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              minLength={6}
             />
           </div>
           <Button
