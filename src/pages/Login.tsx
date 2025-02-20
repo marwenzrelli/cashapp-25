@@ -16,7 +16,6 @@ const Login = () => {
   const [fullName, setFullName] = useState("");
   const navigate = useNavigate();
 
-  // Vérifier l'état de la session au chargement
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -55,7 +54,6 @@ const Login = () => {
           setIsSignUp(false);
         }
       } else {
-        // Tentative de connexion
         console.log("Tentative de connexion...");
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email: normalizedEmail,
@@ -64,49 +62,24 @@ const Login = () => {
 
         if (signInError) {
           console.error("Erreur de connexion:", signInError);
-          if (signInError.message === "Invalid login credentials") {
+          if (signInError.message.includes("Invalid login credentials")) {
             toast.error("Email ou mot de passe incorrect");
+          } else if (signInError.message.includes("Database error")) {
+            toast.error("Erreur de connexion à la base de données. Veuillez réessayer.");
+            console.error("Erreur détaillée:", signInError);
           } else {
             toast.error(signInError.message);
           }
           return;
         }
 
-        if (signInData.user) {
-          console.log("Utilisateur connecté, vérification du profil...");
-          // Vérifier le statut du compte
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('status, role')
-            .eq('id', signInData.user.id)
-            .single();
-
-          console.log("Données du profil:", profileData);
-
-          if (profileError) {
-            console.error("Erreur lors de la vérification du profil:", profileError);
-            await supabase.auth.signOut();
-            toast.error("Erreur lors de la vérification du compte");
-            return;
-          }
-
-          if (!profileData) {
-            console.error("Aucun profil trouvé");
-            await supabase.auth.signOut();
-            toast.error("Erreur: Profil utilisateur introuvable");
-            return;
-          }
-
-          if (profileData.status === 'inactive') {
-            await supabase.auth.signOut();
-            toast.error("Ce compte est désactivé. Veuillez contacter un administrateur.");
-            return;
-          }
-
-          console.log("Connexion réussie, redirection...");
-          toast.success("Connexion réussie !");
-          navigate("/dashboard");
+        if (!signInData || !signInData.user) {
+          toast.error("Erreur lors de la connexion");
+          return;
         }
+
+        navigate("/dashboard");
+        toast.success("Connexion réussie !");
       }
     } catch (error: any) {
       console.error("Erreur d'authentification:", error);
@@ -118,6 +91,8 @@ const Login = () => {
         errorMessage = "Email ou mot de passe incorrect";
       } else if (error.message.includes("User already registered")) {
         errorMessage = "Un compte existe déjà avec cet email";
+      } else if (error.message.includes("Database error")) {
+        errorMessage = "Erreur de connexion à la base de données. Veuillez réessayer.";
       }
       
       toast.error(errorMessage);
