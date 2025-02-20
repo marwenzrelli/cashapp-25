@@ -19,21 +19,14 @@ const Login = () => {
   useEffect(() => {
     const getSession = async () => {
       try {
-        const { data, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error("Erreur de session:", error);
-          return;
-        }
-        
-        if (data.session) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.id) {
           navigate("/dashboard");
         }
       } catch (error) {
         console.error("Erreur lors de la vérification de la session:", error);
       }
     };
-
     getSession();
   }, [navigate]);
 
@@ -51,12 +44,13 @@ const Login = () => {
           options: {
             data: {
               full_name: fullName,
-              role: 'supervisor',
+              role: 'supervisor'
             }
           }
         });
 
         if (error) {
+          console.error("Erreur d'inscription:", error);
           toast.error(error.message);
           return;
         }
@@ -66,50 +60,30 @@ const Login = () => {
           setIsSignUp(false);
         }
       } else {
+        // Connexion simplifiée
         const { data, error } = await supabase.auth.signInWithPassword({
           email: normalizedEmail,
           password,
         });
 
         if (error) {
-          toast.error("Email ou mot de passe incorrect");
+          console.error("Erreur de connexion:", error);
+          if (error.message.includes("Invalid login credentials")) {
+            toast.error("Email ou mot de passe incorrect");
+          } else {
+            toast.error("Erreur de connexion. Veuillez réessayer.");
+          }
           return;
         }
 
-        if (data.session) {
-          // Vérifions si le profil existe avant de rediriger
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('status, role')
-            .eq('id', data.session.user.id)
-            .single();
-
-          if (profileError) {
-            console.error("Erreur lors de la vérification du profil:", profileError);
-            toast.error("Erreur lors de la vérification du profil");
-            await supabase.auth.signOut();
-            return;
-          }
-
-          if (!profileData) {
-            toast.error("Profil non trouvé");
-            await supabase.auth.signOut();
-            return;
-          }
-
-          if (profileData.status === 'inactive') {
-            toast.error("Ce compte est désactivé");
-            await supabase.auth.signOut();
-            return;
-          }
-
+        if (data?.user) {
           navigate("/dashboard");
           toast.success("Connexion réussie !");
         }
       }
     } catch (error: any) {
       console.error("Erreur d'authentification:", error);
-      toast.error("Une erreur est survenue lors de l'authentification");
+      toast.error("Une erreur inattendue est survenue");
     } finally {
       setIsLoading(false);
     }
