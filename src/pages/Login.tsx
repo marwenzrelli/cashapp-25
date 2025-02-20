@@ -26,6 +26,30 @@ const Login = () => {
     checkSession();
   }, [navigate]);
 
+  const verifyUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('status')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Erreur lors de la vérification du profil:", error);
+        return false;
+      }
+
+      if (!data || data.status === 'inactive') {
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Erreur lors de la vérification du profil:", error);
+      return false;
+    }
+  };
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -64,17 +88,22 @@ const Login = () => {
           console.error("Erreur de connexion:", signInError);
           if (signInError.message.includes("Invalid login credentials")) {
             toast.error("Email ou mot de passe incorrect");
-          } else if (signInError.message.includes("Database error")) {
-            toast.error("Erreur de connexion à la base de données. Veuillez réessayer.");
-            console.error("Erreur détaillée:", signInError);
           } else {
-            toast.error(signInError.message);
+            console.error("Erreur détaillée:", signInError);
+            toast.error("Une erreur est survenue lors de la connexion");
           }
           return;
         }
 
-        if (!signInData || !signInData.user) {
+        if (!signInData?.user?.id) {
           toast.error("Erreur lors de la connexion");
+          return;
+        }
+
+        const isProfileValid = await verifyUserProfile(signInData.user.id);
+        if (!isProfileValid) {
+          await supabase.auth.signOut();
+          toast.error("Ce compte est désactivé ou n'existe pas");
           return;
         }
 
@@ -91,8 +120,6 @@ const Login = () => {
         errorMessage = "Email ou mot de passe incorrect";
       } else if (error.message.includes("User already registered")) {
         errorMessage = "Un compte existe déjà avec cet email";
-      } else if (error.message.includes("Database error")) {
-        errorMessage = "Erreur de connexion à la base de données. Veuillez réessayer.";
       }
       
       toast.error(errorMessage);
