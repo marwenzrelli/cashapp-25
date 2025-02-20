@@ -85,6 +85,7 @@ export type Database = {
           department: string
           email: string
           full_name: string
+          hashed_password: string | null
           id: string
           last_login: string | null
           phone: string | null
@@ -98,6 +99,7 @@ export type Database = {
           department?: string
           email: string
           full_name: string
+          hashed_password?: string | null
           id: string
           last_login?: string | null
           phone?: string | null
@@ -111,6 +113,7 @@ export type Database = {
           department?: string
           email?: string
           full_name?: string
+          hashed_password?: string | null
           id?: string
           last_login?: string | null
           phone?: string | null

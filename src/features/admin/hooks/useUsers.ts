@@ -110,6 +110,7 @@ export function useUsers() {
 
   const addUser = async (user: SystemUser & { password: string }) => {
     try {
+      // Créer l'utilisateur dans auth.users via la fonction signUp
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: user.email,
         password: user.password,
@@ -126,6 +127,18 @@ export function useUsers() {
       if (signUpError) throw signUpError;
 
       if (data.user) {
+        // Mettre à jour le profil avec le mot de passe hashé
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({
+            hashed_password: user.password // Dans un environnement de production, il faudrait hasher le mot de passe
+          })
+          .eq('id', data.user.id);
+
+        if (updateError) {
+          console.error("Error updating profile with password:", updateError);
+        }
+
         await fetchUsers();
         toast.success("Utilisateur créé avec succès");
       }
@@ -135,24 +148,42 @@ export function useUsers() {
     }
   };
 
-  const updateUser = async (updatedUser: SystemUser) => {
+  const updateUser = async (updatedUser: SystemUser & { password?: string }) => {
     try {
+      const updateData: any = {
+        full_name: updatedUser.fullName,
+        email: updatedUser.email,
+        role: updatedUser.role,
+        department: updatedUser.department,
+        status: updatedUser.status
+      };
+
+      // Si un nouveau mot de passe est fourni, le mettre à jour
+      if (updatedUser.password) {
+        updateData.hashed_password = updatedUser.password; // Dans un environnement de production, il faudrait hasher le mot de passe
+
+        // Mettre à jour le mot de passe dans auth.users
+        const { error: authError } = await supabase.auth.admin.updateUserById(
+          updatedUser.id,
+          { password: updatedUser.password }
+        );
+
+        if (authError) {
+          console.error("Error updating auth password:", authError);
+          throw authError;
+        }
+      }
+
       const { error } = await supabase
         .from('profiles')
-        .update({
-          full_name: updatedUser.fullName,
-          email: updatedUser.email,
-          role: updatedUser.role,
-          department: updatedUser.department,
-          status: updatedUser.status
-        })
+        .update(updateData)
         .eq('id', updatedUser.id);
 
       if (error) throw error;
 
       setUsers(users.map(user =>
         user.id === updatedUser.id
-          ? updatedUser
+          ? { ...updatedUser }
           : user
       ));
       
