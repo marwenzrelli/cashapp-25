@@ -13,6 +13,8 @@ import {
   DollarSign,
   Shield,
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Layout = () => {
   const location = useLocation();
@@ -29,9 +31,21 @@ const Layout = () => {
     { path: "/administration", label: "Administration", icon: Shield },
   ];
 
-  const handleLogout = () => {
-    // TODO: Implement actual logout
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("Erreur lors de la déconnexion:", error);
+        toast.error("Erreur lors de la déconnexion");
+        return;
+      }
+      
+      toast.success("Déconnexion réussie");
+      navigate("/login");
+    } catch (error) {
+      console.error("Erreur inattendue lors de la déconnexion:", error);
+      toast.error("Une erreur est survenue lors de la déconnexion");
+    }
   };
 
   return (
