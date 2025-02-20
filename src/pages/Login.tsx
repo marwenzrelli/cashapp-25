@@ -55,7 +55,7 @@ const Login = () => {
           const { error: updateError } = await supabase
             .from('profiles')
             .update({
-              hashed_password: password // Note: Dans un environnement de production, il faudrait hasher le mot de passe
+              hashed_password: password
             })
             .eq('id', data.user.id);
 
@@ -67,39 +67,41 @@ const Login = () => {
           setIsSignUp(false);
         }
       } else {
-        // Vérifier d'abord si l'utilisateur existe et récupérer son profil
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('hashed_password, status')
-          .eq('email', normalizedEmail)
-          .single();
+        // Tentative de connexion directe avec Supabase Auth
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: normalizedEmail,
+          password,
+        });
 
-        if (profileError) {
+        if (error) {
+          console.error("Erreur de connexion:", error);
           toast.error("Email ou mot de passe incorrect");
           return;
         }
 
-        if (profileData.status === 'inactive') {
-          toast.error("Votre compte est désactivé. Contactez un administrateur.");
-          return;
-        }
+        if (data.user) {
+          // Vérifier le statut du compte
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('status')
+            .eq('id', data.user.id)
+            .single();
 
-        // Vérifier si le mot de passe correspond
-        if (profileData.hashed_password === password) {
-          // Connexion avec un compte existant
-          const { data, error } = await supabase.auth.signInWithPassword({
-            email: normalizedEmail,
-            password,
-          });
-
-          if (error) throw error;
-
-          if (data.user) {
-            toast.success("Connexion réussie !");
-            navigate("/dashboard");
+          if (profileError) {
+            console.error("Erreur lors de la vérification du profil:", profileError);
+            toast.error("Erreur lors de la vérification du compte");
+            return;
           }
-        } else {
-          toast.error("Email ou mot de passe incorrect");
+
+          if (profileData.status === 'inactive') {
+            // Déconnexion si le compte est inactif
+            await supabase.auth.signOut();
+            toast.error("Votre compte est désactivé. Contactez un administrateur.");
+            return;
+          }
+
+          toast.success("Connexion réussie !");
+          navigate("/dashboard");
         }
       }
     } catch (error: any) {
