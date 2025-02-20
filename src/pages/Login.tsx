@@ -33,9 +33,9 @@ const Login = () => {
 
     try {
       const normalizedEmail = email.trim().toLowerCase();
+      console.log("Tentative de connexion avec:", normalizedEmail);
       
       if (isSignUp) {
-        // Inscription d'un nouveau compte
         const { data, error } = await supabase.auth.signUp({
           email: normalizedEmail,
           password,
@@ -56,29 +56,44 @@ const Login = () => {
         }
       } else {
         // Tentative de connexion
-        const { data, error } = await supabase.auth.signInWithPassword({
+        console.log("Tentative de connexion...");
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email: normalizedEmail,
           password,
         });
 
-        if (error) {
-          console.error("Erreur de connexion:", error);
-          toast.error("Email ou mot de passe incorrect");
+        if (signInError) {
+          console.error("Erreur de connexion:", signInError);
+          if (signInError.message === "Invalid login credentials") {
+            toast.error("Email ou mot de passe incorrect");
+          } else {
+            toast.error(signInError.message);
+          }
           return;
         }
 
-        if (data.user) {
+        if (signInData.user) {
+          console.log("Utilisateur connecté, vérification du profil...");
           // Vérifier le statut du compte
           const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .select('status, role')
-            .eq('id', data.user.id)
+            .eq('id', signInData.user.id)
             .single();
+
+          console.log("Données du profil:", profileData);
 
           if (profileError) {
             console.error("Erreur lors de la vérification du profil:", profileError);
             await supabase.auth.signOut();
             toast.error("Erreur lors de la vérification du compte");
+            return;
+          }
+
+          if (!profileData) {
+            console.error("Aucun profil trouvé");
+            await supabase.auth.signOut();
+            toast.error("Erreur: Profil utilisateur introuvable");
             return;
           }
 
@@ -88,6 +103,7 @@ const Login = () => {
             return;
           }
 
+          console.log("Connexion réussie, redirection...");
           toast.success("Connexion réussie !");
           navigate("/dashboard");
         }
@@ -95,7 +111,6 @@ const Login = () => {
     } catch (error: any) {
       console.error("Erreur d'authentification:", error);
       
-      // Messages d'erreur personnalisés
       let errorMessage = "Une erreur est survenue";
       if (error.message.includes("Email not confirmed")) {
         errorMessage = "Veuillez confirmer votre email avant de vous connecter";
