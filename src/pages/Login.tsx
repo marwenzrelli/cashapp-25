@@ -55,7 +55,7 @@ const Login = () => {
           setIsSignUp(false);
         }
       } else {
-        // Tentative de connexion directe
+        // Tentative de connexion
         const { data, error } = await supabase.auth.signInWithPassword({
           email: normalizedEmail,
           password,
@@ -68,6 +68,26 @@ const Login = () => {
         }
 
         if (data.user) {
+          // Vérifier le statut du compte
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('status, role')
+            .eq('id', data.user.id)
+            .single();
+
+          if (profileError) {
+            console.error("Erreur lors de la vérification du profil:", profileError);
+            await supabase.auth.signOut();
+            toast.error("Erreur lors de la vérification du compte");
+            return;
+          }
+
+          if (profileData.status === 'inactive') {
+            await supabase.auth.signOut();
+            toast.error("Ce compte est désactivé. Veuillez contacter un administrateur.");
+            return;
+          }
+
           toast.success("Connexion réussie !");
           navigate("/dashboard");
         }
