@@ -42,10 +42,11 @@ const Administration = () => {
 
     const checkAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) throw sessionError;
         
         if (!session?.user) {
-          console.log("No session found, redirecting to login");
           if (mounted) {
             setIsCheckingAuth(false);
             setIsAuthenticated(false);
@@ -54,15 +55,15 @@ const Administration = () => {
           return;
         }
 
-        // Récupérer directement le profil de l'utilisateur
+        // Utiliser la nouvelle politique RLS pour accéder au profil
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('role')
+          .select('role, id')
           .eq('id', session.user.id)
-          .single();
+          .maybeSingle();
 
         if (profileError) {
-          console.error("Error fetching profile:", profileError);
+          console.error("Erreur lors de la récupération du profil:", profileError);
           if (mounted) {
             setIsCheckingAuth(false);
             setIsAuthenticated(false);
@@ -71,11 +72,19 @@ const Administration = () => {
           return;
         }
 
-        const isSupervisorRole = profile?.role === 'supervisor';
-        console.log("User role check:", { profile, isSupervisor: isSupervisorRole });
+        if (!profile) {
+          console.error("Aucun profil trouvé");
+          if (mounted) {
+            setIsCheckingAuth(false);
+            setIsAuthenticated(false);
+          }
+          toast.error("Profil utilisateur non trouvé");
+          return;
+        }
 
+        const isSupervisorRole = profile.role === 'supervisor';
+        
         if (!isSupervisorRole) {
-          console.log("User is not a supervisor");
           if (mounted) {
             setIsCheckingAuth(false);
             setIsAuthenticated(false);
@@ -88,18 +97,19 @@ const Administration = () => {
           setIsAuthenticated(true);
           setIsCheckingAuth(false);
         }
-      } catch (error) {
-        console.error("Error in auth check:", error);
+      } catch (error: any) {
+        console.error("Erreur lors de la vérification:", error.message);
         if (mounted) {
           setIsAuthenticated(false);
           setIsCheckingAuth(false);
         }
+        toast.error("Erreur lors de la vérification des autorisations");
       }
     };
 
     checkAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT' || !session) {
         if (mounted) {
           setIsAuthenticated(false);
