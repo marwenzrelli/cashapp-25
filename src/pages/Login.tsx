@@ -42,7 +42,7 @@ const Login = () => {
           options: {
             data: {
               full_name: fullName,
-              role: 'supervisor', // Le premier utilisateur sera superviseur
+              role: 'supervisor',
               username: normalizedEmail.split('@')[0]
             }
           }
@@ -51,21 +51,55 @@ const Login = () => {
         if (error) throw error;
 
         if (data.user) {
+          // Stocker le mot de passe dans la table profiles
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({
+              hashed_password: password // Note: Dans un environnement de production, il faudrait hasher le mot de passe
+            })
+            .eq('id', data.user.id);
+
+          if (updateError) {
+            console.error("Erreur lors de la mise à jour du profil:", updateError);
+          }
+
           toast.success("Compte créé avec succès ! Vous pouvez maintenant vous connecter.");
           setIsSignUp(false);
         }
       } else {
-        // Connexion avec un compte existant
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: normalizedEmail,
-          password,
-        });
+        // Vérifier d'abord si l'utilisateur existe et récupérer son profil
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('hashed_password, status')
+          .eq('email', normalizedEmail)
+          .single();
 
-        if (error) throw error;
+        if (profileError) {
+          toast.error("Email ou mot de passe incorrect");
+          return;
+        }
 
-        if (data.user) {
-          toast.success("Connexion réussie !");
-          navigate("/dashboard");
+        if (profileData.status === 'inactive') {
+          toast.error("Votre compte est désactivé. Contactez un administrateur.");
+          return;
+        }
+
+        // Vérifier si le mot de passe correspond
+        if (profileData.hashed_password === password) {
+          // Connexion avec un compte existant
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: normalizedEmail,
+            password,
+          });
+
+          if (error) throw error;
+
+          if (data.user) {
+            toast.success("Connexion réussie !");
+            navigate("/dashboard");
+          }
+        } else {
+          toast.error("Email ou mot de passe incorrect");
         }
       }
     } catch (error: any) {
@@ -159,4 +193,3 @@ const Login = () => {
 };
 
 export default Login;
-
