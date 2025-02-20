@@ -17,13 +17,24 @@ const Login = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate("/dashboard");
+    const getSession = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Erreur de session:", error);
+          return;
+        }
+        
+        if (data.session) {
+          navigate("/dashboard");
+        }
+      } catch (error) {
+        console.error("Erreur lors de la vérification de la session:", error);
       }
     };
-    checkSession();
+
+    getSession();
   }, [navigate]);
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -41,36 +52,64 @@ const Login = () => {
             data: {
               full_name: fullName,
               role: 'supervisor',
-              username: normalizedEmail.split('@')[0]
             }
           }
         });
 
-        if (error) throw error;
+        if (error) {
+          toast.error(error.message);
+          return;
+        }
 
         if (data.user) {
           toast.success("Compte créé avec succès ! Vous pouvez maintenant vous connecter.");
           setIsSignUp(false);
         }
       } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email: normalizedEmail,
           password,
         });
 
-        if (signInError) {
-          console.error("Erreur de connexion:", signInError);
+        if (error) {
           toast.error("Email ou mot de passe incorrect");
           return;
         }
 
-        // Si la connexion réussit, rediriger directement
-        navigate("/dashboard");
-        toast.success("Connexion réussie !");
+        if (data.session) {
+          // Vérifions si le profil existe avant de rediriger
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('status, role')
+            .eq('id', data.session.user.id)
+            .single();
+
+          if (profileError) {
+            console.error("Erreur lors de la vérification du profil:", profileError);
+            toast.error("Erreur lors de la vérification du profil");
+            await supabase.auth.signOut();
+            return;
+          }
+
+          if (!profileData) {
+            toast.error("Profil non trouvé");
+            await supabase.auth.signOut();
+            return;
+          }
+
+          if (profileData.status === 'inactive') {
+            toast.error("Ce compte est désactivé");
+            await supabase.auth.signOut();
+            return;
+          }
+
+          navigate("/dashboard");
+          toast.success("Connexion réussie !");
+        }
       }
     } catch (error: any) {
       console.error("Erreur d'authentification:", error);
-      toast.error("Email ou mot de passe incorrect");
+      toast.error("Une erreur est survenue lors de l'authentification");
     } finally {
       setIsLoading(false);
     }
