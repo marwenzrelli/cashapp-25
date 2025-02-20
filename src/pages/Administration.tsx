@@ -13,6 +13,7 @@ import { ServiceExplanations } from "@/features/admin/components/ServiceExplanat
 import { UserFilters } from "@/features/admin/components/UserFilters";
 import { useUsers } from "@/features/admin/hooks/useUsers";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Administration = () => {
   const navigate = useNavigate();
@@ -44,27 +45,33 @@ const Administration = () => {
         return;
       }
 
-      // Vérifier le rôle de l'utilisateur
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', session.user.id)
-        .single();
+      try {
+        // Appeler la fonction RPC check_is_supervisor
+        const { data: isSupervisor, error: supervisorError } = await supabase.rpc(
+          'check_is_supervisor',
+          { user_id: session.user.id }
+        );
 
-      if (profileError) {
-        console.error("Error checking user role:", profileError);
+        if (supervisorError) {
+          console.error("Error checking supervisor status:", supervisorError);
+          toast.error("Erreur lors de la vérification des permissions");
+          setIsAuthenticated(false);
+          return;
+        }
+
+        if (!isSupervisor) {
+          console.log("User is not a supervisor");
+          toast.error("Accès réservé aux superviseurs");
+          setIsAuthenticated(false);
+          return;
+        }
+
+        console.log("User authenticated as supervisor");
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error("Error in auth check:", error);
         setIsAuthenticated(false);
-        return;
       }
-
-      if (!profile || profile.role !== 'supervisor') {
-        console.log("User is not a supervisor:", profile?.role);
-        setIsAuthenticated(false);
-        return;
-      }
-
-      console.log("User authenticated as supervisor");
-      setIsAuthenticated(true);
     };
 
     checkAuth();
@@ -76,18 +83,21 @@ const Administration = () => {
         setIsAuthenticated(false);
         navigate("/login");
       } else {
-        // Revérifier le rôle quand l'état d'authentification change
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', session.user.id)
-          .single();
+        try {
+          const { data: isSupervisor, error: supervisorError } = await supabase.rpc(
+            'check_is_supervisor',
+            { user_id: session.user.id }
+          );
 
-        if (profile?.role === 'supervisor') {
-          console.log("User re-authenticated as supervisor");
-          setIsAuthenticated(true);
-        } else {
-          console.log("User not authorized as supervisor");
+          if (supervisorError || !isSupervisor) {
+            console.log("User not authorized as supervisor");
+            setIsAuthenticated(false);
+          } else {
+            console.log("User re-authenticated as supervisor");
+            setIsAuthenticated(true);
+          }
+        } catch (error) {
+          console.error("Error checking supervisor status:", error);
           setIsAuthenticated(false);
         }
       }
@@ -120,21 +130,6 @@ const Administration = () => {
           <h2 className="text-2xl font-semibold mb-2">Chargement...</h2>
           <p className="text-muted-foreground">Veuillez patienter pendant le chargement des données.</p>
         </div>
-      </div>
-    );
-  }
-
-  if (!currentUser) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen">
-        <h2 className="text-2xl font-semibold mb-2">Accès non autorisé</h2>
-        <p className="text-muted-foreground">Vous n'avez pas les permissions nécessaires pour accéder à cette page.</p>
-        <Button 
-          className="mt-4"
-          onClick={() => navigate("/")}
-        >
-          Retour à l'accueil
-        </Button>
       </div>
     );
   }
@@ -239,3 +234,4 @@ const Administration = () => {
 };
 
 export default Administration;
+
