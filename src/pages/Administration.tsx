@@ -38,80 +38,81 @@ const Administration = () => {
   );
 
   useEffect(() => {
+    let mounted = true;
+
     const checkAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
+        
+        if (!session?.user) {
           console.log("No session found, redirecting to login");
+          if (mounted) {
+            setIsCheckingAuth(false);
+            setIsAuthenticated(false);
+          }
           navigate("/login");
           return;
         }
 
-        // Appeler la fonction RPC check_is_supervisor
-        const { data: isSupervisor, error: supervisorError } = await supabase.rpc(
-          'check_is_supervisor',
-          { user_id: session.user.id }
-        );
+        // Récupérer directement le profil de l'utilisateur
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
 
-        if (supervisorError) {
-          console.error("Error checking supervisor status:", supervisorError);
+        if (profileError) {
+          console.error("Error fetching profile:", profileError);
+          if (mounted) {
+            setIsCheckingAuth(false);
+            setIsAuthenticated(false);
+          }
           toast.error("Erreur lors de la vérification des permissions");
-          setIsAuthenticated(false);
-          setIsCheckingAuth(false);
           return;
         }
 
-        console.log("Supervisor check result:", isSupervisor);
+        const isSupervisorRole = profile?.role === 'supervisor';
+        console.log("User role check:", { profile, isSupervisor: isSupervisorRole });
 
-        if (!isSupervisor) {
+        if (!isSupervisorRole) {
           console.log("User is not a supervisor");
+          if (mounted) {
+            setIsCheckingAuth(false);
+            setIsAuthenticated(false);
+          }
           toast.error("Accès réservé aux superviseurs");
-          setIsAuthenticated(false);
-          setIsCheckingAuth(false);
           return;
         }
 
-        console.log("User authenticated as supervisor");
-        setIsAuthenticated(true);
-        setIsCheckingAuth(false);
+        if (mounted) {
+          setIsAuthenticated(true);
+          setIsCheckingAuth(false);
+        }
       } catch (error) {
         console.error("Error in auth check:", error);
-        setIsAuthenticated(false);
-        setIsCheckingAuth(false);
+        if (mounted) {
+          setIsAuthenticated(false);
+          setIsCheckingAuth(false);
+        }
       }
     };
 
     checkAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event);
       if (event === 'SIGNED_OUT' || !session) {
-        console.log("User signed out or no session");
-        setIsAuthenticated(false);
+        if (mounted) {
+          setIsAuthenticated(false);
+          setIsCheckingAuth(false);
+        }
         navigate("/login");
       } else {
-        try {
-          const { data: isSupervisor, error: supervisorError } = await supabase.rpc(
-            'check_is_supervisor',
-            { user_id: session.user.id }
-          );
-
-          if (supervisorError || !isSupervisor) {
-            console.log("User not authorized as supervisor");
-            setIsAuthenticated(false);
-          } else {
-            console.log("User re-authenticated as supervisor");
-            setIsAuthenticated(true);
-          }
-        } catch (error) {
-          console.error("Error checking supervisor status:", error);
-          setIsAuthenticated(false);
-        }
+        checkAuth();
       }
-      setIsCheckingAuth(false);
     });
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, [navigate]);
