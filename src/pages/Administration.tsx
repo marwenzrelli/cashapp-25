@@ -23,6 +23,7 @@ const Administration = () => {
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
   const [selectedRole, setSelectedRole] = useState<UserRole | "all">("all");
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   const isSupervisor = currentUser?.role === "supervisor";
 
@@ -38,14 +39,14 @@ const Administration = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        console.log("No session found, redirecting to login");
-        navigate("/login");
-        return;
-      }
-
       try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          console.log("No session found, redirecting to login");
+          navigate("/login");
+          return;
+        }
+
         // Appeler la fonction RPC check_is_supervisor
         const { data: isSupervisor, error: supervisorError } = await supabase.rpc(
           'check_is_supervisor',
@@ -56,21 +57,27 @@ const Administration = () => {
           console.error("Error checking supervisor status:", supervisorError);
           toast.error("Erreur lors de la vérification des permissions");
           setIsAuthenticated(false);
+          setIsCheckingAuth(false);
           return;
         }
+
+        console.log("Supervisor check result:", isSupervisor);
 
         if (!isSupervisor) {
           console.log("User is not a supervisor");
           toast.error("Accès réservé aux superviseurs");
           setIsAuthenticated(false);
+          setIsCheckingAuth(false);
           return;
         }
 
         console.log("User authenticated as supervisor");
         setIsAuthenticated(true);
+        setIsCheckingAuth(false);
       } catch (error) {
         console.error("Error in auth check:", error);
         setIsAuthenticated(false);
+        setIsCheckingAuth(false);
       }
     };
 
@@ -101,12 +108,24 @@ const Administration = () => {
           setIsAuthenticated(false);
         }
       }
+      setIsCheckingAuth(false);
     });
 
     return () => {
       subscription.unsubscribe();
     };
   }, [navigate]);
+
+  if (isCheckingAuth) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold mb-2">Vérification des autorisations...</h2>
+          <p className="text-muted-foreground">Veuillez patienter pendant la vérification de vos droits d'accès.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated || !currentUser || currentUser.role !== 'supervisor') {
     return (
