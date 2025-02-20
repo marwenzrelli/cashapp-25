@@ -285,6 +285,12 @@ export type Database = {
         }
         Returns: number
       }
+      check_is_supervisor: {
+        Args: {
+          user_id: string
+        }
+        Returns: boolean
+      }
       check_user_role: {
         Args: {
           user_id: string
