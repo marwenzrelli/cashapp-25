@@ -51,23 +51,11 @@ const Login = () => {
         if (error) throw error;
 
         if (data.user) {
-          // Stocker le mot de passe dans la table profiles
-          const { error: updateError } = await supabase
-            .from('profiles')
-            .update({
-              hashed_password: password
-            })
-            .eq('id', data.user.id);
-
-          if (updateError) {
-            console.error("Erreur lors de la mise à jour du profil:", updateError);
-          }
-
           toast.success("Compte créé avec succès ! Vous pouvez maintenant vous connecter.");
           setIsSignUp(false);
         }
       } else {
-        // Tentative de connexion directe avec Supabase Auth
+        // Tentative de connexion directe
         const { data, error } = await supabase.auth.signInWithPassword({
           email: normalizedEmail,
           password,
@@ -80,26 +68,6 @@ const Login = () => {
         }
 
         if (data.user) {
-          // Vérifier le statut du compte
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('status')
-            .eq('id', data.user.id)
-            .single();
-
-          if (profileError) {
-            console.error("Erreur lors de la vérification du profil:", profileError);
-            toast.error("Erreur lors de la vérification du compte");
-            return;
-          }
-
-          if (profileData.status === 'inactive') {
-            // Déconnexion si le compte est inactif
-            await supabase.auth.signOut();
-            toast.error("Votre compte est désactivé. Contactez un administrateur.");
-            return;
-          }
-
           toast.success("Connexion réussie !");
           navigate("/dashboard");
         }
