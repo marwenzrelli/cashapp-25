@@ -26,37 +26,12 @@ const Login = () => {
     checkSession();
   }, [navigate]);
 
-  const verifyUserProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('status')
-        .eq('id', userId)
-        .maybeSingle();
-
-      if (error) {
-        console.error("Erreur lors de la vérification du profil:", error);
-        return false;
-      }
-
-      if (!data || data.status === 'inactive') {
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error("Erreur lors de la vérification du profil:", error);
-      return false;
-    }
-  };
-
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
       const normalizedEmail = email.trim().toLowerCase();
-      console.log("Tentative de connexion avec:", normalizedEmail);
       
       if (isSignUp) {
         const { data, error } = await supabase.auth.signUp({
@@ -78,51 +53,24 @@ const Login = () => {
           setIsSignUp(false);
         }
       } else {
-        console.log("Tentative de connexion...");
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        const { error: signInError } = await supabase.auth.signInWithPassword({
           email: normalizedEmail,
           password,
         });
 
         if (signInError) {
           console.error("Erreur de connexion:", signInError);
-          if (signInError.message.includes("Invalid login credentials")) {
-            toast.error("Email ou mot de passe incorrect");
-          } else {
-            console.error("Erreur détaillée:", signInError);
-            toast.error("Une erreur est survenue lors de la connexion");
-          }
+          toast.error("Email ou mot de passe incorrect");
           return;
         }
 
-        if (!signInData?.user?.id) {
-          toast.error("Erreur lors de la connexion");
-          return;
-        }
-
-        const isProfileValid = await verifyUserProfile(signInData.user.id);
-        if (!isProfileValid) {
-          await supabase.auth.signOut();
-          toast.error("Ce compte est désactivé ou n'existe pas");
-          return;
-        }
-
+        // Si la connexion réussit, rediriger directement
         navigate("/dashboard");
         toast.success("Connexion réussie !");
       }
     } catch (error: any) {
       console.error("Erreur d'authentification:", error);
-      
-      let errorMessage = "Une erreur est survenue";
-      if (error.message.includes("Email not confirmed")) {
-        errorMessage = "Veuillez confirmer votre email avant de vous connecter";
-      } else if (error.message.includes("Invalid login credentials")) {
-        errorMessage = "Email ou mot de passe incorrect";
-      } else if (error.message.includes("User already registered")) {
-        errorMessage = "Un compte existe déjà avec cet email";
-      }
-      
-      toast.error(errorMessage);
+      toast.error("Email ou mot de passe incorrect");
     } finally {
       setIsLoading(false);
     }
