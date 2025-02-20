@@ -20,6 +20,7 @@ const Login = () => {
     const getSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
+        console.log("Session check:", session);
         if (session?.user?.id) {
           navigate("/dashboard");
         }
@@ -36,6 +37,7 @@ const Login = () => {
 
     try {
       const normalizedEmail = email.trim().toLowerCase();
+      console.log("Tentative de connexion avec:", normalizedEmail);
       
       if (isSignUp) {
         const { data, error } = await supabase.auth.signUp({
@@ -50,7 +52,7 @@ const Login = () => {
         });
 
         if (error) {
-          console.error("Erreur d'inscription:", error);
+          console.error("Erreur détaillée d'inscription:", error);
           toast.error(error.message);
           return;
         }
@@ -60,29 +62,32 @@ const Login = () => {
           setIsSignUp(false);
         }
       } else {
-        // Connexion simplifiée
+        console.log("Début de la procédure de connexion");
         const { data, error } = await supabase.auth.signInWithPassword({
           email: normalizedEmail,
           password,
         });
 
+        console.log("Réponse de la connexion:", { data, error });
+
         if (error) {
-          console.error("Erreur de connexion:", error);
+          console.error("Erreur détaillée de connexion:", error);
           if (error.message.includes("Invalid login credentials")) {
             toast.error("Email ou mot de passe incorrect");
           } else {
-            toast.error("Erreur de connexion. Veuillez réessayer.");
+            toast.error(`Erreur de connexion: ${error.message}`);
           }
           return;
         }
 
         if (data?.user) {
+          console.log("Connexion réussie, redirection...");
           navigate("/dashboard");
           toast.success("Connexion réussie !");
         }
       }
     } catch (error: any) {
-      console.error("Erreur d'authentification:", error);
+      console.error("Erreur détaillée d'authentification:", error);
       toast.error("Une erreur inattendue est survenue");
     } finally {
       setIsLoading(false);
@@ -161,4 +166,3 @@ const Login = () => {
 };
 
 export default Login;
-
