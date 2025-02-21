@@ -8,55 +8,92 @@ export function useUsers() {
   const [users, setUsers] = useState<SystemUser[]>([]);
   const [currentUser, setCurrentUser] = useState<SystemUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   const fetchCurrentUser = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      setIsLoading(true);
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) throw sessionError;
       
       if (!session) {
         console.log("No active session");
+        setIsLoading(false);
         return;
       }
 
+      console.log("Fetching profile for user:", session.user.id);
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          id,
+          full_name,
+          email,
+          username,
+          role,
+          department,
+          status,
+          created_at,
+          last_login,
+          user_permissions (
+            id,
+            permission_name,
+            permission_description,
+            module
+          )
+        `)
         .eq('id', session.user.id)
         .single();
 
       if (profileError) {
         console.error("Error fetching profile:", profileError);
-        return;
+        throw profileError;
       }
 
       if (!profile) {
         console.log("No profile found");
+        setIsLoading(false);
         return;
       }
 
-      const { data: permissions } = await supabase
-        .from('user_permissions')
-        .select('id, permission_name, permission_description, module')
-        .eq('user_id', session.user.id);
-
-      setCurrentUser(mapProfileToSystemUser({
-        ...profile,
-        user_permissions: permissions || []
-      }));
+      console.log("Profile loaded successfully:", profile);
+      setCurrentUser(mapProfileToSystemUser(profile));
     } catch (error) {
       console.error("Error loading profile:", error);
+      setError(error as Error);
+      toast.error("Erreur lors du chargement du profil");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const fetchUsers = async () => {
     try {
+      setIsLoading(true);
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('*');
+        .select(`
+          id,
+          full_name,
+          email,
+          username,
+          role,
+          department,
+          status,
+          created_at,
+          last_login,
+          user_permissions (
+            id,
+            permission_name,
+            permission_description,
+            module
+          )
+        `);
 
       if (profilesError) {
         console.error("Error loading users:", profilesError);
-        return;
+        throw profilesError;
       }
 
       if (!profiles) {
@@ -64,18 +101,13 @@ export function useUsers() {
         return;
       }
 
-      const { data: allPermissions } = await supabase
-        .from('user_permissions')
-        .select('*');
-      
-      const mappedUsers = profiles.map(profile => mapProfileToSystemUser({
-        ...profile,
-        user_permissions: allPermissions?.filter(p => p.user_id === profile.id) || []
-      }));
-
+      console.log("Users loaded successfully:", profiles);
+      const mappedUsers = profiles.map(profile => mapProfileToSystemUser(profile));
       setUsers(mappedUsers);
     } catch (error) {
       console.error("Error loading users:", error);
+      setError(error as Error);
+      toast.error("Erreur lors du chargement des utilisateurs");
     } finally {
       setIsLoading(false);
     }
@@ -238,22 +270,46 @@ export function useUsers() {
   };
 
   useEffect(() => {
+    let mounted = true;
+
     const initialize = async () => {
-      await fetchCurrentUser();
-      await fetchUsers();
+      try {
+        await fetchCurrentUser();
+        if (mounted) {
+          await fetchUsers();
+        }
+      } catch (error) {
+        if (mounted) {
+          console.error("Error during initialization:", error);
+          setError(error as Error);
+        }
+      }
     };
 
     initialize();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed in useUsers:", event);
+      if (event === 'SIGNED_IN' && mounted) {
+        initialize();
+      }
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   return {
     users,
     currentUser,
     isLoading,
+    error,
     toggleUserStatus,
     addUser,
     updateUser,
     updatePermissions,
-    deleteUser,
+    deleteUser
   };
 }
