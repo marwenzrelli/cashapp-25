@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, UserCircle } from "lucide-react";
 import { useClients } from "@/features/clients/hooks/useClients";
 import { toast } from "sonner";
 import {
@@ -31,8 +31,11 @@ import {
 } from "@/components/ui/select";
 import { type DepositDialogProps } from "@/features/deposits/types";
 import { type Deposit } from "@/components/deposits/types";
+import { supabase } from "@/integrations/supabase/client";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogProps) => {
+  const { currency } = useCurrency();
   const [selectedClient, setSelectedClient] = useState("");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState<Date>(new Date());
@@ -45,6 +48,29 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
       fetchClients();
     }
   }, [open]);
+
+  // Écouter les changements en temps réel sur la table clients
+  useEffect(() => {
+    const channel = supabase
+      .channel('public:clients')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'clients'
+        },
+        () => {
+          console.log('Mise à jour des soldes détectée');
+          fetchClients();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const handleSubmit = async () => {
     if (!selectedClient || !amount || !date) {
@@ -104,18 +130,29 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
               value={selectedClient} 
               onValueChange={setSelectedClient}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Sélectionner un client" />
               </SelectTrigger>
               <SelectContent>
                 {clients.map((client) => (
-                  <SelectItem key={client.id} value={client.id.toString()}>
-                    {client.prenom} {client.nom}
+                  <SelectItem 
+                    key={client.id} 
+                    value={client.id.toString()}
+                    className="flex items-center justify-between gap-2"
+                  >
+                    <div className="flex items-center gap-2">
+                      <UserCircle className="h-4 w-4 text-primary/50" />
+                      <span>{client.prenom} {client.nom}</span>
+                    </div>
+                    <span className={`font-mono text-sm ${client.solde >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                      {client.solde.toLocaleString()} {currency}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
+
           <div className="space-y-2">
             <Label htmlFor="amount">Montant</Label>
             <Input
@@ -126,21 +163,36 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
               onChange={(e) => setAmount(e.target.value)}
             />
           </div>
+
           <div className="space-y-2">
             <Label>Date</Label>
-            <div className="grid gap-2">
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={handleDateChange}
-                disabled={(date) =>
-                  date > new Date() || date < new Date("2023-01-01")
-                }
-                initialFocus
-                className="rounded-md border"
-              />
-            </div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !date && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {date ? format(date, "P") : <span>Choisir une date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={handleDateChange}
+                  disabled={(date) =>
+                    date > new Date() || date < new Date("2023-01-01")
+                  }
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
           </div>
+
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
             <Input
