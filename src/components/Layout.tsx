@@ -22,20 +22,16 @@ const Layout = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Vérifie l'état de la session au chargement
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        console.info("Session check:", { session });
         navigate("/login", { replace: true });
       }
     };
 
     checkSession();
 
-    // Écoute les changements d'état d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.info("Auth state changed:", event);
       if (event === "SIGNED_OUT" || !session) {
         navigate("/login", { replace: true });
       }
@@ -59,30 +55,23 @@ const Layout = () => {
 
   const handleLogout = async () => {
     try {
-      // Vérifier d'abord si nous avons une session active
-      const { data: { session } } = await supabase.auth.getSession();
-      console.info("Session before logout:", { session });
-
-      if (!session) {
-        console.info("No active session found, redirecting to login");
-        navigate("/login", { replace: true });
-        return;
-      }
-
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error("Erreur lors de la déconnexion:", error);
-        toast.error("Une erreur est survenue lors de la déconnexion");
-      } else {
-        toast.success("Déconnexion réussie");
-      }
-
-      // Dans tous les cas, rediriger vers la page de login
+      // Déconnexion silencieuse sans vérification préalable de session
+      await supabase.auth.signOut();
+      
+      // Suppression du token de session du localStorage
+      localStorage.removeItem('sb-tujomckfdircqiztmqxt-auth-token');
+      
+      // Redirection immédiate
       navigate("/login", { replace: true });
+      
+      // Notification de succès
+      toast.success("Déconnexion réussie");
+      
     } catch (error) {
-      console.error("Erreur inattendue lors de la déconnexion:", error);
-      toast.error("Une erreur est survenue lors de la déconnexion");
+      console.error("Erreur lors de la déconnexion:", error);
+      // En cas d'erreur, on redirige quand même
       navigate("/login", { replace: true });
+      toast.error("La session a été réinitialisée");
     }
   };
 
