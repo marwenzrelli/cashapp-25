@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Client } from "../types";
 import { supabase } from "@/integrations/supabase/client";
@@ -87,8 +86,6 @@ export const useClients = () => {
 
       const clientFullName = `${clientData.prenom} ${clientData.nom}`;
 
-      // Supprimer dans l'ordre pour respecter les dépendances
-      
       // 1. Supprimer les accès QR
       const { error: qrDeleteError } = await supabase
         .from('qr_access')
@@ -129,7 +126,7 @@ export const useClients = () => {
       const { error: transfersError } = await supabase
         .from('transfers')
         .delete()
-        .or(`from_client.eq.${clientFullName},to_client.eq.${clientFullName}`);
+        .or(`from_client.eq."${clientFullName}",to_client.eq."${clientFullName}"`);
 
       if (transfersError) {
         console.error("Erreur lors de la suppression des virements:", transfersError);
