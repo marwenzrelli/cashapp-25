@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Client } from "../types";
 import { supabase } from "@/integrations/supabase/client";
@@ -63,26 +64,45 @@ export const useClients = () => {
   };
 
   const deleteClient = async (id: number) => {
-    const { data: { session } } = await supabase.auth.getSession();
-      
-    if (!session) {
-      toast.error("Vous devez être connecté pour supprimer un client");
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+        
+      if (!session) {
+        toast.error("Vous devez être connecté pour supprimer un client");
+        return false;
+      }
+
+      // D'abord, supprimer les accès QR associés
+      const { error: qrDeleteError } = await supabase
+        .from('qr_access')
+        .delete()
+        .eq('client_id', id);
+
+      if (qrDeleteError) {
+        console.error("Erreur lors de la suppression des accès QR:", qrDeleteError);
+        toast.error("Erreur lors de la suppression des accès QR");
+        return false;
+      }
+
+      // Ensuite, supprimer le client
+      const { error: clientDeleteError } = await supabase
+        .from('clients')
+        .delete()
+        .eq('id', id);
+
+      if (clientDeleteError) {
+        toast.error("Erreur lors de la suppression du client");
+        console.error("Error deleting client:", clientDeleteError);
+        return false;
+      }
+
+      await fetchClients();
+      return true;
+    } catch (error) {
+      console.error("Error in deleteClient:", error);
+      toast.error("Une erreur est survenue lors de la suppression");
       return false;
     }
-
-    const { error } = await supabase
-      .from('clients')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      toast.error("Erreur lors de la suppression du client");
-      console.error("Error deleting client:", error);
-      return false;
-    }
-
-    await fetchClients();
-    return true;
   };
 
   const createClient = async (newClientData: Omit<Client, 'id' | 'date_creation' | 'status'>) => {
