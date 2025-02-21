@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from "react";
 import { Client } from "../types";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client"; 
 import { toast } from "sonner";
 
 export const useClients = () => {
@@ -98,19 +99,7 @@ export const useClients = () => {
         return false;
       }
 
-      // 2. Supprimer les versements
-      const { error: depositsError } = await supabase
-        .from('deposits')
-        .delete()
-        .eq('client_name', clientFullName);
-
-      if (depositsError) {
-        console.error("Erreur lors de la suppression des versements:", depositsError);
-        toast.error("Erreur lors de la suppression des versements");
-        return false;
-      }
-
-      // 3. Supprimer les retraits
+      // 2. Supprimer les retraits
       const { error: withdrawalsError } = await supabase
         .from('withdrawals')
         .delete()
@@ -122,14 +111,37 @@ export const useClients = () => {
         return false;
       }
 
+      // 3. Supprimer les versements
+      const { error: depositsError } = await supabase
+        .from('deposits')
+        .delete()
+        .eq('client_name', clientFullName);
+
+      if (depositsError) {
+        console.error("Erreur lors de la suppression des versements:", depositsError);
+        toast.error("Erreur lors de la suppression des versements");
+        return false;
+      }
+
       // 4. Supprimer les virements (envoyés et reçus)
-      const { error: transfersError } = await supabase
+      const { error: transfersFromError } = await supabase
         .from('transfers')
         .delete()
-        .or(`from_client.eq."${clientFullName}",to_client.eq."${clientFullName}"`);
+        .eq('from_client', clientFullName);
 
-      if (transfersError) {
-        console.error("Erreur lors de la suppression des virements:", transfersError);
+      if (transfersFromError) {
+        console.error("Erreur lors de la suppression des virements envoyés:", transfersFromError);
+        toast.error("Erreur lors de la suppression des virements");
+        return false;
+      }
+
+      const { error: transfersToError } = await supabase
+        .from('transfers')
+        .delete()
+        .eq('to_client', clientFullName);
+
+      if (transfersToError) {
+        console.error("Erreur lors de la suppression des virements reçus:", transfersToError);
         toast.error("Erreur lors de la suppression des virements");
         return false;
       }
@@ -147,6 +159,7 @@ export const useClients = () => {
       }
 
       await fetchClients();
+      toast.success("Client supprimé avec succès");
       return true;
     } catch (error) {
       console.error("Error in deleteClient:", error);
