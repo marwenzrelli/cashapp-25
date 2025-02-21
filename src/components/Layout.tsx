@@ -15,21 +15,53 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { UserRole } from "@/types/admin";
 
 const Layout = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
 
   useEffect(() => {
-    const checkSession = async () => {
+    const checkSessionAndRole = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         navigate("/login", { replace: true });
+        return;
+      }
+
+      // Vérifier le rôle de l'utilisateur
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', session.user.id)
+        .single();
+
+      if (error) {
+        console.error("Erreur lors de la récupération du profil:", error);
+        toast.error("Erreur lors de la vérification des permissions");
+        return;
+      }
+
+      setUserRole(profile.role);
+      
+      // Rediriger si l'utilisateur n'est pas autorisé pour certaines routes
+      const restrictedRoutes = {
+        '/administration': ['supervisor'],
+        '/statistics': ['supervisor', 'manager']
+      };
+
+      const currentPath = location.pathname;
+      const allowedRoles = restrictedRoutes[currentPath as keyof typeof restrictedRoutes];
+
+      if (allowedRoles && !allowedRoles.includes(profile.role)) {
+        toast.error("Accès non autorisé");
+        navigate("/dashboard", { replace: true });
       }
     };
 
-    checkSession();
+    checkSessionAndRole();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_OUT" || !session) {
@@ -40,7 +72,7 @@ const Layout = () => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, location.pathname]);
 
   const navItems = [
     { path: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
@@ -48,32 +80,29 @@ const Layout = () => {
     { path: "/deposits", label: "Versements", icon: ArrowDownCircle },
     { path: "/withdrawals", label: "Retraits", icon: ArrowUpCircle },
     { path: "/transfers", label: "Virements", icon: RefreshCcw },
-    { path: "/statistics", label: "Statistiques", icon: BarChart },
+    { path: "/statistics", label: "Statistiques", icon: BarChart, roles: ['supervisor', 'manager'] },
     { path: "/operations", label: "Recherche", icon: Search },
-    { path: "/administration", label: "Administration", icon: Shield },
+    { path: "/administration", label: "Administration", icon: Shield, roles: ['supervisor'] },
   ];
 
   const handleLogout = async () => {
     try {
-      // Déconnexion silencieuse sans vérification préalable de session
       await supabase.auth.signOut();
-      
-      // Suppression du token de session du localStorage
       localStorage.removeItem('sb-tujomckfdircqiztmqxt-auth-token');
-      
-      // Redirection immédiate
       navigate("/login", { replace: true });
-      
-      // Notification de succès
       toast.success("Déconnexion réussie");
-      
     } catch (error) {
       console.error("Erreur lors de la déconnexion:", error);
-      // En cas d'erreur, on redirige quand même
       navigate("/login", { replace: true });
       toast.error("La session a été réinitialisée");
     }
   };
+
+  // Filtrer les éléments de navigation en fonction du rôle
+  const filteredNavItems = navItems.filter(item => {
+    if (!item.roles) return true;
+    return userRole && item.roles.includes(userRole);
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -93,7 +122,7 @@ const Layout = () => {
                 </span>
               </div>
               <div className="flex items-center space-x-4">
-                {navItems.map(({ path, label, icon: Icon }) => (
+                {filteredNavItems.map(({ path, label, icon: Icon }) => (
                   <Link
                     key={path}
                     to={path}
