@@ -72,7 +72,24 @@ export const useClients = () => {
         return false;
       }
 
-      // D'abord, supprimer les accès QR associés
+      // Récupérer le nom complet du client pour les transactions
+      const { data: clientData, error: clientError } = await supabase
+        .from('clients')
+        .select('prenom, nom')
+        .eq('id', id)
+        .single();
+
+      if (clientError || !clientData) {
+        console.error("Erreur lors de la récupération du client:", clientError);
+        toast.error("Client non trouvé");
+        return false;
+      }
+
+      const clientFullName = `${clientData.prenom} ${clientData.nom}`;
+
+      // Supprimer dans l'ordre pour respecter les dépendances
+      
+      // 1. Supprimer les accès QR
       const { error: qrDeleteError } = await supabase
         .from('qr_access')
         .delete()
@@ -84,7 +101,43 @@ export const useClients = () => {
         return false;
       }
 
-      // Ensuite, supprimer le client
+      // 2. Supprimer les versements
+      const { error: depositsError } = await supabase
+        .from('deposits')
+        .delete()
+        .eq('client_name', clientFullName);
+
+      if (depositsError) {
+        console.error("Erreur lors de la suppression des versements:", depositsError);
+        toast.error("Erreur lors de la suppression des versements");
+        return false;
+      }
+
+      // 3. Supprimer les retraits
+      const { error: withdrawalsError } = await supabase
+        .from('withdrawals')
+        .delete()
+        .eq('client_name', clientFullName);
+
+      if (withdrawalsError) {
+        console.error("Erreur lors de la suppression des retraits:", withdrawalsError);
+        toast.error("Erreur lors de la suppression des retraits");
+        return false;
+      }
+
+      // 4. Supprimer les virements (envoyés et reçus)
+      const { error: transfersError } = await supabase
+        .from('transfers')
+        .delete()
+        .or(`from_client.eq.${clientFullName},to_client.eq.${clientFullName}`);
+
+      if (transfersError) {
+        console.error("Erreur lors de la suppression des virements:", transfersError);
+        toast.error("Erreur lors de la suppression des virements");
+        return false;
+      }
+
+      // 5. Finalement, supprimer le client
       const { error: clientDeleteError } = await supabase
         .from('clients')
         .delete()
