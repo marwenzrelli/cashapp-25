@@ -82,6 +82,28 @@ const Withdrawals = () => {
     fetchWithdrawals();
   }, []);
 
+  useEffect(() => {
+    const channel = supabase
+      .channel('public:clients')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'clients'
+        },
+        () => {
+          console.log('Mise à jour des soldes détectée');
+          fetchClients();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   const fetchWithdrawals = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -366,8 +388,18 @@ const Withdrawals = () => {
                     </SelectTrigger>
                     <SelectContent>
                       {clients.map((client) => (
-                        <SelectItem key={client.id} value={client.id.toString()}>
-                          {client.prenom} {client.nom} - Solde: {client.solde} {currency}
+                        <SelectItem 
+                          key={client.id} 
+                          value={client.id.toString()}
+                          className="flex items-center justify-between gap-2"
+                        >
+                          <div className="flex items-center gap-2">
+                            <UserCircle className="h-4 w-4 text-primary/50" />
+                            <span>{client.prenom} {client.nom}</span>
+                          </div>
+                          <span className={`font-mono text-sm ${client.solde >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                            {client.solde.toLocaleString()} {currency}
+                          </span>
                         </SelectItem>
                       ))}
                     </SelectContent>
