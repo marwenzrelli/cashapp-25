@@ -36,14 +36,16 @@ const Layout = () => {
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error("Erreur lors de la déconnexion:", error);
-        toast.error("Erreur lors de la déconnexion");
-        return;
+        throw error;
       }
       
+      // Forcer la redirection vers la page de login même si la déconnexion échoue
+      navigate("/login", { replace: true });
       toast.success("Déconnexion réussie");
-      navigate("/login");
     } catch (error) {
       console.error("Erreur inattendue lors de la déconnexion:", error);
+      // En cas d'erreur, on force quand même la redirection
+      navigate("/login", { replace: true });
       toast.error("Une erreur est survenue lors de la déconnexion");
     }
   };
@@ -122,3 +124,4 @@ const Layout = () => {
 };
 
 export default Layout;
+
