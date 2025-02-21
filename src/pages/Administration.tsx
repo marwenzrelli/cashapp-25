@@ -27,7 +27,6 @@ const Administration = () => {
 
   const isSupervisor = currentUser?.role === "supervisor";
 
-  // Filtrage des utilisateurs en fonction des critères de recherche
   const filteredUsers = users.filter(
     (user) =>
       (user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -42,9 +41,7 @@ const Administration = () => {
 
     const checkAuth = async () => {
       try {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) throw sessionError;
+        const { data: { session } } = await supabase.auth.getSession();
         
         if (!session?.user) {
           if (mounted) {
@@ -55,40 +52,27 @@ const Administration = () => {
           return;
         }
 
-        // Utiliser la nouvelle politique RLS pour accéder au profil
-        const { data: profile, error: profileError } = await supabase
+        const { data: profile } = await supabase
           .from('profiles')
-          .select('role, id')
+          .select('role')
           .eq('id', session.user.id)
-          .maybeSingle();
-
-        if (profileError) {
-          console.error("Erreur lors de la récupération du profil:", profileError);
-          if (mounted) {
-            setIsCheckingAuth(false);
-            setIsAuthenticated(false);
-          }
-          toast.error("Erreur lors de la vérification des permissions");
-          return;
-        }
+          .single();
 
         if (!profile) {
-          console.error("Aucun profil trouvé");
           if (mounted) {
             setIsCheckingAuth(false);
             setIsAuthenticated(false);
           }
-          toast.error("Profil utilisateur non trouvé");
+          navigate("/login");
           return;
         }
 
-        const isSupervisorRole = profile.role === 'supervisor';
-        
-        if (!isSupervisorRole) {
+        if (profile.role !== 'supervisor') {
           if (mounted) {
             setIsCheckingAuth(false);
             setIsAuthenticated(false);
           }
+          navigate("/");
           toast.error("Accès réservé aux superviseurs");
           return;
         }
@@ -97,13 +81,13 @@ const Administration = () => {
           setIsAuthenticated(true);
           setIsCheckingAuth(false);
         }
-      } catch (error: any) {
-        console.error("Erreur lors de la vérification:", error.message);
+      } catch (error) {
+        console.error("Erreur d'authentification:", error);
         if (mounted) {
           setIsAuthenticated(false);
           setIsCheckingAuth(false);
         }
-        toast.error("Erreur lors de la vérification des autorisations");
+        navigate("/login");
       }
     };
 
@@ -149,17 +133,6 @@ const Administration = () => {
         >
           Retour à l'accueil
         </Button>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold mb-2">Chargement...</h2>
-          <p className="text-muted-foreground">Veuillez patienter pendant le chargement des données.</p>
-        </div>
       </div>
     );
   }
@@ -264,4 +237,3 @@ const Administration = () => {
 };
 
 export default Administration;
-
