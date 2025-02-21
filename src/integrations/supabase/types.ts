@@ -301,6 +301,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      delete_user_safely: {
+        Args: {
+          user_id: string
+        }
+        Returns: undefined
+      }
       get_user_role: {
         Args: {
           user_id: string
