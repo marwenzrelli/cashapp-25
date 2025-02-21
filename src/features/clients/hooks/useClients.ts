@@ -11,6 +11,7 @@ export const useClients = () => {
   const fetchClients = async () => {
     try {
       setLoading(true);
+      console.log("Chargement des clients...");
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
@@ -18,10 +19,13 @@ export const useClients = () => {
         return;
       }
 
+      // Récupérer la liste des clients
       const { data, error } = await supabase
         .from('clients')
         .select('*')
         .order('date_creation', { ascending: false });
+
+      console.log("Clients actuels:", data);
 
       if (error) {
         console.error("Error fetching clients:", error);
@@ -63,146 +67,11 @@ export const useClients = () => {
     return true;
   };
 
-  const deleteClient = async (id: number) => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-        
-      if (!session) {
-        toast.error("Vous devez être connecté pour supprimer un client");
-        return false;
-      }
-
-      // Récupérer le nom complet du client pour les transactions
-      const { data: clientData, error: clientError } = await supabase
-        .from('clients')
-        .select('prenom, nom')
-        .eq('id', id)
-        .single();
-
-      if (clientError || !clientData) {
-        console.error("Erreur lors de la récupération du client:", clientError);
-        toast.error("Client non trouvé");
-        return false;
-      }
-
-      const clientFullName = `${clientData.prenom} ${clientData.nom}`;
-
-      // 1. Supprimer les accès QR
-      const { error: qrDeleteError } = await supabase
-        .from('qr_access')
-        .delete()
-        .eq('client_id', id);
-
-      if (qrDeleteError) {
-        console.error("Erreur lors de la suppression des accès QR:", qrDeleteError);
-        toast.error("Erreur lors de la suppression des accès QR");
-        return false;
-      }
-
-      // 2. Supprimer les retraits
-      const { error: withdrawalsError } = await supabase
-        .from('withdrawals')
-        .delete()
-        .eq('client_name', clientFullName);
-
-      if (withdrawalsError) {
-        console.error("Erreur lors de la suppression des retraits:", withdrawalsError);
-        toast.error("Erreur lors de la suppression des retraits");
-        return false;
-      }
-
-      // 3. Supprimer les versements
-      const { error: depositsError } = await supabase
-        .from('deposits')
-        .delete()
-        .eq('client_name', clientFullName);
-
-      if (depositsError) {
-        console.error("Erreur lors de la suppression des versements:", depositsError);
-        toast.error("Erreur lors de la suppression des versements");
-        return false;
-      }
-
-      // 4. Supprimer les virements (envoyés et reçus)
-      const { error: transfersFromError } = await supabase
-        .from('transfers')
-        .delete()
-        .eq('from_client', clientFullName);
-
-      if (transfersFromError) {
-        console.error("Erreur lors de la suppression des virements envoyés:", transfersFromError);
-        toast.error("Erreur lors de la suppression des virements");
-        return false;
-      }
-
-      const { error: transfersToError } = await supabase
-        .from('transfers')
-        .delete()
-        .eq('to_client', clientFullName);
-
-      if (transfersToError) {
-        console.error("Erreur lors de la suppression des virements reçus:", transfersToError);
-        toast.error("Erreur lors de la suppression des virements");
-        return false;
-      }
-
-      // 5. Finalement, supprimer le client
-      const { error: clientDeleteError } = await supabase
-        .from('clients')
-        .delete()
-        .eq('id', id);
-
-      if (clientDeleteError) {
-        toast.error("Erreur lors de la suppression du client");
-        console.error("Error deleting client:", clientDeleteError);
-        return false;
-      }
-
-      await fetchClients();
-      toast.success("Client supprimé avec succès");
-      return true;
-    } catch (error) {
-      console.error("Error in deleteClient:", error);
-      toast.error("Une erreur est survenue lors de la suppression");
-      return false;
-    }
-  };
-
-  const createClient = async (newClientData: Omit<Client, 'id' | 'date_creation' | 'status'>) => {
-    const { data: { session } } = await supabase.auth.getSession();
-      
-    if (!session) {
-      toast.error("Vous devez être connecté pour créer un client");
-      return false;
-    }
-
-    const { data, error } = await supabase
-      .from('clients')
-      .insert({
-        ...newClientData,
-        created_by: session.user.id
-      })
-      .select()
-      .single();
-
-    if (error) {
-      toast.error("Erreur lors de la création du client");
-      console.error("Error creating client:", error);
-      return false;
-    }
-
-    if (data) {
-      await fetchClients();
-      return true;
-    }
-
-    return false;
-  };
-
   const refreshClientBalance = async (id: number) => {
     try {
       console.log("Rafraîchissement du solde pour le client:", id);
       
+      // Appel direct de la fonction RPC pour calculer le solde
       const { data, error } = await supabase
         .rpc('calculate_client_balance', { client_id: id });
 
@@ -225,23 +94,56 @@ export const useClients = () => {
     }
   };
 
+  // Configuration des souscriptions en temps réel
   useEffect(() => {
     fetchClients();
 
-    const clientsSubscription = supabase
-      .channel('public_clients_changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'clients'
-      }, () => {
-        console.log("Changement détecté dans la table clients");
-        fetchClients();
-      })
+    // Souscription aux modifications de la table clients
+    const clientsChannel = supabase
+      .channel('public:clients')
+      .on('postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'clients'
+        },
+        (payload) => {
+          console.log("Changement détecté dans la table clients:", payload);
+          fetchClients();
+        }
+      )
+      .subscribe((status) => {
+        console.log("Status de la souscription clients:", status);
+      });
+
+    // Souscription aux modifications de la table deposits
+    const depositsChannel = supabase
+      .channel('public:deposits')
+      .on('postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'deposits'
+        },
+        async (payload) => {
+          console.log("Changement détecté dans la table deposits:", payload);
+          // Récupérer l'ID du client à partir du nom complet
+          if (payload.new) {
+            const clientName = payload.new.client_name.split(' ');
+            const client = clients.find(c => 
+              c.prenom === clientName[0] && c.nom === clientName[1]
+            );
+            if (client) {
+              await refreshClientBalance(client.id);
+            }
+          }
+        }
+      )
       .subscribe();
 
     return () => {
-      clientsSubscription.unsubscribe();
+      supabase.removeChannel(clientsChannel);
+      supabase.removeChannel(depositsChannel);
     };
   }, []);
 
@@ -250,8 +152,6 @@ export const useClients = () => {
     loading,
     fetchClients,
     updateClient,
-    deleteClient,
-    createClient,
     refreshClientBalance
   };
 };
