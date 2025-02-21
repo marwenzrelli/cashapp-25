@@ -179,6 +179,8 @@ const Withdrawals = () => {
         toast.success("Retrait modifié", {
           description: `Le retrait de ${parseFloat(newWithdrawal.amount)} ${currency} pour ${clientFullName} a été modifié.`
         });
+
+        await refreshClientBalance(selectedClient.id);
       } else {
         const { error } = await supabase
           .from('withdrawals')
@@ -200,6 +202,8 @@ const Withdrawals = () => {
         toast.success("Retrait enregistré", {
           description: `Le retrait de ${parseFloat(newWithdrawal.amount)} ${currency} pour ${clientFullName} a été enregistré.`
         });
+
+        await refreshClientBalance(selectedClient.id);
       }
 
       setIsDialogOpen(false);
