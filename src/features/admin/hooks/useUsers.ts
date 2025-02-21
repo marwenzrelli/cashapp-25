@@ -1,6 +1,6 @@
 
-import { useState, useEffect } from 'react';
-import { SystemUser, UserRole, mapProfileToSystemUser } from '@/types/admin';
+import { useState, useEffect, useCallback } from 'react';
+import { SystemUser, mapProfileToSystemUser } from '@/types/admin';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -10,17 +10,13 @@ export function useUsers() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchCurrentUser = async () => {
+  const fetchCurrentUser = useCallback(async () => {
     try {
-      setIsLoading(true);
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) throw sessionError;
+      const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
         console.log("No active session");
-        setIsLoading(false);
-        return;
+        return null;
       }
 
       console.log("Fetching profile for user:", session.user.id);
@@ -53,24 +49,19 @@ export function useUsers() {
 
       if (!profile) {
         console.log("No profile found");
-        setIsLoading(false);
-        return;
+        return null;
       }
 
       console.log("Profile loaded successfully:", profile);
-      setCurrentUser(mapProfileToSystemUser(profile));
+      return mapProfileToSystemUser(profile);
     } catch (error) {
       console.error("Error loading profile:", error);
-      setError(error as Error);
-      toast.error("Erreur lors du chargement du profil");
-    } finally {
-      setIsLoading(false);
+      throw error;
     }
-  };
+  }, []);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
-      setIsLoading(true);
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select(`
@@ -96,24 +87,14 @@ export function useUsers() {
         throw profilesError;
       }
 
-      if (!profiles) {
-        setUsers([]);
-        return;
-      }
-
-      console.log("Users loaded successfully:", profiles);
-      const mappedUsers = profiles.map(profile => mapProfileToSystemUser(profile));
-      setUsers(mappedUsers);
+      return profiles ? profiles.map(profile => mapProfileToSystemUser(profile)) : [];
     } catch (error) {
       console.error("Error loading users:", error);
-      setError(error as Error);
-      toast.error("Erreur lors du chargement des utilisateurs");
-    } finally {
-      setIsLoading(false);
+      throw error;
     }
-  };
+  }, []);
 
-  const toggleUserStatus = async (userId: string) => {
+  const toggleUserStatus = useCallback(async (userId: string) => {
     try {
       const user = users.find(u => u.id === userId);
       if (!user) return;
@@ -127,22 +108,23 @@ export function useUsers() {
 
       if (error) throw error;
 
-      setUsers(users.map(user =>
-        user.id === userId
-          ? { ...user, status: newStatus }
-          : user
-      ));
+      setUsers(prevUsers =>
+        prevUsers.map(user =>
+          user.id === userId
+            ? { ...user, status: newStatus }
+            : user
+        )
+      );
       
       toast.success("Statut de l'utilisateur mis à jour");
     } catch (error) {
       console.error("Error updating user status:", error);
       toast.error("Erreur lors de la mise à jour du statut");
     }
-  };
+  }, [users]);
 
-  const addUser = async (user: SystemUser & { password: string }) => {
+  const addUser = useCallback(async (user: SystemUser & { password: string }) => {
     try {
-      // Créer l'utilisateur dans auth.users via la fonction signUp
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: user.email,
         password: user.password,
@@ -159,11 +141,10 @@ export function useUsers() {
       if (signUpError) throw signUpError;
 
       if (data.user) {
-        // Mettre à jour le profil avec le mot de passe hashé
         const { error: updateError } = await supabase
           .from('profiles')
           .update({
-            hashed_password: user.password // Dans un environnement de production, il faudrait hasher le mot de passe
+            hashed_password: user.password
           })
           .eq('id', data.user.id);
 
@@ -171,16 +152,17 @@ export function useUsers() {
           console.error("Error updating profile with password:", updateError);
         }
 
-        await fetchUsers();
+        const newUsers = await fetchUsers();
+        setUsers(newUsers);
         toast.success("Utilisateur créé avec succès");
       }
     } catch (error: any) {
       console.error("Error creating user:", error);
       toast.error("Erreur lors de la création de l'utilisateur: " + error.message);
     }
-  };
+  }, [fetchUsers]);
 
-  const updateUser = async (updatedUser: SystemUser & { password?: string }) => {
+  const updateUser = useCallback(async (updatedUser: SystemUser & { password?: string }) => {
     try {
       const updateData: any = {
         full_name: updatedUser.fullName,
@@ -190,20 +172,14 @@ export function useUsers() {
         status: updatedUser.status
       };
 
-      // Si un nouveau mot de passe est fourni, le mettre à jour
       if (updatedUser.password) {
-        updateData.hashed_password = updatedUser.password; // Dans un environnement de production, il faudrait hasher le mot de passe
-
-        // Mettre à jour le mot de passe dans auth.users
+        updateData.hashed_password = updatedUser.password;
         const { error: authError } = await supabase.auth.admin.updateUserById(
           updatedUser.id,
           { password: updatedUser.password }
         );
 
-        if (authError) {
-          console.error("Error updating auth password:", authError);
-          throw authError;
-        }
+        if (authError) throw authError;
       }
 
       const { error } = await supabase
@@ -213,22 +189,23 @@ export function useUsers() {
 
       if (error) throw error;
 
-      setUsers(users.map(user =>
-        user.id === updatedUser.id
-          ? { ...updatedUser }
-          : user
-      ));
+      setUsers(prevUsers =>
+        prevUsers.map(user =>
+          user.id === updatedUser.id
+            ? { ...updatedUser }
+            : user
+        )
+      );
       
       toast.success("Utilisateur mis à jour avec succès");
     } catch (error) {
       console.error("Error updating user:", error);
       toast.error("Erreur lors de la mise à jour de l'utilisateur");
     }
-  };
+  }, []);
 
-  const updatePermissions = async (userId: string, permissions: SystemUser["permissions"]) => {
+  const updatePermissions = useCallback(async (userId: string, permissions: SystemUser["permissions"]) => {
     try {
-      // Supprimer les permissions existantes
       await supabase
         .from('user_permissions')
         .delete()
@@ -247,48 +224,60 @@ export function useUsers() {
         if (error) throw error;
       }
 
-      await fetchUsers();
+      const newUsers = await fetchUsers();
+      setUsers(newUsers);
       toast.success("Permissions mises à jour avec succès");
     } catch (error) {
       console.error("Error updating permissions:", error);
       toast.error("Erreur lors de la mise à jour des permissions");
     }
-  };
+  }, [fetchUsers]);
 
-  const deleteUser = async (userId: string) => {
+  const deleteUser = useCallback(async (userId: string) => {
     try {
       const { error } = await supabase.auth.admin.deleteUser(userId);
-
       if (error) throw error;
 
-      setUsers(users.filter(user => user.id !== userId));
+      setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
       toast.success("Utilisateur supprimé avec succès");
     } catch (error) {
       console.error("Error deleting user:", error);
       toast.error("Erreur lors de la suppression de l'utilisateur");
     }
-  };
+  }, []);
 
   useEffect(() => {
     let mounted = true;
 
     const initialize = async () => {
+      setIsLoading(true);
       try {
-        await fetchCurrentUser();
+        const [currentUserData, usersData] = await Promise.all([
+          fetchCurrentUser(),
+          fetchUsers()
+        ]);
+
         if (mounted) {
-          await fetchUsers();
+          if (currentUserData) setCurrentUser(currentUserData);
+          setUsers(usersData);
+          setError(null);
         }
       } catch (error) {
         if (mounted) {
           console.error("Error during initialization:", error);
           setError(error as Error);
+          toast.error("Erreur lors du chargement des données");
+        }
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
         }
       }
     };
 
     initialize();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       console.log("Auth state changed in useUsers:", event);
       if (event === 'SIGNED_IN' && mounted) {
         initialize();
@@ -299,7 +288,7 @@ export function useUsers() {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [fetchCurrentUser, fetchUsers]);
 
   return {
     users,
