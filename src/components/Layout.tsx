@@ -15,10 +15,36 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useEffect } from "react";
 
 const Layout = () => {
   const location = useLocation();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Vérifie l'état de la session au chargement
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.info("Session check:", { session });
+        navigate("/login", { replace: true });
+      }
+    };
+
+    checkSession();
+
+    // Écoute les changements d'état d'authentification
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.info("Auth state changed:", event);
+      if (event === "SIGNED_OUT" || !session) {
+        navigate("/login", { replace: true });
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
 
   const navItems = [
     { path: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
@@ -33,20 +59,30 @@ const Layout = () => {
 
   const handleLogout = async () => {
     try {
+      // Vérifier d'abord si nous avons une session active
+      const { data: { session } } = await supabase.auth.getSession();
+      console.info("Session before logout:", { session });
+
+      if (!session) {
+        console.info("No active session found, redirecting to login");
+        navigate("/login", { replace: true });
+        return;
+      }
+
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error("Erreur lors de la déconnexion:", error);
-        throw error;
+        toast.error("Une erreur est survenue lors de la déconnexion");
+      } else {
+        toast.success("Déconnexion réussie");
       }
-      
-      // Forcer la redirection vers la page de login même si la déconnexion échoue
+
+      // Dans tous les cas, rediriger vers la page de login
       navigate("/login", { replace: true });
-      toast.success("Déconnexion réussie");
     } catch (error) {
       console.error("Erreur inattendue lors de la déconnexion:", error);
-      // En cas d'erreur, on force quand même la redirection
-      navigate("/login", { replace: true });
       toast.error("Une erreur est survenue lors de la déconnexion");
+      navigate("/login", { replace: true });
     }
   };
 
@@ -124,4 +160,3 @@ const Layout = () => {
 };
 
 export default Layout;
-
