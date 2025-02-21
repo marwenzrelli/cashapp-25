@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -37,15 +38,21 @@ const Administration = () => {
   );
 
   useEffect(() => {
+    console.log("Starting auth check");
     let mounted = true;
 
     const checkAuth = async () => {
       try {
+        console.log("Fetching session...");
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
-        if (sessionError) throw sessionError;
+        if (sessionError) {
+          console.error("Session error:", sessionError);
+          throw sessionError;
+        }
         
         if (!session?.user) {
+          console.log("No session found, redirecting to login");
           if (mounted) {
             setIsCheckingAuth(false);
             setIsAuthenticated(false);
@@ -54,11 +61,19 @@ const Administration = () => {
           return;
         }
 
-        const { data: isSupervisor, error: supervisorError } = await supabase
-          .rpc('is_supervisor', { user_id: session.user.id });
+        console.log("Session found, checking supervisor status...");
+        // Vérification directe du rôle dans la table profiles
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
 
-        if (supervisorError) {
-          console.error("Erreur lors de la vérification du rôle:", supervisorError);
+        console.log("Profile data:", profile);
+        console.log("Profile error:", profileError);
+
+        if (profileError) {
+          console.error("Erreur lors de la récupération du profil:", profileError);
           if (mounted) {
             setIsCheckingAuth(false);
             setIsAuthenticated(false);
@@ -68,19 +83,21 @@ const Administration = () => {
           return;
         }
 
-        if (!isSupervisor) {
+        if (!profile || profile.role !== 'supervisor') {
+          console.log("User is not a supervisor");
           if (mounted) {
             setIsCheckingAuth(false);
             setIsAuthenticated(false);
             setError("Accès réservé aux superviseurs");
             toast.error("Accès réservé aux superviseurs");
             setTimeout(() => {
-              navigate("/dashboard");
+              if (mounted) navigate("/dashboard");
             }, 2000);
           }
           return;
         }
 
+        console.log("User is authenticated as supervisor");
         if (mounted) {
           setError(null);
           setIsAuthenticated(true);
@@ -94,7 +111,7 @@ const Administration = () => {
           setError("Une erreur est survenue lors de la vérification");
           toast.error("Une erreur est survenue lors de la vérification");
           setTimeout(() => {
-            navigate("/dashboard");
+            if (mounted) navigate("/dashboard");
           }, 2000);
         }
       }
@@ -103,6 +120,7 @@ const Administration = () => {
     checkAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event);
       if (event === 'SIGNED_OUT' || !session) {
         if (mounted) {
           setIsAuthenticated(false);
@@ -120,7 +138,16 @@ const Administration = () => {
     };
   }, [navigate]);
 
+  console.log({
+    isCheckingAuth,
+    isAuthenticated,
+    error,
+    currentUser,
+    isSupervisor
+  });
+
   if (isCheckingAuth) {
+    console.log("Rendering loading state");
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
@@ -132,6 +159,7 @@ const Administration = () => {
   }
 
   if (error) {
+    console.log("Rendering error state");
     return (
       <div className="flex flex-col items-center justify-center h-screen">
         <div className="text-center max-w-md mx-auto p-6 bg-background rounded-lg shadow-lg border">
@@ -144,10 +172,26 @@ const Administration = () => {
     );
   }
 
-  if (!isAuthenticated || !currentUser || currentUser.role !== 'supervisor') {
+  // On vérifie si currentUser existe avant de vérifier son rôle
+  if (!currentUser) {
+    console.log("No current user, waiting for data");
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold mb-2">Chargement du profil...</h2>
+          <p className="text-muted-foreground">Veuillez patienter pendant le chargement de votre profil.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Si l'utilisateur n'est pas authentifié ou n'est pas superviseur
+  if (!isAuthenticated || currentUser.role !== 'supervisor') {
+    console.log("User not authenticated or not supervisor");
     return null;
   }
 
+  console.log("Rendering main content");
   return (
     <div className="space-y-8 animate-in">
       <div className="flex justify-between items-start">
