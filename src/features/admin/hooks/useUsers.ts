@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { SystemUser, mapProfileToSystemUser } from '@/types/admin';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,6 +8,21 @@ export function useUsers() {
   const [currentUser, setCurrentUser] = useState<SystemUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+
+  const fetchUserPermissions = useCallback(async (userId: string) => {
+    try {
+      const { data: permissions, error } = await supabase
+        .from('user_permissions')
+        .select('*')
+        .eq('user_id', userId);
+
+      if (error) throw error;
+      return permissions || [];
+    } catch (error) {
+      console.error("Error fetching user permissions:", error);
+      return [];
+    }
+  }, []);
 
   const fetchCurrentUser = useCallback(async () => {
     try {
@@ -22,23 +36,7 @@ export function useUsers() {
       console.log("Fetching profile for user:", session.user.id);
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select(`
-          id,
-          full_name,
-          email,
-          username,
-          role,
-          department,
-          status,
-          created_at,
-          last_login,
-          user_permissions (
-            id,
-            permission_name,
-            permission_description,
-            module
-          )
-        `)
+        .select('*')
         .eq('id', session.user.id)
         .single();
 
@@ -52,47 +50,42 @@ export function useUsers() {
         return null;
       }
 
+      const permissions = await fetchUserPermissions(session.user.id);
+      
       console.log("Profile loaded successfully:", profile);
-      return mapProfileToSystemUser(profile);
+      return mapProfileToSystemUser({ ...profile, user_permissions: permissions });
     } catch (error) {
       console.error("Error loading profile:", error);
       throw error;
     }
-  }, []);
+  }, [fetchUserPermissions]);
 
   const fetchUsers = useCallback(async () => {
     try {
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
-          id,
-          full_name,
-          email,
-          username,
-          role,
-          department,
-          status,
-          created_at,
-          last_login,
-          user_permissions (
-            id,
-            permission_name,
-            permission_description,
-            module
-          )
-        `);
+        .select('*');
 
       if (profilesError) {
         console.error("Error loading users:", profilesError);
         throw profilesError;
       }
 
-      return profiles ? profiles.map(profile => mapProfileToSystemUser(profile)) : [];
+      if (!profiles) return [];
+
+      const usersWithPermissions = await Promise.all(
+        profiles.map(async (profile) => {
+          const permissions = await fetchUserPermissions(profile.id);
+          return mapProfileToSystemUser({ ...profile, user_permissions: permissions });
+        })
+      );
+
+      return usersWithPermissions;
     } catch (error) {
       console.error("Error loading users:", error);
       throw error;
     }
-  }, []);
+  }, [fetchUserPermissions]);
 
   const toggleUserStatus = useCallback(async (userId: string) => {
     try {
@@ -174,7 +167,6 @@ export function useUsers() {
 
       if (updatedUser.password) {
         updateData.hashed_password = updatedUser.password;
-        // Note: This operation requires administrative privileges
         const { error: authError } = await supabase.auth.admin.updateUserById(
           updatedUser.id,
           { password: updatedUser.password }
@@ -207,13 +199,11 @@ export function useUsers() {
 
   const updatePermissions = useCallback(async (userId: string, permissions: SystemUser["permissions"]) => {
     try {
-      // Supprimer d'abord toutes les permissions existantes
       await supabase
         .from('user_permissions')
         .delete()
         .eq('user_id', userId);
 
-      // Ajouter les nouvelles permissions si elles existent
       if (permissions.length > 0) {
         const { error } = await supabase
           .from('user_permissions')
@@ -227,7 +217,6 @@ export function useUsers() {
         if (error) throw error;
       }
 
-      // Recharger les utilisateurs pour mettre à jour l'interface
       const newUsers = await fetchUsers();
       setUsers(newUsers);
       toast.success("Permissions mises à jour avec succès");
@@ -239,7 +228,6 @@ export function useUsers() {
 
   const deleteUser = useCallback(async (userId: string) => {
     try {
-      // Note: This operation requires administrative privileges
       const { error } = await supabase.auth.admin.deleteUser(userId);
       if (error) throw error;
 
