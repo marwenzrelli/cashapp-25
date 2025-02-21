@@ -17,7 +17,17 @@ import { toast } from "sonner";
 
 const Administration = () => {
   const navigate = useNavigate();
-  const { users, currentUser, isLoading, error: usersError } = useUsers();
+  const { 
+    users, 
+    currentUser, 
+    isLoading, 
+    error: usersError,
+    toggleUserStatus,
+    addUser,
+    updateUser,
+    updatePermissions,
+    deleteUser
+  } = useUsers();
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
@@ -173,13 +183,21 @@ const Administration = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <UsersList users={filteredUsers} currentUser={currentUser} />
+          <UsersList 
+            users={filteredUsers} 
+            currentUser={currentUser}
+            onToggleStatus={toggleUserStatus}
+            onUpdateUser={updateUser}
+            onUpdatePermissions={updatePermissions}
+            onDeleteUser={deleteUser}
+          />
         </CardContent>
       </Card>
 
       <AddUserDialog
         isOpen={isAddUserOpen}
         onClose={() => setIsAddUserOpen(false)}
+        onAddUser={addUser}
       />
 
       <UserProfile user={currentUser} />
