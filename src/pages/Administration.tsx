@@ -41,7 +41,9 @@ const Administration = () => {
 
     const checkAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) throw sessionError;
         
         if (!session?.user) {
           if (mounted) {
@@ -52,41 +54,30 @@ const Administration = () => {
           return;
         }
 
-        // Vérification du rôle directement depuis la table profiles
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', session.user.id)
-          .single();
+        const { data: isSupervisor, error: supervisorError } = await supabase
+          .rpc('is_supervisor', { user_id: session.user.id });
 
-        if (profileError) {
-          console.error("Erreur lors de la récupération du profil:", profileError);
+        if (supervisorError) {
+          console.error("Erreur lors de la vérification du rôle:", supervisorError);
           if (mounted) {
             setIsCheckingAuth(false);
             setIsAuthenticated(false);
             setError("Erreur lors de la vérification des permissions");
+            toast.error("Erreur lors de la vérification des permissions");
           }
-          toast.error("Erreur lors de la vérification des permissions", {
-            duration: 3000
-          });
-          setTimeout(() => {
-            if (mounted) navigate("/dashboard");
-          }, 2000);
           return;
         }
 
-        if (!profile || profile.role !== 'supervisor') {
+        if (!isSupervisor) {
           if (mounted) {
             setIsCheckingAuth(false);
             setIsAuthenticated(false);
             setError("Accès réservé aux superviseurs");
+            toast.error("Accès réservé aux superviseurs");
+            setTimeout(() => {
+              navigate("/dashboard");
+            }, 2000);
           }
-          toast.error("Accès réservé aux superviseurs", {
-            duration: 3000
-          });
-          setTimeout(() => {
-            if (mounted) navigate("/dashboard");
-          }, 2000);
           return;
         }
 
@@ -101,13 +92,11 @@ const Administration = () => {
           setIsAuthenticated(false);
           setIsCheckingAuth(false);
           setError("Une erreur est survenue lors de la vérification");
+          toast.error("Une erreur est survenue lors de la vérification");
+          setTimeout(() => {
+            navigate("/dashboard");
+          }, 2000);
         }
-        toast.error("Une erreur est survenue", {
-          duration: 3000
-        });
-        setTimeout(() => {
-          if (mounted) navigate("/dashboard");
-        }, 2000);
       }
     };
 
@@ -118,8 +107,8 @@ const Administration = () => {
         if (mounted) {
           setIsAuthenticated(false);
           setIsCheckingAuth(false);
+          navigate("/login");
         }
-        navigate("/login");
       } else {
         await checkAuth();
       }
