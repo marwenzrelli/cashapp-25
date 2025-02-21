@@ -174,6 +174,7 @@ export function useUsers() {
 
       if (updatedUser.password) {
         updateData.hashed_password = updatedUser.password;
+        // Note: This operation requires administrative privileges
         const { error: authError } = await supabase.auth.admin.updateUserById(
           updatedUser.id,
           { password: updatedUser.password }
@@ -206,11 +207,13 @@ export function useUsers() {
 
   const updatePermissions = useCallback(async (userId: string, permissions: SystemUser["permissions"]) => {
     try {
+      // Supprimer d'abord toutes les permissions existantes
       await supabase
         .from('user_permissions')
         .delete()
         .eq('user_id', userId);
 
+      // Ajouter les nouvelles permissions si elles existent
       if (permissions.length > 0) {
         const { error } = await supabase
           .from('user_permissions')
@@ -224,6 +227,7 @@ export function useUsers() {
         if (error) throw error;
       }
 
+      // Recharger les utilisateurs pour mettre à jour l'interface
       const newUsers = await fetchUsers();
       setUsers(newUsers);
       toast.success("Permissions mises à jour avec succès");
@@ -235,6 +239,7 @@ export function useUsers() {
 
   const deleteUser = useCallback(async (userId: string) => {
     try {
+      // Note: This operation requires administrative privileges
       const { error } = await supabase.auth.admin.deleteUser(userId);
       if (error) throw error;
 
