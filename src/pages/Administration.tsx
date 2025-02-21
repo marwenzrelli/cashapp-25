@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -24,6 +23,7 @@ const Administration = () => {
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
   const [selectedRole, setSelectedRole] = useState<UserRole | "all">("all");
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const isSupervisor = currentUser?.role === "supervisor";
 
@@ -64,9 +64,14 @@ const Administration = () => {
           if (mounted) {
             setIsCheckingAuth(false);
             setIsAuthenticated(false);
+            setError("Erreur lors de la vérification des permissions");
           }
-          toast.error("Erreur lors de la vérification des permissions");
-          navigate("/dashboard");
+          toast.error("Erreur lors de la vérification des permissions", {
+            duration: 3000
+          });
+          setTimeout(() => {
+            if (mounted) navigate("/dashboard");
+          }, 2000);
           return;
         }
 
@@ -74,13 +79,19 @@ const Administration = () => {
           if (mounted) {
             setIsCheckingAuth(false);
             setIsAuthenticated(false);
+            setError("Accès réservé aux superviseurs");
           }
-          toast.error("Accès réservé aux superviseurs");
-          navigate("/dashboard");
+          toast.error("Accès réservé aux superviseurs", {
+            duration: 3000
+          });
+          setTimeout(() => {
+            if (mounted) navigate("/dashboard");
+          }, 2000);
           return;
         }
 
         if (mounted) {
+          setError(null);
           setIsAuthenticated(true);
           setIsCheckingAuth(false);
         }
@@ -89,8 +100,14 @@ const Administration = () => {
         if (mounted) {
           setIsAuthenticated(false);
           setIsCheckingAuth(false);
+          setError("Une erreur est survenue lors de la vérification");
         }
-        navigate("/dashboard");
+        toast.error("Une erreur est survenue", {
+          duration: 3000
+        });
+        setTimeout(() => {
+          if (mounted) navigate("/dashboard");
+        }, 2000);
       }
     };
 
@@ -125,8 +142,21 @@ const Administration = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen">
+        <div className="text-center max-w-md mx-auto p-6 bg-background rounded-lg shadow-lg border">
+          <Shield className="w-12 h-12 text-destructive mx-auto mb-4" />
+          <h2 className="text-2xl font-semibold mb-2">Accès non autorisé</h2>
+          <p className="text-muted-foreground mb-4">{error}</p>
+          <p className="text-sm text-muted-foreground">Redirection vers le tableau de bord...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!isAuthenticated || !currentUser || currentUser.role !== 'supervisor') {
-    return null; // On retourne null car la redirection est déjà gérée dans useEffect
+    return null;
   }
 
   return (
