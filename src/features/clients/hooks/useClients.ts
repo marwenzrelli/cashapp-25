@@ -1,9 +1,7 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Client } from "../types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useEffect } from "react";
 
 export const useClients = () => {
   const [clients, setClients] = useState<Client[]>([]);
@@ -12,7 +10,6 @@ export const useClients = () => {
   const fetchClients = async () => {
     try {
       setLoading(true);
-      // Vérifier si l'utilisateur est authentifié
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
@@ -119,7 +116,6 @@ export const useClients = () => {
     return false;
   };
 
-  // Fonction pour mettre à jour le solde après une opération
   const refreshClientBalance = async (id: number) => {
     try {
       console.log("Rafraîchissement du solde pour le client:", id);
@@ -138,7 +134,6 @@ export const useClients = () => {
         await updateClient(id, { solde: data });
       }
 
-      // Force le rechargement des clients pour mettre à jour l'affichage
       await fetchClients();
       
     } catch (error) {
@@ -147,9 +142,24 @@ export const useClients = () => {
     }
   };
 
-  // Recharger les clients au montage du composant
   useEffect(() => {
     fetchClients();
+
+    const clientsSubscription = supabase
+      .channel('public_clients_changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'clients'
+      }, () => {
+        console.log("Changement détecté dans la table clients");
+        fetchClients();
+      })
+      .subscribe();
+
+    return () => {
+      clientsSubscription.unsubscribe();
+    };
   }, []);
 
   return {

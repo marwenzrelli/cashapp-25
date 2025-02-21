@@ -87,6 +87,59 @@ const ClientProfile = () => {
     };
 
     fetchClient();
+
+    const clientSubscription = supabase
+      .channel('public_client_changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'clients',
+        filter: `id=eq.${clientId}`,
+      }, (payload) => {
+        console.log("Mise à jour client reçue:", payload);
+        setClient(payload.new as Client);
+      })
+      .subscribe();
+
+    const depositsSubscription = supabase
+      .channel('deposits_changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'deposits',
+      }, () => {
+        fetchClient();
+      })
+      .subscribe();
+
+    const withdrawalsSubscription = supabase
+      .channel('withdrawals_changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'withdrawals',
+      }, () => {
+        fetchClient();
+      })
+      .subscribe();
+
+    const transfersSubscription = supabase
+      .channel('transfers_changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'transfers',
+      }, () => {
+        fetchClient();
+      })
+      .subscribe();
+
+    return () => {
+      clientSubscription.unsubscribe();
+      depositsSubscription.unsubscribe();
+      withdrawalsSubscription.unsubscribe();
+      transfersSubscription.unsubscribe();
+    };
   }, [clientId]);
 
   if (isLoading) {
