@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -17,16 +16,13 @@ import { toast } from "sonner";
 
 const Administration = () => {
   const navigate = useNavigate();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const { users, currentUser, isLoading, toggleUserStatus, addUser, updateUser, updatePermissions, deleteUser } = useUsers();
+  const { users, currentUser, isLoading: isLoadingUsers } = useUsers();
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
   const [selectedRole, setSelectedRole] = useState<UserRole | "all">("all");
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const isSupervisor = currentUser?.role === "supervisor";
 
   const filteredUsers = users.filter(
     (user) =>
@@ -38,97 +34,75 @@ const Administration = () => {
   );
 
   useEffect(() => {
-    console.log("Starting auth check");
+    console.log("Effect running, currentUser:", currentUser);
     let mounted = true;
 
-    const checkAuth = async () => {
+    const checkAccess = async () => {
       try {
-        console.log("Fetching session...");
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) {
-          console.error("Session error:", sessionError);
-          throw sessionError;
-        }
+        const { data: { session } } = await supabase.auth.getSession();
         
         if (!session?.user) {
-          console.log("No session found, redirecting to login");
+          console.log("No session, redirecting to login");
           if (mounted) {
             setIsCheckingAuth(false);
-            setIsAuthenticated(false);
             navigate("/login");
           }
           return;
         }
 
-        console.log("Session found, checking supervisor status...");
-        // Vérification directe du rôle dans la table profiles
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', session.user.id)
-          .single();
-
-        console.log("Profile data:", profile);
-        console.log("Profile error:", profileError);
-
-        if (profileError) {
-          console.error("Erreur lors de la récupération du profil:", profileError);
+        if (!currentUser && !isLoadingUsers) {
+          console.log("No current user data and not loading");
           if (mounted) {
+            setError("Erreur lors du chargement du profil");
+            toast.error("Erreur lors du chargement du profil");
             setIsCheckingAuth(false);
-            setIsAuthenticated(false);
-            setError("Erreur lors de la vérification des permissions");
-            toast.error("Erreur lors de la vérification des permissions");
           }
           return;
         }
 
-        if (!profile || profile.role !== 'supervisor') {
-          console.log("User is not a supervisor");
+        if (currentUser && currentUser.role !== 'supervisor') {
+          console.log("User is not supervisor:", currentUser.role);
           if (mounted) {
-            setIsCheckingAuth(false);
-            setIsAuthenticated(false);
             setError("Accès réservé aux superviseurs");
-            toast.error("Accès réservé aux superviseurs");
+            toast.error("Accès réservé aux superviseurs", {
+              duration: 3000
+            });
+            setIsCheckingAuth(false);
             setTimeout(() => {
               if (mounted) navigate("/dashboard");
-            }, 2000);
+            }, 3000);
           }
           return;
         }
 
-        console.log("User is authenticated as supervisor");
-        if (mounted) {
-          setError(null);
-          setIsAuthenticated(true);
-          setIsCheckingAuth(false);
+        if (currentUser && currentUser.role === 'supervisor') {
+          console.log("User is supervisor, granting access");
+          if (mounted) {
+            setError(null);
+            setIsCheckingAuth(false);
+          }
         }
       } catch (error) {
-        console.error("Erreur lors de la vérification:", error);
+        console.error("Error during access check:", error);
         if (mounted) {
-          setIsAuthenticated(false);
+          setError("Une erreur est survenue");
+          toast.error("Une erreur est survenue");
           setIsCheckingAuth(false);
-          setError("Une erreur est survenue lors de la vérification");
-          toast.error("Une erreur est survenue lors de la vérification");
           setTimeout(() => {
             if (mounted) navigate("/dashboard");
-          }, 2000);
+          }, 3000);
         }
       }
     };
 
-    checkAuth();
+    checkAccess();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       console.log("Auth state changed:", event);
-      if (event === 'SIGNED_OUT' || !session) {
+      if (event === 'SIGNED_OUT') {
         if (mounted) {
-          setIsAuthenticated(false);
-          setIsCheckingAuth(false);
           navigate("/login");
         }
-      } else {
-        await checkAuth();
       }
     });
 
@@ -136,18 +110,16 @@ const Administration = () => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, currentUser, isLoadingUsers]);
 
-  console.log({
+  console.log("Render state:", {
     isCheckingAuth,
-    isAuthenticated,
     error,
     currentUser,
-    isSupervisor
+    isLoadingUsers
   });
 
-  if (isCheckingAuth) {
-    console.log("Rendering loading state");
+  if (isCheckingAuth || isLoadingUsers) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
@@ -159,7 +131,6 @@ const Administration = () => {
   }
 
   if (error) {
-    console.log("Rendering error state");
     return (
       <div className="flex flex-col items-center justify-center h-screen">
         <div className="text-center max-w-md mx-auto p-6 bg-background rounded-lg shadow-lg border">
@@ -172,26 +143,10 @@ const Administration = () => {
     );
   }
 
-  // On vérifie si currentUser existe avant de vérifier son rôle
-  if (!currentUser) {
-    console.log("No current user, waiting for data");
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold mb-2">Chargement du profil...</h2>
-          <p className="text-muted-foreground">Veuillez patienter pendant le chargement de votre profil.</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Si l'utilisateur n'est pas authentifié ou n'est pas superviseur
-  if (!isAuthenticated || currentUser.role !== 'supervisor') {
-    console.log("User not authenticated or not supervisor");
+  if (!currentUser || currentUser.role !== 'supervisor') {
     return null;
   }
 
-  console.log("Rendering main content");
   return (
     <div className="space-y-8 animate-in">
       <div className="flex justify-between items-start">
@@ -201,7 +156,7 @@ const Administration = () => {
             Gestion des utilisateurs et des autorisations
           </p>
         </div>
-        {isSupervisor && (
+        {currentUser?.role === "supervisor" && (
           <Button
             onClick={() => setIsAddUserOpen(true)}
             className="flex items-center gap-2"
@@ -212,7 +167,7 @@ const Administration = () => {
         )}
       </div>
 
-      {isSupervisor && (
+      {currentUser?.role === "supervisor" && (
         <>
           <div className="grid gap-6 md:grid-cols-4">
             <StatCard
@@ -266,27 +221,27 @@ const Administration = () => {
               <UsersList 
                 users={filteredUsers} 
                 currentUser={currentUser}
-                onToggleStatus={toggleUserStatus}
-                onUpdateUser={updateUser}
-                onUpdatePermissions={updatePermissions}
-                onDeleteUser={deleteUser}
+                onToggleStatus={() => {}}
+                onUpdateUser={() => {}}
+                onUpdatePermissions={() => {}}
+                onDeleteUser={() => {}}
               />
             </CardContent>
           </Card>
         </>
       )}
 
-      {isSupervisor && (
+      {currentUser?.role === "supervisor" && (
         <AddUserDialog
           isOpen={isAddUserOpen}
           onClose={() => setIsAddUserOpen(false)}
-          onAddUser={addUser}
+          onAddUser={() => {}}
         />
       )}
 
       <UserProfile user={currentUser} />
       
-      {isSupervisor && <ServiceExplanations />}
+      {currentUser?.role === "supervisor" && <ServiceExplanations />}
     </div>
   );
 };
