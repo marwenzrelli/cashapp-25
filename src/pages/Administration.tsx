@@ -47,33 +47,36 @@ const Administration = () => {
           if (mounted) {
             setIsCheckingAuth(false);
             setIsAuthenticated(false);
+            navigate("/login");
           }
-          navigate("/login");
           return;
         }
 
-        const { data: profile } = await supabase
+        // Vérification du rôle directement depuis la table profiles
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', session.user.id)
           .single();
 
-        if (!profile) {
+        if (profileError) {
+          console.error("Erreur lors de la récupération du profil:", profileError);
           if (mounted) {
             setIsCheckingAuth(false);
             setIsAuthenticated(false);
           }
-          navigate("/login");
+          toast.error("Erreur lors de la vérification des permissions");
+          navigate("/dashboard");
           return;
         }
 
-        if (profile.role !== 'supervisor') {
+        if (!profile || profile.role !== 'supervisor') {
           if (mounted) {
             setIsCheckingAuth(false);
             setIsAuthenticated(false);
           }
-          navigate("/");
           toast.error("Accès réservé aux superviseurs");
+          navigate("/dashboard");
           return;
         }
 
@@ -82,18 +85,18 @@ const Administration = () => {
           setIsCheckingAuth(false);
         }
       } catch (error) {
-        console.error("Erreur d'authentification:", error);
+        console.error("Erreur lors de la vérification:", error);
         if (mounted) {
           setIsAuthenticated(false);
           setIsCheckingAuth(false);
         }
-        navigate("/login");
+        navigate("/dashboard");
       }
     };
 
     checkAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_OUT' || !session) {
         if (mounted) {
           setIsAuthenticated(false);
@@ -101,7 +104,7 @@ const Administration = () => {
         }
         navigate("/login");
       } else {
-        checkAuth();
+        await checkAuth();
       }
     });
 
@@ -123,18 +126,7 @@ const Administration = () => {
   }
 
   if (!isAuthenticated || !currentUser || currentUser.role !== 'supervisor') {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen">
-        <h2 className="text-2xl font-semibold mb-2">Accès non autorisé</h2>
-        <p className="text-muted-foreground">Cette page est réservée aux superviseurs.</p>
-        <Button 
-          className="mt-4"
-          onClick={() => navigate("/")}
-        >
-          Retour à l'accueil
-        </Button>
-      </div>
-    );
+    return null; // On retourne null car la redirection est déjà gérée dans useEffect
   }
 
   return (
