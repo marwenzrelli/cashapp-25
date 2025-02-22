@@ -169,17 +169,31 @@ export const useClients = () => {
 
   const deleteClient = async (id: number) => {
     try {
-      const { error } = await supabase
+      // D'abord, supprimer les enregistrements QR liés
+      const { error: qrDeleteError } = await supabase
+        .from('qr_access')
+        .delete()
+        .eq('client_id', id);
+
+      if (qrDeleteError) {
+        console.error("Error deleting QR access:", qrDeleteError);
+        toast.error("Erreur lors de la suppression des accès QR");
+        return false;
+      }
+
+      // Ensuite, supprimer le client
+      const { error: clientDeleteError } = await supabase
         .from('clients')
         .delete()
         .eq('id', id);
 
-      if (error) {
-        console.error("Error deleting client:", error);
+      if (clientDeleteError) {
+        console.error("Error deleting client:", clientDeleteError);
         toast.error("Erreur lors de la suppression du client");
         return false;
       }
 
+      // Rafraîchir la liste des clients
       await fetchClients();
       return true;
     } catch (error) {
@@ -204,6 +218,15 @@ export const useClients = () => {
 
       console.log("Nouveau solde calculé:", balance);
 
+      // Mise à jour immédiate du client dans le state local
+      setClients(prevClients => 
+        prevClients.map(client => 
+          client.id === id 
+            ? { ...client, solde: balance || 0 }
+            : client
+        )
+      );
+
       // Mise à jour du solde dans la base de données
       const { error: updateError } = await supabase
         .from('clients')
@@ -215,10 +238,6 @@ export const useClients = () => {
         toast.error("Erreur lors de la mise à jour du solde");
         return;
       }
-
-      // Rafraîchir la liste complète des clients
-      await fetchClients();
-      
     } catch (error) {
       console.error("Erreur lors du rafraîchissement du solde:", error);
       toast.error("Une erreur est survenue lors de la mise à jour du solde");
