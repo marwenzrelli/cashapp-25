@@ -3,6 +3,36 @@ import { useState, useEffect } from "react";
 import { Client } from "../types";
 import { supabase } from "@/integrations/supabase/client"; 
 import { toast } from "sonner";
+import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+
+// Interfaces pour typer les payloads des différentes tables
+interface DepositRecord {
+  client_name: string;
+  amount: number;
+  created_at: string;
+  id: number;
+  notes?: string;
+  status: string;
+}
+
+interface WithdrawalRecord {
+  client_name: string;
+  amount: number;
+  created_at: string;
+  id: string;
+  notes?: string;
+  status: string;
+}
+
+interface TransferRecord {
+  from_client: string;
+  to_client: string;
+  amount: number;
+  created_at: string;
+  id: string;
+  reason: string;
+  status: string;
+}
 
 export const useClients = () => {
   const [clients, setClients] = useState<Client[]>([]);
@@ -173,9 +203,9 @@ export const useClients = () => {
           schema: 'public',
           table: 'deposits'
         },
-        async (payload) => {
+        async (payload: RealtimePostgresChangesPayload<DepositRecord>) => {
           console.log("Changement détecté dans la table deposits:", payload);
-          if (payload.new && payload.new.client_name) {
+          if (payload.new?.client_name) {
             const clientName = payload.new.client_name.split(' ');
             const client = clients.find(c => 
               c.prenom === clientName[0] && c.nom === clientName[1]
@@ -185,7 +215,7 @@ export const useClients = () => {
             }
           }
           // Mise à jour en cas de suppression
-          if (payload.old && payload.old.client_name) {
+          if (payload.old?.client_name) {
             const clientName = payload.old.client_name.split(' ');
             const client = clients.find(c => 
               c.prenom === clientName[0] && c.nom === clientName[1]
@@ -206,9 +236,9 @@ export const useClients = () => {
           schema: 'public',
           table: 'withdrawals'
         },
-        async (payload) => {
+        async (payload: RealtimePostgresChangesPayload<WithdrawalRecord>) => {
           console.log("Changement détecté dans la table withdrawals:", payload);
-          if (payload.new && payload.new.client_name) {
+          if (payload.new?.client_name) {
             const clientName = payload.new.client_name.split(' ');
             const client = clients.find(c => 
               c.prenom === clientName[0] && c.nom === clientName[1]
@@ -218,7 +248,7 @@ export const useClients = () => {
             }
           }
           // Mise à jour en cas de suppression
-          if (payload.old && payload.old.client_name) {
+          if (payload.old?.client_name) {
             const clientName = payload.old.client_name.split(' ');
             const client = clients.find(c => 
               c.prenom === clientName[0] && c.nom === clientName[1]
@@ -239,7 +269,7 @@ export const useClients = () => {
           schema: 'public',
           table: 'transfers'
         },
-        async (payload) => {
+        async (payload: RealtimePostgresChangesPayload<TransferRecord>) => {
           console.log("Changement détecté dans la table transfers:", payload);
           // En cas de suppression, mettre à jour les deux clients impliqués
           if (payload.old) {
