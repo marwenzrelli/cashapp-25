@@ -47,6 +47,13 @@ export const updateUserStatus = async (userId: string, status: "active" | "inact
 };
 
 export const createUser = async (user: SystemUser & { password: string }) => {
+  // Validation du mot de passe
+  if (!user.password || user.password.length < 6) {
+    throw new Error("Le mot de passe doit contenir au moins 6 caractères");
+  }
+
+  console.log("Tentative de création de l'utilisateur:", { ...user, password: '[HIDDEN]' });
+
   const { data, error: signUpError } = await supabase.auth.signUp({
     email: user.email,
     password: user.password,
@@ -60,17 +67,31 @@ export const createUser = async (user: SystemUser & { password: string }) => {
     }
   });
 
-  if (signUpError) throw signUpError;
+  if (signUpError) {
+    console.error("Erreur lors de la création de l'utilisateur:", signUpError);
+    throw signUpError;
+  }
 
-  if (data.user) {
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({
-        hashed_password: user.password
-      })
-      .eq('id', data.user.id);
+  if (!data.user) {
+    throw new Error("Erreur lors de la création de l'utilisateur");
+  }
 
-    if (updateError) throw updateError;
+  console.log("Utilisateur créé avec succès:", data.user.id);
+
+  // Mise à jour du profil
+  const { error: updateError } = await supabase
+    .from('profiles')
+    .update({
+      hashed_password: user.password,
+      role: user.role,
+      department: user.department,
+      status: 'active'
+    })
+    .eq('id', data.user.id);
+
+  if (updateError) {
+    console.error("Erreur lors de la mise à jour du profil:", updateError);
+    throw updateError;
   }
 
   return data.user;
@@ -86,6 +107,10 @@ export const updateUserProfile = async (user: SystemUser & { password?: string }
   };
 
   if (user.password) {
+    if (user.password.length < 6) {
+      throw new Error("Le mot de passe doit contenir au moins 6 caractères");
+    }
+
     updateData.hashed_password = user.password;
     const { error: authError } = await supabase.auth.admin.updateUserById(
       user.id,
