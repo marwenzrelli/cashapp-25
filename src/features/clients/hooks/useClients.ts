@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Client } from "../types";
 import { supabase } from "@/integrations/supabase/client"; 
@@ -170,93 +169,108 @@ export const useClients = () => {
 
   const deleteClient = async (id: number) => {
     try {
-      // Récupérer le nom complet du client
-      const client = clients.find(c => c.id === id);
-      if (!client) {
+      setLoading(true);
+      
+      // Récupérer le client avant la suppression
+      const { data: clientData, error: clientError } = await supabase
+        .from('clients')
+        .select('prenom, nom')
+        .eq('id', id)
+        .single();
+
+      if (clientError || !clientData) {
+        console.error("Error fetching client:", clientError);
         toast.error("Client introuvable");
         return false;
       }
-      const clientFullName = `${client.prenom} ${client.nom}`;
 
-      // Supprimer les enregistrements QR
-      const { error: qrDeleteError } = await supabase
-        .from('qr_access')
-        .delete()
-        .eq('client_id', id);
+      const clientFullName = `${clientData.prenom} ${clientData.nom}`;
+      console.log("Suppression du client:", clientFullName);
 
-      if (qrDeleteError) {
-        console.error("Error deleting QR access:", qrDeleteError);
-        toast.error("Erreur lors de la suppression des accès QR");
+      // Commencer par les opérations avant de supprimer le client
+      const deleteOperations = async () => {
+        // Dépôts
+        const { error: depositsError } = await supabase
+          .from('deposits')
+          .delete()
+          .eq('client_name', clientFullName);
+
+        if (depositsError) {
+          throw new Error(`Erreur suppression dépôts: ${depositsError.message}`);
+        }
+
+        // Retraits
+        const { error: withdrawalsError } = await supabase
+          .from('withdrawals')
+          .delete()
+          .eq('client_name', clientFullName);
+
+        if (withdrawalsError) {
+          throw new Error(`Erreur suppression retraits: ${withdrawalsError.message}`);
+        }
+
+        // Transferts (from)
+        const { error: transfersFromError } = await supabase
+          .from('transfers')
+          .delete()
+          .eq('from_client', clientFullName);
+
+        if (transfersFromError) {
+          throw new Error(`Erreur suppression transferts (from): ${transfersFromError.message}`);
+        }
+
+        // Transferts (to)
+        const { error: transfersToError } = await supabase
+          .from('transfers')
+          .delete()
+          .eq('to_client', clientFullName);
+
+        if (transfersToError) {
+          throw new Error(`Erreur suppression transferts (to): ${transfersToError.message}`);
+        }
+
+        // QR Access
+        const { error: qrError } = await supabase
+          .from('qr_access')
+          .delete()
+          .eq('client_id', id);
+
+        if (qrError) {
+          throw new Error(`Erreur suppression QR: ${qrError.message}`);
+        }
+      };
+
+      try {
+        await deleteOperations();
+        console.log("Toutes les opérations ont été supprimées");
+
+        // Maintenant on peut supprimer le client
+        const { error: deleteError } = await supabase
+          .from('clients')
+          .delete()
+          .eq('id', id);
+
+        if (deleteError) {
+          throw new Error(`Erreur suppression client: ${deleteError.message}`);
+        }
+
+        // Mise à jour de l'état local
+        setClients(prevClients => prevClients.filter(c => c.id !== id));
+        toast.success("Client supprimé avec succès");
+        return true;
+
+      } catch (operationError) {
+        console.error("Erreur lors de la suppression des opérations:", operationError);
+        toast.error(`Erreur: ${operationError.message}`);
         return false;
       }
 
-      // Supprimer les dépôts
-      const { error: depositsError } = await supabase
-        .from('deposits')
-        .delete()
-        .eq('client_name', clientFullName);
-
-      if (depositsError) {
-        console.error("Error deleting deposits:", depositsError);
-        toast.error("Erreur lors de la suppression des dépôts");
-        return false;
-      }
-
-      // Supprimer les retraits
-      const { error: withdrawalsError } = await supabase
-        .from('withdrawals')
-        .delete()
-        .eq('client_name', clientFullName);
-
-      if (withdrawalsError) {
-        console.error("Error deleting withdrawals:", withdrawalsError);
-        toast.error("Erreur lors de la suppression des retraits");
-        return false;
-      }
-
-      // Supprimer les transferts où le client est impliqué
-      const { error: transfersFromError } = await supabase
-        .from('transfers')
-        .delete()
-        .eq('from_client', clientFullName);
-
-      if (transfersFromError) {
-        console.error("Error deleting transfers (from):", transfersFromError);
-        toast.error("Erreur lors de la suppression des transferts");
-        return false;
-      }
-
-      const { error: transfersToError } = await supabase
-        .from('transfers')
-        .delete()
-        .eq('to_client', clientFullName);
-
-      if (transfersToError) {
-        console.error("Error deleting transfers (to):", transfersToError);
-        toast.error("Erreur lors de la suppression des transferts");
-        return false;
-      }
-
-      // Enfin, supprimer le client
-      const { error: clientDeleteError } = await supabase
-        .from('clients')
-        .delete()
-        .eq('id', id);
-
-      if (clientDeleteError) {
-        console.error("Error deleting client:", clientDeleteError);
-        toast.error("Erreur lors de la suppression du client");
-        return false;
-      }
-
-      // Mettre à jour la liste des clients localement
-      setClients(prevClients => prevClients.filter(c => c.id !== id));
-      
-      return true;
     } catch (error) {
       console.error("Error in deleteClient:", error);
       toast.error("Une erreur est survenue lors de la suppression du client");
       return false;
+    } finally {
+      setLoading(false);
     }
   };
 
