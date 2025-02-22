@@ -12,28 +12,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [fullName, setFullName] = useState("");
-  const [hasSupervisor, setHasSupervisor] = useState(false);
   const navigate = useNavigate();
-
-  const checkSupervisor = async () => {
-    try {
-      const { count, error } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'supervisor');
-
-      if (error) throw error;
-      const supervisorExists = count > 0;
-      setHasSupervisor(supervisorExists);
-      if (supervisorExists) {
-        setIsSignUp(false); // Force le mode connexion si un superviseur existe
-      }
-    } catch (error) {
-      console.error("Erreur lors de la vérification du superviseur:", error);
-    }
-  };
 
   useEffect(() => {
     // Vérifier la session active
@@ -49,31 +28,6 @@ const Login = () => {
       }
     };
     getSession();
-
-    // Vérifier l'existence d'un superviseur
-    checkSupervisor();
-
-    // Mettre en place une souscription aux changements de la table profiles
-    const profilesSubscription = supabase
-      .channel('profiles-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'profiles'
-        },
-        () => {
-          // Revérifier l'existence d'un superviseur à chaque changement
-          checkSupervisor();
-        }
-      )
-      .subscribe();
-
-    // Cleanup
-    return () => {
-      profilesSubscription.unsubscribe();
-    };
   }, [navigate]);
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -87,70 +41,30 @@ const Login = () => {
 
     try {
       const normalizedEmail = email.trim().toLowerCase();
-      console.log("Tentative d'authentification avec:", { email: normalizedEmail, isSignUp });
-      
-      if (isSignUp && !hasSupervisor) { // Vérification supplémentaire
-        if (!fullName) {
-          toast.error("Le nom complet est requis pour l'inscription");
-          setIsLoading(false);
-          return;
+      console.log("Début de la procédure de connexion");
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: normalizedEmail,
+        password,
+      });
+
+      console.log("Réponse connexion:", { data, error });
+
+      if (error) {
+        console.error("Erreur détaillée de connexion:", error);
+        let errorMessage = "Erreur de connexion";
+        if (error.message.includes("Invalid login credentials")) {
+          errorMessage = "Email ou mot de passe incorrect";
+        } else if (error.message.includes("Email not confirmed")) {
+          errorMessage = "Veuillez confirmer votre email avant de vous connecter";
         }
+        toast.error(errorMessage);
+        return;
+      }
 
-        const { data, error } = await supabase.auth.signUp({
-          email: normalizedEmail,
-          password,
-          options: {
-            data: {
-              full_name: fullName,
-              role: 'supervisor'
-            },
-            emailRedirectTo: window.location.origin
-          }
-        });
-
-        console.log("Réponse inscription:", { data, error });
-
-        if (error) {
-          console.error("Erreur détaillée d'inscription:", error);
-          let errorMessage = "Erreur lors de l'inscription";
-          if (error.message.includes("already registered")) {
-            errorMessage = "Cet email est déjà utilisé";
-          }
-          toast.error(errorMessage);
-          return;
-        }
-
-        if (data.user) {
-          toast.success("Compte créé avec succès ! Vous pouvez maintenant vous connecter.");
-          setIsSignUp(false);
-          await checkSupervisor(); // Vérifier immédiatement après la création
-        }
-      } else {
-        console.log("Début de la procédure de connexion");
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: normalizedEmail,
-          password,
-        });
-
-        console.log("Réponse connexion:", { data, error });
-
-        if (error) {
-          console.error("Erreur détaillée de connexion:", error);
-          let errorMessage = "Erreur de connexion";
-          if (error.message.includes("Invalid login credentials")) {
-            errorMessage = "Email ou mot de passe incorrect";
-          } else if (error.message.includes("Email not confirmed")) {
-            errorMessage = "Veuillez confirmer votre email avant de vous connecter";
-          }
-          toast.error(errorMessage);
-          return;
-        }
-
-        if (data?.user) {
-          console.log("Connexion réussie, redirection...");
-          navigate("/dashboard");
-          toast.success("Connexion réussie !");
-        }
+      if (data?.user) {
+        console.log("Connexion réussie, redirection...");
+        navigate("/dashboard");
+        toast.success("Connexion réussie !");
       }
     } catch (error: any) {
       console.error("Erreur détaillée d'authentification:", error);
@@ -173,23 +87,10 @@ const Login = () => {
             </div>
           </div>
           <h1 className="text-2xl font-bold">Flow Cash Control</h1>
-          <p className="text-gray-500">
-            {isSignUp ? "Créer un nouveau compte" : "Connectez-vous à votre compte"}
-          </p>
+          <p className="text-gray-500">Connectez-vous à votre compte</p>
         </div>
 
         <form onSubmit={handleAuth} className="space-y-4">
-          {isSignUp && !hasSupervisor && (
-            <div className="space-y-2">
-              <Input
-                type="text"
-                placeholder="Nom complet"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                required
-              />
-            </div>
-          )}
           <div className="space-y-2">
             <Input
               type="email"
@@ -214,20 +115,8 @@ const Login = () => {
             className="w-full"
             disabled={isLoading}
           >
-            {isLoading ? "Chargement..." : (isSignUp && !hasSupervisor ? "Créer un compte" : "Se connecter")}
+            {isLoading ? "Chargement..." : "Se connecter"}
           </Button>
-          {!hasSupervisor && (
-            <p className="text-center text-sm text-gray-500">
-              {isSignUp ? "Déjà un compte ?" : "Pas encore de compte ?"}{" "}
-              <button
-                type="button"
-                className="text-primary hover:underline"
-                onClick={() => setIsSignUp(!isSignUp)}
-              >
-                {isSignUp ? "Se connecter" : "Créer un compte"}
-              </button>
-            </p>
-          )}
         </form>
       </Card>
     </div>
