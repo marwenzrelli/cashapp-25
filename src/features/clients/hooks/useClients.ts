@@ -33,7 +33,16 @@ export const useClients = () => {
       }
 
       if (data) {
-        setClients(data);
+        // Mettre à jour les soldes pour chaque client
+        const updatedData = await Promise.all(data.map(async (client) => {
+          const { data: balance } = await supabase
+            .rpc('calculate_client_balance', { client_id: client.id });
+          return {
+            ...client,
+            solde: balance || 0
+          };
+        }));
+        setClients(updatedData);
       }
     } catch (error) {
       console.error("Error in fetchClients:", error);
@@ -140,6 +149,7 @@ export const useClients = () => {
   useEffect(() => {
     fetchClients();
 
+    // Configuration des souscriptions pour les mises à jour en temps réel
     const clientsChannel = supabase
       .channel('public:clients')
       .on('postgres_changes',
@@ -148,9 +158,9 @@ export const useClients = () => {
           schema: 'public',
           table: 'clients'
         },
-        (payload) => {
+        async (payload) => {
           console.log("Changement détecté dans la table clients:", payload);
-          fetchClients();
+          await fetchClients();
         }
       )
       .subscribe();
@@ -163,10 +173,20 @@ export const useClients = () => {
           schema: 'public',
           table: 'deposits'
         },
-        async (payload: any) => {
+        async (payload) => {
           console.log("Changement détecté dans la table deposits:", payload);
           if (payload.new && payload.new.client_name) {
             const clientName = payload.new.client_name.split(' ');
+            const client = clients.find(c => 
+              c.prenom === clientName[0] && c.nom === clientName[1]
+            );
+            if (client) {
+              await refreshClientBalance(client.id);
+            }
+          }
+          // Mise à jour en cas de suppression
+          if (payload.old && payload.old.client_name) {
+            const clientName = payload.old.client_name.split(' ');
             const client = clients.find(c => 
               c.prenom === clientName[0] && c.nom === clientName[1]
             );
@@ -186,10 +206,20 @@ export const useClients = () => {
           schema: 'public',
           table: 'withdrawals'
         },
-        async (payload: any) => {
+        async (payload) => {
           console.log("Changement détecté dans la table withdrawals:", payload);
           if (payload.new && payload.new.client_name) {
             const clientName = payload.new.client_name.split(' ');
+            const client = clients.find(c => 
+              c.prenom === clientName[0] && c.nom === clientName[1]
+            );
+            if (client) {
+              await refreshClientBalance(client.id);
+            }
+          }
+          // Mise à jour en cas de suppression
+          if (payload.old && payload.old.client_name) {
+            const clientName = payload.old.client_name.split(' ');
             const client = clients.find(c => 
               c.prenom === clientName[0] && c.nom === clientName[1]
             );
@@ -209,9 +239,30 @@ export const useClients = () => {
           schema: 'public',
           table: 'transfers'
         },
-        async (payload: any) => {
+        async (payload) => {
           console.log("Changement détecté dans la table transfers:", payload);
-          fetchClients();
+          // En cas de suppression, mettre à jour les deux clients impliqués
+          if (payload.old) {
+            if (payload.old.from_client) {
+              const fromClientName = payload.old.from_client.split(' ');
+              const fromClient = clients.find(c => 
+                c.prenom === fromClientName[0] && c.nom === fromClientName[1]
+              );
+              if (fromClient) {
+                await refreshClientBalance(fromClient.id);
+              }
+            }
+            if (payload.old.to_client) {
+              const toClientName = payload.old.to_client.split(' ');
+              const toClient = clients.find(c => 
+                c.prenom === toClientName[0] && c.nom === toClientName[1]
+              );
+              if (toClient) {
+                await refreshClientBalance(toClient.id);
+              }
+            }
+          }
+          await fetchClients();
         }
       )
       .subscribe();
