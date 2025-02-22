@@ -14,6 +14,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [fullName, setFullName] = useState("");
+  const [hasSupervisor, setHasSupervisor] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -29,6 +30,23 @@ const Login = () => {
       }
     };
     getSession();
+
+    // Vérifier s'il existe déjà un superviseur
+    const checkSupervisor = async () => {
+      try {
+        const { count, error } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .eq('role', 'supervisor');
+
+        if (error) throw error;
+        setHasSupervisor(count > 0);
+        if (count > 0) setIsSignUp(false); // Désactiver le mode inscription s'il y a déjà un superviseur
+      } catch (error) {
+        console.error("Erreur lors de la vérification du superviseur:", error);
+      }
+    };
+    checkSupervisor();
   }, [navigate]);
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -78,6 +96,8 @@ const Login = () => {
         if (data.user) {
           toast.success("Compte créé avec succès ! Vous pouvez maintenant vous connecter.");
           setIsSignUp(false);
+          // Mettre à jour l'état hasSupervisor après la création réussie
+          setHasSupervisor(true);
         }
       } else {
         console.log("Début de la procédure de connexion");
@@ -170,16 +190,18 @@ const Login = () => {
           >
             {isLoading ? "Chargement..." : (isSignUp ? "Créer un compte" : "Se connecter")}
           </Button>
-          <p className="text-center text-sm text-gray-500">
-            {isSignUp ? "Déjà un compte ?" : "Pas encore de compte ?"}{" "}
-            <button
-              type="button"
-              className="text-primary hover:underline"
-              onClick={() => setIsSignUp(!isSignUp)}
-            >
-              {isSignUp ? "Se connecter" : "Créer un compte"}
-            </button>
-          </p>
+          {!hasSupervisor && (
+            <p className="text-center text-sm text-gray-500">
+              {isSignUp ? "Déjà un compte ?" : "Pas encore de compte ?"}{" "}
+              <button
+                type="button"
+                className="text-primary hover:underline"
+                onClick={() => setIsSignUp(!isSignUp)}
+              >
+                {isSignUp ? "Se connecter" : "Créer un compte"}
+              </button>
+            </p>
+          )}
         </form>
       </Card>
     </div>
