@@ -1,30 +1,29 @@
-
 import { useState, useEffect } from "react";
 import { Client } from "../types";
 import { supabase } from "@/integrations/supabase/client"; 
 import { toast } from "sonner";
 import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
-// Interfaces pour typer les payloads des différentes tables
-interface DepositRecord {
+// Types pour les enregistrements de la base de données
+type DepositRecord = {
   client_name: string;
   amount: number;
   created_at: string;
   id: number;
   notes?: string;
   status: string;
-}
+};
 
-interface WithdrawalRecord {
+type WithdrawalRecord = {
   client_name: string;
   amount: number;
   created_at: string;
   id: string;
   notes?: string;
   status: string;
-}
+};
 
-interface TransferRecord {
+type TransferRecord = {
   from_client: string;
   to_client: string;
   amount: number;
@@ -32,7 +31,12 @@ interface TransferRecord {
   id: string;
   reason: string;
   status: string;
-}
+};
+
+// Types spécifiques pour les payloads de changement
+type DepositPayload = RealtimePostgresChangesPayload<DepositRecord>;
+type WithdrawalPayload = RealtimePostgresChangesPayload<WithdrawalRecord>;
+type TransferPayload = RealtimePostgresChangesPayload<TransferRecord>;
 
 export const useClients = () => {
   const [clients, setClients] = useState<Client[]>([]);
@@ -179,15 +183,10 @@ export const useClients = () => {
   useEffect(() => {
     fetchClients();
 
-    // Configuration des souscriptions pour les mises à jour en temps réel
     const clientsChannel = supabase
       .channel('public:clients')
       .on('postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'clients'
-        },
+        { event: '*', schema: 'public', table: 'clients' },
         async (payload) => {
           console.log("Changement détecté dans la table clients:", payload);
           await fetchClients();
@@ -198,31 +197,26 @@ export const useClients = () => {
     const depositsChannel = supabase
       .channel('public:deposits')
       .on('postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'deposits'
-        },
-        async (payload: RealtimePostgresChangesPayload<DepositRecord>) => {
+        { event: '*', schema: 'public', table: 'deposits' },
+        async (payload: DepositPayload) => {
           console.log("Changement détecté dans la table deposits:", payload);
-          if (payload.new?.client_name) {
-            const clientName = payload.new.client_name.split(' ');
+          const newRecord = payload.new as DepositRecord | null;
+          const oldRecord = payload.old as DepositRecord | null;
+
+          if (newRecord?.client_name) {
+            const clientName = newRecord.client_name.split(' ');
             const client = clients.find(c => 
               c.prenom === clientName[0] && c.nom === clientName[1]
             );
-            if (client) {
-              await refreshClientBalance(client.id);
-            }
+            if (client) await refreshClientBalance(client.id);
           }
-          // Mise à jour en cas de suppression
-          if (payload.old?.client_name) {
-            const clientName = payload.old.client_name.split(' ');
+
+          if (oldRecord?.client_name) {
+            const clientName = oldRecord.client_name.split(' ');
             const client = clients.find(c => 
               c.prenom === clientName[0] && c.nom === clientName[1]
             );
-            if (client) {
-              await refreshClientBalance(client.id);
-            }
+            if (client) await refreshClientBalance(client.id);
           }
         }
       )
@@ -231,31 +225,26 @@ export const useClients = () => {
     const withdrawalsChannel = supabase
       .channel('public:withdrawals')
       .on('postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'withdrawals'
-        },
-        async (payload: RealtimePostgresChangesPayload<WithdrawalRecord>) => {
+        { event: '*', schema: 'public', table: 'withdrawals' },
+        async (payload: WithdrawalPayload) => {
           console.log("Changement détecté dans la table withdrawals:", payload);
-          if (payload.new?.client_name) {
-            const clientName = payload.new.client_name.split(' ');
+          const newRecord = payload.new as WithdrawalRecord | null;
+          const oldRecord = payload.old as WithdrawalRecord | null;
+
+          if (newRecord?.client_name) {
+            const clientName = newRecord.client_name.split(' ');
             const client = clients.find(c => 
               c.prenom === clientName[0] && c.nom === clientName[1]
             );
-            if (client) {
-              await refreshClientBalance(client.id);
-            }
+            if (client) await refreshClientBalance(client.id);
           }
-          // Mise à jour en cas de suppression
-          if (payload.old?.client_name) {
-            const clientName = payload.old.client_name.split(' ');
+
+          if (oldRecord?.client_name) {
+            const clientName = oldRecord.client_name.split(' ');
             const client = clients.find(c => 
               c.prenom === clientName[0] && c.nom === clientName[1]
             );
-            if (client) {
-              await refreshClientBalance(client.id);
-            }
+            if (client) await refreshClientBalance(client.id);
           }
         }
       )
@@ -264,32 +253,26 @@ export const useClients = () => {
     const transfersChannel = supabase
       .channel('public:transfers')
       .on('postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'transfers'
-        },
-        async (payload: RealtimePostgresChangesPayload<TransferRecord>) => {
+        { event: '*', schema: 'public', table: 'transfers' },
+        async (payload: TransferPayload) => {
           console.log("Changement détecté dans la table transfers:", payload);
-          // En cas de suppression, mettre à jour les deux clients impliqués
-          if (payload.old) {
-            if (payload.old.from_client) {
-              const fromClientName = payload.old.from_client.split(' ');
+          const oldRecord = payload.old as TransferRecord | null;
+
+          if (oldRecord) {
+            if (oldRecord.from_client) {
+              const fromClientName = oldRecord.from_client.split(' ');
               const fromClient = clients.find(c => 
                 c.prenom === fromClientName[0] && c.nom === fromClientName[1]
               );
-              if (fromClient) {
-                await refreshClientBalance(fromClient.id);
-              }
+              if (fromClient) await refreshClientBalance(fromClient.id);
             }
-            if (payload.old.to_client) {
-              const toClientName = payload.old.to_client.split(' ');
+
+            if (oldRecord.to_client) {
+              const toClientName = oldRecord.to_client.split(' ');
               const toClient = clients.find(c => 
                 c.prenom === toClientName[0] && c.nom === toClientName[1]
               );
-              if (toClient) {
-                await refreshClientBalance(toClient.id);
-              }
+              if (toClient) await refreshClientBalance(toClient.id);
             }
           }
           await fetchClients();
