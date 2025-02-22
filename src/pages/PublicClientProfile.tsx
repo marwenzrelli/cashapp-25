@@ -230,7 +230,9 @@ const PublicClientProfile = () => {
               <CardContent>
                 <div className={cn(
                   "text-4xl font-bold",
-                  client.solde < 0 ? "text-red-600 dark:text-red-400" : ""
+                  client.solde < 0 
+                    ? "text-red-600 dark:text-red-400" 
+                    : "text-green-600 dark:text-green-400"
                 )}>
                   {client.solde.toLocaleString()} €</div>
                 <p className="text-sm text-muted-foreground mt-2">
