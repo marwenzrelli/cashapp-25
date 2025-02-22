@@ -692,7 +692,7 @@ const ClientProfile = () => {
             <CardContent>
               <div className={cn(
                 "text-3xl font-bold",
-                client.solde < 0 ? "text-red-600 dark:text-red-400" : ""
+                client.solde >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
               )}>
                 {formatAmount(client.solde)}
               </div>
