@@ -30,7 +30,8 @@ import {
 import { cn } from "@/lib/utils";
 
 const ClientProfile = () => {
-  const { clientId } = useParams();
+  const params = useParams<{ clientId: string }>();
+  const clientId = params.clientId;
   const [client, setClient] = useState<Client | null>(null);
   const [operations, setOperations] = useState<Operation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -40,8 +41,8 @@ const ClientProfile = () => {
   useEffect(() => {
     const fetchClientData = async () => {
       try {
-        if (!clientId) {
-          setError("ID client non spécifié");
+        if (!clientId || isNaN(parseInt(clientId))) {
+          setError("ID client invalide");
           setIsLoading(false);
           return;
         }
