@@ -17,7 +17,26 @@ const Login = () => {
   const [hasSupervisor, setHasSupervisor] = useState(false);
   const navigate = useNavigate();
 
+  const checkSupervisor = async () => {
+    try {
+      const { count, error } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('role', 'supervisor');
+
+      if (error) throw error;
+      const supervisorExists = count > 0;
+      setHasSupervisor(supervisorExists);
+      if (supervisorExists) {
+        setIsSignUp(false); // Force le mode connexion si un superviseur existe
+      }
+    } catch (error) {
+      console.error("Erreur lors de la vérification du superviseur:", error);
+    }
+  };
+
   useEffect(() => {
+    // Vérifier la session active
     const getSession = async () => {
       try {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -31,22 +50,30 @@ const Login = () => {
     };
     getSession();
 
-    // Vérifier s'il existe déjà un superviseur
-    const checkSupervisor = async () => {
-      try {
-        const { count, error } = await supabase
-          .from('profiles')
-          .select('*', { count: 'exact', head: true })
-          .eq('role', 'supervisor');
-
-        if (error) throw error;
-        setHasSupervisor(count > 0);
-        if (count > 0) setIsSignUp(false); // Désactiver le mode inscription s'il y a déjà un superviseur
-      } catch (error) {
-        console.error("Erreur lors de la vérification du superviseur:", error);
-      }
-    };
+    // Vérifier l'existence d'un superviseur
     checkSupervisor();
+
+    // Mettre en place une souscription aux changements de la table profiles
+    const profilesSubscription = supabase
+      .channel('profiles-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'profiles'
+        },
+        () => {
+          // Revérifier l'existence d'un superviseur à chaque changement
+          checkSupervisor();
+        }
+      )
+      .subscribe();
+
+    // Cleanup
+    return () => {
+      profilesSubscription.unsubscribe();
+    };
   }, [navigate]);
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -62,7 +89,7 @@ const Login = () => {
       const normalizedEmail = email.trim().toLowerCase();
       console.log("Tentative d'authentification avec:", { email: normalizedEmail, isSignUp });
       
-      if (isSignUp) {
+      if (isSignUp && !hasSupervisor) { // Vérification supplémentaire
         if (!fullName) {
           toast.error("Le nom complet est requis pour l'inscription");
           setIsLoading(false);
@@ -96,8 +123,7 @@ const Login = () => {
         if (data.user) {
           toast.success("Compte créé avec succès ! Vous pouvez maintenant vous connecter.");
           setIsSignUp(false);
-          // Mettre à jour l'état hasSupervisor après la création réussie
-          setHasSupervisor(true);
+          await checkSupervisor(); // Vérifier immédiatement après la création
         }
       } else {
         console.log("Début de la procédure de connexion");
@@ -153,7 +179,7 @@ const Login = () => {
         </div>
 
         <form onSubmit={handleAuth} className="space-y-4">
-          {isSignUp && (
+          {isSignUp && !hasSupervisor && (
             <div className="space-y-2">
               <Input
                 type="text"
@@ -188,7 +214,7 @@ const Login = () => {
             className="w-full"
             disabled={isLoading}
           >
-            {isLoading ? "Chargement..." : (isSignUp ? "Créer un compte" : "Se connecter")}
+            {isLoading ? "Chargement..." : (isSignUp && !hasSupervisor ? "Créer un compte" : "Se connecter")}
           </Button>
           {!hasSupervisor && (
             <p className="text-center text-sm text-gray-500">
