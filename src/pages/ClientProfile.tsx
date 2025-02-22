@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -253,23 +252,19 @@ const ClientProfile = () => {
 
   if (isLoading) {
     return (
-      <Shell>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-        </div>
-      </Shell>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
     );
   }
 
   if (error || !client) {
     return (
-      <Shell>
-        <div className="flex flex-col items-center justify-center min-h-screen">
-          <h2 className="text-2xl font-bold mb-4 text-destructive">
-            {error || "Client not found"}
-          </h2>
-        </div>
-      </Shell>
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <h2 className="text-2xl font-bold mb-4 text-destructive">
+          {error || "Client not found"}
+        </h2>
+      </div>
     );
   }
 
@@ -462,20 +457,6 @@ const ClientProfile = () => {
               </Tabs>
             </CardContent>
           </Card>
-        </div>
-      )}
-
-      {isLoading && (
-        <div className="flex items-center justify-center h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-        </div>
-      )}
-
-      {error && (
-        <div className="flex flex-col items-center justify-center h-screen">
-          <h2 className="text-xl font-bold mb-4 text-destructive text-center">
-            {error}
-          </h2>
         </div>
       )}
     </div>
