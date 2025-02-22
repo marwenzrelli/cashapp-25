@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { User, Phone, Mail, Calendar, ArrowUpCircle, ArrowDownCircle, RefreshCcw } from "lucide-react";
 import { OperationCard } from "@/features/operations/components/OperationCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 
 const PublicClientProfile = () => {
   const { token } = useParams();
@@ -226,7 +228,11 @@ const PublicClientProfile = () => {
                 <CardTitle className="text-2xl">Solde actuel</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-4xl font-bold">{client.solde.toLocaleString()} €</div>
+                <div className={cn(
+                  "text-4xl font-bold",
+                  client.solde < 0 ? "text-red-600 dark:text-red-400" : ""
+                )}>
+                  {client.solde.toLocaleString()} €</div>
                 <p className="text-sm text-muted-foreground mt-2">
                   Mis à jour le {format(new Date(), 'dd/MM/yyyy HH:mm')}
                 </p>
