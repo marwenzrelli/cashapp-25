@@ -19,7 +19,6 @@ export const useClients = () => {
         return;
       }
 
-      // Récupérer la liste des clients
       const { data, error } = await supabase
         .from('clients')
         .select('*')
@@ -42,6 +41,28 @@ export const useClients = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const createClient = async (newClient: Omit<Client, 'id' | 'date_creation' | 'status'>) => {
+    const { data: { session } } = await supabase.auth.getSession();
+      
+    if (!session) {
+      toast.error("Vous devez être connecté pour créer un client");
+      return false;
+    }
+
+    const { error } = await supabase
+      .from('clients')
+      .insert([{ ...newClient, created_by: session.user.id }]);
+
+    if (error) {
+      toast.error("Erreur lors de la création du client");
+      console.error("Error creating client:", error);
+      return false;
+    }
+
+    await fetchClients();
+    return true;
   };
 
   const updateClient = async (id: number, updates: Partial<Client>) => {
@@ -67,11 +88,33 @@ export const useClients = () => {
     return true;
   };
 
+  const deleteClient = async (id: number) => {
+    const { data: { session } } = await supabase.auth.getSession();
+      
+    if (!session) {
+      toast.error("Vous devez être connecté pour supprimer un client");
+      return false;
+    }
+
+    const { error } = await supabase
+      .from('clients')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      toast.error("Erreur lors de la suppression du client");
+      console.error("Error deleting client:", error);
+      return false;
+    }
+
+    await fetchClients();
+    return true;
+  };
+
   const refreshClientBalance = async (id: number) => {
     try {
       console.log("Rafraîchissement du solde pour le client:", id);
       
-      // Appel direct de la fonction RPC pour calculer le solde
       const { data, error } = await supabase
         .rpc('calculate_client_balance', { client_id: id });
 
@@ -94,11 +137,9 @@ export const useClients = () => {
     }
   };
 
-  // Configuration des souscriptions en temps réel
   useEffect(() => {
     fetchClients();
 
-    // Souscription aux modifications de la table clients
     const clientsChannel = supabase
       .channel('public:clients')
       .on('postgres_changes',
@@ -112,11 +153,8 @@ export const useClients = () => {
           fetchClients();
         }
       )
-      .subscribe((status) => {
-        console.log("Status de la souscription clients:", status);
-      });
+      .subscribe();
 
-    // Souscription aux modifications de la table deposits
     const depositsChannel = supabase
       .channel('public:deposits')
       .on('postgres_changes',
@@ -125,10 +163,9 @@ export const useClients = () => {
           schema: 'public',
           table: 'deposits'
         },
-        async (payload) => {
+        async (payload: any) => {
           console.log("Changement détecté dans la table deposits:", payload);
-          // Récupérer l'ID du client à partir du nom complet
-          if (payload.new) {
+          if (payload.new && payload.new.client_name) {
             const clientName = payload.new.client_name.split(' ');
             const client = clients.find(c => 
               c.prenom === clientName[0] && c.nom === clientName[1]
@@ -141,9 +178,49 @@ export const useClients = () => {
       )
       .subscribe();
 
+    const withdrawalsChannel = supabase
+      .channel('public:withdrawals')
+      .on('postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'withdrawals'
+        },
+        async (payload: any) => {
+          console.log("Changement détecté dans la table withdrawals:", payload);
+          if (payload.new && payload.new.client_name) {
+            const clientName = payload.new.client_name.split(' ');
+            const client = clients.find(c => 
+              c.prenom === clientName[0] && c.nom === clientName[1]
+            );
+            if (client) {
+              await refreshClientBalance(client.id);
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    const transfersChannel = supabase
+      .channel('public:transfers')
+      .on('postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'transfers'
+        },
+        async (payload: any) => {
+          console.log("Changement détecté dans la table transfers:", payload);
+          fetchClients();
+        }
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(clientsChannel);
       supabase.removeChannel(depositsChannel);
+      supabase.removeChannel(withdrawalsChannel);
+      supabase.removeChannel(transfersChannel);
     };
   }, []);
 
@@ -151,7 +228,9 @@ export const useClients = () => {
     clients,
     loading,
     fetchClients,
+    createClient,
     updateClient,
+    deleteClient,
     refreshClientBalance
   };
 };
