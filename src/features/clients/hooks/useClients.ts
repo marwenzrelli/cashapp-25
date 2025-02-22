@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Client } from "../types";
 import { supabase } from "@/integrations/supabase/client"; 
@@ -53,31 +54,60 @@ export const useClients = () => {
         return;
       }
 
-      const { data, error } = await supabase
+      const { data: clientsData, error: clientsError } = await supabase
         .from('clients')
         .select('*')
         .order('date_creation', { ascending: false });
 
-      console.log("Clients actuels:", data);
-
-      if (error) {
-        console.error("Error fetching clients:", error);
+      if (clientsError) {
+        console.error("Error fetching clients:", clientsError);
         toast.error("Erreur lors du chargement des clients");
         return;
       }
 
-      if (data) {
-        // Mettre à jour les soldes pour chaque client
-        const updatedData = await Promise.all(data.map(async (client) => {
-          const { data: balance } = await supabase
-            .rpc('calculate_client_balance', { client_id: client.id });
-          return {
-            ...client,
-            solde: balance || 0
-          };
-        }));
-        setClients(updatedData);
+      if (!clientsData) {
+        return;
       }
+
+      console.log("Clients récupérés:", clientsData);
+
+      // Mettre à jour les soldes pour chaque client
+      const updatedClients = await Promise.all(
+        clientsData.map(async (client) => {
+          try {
+            const { data: balance, error: balanceError } = await supabase
+              .rpc('calculate_client_balance', { client_id: client.id });
+
+            if (balanceError) {
+              console.error("Erreur calcul solde pour client", client.id, ":", balanceError);
+              return client;
+            }
+
+            console.log(`Solde calculé pour ${client.prenom} ${client.nom}:`, balance);
+            
+            // Mise à jour du solde dans la base de données
+            const { error: updateError } = await supabase
+              .from('clients')
+              .update({ solde: balance || 0 })
+              .eq('id', client.id);
+
+            if (updateError) {
+              console.error("Erreur mise à jour solde pour client", client.id, ":", updateError);
+            }
+
+            return {
+              ...client,
+              solde: balance || 0
+            };
+          } catch (error) {
+            console.error("Erreur lors du calcul du solde pour le client", client.id, ":", error);
+            return client;
+          }
+        })
+      );
+
+      console.log("Clients avec soldes mis à jour:", updatedClients);
+      setClients(updatedClients);
     } catch (error) {
       console.error("Error in fetchClients:", error);
       toast.error("Une erreur est survenue");
@@ -86,92 +116,34 @@ export const useClients = () => {
     }
   };
 
-  const createClient = async (newClient: Omit<Client, 'id' | 'date_creation' | 'status'>) => {
-    const { data: { session } } = await supabase.auth.getSession();
-      
-    if (!session) {
-      toast.error("Vous devez être connecté pour créer un client");
-      return false;
-    }
-
-    const { error } = await supabase
-      .from('clients')
-      .insert([{ ...newClient, created_by: session.user.id }]);
-
-    if (error) {
-      toast.error("Erreur lors de la création du client");
-      console.error("Error creating client:", error);
-      return false;
-    }
-
-    await fetchClients();
-    return true;
-  };
-
-  const updateClient = async (id: number, updates: Partial<Client>) => {
-    const { data: { session } } = await supabase.auth.getSession();
-      
-    if (!session) {
-      toast.error("Vous devez être connecté pour modifier un client");
-      return false;
-    }
-
-    const { error } = await supabase
-      .from('clients')
-      .update(updates)
-      .eq('id', id);
-
-    if (error) {
-      toast.error("Erreur lors de la modification du client");
-      console.error("Error updating client:", error);
-      return false;
-    }
-
-    await fetchClients();
-    return true;
-  };
-
-  const deleteClient = async (id: number) => {
-    const { data: { session } } = await supabase.auth.getSession();
-      
-    if (!session) {
-      toast.error("Vous devez être connecté pour supprimer un client");
-      return false;
-    }
-
-    const { error } = await supabase
-      .from('clients')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      toast.error("Erreur lors de la suppression du client");
-      console.error("Error deleting client:", error);
-      return false;
-    }
-
-    await fetchClients();
-    return true;
-  };
-
   const refreshClientBalance = async (id: number) => {
     try {
       console.log("Rafraîchissement du solde pour le client:", id);
       
-      const { data, error } = await supabase
+      const { data: balance, error: balanceError } = await supabase
         .rpc('calculate_client_balance', { client_id: id });
 
-      if (error) {
-        console.error("Erreur lors du calcul du solde:", error);
+      if (balanceError) {
+        console.error("Erreur lors du calcul du solde:", balanceError);
         toast.error("Erreur lors de la mise à jour du solde");
         return;
       }
 
-      if (data !== null) {
-        console.log("Nouveau solde calculé:", data);
-        await updateClient(id, { solde: data });
+      console.log("Nouveau solde calculé:", balance);
+
+      // Mise à jour du solde dans la base de données
+      const { error: updateError } = await supabase
+        .from('clients')
+        .update({ solde: balance || 0 })
+        .eq('id', id);
+
+      if (updateError) {
+        console.error("Erreur lors de la mise à jour du solde en base:", updateError);
+        toast.error("Erreur lors de la mise à jour du solde");
+        return;
       }
 
+      // Rafraîchir la liste complète des clients
       await fetchClients();
       
     } catch (error) {
@@ -203,20 +175,16 @@ export const useClients = () => {
           const newRecord = payload.new as DepositRecord | null;
           const oldRecord = payload.old as DepositRecord | null;
 
-          if (newRecord?.client_name) {
-            const clientName = newRecord.client_name.split(' ');
-            const client = clients.find(c => 
-              c.prenom === clientName[0] && c.nom === clientName[1]
-            );
-            if (client) await refreshClientBalance(client.id);
-          }
-
-          if (oldRecord?.client_name) {
-            const clientName = oldRecord.client_name.split(' ');
-            const client = clients.find(c => 
-              c.prenom === clientName[0] && c.nom === clientName[1]
-            );
-            if (client) await refreshClientBalance(client.id);
+          if (newRecord?.client_name || oldRecord?.client_name) {
+            const clientName = (newRecord?.client_name || oldRecord?.client_name)?.split(' ');
+            if (clientName) {
+              const client = clients.find(c => 
+                c.prenom === clientName[0] && c.nom === clientName[1]
+              );
+              if (client) {
+                await refreshClientBalance(client.id);
+              }
+            }
           }
         }
       )
@@ -231,20 +199,16 @@ export const useClients = () => {
           const newRecord = payload.new as WithdrawalRecord | null;
           const oldRecord = payload.old as WithdrawalRecord | null;
 
-          if (newRecord?.client_name) {
-            const clientName = newRecord.client_name.split(' ');
-            const client = clients.find(c => 
-              c.prenom === clientName[0] && c.nom === clientName[1]
-            );
-            if (client) await refreshClientBalance(client.id);
-          }
-
-          if (oldRecord?.client_name) {
-            const clientName = oldRecord.client_name.split(' ');
-            const client = clients.find(c => 
-              c.prenom === clientName[0] && c.nom === clientName[1]
-            );
-            if (client) await refreshClientBalance(client.id);
+          if (newRecord?.client_name || oldRecord?.client_name) {
+            const clientName = (newRecord?.client_name || oldRecord?.client_name)?.split(' ');
+            if (clientName) {
+              const client = clients.find(c => 
+                c.prenom === clientName[0] && c.nom === clientName[1]
+              );
+              if (client) {
+                await refreshClientBalance(client.id);
+              }
+            }
           }
         }
       )
@@ -256,26 +220,33 @@ export const useClients = () => {
         { event: '*', schema: 'public', table: 'transfers' },
         async (payload: TransferPayload) => {
           console.log("Changement détecté dans la table transfers:", payload);
+          const newRecord = payload.new as TransferRecord | null;
           const oldRecord = payload.old as TransferRecord | null;
 
-          if (oldRecord) {
-            if (oldRecord.from_client) {
-              const fromClientName = oldRecord.from_client.split(' ');
+          // Traiter à la fois le client source et le client destination
+          for (const record of [newRecord, oldRecord]) {
+            if (!record) continue;
+
+            if (record.from_client) {
+              const fromClientName = record.from_client.split(' ');
               const fromClient = clients.find(c => 
                 c.prenom === fromClientName[0] && c.nom === fromClientName[1]
               );
-              if (fromClient) await refreshClientBalance(fromClient.id);
+              if (fromClient) {
+                await refreshClientBalance(fromClient.id);
+              }
             }
 
-            if (oldRecord.to_client) {
-              const toClientName = oldRecord.to_client.split(' ');
+            if (record.to_client) {
+              const toClientName = record.to_client.split(' ');
               const toClient = clients.find(c => 
                 c.prenom === toClientName[0] && c.nom === toClientName[1]
               );
-              if (toClient) await refreshClientBalance(toClient.id);
+              if (toClient) {
+                await refreshClientBalance(toClient.id);
+              }
             }
           }
-          await fetchClients();
         }
       )
       .subscribe();
@@ -292,9 +263,6 @@ export const useClients = () => {
     clients,
     loading,
     fetchClients,
-    createClient,
-    updateClient,
-    deleteClient,
     refreshClientBalance
   };
 };
