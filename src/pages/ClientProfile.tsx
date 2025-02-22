@@ -30,8 +30,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const ClientProfile = () => {
-  const params = useParams<{ clientId: string }>();
-  const clientId = params.clientId;
+  const { clientId } = useParams();
   const [client, setClient] = useState<Client | null>(null);
   const [operations, setOperations] = useState<Operation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,7 +40,7 @@ const ClientProfile = () => {
   useEffect(() => {
     const fetchClientData = async () => {
       try {
-        if (!clientId || isNaN(parseInt(clientId))) {
+        if (!clientId || isNaN(Number(clientId))) {
           setError("ID client invalide");
           setIsLoading(false);
           return;
@@ -52,7 +51,7 @@ const ClientProfile = () => {
         const { data: clientData, error: clientError } = await supabase
           .from("clients")
           .select("*")
-          .eq("id", parseInt(clientId))
+          .eq("id", Number(clientId))
           .maybeSingle();
 
         if (clientError) {
@@ -85,10 +84,7 @@ const ClientProfile = () => {
           .order("operation_date", { ascending: false });
 
         if (depositsError) {
-          console.error(
-            "Erreur lors de la récupération des versements:",
-            depositsError
-          );
+          console.error("Erreur lors de la récupération des versements:", depositsError);
         } else {
           console.log("Versements trouvés:", deposits);
         }
@@ -102,10 +98,7 @@ const ClientProfile = () => {
           .order("operation_date", { ascending: false });
 
         if (withdrawalsError) {
-          console.error(
-            "Erreur lors de la récupération des retraits:",
-            withdrawalsError
-          );
+          console.error("Erreur lors de la récupération des retraits:", withdrawalsError);
         } else {
           console.log("Retraits trouvés:", withdrawals);
         }
@@ -114,54 +107,43 @@ const ClientProfile = () => {
         const { data: transfers, error: transfersError } = await supabase
           .from("transfers")
           .select("*")
-          .or(
-            `from_client.eq."${clientFullName}",to_client.eq."${clientFullName}"`
-          )
+          .or(`from_client.eq.${clientFullName},to_client.eq.${clientFullName}`)
           .eq("status", "completed")
           .order("operation_date", { ascending: false });
 
         if (transfersError) {
-          console.error(
-            "Erreur lors de la récupération des virements:",
-            transfersError
-          );
+          console.error("Erreur lors de la récupération des virements:", transfersError);
         } else {
           console.log("Virements trouvés:", transfers);
         }
 
         // Transformer les données en format unifié
         const allOperations: Operation[] = [
-          ...(deposits || []).map(
-            (d): Operation => ({
-              id: d.id.toString().slice(-6),
-              type: "deposit",
-              amount: d.amount,
-              date: d.operation_date,
-              description: `Versement de ${d.client_name}`,
-              fromClient: d.client_name,
-            })
-          ),
-          ...(withdrawals || []).map(
-            (w): Operation => ({
-              id: w.id.toString().slice(-6),
-              type: "withdrawal",
-              amount: w.amount,
-              date: w.operation_date,
-              description: `Retrait par ${w.client_name}`,
-              fromClient: w.client_name,
-            })
-          ),
-          ...(transfers || []).map(
-            (t): Operation => ({
-              id: t.id.toString().slice(-6),
-              type: "transfer",
-              amount: t.amount,
-              date: t.operation_date,
-              description: t.reason || "Virement",
-              fromClient: t.from_client,
-              toClient: t.to_client,
-            })
-          ),
+          ...(deposits || []).map((d): Operation => ({
+            id: d.id.toString(),
+            type: "deposit",
+            amount: d.amount,
+            date: d.operation_date,
+            description: `Versement de ${d.client_name}`,
+            fromClient: d.client_name,
+          })),
+          ...(withdrawals || []).map((w): Operation => ({
+            id: w.id.toString(),
+            type: "withdrawal",
+            amount: w.amount,
+            date: w.operation_date,
+            description: `Retrait par ${w.client_name}`,
+            fromClient: w.client_name,
+          })),
+          ...(transfers || []).map((t): Operation => ({
+            id: t.id.toString(),
+            type: "transfer",
+            amount: t.amount,
+            date: t.operation_date,
+            description: t.reason || "Virement",
+            fromClient: t.from_client,
+            toClient: t.to_client,
+          })),
         ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
         console.log("Opérations transformées:", allOperations);
