@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -230,9 +229,10 @@ const PublicClientProfile = () => {
               <CardContent>
                 <div className={cn(
                   "text-4xl font-bold",
-                  client.solde < 0 ? "text-red-600 dark:text-red-400" : ""
+                  client.solde >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
                 )}>
-                  {client.solde.toLocaleString()} €</div>
+                  {client.solde.toLocaleString()} €
+                </div>
                 <p className="text-sm text-muted-foreground mt-2">
                   Mis à jour le {format(new Date(), 'dd/MM/yyyy HH:mm')}
                 </p>
