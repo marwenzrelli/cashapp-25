@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -9,12 +10,10 @@ import {
 } from "@/components/ui/card";
 import { format } from "date-fns";
 import { Separator } from "@/components/ui/separator";
-import { Shell } from "@/components/Shell";
 import { Client } from "@/features/clients/types";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
-import { deleteClient } from "@/features/clients/api";
 import { toast } from "sonner";
 import { Operation } from "@/features/operations/types";
 import { OperationCard } from "@/features/operations/components/OperationCard";
@@ -47,7 +46,7 @@ const ClientProfile = () => {
         const { data: clientData, error: clientError } = await supabase
           .from("clients")
           .select("*")
-          .eq("id", clientId)
+          .eq("id", parseInt(clientId))
           .single();
 
         if (clientError) {
@@ -235,13 +234,20 @@ const ClientProfile = () => {
 
   const handleDelete = async () => {
     if (!clientId) return;
+    
     try {
-      await deleteClient(clientId);
-      toast.success("Client deleted successfully.");
+      const { error } = await supabase
+        .from('clients')
+        .delete()
+        .eq('id', parseInt(clientId));
+
+      if (error) throw error;
+
+      toast.success("Client supprimé avec succès.");
       navigate("/clients");
     } catch (error) {
       console.error("Error deleting client:", error);
-      toast.error("Failed to delete client.");
+      toast.error("Échec de la suppression du client.");
     }
   };
 
@@ -279,8 +285,8 @@ const ClientProfile = () => {
             <CardContent>
               <div className={cn(
                 "text-3xl font-bold",
-                client.solde < 0
-                  ? "text-red-600 dark:text-red-400"
+                client.solde < 0 
+                  ? "text-red-600 dark:text-red-400" 
                   : "text-green-600 dark:text-green-400"
               )}>
                 {formatAmount(client.solde)}
