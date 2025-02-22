@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Client } from "../types";
 import { supabase } from "@/integrations/supabase/client"; 
@@ -113,6 +112,80 @@ export const useClients = () => {
       toast.error("Une erreur est survenue");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const createClient = async (newClient: Omit<Client, "id" | "date_creation">) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error("Vous devez être connecté pour créer un client");
+        return false;
+      }
+
+      const { data, error } = await supabase
+        .from('clients')
+        .insert([{ ...newClient, created_by: session.user.id }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error creating client:", error);
+        toast.error("Erreur lors de la création du client");
+        return false;
+      }
+
+      await fetchClients();
+      return true;
+    } catch (error) {
+      console.error("Error in createClient:", error);
+      toast.error("Une erreur est survenue lors de la création du client");
+      return false;
+    }
+  };
+
+  const updateClient = async (id: number, client: Partial<Client>) => {
+    try {
+      const { error } = await supabase
+        .from('clients')
+        .update(client)
+        .eq('id', id);
+
+      if (error) {
+        console.error("Error updating client:", error);
+        toast.error("Erreur lors de la mise à jour du client");
+        return false;
+      }
+
+      await fetchClients();
+      return true;
+    } catch (error) {
+      console.error("Error in updateClient:", error);
+      toast.error("Une erreur est survenue lors de la mise à jour du client");
+      return false;
+    }
+  };
+
+  const deleteClient = async (id: number) => {
+    try {
+      const { error } = await supabase
+        .from('clients')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error("Error deleting client:", error);
+        toast.error("Erreur lors de la suppression du client");
+        return false;
+      }
+
+      await fetchClients();
+      return true;
+    } catch (error) {
+      console.error("Error in deleteClient:", error);
+      toast.error("Une erreur est survenue lors de la suppression du client");
+      return false;
     }
   };
 
@@ -263,6 +336,9 @@ export const useClients = () => {
     clients,
     loading,
     fetchClients,
+    createClient,
+    updateClient,
+    deleteClient,
     refreshClientBalance
   };
 };
