@@ -40,27 +40,42 @@ const ClientProfile = () => {
   useEffect(() => {
     const fetchClientData = async () => {
       try {
-        if (!clientId) return;
+        if (!clientId) {
+          setError("ID client non spécifié");
+          setIsLoading(false);
+          return;
+        }
 
+        console.log("Fetching client data for ID:", clientId);
+        
         const { data: clientData, error: clientError } = await supabase
           .from("clients")
           .select("*")
           .eq("id", parseInt(clientId))
-          .single();
+          .maybeSingle();
 
         if (clientError) {
           console.error("Error fetching client:", clientError);
-          setError("Failed to load client data.");
+          setError("Erreur lors du chargement des données client.");
+          setIsLoading(false);
           return;
         }
 
+        if (!clientData) {
+          console.error("No client found with ID:", clientId);
+          setError("Client non trouvé.");
+          setIsLoading(false);
+          return;
+        }
+
+        console.log("Client data received:", clientData);
         setClient(clientData);
 
-        // Récupérer toutes les opérations
+        // Récupérer les opérations
         const clientFullName = `${clientData.prenom} ${clientData.nom}`;
         console.log("Recherche des opérations pour:", clientFullName);
 
-        // Récupérer les versements
+        // Récupérer toutes les opérations
         const { data: deposits, error: depositsError } = await supabase
           .from("deposits")
           .select("*")
@@ -151,8 +166,8 @@ const ClientProfile = () => {
         console.log("Opérations transformées:", allOperations);
         setOperations(allOperations);
       } catch (err) {
-        console.error("Error fetching data:", err);
-        setError("Failed to load data.");
+        console.error("Error in fetchClientData:", err);
+        setError("Une erreur est survenue lors du chargement des données.");
       } finally {
         setIsLoading(false);
       }
@@ -229,7 +244,7 @@ const ClientProfile = () => {
       withdrawalsSubscription.unsubscribe();
       transfersSubscription.unsubscribe();
     };
-  }, [clientId, client?.id]);
+  }, [clientId]);
 
   const handleDelete = async () => {
     if (!clientId) return;
@@ -262,8 +277,15 @@ const ClientProfile = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
         <h2 className="text-2xl font-bold mb-4 text-destructive">
-          {error || "Client not found"}
+          {error || "Client non trouvé"}
         </h2>
+        <Button
+          variant="outline"
+          onClick={() => navigate("/clients")}
+          className="mt-4"
+        >
+          Retour à la liste des clients
+        </Button>
       </div>
     );
   }
