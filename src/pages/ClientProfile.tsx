@@ -17,6 +17,7 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import html2canvas from 'html2canvas';
+import { cn } from "@/lib/utils";
 
 const ClientProfile = () => {
   const { id } = useParams();
@@ -689,7 +690,10 @@ const ClientProfile = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">
+              <div className={cn(
+                "text-3xl font-bold",
+                client.solde < 0 ? "text-red-600 dark:text-red-400" : ""
+              )}>
                 {formatAmount(client.solde)}
               </div>
               <p className="text-sm text-muted-foreground mt-2">
