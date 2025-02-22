@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Client } from "../types";
 import { supabase } from "@/integrations/supabase/client"; 
@@ -169,7 +170,15 @@ export const useClients = () => {
 
   const deleteClient = async (id: number) => {
     try {
-      // D'abord, supprimer les enregistrements QR liés
+      // Récupérer le nom complet du client
+      const client = clients.find(c => c.id === id);
+      if (!client) {
+        toast.error("Client introuvable");
+        return false;
+      }
+      const clientFullName = `${client.prenom} ${client.nom}`;
+
+      // Supprimer les enregistrements QR
       const { error: qrDeleteError } = await supabase
         .from('qr_access')
         .delete()
@@ -181,7 +190,54 @@ export const useClients = () => {
         return false;
       }
 
-      // Ensuite, supprimer le client
+      // Supprimer les dépôts
+      const { error: depositsError } = await supabase
+        .from('deposits')
+        .delete()
+        .eq('client_name', clientFullName);
+
+      if (depositsError) {
+        console.error("Error deleting deposits:", depositsError);
+        toast.error("Erreur lors de la suppression des dépôts");
+        return false;
+      }
+
+      // Supprimer les retraits
+      const { error: withdrawalsError } = await supabase
+        .from('withdrawals')
+        .delete()
+        .eq('client_name', clientFullName);
+
+      if (withdrawalsError) {
+        console.error("Error deleting withdrawals:", withdrawalsError);
+        toast.error("Erreur lors de la suppression des retraits");
+        return false;
+      }
+
+      // Supprimer les transferts où le client est impliqué
+      const { error: transfersFromError } = await supabase
+        .from('transfers')
+        .delete()
+        .eq('from_client', clientFullName);
+
+      if (transfersFromError) {
+        console.error("Error deleting transfers (from):", transfersFromError);
+        toast.error("Erreur lors de la suppression des transferts");
+        return false;
+      }
+
+      const { error: transfersToError } = await supabase
+        .from('transfers')
+        .delete()
+        .eq('to_client', clientFullName);
+
+      if (transfersToError) {
+        console.error("Error deleting transfers (to):", transfersToError);
+        toast.error("Erreur lors de la suppression des transferts");
+        return false;
+      }
+
+      // Enfin, supprimer le client
       const { error: clientDeleteError } = await supabase
         .from('clients')
         .delete()
@@ -193,8 +249,9 @@ export const useClients = () => {
         return false;
       }
 
-      // Rafraîchir la liste des clients
-      await fetchClients();
+      // Mettre à jour la liste des clients localement
+      setClients(prevClients => prevClients.filter(c => c.id !== id));
+      
       return true;
     } catch (error) {
       console.error("Error in deleteClient:", error);
