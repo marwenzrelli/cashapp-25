@@ -86,7 +86,13 @@ const Clients = () => {
 
   const handleCreateClient = async () => {
     console.log("Création d'un nouveau client:", newClient);
-    const success = await createClient(newClient);
+    // Ajout du status par défaut 'active' lors de la création
+    const clientData = {
+      ...newClient,
+      status: 'active'
+    };
+    
+    const success = await createClient(clientData);
     
     if (success) {
       setIsDialogOpen(false);
