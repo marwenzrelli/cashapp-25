@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { SystemUser } from '@/types/admin';
 
@@ -47,53 +46,67 @@ export const updateUserStatus = async (userId: string, status: "active" | "inact
 };
 
 export const createUser = async (user: SystemUser & { password: string }) => {
-  // Validation du mot de passe
-  if (!user.password || user.password.length < 6) {
+  console.log("Démarrage de la création de l'utilisateur");
+
+  // Vérification complète des données
+  if (!user.email || !user.fullName || !user.password) {
+    throw new Error("Tous les champs requis doivent être remplis");
+  }
+
+  if (user.password.length < 6) {
+    console.log("Erreur de validation: mot de passe trop court");
     throw new Error("Le mot de passe doit contenir au moins 6 caractères");
   }
 
-  console.log("Tentative de création de l'utilisateur:", { ...user, password: '[HIDDEN]' });
-
-  const { data, error: signUpError } = await supabase.auth.signUp({
-    email: user.email,
-    password: user.password,
-    options: {
-      data: {
+  try {
+    // Étape 1: Créer l'utilisateur dans auth.users
+    const { data: authData, error: signUpError } = await supabase.auth.admin.createUser({
+      email: user.email,
+      password: user.password,
+      email_confirm: true,
+      user_metadata: {
         full_name: user.fullName,
         role: user.role,
         department: user.department,
         username: user.username
       }
+    });
+
+    if (signUpError) {
+      console.error("Erreur lors de la création de l'utilisateur:", signUpError);
+      throw signUpError;
     }
-  });
 
-  if (signUpError) {
-    console.error("Erreur lors de la création de l'utilisateur:", signUpError);
-    throw signUpError;
+    if (!authData.user) {
+      throw new Error("Erreur: Aucun utilisateur créé");
+    }
+
+    console.log("Utilisateur créé avec succès dans auth.users:", authData.user.id);
+
+    // Étape 2: Mettre à jour le profil
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({
+        role: user.role,
+        department: user.department,
+        status: 'active',
+        full_name: user.fullName,
+        username: user.username
+      })
+      .eq('id', authData.user.id);
+
+    if (updateError) {
+      console.error("Erreur lors de la mise à jour du profil:", updateError);
+      throw updateError;
+    }
+
+    console.log("Profil utilisateur mis à jour avec succès");
+    return authData.user;
+
+  } catch (error) {
+    console.error("Erreur complète lors de la création de l'utilisateur:", error);
+    throw error;
   }
-
-  if (!data.user) {
-    throw new Error("Erreur lors de la création de l'utilisateur");
-  }
-
-  console.log("Utilisateur créé avec succès:", data.user.id);
-
-  // Mise à jour du profil
-  const { error: updateError } = await supabase
-    .from('profiles')
-    .update({
-      role: user.role,
-      department: user.department,
-      status: 'active'
-    })
-    .eq('id', data.user.id);
-
-  if (updateError) {
-    console.error("Erreur lors de la mise à jour du profil:", updateError);
-    throw updateError;
-  }
-
-  return data.user;
 };
 
 export const updateUserProfile = async (user: SystemUser & { password?: string }) => {
