@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 interface AddUserDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddUser: (user: SystemUser) => void;
+  onAddUser: (user: SystemUser & { password: string }) => void;
 }
 
 export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps) => {
@@ -21,6 +21,7 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
     email: "",
     password: "",
     role: "cashier" as UserRole,
+    department: "accounting" as string,
   });
 
   // Vérification du rôle de l'utilisateur actuel
@@ -65,7 +66,8 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
     const isAuthorized = await checkUserRole();
     if (!isAuthorized) return;
 
-    if (!newUser.fullName || !newUser.username || !newUser.password || !newUser.email) {
+    // Vérification des champs obligatoires
+    if (!newUser.fullName.trim() || !newUser.username.trim() || !newUser.password.trim() || !newUser.email.trim()) {
       toast.error("Veuillez remplir tous les champs obligatoires");
       return;
     }
@@ -89,28 +91,38 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
       return;
     }
 
-    const user: SystemUser = {
-      id: Math.random().toString(36).substr(2, 9),
+    const department = getDepartmentByRole(newUser.role);
+
+    const user: SystemUser & { password: string } = {
+      id: "", // Sera généré par Supabase
       email: newUser.email,
       username: newUser.username,
       fullName: newUser.fullName,
       role: newUser.role,
-      department: getDepartmentByRole(newUser.role),
+      department: department,
       status: "active",
       permissions: [],
       createdAt: new Date().toISOString(),
-      lastLogin: null
+      lastLogin: null,
+      password: newUser.password
     };
 
-    onAddUser(user);
-    setNewUser({
-      fullName: "",
-      username: "",
-      email: "",
-      password: "",
-      role: "cashier",
-    });
-    onClose();
+    try {
+      await onAddUser(user);
+      setNewUser({
+        fullName: "",
+        username: "",
+        email: "",
+        password: "",
+        role: "cashier",
+        department: "accounting"
+      });
+      onClose();
+      toast.success("Utilisateur créé avec succès");
+    } catch (error) {
+      console.error("Erreur lors de la création de l'utilisateur:", error);
+      toast.error(error instanceof Error ? error.message : "Erreur lors de la création de l'utilisateur");
+    }
   };
 
   return (
@@ -175,9 +187,10 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
             <label>Rôle</label>
             <Select
               value={newUser.role}
-              onValueChange={(value: UserRole) =>
-                setNewUser({ ...newUser, role: value })
-              }
+              onValueChange={(value: UserRole) => {
+                const department = getDepartmentByRole(value);
+                setNewUser({ ...newUser, role: value, department });
+              }}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner un rôle" />
