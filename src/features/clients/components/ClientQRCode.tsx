@@ -56,7 +56,8 @@ export const ClientQRCode = ({ clientId, clientName }: ClientQRCodeProps) => {
 
       if (profile) {
         setUserRole(profile.role);
-        setHasAccess(['supervisor', 'manager'].includes(profile.role));
+        // Ajout du rôle 'cashier' aux rôles autorisés
+        setHasAccess(['supervisor', 'manager', 'cashier'].includes(profile.role));
       }
     };
 
@@ -140,7 +141,6 @@ export const ClientQRCode = ({ clientId, clientName }: ClientQRCodeProps) => {
     return null;
   }
 
-  // Si l'utilisateur n'est pas un superviseur ou manager, ne pas afficher le composant
   if (!hasAccess) {
     return null;
   }
@@ -157,7 +157,7 @@ export const ClientQRCode = ({ clientId, clientName }: ClientQRCodeProps) => {
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/80 gap-2">
               <Shield className="h-8 w-8 text-muted-foreground" />
               <p className="text-sm text-muted-foreground text-center">
-                Accès restreint aux superviseurs et managers
+                Chargement du QR code...
               </p>
             </div>
           ) : null}
