@@ -76,9 +76,9 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
       return;
     }
 
-    // Validation du mot de passe (au moins 8 caractères)
-    if (newUser.password.length < 8) {
-      toast.error("Le mot de passe doit contenir au moins 8 caractères");
+    // Validation du mot de passe (au moins 6 caractères)
+    if (newUser.password.length < 6) {
+      toast.error("Le mot de passe doit contenir au moins 6 caractères");
       return;
     }
 
@@ -110,6 +110,7 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
       password: "",
       role: "cashier",
     });
+    onClose();
   };
 
   return (
@@ -167,7 +168,7 @@ export const AddUserDialog = ({ isOpen, onClose, onAddUser }: AddUserDialogProps
               onChange={(e) =>
                 setNewUser({ ...newUser, password: e.target.value })
               }
-              placeholder="Minimum 8 caractères"
+              placeholder="Minimum 6 caractères"
             />
           </div>
           <div className="space-y-2">
