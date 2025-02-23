@@ -82,7 +82,6 @@ export const createUser = async (user: SystemUser & { password: string }) => {
   const { error: updateError } = await supabase
     .from('profiles')
     .update({
-      hashed_password: user.password,
       role: user.role,
       department: user.department,
       status: 'active'
@@ -111,7 +110,6 @@ export const updateUserProfile = async (user: SystemUser & { password?: string }
       throw new Error("Le mot de passe doit contenir au moins 6 caractères");
     }
 
-    updateData.hashed_password = user.password;
     const { error: authError } = await supabase.auth.admin.updateUserById(
       user.id,
       { password: user.password }
