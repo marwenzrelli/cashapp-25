@@ -21,6 +21,8 @@ export const ClientQRCode = ({ clientId, clientName }: ClientQRCodeProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const [session, setSession] = useState<any>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [hasAccess, setHasAccess] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -42,43 +44,30 @@ export const ClientQRCode = ({ clientId, clientName }: ClientQRCodeProps) => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const checkUserRole = async () => {
-    if (!session) {
-      toast({
-        title: "Accès non autorisé",
-        description: "Vous devez être connecté pour accéder à cette fonctionnalité",
-        variant: "destructive",
-      });
-      navigate('/login');
-      return false;
-    }
+  useEffect(() => {
+    const checkUserRole = async () => {
+      if (!session) return;
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', session.user.id)
-      .single();
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', session.user.id)
+        .single();
 
-    if (!profile || !['supervisor', 'manager'].includes(profile.role)) {
-      toast({
-        title: "Accès non autorisé",
-        description: "Vous n'avez pas les permissions nécessaires pour cette action",
-        variant: "destructive",
-      });
-      return false;
-    }
+      if (profile) {
+        setUserRole(profile.role);
+        setHasAccess(['supervisor', 'manager'].includes(profile.role));
+      }
+    };
 
-    return true;
-  };
+    checkUserRole();
+  }, [session]);
 
   const generateQRAccess = async () => {
-    if (!session) return;
+    if (!session || !hasAccess) return;
     
     try {
       setIsLoading(true);
-      
-      const hasPermission = await checkUserRole();
-      if (!hasPermission) return;
 
       const { data, error } = await supabase
         .from('qr_access')
@@ -121,10 +110,10 @@ export const ClientQRCode = ({ clientId, clientName }: ClientQRCodeProps) => {
   };
 
   useEffect(() => {
-    if (session) {
+    if (session && hasAccess) {
       generateQRAccess();
     }
-  }, [clientId, clientName, session]);
+  }, [clientId, clientName, session, hasAccess]);
 
   const handleCopyLink = async () => {
     try {
@@ -148,6 +137,11 @@ export const ClientQRCode = ({ clientId, clientName }: ClientQRCodeProps) => {
   };
 
   if (!session) {
+    return null;
+  }
+
+  // Si l'utilisateur n'est pas un superviseur ou manager, ne pas afficher le composant
+  if (!hasAccess) {
     return null;
   }
 
