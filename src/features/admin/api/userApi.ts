@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { SystemUser } from '@/types/admin';
 
@@ -60,15 +61,16 @@ export const createUser = async (user: SystemUser & { password: string }) => {
 
   try {
     // Étape 1: Créer l'utilisateur dans auth.users
-    const { data: authData, error: signUpError } = await supabase.auth.admin.createUser({
+    const { data: authData, error: signUpError } = await supabase.auth.signUp({
       email: user.email,
       password: user.password,
-      email_confirm: true,
-      user_metadata: {
-        full_name: user.fullName,
-        role: user.role,
-        department: user.department,
-        username: user.username
+      options: {
+        data: {
+          full_name: user.fullName,
+          role: user.role,
+          department: user.department,
+          username: user.username
+        }
       }
     });
 
