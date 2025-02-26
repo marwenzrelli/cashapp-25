@@ -1,4 +1,3 @@
-
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, Area, AreaChart } from "recharts";
 import { 
@@ -97,17 +96,17 @@ const Statistics = () => {
   const endOfCurrentMonth = endOfMonth(currentMonth);
 
   const currentMonthDeposits = filteredDeposits.filter(dep => {
-    const depositDate = new Date(dep.created_at);
+    const depositDate = new Date(dep.created_at || dep.operation_date || '');
     return depositDate >= startOfCurrentMonth && depositDate <= endOfCurrentMonth;
   });
 
   const currentMonthWithdrawals = filteredWithdrawals.filter(w => {
-    const withdrawalDate = new Date(w.created_at);
+    const withdrawalDate = new Date(w.created_at || w.operation_date || '');
     return withdrawalDate >= startOfCurrentMonth && withdrawalDate <= endOfCurrentMonth;
   });
 
   const currentMonthTransfers = filteredTransfers.filter(transfer => {
-    const transferDate = new Date(transfer.date);
+    const transferDate = new Date(transfer.operation_date || transfer.created_at || '');
     return !isNaN(transferDate.getTime()) && transferDate >= startOfCurrentMonth && transferDate <= endOfCurrentMonth;
   });
 
@@ -116,17 +115,17 @@ const Statistics = () => {
   const endOfLastMonth = endOfMonth(lastMonth);
 
   const lastMonthDeposits = filteredDeposits.filter(dep => {
-    const depositDate = new Date(dep.created_at);
+    const depositDate = new Date(dep.created_at || dep.operation_date || '');
     return depositDate >= startOfLastMonth && depositDate <= endOfLastMonth;
   });
 
   const lastMonthWithdrawals = filteredWithdrawals.filter(w => {
-    const withdrawalDate = new Date(w.created_at);
+    const withdrawalDate = new Date(w.created_at || w.operation_date || '');
     return withdrawalDate >= startOfLastMonth && withdrawalDate <= endOfLastMonth;
   });
 
   const lastMonthTransfers = filteredTransfers.filter(transfer => {
-    const transferDate = new Date(transfer.date);
+    const transferDate = new Date(transfer.operation_date || transfer.created_at || '');
     return !isNaN(transferDate.getTime()) && transferDate >= startOfLastMonth && transferDate <= endOfLastMonth;
   });
 
