@@ -1,3 +1,4 @@
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -55,6 +56,11 @@ export const UsersList = ({ users, currentUser, onToggleStatus, onUpdateUser, on
     return `Il y a ${formatDistanceToNow(new Date(lastLogin), { locale: fr })}`;
   };
 
+  const formatEmployeeId = (id: string) => {
+    // Prendre les 4 premiers caractères de l'ID
+    return id.slice(0, 4).toUpperCase();
+  };
+
   const isSupervisor = currentUser?.role === "supervisor";
 
   return (
@@ -92,7 +98,7 @@ export const UsersList = ({ users, currentUser, onToggleStatus, onUpdateUser, on
                       {user.email}
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      @{user.username}
+                      ID: {formatEmployeeId(user.id)}
                     </div>
                   </div>
                 </div>
