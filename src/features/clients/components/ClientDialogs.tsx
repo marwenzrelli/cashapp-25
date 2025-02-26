@@ -57,6 +57,33 @@ export const ClientDialogs = ({
 }: ClientDialogsProps) => {
   const { currency } = useCurrency();
 
+  const formatPhoneNumber = (value: string) => {
+    const numberOnly = value.replace(/\D/g, '');
+    const truncated = numberOnly.slice(0, 8);
+    if (truncated.length >= 2) {
+      let formatted = truncated.slice(0, 2);
+      if (truncated.length >= 5) {
+        formatted += ' ' + truncated.slice(2, 5);
+        if (truncated.length > 5) {
+          formatted += ' ' + truncated.slice(5);
+        }
+      } else if (truncated.length > 2) {
+        formatted += ' ' + truncated.slice(2);
+      }
+      return formatted;
+    }
+    return truncated;
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>, isNewClient: boolean) => {
+    const formattedNumber = formatPhoneNumber(e.target.value);
+    if (isNewClient) {
+      onNewClientChange({ ...newClient, telephone: formattedNumber });
+    } else {
+      onEditFormChange({ ...editForm, telephone: formattedNumber });
+    }
+  };
+
   return (
     <>
       <Dialog open={isCreateOpen} onOpenChange={onCreateClose}>
@@ -125,10 +152,11 @@ export const ClientDialogs = ({
                       <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="telephone"
-                        placeholder="06 12 34 56 78"
+                        placeholder="XX XXX XXX"
                         value={newClient.telephone}
-                        onChange={(e) => onNewClientChange({ ...newClient, telephone: e.target.value })}
+                        onChange={(e) => handlePhoneChange(e, true)}
                         className="pl-9"
+                        maxLength={10}
                       />
                     </div>
                   </div>
@@ -198,7 +226,9 @@ export const ClientDialogs = ({
               <Input
                 id="edit-telephone"
                 value={editForm.telephone}
-                onChange={(e) => onEditFormChange({ ...editForm, telephone: e.target.value })}
+                onChange={(e) => handlePhoneChange(e, false)}
+                placeholder="XX XXX XXX"
+                maxLength={10}
               />
             </div>
             <div className="space-y-2">
