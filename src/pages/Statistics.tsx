@@ -1,3 +1,4 @@
+
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, Area, AreaChart } from "recharts";
 import { 
@@ -19,14 +20,15 @@ import { addDays } from "date-fns";
 import { useState } from "react";
 import { DateRange } from "react-day-picker";
 import { ClientStats } from "@/features/operations/types";
+import { Transfer } from "@/features/transfers/types";
 
 interface FilteredData {
   client_name?: string;
   fromClient?: string;
   toClient?: string;
   amount: number;
-  created_at: string;
-  date?: string;
+  created_at?: string;
+  operation_date?: string;
 }
 
 const Statistics = () => {
@@ -44,7 +46,7 @@ const Statistics = () => {
 
   const filterData = (data: FilteredData[], type: string) => {
     return data.filter(item => {
-      const itemDate = new Date(item.created_at || item.date || '');
+      const itemDate = new Date(item.operation_date || item.created_at || '');
       const dateMatch = !dateRange?.from || !dateRange?.to || 
         isWithinInterval(itemDate, { 
           start: dateRange.from, 
@@ -68,7 +70,15 @@ const Statistics = () => {
 
   const filteredDeposits = filterData(deposits as FilteredData[], "deposits");
   const filteredWithdrawals = filterData(withdrawals as FilteredData[], "withdrawals");
-  const filteredTransfers = filterData(transfers as FilteredData[], "transfers");
+  const filteredTransfers = filterData(
+    transfers.map(t => ({
+      fromClient: t.fromClient,
+      toClient: t.toClient,
+      amount: t.amount,
+      operation_date: t.date,
+    })) as FilteredData[],
+    "transfers"
+  );
 
   const totalDeposits = filteredDeposits.reduce((acc, dep) => acc + (dep.amount || 0), 0);
   const totalWithdrawals = filteredWithdrawals.reduce((acc, withdrawal) => acc + (withdrawal.amount || 0), 0);
