@@ -197,7 +197,7 @@ const Statistics = () => {
   return (
     <div className="space-y-8 animate-in">
       <div>
-        <h1 className="text-3xl font-bold">Tableau de Bord</h1>
+        <h1 className="text-3xl font-bold">Statistiques</h1>
         <p className="text-muted-foreground">
           Vue d'ensemble et analyses détaillées
         </p>
