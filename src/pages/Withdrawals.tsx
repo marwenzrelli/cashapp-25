@@ -438,35 +438,6 @@ const Withdrawals = () => {
               </div>
             </div>
 
-            <div className="flex gap-4">
-              <div className="flex-1 rounded-lg border bg-muted/50 p-4">
-                <div className="flex items-start gap-4">
-                  <div className="rounded-full bg-blue-100 dark:bg-blue-900/20 p-2">
-                    <Sparkles className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-medium">Recommandations IA</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Vérifiez le solde disponible et les limites de retrait avant de valider l'opération.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex-1 rounded-lg border bg-muted/50 p-4">
-                <div className="flex items-start gap-4">
-                  <div className="rounded-full bg-amber-100 dark:bg-amber-900/20 p-2">
-                    <AlertCircle className="h-5 w-5 text-amber-600" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-medium">Vérifications</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Une pièce d'identité valide est requise pour les retraits supérieurs à 1000€.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
 
           <DialogFooter className="sm:justify-between">
