@@ -143,10 +143,10 @@ const Statistics = () => {
 
   const dailyTransactionsBase = filteredDeposits.reduce((acc, dep) => {
     try {
-      const date = format(new Date(dep.created_at), 'dd/MM/yyyy');
+      const date = format(new Date(dep.created_at || dep.operation_date || ''), 'dd/MM/yyyy');
       acc[date] = (acc[date] || 0) + 1;
     } catch (error) {
-      console.error("Error formatting date:", dep.created_at);
+      console.error("Error formatting date:", dep.created_at || dep.operation_date);
     }
     return acc;
   }, {} as Record<string, number>);
@@ -154,12 +154,12 @@ const Statistics = () => {
   const dailyTransactions = [...filteredDeposits, ...filteredWithdrawals, ...filteredTransfers].reduce((acc, op) => {
     try {
       const date = format(
-        new Date('created_at' in op ? op.created_at : op.date), 
+        new Date(op.created_at || op.operation_date || ''), 
         'dd/MM/yyyy'
       );
       acc[date] = (acc[date] || 0) + 1;
     } catch (error) {
-      console.error("Error formatting date for operation:", op);
+      console.error("Error formatting operation date:", op.created_at || op.operation_date);
     }
     return acc;
   }, {} as Record<string, number>);
@@ -173,29 +173,29 @@ const Statistics = () => {
     
     const dayDeposits = filteredDeposits.filter(dep => {
       try {
-        return format(new Date(dep.created_at), 'dd/MM') === formattedDate;
+        return format(new Date(dep.created_at || dep.operation_date || ''), 'dd/MM') === formattedDate;
       } catch (error) {
-        console.error("Error filtering deposit date:", dep.created_at);
+        console.error("Error filtering deposit date:", dep.created_at || dep.operation_date);
         return false;
       }
     });
     
     const dayWithdrawals = filteredWithdrawals.filter(w => {
       try {
-        return format(new Date(w.created_at), 'dd/MM') === formattedDate;
+        return format(new Date(w.created_at || w.operation_date || ''), 'dd/MM') === formattedDate;
       } catch (error) {
-        console.error("Error filtering withdrawal date:", w.created_at);
+        console.error("Error filtering withdrawal date:", w.created_at || w.operation_date);
         return false;
       }
     });
     
     const dayTransfers = filteredTransfers.filter(transfer => {
       try {
-        const transferDate = new Date(transfer.date);
+        const transferDate = new Date(transfer.operation_date || transfer.created_at || '');
         return !isNaN(transferDate.getTime()) && 
           format(transferDate, 'dd/MM') === formattedDate;
       } catch (error) {
-        console.error("Error filtering transfer date:", transfer.date);
+        console.error("Error filtering transfer date:", transfer.operation_date || transfer.created_at);
         return false;
       }
     });
