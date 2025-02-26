@@ -9,9 +9,15 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { useDeposits } from "@/features/deposits/hooks/useDeposits";
 import { useTransfersList } from "@/features/transfers/hooks/useTransfersList";
 import { cn } from "@/lib/utils";
-import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
+import { format, subDays, startOfMonth, endOfMonth, parse, isWithinInterval } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useWithdrawals } from "@/features/withdrawals/hooks/useWithdrawals";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { Input } from "@/components/ui/input";
+import { addDays } from "date-fns";
+import { useState } from "react";
+import { DateRange } from "react-day-picker";
 
 const Statistics = () => {
   const { deposits, isLoading: isLoadingDeposits } = useDeposits();
@@ -19,34 +25,67 @@ const Statistics = () => {
   const { transfers } = useTransfersList();
   const { currency } = useCurrency();
 
-  // Calculs des totaux
-  const totalDeposits = deposits.reduce((acc, dep) => acc + Math.max(dep.amount, 0), 0);
-  const totalWithdrawals = withdrawals.reduce((acc, withdrawal) => acc + withdrawal.amount, 0);
-  const totalTransfers = transfers.reduce((acc, transfer) => acc + transfer.amount, 0);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: subDays(new Date(), 30),
+    to: new Date(),
+  });
+  const [clientFilter, setClientFilter] = useState("");
+  const [transactionType, setTransactionType] = useState<"all" | "deposits" | "withdrawals" | "transfers">("all");
+
+  const filterData = (data: any[], type: string) => {
+    return data.filter(item => {
+      const itemDate = new Date(item.created_at || item.date);
+      const dateMatch = !dateRange?.from || !dateRange?.to || 
+        isWithinInterval(itemDate, { 
+          start: dateRange.from, 
+          end: dateRange.to 
+        });
+      
+      const clientMatch = !clientFilter || 
+        (type === "transfers" 
+          ? item.fromClient.toLowerCase().includes(clientFilter.toLowerCase()) ||
+            item.toClient.toLowerCase().includes(clientFilter.toLowerCase())
+          : item.client_name.toLowerCase().includes(clientFilter.toLowerCase()));
+
+      const typeMatch = transactionType === "all" || 
+        (transactionType === "deposits" && type === "deposits") ||
+        (transactionType === "withdrawals" && type === "withdrawals") ||
+        (transactionType === "transfers" && type === "transfers");
+
+      return dateMatch && clientMatch && typeMatch;
+    });
+  };
+
+  const filteredDeposits = filterData(deposits, "deposits");
+  const filteredWithdrawals = filterData(withdrawals, "withdrawals");
+  const filteredTransfers = filterData(transfers, "transfers");
+
+  const totalDeposits = filteredDeposits.reduce((acc, dep) => acc + Math.max(dep.amount, 0), 0);
+  const totalWithdrawals = filteredWithdrawals.reduce((acc, withdrawal) => acc + withdrawal.amount, 0);
+  const totalTransfers = filteredTransfers.reduce((acc, transfer) => acc + transfer.amount, 0);
   const activeClients = new Set([
-    ...deposits.map(dep => dep.client_name),
-    ...withdrawals.map(w => w.client_name),
-    ...transfers.map(transfer => transfer.fromClient),
-    ...transfers.map(transfer => transfer.toClient)
+    ...filteredDeposits.map(dep => dep.client_name),
+    ...filteredWithdrawals.map(w => w.client_name),
+    ...filteredTransfers.map(transfer => transfer.fromClient),
+    ...filteredTransfers.map(transfer => transfer.toClient)
   ]).size;
   const netFlow = totalDeposits - totalWithdrawals;
 
-  // Analyse temporelle
   const currentMonth = new Date();
   const startOfCurrentMonth = startOfMonth(currentMonth);
   const endOfCurrentMonth = endOfMonth(currentMonth);
 
-  const currentMonthDeposits = deposits.filter(dep => {
+  const currentMonthDeposits = filteredDeposits.filter(dep => {
     const depositDate = new Date(dep.created_at);
     return depositDate >= startOfCurrentMonth && depositDate <= endOfCurrentMonth;
   });
 
-  const currentMonthWithdrawals = withdrawals.filter(w => {
+  const currentMonthWithdrawals = filteredWithdrawals.filter(w => {
     const withdrawalDate = new Date(w.created_at);
     return withdrawalDate >= startOfCurrentMonth && withdrawalDate <= endOfCurrentMonth;
   });
 
-  const currentMonthTransfers = transfers.filter(transfer => {
+  const currentMonthTransfers = filteredTransfers.filter(transfer => {
     const transferDate = new Date(transfer.date);
     return !isNaN(transferDate.getTime()) && transferDate >= startOfCurrentMonth && transferDate <= endOfCurrentMonth;
   });
@@ -55,22 +94,21 @@ const Statistics = () => {
   const startOfLastMonth = startOfMonth(lastMonth);
   const endOfLastMonth = endOfMonth(lastMonth);
 
-  const lastMonthDeposits = deposits.filter(dep => {
+  const lastMonthDeposits = filteredDeposits.filter(dep => {
     const depositDate = new Date(dep.created_at);
     return depositDate >= startOfLastMonth && depositDate <= endOfLastMonth;
   });
 
-  const lastMonthWithdrawals = withdrawals.filter(w => {
+  const lastMonthWithdrawals = filteredWithdrawals.filter(w => {
     const withdrawalDate = new Date(w.created_at);
     return withdrawalDate >= startOfLastMonth && withdrawalDate <= endOfLastMonth;
   });
 
-  const lastMonthTransfers = transfers.filter(transfer => {
+  const lastMonthTransfers = filteredTransfers.filter(transfer => {
     const transferDate = new Date(transfer.date);
     return !isNaN(transferDate.getTime()) && transferDate >= startOfLastMonth && transferDate <= endOfLastMonth;
   });
 
-  // Calcul des tendances
   const currentMonthTotal = currentMonthDeposits.reduce((acc, dep) => acc + dep.amount, 0) -
     currentMonthWithdrawals.reduce((acc, w) => acc + w.amount, 0) +
     currentMonthTransfers.reduce((acc, transfer) => acc + transfer.amount, 0);
@@ -83,8 +121,7 @@ const Statistics = () => {
     ? ((currentMonthTotal - lastMonthTotal) / lastMonthTotal) * 100 
     : 0;
 
-  // Analyse des transactions par jour
-  const dailyTransactionsBase = deposits.reduce((acc, dep) => {
+  const dailyTransactionsBase = filteredDeposits.reduce((acc, dep) => {
     try {
       const date = format(new Date(dep.created_at), 'dd/MM/yyyy');
       acc[date] = (acc[date] || 0) + 1;
@@ -94,8 +131,7 @@ const Statistics = () => {
     return acc;
   }, {} as Record<string, number>);
 
-  // Analyse des transactions par jour incluant les virements
-  const dailyTransactions = [...deposits, ...withdrawals, ...transfers].reduce((acc, op) => {
+  const dailyTransactions = [...filteredDeposits, ...filteredWithdrawals, ...filteredTransfers].reduce((acc, op) => {
     try {
       const date = format(
         new Date('created_at' in op ? op.created_at : op.date), 
@@ -108,16 +144,14 @@ const Statistics = () => {
     return acc;
   }, {} as Record<string, number>);
 
-  // Moyenne des transactions par jour
   const averageTransactionsPerDay = Object.values(dailyTransactions).reduce((a, b) => a + b, 0) / 
     Math.max(Object.keys(dailyTransactions).length, 1);
 
-  // Données pour le graphique d'évolution
   const last30DaysData = Array.from({ length: 30 }, (_, i) => {
     const date = subDays(new Date(), i);
     const formattedDate = format(date, 'dd/MM');
     
-    const dayDeposits = deposits.filter(dep => {
+    const dayDeposits = filteredDeposits.filter(dep => {
       try {
         return format(new Date(dep.created_at), 'dd/MM') === formattedDate;
       } catch (error) {
@@ -126,7 +160,7 @@ const Statistics = () => {
       }
     });
     
-    const dayWithdrawals = withdrawals.filter(w => {
+    const dayWithdrawals = filteredWithdrawals.filter(w => {
       try {
         return format(new Date(w.created_at), 'dd/MM') === formattedDate;
       } catch (error) {
@@ -135,7 +169,7 @@ const Statistics = () => {
       }
     });
     
-    const dayTransfers = transfers.filter(transfer => {
+    const dayTransfers = filteredTransfers.filter(transfer => {
       try {
         const transferDate = new Date(transfer.date);
         return !isNaN(transferDate.getTime()) && 
@@ -155,7 +189,7 @@ const Statistics = () => {
     };
   }).reverse();
 
-  const clientStats = deposits.reduce((acc, dep) => {
+  const clientStats = filteredDeposits.reduce((acc, dep) => {
     if (!acc[dep.client_name]) {
       acc[dep.client_name] = {
         totalAmount: 0,
@@ -203,7 +237,50 @@ const Statistics = () => {
         </p>
       </div>
 
-      {/* Cartes principales */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="h-5 w-5 text-primary" />
+            Filtres
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Période</label>
+              <DatePickerWithRange date={dateRange} onDateChange={setDateRange} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Client</label>
+              <Input
+                placeholder="Rechercher un client..."
+                value={clientFilter}
+                onChange={(e) => setClientFilter(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Type de transaction</label>
+              <Select 
+                value={transactionType} 
+                onValueChange={(value: "all" | "deposits" | "withdrawals" | "transfers") => 
+                  setTransactionType(value)
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner le type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes les transactions</SelectItem>
+                  <SelectItem value="deposits">Versements</SelectItem>
+                  <SelectItem value="withdrawals">Retraits</SelectItem>
+                  <SelectItem value="transfers">Virements</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid gap-6 md:grid-cols-4">
         <Card className="bg-gradient-to-br from-green-50 to-transparent dark:from-green-950/20">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -301,7 +378,6 @@ const Statistics = () => {
         </Card>
       </div>
 
-      {/* Graphiques */}
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
@@ -394,7 +470,6 @@ const Statistics = () => {
         </Card>
       </div>
 
-      {/* Insights */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -408,7 +483,7 @@ const Statistics = () => {
               "p-4 rounded-lg border",
               percentageChange >= 0 
                 ? "border-green-200 bg-green-50 dark:bg-green-950/20"
-                : "border-red-200 bg-red-50 dark:bg-red-950/20"
+                : "border-red-200 bg-red-50 dark:bg-red-955/20"
             )}>
               <div className="flex items-start gap-3">
                 {percentageChange >= 0 ? (
