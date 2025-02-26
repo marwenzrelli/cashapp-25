@@ -110,7 +110,7 @@ export const ClientDialogs = ({
                       <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="prenom"
-                        placeholder="Jean"
+                        placeholder="Mohamed"
                         value={newClient.prenom}
                         onChange={(e) => onNewClientChange({ ...newClient, prenom: e.target.value })}
                         className="pl-9"
@@ -123,7 +123,7 @@ export const ClientDialogs = ({
                       <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="nom"
-                        placeholder="Dupont"
+                        placeholder="Ben Ali"
                         value={newClient.nom}
                         onChange={(e) => onNewClientChange({ ...newClient, nom: e.target.value })}
                         className="pl-9"
@@ -138,7 +138,7 @@ export const ClientDialogs = ({
                     <Input
                       id="email"
                       type="email"
-                      placeholder="jean.dupont@example.com"
+                      placeholder="mohamed.benali@example.com"
                       value={newClient.email}
                       onChange={(e) => onNewClientChange({ ...newClient, email: e.target.value })}
                       className="pl-9"
