@@ -30,7 +30,7 @@ export const SearchBar = ({
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -40,12 +40,12 @@ export const SearchBar = ({
                 className="pl-9"
               />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2">
               <Select
                 value={itemsPerPage}
                 onValueChange={onItemsPerPageChange}
               >
-                <SelectTrigger className="w-[180px] bg-primary/5 border-primary/20 hover:bg-primary/10 transition-colors">
+                <SelectTrigger className="w-full md:w-[180px] bg-primary/5 border-primary/20 hover:bg-primary/10 transition-colors">
                   <ListFilter className="h-4 w-4 mr-2 text-primary" />
                   <SelectValue placeholder="Nombre d'éléments" />
                 </SelectTrigger>
@@ -56,7 +56,7 @@ export const SearchBar = ({
                   <SelectItem value="100">100 éléments</SelectItem>
                 </SelectContent>
               </Select>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm text-muted-foreground text-center md:text-left">
                 {totalDeposits} résultats
               </div>
             </div>
