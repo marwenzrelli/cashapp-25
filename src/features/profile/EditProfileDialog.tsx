@@ -40,6 +40,10 @@ export const EditProfileDialog = ({
     toast.success("Profil mis à jour avec succès");
   };
 
+  const formatEmployeeId = (id: string) => {
+    return id.slice(0, 4).toUpperCase();
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
@@ -124,7 +128,7 @@ export const EditProfileDialog = ({
               <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
                 id="employeeId"
-                value={formData.employeeId}
+                value={formatEmployeeId(formData.employeeId)}
                 className="pl-9"
                 readOnly
               />
