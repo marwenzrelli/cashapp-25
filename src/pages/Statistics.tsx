@@ -18,6 +18,16 @@ import { Input } from "@/components/ui/input";
 import { addDays } from "date-fns";
 import { useState } from "react";
 import { DateRange } from "react-day-picker";
+import { ClientStats } from "@/features/operations/types";
+
+interface FilteredData {
+  client_name?: string;
+  fromClient?: string;
+  toClient?: string;
+  amount: number;
+  created_at: string;
+  date?: string;
+}
 
 const Statistics = () => {
   const { deposits, isLoading: isLoadingDeposits } = useDeposits();
@@ -32,9 +42,9 @@ const Statistics = () => {
   const [clientFilter, setClientFilter] = useState("");
   const [transactionType, setTransactionType] = useState<"all" | "deposits" | "withdrawals" | "transfers">("all");
 
-  const filterData = (data: any[], type: string) => {
+  const filterData = (data: FilteredData[], type: string) => {
     return data.filter(item => {
-      const itemDate = new Date(item.created_at || item.date);
+      const itemDate = new Date(item.created_at || item.date || '');
       const dateMatch = !dateRange?.from || !dateRange?.to || 
         isWithinInterval(itemDate, { 
           start: dateRange.from, 
@@ -43,9 +53,9 @@ const Statistics = () => {
       
       const clientMatch = !clientFilter || 
         (type === "transfers" 
-          ? item.fromClient.toLowerCase().includes(clientFilter.toLowerCase()) ||
-            item.toClient.toLowerCase().includes(clientFilter.toLowerCase())
-          : item.client_name.toLowerCase().includes(clientFilter.toLowerCase()));
+          ? (item.fromClient?.toLowerCase().includes(clientFilter.toLowerCase()) ||
+             item.toClient?.toLowerCase().includes(clientFilter.toLowerCase()))
+          : item.client_name?.toLowerCase().includes(clientFilter.toLowerCase()));
 
       const typeMatch = transactionType === "all" || 
         (transactionType === "deposits" && type === "deposits") ||
@@ -56,13 +66,14 @@ const Statistics = () => {
     });
   };
 
-  const filteredDeposits = filterData(deposits, "deposits");
-  const filteredWithdrawals = filterData(withdrawals, "withdrawals");
-  const filteredTransfers = filterData(transfers, "transfers");
+  const filteredDeposits = filterData(deposits as FilteredData[], "deposits");
+  const filteredWithdrawals = filterData(withdrawals as FilteredData[], "withdrawals");
+  const filteredTransfers = filterData(transfers as FilteredData[], "transfers");
 
-  const totalDeposits = filteredDeposits.reduce((acc, dep) => acc + Math.max(dep.amount, 0), 0);
-  const totalWithdrawals = filteredWithdrawals.reduce((acc, withdrawal) => acc + withdrawal.amount, 0);
-  const totalTransfers = filteredTransfers.reduce((acc, transfer) => acc + transfer.amount, 0);
+  const totalDeposits = filteredDeposits.reduce((acc, dep) => acc + (dep.amount || 0), 0);
+  const totalWithdrawals = filteredWithdrawals.reduce((acc, withdrawal) => acc + (withdrawal.amount || 0), 0);
+  const totalTransfers = filteredTransfers.reduce((acc, transfer) => acc + (transfer.amount || 0), 0);
+
   const activeClients = new Set([
     ...filteredDeposits.map(dep => dep.client_name),
     ...filteredWithdrawals.map(w => w.client_name),
@@ -189,20 +200,23 @@ const Statistics = () => {
     };
   }).reverse();
 
-  const clientStats = filteredDeposits.reduce((acc, dep) => {
-    if (!acc[dep.client_name]) {
-      acc[dep.client_name] = {
+  const clientStats: Record<string, ClientStats> = {};
+  
+  filteredDeposits.forEach(dep => {
+    if (!dep.client_name) return;
+    
+    if (!clientStats[dep.client_name]) {
+      clientStats[dep.client_name] = {
         totalAmount: 0,
         transactionCount: 0,
         averageAmount: 0
       };
     }
-    acc[dep.client_name].totalAmount += dep.amount;
-    acc[dep.client_name].transactionCount += 1;
-    acc[dep.client_name].averageAmount = 
-      acc[dep.client_name].totalAmount / acc[dep.client_name].transactionCount;
-    return acc;
-  }, {} as Record<string, { totalAmount: number; transactionCount: number; averageAmount: number }>);
+    clientStats[dep.client_name].totalAmount += dep.amount || 0;
+    clientStats[dep.client_name].transactionCount += 1;
+    clientStats[dep.client_name].averageAmount = 
+      clientStats[dep.client_name].totalAmount / clientStats[dep.client_name].transactionCount;
+  });
 
   const topClients = Object.entries(clientStats)
     .sort((a, b) => b[1].totalAmount - a[1].totalAmount)
