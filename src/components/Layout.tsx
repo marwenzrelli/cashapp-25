@@ -1,4 +1,3 @@
-
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -163,7 +162,7 @@ const Layout = () => {
                   </div>
                 </div>
                 <span className="text-xl font-bold bg-gradient-to-r from-[#9b87f5] to-[#8B5CF6] text-transparent bg-clip-text">
-                  Flow Cash Control
+                  FinanceFlow Pro
                 </span>
               </div>
 
@@ -184,7 +183,7 @@ const Layout = () => {
                     <SheetHeader className="mb-4">
                       <SheetTitle className="flex items-center space-x-2">
                         <DollarSign className="h-6 w-6 text-primary" />
-                        <span>Flow Cash Control</span>
+                        <span>FinanceFlow Pro</span>
                       </SheetTitle>
                     </SheetHeader>
                     <NavigationLinks

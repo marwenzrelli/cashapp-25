@@ -86,7 +86,7 @@ const Login = () => {
               </div>
             </div>
           </div>
-          <h1 className="text-2xl font-bold">Flow Cash Control</h1>
+          <h1 className="text-2xl font-bold">FinanceFlow Pro</h1>
           <p className="text-gray-500">Connectez-vous à votre compte</p>
         </div>
 
