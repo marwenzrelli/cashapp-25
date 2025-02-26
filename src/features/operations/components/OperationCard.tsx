@@ -65,7 +65,7 @@ export const OperationCard = ({ operation, onEdit, onDelete }: OperationCardProp
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <span className="font-medium truncate">{operation.description}</span>
-            <span className="text-xs text-muted-foreground">#{operation.id.slice(0, 8)}</span>
+            <span className="text-xs text-muted-foreground">#{operation.id.slice(0, 4)}</span>
           </div>
           <div className="text-sm text-muted-foreground flex items-center gap-1.5 overflow-hidden">
             <span className="whitespace-nowrap">{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</span>
