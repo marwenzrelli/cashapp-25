@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
@@ -6,8 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, UserPlus, User, Mail, Phone, Coins, Pencil, Trash2 } from "lucide-react";
 import { Client } from "../types";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
-// Définition des types pour les formulaires
 type NewClientForm = {
   nom: string;
   prenom: string;
@@ -56,6 +55,8 @@ export const ClientDialogs = ({
   onNewClientChange,
   onEditFormChange,
 }: ClientDialogsProps) => {
+  const { currency } = useCurrency();
+
   return (
     <>
       <Dialog open={isCreateOpen} onOpenChange={onCreateClose}>
@@ -143,7 +144,7 @@ export const ClientDialogs = ({
                         onChange={(e) => onNewClientChange({ ...newClient, solde: parseFloat(e.target.value) })}
                         className="pl-9"
                       />
-                      <span className="absolute right-3 top-3 text-muted-foreground">€</span>
+                      <span className="absolute right-3 top-3 text-muted-foreground">{currency}</span>
                     </div>
                   </div>
                 </div>
