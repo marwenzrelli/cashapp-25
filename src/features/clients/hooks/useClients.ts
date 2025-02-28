@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Client } from "../types";
 import { supabase } from "@/integrations/supabase/client"; 
 import { toast } from "sonner";
@@ -42,455 +42,462 @@ type TransferPayload = RealtimePostgresChangesPayload<TransferRecord>;
 export const useClients = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
+  const [error, setError] = useState<string | null>(null);
   const MAX_RETRIES = 3;
   const RETRY_DELAY = 2000; // 2 secondes
 
-  const fetchClients = async (retry = 0) => {
+  // Utiliser useCallback pour créer la fonction de récupération des clients de manière memoïsée
+  const fetchClients = useCallback(async (retry = 0) => {
     try {
-      setLoading(true);
+      if (retry === 0) {
+        setLoading(true);
+        setError(null);
+      }
+      
       console.log(`Chargement des clients... (tentative ${retry + 1}/${MAX_RETRIES + 1})`);
       
-      // Vérifier la session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) {
-        console.warn("Erreur lors de la récupération de la session:", sessionError);
-        // Continuer même sans session pour permettre la visualisation en mode déconnecté
+      // Vérifier que la connexion à Supabase est établie
+      if (!supabase) {
+        throw new Error("La connexion à la base de données n'est pas disponible");
       }
       
-      if (!session && retry === 0) {
-        // En première tentative, afficher un avertissement
-        console.warn("Aucune session active. Accès limité aux clients.");
-        // Ne pas retourner ici, permettre de continuer pour récupérer les clients publics
-      }
-
-      // Récupérer les clients même sans session (si l'API le permet)
+      // Récupérer les clients
       const { data: clientsData, error: clientsError } = await supabase
         .from('clients')
         .select('*')
         .order('date_creation', { ascending: false });
 
       if (clientsError) {
-        console.error("Error fetching clients:", clientsError);
+        console.error("Erreur lors de la récupération des clients:", clientsError);
         
-        // Stratégie de retry
+        // Si nous n'avons pas atteint le nombre maximal de tentatives, réessayer
         if (retry < MAX_RETRIES) {
           console.log(`Nouvelle tentative dans ${RETRY_DELAY/1000} secondes...`);
           setTimeout(() => fetchClients(retry + 1), RETRY_DELAY);
           return;
-        } else {
-          // Après plusieurs tentatives échouées, afficher un message d'erreur
-          toast.error("Erreur lors du chargement des clients", {
-            description: "Vérifiez votre connexion internet et réessayez."
-          });
         }
-        return;
+        
+        // Si toutes les tentatives ont échoué, définir l'erreur et afficher un toast
+        throw new Error(clientsError.message || "Erreur lors du chargement des clients");
       }
 
-      if (!clientsData) {
-        console.warn("Aucun client récupéré");
+      if (!clientsData || clientsData.length === 0) {
+        console.log("Aucun client trouvé dans la base de données");
         setClients([]);
         return;
       }
 
-      console.log("Clients récupérés:", clientsData);
+      console.log(`${clientsData.length} clients récupérés avec succès`);
       
-      // Récupérer les clients sans calculer les soldes immédiatement
+      // Mettre à jour l'état avec les clients récupérés
       setClients(clientsData);
-
-      // Mettre à jour les soldes en arrière-plan pour chaque client
-      updateClientBalances(clientsData);
+      
+      // Calculer les soldes en arrière-plan
+      try {
+        updateClientBalances(clientsData);
+      } catch (balanceError) {
+        console.error("Erreur lors de la mise à jour des soldes:", balanceError);
+        // Ne pas bloquer le chargement des clients si le calcul des soldes échoue
+      }
       
     } catch (error) {
-      console.error("Error in fetchClients:", error);
+      console.error("Erreur critique lors du chargement des clients:", error);
       
-      // Stratégie de retry en cas d'erreur générale
       if (retry < MAX_RETRIES) {
         console.log(`Nouvelle tentative dans ${RETRY_DELAY/1000} secondes...`);
         setTimeout(() => fetchClients(retry + 1), RETRY_DELAY);
-      } else {
-        toast.error("Une erreur est survenue lors du chargement des clients", {
-          description: "Vérifiez votre connexion internet et réessayez."
-        });
+        return;
       }
+      
+      setError((error as Error).message || "Une erreur est survenue");
+      toast.error("Erreur de connexion", {
+        description: "Impossible de charger les clients. Vérifiez votre connexion et réessayez."
+      });
     } finally {
-      setLoading(false);
+      if (retry === 0 || retry === MAX_RETRIES) {
+        setLoading(false);
+      }
     }
-  };
+  }, []);
 
-  // Fonction pour mettre à jour les soldes en arrière-plan
+  // Fonction pour mettre à jour les soldes des clients
   const updateClientBalances = async (clientsList: Client[]) => {
+    if (!supabase || !clientsList.length) return;
+    
     try {
-      const updatedClients = await Promise.all(
-        clientsList.map(async (client) => {
-          try {
-            const { data: balance, error: balanceError } = await supabase
-              .rpc('calculate_client_balance', { client_id: client.id });
-
-            if (balanceError) {
-              console.error("Erreur calcul solde pour client", client.id, ":", balanceError);
-              return client;
-            }
-
-            console.log(`Solde calculé pour ${client.prenom} ${client.nom}:`, balance);
-            
-            // Mise à jour du solde dans la base de données en arrière-plan
+      // Traiter les clients par lots pour éviter de surcharger l'API
+      const batchSize = 5;
+      for (let i = 0; i < clientsList.length; i += batchSize) {
+        const batch = clientsList.slice(i, i + batchSize);
+        
+        await Promise.all(
+          batch.map(async (client) => {
             try {
+              // Calculer le solde du client
+              const { data: balance, error: balanceError } = await supabase
+                .rpc('calculate_client_balance', { client_id: client.id });
+
+              if (balanceError) {
+                console.warn(`Impossible de calculer le solde pour ${client.prenom} ${client.nom}:`, balanceError);
+                return;
+              }
+
+              // Mettre à jour le solde dans la base de données
               const { error: updateError } = await supabase
                 .from('clients')
                 .update({ solde: balance || 0 })
                 .eq('id', client.id);
 
               if (updateError) {
-                console.error("Erreur mise à jour solde pour client", client.id, ":", updateError);
+                console.warn(`Impossible de mettre à jour le solde pour ${client.prenom} ${client.nom}:`, updateError);
+                return;
               }
-            } catch (updateError) {
-              console.error("Exception lors de la mise à jour du solde:", updateError);
+
+              // Mettre à jour le client dans l'état local
+              setClients(prevClients => 
+                prevClients.map(c => 
+                  c.id === client.id ? { ...c, solde: balance || 0 } : c
+                )
+              );
+            } catch (error) {
+              console.error(`Erreur pour le client ${client.id}:`, error);
             }
-
-            return {
-              ...client,
-              solde: balance || 0
-            };
-          } catch (error) {
-            console.error("Erreur lors du calcul du solde pour le client", client.id, ":", error);
-            return client;
-          }
-        })
-      );
-
-      console.log("Clients avec soldes mis à jour:", updatedClients);
-      setClients(updatedClients);
+          })
+        );
+        
+        // Pause entre les lots pour éviter de surcharger l'API
+        if (i + batchSize < clientsList.length) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      }
     } catch (error) {
-      console.error("Erreur globale lors de la mise à jour des soldes:", error);
+      console.error("Erreur lors de la mise à jour des soldes:", error);
     }
   };
 
+  // Fonction pour créer un nouveau client
   const createClient = async (newClient: Omit<Client, "id" | "date_creation">) => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      setLoading(true);
       
-      if (!session) {
-        toast.error("Vous devez être connecté pour créer un client");
+      // Vérifier la connexion à Supabase
+      if (!supabase) {
+        throw new Error("La connexion à la base de données n'est pas disponible");
+      }
+      
+      // Vérifier si l'utilisateur est connecté
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        throw new Error(`Erreur de session: ${sessionError.message}`);
+      }
+      
+      if (!sessionData.session) {
+        toast.error("Session expirée", {
+          description: "Veuillez vous reconnecter pour effectuer cette action."
+        });
         return false;
       }
-
+      
+      // Créer le client
       const { data, error } = await supabase
         .from('clients')
-        .insert([{ ...newClient, created_by: session.user.id }])
+        .insert([{ 
+          ...newClient, 
+          created_by: sessionData.session.user.id,
+          date_creation: new Date().toISOString()
+        }])
         .select()
         .single();
 
       if (error) {
-        console.error("Error creating client:", error);
-        toast.error("Erreur lors de la création du client", {
-          description: error.message
+        console.error("Erreur lors de la création du client:", error);
+        toast.error("Erreur lors de la création", {
+          description: error.message || "Impossible de créer le client."
         });
         return false;
       }
 
-      // Ajouter immédiatement le nouveau client à la liste locale
+      // Ajouter le nouveau client à l'état local
       setClients(prevClients => [data, ...prevClients]);
+      
+      toast.success("Client créé avec succès", {
+        description: `${newClient.prenom} ${newClient.nom} a été ajouté.`
+      });
+      
+      return true;
+    } catch (error) {
+      console.error("Erreur critique lors de la création du client:", error);
+      toast.error("Erreur lors de la création du client", {
+        description: (error as Error).message || "Une erreur est survenue."
+      });
+      return false;
+    } finally {
+      setLoading(false);
       
       // Rafraîchir la liste complète en arrière-plan
       fetchClients();
-      return true;
-    } catch (error) {
-      console.error("Error in createClient:", error);
-      toast.error("Une erreur est survenue lors de la création du client");
-      return false;
     }
   };
 
+  // Fonction pour mettre à jour un client existant
   const updateClient = async (id: number, client: Partial<Client>) => {
     try {
+      setLoading(true);
+      
+      // Vérifier la connexion à Supabase
+      if (!supabase) {
+        throw new Error("La connexion à la base de données n'est pas disponible");
+      }
+      
+      // Mettre à jour le client
       const { error } = await supabase
         .from('clients')
         .update(client)
         .eq('id', id);
 
       if (error) {
-        console.error("Error updating client:", error);
-        toast.error("Erreur lors de la mise à jour du client", {
-          description: error.message
+        console.error("Erreur lors de la mise à jour du client:", error);
+        toast.error("Erreur lors de la mise à jour", {
+          description: error.message || "Impossible de mettre à jour le client."
         });
         return false;
       }
 
-      // Mettre à jour le client localement pour une mise à jour immédiate de l'UI
+      // Mettre à jour le client dans l'état local
       setClients(prevClients => 
         prevClients.map(c => c.id === id ? { ...c, ...client } : c)
       );
       
-      // Rafraîchir la liste complète en arrière-plan
-      fetchClients();
+      toast.success("Client mis à jour", {
+        description: "Les informations ont été enregistrées avec succès."
+      });
+      
       return true;
     } catch (error) {
-      console.error("Error in updateClient:", error);
-      toast.error("Une erreur est survenue lors de la mise à jour du client");
-      return false;
-    }
-  };
-
-  const deleteClient = async (id: number) => {
-    try {
-      setLoading(true);
-      
-      // Récupérer le client avant la suppression
-      const { data: clientData, error: clientError } = await supabase
-        .from('clients')
-        .select('prenom, nom')
-        .eq('id', id)
-        .single();
-
-      if (clientError || !clientData) {
-        console.error("Error fetching client:", clientError);
-        toast.error("Client introuvable");
-        return false;
-      }
-
-      const clientFullName = `${clientData.prenom} ${clientData.nom}`;
-      console.log("Suppression du client:", clientFullName);
-
-      // Commencer par les opérations avant de supprimer le client
-      const deleteOperations = async () => {
-        // Dépôts
-        const { error: depositsError } = await supabase
-          .from('deposits')
-          .delete()
-          .eq('client_name', clientFullName);
-
-        if (depositsError) {
-          throw new Error(`Erreur suppression dépôts: ${depositsError.message}`);
-        }
-
-        // Retraits
-        const { error: withdrawalsError } = await supabase
-          .from('withdrawals')
-          .delete()
-          .eq('client_name', clientFullName);
-
-        if (withdrawalsError) {
-          throw new Error(`Erreur suppression retraits: ${withdrawalsError.message}`);
-        }
-
-        // Transferts (from)
-        const { error: transfersFromError } = await supabase
-          .from('transfers')
-          .delete()
-          .eq('from_client', clientFullName);
-
-        if (transfersFromError) {
-          throw new Error(`Erreur suppression transferts (from): ${transfersFromError.message}`);
-        }
-
-        // Transferts (to)
-        const { error: transfersToError } = await supabase
-          .from('transfers')
-          .delete()
-          .eq('to_client', clientFullName);
-
-        if (transfersToError) {
-          throw new Error(`Erreur suppression transferts (to): ${transfersToError.message}`);
-        }
-
-        // QR Access
-        const { error: qrError } = await supabase
-          .from('qr_access')
-          .delete()
-          .eq('client_id', id);
-
-        if (qrError) {
-          throw new Error(`Erreur suppression QR: ${qrError.message}`);
-        }
-      };
-
-      try {
-        await deleteOperations();
-        console.log("Toutes les opérations ont été supprimées");
-
-        // Maintenant on peut supprimer le client
-        const { error: deleteError } = await supabase
-          .from('clients')
-          .delete()
-          .eq('id', id);
-
-        if (deleteError) {
-          throw new Error(`Erreur suppression client: ${deleteError.message}`);
-        }
-
-        // Mise à jour de l'état local
-        setClients(prevClients => prevClients.filter(c => c.id !== id));
-        toast.success("Client supprimé avec succès");
-        return true;
-
-      } catch (operationError) {
-        console.error("Erreur lors de la suppression des opérations:", operationError);
-        toast.error(`Erreur: ${operationError.message}`);
-        return false;
-      }
-
-    } catch (error) {
-      console.error("Error in deleteClient:", error);
-      toast.error("Une erreur est survenue lors de la suppression du client");
+      console.error("Erreur critique lors de la mise à jour du client:", error);
+      toast.error("Erreur lors de la mise à jour", {
+        description: (error as Error).message || "Une erreur est survenue."
+      });
       return false;
     } finally {
       setLoading(false);
     }
   };
 
+  // Fonction pour supprimer un client
+  const deleteClient = async (id: number) => {
+    try {
+      setLoading(true);
+      
+      // Vérifier la connexion à Supabase
+      if (!supabase) {
+        throw new Error("La connexion à la base de données n'est pas disponible");
+      }
+      
+      // Récupérer les informations du client avant de le supprimer
+      const { data: clientData, error: clientError } = await supabase
+        .from('clients')
+        .select('prenom, nom')
+        .eq('id', id)
+        .single();
+
+      if (clientError) {
+        console.error("Erreur lors de la récupération du client:", clientError);
+        toast.error("Client introuvable", {
+          description: "Impossible de trouver les informations du client."
+        });
+        return false;
+      }
+
+      const clientFullName = `${clientData.prenom} ${clientData.nom}`;
+      
+      // Supprimer le client et ses opérations associées
+      try {
+        // Supprimer les dépôts
+        await supabase
+          .from('deposits')
+          .delete()
+          .eq('client_name', clientFullName);
+        
+        // Supprimer les retraits
+        await supabase
+          .from('withdrawals')
+          .delete()
+          .eq('client_name', clientFullName);
+        
+        // Supprimer les transferts (from)
+        await supabase
+          .from('transfers')
+          .delete()
+          .eq('from_client', clientFullName);
+        
+        // Supprimer les transferts (to)
+        await supabase
+          .from('transfers')
+          .delete()
+          .eq('to_client', clientFullName);
+        
+        // Supprimer les accès QR
+        await supabase
+          .from('qr_access')
+          .delete()
+          .eq('client_id', id);
+        
+        // Supprimer le client
+        const { error: deleteError } = await supabase
+          .from('clients')
+          .delete()
+          .eq('id', id);
+
+        if (deleteError) {
+          throw new Error(deleteError.message);
+        }
+        
+        // Mettre à jour l'état local
+        setClients(prevClients => prevClients.filter(c => c.id !== id));
+        
+        toast.success("Client supprimé", {
+          description: `${clientFullName} a été supprimé avec succès.`
+        });
+        
+        return true;
+      } catch (error) {
+        console.error("Erreur lors de la suppression:", error);
+        toast.error("Erreur lors de la suppression", {
+          description: (error as Error).message || "Impossible de supprimer le client."
+        });
+        return false;
+      }
+    } catch (error) {
+      console.error("Erreur critique lors de la suppression du client:", error);
+      toast.error("Erreur lors de la suppression", {
+        description: (error as Error).message || "Une erreur est survenue."
+      });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fonction pour rafraîchir le solde d'un client
   const refreshClientBalance = async (id: number) => {
     try {
-      console.log("Rafraîchissement du solde pour le client:", id);
+      // Vérifier la connexion à Supabase
+      if (!supabase) {
+        throw new Error("La connexion à la base de données n'est pas disponible");
+      }
       
+      // Calculer le solde du client
       const { data: balance, error: balanceError } = await supabase
         .rpc('calculate_client_balance', { client_id: id });
 
       if (balanceError) {
         console.error("Erreur lors du calcul du solde:", balanceError);
-        toast.error("Erreur lors de la mise à jour du solde");
         return;
       }
 
-      console.log("Nouveau solde calculé:", balance);
-
-      // Mise à jour immédiate du client dans le state local
-      setClients(prevClients => 
-        prevClients.map(client => 
-          client.id === id 
-            ? { ...client, solde: balance || 0 }
-            : client
-        )
-      );
-
-      // Mise à jour du solde dans la base de données
-      const { error: updateError } = await supabase
+      // Mettre à jour le solde dans la base de données
+      await supabase
         .from('clients')
         .update({ solde: balance || 0 })
         .eq('id', id);
 
-      if (updateError) {
-        console.error("Erreur lors de la mise à jour du solde en base:", updateError);
-        toast.error("Erreur lors de la mise à jour du solde");
-        return;
-      }
+      // Mettre à jour le client dans l'état local
+      setClients(prevClients => 
+        prevClients.map(client => 
+          client.id === id ? { ...client, solde: balance || 0 } : client
+        )
+      );
     } catch (error) {
       console.error("Erreur lors du rafraîchissement du solde:", error);
-      toast.error("Une erreur est survenue lors de la mise à jour du solde");
     }
   };
 
+  // Configurer les écouteurs de changements en temps réel et charger les clients au montage du composant
   useEffect(() => {
+    // Charger les clients au démarrage
     fetchClients();
 
-    const clientsChannel = supabase
-      .channel('public:clients')
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'clients' },
-        async (payload) => {
-          console.log("Changement détecté dans la table clients:", payload);
-          await fetchClients();
-        }
-      )
-      .subscribe();
-
-    const depositsChannel = supabase
-      .channel('public:deposits')
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'deposits' },
-        async (payload: DepositPayload) => {
-          console.log("Changement détecté dans la table deposits:", payload);
-          const newRecord = payload.new as DepositRecord | null;
-          const oldRecord = payload.old as DepositRecord | null;
-
-          if (newRecord?.client_name || oldRecord?.client_name) {
-            const clientName = (newRecord?.client_name || oldRecord?.client_name)?.split(' ');
-            if (clientName) {
-              const client = clients.find(c => 
-                c.prenom === clientName[0] && c.nom === clientName[1]
-              );
-              if (client) {
-                await refreshClientBalance(client.id);
-              }
+    // Configurer les écouteurs pour les changements en temps réel
+    const setupRealtimeListeners = async () => {
+      try {
+        // Écouteur pour les changements dans la table clients
+        const clientsChannel = supabase
+          .channel('client-changes')
+          .on('postgres_changes', 
+            { event: '*', schema: 'public', table: 'clients' },
+            (payload) => {
+              console.log("Changement détecté dans la table clients:", payload);
+              // Recharger tous les clients pour être sûr d'avoir les données les plus récentes
+              fetchClients();
             }
-          }
-        }
-      )
-      .subscribe();
+          )
+          .subscribe((status) => {
+            console.log("Statut de l'abonnement clients:", status);
+          });
 
-    const withdrawalsChannel = supabase
-      .channel('public:withdrawals')
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'withdrawals' },
-        async (payload: WithdrawalPayload) => {
-          console.log("Changement détecté dans la table withdrawals:", payload);
-          const newRecord = payload.new as WithdrawalRecord | null;
-          const oldRecord = payload.old as WithdrawalRecord | null;
-
-          if (newRecord?.client_name || oldRecord?.client_name) {
-            const clientName = (newRecord?.client_name || oldRecord?.client_name)?.split(' ');
-            if (clientName) {
-              const client = clients.find(c => 
-                c.prenom === clientName[0] && c.nom === clientName[1]
-              );
-              if (client) {
-                await refreshClientBalance(client.id);
-              }
+        // Écouteur pour les changements dans la table deposits
+        const depositsChannel = supabase
+          .channel('deposit-changes')
+          .on('postgres_changes',
+            { event: '*', schema: 'public', table: 'deposits' },
+            (payload) => {
+              console.log("Changement détecté dans la table deposits:", payload);
+              fetchClients(); // Recharger tous les clients pour mettre à jour les soldes
             }
-          }
-        }
-      )
-      .subscribe();
+          )
+          .subscribe();
 
-    const transfersChannel = supabase
-      .channel('public:transfers')
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'transfers' },
-        async (payload: TransferPayload) => {
-          console.log("Changement détecté dans la table transfers:", payload);
-          const newRecord = payload.new as TransferRecord | null;
-          const oldRecord = payload.old as TransferRecord | null;
-
-          // Traiter à la fois le client source et le client destination
-          for (const record of [newRecord, oldRecord]) {
-            if (!record) continue;
-
-            if (record.from_client) {
-              const fromClientName = record.from_client.split(' ');
-              const fromClient = clients.find(c => 
-                c.prenom === fromClientName[0] && c.nom === fromClientName[1]
-              );
-              if (fromClient) {
-                await refreshClientBalance(fromClient.id);
-              }
+        // Écouteur pour les changements dans la table withdrawals
+        const withdrawalsChannel = supabase
+          .channel('withdrawal-changes')
+          .on('postgres_changes',
+            { event: '*', schema: 'public', table: 'withdrawals' },
+            (payload) => {
+              console.log("Changement détecté dans la table withdrawals:", payload);
+              fetchClients(); // Recharger tous les clients pour mettre à jour les soldes
             }
+          )
+          .subscribe();
 
-            if (record.to_client) {
-              const toClientName = record.to_client.split(' ');
-              const toClient = clients.find(c => 
-                c.prenom === toClientName[0] && c.nom === toClientName[1]
-              );
-              if (toClient) {
-                await refreshClientBalance(toClient.id);
-              }
+        // Écouteur pour les changements dans la table transfers
+        const transfersChannel = supabase
+          .channel('transfer-changes')
+          .on('postgres_changes',
+            { event: '*', schema: 'public', table: 'transfers' },
+            (payload) => {
+              console.log("Changement détecté dans la table transfers:", payload);
+              fetchClients(); // Recharger tous les clients pour mettre à jour les soldes
             }
-          }
-        }
-      )
-      .subscribe();
+          )
+          .subscribe();
 
-    return () => {
-      supabase.removeChannel(clientsChannel);
-      supabase.removeChannel(depositsChannel);
-      supabase.removeChannel(withdrawalsChannel);
-      supabase.removeChannel(transfersChannel);
+        // Nettoyer les écouteurs au démontage du composant
+        return () => {
+          supabase.removeChannel(clientsChannel);
+          supabase.removeChannel(depositsChannel);
+          supabase.removeChannel(withdrawalsChannel);
+          supabase.removeChannel(transfersChannel);
+        };
+      } catch (error) {
+        console.error("Erreur lors de la configuration des écouteurs en temps réel:", error);
+      }
     };
-  }, []);
+
+    const cleanup = setupRealtimeListeners();
+    return () => {
+      // Nettoyer les écouteurs au démontage du composant
+      cleanup.then(cleanupFn => {
+        if (cleanupFn) cleanupFn();
+      });
+    };
+  }, [fetchClients]);
 
   return {
     clients,
     loading,
+    error,
     fetchClients,
     createClient,
     updateClient,
