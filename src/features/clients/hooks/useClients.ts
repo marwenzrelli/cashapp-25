@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Client } from "../types";
 import { supabase } from "@/integrations/supabase/client"; 
@@ -41,18 +42,30 @@ type TransferPayload = RealtimePostgresChangesPayload<TransferRecord>;
 export const useClients = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const MAX_RETRIES = 3;
+  const RETRY_DELAY = 2000; // 2 secondes
 
-  const fetchClients = async () => {
+  const fetchClients = async (retry = 0) => {
     try {
       setLoading(true);
-      console.log("Chargement des clients...");
-      const { data: { session } } = await supabase.auth.getSession();
+      console.log(`Chargement des clients... (tentative ${retry + 1}/${MAX_RETRIES + 1})`);
       
-      if (!session) {
-        toast.error("Vous devez être connecté pour accéder aux clients");
-        return;
+      // Vérifier la session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.warn("Erreur lors de la récupération de la session:", sessionError);
+        // Continuer même sans session pour permettre la visualisation en mode déconnecté
+      }
+      
+      if (!session && retry === 0) {
+        // En première tentative, afficher un avertissement
+        console.warn("Aucune session active. Accès limité aux clients.");
+        // Ne pas retourner ici, permettre de continuer pour récupérer les clients publics
       }
 
+      // Récupérer les clients même sans session (si l'API le permet)
       const { data: clientsData, error: clientsError } = await supabase
         .from('clients')
         .select('*')
@@ -60,19 +73,57 @@ export const useClients = () => {
 
       if (clientsError) {
         console.error("Error fetching clients:", clientsError);
-        toast.error("Erreur lors du chargement des clients");
+        
+        // Stratégie de retry
+        if (retry < MAX_RETRIES) {
+          console.log(`Nouvelle tentative dans ${RETRY_DELAY/1000} secondes...`);
+          setTimeout(() => fetchClients(retry + 1), RETRY_DELAY);
+          return;
+        } else {
+          // Après plusieurs tentatives échouées, afficher un message d'erreur
+          toast.error("Erreur lors du chargement des clients", {
+            description: "Vérifiez votre connexion internet et réessayez."
+          });
+        }
         return;
       }
 
       if (!clientsData) {
+        console.warn("Aucun client récupéré");
+        setClients([]);
         return;
       }
 
       console.log("Clients récupérés:", clientsData);
+      
+      // Récupérer les clients sans calculer les soldes immédiatement
+      setClients(clientsData);
 
-      // Mettre à jour les soldes pour chaque client
+      // Mettre à jour les soldes en arrière-plan pour chaque client
+      updateClientBalances(clientsData);
+      
+    } catch (error) {
+      console.error("Error in fetchClients:", error);
+      
+      // Stratégie de retry en cas d'erreur générale
+      if (retry < MAX_RETRIES) {
+        console.log(`Nouvelle tentative dans ${RETRY_DELAY/1000} secondes...`);
+        setTimeout(() => fetchClients(retry + 1), RETRY_DELAY);
+      } else {
+        toast.error("Une erreur est survenue lors du chargement des clients", {
+          description: "Vérifiez votre connexion internet et réessayez."
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fonction pour mettre à jour les soldes en arrière-plan
+  const updateClientBalances = async (clientsList: Client[]) => {
+    try {
       const updatedClients = await Promise.all(
-        clientsData.map(async (client) => {
+        clientsList.map(async (client) => {
           try {
             const { data: balance, error: balanceError } = await supabase
               .rpc('calculate_client_balance', { client_id: client.id });
@@ -84,14 +135,18 @@ export const useClients = () => {
 
             console.log(`Solde calculé pour ${client.prenom} ${client.nom}:`, balance);
             
-            // Mise à jour du solde dans la base de données
-            const { error: updateError } = await supabase
-              .from('clients')
-              .update({ solde: balance || 0 })
-              .eq('id', client.id);
+            // Mise à jour du solde dans la base de données en arrière-plan
+            try {
+              const { error: updateError } = await supabase
+                .from('clients')
+                .update({ solde: balance || 0 })
+                .eq('id', client.id);
 
-            if (updateError) {
-              console.error("Erreur mise à jour solde pour client", client.id, ":", updateError);
+              if (updateError) {
+                console.error("Erreur mise à jour solde pour client", client.id, ":", updateError);
+              }
+            } catch (updateError) {
+              console.error("Exception lors de la mise à jour du solde:", updateError);
             }
 
             return {
@@ -108,10 +163,7 @@ export const useClients = () => {
       console.log("Clients avec soldes mis à jour:", updatedClients);
       setClients(updatedClients);
     } catch (error) {
-      console.error("Error in fetchClients:", error);
-      toast.error("Une erreur est survenue");
-    } finally {
-      setLoading(false);
+      console.error("Erreur globale lors de la mise à jour des soldes:", error);
     }
   };
 
@@ -132,11 +184,17 @@ export const useClients = () => {
 
       if (error) {
         console.error("Error creating client:", error);
-        toast.error("Erreur lors de la création du client");
+        toast.error("Erreur lors de la création du client", {
+          description: error.message
+        });
         return false;
       }
 
-      await fetchClients();
+      // Ajouter immédiatement le nouveau client à la liste locale
+      setClients(prevClients => [data, ...prevClients]);
+      
+      // Rafraîchir la liste complète en arrière-plan
+      fetchClients();
       return true;
     } catch (error) {
       console.error("Error in createClient:", error);
@@ -154,11 +212,19 @@ export const useClients = () => {
 
       if (error) {
         console.error("Error updating client:", error);
-        toast.error("Erreur lors de la mise à jour du client");
+        toast.error("Erreur lors de la mise à jour du client", {
+          description: error.message
+        });
         return false;
       }
 
-      await fetchClients();
+      // Mettre à jour le client localement pour une mise à jour immédiate de l'UI
+      setClients(prevClients => 
+        prevClients.map(c => c.id === id ? { ...c, ...client } : c)
+      );
+      
+      // Rafraîchir la liste complète en arrière-plan
+      fetchClients();
       return true;
     } catch (error) {
       console.error("Error in updateClient:", error);

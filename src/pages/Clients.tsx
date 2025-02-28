@@ -8,11 +8,13 @@ import { AISuggestion } from "@/features/clients/types";
 import { useClients } from "@/features/clients/hooks/useClients";
 import { useClientDialogs } from "@/features/clients/hooks/useClientDialogs";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 const Clients = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const { 
     clients,
+    loading,
     fetchClients,
     updateClient,
     deleteClient,
@@ -86,6 +88,14 @@ const Clients = () => {
 
   const handleCreateClient = async () => {
     console.log("Création d'un nouveau client:", newClient);
+    // Validation des champs requis
+    if (!newClient.prenom.trim() || !newClient.nom.trim() || !newClient.telephone.trim()) {
+      toast.error("Informations incomplètes", {
+        description: "Veuillez remplir au moins le prénom, le nom et le téléphone du client."
+      });
+      return;
+    }
+
     // Ajout du status par défaut 'active' lors de la création
     const clientData = {
       ...newClient,
@@ -127,11 +137,18 @@ const Clients = () => {
         />
       </div>
 
-      <ClientList
-        clients={filteredClients}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
+      {loading && clients.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 space-y-4">
+          <Loader2 className="h-12 w-12 text-primary animate-spin" />
+          <p className="text-muted-foreground">Chargement des clients...</p>
+        </div>
+      ) : (
+        <ClientList
+          clients={filteredClients}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      )}
 
       <ClientDialogs
         isCreateOpen={isDialogOpen}
