@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { UserPlus, Users, Shield, UserCog } from "lucide-react";
-import { SystemUser, UserRole } from "@/types/admin";
+import { UserRole } from "@/types/admin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/features/admin/components/StatCard";
 import { AddUserDialog } from "@/features/admin/components/AddUserDialog";
@@ -14,6 +14,7 @@ import { UserFilters } from "@/features/admin/components/UserFilters";
 import { useUsers } from "@/features/admin/hooks/useUsers";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { SystemAuditLog } from "@/features/admin/components/SystemAuditLog";
 
 const Administration = () => {
   const navigate = useNavigate();
@@ -193,6 +194,9 @@ const Administration = () => {
           />
         </CardContent>
       </Card>
+
+      {/* Journal des activités du système */}
+      <SystemAuditLog />
 
       <AddUserDialog
         isOpen={isAddUserOpen}
