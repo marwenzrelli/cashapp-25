@@ -25,6 +25,11 @@ export const ClientList = ({ clients, onEdit, onDelete }: ClientListProps) => {
     return "text-gray-600 dark:text-gray-400";
   };
 
+  // Fonction pour formater l'ID sur 3 chiffres
+  const formatClientId = (id: number): string => {
+    return id.toString().padStart(3, '0');
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -64,7 +69,7 @@ export const ClientList = ({ clients, onEdit, onDelete }: ClientListProps) => {
                           {client.prenom} {client.nom}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          ID: {client.id}
+                          ID: {formatClientId(client.id)}
                         </p>
                       </div>
                     </div>
