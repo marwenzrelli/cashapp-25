@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Client } from "../types";
 import { supabase } from "@/integrations/supabase/client"; 
 import { toast } from "sonner";
@@ -60,13 +60,27 @@ export const useClients = () => {
   const [error, setError] = useState<string | null>(null);
   const MAX_RETRIES = 3;
   const RETRY_DELAY = 3000; // 3 secondes
+  
+  // Utiliser une référence pour suivre si une notification d'erreur a déjà été affichée
+  const errorNotifiedRef = useRef(false);
+  // Utiliser une référence pour les opérations en cours
+  const fetchingRef = useRef(false);
 
   // Fonction de récupération des clients
-  const fetchClients = useCallback(async (retry = 0) => {
+  const fetchClients = useCallback(async (retry = 0, showToast = true) => {
+    // Si une récupération est déjà en cours, ne pas en démarrer une autre
+    if (fetchingRef.current) {
+      return;
+    }
+    
+    fetchingRef.current = true;
+    
     try {
       if (retry === 0) {
         setLoading(true);
         setError(null);
+        // Réinitialiser le drapeau de notification d'erreur lors d'une nouvelle tentative
+        errorNotifiedRef.current = false;
       }
       
       console.log(`Chargement des clients... (tentative ${retry + 1}/${MAX_RETRIES + 1})`);
@@ -101,7 +115,7 @@ export const useClients = () => {
         // Si nous n'avons pas atteint le nombre maximal de tentatives, réessayer
         if (retry < MAX_RETRIES) {
           console.log(`Nouvelle tentative dans ${RETRY_DELAY/1000} secondes...`);
-          setTimeout(() => fetchClients(retry + 1), RETRY_DELAY);
+          setTimeout(() => fetchClients(retry + 1, false), RETRY_DELAY);
           return;
         }
         
@@ -143,18 +157,26 @@ export const useClients = () => {
       
       if (retry < MAX_RETRIES) {
         console.log(`Nouvelle tentative dans ${RETRY_DELAY/1000} secondes...`);
-        setTimeout(() => fetchClients(retry + 1), RETRY_DELAY);
+        setTimeout(() => fetchClients(retry + 1, false), RETRY_DELAY);
         return;
       }
       
       setError(handleSupabaseError(error));
-      toast.error("Erreur de connexion", {
-        description: handleSupabaseError(error)
-      });
+      
+      // Afficher la notification d'erreur seulement si nous n'en avons pas encore affiché et si showToast est true
+      if (showToast && !errorNotifiedRef.current) {
+        toast.error("Erreur de connexion", {
+          description: handleSupabaseError(error),
+          id: "client-fetch-error", // ID unique pour éviter les duplications
+          duration: 5000, // Durée d'affichage de 5 secondes
+        });
+        errorNotifiedRef.current = true;
+      }
     } finally {
       if (retry === 0 || retry === MAX_RETRIES) {
         setLoading(false);
       }
+      fetchingRef.current = false;
     }
   }, []);
 
@@ -467,28 +489,29 @@ export const useClients = () => {
             { event: '*', schema: 'public', table: 'clients' },
             (payload) => {
               console.log("Changement détecté dans la table clients:", payload);
-              fetchClients();
+              // Utiliser showToast=false pour éviter de montrer des toasts d'erreur répétés
+              fetchClients(0, false);
             }
           )
           .on('postgres_changes',
             { event: '*', schema: 'public', table: 'deposits' },
             (payload) => {
               console.log("Changement détecté dans la table deposits:", payload);
-              fetchClients();
+              fetchClients(0, false);
             }
           )
           .on('postgres_changes',
             { event: '*', schema: 'public', table: 'withdrawals' },
             (payload) => {
               console.log("Changement détecté dans la table withdrawals:", payload);
-              fetchClients();
+              fetchClients(0, false);
             }
           )
           .on('postgres_changes',
             { event: '*', schema: 'public', table: 'transfers' },
             (payload) => {
               console.log("Changement détecté dans la table transfers:", payload);
-              fetchClients();
+              fetchClients(0, false);
             }
           )
           .subscribe((status) => {
