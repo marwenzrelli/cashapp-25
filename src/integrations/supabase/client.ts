@@ -18,9 +18,13 @@ export const supabase = createClient<Database>(
       autoRefreshToken: true,
     },
     global: {
-      fetch: (...args) => {
+      fetch: (input: RequestInfo | URL, init?: RequestInit) => {
         // Ajout d'un timeout plus long pour éviter les erreurs de connexion
-        return fetch(...args);
+        const fetchOptions: RequestInit = {
+          ...init,
+          // Si nécessaire, on peut ajouter des options supplémentaires ici
+        };
+        return fetch(input, fetchOptions);
       },
       headers: {
         'X-Client-Info': 'supabase-js-web/2.33.1',
