@@ -3,6 +3,7 @@ import { User, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { type Deposit } from "@/components/deposits/types";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 interface DepositsTableProps {
   deposits: Deposit[];
@@ -12,10 +13,19 @@ interface DepositsTableProps {
 }
 
 export const DepositsTable = ({ deposits, itemsPerPage, onEdit, onDelete }: DepositsTableProps) => {
+  const navigate = useNavigate();
+  
   const getAmountColor = (amount: number) => {
     if (amount > 0) return "text-green-600 dark:text-green-400";
     if (amount < 0) return "text-red-600 dark:text-red-400";
     return "text-gray-600 dark:text-gray-400";
+  };
+
+  const handleClientClick = (clientName: string) => {
+    // Cette fonction récupère l'ID du client à partir de son nom complet
+    // puis navigue vers sa page de profil
+    const [firstName, lastName] = clientName.split(' ');
+    navigate(`/clients?search=${encodeURIComponent(firstName + ' ' + lastName)}`);
   };
 
   return (
@@ -41,7 +51,12 @@ export const DepositsTable = ({ deposits, itemsPerPage, onEdit, onDelete }: Depo
                       <div className="absolute inset-0 animate-pulse rounded-full bg-primary/5" />
                     </div>
                     <div>
-                      <p className="font-medium">{deposit.client_name}</p>
+                      <p 
+                        className="font-medium cursor-pointer hover:text-primary transition-colors"
+                        onClick={() => handleClientClick(deposit.client_name)}
+                      >
+                        {deposit.client_name}
+                      </p>
                       <p className="text-sm text-muted-foreground">
                         #{deposit.id.toString().padStart(4, '0')}
                       </p>
@@ -92,7 +107,12 @@ export const DepositsTable = ({ deposits, itemsPerPage, onEdit, onDelete }: Depo
                   <div className="absolute inset-0 animate-pulse rounded-full bg-primary/5" />
                 </div>
                 <div>
-                  <p className="font-medium">{deposit.client_name}</p>
+                  <p 
+                    className="font-medium cursor-pointer hover:text-primary transition-colors"
+                    onClick={() => handleClientClick(deposit.client_name)}
+                  >
+                    {deposit.client_name}
+                  </p>
                   <p className="text-sm text-muted-foreground">
                     #{deposit.id.toString().padStart(4, '0')}
                   </p>
