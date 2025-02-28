@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { type Deposit } from "@/components/deposits/types";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface DepositsTableProps {
   deposits: Deposit[];
@@ -21,11 +23,33 @@ export const DepositsTable = ({ deposits, itemsPerPage, onEdit, onDelete }: Depo
     return "text-gray-600 dark:text-gray-400";
   };
 
-  const handleClientClick = (clientName: string) => {
-    // Cette fonction récupère l'ID du client à partir de son nom complet
-    // puis navigue vers sa page de profil
-    const [firstName, lastName] = clientName.split(' ');
-    navigate(`/clients?search=${encodeURIComponent(firstName + ' ' + lastName)}`);
+  const handleClientClick = async (clientName: string) => {
+    try {
+      // Rechercher le client par son nom complet
+      const [firstName, lastName] = clientName.split(' ');
+      
+      const { data, error } = await supabase
+        .from('clients')
+        .select('id')
+        .or(`prenom.ilike.${firstName},nom.ilike.${lastName}`)
+        .limit(1)
+        .single();
+      
+      if (error || !data) {
+        // Si le client n'est pas trouvé, on redirige vers la recherche
+        navigate(`/clients?search=${encodeURIComponent(clientName)}`);
+        return;
+      }
+      
+      // Rediriger vers la page de profil du client avec son ID
+      navigate(`/clients/${data.id}`);
+    } catch (error) {
+      console.error("Erreur lors de la recherche du client:", error);
+      toast.error("Impossible de trouver le profil du client");
+      
+      // En cas d'erreur, rediriger vers la recherche
+      navigate(`/clients?search=${encodeURIComponent(clientName)}`);
+    }
   };
 
   return (
