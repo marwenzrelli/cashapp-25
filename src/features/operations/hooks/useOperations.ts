@@ -88,11 +88,11 @@ export const useOperations = () => {
       const userId = session?.user?.id;
       
       console.log(`Début de la suppression de l'opération: ${operationToDelete.type} avec l'ID: ${operationToDelete.id}`);
+      console.log("Type de l'ID:", typeof operationToDelete.id);
       
       // Création d'un objet commun pour l'enregistrement dans deleted_transfers_log
       const currentDate = new Date().toISOString();
       const commonLogData = {
-        original_id: operationToDelete.id,
         deleted_by: userId || null,
         deleted_at: currentDate,
       };
@@ -111,26 +111,35 @@ export const useOperations = () => {
             throw depositFetchError;
           } else if (depositData) {
             console.log("Enregistrement dans deleted_transfers_log du versement:", depositData);
+            console.log("Type de l'ID:", typeof depositData.id);
+            
+            // Préparation des données pour l'insertion
+            const depositLogEntry = {
+              ...commonLogData,
+              original_id: depositData.id.toString(), // Conversion explicite en string
+              operation_type: 'deposit',
+              client_name: depositData.client_name,
+              amount: Number(depositData.amount),
+              operation_date: depositData.operation_date,
+              reason: depositData.notes || null,
+              from_client: depositData.client_name,
+              to_client: depositData.client_name,
+            };
+            
+            console.log("Données à insérer dans deleted_transfers_log pour le versement:", depositLogEntry);
             
             // Enregistrer dans deleted_transfers_log
-            const { error: depositLogError } = await supabase
+            const { data: depositLogData, error: depositLogError } = await supabase
               .from('deleted_transfers_log')
-              .insert({
-                ...commonLogData,
-                operation_type: 'deposit',
-                client_name: depositData.client_name,
-                amount: depositData.amount,
-                operation_date: depositData.operation_date,
-                reason: depositData.notes || null,
-                from_client: depositData.client_name,
-                to_client: depositData.client_name,
-              });
+              .insert(depositLogEntry)
+              .select();
             
             if (depositLogError) {
               console.error("Erreur lors de l'enregistrement dans deleted_transfers_log:", depositLogError);
+              console.error("Détails de l'erreur:", depositLogError.message, depositLogError.details, depositLogError.hint);
               throw depositLogError;
             } else {
-              console.log("Versement enregistré avec succès dans deleted_transfers_log");
+              console.log("Versement enregistré avec succès dans deleted_transfers_log:", depositLogData);
             }
             
             // Supprimer le versement
@@ -161,26 +170,35 @@ export const useOperations = () => {
             throw withdrawalFetchError;
           } else if (withdrawalData) {
             console.log("Enregistrement dans deleted_transfers_log du retrait:", withdrawalData);
+            console.log("Type de l'ID:", typeof withdrawalData.id);
+            
+            // Préparation des données pour l'insertion
+            const withdrawalLogEntry = {
+              ...commonLogData,
+              original_id: withdrawalData.id,
+              operation_type: 'withdrawal',
+              client_name: withdrawalData.client_name,
+              amount: Number(withdrawalData.amount),
+              operation_date: withdrawalData.operation_date,
+              reason: withdrawalData.notes || null,
+              from_client: withdrawalData.client_name,
+              to_client: withdrawalData.client_name,
+            };
+            
+            console.log("Données à insérer dans deleted_transfers_log pour le retrait:", withdrawalLogEntry);
             
             // Enregistrer dans deleted_transfers_log
-            const { error: withdrawalLogError } = await supabase
+            const { data: withdrawalLogData, error: withdrawalLogError } = await supabase
               .from('deleted_transfers_log')
-              .insert({
-                ...commonLogData,
-                operation_type: 'withdrawal',
-                client_name: withdrawalData.client_name,
-                amount: withdrawalData.amount,
-                operation_date: withdrawalData.operation_date,
-                reason: withdrawalData.notes || null,
-                from_client: withdrawalData.client_name,
-                to_client: withdrawalData.client_name,
-              });
+              .insert(withdrawalLogEntry)
+              .select();
             
             if (withdrawalLogError) {
               console.error("Erreur lors de l'enregistrement dans deleted_transfers_log:", withdrawalLogError);
+              console.error("Détails de l'erreur:", withdrawalLogError.message, withdrawalLogError.details, withdrawalLogError.hint);
               throw withdrawalLogError;
             } else {
-              console.log("Retrait enregistré avec succès dans deleted_transfers_log");
+              console.log("Retrait enregistré avec succès dans deleted_transfers_log:", withdrawalLogData);
             }
             
             // Supprimer le retrait
@@ -211,25 +229,35 @@ export const useOperations = () => {
             throw transferFetchError;
           } else if (transferData) {
             console.log("Enregistrement dans deleted_transfers_log du virement:", transferData);
+            console.log("Type de l'ID:", typeof transferData.id);
+            
+            // Préparation des données pour l'insertion
+            const transferLogEntry = {
+              ...commonLogData,
+              original_id: transferData.id,
+              operation_type: 'transfer',
+              amount: Number(transferData.amount),
+              operation_date: transferData.operation_date,
+              reason: transferData.reason,
+              from_client: transferData.from_client,
+              to_client: transferData.to_client,
+              client_name: transferData.from_client, // Utiliser le client source comme client principal
+            };
+            
+            console.log("Données à insérer dans deleted_transfers_log pour le virement:", transferLogEntry);
             
             // Enregistrer dans deleted_transfers_log
-            const { error: transferLogError } = await supabase
+            const { data: transferLogData, error: transferLogError } = await supabase
               .from('deleted_transfers_log')
-              .insert({
-                ...commonLogData,
-                operation_type: 'transfer',
-                amount: transferData.amount,
-                operation_date: transferData.operation_date,
-                reason: transferData.reason,
-                from_client: transferData.from_client,
-                to_client: transferData.to_client,
-              });
+              .insert(transferLogEntry)
+              .select();
             
             if (transferLogError) {
               console.error("Erreur lors de l'enregistrement dans deleted_transfers_log:", transferLogError);
+              console.error("Détails de l'erreur:", transferLogError.message, transferLogError.details, transferLogError.hint);
               throw transferLogError;
             } else {
-              console.log("Virement enregistré avec succès dans deleted_transfers_log");
+              console.log("Virement enregistré avec succès dans deleted_transfers_log:", transferLogData);
             }
             
             // Supprimer le virement
@@ -250,9 +278,11 @@ export const useOperations = () => {
       
       toast.success("Opération supprimée avec succès");
       await fetchAllOperations();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erreur lors de la suppression de l'opération:", error);
-      toast.error("Erreur lors de la suppression de l'opération");
+      toast.error("Erreur lors de la suppression de l'opération", {
+        description: error.message || "Une erreur s'est produite lors de la suppression."
+      });
     } finally {
       setShowDeleteDialog(false);
       setOperationToDelete(undefined);

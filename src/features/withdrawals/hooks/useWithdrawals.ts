@@ -116,14 +116,20 @@ export const useWithdrawals = () => {
         throw new Error("Retrait introuvable");
       }
       
-      console.log("Préparation à l'enregistrement dans deleted_transfers_log du retrait:", withdrawalData);
+      console.log("Récupération des détails du retrait réussie:", withdrawalData);
+      console.log("Préparation à l'enregistrement dans deleted_transfers_log du retrait", {
+        id: withdrawalData.id,
+        id_type: typeof withdrawalData.id,
+        amount: withdrawalData.amount,
+        amount_type: typeof withdrawalData.amount
+      });
       
       // Vérification et conversion explicite des types avant l'insertion
       const logEntry = {
-        original_id: withdrawalData.id,
+        original_id: withdrawalData.id, // Pas de conversion car déjà en UUID
         operation_type: 'withdrawal',
         client_name: withdrawalData.client_name,
-        amount: Number(withdrawalData.amount),
+        amount: Number(withdrawalData.amount), // Conversion explicite en number
         operation_date: withdrawalData.operation_date || withdrawalData.created_at,
         reason: withdrawalData.notes || null,
         from_client: withdrawalData.client_name,
@@ -132,7 +138,7 @@ export const useWithdrawals = () => {
         deleted_at: new Date().toISOString(),
       };
 
-      console.log("Données à insérer dans deleted_transfers_log:", logEntry);
+      console.log("Données à insérer dans deleted_transfers_log:", JSON.stringify(logEntry));
       
       // ÉTAPE 1: Vérifier la structure de la table deleted_transfers_log
       console.log("Structure attendue de la table deleted_transfers_log:");
