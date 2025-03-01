@@ -127,21 +127,32 @@ const Withdrawals = () => {
       }
 
       if (data) {
+        if (data.length > 0) {
+          console.log("Withdrawals.tsx - Premier retrait avec dates:", {
+            id: data[0].id,
+            created_at: data[0].created_at,
+            operation_date: data[0].operation_date,
+          });
+        }
+
         const formattedWithdrawals = data.map(withdrawal => {
-          console.log("Date d'opération brute:", withdrawal.operation_date);
-          // S'assurer que nous avons une date valide
           if (!withdrawal.operation_date) {
+            console.error("Date manquante pour le retrait:", withdrawal.id);
             return {
               ...withdrawal,
               formattedDate: "Date inconnue"
             };
           }
           
+          const formatted = formatDateTime(withdrawal.operation_date);
+          console.log(`Withdrawals.tsx - Retrait ${withdrawal.id}: Date brute = ${withdrawal.operation_date}, Formatée = ${formatted}`);
+          
           return {
             ...withdrawal,
-            formattedDate: formatDateTime(withdrawal.operation_date)
+            formattedDate: formatted
           };
         });
+        
         console.log("Retraits avec dates formatées dans Withdrawals.tsx:", formattedWithdrawals);
         setWithdrawals(formattedWithdrawals);
       }

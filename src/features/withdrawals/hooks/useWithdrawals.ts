@@ -45,6 +45,15 @@ export const useWithdrawals = () => {
         return;
       }
 
+      // Déboguer les dates reçues
+      if (data && data.length > 0) {
+        console.log("Exemple de premier retrait avec dates:", {
+          id: data[0].id,
+          created_at: data[0].created_at,
+          operation_date: data[0].operation_date,
+        });
+      }
+
       // Formatons chaque retrait avec son horodatage exact
       const formattedWithdrawals = data.map(withdrawal => {
         // Vérifier si la date est valide avant de la formater
@@ -56,10 +65,12 @@ export const useWithdrawals = () => {
           };
         }
         
-        console.log("Date brute du retrait:", withdrawal.operation_date);
+        const formatted = formatDateTime(withdrawal.operation_date);
+        console.log(`Retrait ${withdrawal.id}: Date brute = ${withdrawal.operation_date}, Formatée = ${formatted}`);
+        
         return {
           ...withdrawal,
-          formattedDate: formatDateTime(withdrawal.operation_date)
+          formattedDate: formatted
         };
       });
 
