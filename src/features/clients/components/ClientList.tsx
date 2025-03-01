@@ -1,4 +1,3 @@
-
 import { Client } from "../types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Eye, Edit, Trash2, CreditCard, QrCode, User, Phone, Mail, Calendar } from "lucide-react";
@@ -6,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface ClientListProps {
   clients: Client[];
@@ -15,8 +15,8 @@ interface ClientListProps {
 
 export const ClientList = ({ clients, onEdit, onDelete }: ClientListProps) => {
   const navigate = useNavigate();
+  const { currency } = useCurrency();
 
-  // Fonction pour naviguer vers le profil du client avec son ID
   const navigateToClientProfile = (clientId: number) => {
     console.log("Navigation vers le profil client:", clientId);
     navigate(`/clients/${clientId}`);
@@ -83,7 +83,7 @@ export const ClientList = ({ clients, onEdit, onDelete }: ClientListProps) => {
                   </div>
                   <div className="flex items-center text-sm">
                     <span className={`${client.solde >= 0 ? 'text-green-600' : 'text-red-600'} font-semibold`}>
-                      {client.solde.toLocaleString()} €
+                      {client.solde.toLocaleString()} {currency}
                     </span>
                   </div>
                 </div>
@@ -151,7 +151,7 @@ export const ClientList = ({ clients, onEdit, onDelete }: ClientListProps) => {
                 
                 <div className="col-span-2 font-medium">
                   <span className={`${client.solde >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {client.solde.toLocaleString()} €
+                    {client.solde.toLocaleString()} {currency}
                   </span>
                 </div>
                 
