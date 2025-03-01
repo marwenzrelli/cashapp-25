@@ -1,21 +1,7 @@
-
 import { useState, useEffect } from "react";
-import { Operation } from "@/features/operations/types";
+import { Operation, formatDateTime } from "@/features/operations/types";
 import { Client } from "@/features/clients/types";
 import { supabase } from "@/integrations/supabase/client";
-
-// Fonction utilitaire pour formater la date avec l'heure en format 24h
-export const formatDateTime = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('fr-FR', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false
-  });
-};
 
 export const usePublicClientProfile = (token: string | undefined) => {
   const [client, setClient] = useState<Client | null>(null);

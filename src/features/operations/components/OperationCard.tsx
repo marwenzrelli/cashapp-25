@@ -2,7 +2,7 @@
 import { Operation } from "../types";
 import { Button } from "@/components/ui/button";
 import { Edit2, Trash2, ArrowUpCircle, ArrowDownCircle, RefreshCcw, User } from "lucide-react";
-import { format } from "date-fns";
+import { formatDateTime } from "../types";
 
 interface OperationCardProps {
   operation: Operation;
@@ -68,7 +68,7 @@ export const OperationCard = ({ operation, onEdit, onDelete }: OperationCardProp
             <span className="text-xs text-muted-foreground">#{operation.id.slice(0, 4)}</span>
           </div>
           <div className="text-sm text-muted-foreground flex items-center gap-1.5 overflow-hidden">
-            <span className="whitespace-nowrap">{format(new Date(operation.date), "dd/MM/yyyy HH:mm:ss")}</span>
+            <span className="whitespace-nowrap">{operation.formattedDate || formatDateTime(operation.date)}</span>
             <div className="flex items-center gap-1">
               <User className="h-3 w-3" />
               {operation.type === "transfer" ? (
