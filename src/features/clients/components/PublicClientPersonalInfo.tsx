@@ -15,8 +15,6 @@ interface PublicClientPersonalInfoProps {
 export const PublicClientPersonalInfo = ({ client }: PublicClientPersonalInfoProps) => {
   const { currency } = useCurrency();
   
-  const formatAmount = (amount: number) => `${amount.toLocaleString()} ${currency}`;
-  
   return (
     <Card className="backdrop-blur-xl bg-white/50 dark:bg-gray-950/50 md:col-span-3">
       <CardHeader>
@@ -28,7 +26,7 @@ export const PublicClientPersonalInfo = ({ client }: PublicClientPersonalInfoPro
       <CardContent>
         <div className="grid gap-6 md:grid-cols-3">
           <div className="md:col-span-2">
-            <PersonalInfoFields client={client} formatAmount={formatAmount} />
+            <PersonalInfoFields client={client} />
           </div>
           <div className="mt-0">
             <div className="flex items-start gap-3">
