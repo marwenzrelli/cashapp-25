@@ -340,6 +340,23 @@ const Withdrawals = () => {
     }
   };
 
+  const findClientById = (clientFullName: string) => {
+    if (!clientFullName) return null;
+    
+    const [firstName, lastName] = clientFullName.split(' ');
+    
+    const client = clients.find(c => 
+      c.prenom.toLowerCase() === firstName?.toLowerCase() && 
+      c.nom.toLowerCase() === lastName?.toLowerCase()
+    );
+    
+    if (client) return client;
+    
+    return clients.find(c => 
+      `${c.prenom} ${c.nom}`.toLowerCase().includes(clientFullName.toLowerCase())
+    ) || null;
+  };
+
   return (
     <div className="space-y-8 animate-in">
       <div>
@@ -537,10 +554,7 @@ const Withdrawals = () => {
               </thead>
               <tbody>
                 {withdrawals.slice(0, parseInt(itemsPerPage)).map((withdrawal) => {
-                  const clientName = withdrawal.client_name.split(' ');
-                  const client = clients.find(c => 
-                    c.prenom === clientName[0] && c.nom === clientName[1]
-                  );
+                  const client = findClientById(withdrawal.client_name);
                   
                   return (
                     <tr key={withdrawal.id} className="group border-b hover:bg-muted/50 transition-colors">
@@ -553,7 +567,7 @@ const Withdrawals = () => {
                           <div>
                             <p className="font-medium">{withdrawal.client_name}</p>
                             <p className="text-sm text-muted-foreground">
-                              ID: {client?.id || 'N/A'}
+                              ID: {client ? client.id : 'Non trouvé'}
                             </p>
                           </div>
                         </div>
