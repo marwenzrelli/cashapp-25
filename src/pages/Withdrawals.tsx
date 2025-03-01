@@ -127,6 +127,7 @@ const Withdrawals = () => {
       }
 
       if (data) {
+        // Format the operation_date for consistent display, using the same approach as in Deposits.tsx
         const formattedWithdrawals = data.map(withdrawal => ({
           ...withdrawal,
           formattedDate: formatDateTime(withdrawal.operation_date)

@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { formatDateTime } from "@/features/operations/types";
 
 interface Withdrawal {
   id: string;
@@ -14,8 +13,21 @@ interface Withdrawal {
   notes: string | null;
   status: string;
   created_by: string | null;
-  formattedDate?: string; // Format de date lisible
+  formattedDate?: string;
 }
+
+// Fonction utilitaire pour formater la date avec l'heure en format 24h - comme dans useDeposits.ts
+const formatDateTime = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('fr-FR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
+};
 
 export const useWithdrawals = () => {
   const navigate = useNavigate();
@@ -45,7 +57,7 @@ export const useWithdrawals = () => {
         return;
       }
 
-      // Format the operation_date for consistent display
+      // Format the operation_date for consistent display, using the same approach as in useDeposits
       const formattedWithdrawals = data.map(withdrawal => ({
         ...withdrawal,
         formattedDate: formatDateTime(withdrawal.operation_date)
