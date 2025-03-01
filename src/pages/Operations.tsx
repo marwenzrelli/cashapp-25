@@ -89,6 +89,12 @@ const Operations = () => {
     doc.save("operations-report.pdf");
   };
 
+  // Wrapper for confirmDeleteOperation to match the expected signature
+  const handleDeleteOperation = async (id: string | number) => {
+    await confirmDeleteOperation();
+    return true; // Return true to indicate successful deletion
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -144,7 +150,7 @@ const Operations = () => {
       <DeleteOperationDialog
         isOpen={showDeleteDialog}
         onClose={() => setShowDeleteDialog(false)}
-        onDelete={confirmDeleteOperation}
+        onDelete={handleDeleteOperation}
         operation={operationToDelete}
       />
     </div>
