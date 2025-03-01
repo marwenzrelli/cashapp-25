@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { UserPlus, Users, Shield, UserCog } from "lucide-react";
+import { UserPlus, Users, Shield, UserCog, RefreshCw } from "lucide-react";
 import { UserRole } from "@/types/admin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/features/admin/components/StatCard";
@@ -15,9 +15,11 @@ import { useUsers } from "@/features/admin/hooks/useUsers";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SystemAuditLog } from "@/features/admin/components/SystemAuditLog";
+import { useQueryClient } from "@tanstack/react-query";
 
 const Administration = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { 
     users, 
     currentUser, 
@@ -42,6 +44,13 @@ const Administration = () => {
         user.department === selectedDepartment) &&
       (selectedRole === "all" || user.role === selectedRole)
   );
+
+  // Handle manual refresh of audit logs
+  const refreshAuditLogs = () => {
+    queryClient.invalidateQueries({ queryKey: ['deleted-operations'] });
+    queryClient.invalidateQueries({ queryKey: ['recent-operations'] });
+    toast.success("Journaux d'activité mis à jour");
+  };
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -196,6 +205,13 @@ const Administration = () => {
       </Card>
 
       {/* Journal des activités du système */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-semibold">Journal d'activité du système</h2>
+        <Button variant="outline" onClick={refreshAuditLogs} className="flex items-center gap-2">
+          <RefreshCw className="h-4 w-4" />
+          Rafraîchir
+        </Button>
+      </div>
       <SystemAuditLog />
 
       <AddUserDialog

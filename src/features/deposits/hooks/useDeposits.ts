@@ -157,6 +157,9 @@ export const useDeposits = () => {
       }
 
       console.log("Détails du dépôt à supprimer:", depositToDelete);
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
 
       try {
         const { error: logError } = await supabase
@@ -165,16 +168,18 @@ export const useDeposits = () => {
             original_id: depositToDelete.id.toString(),
             from_client: depositToDelete.client_name,
             to_client: depositToDelete.client_name,
+            client_name: depositToDelete.client_name,
             amount: depositToDelete.amount,
             operation_date: depositToDelete.operation_date,
             operation_type: 'deposit',
             reason: depositToDelete.notes || 'Aucune raison fournie',
             deleted_at: new Date().toISOString(),
-            client_name: depositToDelete.client_name
+            deleted_by: userId
           });
 
         if (logError) {
           console.error("Erreur lors de la création du log de suppression:", logError);
+          console.error("Détails complets de l'erreur:", JSON.stringify(logError));
         } else {
           console.log("Log de suppression créé avec succès");
         }

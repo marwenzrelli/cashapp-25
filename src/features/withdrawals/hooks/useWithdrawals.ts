@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Withdrawal } from "../types";
 import { supabase } from "@/integrations/supabase/client";
@@ -51,7 +50,6 @@ export const useWithdrawals = () => {
       const transformedWithdrawals = data.map(withdrawal => {
         const createdAtIso = withdrawal.created_at;
         
-        // We've confirmed that formatDate already handles null values properly
         const formattedDate = formatDate(createdAtIso);
         
         return {
@@ -93,7 +91,6 @@ export const useWithdrawals = () => {
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id;
       
-      // Récupérer les détails complets du retrait avant la suppression
       const { data: withdrawalData, error: fetchError } = await supabase
         .from('withdrawals')
         .select('*')
@@ -117,19 +114,12 @@ export const useWithdrawals = () => {
       }
       
       console.log("Récupération des détails du retrait réussie:", withdrawalData);
-      console.log("Préparation à l'enregistrement dans deleted_transfers_log du retrait", {
-        id: withdrawalData.id,
-        id_type: typeof withdrawalData.id,
-        amount: withdrawalData.amount,
-        amount_type: typeof withdrawalData.amount
-      });
       
-      // Vérification et conversion explicite des types avant l'insertion
       const logEntry = {
-        original_id: withdrawalData.id, // Pas de conversion car déjà en UUID
+        original_id: withdrawalData.id, 
         operation_type: 'withdrawal',
         client_name: withdrawalData.client_name,
-        amount: Number(withdrawalData.amount), // Conversion explicite en number
+        amount: Number(withdrawalData.amount),
         operation_date: withdrawalData.operation_date || withdrawalData.created_at,
         reason: withdrawalData.notes || null,
         from_client: withdrawalData.client_name,
@@ -140,21 +130,6 @@ export const useWithdrawals = () => {
 
       console.log("Données à insérer dans deleted_transfers_log:", JSON.stringify(logEntry));
       
-      // ÉTAPE 1: Vérifier la structure de la table deleted_transfers_log
-      console.log("Structure attendue de la table deleted_transfers_log:");
-      console.log("- id: uuid (généré automatiquement)");
-      console.log("- original_id: string/uuid");
-      console.log("- operation_type: string ('withdrawal')");
-      console.log("- client_name: string");
-      console.log("- amount: number");
-      console.log("- operation_date: timestamp");
-      console.log("- reason: string | null");
-      console.log("- from_client: string");
-      console.log("- to_client: string");
-      console.log("- deleted_by: uuid | null");
-      console.log("- deleted_at: timestamp");
-      
-      // Enregistrer d'abord dans deleted_transfers_log
       const { data: logData, error: logError } = await supabase
         .from('deleted_transfers_log')
         .insert(logEntry)
@@ -164,15 +139,11 @@ export const useWithdrawals = () => {
         console.error("Erreur lors de l'enregistrement dans deleted_transfers_log:", logError);
         console.error("Détails de l'erreur:", logError.message, logError.details, logError.hint);
         console.error("Code de l'erreur:", logError.code);
-        toast.error("Erreur lors de l'enregistrement du log de suppression", {
-          description: logError.message
-        });
-        throw logError; // Arrêter le processus en cas d'échec de l'enregistrement du log
+        throw logError;
       } 
       
       console.log("Retrait enregistré avec succès dans deleted_transfers_log, données retournées:", logData);
       
-      // ÉTAPE 2: Supprimer le retrait SEULEMENT si l'enregistrement du log a réussi
       const { error: deleteError } = await supabase
         .from('withdrawals')
         .delete()
@@ -189,13 +160,14 @@ export const useWithdrawals = () => {
       console.log("Retrait supprimé avec succès, ID:", withdrawalToDelete.id);
       toast.success("Retrait supprimé avec succès");
       
-      // Rafraîchir la liste
       fetchWithdrawals();
+      return true;
     } catch (error: any) {
       console.error("Erreur lors de la suppression du retrait:", error);
       toast.error("Erreur lors de la suppression", {
         description: error.message || "Une erreur s'est produite lors de la suppression du retrait.",
       });
+      return false;
     } finally {
       setLoading(false);
       setWithdrawalToDelete(null);
@@ -207,7 +179,6 @@ export const useWithdrawals = () => {
     fetchWithdrawals();
   }, []);
 
-  // Rename 'loading' to 'isLoading' in the returned object to match what's expected
   return {
     withdrawals,
     isLoading: loading,

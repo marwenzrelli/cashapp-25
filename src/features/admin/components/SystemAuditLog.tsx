@@ -49,112 +49,120 @@ interface OperationLogEntry {
 
 const fetchDeletedOperations = async () => {
   console.log("Début de la récupération des opérations supprimées");
-  const { data: deletedData, error: deletedError } = await supabase
-    .from('deleted_transfers_log')
-    .select('*')
-    .order('deleted_at', { ascending: false });
+  try {
+    const { data: deletedData, error: deletedError } = await supabase
+      .from('deleted_transfers_log')
+      .select('*')
+      .order('deleted_at', { ascending: false });
 
-  if (deletedError) {
-    console.error("Erreur lors de la récupération des opérations supprimées:", deletedError);
-    toast.error("Erreur lors de la récupération des opérations supprimées");
-    throw deletedError;
-  }
+    if (deletedError) {
+      console.error("Erreur lors de la récupération des opérations supprimées:", deletedError);
+      toast.error("Erreur lors de la récupération des opérations supprimées");
+      throw deletedError;
+    }
 
-  // Log the data to help debug
-  console.log("Données des opérations supprimées:", deletedData);
-  console.log("Nombre d'opérations supprimées récupérées:", deletedData ? deletedData.length : 0);
+    // Log the data to help debug
+    console.log("Données des opérations supprimées:", deletedData);
+    console.log("Nombre d'opérations supprimées récupérées:", deletedData ? deletedData.length : 0);
 
-  // Get user details for deleted_by IDs
-  const userIds = [...new Set(deletedData.map(item => item.deleted_by))].filter(Boolean);
-  console.log("Récupération des détails pour les utilisateurs:", userIds);
-  
-  let usersMap: Record<string, string> = {};
-  
-  if (userIds.length > 0) {
-    const { data: userData, error: userError } = await supabase
-      .from('profiles')
-      .select('id, full_name')
-      .in('id', userIds);
+    // Get user details for deleted_by IDs
+    const userIds = deletedData
+      .map(item => item.deleted_by)
+      .filter(id => id !== null && id !== undefined);
+      
+    console.log("Récupération des détails pour les utilisateurs:", userIds);
     
-    if (userError) {
-      console.error("Erreur lors de la récupération des utilisateurs:", userError);
-    } else {
-      console.log("Données utilisateurs récupérées:", userData);
-      usersMap = (userData || []).reduce((acc, user) => {
-        acc[user.id] = user.full_name;
-        return acc;
-      }, {} as Record<string, string>);
+    let usersMap: Record<string, string> = {};
+    
+    if (userIds.length > 0) {
+      const { data: userData, error: userError } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .in('id', userIds);
+      
+      if (userError) {
+        console.error("Erreur lors de la récupération des utilisateurs:", userError);
+      } else {
+        console.log("Données utilisateurs récupérées:", userData);
+        usersMap = (userData || []).reduce((acc, user) => {
+          acc[user.id] = user.full_name;
+          return acc;
+        }, {} as Record<string, string>);
+      }
     }
-  }
 
-  // Format deleted operations for unified view
-  const formattedDeletedOperations = deletedData.map((transaction: DeletedTransaction) => {
-    let type = transaction.operation_type;
-    let description = '';
-    let clientInfo: any = {};
+    // Format deleted operations for unified view
+    const formattedDeletedOperations = deletedData.map((transaction: DeletedTransaction) => {
+      let type = transaction.operation_type;
+      let description = '';
+      let clientInfo: any = {};
 
-    if (type === 'deposit') {
-      description = `Versement supprimé pour ${transaction.client_name}`;
-      clientInfo = { client_name: transaction.client_name };
-    } else if (type === 'withdrawal') {
-      description = `Retrait supprimé pour ${transaction.client_name}`;
-      clientInfo = { client_name: transaction.client_name };
-    } else if (type === 'transfer') {
-      description = `Virement supprimé de ${transaction.from_client} vers ${transaction.to_client}`;
-      clientInfo = { 
-        from_client: transaction.from_client,
-        to_client: transaction.to_client
+      if (type === 'deposit') {
+        description = `Versement supprimé pour ${transaction.client_name}`;
+        clientInfo = { client_name: transaction.client_name };
+      } else if (type === 'withdrawal') {
+        description = `Retrait supprimé pour ${transaction.client_name}`;
+        clientInfo = { client_name: transaction.client_name };
+      } else if (type === 'transfer') {
+        description = `Virement supprimé de ${transaction.from_client} vers ${transaction.to_client}`;
+        clientInfo = { 
+          from_client: transaction.from_client,
+          to_client: transaction.to_client
+        };
+      }
+
+      return {
+        id: transaction.id,
+        type,
+        amount: transaction.amount,
+        date: format(new Date(transaction.deleted_at), 'dd/MM/yyyy HH:mm'),
+        created_by: transaction.deleted_by,
+        created_by_name: usersMap[transaction.deleted_by] || 'Utilisateur inconnu',
+        description,
+        ...clientInfo
       };
-    }
+    });
 
     return {
-      id: transaction.id,
-      type,
-      amount: transaction.amount,
-      date: format(new Date(transaction.deleted_at), 'dd/MM/yyyy HH:mm'),
-      created_by: transaction.deleted_by,
-      created_by_name: usersMap[transaction.deleted_by] || 'Utilisateur inconnu',
-      description,
-      ...clientInfo
+      deletedOperations: formattedDeletedOperations,
+      deposits: deletedData.filter(transaction => transaction.operation_type === 'deposit')
+        .map((transaction: DeletedTransaction) => ({
+          id: transaction.id,
+          action_type: 'Versement supprimé',
+          action_date: format(new Date(transaction.deleted_at), 'dd/MM/yyyy HH:mm'),
+          performed_by: usersMap[transaction.deleted_by] || 'Utilisateur inconnu',
+          details: `Versement supprimé pour ${transaction.client_name}`,
+          target_id: transaction.original_id,
+          target_name: transaction.client_name || '',
+          amount: transaction.amount
+        })),
+      withdrawals: deletedData.filter(transaction => transaction.operation_type === 'withdrawal')
+        .map((transaction: DeletedTransaction) => ({
+          id: transaction.id,
+          action_type: 'Retrait supprimé',
+          action_date: format(new Date(transaction.deleted_at), 'dd/MM/yyyy HH:mm'),
+          performed_by: usersMap[transaction.deleted_by] || 'Utilisateur inconnu',
+          details: `Retrait supprimé pour ${transaction.client_name}`,
+          target_id: transaction.original_id,
+          target_name: transaction.client_name || '',
+          amount: transaction.amount
+        })),
+      transfers: deletedData.filter(transaction => transaction.operation_type === 'transfer')
+        .map((transaction: DeletedTransaction) => ({
+          id: transaction.id,
+          action_type: 'Virement supprimé',
+          action_date: format(new Date(transaction.deleted_at), 'dd/MM/yyyy HH:mm'),
+          performed_by: usersMap[transaction.deleted_by] || 'Utilisateur inconnu',
+          details: `Virement de ${transaction.from_client} vers ${transaction.to_client}`,
+          target_id: transaction.original_id,
+          target_name: `${transaction.from_client} → ${transaction.to_client}`,
+          amount: transaction.amount
+        }))
     };
-  });
-
-  return {
-    deletedOperations: formattedDeletedOperations,
-    deposits: deletedData.filter(transaction => transaction.operation_type === 'deposit')
-      .map((transaction: DeletedTransaction) => ({
-        id: transaction.id,
-        action_type: 'Versement supprimé',
-        action_date: format(new Date(transaction.deleted_at), 'dd/MM/yyyy HH:mm'),
-        performed_by: usersMap[transaction.deleted_by] || 'Utilisateur inconnu',
-        details: `Versement supprimé pour ${transaction.client_name}`,
-        target_id: transaction.original_id,
-        target_name: transaction.client_name || '',
-        amount: transaction.amount
-      })),
-    withdrawals: deletedData.filter(transaction => transaction.operation_type === 'withdrawal')
-      .map((transaction: DeletedTransaction) => ({
-        id: transaction.id,
-        action_type: 'Retrait supprimé',
-        action_date: format(new Date(transaction.deleted_at), 'dd/MM/yyyy HH:mm'),
-        performed_by: usersMap[transaction.deleted_by] || 'Utilisateur inconnu',
-        details: `Retrait supprimé pour ${transaction.client_name}`,
-        target_id: transaction.original_id,
-        target_name: transaction.client_name || '',
-        amount: transaction.amount
-      })),
-    transfers: deletedData.filter(transaction => transaction.operation_type === 'transfer')
-      .map((transaction: DeletedTransaction) => ({
-        id: transaction.id,
-        action_type: 'Virement supprimé',
-        action_date: format(new Date(transaction.deleted_at), 'dd/MM/yyyy HH:mm'),
-        performed_by: usersMap[transaction.deleted_by] || 'Utilisateur inconnu',
-        details: `Virement de ${transaction.from_client} vers ${transaction.to_client}`,
-        target_id: transaction.original_id,
-        target_name: `${transaction.from_client} → ${transaction.to_client}`,
-        amount: transaction.amount
-      }))
-  };
+  } catch (error) {
+    console.error("Erreur complète dans fetchDeletedOperations:", error);
+    throw error;
+  }
 };
 
 const fetchRecentOperations = async () => {
@@ -252,8 +260,9 @@ export const SystemAuditLog = () => {
   const { data: deletedData, isLoading: isLoadingDeleted, refetch: refetchDeleted } = useQuery({
     queryKey: ['deleted-operations'],
     queryFn: fetchDeletedOperations,
-    staleTime: 60000, // Les données restent "fresh" pendant 1 minute
-    refetchOnWindowFocus: true
+    staleTime: 5000, // Reduce stale time to 5 seconds for faster refreshes
+    refetchOnWindowFocus: true,
+    refetchInterval: 10000 // Auto refresh every 10 seconds
   });
   
   // Utilisez React Query pour charger les données des opérations récentes

@@ -33,7 +33,7 @@ const fetchTransfersData = async (): Promise<Transfer[]> => {
     
     return [];
   } catch (error) {
-    console.error("Error in fetchTransfers:", error);
+    console.error("Error in fetchTransfersData:", error);
     toast.error("Une erreur est survenue");
     throw error;
   }
