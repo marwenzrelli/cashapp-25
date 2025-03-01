@@ -87,6 +87,9 @@ export const useWithdrawals = () => {
     setLoading(true);
     
     try {
+      console.log("Début de la suppression du retrait avec ID:", withdrawalToDelete.id);
+      console.log("Type de l'ID:", typeof withdrawalToDelete.id);
+      
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id;
       
@@ -115,37 +118,53 @@ export const useWithdrawals = () => {
       
       console.log("Préparation à l'enregistrement dans deleted_transfers_log du retrait:", withdrawalData);
       
-      // S'assurer que l'enregistrement dans deleted_transfers_log contient tous les champs nécessaires
+      // Vérification et conversion explicite des types avant l'insertion
       const logEntry = {
-        original_id: withdrawalToDelete.id,
+        original_id: withdrawalData.id,
         operation_type: 'withdrawal',
         client_name: withdrawalData.client_name,
-        amount: withdrawalData.amount,
+        amount: Number(withdrawalData.amount),
         operation_date: withdrawalData.operation_date || withdrawalData.created_at,
         reason: withdrawalData.notes || null,
-        from_client: withdrawalData.client_name, // Pour maintenir la structure de la table
-        to_client: withdrawalData.client_name, // Pour maintenir la structure de la table
+        from_client: withdrawalData.client_name,
+        to_client: withdrawalData.client_name,
         deleted_by: userId || null,
         deleted_at: new Date().toISOString(),
       };
 
       console.log("Données à insérer dans deleted_transfers_log:", logEntry);
       
-      // ÉTAPE 1: Enregistrer d'abord dans deleted_transfers_log
-      const { error: logError } = await supabase
+      // ÉTAPE 1: Vérifier la structure de la table deleted_transfers_log
+      console.log("Structure attendue de la table deleted_transfers_log:");
+      console.log("- id: uuid (généré automatiquement)");
+      console.log("- original_id: string/uuid");
+      console.log("- operation_type: string ('withdrawal')");
+      console.log("- client_name: string");
+      console.log("- amount: number");
+      console.log("- operation_date: timestamp");
+      console.log("- reason: string | null");
+      console.log("- from_client: string");
+      console.log("- to_client: string");
+      console.log("- deleted_by: uuid | null");
+      console.log("- deleted_at: timestamp");
+      
+      // Enregistrer d'abord dans deleted_transfers_log
+      const { data: logData, error: logError } = await supabase
         .from('deleted_transfers_log')
-        .insert(logEntry);
+        .insert(logEntry)
+        .select();
         
       if (logError) {
         console.error("Erreur lors de l'enregistrement dans deleted_transfers_log:", logError);
         console.error("Détails de l'erreur:", logError.message, logError.details, logError.hint);
+        console.error("Code de l'erreur:", logError.code);
         toast.error("Erreur lors de l'enregistrement du log de suppression", {
           description: logError.message
         });
         throw logError; // Arrêter le processus en cas d'échec de l'enregistrement du log
       } 
       
-      console.log("Retrait enregistré avec succès dans deleted_transfers_log");
+      console.log("Retrait enregistré avec succès dans deleted_transfers_log, données retournées:", logData);
       
       // ÉTAPE 2: Supprimer le retrait SEULEMENT si l'enregistrement du log a réussi
       const { error: deleteError } = await supabase
