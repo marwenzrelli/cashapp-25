@@ -45,10 +45,18 @@ export const useWithdrawals = () => {
         return;
       }
 
-      // Formatons chaque retrait avec sa date exacte
+      // Formatons chaque retrait avec son horodatage exact
       const formattedWithdrawals = data.map(withdrawal => {
+        // Vérifier si la date est valide avant de la formater
+        if (!withdrawal.operation_date) {
+          console.error("Date manquante pour le retrait:", withdrawal.id);
+          return {
+            ...withdrawal,
+            formattedDate: "Date inconnue"
+          };
+        }
+        
         console.log("Date brute du retrait:", withdrawal.operation_date);
-        // Utiliser la date d'opération pour l'affichage
         return {
           ...withdrawal,
           formattedDate: formatDateTime(withdrawal.operation_date)

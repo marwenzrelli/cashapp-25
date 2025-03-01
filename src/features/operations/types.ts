@@ -34,7 +34,7 @@ export const formatDateTime = (dateString: string) => {
     return "Date invalide";
   }
   
-  // Formatage complet de la date et de l'heure
+  // Formatage complet de la date et de l'heure avec les secondes pour plus de précision
   return date.toLocaleString('fr-FR', {
     year: 'numeric',
     month: '2-digit',

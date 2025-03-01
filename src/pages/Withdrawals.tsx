@@ -129,6 +129,14 @@ const Withdrawals = () => {
       if (data) {
         const formattedWithdrawals = data.map(withdrawal => {
           console.log("Date d'opération brute:", withdrawal.operation_date);
+          // S'assurer que nous avons une date valide
+          if (!withdrawal.operation_date) {
+            return {
+              ...withdrawal,
+              formattedDate: "Date inconnue"
+            };
+          }
+          
           return {
             ...withdrawal,
             formattedDate: formatDateTime(withdrawal.operation_date)
