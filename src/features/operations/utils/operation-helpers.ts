@@ -1,5 +1,6 @@
 
 import { ReactNode } from "react";
+import * as React from "react";
 import { ArrowUpCircle, ArrowDownCircle, RefreshCcw } from "lucide-react";
 import { Operation } from "../types";
 
@@ -17,11 +18,11 @@ export const getTypeStyle = (type: Operation["type"]) => {
 export const getTypeIcon = (type: Operation["type"]): ReactNode => {
   switch (type) {
     case "deposit":
-      return <ArrowUpCircle className="h-4 w-4" />;
+      return React.createElement(ArrowUpCircle, { className: "h-4 w-4" });
     case "withdrawal":
-      return <ArrowDownCircle className="h-4 w-4" />;
+      return React.createElement(ArrowDownCircle, { className: "h-4 w-4" });
     case "transfer":
-      return <RefreshCcw className="h-4 w-4" />;
+      return React.createElement(RefreshCcw, { className: "h-4 w-4" });
   }
 };
 
