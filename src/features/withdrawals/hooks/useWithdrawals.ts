@@ -122,6 +122,7 @@ export const useWithdrawals = () => {
         });
         
         // Formater la date avec contrôle de valeur null
+        // Utiliser le formatDate qui gère déjà les valeurs null
         const formattedDate = formatDate(operationDateIso);
         
         return {
