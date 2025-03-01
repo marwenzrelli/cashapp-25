@@ -73,10 +73,10 @@ export const useClientsPage = () => {
 
   const handleCreateClient = async () => {
     console.log("Création d'un nouveau client:", newClient);
-    // Validation des champs requis
-    if (!newClient.prenom.trim() || !newClient.nom.trim() || !newClient.telephone.trim()) {
+    // Validation des champs requis - téléphone n'est plus obligatoire
+    if (!newClient.prenom.trim() || !newClient.nom.trim()) {
       toast.error("Informations incomplètes", {
-        description: "Veuillez remplir au moins le prénom, le nom et le téléphone du client."
+        description: "Veuillez remplir au moins le prénom et le nom du client."
       });
       return;
     }

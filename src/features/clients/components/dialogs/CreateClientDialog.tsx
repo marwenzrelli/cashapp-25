@@ -98,7 +98,7 @@ export const CreateClientDialog = ({
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="telephone">Téléphone</Label>
+                  <Label htmlFor="telephone">Téléphone (optionnel)</Label>
                   <div className="relative">
                     <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
