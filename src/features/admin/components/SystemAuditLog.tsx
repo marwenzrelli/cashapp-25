@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
@@ -407,6 +406,32 @@ export const SystemAuditLog = () => {
     }
   };
 
+  const renderDeletedOperationsByType = (type: string) => {
+    const filteredOperations = deletedOperationsLog.filter(op => op.type === type);
+    
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center py-10">
+          <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
+        </div>
+      );
+    }
+    
+    if (filteredOperations.length === 0) {
+      return (
+        <div className="text-center py-10 text-muted-foreground">
+          Aucune opération de ce type supprimée
+        </div>
+      );
+    }
+    
+    return (
+      <div className="divide-y divide-border">
+        {filteredOperations.map((operation, index) => renderOperationLogEntry(operation, index))}
+      </div>
+    );
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -417,13 +442,10 @@ export const SystemAuditLog = () => {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-6 mb-4">
+          <TabsList className="grid grid-cols-3 mb-4">
             <TabsTrigger value="user-activity">Connexions</TabsTrigger>
             <TabsTrigger value="operations-history">Opérations réalisées</TabsTrigger>
             <TabsTrigger value="deleted-operations">Opérations supprimées</TabsTrigger>
-            <TabsTrigger value="deleted-deposits">Versements supprimés</TabsTrigger>
-            <TabsTrigger value="deleted-withdrawals">Retraits supprimés</TabsTrigger>
-            <TabsTrigger value="deleted-transfers">Virements supprimés</TabsTrigger>
           </TabsList>
           
           <TabsContent value="user-activity">
@@ -463,75 +485,50 @@ export const SystemAuditLog = () => {
           </TabsContent>
           
           <TabsContent value="deleted-operations">
-            <ScrollArea className="h-[50vh]">
-              {isLoading ? (
-                <div className="flex items-center justify-center py-10">
-                  <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
-                </div>
-              ) : deletedOperationsLog.length === 0 ? (
-                <div className="text-center py-10 text-muted-foreground">
-                  Aucune opération supprimée
-                </div>
-              ) : (
-                <div className="divide-y divide-border">
-                  {deletedOperationsLog.map((operation, index) => renderOperationLogEntry(operation, index))}
-                </div>
-              )}
-            </ScrollArea>
-          </TabsContent>
-          
-          <TabsContent value="deleted-deposits">
-            <ScrollArea className="h-[50vh]">
-              {isLoading ? (
-                <div className="flex items-center justify-center py-10">
-                  <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
-                </div>
-              ) : deletedDeposits.length === 0 ? (
-                <div className="text-center py-10 text-muted-foreground">
-                  Aucun versement supprimé
-                </div>
-              ) : (
-                <div className="divide-y divide-border">
-                  {deletedDeposits.map((log, index) => renderTransactionLogEntry(log, index))}
-                </div>
-              )}
-            </ScrollArea>
-          </TabsContent>
-          
-          <TabsContent value="deleted-withdrawals">
-            <ScrollArea className="h-[50vh]">
-              {isLoading ? (
-                <div className="flex items-center justify-center py-10">
-                  <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
-                </div>
-              ) : deletedWithdrawals.length === 0 ? (
-                <div className="text-center py-10 text-muted-foreground">
-                  Aucun retrait supprimé
-                </div>
-              ) : (
-                <div className="divide-y divide-border">
-                  {deletedWithdrawals.map((log, index) => renderTransactionLogEntry(log, index))}
-                </div>
-              )}
-            </ScrollArea>
-          </TabsContent>
-          
-          <TabsContent value="deleted-transfers">
-            <ScrollArea className="h-[50vh]">
-              {isLoading ? (
-                <div className="flex items-center justify-center py-10">
-                  <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
-                </div>
-              ) : deletedTransfers.length === 0 ? (
-                <div className="text-center py-10 text-muted-foreground">
-                  Aucun virement supprimé
-                </div>
-              ) : (
-                <div className="divide-y divide-border">
-                  {deletedTransfers.map((log, index) => renderTransactionLogEntry(log, index))}
-                </div>
-              )}
-            </ScrollArea>
+            <Tabs defaultValue="all">
+              <TabsList className="grid grid-cols-4 mb-4">
+                <TabsTrigger value="all">Toutes les opérations</TabsTrigger>
+                <TabsTrigger value="deposit">Versements supprimés</TabsTrigger>
+                <TabsTrigger value="withdrawal">Retraits supprimés</TabsTrigger>
+                <TabsTrigger value="transfer">Virements supprimés</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="all">
+                <ScrollArea className="h-[50vh]">
+                  {isLoading ? (
+                    <div className="flex items-center justify-center py-10">
+                      <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
+                    </div>
+                  ) : deletedOperationsLog.length === 0 ? (
+                    <div className="text-center py-10 text-muted-foreground">
+                      Aucune opération supprimée
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-border">
+                      {deletedOperationsLog.map((operation, index) => renderOperationLogEntry(operation, index))}
+                    </div>
+                  )}
+                </ScrollArea>
+              </TabsContent>
+              
+              <TabsContent value="deposit">
+                <ScrollArea className="h-[50vh]">
+                  {renderDeletedOperationsByType('deposit')}
+                </ScrollArea>
+              </TabsContent>
+              
+              <TabsContent value="withdrawal">
+                <ScrollArea className="h-[50vh]">
+                  {renderDeletedOperationsByType('withdrawal')}
+                </ScrollArea>
+              </TabsContent>
+              
+              <TabsContent value="transfer">
+                <ScrollArea className="h-[50vh]">
+                  {renderDeletedOperationsByType('transfer')}
+                </ScrollArea>
+              </TabsContent>
+            </Tabs>
           </TabsContent>
         </Tabs>
       </CardContent>
