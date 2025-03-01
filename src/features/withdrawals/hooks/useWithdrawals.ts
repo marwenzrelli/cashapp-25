@@ -121,9 +121,9 @@ export const useWithdrawals = () => {
           operation_date_iso: operationDateIso
         });
         
-        // Formater la date avec contrôle de valeur null
-        // Utiliser le formatDate qui gère déjà les valeurs null
-        const formattedDate = formatDate(operationDateIso);
+        // Le formatDate gère déjà les valeurs null, on peut donc l'appeler directement sans vérification
+        // supplémentaire, TypeScript sera satisfait avec cette assertion
+        const formattedDate = formatDate(operationDateIso as string | null);
         
         return {
           ...withdrawal,
