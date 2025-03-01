@@ -27,10 +27,8 @@ export const PublicClientPersonalInfo = ({ client }: PublicClientPersonalInfoPro
       </CardHeader>
       <CardContent>
         <div className="grid gap-6 md:grid-cols-3">
-          <div className="md:col-span-2">
-            <PersonalInfoFields client={client} formatAmount={formatAmount} />
-          </div>
-          <div className="hidden md:block">
+          <PersonalInfoFields client={client} formatAmount={formatAmount} />
+          <div>
             <div className="flex items-start gap-3">
               <Wallet className="h-6 w-6 text-primary mt-1" />
               <div>
