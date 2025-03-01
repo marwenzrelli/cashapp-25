@@ -4,12 +4,15 @@ import { User, Phone, Mail, Calendar, Wallet } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Client } from "../types";
 import { cn } from "@/lib/utils";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface PublicClientPersonalInfoProps {
   client: Client;
 }
 
 export const PublicClientPersonalInfo = ({ client }: PublicClientPersonalInfoProps) => {
+  const { currency } = useCurrency();
+  
   return (
     <Card className="backdrop-blur-xl bg-white/50 dark:bg-gray-950/50 md:col-span-3">
       <CardHeader>
@@ -58,7 +61,7 @@ export const PublicClientPersonalInfo = ({ client }: PublicClientPersonalInfoPro
                   "text-2xl font-bold",
                   client.solde >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
                 )}>
-                  {client.solde.toLocaleString()} €
+                  {client.solde.toLocaleString()} {currency}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   Mis à jour le {format(new Date(), 'dd/MM/yyyy HH:mm')}
