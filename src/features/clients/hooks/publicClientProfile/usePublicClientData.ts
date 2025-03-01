@@ -1,9 +1,10 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Client } from "@/features/clients/types";
 import { Operation } from "@/features/operations/types";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDateTime } from "@/features/operations/types";
+import { handleSupabaseError } from "../utils/errorUtils";
 
 export const usePublicClientData = (token: string | undefined) => {
   const [client, setClient] = useState<Client | null>(null);
@@ -13,7 +14,11 @@ export const usePublicClientData = (token: string | undefined) => {
 
   const fetchClientData = async () => {
     try {
-      if (!token) return;
+      if (!token) {
+        setError("Token d'accès manquant");
+        setIsLoading(false);
+        return;
+      }
 
       console.log("Début de la récupération des données avec le token:", token);
 
@@ -22,11 +27,15 @@ export const usePublicClientData = (token: string | undefined) => {
         .from('qr_access')
         .select('client_id, expires_at')
         .eq('access_token', token)
-        .single();
+        .maybeSingle();
 
       if (qrError) {
         console.error("Erreur QR Access:", qrError);
         throw new Error("Token d'accès invalide");
+      }
+      
+      if (!qrAccess) {
+        throw new Error("Token d'accès non trouvé");
       }
       
       console.log("QR Access trouvé:", qrAccess);
@@ -40,11 +49,15 @@ export const usePublicClientData = (token: string | undefined) => {
         .from('clients')
         .select('*')
         .eq('id', qrAccess.client_id)
-        .single();
+        .maybeSingle();
 
       if (clientError) {
         console.error("Erreur Client:", clientError);
         throw clientError;
+      }
+
+      if (!clientData) {
+        throw new Error("Client non trouvé");
       }
 
       console.log("Client trouvé:", clientData);
@@ -53,7 +66,7 @@ export const usePublicClientData = (token: string | undefined) => {
       await fetchOperations(clientData);
     } catch (err) {
       console.error("Erreur complète:", err);
-      setError(err instanceof Error ? err.message : "Une erreur est survenue");
+      setError(handleSupabaseError(err));
     } finally {
       setIsLoading(false);
     }
@@ -144,6 +157,10 @@ export const usePublicClientData = (token: string | undefined) => {
     console.log("Opérations transformées:", allOperations);
     setOperations(allOperations);
   };
+
+  useEffect(() => {
+    fetchClientData();
+  }, [token]);
 
   return {
     client,
