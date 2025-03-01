@@ -151,9 +151,17 @@ export const useDeposits = () => {
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id;
       
+      // Récupérer et vérifier que l'ID est bien au format numérique
+      const depositId = parseInt(deposit.id.toString(), 10);
+      if (isNaN(depositId)) {
+        console.error("L'ID du versement n'est pas un nombre valide:", deposit.id);
+        toast.error("Erreur: ID de versement invalide");
+        return false;
+      }
+      
       // Préparation des données pour le log
       const logEntry = {
-        original_id: deposit.id.toString(),
+        original_id: depositId.toString(),
         operation_type: 'deposit',
         client_name: deposit.client_name,
         amount: deposit.amount,
@@ -183,7 +191,7 @@ export const useDeposits = () => {
       const { error: deleteError } = await supabase
         .from('deposits')
         .delete()
-        .eq('id', deposit.id);
+        .eq('id', depositId);
         
       if (deleteError) {
         console.error("Erreur lors de la suppression du versement:", deleteError);
