@@ -34,6 +34,8 @@ export const useWithdrawals = () => {
 
   const fetchWithdrawals = async () => {
     try {
+      setIsLoading(true);
+      
       const { data, error } = await supabase
         .from('withdrawals')
         .select('*')
@@ -45,33 +47,50 @@ export const useWithdrawals = () => {
         return;
       }
 
-      // Déboguer les dates reçues
+      console.log("Données brutes des retraits:", data);
+      
       if (data && data.length > 0) {
-        console.log("Exemple de premier retrait avec dates:", {
+        // Log pour vérifier les données du premier retrait
+        console.log("Hook useWithdrawals - Premier retrait (données brutes):", {
           id: data[0].id,
           created_at: data[0].created_at,
           operation_date: data[0].operation_date,
+          operation_date_type: typeof data[0].operation_date
         });
       }
 
-      // Formatons chaque retrait avec son horodatage exact
       const formattedWithdrawals = data.map(withdrawal => {
-        // Vérifier si la date est valide avant de la formater
-        if (!withdrawal.operation_date) {
-          console.error("Date manquante pour le retrait:", withdrawal.id);
+        try {
+          // Vérification stricte de la date
+          if (!withdrawal.operation_date) {
+            console.error(`Date d'opération manquante pour le retrait ${withdrawal.id}`);
+            return {
+              ...withdrawal,
+              formattedDate: "Date inconnue"
+            };
+          }
+          
+          // Forcer la date en format string si nécessaire
+          const dateStr = String(withdrawal.operation_date);
+          const formatted = formatDateTime(dateStr);
+          
+          console.log(`Hook useWithdrawals - Retrait ${withdrawal.id}:`, {
+            date_brute: dateStr,
+            date_formatee: formatted,
+            date_type: typeof dateStr
+          });
+          
           return {
             ...withdrawal,
-            formattedDate: "Date inconnue"
+            formattedDate: formatted
+          };
+        } catch (err) {
+          console.error(`Erreur lors du formatage de la date pour le retrait ${withdrawal.id}:`, err);
+          return {
+            ...withdrawal,
+            formattedDate: "Erreur de date"
           };
         }
-        
-        const formatted = formatDateTime(withdrawal.operation_date);
-        console.log(`Retrait ${withdrawal.id}: Date brute = ${withdrawal.operation_date}, Formatée = ${formatted}`);
-        
-        return {
-          ...withdrawal,
-          formattedDate: formatted
-        };
       });
 
       console.log("Retraits avec dates formatées:", formattedWithdrawals);

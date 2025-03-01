@@ -127,33 +127,52 @@ const Withdrawals = () => {
       }
 
       if (data) {
+        console.log("Withdrawals.tsx - Données brutes reçues:", data);
+        
         if (data.length > 0) {
-          console.log("Withdrawals.tsx - Premier retrait avec dates:", {
+          console.log("Withdrawals.tsx - Détail du premier retrait:", {
             id: data[0].id,
             created_at: data[0].created_at,
             operation_date: data[0].operation_date,
+            operation_date_type: typeof data[0].operation_date,
+            operation_date_json: JSON.stringify(data[0].operation_date)
           });
         }
 
         const formattedWithdrawals = data.map(withdrawal => {
-          if (!withdrawal.operation_date) {
-            console.error("Date manquante pour le retrait:", withdrawal.id);
+          try {
+            if (!withdrawal.operation_date) {
+              console.error(`Date manquante pour le retrait ${withdrawal.id}`);
+              return {
+                ...withdrawal,
+                formattedDate: "Date inconnue"
+              };
+            }
+            
+            const dateStr = String(withdrawal.operation_date);
+            const formatted = formatDateTime(dateStr);
+            
+            console.log(`Withdrawals.tsx - Formatage du retrait ${withdrawal.id}:`, {
+              date_brute: dateStr,
+              date_formatee: formatted,
+              date_type: typeof dateStr,
+              date_json: JSON.stringify(dateStr)
+            });
+            
             return {
               ...withdrawal,
-              formattedDate: "Date inconnue"
+              formattedDate: formatted
+            };
+          } catch (err) {
+            console.error(`Erreur lors du formatage de la date pour le retrait ${withdrawal.id}:`, err);
+            return {
+              ...withdrawal,
+              formattedDate: "Erreur de date"
             };
           }
-          
-          const formatted = formatDateTime(withdrawal.operation_date);
-          console.log(`Withdrawals.tsx - Retrait ${withdrawal.id}: Date brute = ${withdrawal.operation_date}, Formatée = ${formatted}`);
-          
-          return {
-            ...withdrawal,
-            formattedDate: formatted
-          };
         });
         
-        console.log("Retraits avec dates formatées dans Withdrawals.tsx:", formattedWithdrawals);
+        console.log("Withdrawals.tsx - Retraits après formatage:", formattedWithdrawals);
         setWithdrawals(formattedWithdrawals);
       }
     } catch (error) {

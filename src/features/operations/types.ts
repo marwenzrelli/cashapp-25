@@ -25,23 +25,28 @@ export const TIME_RANGES = [
 
 // Fonction utilitaire pour formater les dates uniformément dans l'application
 export const formatDateTime = (dateString: string) => {
-  // Convertir la chaîne de date en objet Date
-  const date = new Date(dateString);
-  
-  // S'assurer que la date est valide
-  if (isNaN(date.getTime())) {
-    console.error(`Date invalide: ${dateString}`);
-    return "Date invalide";
+  try {
+    // Convertir la chaîne de date en objet Date
+    const date = new Date(dateString);
+    
+    // S'assurer que la date est valide
+    if (isNaN(date.getTime())) {
+      console.error(`Date invalide: ${dateString}`);
+      return "Date invalide";
+    }
+    
+    // Formatage complet de la date et de l'heure avec les secondes pour plus de précision
+    return date.toLocaleString('fr-FR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+  } catch (error) {
+    console.error(`Erreur lors du formatage de la date ${dateString}:`, error);
+    return "Erreur de date";
   }
-  
-  // Formatage complet de la date et de l'heure avec les secondes pour plus de précision
-  return date.toLocaleString('fr-FR', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false
-  });
 };
