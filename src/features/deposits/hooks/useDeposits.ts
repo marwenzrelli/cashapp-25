@@ -167,7 +167,7 @@ export const useDeposits = () => {
       
       // Préparation des données pour le log avec le format correct
       const logEntry = {
-        original_id: deposit.id.toString(), // Assurez-vous que c'est une chaîne
+        original_id: String(deposit.id), // Conversion explicite en chaîne
         operation_type: 'deposit',
         client_name: depositData.client_name,
         amount: depositData.amount,
@@ -175,21 +175,16 @@ export const useDeposits = () => {
         reason: depositData.notes || null,
         from_client: depositData.client_name,
         to_client: depositData.client_name,
-        deleted_by: userId
+        deleted_by: userId,
+        deleted_at: new Date().toISOString()
       };
       
       console.log("Données préparées pour le log:", logEntry);
       
-      // Suppression de la vérification de structure de la table qui causait l'erreur
-      // Cette ligne causait l'erreur TS2345 car get_table_details n'est pas dans la liste des fonctions RPC autorisées
-      // const { data: tableInfo, error: tableInfoError } = await supabase
-      //  .rpc('get_table_details', { table_name: 'deleted_transfers_log' });
-      
       // Création du log de suppression avec gestion d'erreur détaillée
       const { data: logData, error: logError } = await supabase
         .from('deleted_transfers_log')
-        .insert(logEntry)
-        .select();
+        .insert(logEntry);
         
       if (logError) {
         console.error("Erreur détaillée lors de la création du log de suppression:", {
@@ -206,7 +201,7 @@ export const useDeposits = () => {
       }
       
       // Suppression du versement après vérification de l'ID
-      const depositId = parseInt(deposit.id.toString(), 10);
+      const depositId = parseInt(String(deposit.id), 10);
       if (isNaN(depositId)) {
         console.error("L'ID du versement n'est pas un nombre valide:", deposit.id);
         toast.error("Erreur: ID de versement invalide");
