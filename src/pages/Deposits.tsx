@@ -51,6 +51,7 @@ const Deposits = () => {
     
     console.log("Confirmation de suppression pour:", selectedDeposit);
     try {
+      // S'assurer que le depositToDelete est correctement défini dans useDeposits
       const success = await confirmDeleteDeposit();
       
       if (success) {
