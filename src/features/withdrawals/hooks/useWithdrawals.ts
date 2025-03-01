@@ -99,7 +99,7 @@ export const useWithdrawals = () => {
       // Traitement des withdrawals avec un nouveau formatage des dates
       const formattedWithdrawals = data.map(withdrawal => {
         // Obtention de l'horodatage ISO complet depuis la base de données
-        let operationDateIso = withdrawal.operation_date;
+        let operationDateIso: string | null = withdrawal.operation_date;
         
         // Si c'est un objet, tenter de l'extraire (cas particulier pour certaines implémentations Supabase)
         if (typeof operationDateIso === 'object' && operationDateIso !== null) {
