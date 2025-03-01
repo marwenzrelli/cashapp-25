@@ -60,7 +60,7 @@ interface Withdrawal {
   status: string;
   created_at: string;
   created_by: string | null;
-  formattedDate?: string; // Propriété pour la date formatée
+  formattedDate?: string;
 }
 
 const Withdrawals = () => {
@@ -131,6 +131,7 @@ const Withdrawals = () => {
           ...withdrawal,
           formattedDate: formatDateTime(withdrawal.operation_date)
         }));
+        console.log("Retraits formatés dans Withdrawals.tsx:", formattedWithdrawals);
         setWithdrawals(formattedWithdrawals);
       }
     } catch (error) {

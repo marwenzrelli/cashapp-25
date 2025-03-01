@@ -51,6 +51,7 @@ export const useWithdrawals = () => {
         formattedDate: formatDateTime(withdrawal.operation_date)
       }));
 
+      console.log("Retraits formatés:", formattedWithdrawals);
       setWithdrawals(formattedWithdrawals);
     } catch (error) {
       console.error("Erreur lors du chargement des retraits:", error);
