@@ -30,7 +30,7 @@ export const PublicClientPersonalInfo = ({ client }: PublicClientPersonalInfoPro
           <div className="md:col-span-2">
             <PersonalInfoFields client={client} formatAmount={formatAmount} />
           </div>
-          <div>
+          <div className="mt-0">
             <div className="flex items-start gap-3">
               <Wallet className="h-6 w-6 text-primary mt-1" />
               <div>
