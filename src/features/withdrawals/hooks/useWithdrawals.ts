@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Withdrawal } from "../types";
 import { supabase } from "@/integrations/supabase/client";
@@ -51,7 +50,6 @@ export const useWithdrawals = () => {
 
       const transformedWithdrawals = data.map(withdrawal => {
         const createdAtIso = withdrawal.created_at;
-        
         const formattedDate = formatDate(createdAtIso);
         
         return {

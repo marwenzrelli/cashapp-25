@@ -38,6 +38,7 @@ import { useEffect } from "react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useWithdrawals } from "@/features/withdrawals/hooks/useWithdrawals";
 import { formatDateTime } from "@/features/operations/types";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Client {
   id: number;
@@ -229,6 +230,7 @@ const Withdrawals = () => {
     ) || null;
   };
 
+  
   return (
     <div className="space-y-8 animate-in">
       <div>
@@ -453,7 +455,7 @@ const Withdrawals = () => {
                         </div>
                       </td>
                       <td className="p-3 text-muted-foreground">
-                        {withdrawal.formattedDate}
+                        {withdrawal.date}
                       </td>
                       <td className="p-3 text-muted-foreground">{withdrawal.notes}</td>
                       <td className="p-3">
