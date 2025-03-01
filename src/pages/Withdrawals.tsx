@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,7 @@ import { useClients } from "@/features/clients/hooks/useClients";
 import { useEffect } from "react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { supabase } from "@/integrations/supabase/client";
+import { formatDateTime } from "@/features/operations/types";
 
 interface Client {
   id: number;
@@ -126,7 +128,12 @@ const Withdrawals = () => {
       }
 
       if (data) {
-        setWithdrawals(data);
+        // Add formatted date to each withdrawal
+        const formattedWithdrawals = data.map(withdrawal => ({
+          ...withdrawal,
+          formattedDate: formatDateTime(withdrawal.operation_date)
+        }));
+        setWithdrawals(formattedWithdrawals);
       }
     } catch (error) {
       console.error("Error in fetchWithdrawals:", error);
@@ -520,7 +527,7 @@ const Withdrawals = () => {
                         </div>
                       </td>
                       <td className="p-3 text-muted-foreground">
-                        {withdrawal.formattedDate || new Date(withdrawal.operation_date).toLocaleDateString()}
+                        {withdrawal.formattedDate || formatDateTime(withdrawal.operation_date)}
                       </td>
                       <td className="p-3 text-muted-foreground">{withdrawal.notes}</td>
                       <td className="p-3">
