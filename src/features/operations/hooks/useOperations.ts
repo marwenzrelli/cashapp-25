@@ -89,6 +89,14 @@ export const useOperations = () => {
       
       console.log(`Début de la suppression de l'opération: ${operationToDelete.type} avec l'ID: ${operationToDelete.id}`);
       
+      // Création d'un objet commun pour l'enregistrement dans deleted_transfers_log
+      const currentDate = new Date().toISOString();
+      const commonLogData = {
+        original_id: operationToDelete.id,
+        deleted_by: userId || null,
+        deleted_at: currentDate,
+      };
+      
       switch (operationToDelete.type) {
         case "deposit":
           // Récupérer les détails du versement avant la suppression
@@ -100,6 +108,7 @@ export const useOperations = () => {
             
           if (depositFetchError) {
             console.error("Erreur lors de la récupération du versement:", depositFetchError);
+            throw depositFetchError;
           } else if (depositData) {
             console.log("Enregistrement dans deleted_transfers_log du versement:", depositData);
             
@@ -107,36 +116,36 @@ export const useOperations = () => {
             const { error: depositLogError } = await supabase
               .from('deleted_transfers_log')
               .insert({
-                original_id: operationToDelete.id,
+                ...commonLogData,
                 operation_type: 'deposit',
                 client_name: depositData.client_name,
                 amount: depositData.amount,
                 operation_date: depositData.operation_date,
                 reason: depositData.notes || null,
-                from_client: depositData.client_name, // Pour maintenir la structure de la table
-                to_client: depositData.client_name, // Pour maintenir la structure de la table
-                deleted_by: userId || null,
+                from_client: depositData.client_name,
+                to_client: depositData.client_name,
               });
             
             if (depositLogError) {
               console.error("Erreur lors de l'enregistrement dans deleted_transfers_log:", depositLogError);
+              throw depositLogError;
             } else {
               console.log("Versement enregistré avec succès dans deleted_transfers_log");
             }
-          }
             
-          // Supprimer le versement
-          const { error: depositError } = await supabase
-            .from('deposits')
-            .delete()
-            .eq('id', parseInt(operationToDelete.id));
+            // Supprimer le versement
+            const { error: depositError } = await supabase
+              .from('deposits')
+              .delete()
+              .eq('id', parseInt(operationToDelete.id));
+              
+            if (depositError) {
+              console.error("Erreur lors de la suppression du versement:", depositError);
+              throw depositError;
+            }
             
-          if (depositError) {
-            console.error("Erreur lors de la suppression du versement:", depositError);
-            throw depositError;
+            console.log("Versement supprimé avec succès");
           }
-          
-          console.log("Versement supprimé avec succès");
           break;
           
         case "withdrawal":
@@ -149,6 +158,7 @@ export const useOperations = () => {
             
           if (withdrawalFetchError) {
             console.error("Erreur lors de la récupération du retrait:", withdrawalFetchError);
+            throw withdrawalFetchError;
           } else if (withdrawalData) {
             console.log("Enregistrement dans deleted_transfers_log du retrait:", withdrawalData);
             
@@ -156,36 +166,36 @@ export const useOperations = () => {
             const { error: withdrawalLogError } = await supabase
               .from('deleted_transfers_log')
               .insert({
-                original_id: operationToDelete.id,
+                ...commonLogData,
                 operation_type: 'withdrawal',
                 client_name: withdrawalData.client_name,
                 amount: withdrawalData.amount,
                 operation_date: withdrawalData.operation_date,
                 reason: withdrawalData.notes || null,
-                from_client: withdrawalData.client_name, // Pour maintenir la structure de la table
-                to_client: withdrawalData.client_name, // Pour maintenir la structure de la table
-                deleted_by: userId || null,
+                from_client: withdrawalData.client_name,
+                to_client: withdrawalData.client_name,
               });
             
             if (withdrawalLogError) {
               console.error("Erreur lors de l'enregistrement dans deleted_transfers_log:", withdrawalLogError);
+              throw withdrawalLogError;
             } else {
               console.log("Retrait enregistré avec succès dans deleted_transfers_log");
             }
-          }
-          
-          // Supprimer le retrait
-          const { error: withdrawalError } = await supabase
-            .from('withdrawals')
-            .delete()
-            .eq('id', operationToDelete.id);
             
-          if (withdrawalError) {
-            console.error("Erreur lors de la suppression du retrait:", withdrawalError);
-            throw withdrawalError;
+            // Supprimer le retrait
+            const { error: withdrawalError } = await supabase
+              .from('withdrawals')
+              .delete()
+              .eq('id', operationToDelete.id);
+              
+            if (withdrawalError) {
+              console.error("Erreur lors de la suppression du retrait:", withdrawalError);
+              throw withdrawalError;
+            }
+            
+            console.log("Retrait supprimé avec succès");
           }
-          
-          console.log("Retrait supprimé avec succès");
           break;
           
         case "transfer":
@@ -198,6 +208,7 @@ export const useOperations = () => {
             
           if (transferFetchError) {
             console.error("Erreur lors de la récupération du virement:", transferFetchError);
+            throw transferFetchError;
           } else if (transferData) {
             console.log("Enregistrement dans deleted_transfers_log du virement:", transferData);
             
@@ -205,35 +216,35 @@ export const useOperations = () => {
             const { error: transferLogError } = await supabase
               .from('deleted_transfers_log')
               .insert({
-                original_id: operationToDelete.id,
+                ...commonLogData,
                 operation_type: 'transfer',
+                amount: transferData.amount,
+                operation_date: transferData.operation_date,
+                reason: transferData.reason,
                 from_client: transferData.from_client,
                 to_client: transferData.to_client,
-                amount: transferData.amount,
-                reason: transferData.reason,
-                operation_date: transferData.operation_date,
-                deleted_by: userId || null,
               });
             
             if (transferLogError) {
               console.error("Erreur lors de l'enregistrement dans deleted_transfers_log:", transferLogError);
+              throw transferLogError;
             } else {
               console.log("Virement enregistré avec succès dans deleted_transfers_log");
             }
-          }
-          
-          // Supprimer le virement
-          const { error: transferError } = await supabase
-            .from('transfers')
-            .delete()
-            .eq('id', operationToDelete.id);
             
-          if (transferError) {
-            console.error("Erreur lors de la suppression du virement:", transferError);
-            throw transferError;
+            // Supprimer le virement
+            const { error: transferError } = await supabase
+              .from('transfers')
+              .delete()
+              .eq('id', operationToDelete.id);
+              
+            if (transferError) {
+              console.error("Erreur lors de la suppression du virement:", transferError);
+              throw transferError;
+            }
+            
+            console.log("Virement supprimé avec succès");
           }
-          
-          console.log("Virement supprimé avec succès");
           break;
       }
       
