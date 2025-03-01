@@ -1,360 +1,319 @@
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, CreditCard, ArrowDownUp, PlusCircle, Calendar, FileText, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CalendarIcon, Trash, ArrowDownCircle, ArrowUpCircle, RefreshCcw } from "lucide-react";
+import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { toast } from "sonner";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface AuditLogEntry {
   id: string;
-  action_type: 'user_creation' | 'deposit' | 'withdrawal' | 'transfer' | 'deposit_deleted' | 'withdrawal_deleted' | 'transfer_deleted';
+  action_type: string;
   action_date: string;
   performed_by: string;
   details: string;
   target_id: string;
-  target_name?: string;
+  target_name: string;
   amount?: number;
 }
 
 interface DeletedTransaction {
   id: string;
   original_id: string;
-  operation_type: 'deposit' | 'withdrawal' | 'transfer';
+  operation_type: string;
   from_client?: string;
   to_client?: string;
-  client_name?: string;
+  client_name?: string; 
   amount: number;
   reason?: string;
-  notes?: string;
   operation_date: string;
   deleted_by: string;
   deleted_at: string;
 }
 
 export const SystemAuditLog = () => {
+  const [activeTab, setActiveTab] = useState("user-activity");
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
+  const [deletedDeposits, setDeletedDeposits] = useState<AuditLogEntry[]>([]);
+  const [deletedWithdrawals, setDeletedWithdrawals] = useState<AuditLogEntry[]>([]);
+  const [deletedTransfers, setDeletedTransfers] = useState<AuditLogEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("all");
-
-  const fetchAuditLogs = async () => {
-    setIsLoading(true);
-    try {
-      // Récupère les utilisateurs créés
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, full_name, created_at');
-      
-      if (profilesError) throw profilesError;
-
-      // Récupère les versements
-      const { data: deposits, error: depositsError } = await supabase
-        .from('deposits')
-        .select('id, amount, client_name, created_at, created_by, status');
-      
-      if (depositsError) throw depositsError;
-
-      // Récupère les retraits
-      const { data: withdrawals, error: withdrawalsError } = await supabase
-        .from('withdrawals')
-        .select('id, amount, client_name, created_at, created_by, status');
-      
-      if (withdrawalsError) throw withdrawalsError;
-
-      // Récupère les virements
-      const { data: transfers, error: transfersError } = await supabase
-        .from('transfers')
-        .select('id, amount, from_client, to_client, created_at, created_by, status');
-      
-      if (transfersError) throw transfersError;
-      
-      // Récupère les transactions supprimées depuis la table des logs
-      const { data: deletedTransactions, error: deletedTransactionsError } = await supabase
-        .from('deleted_transfers_log')
-        .select('*');
-      
-      if (deletedTransactionsError) {
-        console.error("Erreur lors de la récupération des transactions supprimées:", deletedTransactionsError);
-        // Continue execution even if there's an error (table might not exist yet)
-      }
-
-      // Récupère les détails des utilisateurs pour les IDs created_by
-      const allCreatorIds = [
-        ...deposits.map(d => d.created_by),
-        ...withdrawals.map(w => w.created_by),
-        ...transfers.map(t => t.created_by),
-        ...(deletedTransactions ? deletedTransactions.map(dt => dt.deleted_by) : [])
-      ].filter(id => id !== null);
-      
-      const uniqueCreatorIds = [...new Set(allCreatorIds)];
-      
-      let creatorDetails: Record<string, string> = {};
-      
-      if (uniqueCreatorIds.length > 0) {
-        const { data: creators, error: creatorsError } = await supabase
-          .from('profiles')
-          .select('id, full_name')
-          .in('id', uniqueCreatorIds);
-        
-        if (creatorsError) throw creatorsError;
-        
-        creatorDetails = creators.reduce((acc, creator) => {
-          acc[creator.id] = creator.full_name;
-          return acc;
-        }, {} as Record<string, string>);
-      }
-
-      // Transforme les données en logs d'audit uniformes
-      const userCreationLogs: AuditLogEntry[] = profiles.map(profile => ({
-        id: `user-${profile.id}`,
-        action_type: 'user_creation',
-        action_date: profile.created_at,
-        performed_by: 'system', // Généralement créé par le système lors de l'inscription
-        details: `Création d'un nouvel utilisateur: ${profile.full_name}`,
-        target_id: profile.id,
-        target_name: profile.full_name
-      }));
-
-      const depositLogs: AuditLogEntry[] = deposits.map(deposit => ({
-        id: `deposit-${deposit.id}`,
-        action_type: 'deposit',
-        action_date: deposit.created_at,
-        performed_by: creatorDetails[deposit.created_by] || 'Inconnu',
-        details: `Versement pour ${deposit.client_name}`,
-        target_id: deposit.id.toString(),
-        target_name: deposit.client_name,
-        amount: deposit.amount
-      }));
-
-      const withdrawalLogs: AuditLogEntry[] = withdrawals.map(withdrawal => ({
-        id: `withdrawal-${withdrawal.id}`,
-        action_type: 'withdrawal',
-        action_date: withdrawal.created_at,
-        performed_by: creatorDetails[withdrawal.created_by] || 'Inconnu',
-        details: `Retrait pour ${withdrawal.client_name}`,
-        target_id: withdrawal.id,
-        target_name: withdrawal.client_name,
-        amount: withdrawal.amount
-      }));
-
-      const transferLogs: AuditLogEntry[] = transfers.map(transfer => ({
-        id: `transfer-${transfer.id}`,
-        action_type: 'transfer',
-        action_date: transfer.created_at,
-        performed_by: creatorDetails[transfer.created_by] || 'Inconnu',
-        details: `Virement de ${transfer.from_client} à ${transfer.to_client}`,
-        target_id: transfer.id,
-        target_name: `${transfer.from_client} → ${transfer.to_client}`,
-        amount: transfer.amount
-      }));
-      
-      // Ajouter les transactions supprimées s'ils existent
-      const deletedTransactionLogs: AuditLogEntry[] = deletedTransactions ? deletedTransactions.map((transaction: DeletedTransaction) => {
-        let actionType, details, targetName;
-        
-        switch (transaction.operation_type) {
-          case 'deposit':
-            actionType = 'deposit_deleted';
-            details = `Versement supprimé pour ${transaction.client_name}`;
-            targetName = transaction.client_name;
-            break;
-          case 'withdrawal':
-            actionType = 'withdrawal_deleted';
-            details = `Retrait supprimé pour ${transaction.client_name}`;
-            targetName = transaction.client_name;
-            break;
-          case 'transfer':
-            actionType = 'transfer_deleted';
-            details = `Virement supprimé de ${transaction.from_client} à ${transaction.to_client}`;
-            targetName = `${transaction.from_client} → ${transaction.to_client}`;
-            break;
-          default:
-            actionType = 'transfer_deleted';
-            details = 'Transaction supprimée';
-            targetName = '';
-        }
-        
-        return {
-          id: `deleted-transaction-${transaction.id}`,
-          action_type: actionType as any,
-          action_date: transaction.deleted_at,
-          performed_by: creatorDetails[transaction.deleted_by] || 'Inconnu',
-          details: details,
-          target_id: transaction.original_id,
-          target_name: targetName,
-          amount: transaction.amount
-        };
-      }) : [];
-
-      // Combine tous les logs et trie par date (plus récents en premier)
-      const allLogs = [
-        ...userCreationLogs,
-        ...depositLogs,
-        ...withdrawalLogs,
-        ...transferLogs,
-        ...deletedTransactionLogs
-      ].sort((a, b) => new Date(b.action_date).getTime() - new Date(a.action_date).getTime());
-
-      setAuditLogs(allLogs);
-    } catch (error) {
-      console.error("Erreur lors du chargement des logs d'audit:", error);
-      toast.error("Impossible de charger les logs d'audit du système");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   useEffect(() => {
-    fetchAuditLogs();
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        // Fetch user login activity
+        const { data: loginData, error: loginError } = await supabase
+          .from('profiles')
+          .select('id, full_name, last_login')
+          .order('last_login', { ascending: false })
+          .limit(50);
+
+        if (loginError) throw loginError;
+
+        // Format login data for the audit log
+        const formattedLoginData = loginData.map(user => ({
+          id: `login-${user.id}`,
+          action_type: 'Connexion',
+          action_date: user.last_login ? format(new Date(user.last_login), 'dd/MM/yyyy HH:mm') : 'Jamais',
+          performed_by: user.full_name,
+          details: 'Connexion au système',
+          target_id: user.id,
+          target_name: user.full_name
+        }));
+
+        // Fetch deleted transactions logs
+        const { data: deletedData, error: deletedError } = await supabase
+          .from('deleted_transfers_log')
+          .select('*')
+          .order('deleted_at', { ascending: false });
+
+        if (deletedError) throw deletedError;
+
+        // Get user details for deleted_by IDs
+        const userIds = [...new Set(deletedData.map(item => item.deleted_by))].filter(Boolean);
+        
+        let usersMap: Record<string, string> = {};
+        
+        if (userIds.length > 0) {
+          const { data: userData } = await supabase
+            .from('profiles')
+            .select('id, full_name')
+            .in('id', userIds);
+          
+          usersMap = (userData || []).reduce((acc, user) => {
+            acc[user.id] = user.full_name;
+            return acc;
+          }, {} as Record<string, string>);
+        }
+
+        // Process deleted transactions by type
+        const deposits = deletedData
+          .filter(transaction => transaction.operation_type === 'deposit')
+          .map((transaction: DeletedTransaction) => ({
+            id: transaction.id,
+            action_type: 'Versement supprimé',
+            action_date: format(new Date(transaction.deleted_at), 'dd/MM/yyyy HH:mm'),
+            performed_by: usersMap[transaction.deleted_by] || 'Utilisateur inconnu',
+            details: `Versement supprimé pour ${transaction.client_name}`,
+            target_id: transaction.original_id,
+            target_name: transaction.client_name || '',
+            amount: transaction.amount
+          }));
+
+        const withdrawals = deletedData
+          .filter(transaction => transaction.operation_type === 'withdrawal')
+          .map((transaction: DeletedTransaction) => ({
+            id: transaction.id,
+            action_type: 'Retrait supprimé',
+            action_date: format(new Date(transaction.deleted_at), 'dd/MM/yyyy HH:mm'),
+            performed_by: usersMap[transaction.deleted_by] || 'Utilisateur inconnu',
+            details: `Retrait supprimé pour ${transaction.client_name}`,
+            target_id: transaction.original_id,
+            target_name: transaction.client_name || '',
+            amount: transaction.amount
+          }));
+
+        const transfers = deletedData
+          .filter(transaction => transaction.operation_type === 'transfer')
+          .map((transaction: DeletedTransaction) => ({
+            id: transaction.id,
+            action_type: 'Virement supprimé',
+            action_date: format(new Date(transaction.deleted_at), 'dd/MM/yyyy HH:mm'),
+            performed_by: usersMap[transaction.deleted_by] || 'Utilisateur inconnu',
+            details: `Virement de ${transaction.from_client} vers ${transaction.to_client}`,
+            target_id: transaction.original_id,
+            target_name: `${transaction.from_client} → ${transaction.to_client}`,
+            amount: transaction.amount
+          }));
+
+        setAuditLogs(formattedLoginData);
+        setDeletedDeposits(deposits);
+        setDeletedWithdrawals(withdrawals);
+        setDeletedTransfers(transfers);
+      } catch (error) {
+        console.error("Erreur lors du chargement des logs d'audit:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
-  const filteredLogs = activeTab === "all" 
-    ? auditLogs 
-    : auditLogs.filter(log => {
-        if (activeTab === "deleted_all") {
-          return log.action_type === 'deposit_deleted' || 
-                 log.action_type === 'withdrawal_deleted' || 
-                 log.action_type === 'transfer_deleted';
-        }
-        return log.action_type === activeTab;
-      });
+  // Function to render transaction log entry
+  const renderTransactionLogEntry = (log: AuditLogEntry, index: number) => (
+    <div 
+      key={log.id} 
+      className={`flex items-start p-3 gap-4 ${index % 2 === 0 ? 'bg-muted/30' : 'bg-background'}`}
+    >
+      <div className="flex-shrink-0 mt-1">
+        <Trash className="h-5 w-5 text-red-500" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <p className="font-medium text-sm">{log.action_type}</p>
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <CalendarIcon className="h-3 w-3" />
+              <span>{log.action_date}</span>
+            </div>
+          </div>
+          <Badge variant="outline" className="w-fit text-xs">
+            {log.performed_by}
+          </Badge>
+        </div>
+        <p className="text-sm mt-1">{log.details}</p>
+        <div className="flex items-center justify-between mt-2">
+          <span className="text-xs text-muted-foreground">ID: {log.target_id}</span>
+          {log.amount && (
+            <Badge variant="secondary" className="font-semibold">
+              {log.amount.toLocaleString()} TND
+            </Badge>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 
-  const getActionIcon = (type: string) => {
+  // Function to render audit log entry
+  const renderAuditLogEntry = (log: AuditLogEntry, index: number) => (
+    <div 
+      key={log.id} 
+      className={`flex items-start p-3 gap-4 ${index % 2 === 0 ? 'bg-muted/30' : 'bg-background'}`}
+    >
+      <div className="flex-shrink-0 mt-1">
+        {log.action_type === 'Connexion' ? (
+          <div className="h-5 w-5 rounded-full bg-green-100 flex items-center justify-center">
+            <div className="h-2 w-2 rounded-full bg-green-500"></div>
+          </div>
+        ) : (
+          <div className="h-5 w-5 rounded-full bg-blue-100 flex items-center justify-center">
+            <div className="h-2 w-2 rounded-full bg-blue-500"></div>
+          </div>
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <p className="font-medium text-sm">{log.action_type}</p>
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <CalendarIcon className="h-3 w-3" />
+              <span>{log.action_date}</span>
+            </div>
+          </div>
+          <Badge variant="outline" className="w-fit text-xs">
+            {log.performed_by}
+          </Badge>
+        </div>
+        <p className="text-sm mt-1">{log.details}</p>
+      </div>
+    </div>
+  );
+
+  const getTransactionIcon = (type: string) => {
     switch (type) {
-      case 'user_creation': return <User className="h-4 w-4 text-blue-500" />;
-      case 'deposit': return <PlusCircle className="h-4 w-4 text-green-500" />;
-      case 'withdrawal': return <CreditCard className="h-4 w-4 text-red-500" />;
-      case 'transfer': return <ArrowDownUp className="h-4 w-4 text-orange-500" />;
-      case 'deposit_deleted': return <Trash2 className="h-4 w-4 text-green-700" />;
-      case 'withdrawal_deleted': return <Trash2 className="h-4 w-4 text-red-700" />;
-      case 'transfer_deleted': return <Trash2 className="h-4 w-4 text-orange-700" />;
-      default: return <FileText className="h-4 w-4 text-gray-500" />;
+      case 'deposit':
+        return <ArrowUpCircle className="h-4 w-4 text-green-500" />;
+      case 'withdrawal':
+        return <ArrowDownCircle className="h-4 w-4 text-red-500" />;
+      case 'transfer':
+        return <RefreshCcw className="h-4 w-4 text-purple-500" />;
+      default:
+        return <Trash className="h-4 w-4 text-red-500" />;
     }
-  };
-
-  const getActionText = (type: string) => {
-    switch (type) {
-      case 'user_creation': return "Création d'utilisateur";
-      case 'deposit': return "Versement";
-      case 'withdrawal': return "Retrait";
-      case 'transfer': return "Virement";
-      case 'deposit_deleted': return "Versement supprimé";
-      case 'withdrawal_deleted': return "Retrait supprimé";
-      case 'transfer_deleted': return "Virement supprimé";
-      default: return "Action inconnue";
-    }
-  };
-
-  const getActionColor = (type: string) => {
-    switch (type) {
-      case 'user_creation': return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300";
-      case 'deposit': return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
-      case 'withdrawal': return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
-      case 'transfer': return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300";
-      case 'deposit_deleted': return "bg-green-200 text-green-900 dark:bg-green-800 dark:text-green-200";
-      case 'withdrawal_deleted': return "bg-red-200 text-red-900 dark:bg-red-800 dark:text-red-200";
-      case 'transfer_deleted': return "bg-orange-200 text-orange-900 dark:bg-orange-800 dark:text-orange-200";
-      default: return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('fr-FR', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(date);
   };
 
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Calendar className="h-5 w-5 text-primary" />
-          Journal des activités du système
-        </CardTitle>
+        <CardTitle>Journal d'audit du système</CardTitle>
+        <CardDescription>
+          Historique des connexions et des opérations supprimées
+        </CardDescription>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-4">
-            <TabsTrigger value="all">Tous</TabsTrigger>
-            <TabsTrigger value="user_creation">Utilisateurs</TabsTrigger>
-            <TabsTrigger value="deposit">Versements</TabsTrigger>
-            <TabsTrigger value="withdrawal">Retraits</TabsTrigger>
-            <TabsTrigger value="transfer">Virements</TabsTrigger>
-            <TabsTrigger value="deleted_all">Transactions Supprimées</TabsTrigger>
-            <TabsTrigger value="deposit_deleted">Versements Supprimés</TabsTrigger>
-            <TabsTrigger value="withdrawal_deleted">Retraits Supprimés</TabsTrigger>
-            <TabsTrigger value="transfer_deleted">Virements Supprimés</TabsTrigger>
+        <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid grid-cols-4 mb-4">
+            <TabsTrigger value="user-activity">Connexions</TabsTrigger>
+            <TabsTrigger value="deleted-deposits">Versements supprimés</TabsTrigger>
+            <TabsTrigger value="deleted-withdrawals">Retraits supprimés</TabsTrigger>
+            <TabsTrigger value="deleted-transfers">Virements supprimés</TabsTrigger>
           </TabsList>
           
-          <TabsContent value={activeTab} className="mt-0">
-            {isLoading ? (
-              <div className="flex justify-center items-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
-              </div>
-            ) : filteredLogs.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                Aucune activité trouvée
-              </div>
-            ) : (
-              <div className="border rounded-md overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[120px]">Date</TableHead>
-                      <TableHead className="w-[150px]">Type</TableHead>
-                      <TableHead>Effectué par</TableHead>
-                      <TableHead>Détails</TableHead>
-                      <TableHead className="text-right">Montant</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredLogs.map((log) => (
-                      <TableRow key={log.id}>
-                        <TableCell className="font-mono text-xs">
-                          {formatDate(log.action_date)}
-                        </TableCell>
-                        <TableCell>
-                          <Badge 
-                            variant="outline" 
-                            className={`flex items-center gap-1 ${getActionColor(log.action_type)}`}
-                          >
-                            {getActionIcon(log.action_type)}
-                            <span>{getActionText(log.action_type)}</span>
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="font-medium">{log.performed_by}</div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="font-medium">{log.details}</div>
-                          {log.target_name && (
-                            <div className="text-xs text-muted-foreground">
-                              {log.action_type === 'user_creation' ? `ID: ${log.target_id}` : log.target_name}
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {log.amount !== undefined ? (
-                            <span className={log.action_type.includes('withdrawal') || log.action_type.includes('transfer_deleted') ? 'text-red-600' : 'text-green-600'}>
-                              {log.amount.toLocaleString()} TND
-                            </span>
-                          ) : (
-                            '-'
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
+          <TabsContent value="user-activity">
+            <ScrollArea className="h-[50vh]">
+              {isLoading ? (
+                <div className="flex items-center justify-center py-10">
+                  <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
+                </div>
+              ) : auditLogs.length === 0 ? (
+                <div className="text-center py-10 text-muted-foreground">
+                  Aucune activité enregistrée
+                </div>
+              ) : (
+                <div className="divide-y divide-border">
+                  {auditLogs.map((log, index) => renderAuditLogEntry(log, index))}
+                </div>
+              )}
+            </ScrollArea>
+          </TabsContent>
+          
+          <TabsContent value="deleted-deposits">
+            <ScrollArea className="h-[50vh]">
+              {isLoading ? (
+                <div className="flex items-center justify-center py-10">
+                  <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
+                </div>
+              ) : deletedDeposits.length === 0 ? (
+                <div className="text-center py-10 text-muted-foreground">
+                  Aucun versement supprimé
+                </div>
+              ) : (
+                <div className="divide-y divide-border">
+                  {deletedDeposits.map((log, index) => renderTransactionLogEntry(log, index))}
+                </div>
+              )}
+            </ScrollArea>
+          </TabsContent>
+          
+          <TabsContent value="deleted-withdrawals">
+            <ScrollArea className="h-[50vh]">
+              {isLoading ? (
+                <div className="flex items-center justify-center py-10">
+                  <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
+                </div>
+              ) : deletedWithdrawals.length === 0 ? (
+                <div className="text-center py-10 text-muted-foreground">
+                  Aucun retrait supprimé
+                </div>
+              ) : (
+                <div className="divide-y divide-border">
+                  {deletedWithdrawals.map((log, index) => renderTransactionLogEntry(log, index))}
+                </div>
+              )}
+            </ScrollArea>
+          </TabsContent>
+          
+          <TabsContent value="deleted-transfers">
+            <ScrollArea className="h-[50vh]">
+              {isLoading ? (
+                <div className="flex items-center justify-center py-10">
+                  <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
+                </div>
+              ) : deletedTransfers.length === 0 ? (
+                <div className="text-center py-10 text-muted-foreground">
+                  Aucun virement supprimé
+                </div>
+              ) : (
+                <div className="divide-y divide-border">
+                  {deletedTransfers.map((log, index) => renderTransactionLogEntry(log, index))}
+                </div>
+              )}
+            </ScrollArea>
           </TabsContent>
         </Tabs>
       </CardContent>

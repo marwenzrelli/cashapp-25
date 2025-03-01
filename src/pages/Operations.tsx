@@ -22,7 +22,7 @@ const Operations = () => {
   } = useOperations();
   const [filterType, setFilterType] = useState<string | null>(null);
   const [filterClient, setFilterClient] = useState("");
-  const [dateRange, setDateRange] = useState<DateRange>({});
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({});
 
   const filteredOperations = operations.filter((op) => {
     const matchesType = !filterType || op.type === filterType;
@@ -31,9 +31,9 @@ const Operations = () => {
       op.fromClient?.toLowerCase().includes(filterClient.toLowerCase()) ||
       op.toClient?.toLowerCase().includes(filterClient.toLowerCase());
     const matchesDate =
-      (!dateRange.from ||
+      (!dateRange?.from ||
         new Date(op.date) >= new Date(dateRange.from)) &&
-      (!dateRange.to ||
+      (!dateRange?.to ||
         new Date(op.date) <= new Date(dateRange.to));
     return matchesType && matchesClient && matchesDate;
   });
@@ -51,8 +51,8 @@ const Operations = () => {
     let filterText = "Filtres appliqués: ";
     filterText += filterType ? `Type: ${filterType}, ` : "";
     filterText += filterClient ? `Client: ${filterClient}, ` : "";
-    filterText += dateRange.from ? `Du: ${dateRange.from.toLocaleDateString()}, ` : "";
-    filterText += dateRange.to ? `Au: ${dateRange.to.toLocaleDateString()}, ` : "";
+    filterText += dateRange?.from ? `Du: ${dateRange.from.toLocaleDateString()}, ` : "";
+    filterText += dateRange?.to ? `Au: ${dateRange.to.toLocaleDateString()}, ` : "";
     filterText = filterText.endsWith(", ") ? filterText.slice(0, -2) : filterText;
     filterText = filterText === "Filtres appliqués: " ? "Aucun filtre appliqué" : filterText;
     

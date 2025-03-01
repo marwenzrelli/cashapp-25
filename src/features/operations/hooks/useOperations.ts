@@ -98,14 +98,16 @@ export const useOperations = () => {
             .single();
             
           if (depositData) {
-            // Enregistrer dans deleted_deposits_log
+            // Enregistrer dans deleted_transfers_log
             await supabase.from('deleted_transfers_log').insert({
               original_id: operationToDelete.id,
               operation_type: 'deposit',
               client_name: depositData.client_name,
               amount: depositData.amount,
               operation_date: depositData.operation_date,
-              notes: depositData.notes,
+              reason: depositData.notes || null,
+              from_client: depositData.client_name, // Pour maintenir la structure de la table
+              to_client: depositData.client_name, // Pour maintenir la structure de la table
               deleted_by: userId || null,
             });
           }
@@ -134,7 +136,9 @@ export const useOperations = () => {
               client_name: withdrawalData.client_name,
               amount: withdrawalData.amount,
               operation_date: withdrawalData.operation_date,
-              notes: withdrawalData.notes,
+              reason: withdrawalData.notes || null,
+              from_client: withdrawalData.client_name, // Pour maintenir la structure de la table
+              to_client: withdrawalData.client_name, // Pour maintenir la structure de la table
               deleted_by: userId || null,
             });
           }

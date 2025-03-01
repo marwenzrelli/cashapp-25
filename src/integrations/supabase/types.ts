@@ -48,33 +48,39 @@ export type Database = {
       deleted_transfers_log: {
         Row: {
           amount: number
+          client_name: string | null
           deleted_at: string
           deleted_by: string | null
           from_client: string
           id: string
           operation_date: string
+          operation_type: string
           original_id: string
           reason: string | null
           to_client: string
         }
         Insert: {
           amount: number
+          client_name?: string | null
           deleted_at?: string
           deleted_by?: string | null
           from_client: string
           id?: string
           operation_date: string
+          operation_type?: string
           original_id: string
           reason?: string | null
           to_client: string
         }
         Update: {
           amount?: number
+          client_name?: string | null
           deleted_at?: string
           deleted_by?: string | null
           from_client?: string
           id?: string
           operation_date?: string
+          operation_type?: string
           original_id?: string
           reason?: string | null
           to_client?: string
