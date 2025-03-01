@@ -36,6 +36,19 @@ export const ClientOperationsHistory = ({
   setDateRange,
   filteredOperations,
 }: ClientOperationsHistoryProps) => {
+  const getAmountColor = (type: Operation["type"]) => {
+    switch (type) {
+      case "deposit":
+        return "text-green-600 dark:text-green-400";
+      case "withdrawal":
+        return "text-red-600 dark:text-red-400";
+      case "transfer":
+        return "text-green-600 dark:text-green-400";
+      default:
+        return "";
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -98,7 +111,9 @@ export const ClientOperationsHistory = ({
                       </TableCell>
                       <TableCell>{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</TableCell>
                       <TableCell className="max-w-[200px] truncate">{operation.description}</TableCell>
-                      <TableCell className="text-right font-medium">{Math.round(operation.amount)} TND</TableCell>
+                      <TableCell className={`text-right font-medium ${getAmountColor(operation.type)}`}>
+                        {operation.type === "withdrawal" ? "-" : ""}{Math.round(operation.amount)} TND
+                      </TableCell>
                       <TableCell className="max-w-[200px] truncate">
                         {operation.type === "transfer" ? (
                           <>{operation.fromClient} → {operation.toClient}</>
@@ -172,7 +187,7 @@ export const ClientOperationsHistory = ({
                     <TableRow key={operation.id}>
                       <TableCell>{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</TableCell>
                       <TableCell className="max-w-[200px] truncate">{operation.description}</TableCell>
-                      <TableCell className="text-right font-medium">{Math.round(operation.amount)} TND</TableCell>
+                      <TableCell className="text-right font-medium text-green-600 dark:text-green-400">{Math.round(operation.amount)} TND</TableCell>
                       <TableCell className="max-w-[200px] truncate">{operation.fromClient}</TableCell>
                     </TableRow>
                   ))}
