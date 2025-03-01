@@ -25,17 +25,18 @@ const Deposits = () => {
     notes: ""
   });
   
-  const { deposits, createDeposit, deleteDeposit, updateDeposit } = useDeposits();
+  const { deposits, createDeposit, deleteDeposit, updateDeposit, confirmDeleteDeposit, setShowDeleteDialog } = useDeposits();
 
   const handleDelete = (deposit: Deposit) => {
     setSelectedDeposit(deposit);
     setIsDeleteDialogOpen(true);
+    setShowDeleteDialog(true);
   };
 
   const confirmDelete = async () => {
     if (!selectedDeposit) return;
-    // Pass the deposit object instead of just the ID
-    const success = await deleteDeposit(selectedDeposit);
+    
+    const success = await confirmDeleteDeposit();
     if (success) {
       setIsDeleteDialogOpen(false);
     }

@@ -145,8 +145,11 @@ export const useDeposits = () => {
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id;
       
+      const stringifiedId = deposit.id.toString();
+      console.log("Stringified ID:", stringifiedId, "Type:", typeof stringifiedId);
+      
       const logEntry = {
-        original_id: deposit.id.toString(),
+        original_id: stringifiedId,
         operation_type: 'deposit',
         client_name: deposit.client_name,
         amount: Number(deposit.amount),
@@ -164,14 +167,14 @@ export const useDeposits = () => {
         console.log(`- ${key}: ${value} (type: ${typeof value})`);
       });
       
-      const { data: logData, error: logError } = await supabase
+      const { error: logError } = await supabase
         .from('deleted_transfers_log')
         .insert(logEntry);
         
       if (logError) {
         console.error("Error logging deposit deletion:", logError);
         console.error("Details:", logError.message, logError.details, logError.hint);
-        toast.error("Error creating deletion log");
+        toast.error("Erreur lors de la création du log de suppression");
         return false;
       }
       
@@ -184,7 +187,7 @@ export const useDeposits = () => {
         
       if (deleteError) {
         console.error("Error deleting deposit:", deleteError);
-        toast.error("Error during deposit deletion");
+        toast.error("Erreur lors de la suppression du versement");
         return false;
       }
       
@@ -201,7 +204,7 @@ export const useDeposits = () => {
       return true;
     } catch (error) {
       console.error("Critical error during deposit deletion:", error);
-      toast.error("Error deleting deposit");
+      toast.error("Erreur lors de la suppression du versement");
       return false;
     }
   };
@@ -215,74 +218,15 @@ export const useDeposits = () => {
       console.log("Début de la suppression du versement avec ID:", depositToDelete.id);
       console.log("Type de l'ID:", typeof depositToDelete.id);
       
-      const { data: { session } } = await supabase.auth.getSession();
-      const userId = session?.user?.id;
+      const success = await deleteDeposit(depositToDelete);
       
-      const { data: depositData, error: fetchError } = await supabase
-        .from('deposits')
-        .select('*')
-        .eq('id', depositToDelete.id)
-        .single();
-        
-      if (fetchError) {
-        console.error("Erreur lors de la récupération des détails du versement:", fetchError);
-        toast.error("Erreur lors de la récupération des détails du versement");
-        throw fetchError;
+      if (success) {
+        setDepositToDelete(null);
+        setShowDeleteDialog(false);
+        return true;
+      } else {
+        throw new Error("Échec de la suppression du versement");
       }
-      
-      if (!depositData) {
-        console.error("Aucune donnée de versement trouvée pour l'ID:", depositToDelete.id);
-        toast.error("Versement introuvable");
-        throw new Error("Versement introuvable");
-      }
-      
-      const logEntry = {
-        original_id: depositData.id.toString(),
-        operation_type: 'deposit',
-        client_name: depositData.client_name,
-        amount: Number(depositData.amount),
-        operation_date: depositData.operation_date || depositData.created_at,
-        reason: depositData.notes || null,
-        from_client: depositData.client_name,
-        to_client: depositData.client_name,
-        deleted_by: userId || null,
-        deleted_at: new Date().toISOString(),
-      };
-      
-      console.log("Données à insérer dans deleted_transfers_log:", logEntry);
-      
-      const { data: logData, error: logError } = await supabase
-        .from('deleted_transfers_log')
-        .insert(logEntry)
-        .select();
-        
-      if (logError) {
-        console.error("Erreur lors de l'enregistrement dans deleted_transfers_log:", logError);
-        console.error("Détails de l'erreur:", logError.message, logError.details, logError.hint);
-        console.error("Code de l'erreur:", logError.code);
-        toast.error("Erreur lors de l'enregistrement du log de suppression");
-        throw logError;
-      }
-      
-      const { error: deleteError } = await supabase
-        .from('deposits')
-        .delete()
-        .eq('id', depositToDelete.id);
-        
-      if (deleteError) {
-        console.error("Erreur lors de la suppression du versement:", deleteError);
-        toast.error("Erreur lors de la suppression du versement");
-        throw deleteError;
-      }
-      
-      setDeposits(prevDeposits =>
-        prevDeposits.filter(deposit => deposit.id !== depositToDelete.id)
-      );
-
-      toast.success("Versement supprimé", {
-        description: `Le versement a été retiré de la base de données.`
-      });
-      return true;
     } catch (error) {
       console.error("Erreur lors de la suppression:", error);
       toast.error("Erreur lors de la suppression du versement");
