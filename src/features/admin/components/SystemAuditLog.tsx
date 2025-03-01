@@ -7,6 +7,7 @@ import { CalendarIcon, Trash, ArrowDownCircle, ArrowUpCircle, RefreshCcw, Activi
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "sonner";
 
 interface AuditLogEntry {
   id: string;
@@ -86,7 +87,14 @@ export const SystemAuditLog = () => {
           .select('*')
           .order('deleted_at', { ascending: false });
 
-        if (deletedError) throw deletedError;
+        if (deletedError) {
+          console.error("Erreur lors de la récupération des opérations supprimées:", deletedError);
+          toast.error("Erreur lors de la récupération des opérations supprimées");
+          throw deletedError;
+        }
+
+        // Log the data to help debug
+        console.log("Deleted operations data:", deletedData);
 
         // Get user details for deleted_by IDs
         const userIds = [...new Set(deletedData.map(item => item.deleted_by))].filter(Boolean);
@@ -149,7 +157,7 @@ export const SystemAuditLog = () => {
         const formattedDeletedOperations = deletedData.map((transaction: DeletedTransaction) => {
           let type = transaction.operation_type;
           let description = '';
-          let clientInfo = {};
+          let clientInfo: any = {};
 
           if (type === 'deposit') {
             description = `Versement supprimé pour ${transaction.client_name}`;
@@ -177,7 +185,9 @@ export const SystemAuditLog = () => {
           };
         });
 
-        // Fetch recent operations (new code)
+        console.log("Formatted deleted operations:", formattedDeletedOperations);
+
+        // Fetch recent operations
         await fetchRecentOperations();
 
         setAuditLogs(formattedLoginData);
@@ -187,6 +197,7 @@ export const SystemAuditLog = () => {
         setDeletedOperationsLog(formattedDeletedOperations);
       } catch (error) {
         console.error("Erreur lors du chargement des logs d'audit:", error);
+        toast.error("Erreur lors du chargement des logs d'audit");
       } finally {
         setIsLoading(false);
       }
@@ -278,6 +289,7 @@ export const SystemAuditLog = () => {
       setOperationsLog(allOperations);
     } catch (error) {
       console.error("Erreur lors du chargement des opérations récentes:", error);
+      toast.error("Erreur lors du chargement des opérations récentes");
     }
   };
 
@@ -343,7 +355,11 @@ export const SystemAuditLog = () => {
         </div>
         <p className="text-sm mt-1">{operation.description}</p>
         <div className="flex items-center justify-between mt-2">
-          <span className="text-xs text-muted-foreground">{operation.id.split('-')[1]}</span>
+          <span className="text-xs text-muted-foreground">
+            {operation.id.includes("deposit-") || operation.id.includes("withdrawal-") || operation.id.includes("transfer-")
+              ? operation.id.split('-')[1]
+              : operation.id}
+          </span>
           <Badge 
             variant="secondary" 
             className={`font-semibold ${
