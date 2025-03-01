@@ -22,7 +22,7 @@ const Operations = () => {
   } = useOperations();
   const [filterType, setFilterType] = useState<string | null>(null);
   const [filterClient, setFilterClient] = useState("");
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({});
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
   const filteredOperations = operations.filter((op) => {
     const matchesType = !filterType || op.type === filterType;
