@@ -1,5 +1,5 @@
 
-import React from "react";
+import { ReactNode } from "react";
 import { ArrowUpCircle, ArrowDownCircle, RefreshCcw } from "lucide-react";
 import { Operation } from "../types";
 
@@ -14,14 +14,14 @@ export const getTypeStyle = (type: Operation["type"]) => {
   }
 };
 
-export const getTypeIcon = (type: Operation["type"]): JSX.Element => {
+export const getTypeIcon = (type: Operation["type"]): ReactNode => {
   switch (type) {
     case "deposit":
-      return React.createElement(ArrowUpCircle, { size: 16 });
+      return <ArrowUpCircle className="h-4 w-4" />;
     case "withdrawal":
-      return React.createElement(ArrowDownCircle, { size: 16 });
+      return <ArrowDownCircle className="h-4 w-4" />;
     case "transfer":
-      return React.createElement(RefreshCcw, { size: 16 });
+      return <RefreshCcw className="h-4 w-4" />;
   }
 };
 
