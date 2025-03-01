@@ -21,9 +21,11 @@ const PublicClientProfile = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950/50 dark:to-blue-950/50 p-2 sm:p-8">
-      <div className="max-w-md mx-auto space-y-4">
-        <PublicClientBalanceCard client={client} />
-        <PublicClientPersonalInfo client={client} />
+      <div className="max-w-7xl mx-auto space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <PublicClientPersonalInfo client={client} />
+          <PublicClientBalanceCard client={client} />
+        </div>
         <PublicClientOperationsHistory operations={operations} />
       </div>
     </div>

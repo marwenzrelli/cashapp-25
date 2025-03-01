@@ -49,39 +49,20 @@ const ClientProfile = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <div className="flex flex-col md:flex-row justify-between items-start gap-8">
-        <div className="w-full md:w-2/3 space-y-6">
-          <div>
-            <Button variant="ghost" onClick={() => navigate('/clients')} className="mb-4">
-              <ChevronLeft className="mr-2 h-4 w-4" />
-              Retour aux clients
-            </Button>
-            <h1 className="text-3xl font-bold">Profil Client</h1>
-            <p className="text-muted-foreground">
-              Détails et historique des opérations
-            </p>
-          </div>
-
-          <ClientPersonalInfo client={client} />
-
-          <ClientOperationsHistory
-            operations={clientOperations}
-            selectedType={selectedType}
-            setSelectedType={setSelectedType}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            dateRange={dateRange}
-            setDateRange={setDateRange}
-            filteredOperations={filteredOperations}
-          />
-
-          <OperationsDetailCards
-            clientOperations={clientOperations}
-            formatAmount={formatAmount}
-          />
+      <div className="space-y-6">
+        <div>
+          <Button variant="ghost" onClick={() => navigate('/clients')} className="mb-4">
+            <ChevronLeft className="mr-2 h-4 w-4" />
+            Retour aux clients
+          </Button>
+          <h1 className="text-3xl font-bold">Profil Client</h1>
+          <p className="text-muted-foreground">
+            Détails et historique des opérations
+          </p>
         </div>
 
-        <div className="w-full md:w-1/3 space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <ClientPersonalInfo client={client} />
           <ClientBalanceCard
             client={client}
             clientId={clientId}
@@ -91,6 +72,22 @@ const ClientProfile = () => {
             formatAmount={formatAmount}
           />
         </div>
+
+        <ClientOperationsHistory
+          operations={clientOperations}
+          selectedType={selectedType}
+          setSelectedType={setSelectedType}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          dateRange={dateRange}
+          setDateRange={setDateRange}
+          filteredOperations={filteredOperations}
+        />
+
+        <OperationsDetailCards
+          clientOperations={clientOperations}
+          formatAmount={formatAmount}
+        />
       </div>
     </div>
   );

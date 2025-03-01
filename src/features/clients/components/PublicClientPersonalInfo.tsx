@@ -10,12 +10,12 @@ interface PublicClientPersonalInfoProps {
 
 export const PublicClientPersonalInfo = ({ client }: PublicClientPersonalInfoProps) => {
   return (
-    <Card className="backdrop-blur-xl bg-white/50 dark:bg-gray-950/50">
+    <Card className="backdrop-blur-xl bg-white/50 dark:bg-gray-950/50 md:col-span-2">
       <CardHeader>
         <CardTitle className="text-lg">Informations personnelles</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex items-center gap-3">
             <User className="h-5 w-5 text-primary" />
             <div>

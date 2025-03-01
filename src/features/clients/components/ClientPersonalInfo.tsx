@@ -10,7 +10,7 @@ interface ClientPersonalInfoProps {
 
 export const ClientPersonalInfo = ({ client }: ClientPersonalInfoProps) => {
   return (
-    <Card>
+    <Card className="md:col-span-2">
       <CardHeader>
         <CardTitle>Informations personnelles</CardTitle>
       </CardHeader>
