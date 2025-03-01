@@ -1,27 +1,17 @@
-
 import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Withdrawal } from "../types";
 import { UserCircle, ArrowDownCircle, Pencil, Trash2 } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
-
-interface Client {
-  id: number;
-  nom: string;
-  prenom: string;
-  telephone: string;
-  email: string;
-  solde: number;
-  dateCreation: string;
-}
+import { Client } from "@/features/clients/types";
 
 interface WithdrawalTableProps {
   withdrawals: Withdrawal[];
   itemsPerPage: string;
   onEdit: (withdrawal: Withdrawal) => void;
   onDelete: (withdrawal: Withdrawal) => void;
-  findClientById: (clientFullName: string) => Client | null;
+  findClientById: (clientFullName: string) => (Client & { dateCreation: string }) | null;
 }
 
 export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({

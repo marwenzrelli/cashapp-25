@@ -1,4 +1,3 @@
-
 import React from "react";
 import { DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -13,19 +12,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { Client } from "@/features/clients/types";
 
-interface Client {
-  id: number;
-  nom: string;
-  prenom: string;
-  telephone: string;
-  email: string;
-  solde: number;
+interface ExtendedClient extends Client {
   dateCreation: string;
 }
 
 interface WithdrawalFormProps {
-  clients: Client[];
+  clients: ExtendedClient[];
   newWithdrawal: {
     clientId: string;
     amount: string;

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog } from "@/components/ui/dialog";
 import { toast } from "sonner";
@@ -7,6 +6,7 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { useWithdrawals } from "@/features/withdrawals/hooks/useWithdrawals";
 import { supabase } from "@/integrations/supabase/client";
 import { Withdrawal } from "@/features/withdrawals/types";
+import { Client } from "@/features/clients/types";
 
 // Import the new components
 import { WithdrawalHeader } from "@/features/withdrawals/components/WithdrawalHeader";
@@ -14,16 +14,6 @@ import { QuickActions } from "@/features/withdrawals/components/QuickActions";
 import { WithdrawalForm } from "@/features/withdrawals/components/WithdrawalForm";
 import { WithdrawalTable } from "@/features/withdrawals/components/WithdrawalTable";
 import { DeleteWithdrawalDialog } from "@/features/withdrawals/components/DeleteWithdrawalDialog";
-
-interface Client {
-  id: number;
-  nom: string;
-  prenom: string;
-  telephone: string;
-  email: string;
-  solde: number;
-  dateCreation: string;
-}
 
 const Withdrawals = () => {
   const { currency } = useCurrency();
@@ -188,7 +178,7 @@ const Withdrawals = () => {
     }
   };
 
-  const findClientById = (clientFullName: string) => {
+  const findClientById = (clientFullName: string): (Client & { dateCreation: string }) | null => {
     if (!clientFullName) return null;
     
     const [firstName, lastName] = clientFullName.split(' ');
@@ -198,11 +188,25 @@ const Withdrawals = () => {
       c.nom.toLowerCase() === lastName?.toLowerCase()
     );
     
-    if (client) return client;
+    if (client) {
+      return {
+        ...client,
+        dateCreation: client.date_creation || new Date().toISOString()
+      };
+    }
     
-    return clients.find(c => 
+    const fallbackClient = clients.find(c => 
       `${c.prenom} ${c.nom}`.toLowerCase().includes(clientFullName.toLowerCase())
-    ) || null;
+    );
+    
+    if (fallbackClient) {
+      return {
+        ...fallbackClient,
+        dateCreation: fallbackClient.date_creation || new Date().toISOString()
+      };
+    }
+    
+    return null;
   };
   
   return (
@@ -218,7 +222,10 @@ const Withdrawals = () => {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <WithdrawalForm 
-          clients={clients}
+          clients={clients.map(client => ({
+            ...client,
+            dateCreation: client.date_creation || new Date().toISOString()
+          }))}
           newWithdrawal={newWithdrawal}
           setNewWithdrawal={setNewWithdrawal}
           onClose={() => {
