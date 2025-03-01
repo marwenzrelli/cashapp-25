@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
@@ -406,6 +407,32 @@ export const SystemAuditLog = () => {
     }
   };
 
+  const renderOperationsByType = (type: string) => {
+    const filteredOperations = operationsLog.filter(op => op.type === type);
+    
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center py-10">
+          <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
+        </div>
+      );
+    }
+    
+    if (filteredOperations.length === 0) {
+      return (
+        <div className="text-center py-10 text-muted-foreground">
+          Aucune opération de ce type
+        </div>
+      );
+    }
+    
+    return (
+      <div className="divide-y divide-border">
+        {filteredOperations.map((operation, index) => renderOperationLogEntry(operation, index))}
+      </div>
+    );
+  };
+  
   const renderDeletedOperationsByType = (type: string) => {
     const filteredOperations = deletedOperationsLog.filter(op => op.type === type);
     
@@ -467,21 +494,50 @@ export const SystemAuditLog = () => {
           </TabsContent>
           
           <TabsContent value="operations-history">
-            <ScrollArea className="h-[50vh]">
-              {isLoading ? (
-                <div className="flex items-center justify-center py-10">
-                  <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
-                </div>
-              ) : operationsLog.length === 0 ? (
-                <div className="text-center py-10 text-muted-foreground">
-                  Aucune opération enregistrée
-                </div>
-              ) : (
-                <div className="divide-y divide-border">
-                  {operationsLog.map((operation, index) => renderOperationLogEntry(operation, index))}
-                </div>
-              )}
-            </ScrollArea>
+            <Tabs defaultValue="all">
+              <TabsList className="grid grid-cols-4 mb-4">
+                <TabsTrigger value="all">Toutes les opérations</TabsTrigger>
+                <TabsTrigger value="deposit">Versements</TabsTrigger>
+                <TabsTrigger value="withdrawal">Retraits</TabsTrigger>
+                <TabsTrigger value="transfer">Virements</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="all">
+                <ScrollArea className="h-[50vh]">
+                  {isLoading ? (
+                    <div className="flex items-center justify-center py-10">
+                      <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
+                    </div>
+                  ) : operationsLog.length === 0 ? (
+                    <div className="text-center py-10 text-muted-foreground">
+                      Aucune opération enregistrée
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-border">
+                      {operationsLog.map((operation, index) => renderOperationLogEntry(operation, index))}
+                    </div>
+                  )}
+                </ScrollArea>
+              </TabsContent>
+              
+              <TabsContent value="deposit">
+                <ScrollArea className="h-[50vh]">
+                  {renderOperationsByType('deposit')}
+                </ScrollArea>
+              </TabsContent>
+              
+              <TabsContent value="withdrawal">
+                <ScrollArea className="h-[50vh]">
+                  {renderOperationsByType('withdrawal')}
+                </ScrollArea>
+              </TabsContent>
+              
+              <TabsContent value="transfer">
+                <ScrollArea className="h-[50vh]">
+                  {renderOperationsByType('transfer')}
+                </ScrollArea>
+              </TabsContent>
+            </Tabs>
           </TabsContent>
           
           <TabsContent value="deleted-operations">
