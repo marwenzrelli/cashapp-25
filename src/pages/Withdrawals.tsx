@@ -61,7 +61,7 @@ interface Withdrawal {
   status: string;
   created_at: string;
   created_by: string | null;
-  formattedDate?: string; // Added formattedDate property
+  formattedDate?: string; // Propriété pour la date formatée
 }
 
 const Withdrawals = () => {
@@ -119,7 +119,7 @@ const Withdrawals = () => {
       const { data, error } = await supabase
         .from('withdrawals')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('operation_date', { ascending: false });
 
       if (error) {
         toast.error("Erreur lors du chargement des retraits");
@@ -128,7 +128,7 @@ const Withdrawals = () => {
       }
 
       if (data) {
-        // Add formatted date to each withdrawal
+        // Ajout de la date formatée à chaque retrait
         const formattedWithdrawals = data.map(withdrawal => ({
           ...withdrawal,
           formattedDate: formatDateTime(withdrawal.operation_date)
@@ -527,7 +527,7 @@ const Withdrawals = () => {
                         </div>
                       </td>
                       <td className="p-3 text-muted-foreground">
-                        {withdrawal.formattedDate || formatDateTime(withdrawal.operation_date)}
+                        {withdrawal.formattedDate}
                       </td>
                       <td className="p-3 text-muted-foreground">{withdrawal.notes}</td>
                       <td className="p-3">
