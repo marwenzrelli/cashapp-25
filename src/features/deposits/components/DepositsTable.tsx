@@ -1,11 +1,11 @@
-
-import { User, Pencil, Trash2 } from "lucide-react";
+import { User, Pencil, Trash2, Hash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { type Deposit } from "@/components/deposits/types";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { formatId } from "@/utils/formatId";
 
 interface DepositsTableProps {
   deposits: Deposit[];
@@ -25,7 +25,6 @@ export const DepositsTable = ({ deposits, itemsPerPage, onEdit, onDelete }: Depo
 
   const handleClientClick = async (clientName: string) => {
     try {
-      // Rechercher le client par son nom complet
       const [firstName, lastName] = clientName.split(' ');
       
       const { data, error } = await supabase
@@ -36,23 +35,19 @@ export const DepositsTable = ({ deposits, itemsPerPage, onEdit, onDelete }: Depo
         .single();
       
       if (error || !data) {
-        // Si le client n'est pas trouvé, on redirige vers la recherche
         navigate(`/clients?search=${encodeURIComponent(clientName)}`);
         return;
       }
       
-      // Rediriger vers la page de profil du client avec son ID
       navigate(`/clients/${data.id}`);
     } catch (error) {
       console.error("Erreur lors de la recherche du client:", error);
       toast.error("Impossible de trouver le profil du client");
       
-      // En cas d'erreur, rediriger vers la recherche
       navigate(`/clients?search=${encodeURIComponent(clientName)}`);
     }
   };
 
-  // Format the date to include time in 24-hour format with seconds
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleString('fr-FR', {
@@ -68,7 +63,7 @@ export const DepositsTable = ({ deposits, itemsPerPage, onEdit, onDelete }: Depo
 
   return (
     <div className="relative w-full overflow-auto rounded-lg border">
-      <div className="hidden md:block"> {/* Version desktop */}
+      <div className="hidden md:block">
         <table className="w-full text-sm">
           <thead className="bg-muted/50">
             <tr className="text-left">
@@ -95,8 +90,9 @@ export const DepositsTable = ({ deposits, itemsPerPage, onEdit, onDelete }: Depo
                       >
                         {deposit.client_name}
                       </p>
-                      <p className="text-sm text-muted-foreground">
-                        #{deposit.id.toString().padStart(4, '0')}
+                      <p className="text-sm text-muted-foreground flex items-center gap-1">
+                        <Hash className="h-3 w-3" />
+                        {formatId(deposit.id)}
                       </p>
                     </div>
                   </div>
@@ -136,7 +132,6 @@ export const DepositsTable = ({ deposits, itemsPerPage, onEdit, onDelete }: Depo
         </table>
       </div>
 
-      {/* Version mobile */}
       <div className="md:hidden space-y-4">
         {deposits.slice(0, parseInt(itemsPerPage)).map((deposit) => (
           <div key={deposit.id} className="p-4 border-b last:border-b-0">
@@ -153,8 +148,9 @@ export const DepositsTable = ({ deposits, itemsPerPage, onEdit, onDelete }: Depo
                   >
                     {deposit.client_name}
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                    #{deposit.id.toString().padStart(4, '0')}
+                  <p className="text-sm text-muted-foreground flex items-center gap-1">
+                    <Hash className="h-3 w-3" />
+                    {formatId(deposit.id)}
                   </p>
                 </div>
               </div>

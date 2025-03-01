@@ -1,8 +1,8 @@
-
 import { Operation } from "../types";
 import { Button } from "@/components/ui/button";
-import { Edit2, Trash2, ArrowUpCircle, ArrowDownCircle, RefreshCcw, User } from "lucide-react";
+import { Edit2, Trash2, ArrowUpCircle, ArrowDownCircle, RefreshCcw, User, Hash } from "lucide-react";
 import { formatDateTime } from "../types";
+import { formatId } from "@/utils/formatId";
 
 interface OperationCardProps {
   operation: Operation;
@@ -65,7 +65,10 @@ export const OperationCard = ({ operation, onEdit, onDelete }: OperationCardProp
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <span className="font-medium truncate">{operation.description}</span>
-            <span className="text-xs text-muted-foreground">#{operation.id.slice(0, 4)}</span>
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <Hash className="h-3 w-3" />
+              {formatId(operation.id.slice(0, 4))}
+            </span>
           </div>
           <div className="text-sm text-muted-foreground flex items-center gap-1.5 overflow-hidden">
             <span className="whitespace-nowrap">{operation.formattedDate || formatDateTime(operation.createdAt || operation.date)}</span>

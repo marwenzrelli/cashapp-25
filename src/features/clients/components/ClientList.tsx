@@ -1,11 +1,11 @@
-import { Client } from "../types";
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Eye, Edit, Trash2, CreditCard, QrCode, User, Phone, Mail, Calendar } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Client } from "../types";
 import { useNavigate } from "react-router-dom";
-import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
-import { useCurrency } from "@/contexts/CurrencyContext";
+import { Button } from "@/components/ui/button";
+import { MoreHorizontal, Edit, Trash2, Eye, Hash } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { formatId } from "@/utils/formatId";
 
 interface ClientListProps {
   clients: Client[];
@@ -15,186 +15,167 @@ interface ClientListProps {
 
 export const ClientList = ({ clients, onEdit, onDelete }: ClientListProps) => {
   const navigate = useNavigate();
-  const { currency } = useCurrency();
+  const [expandedClientId, setExpandedClientId] = useState<number | null>(null);
 
-  const navigateToClientProfile = (clientId: number) => {
-    console.log("Navigation vers le profil client:", clientId);
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
+      case 'inactive':
+        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
+      default:
+        return 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400';
+    }
+  };
+
+  const toggleExpand = (clientId: number) => {
+    if (expandedClientId === clientId) {
+      setExpandedClientId(null);
+    } else {
+      setExpandedClientId(clientId);
+    }
+  };
+
+  const handleView = (clientId: number) => {
     navigate(`/clients/${clientId}`);
   };
 
   return (
-    <div className="w-full space-y-3">
-      {clients.length === 0 && (
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">Aucun client trouvé</p>
-        </div>
-      )}
-      
-      <Card className="w-full overflow-hidden">
-        {clients.length > 0 && (
-          <div className="hidden md:grid grid-cols-12 gap-4 p-4 bg-muted/50 font-medium text-sm">
-            <div className="col-span-3">Nom</div>
-            <div className="col-span-2">Contact</div>
-            <div className="col-span-2">Créé le</div>
-            <div className="col-span-2">Solde</div>
-            <div className="col-span-1">Status</div>
-            <div className="col-span-2 text-right">Actions</div>
-          </div>
-        )}
-        
+    <Card className="w-full">
+      <CardContent className="p-0">
         <div className="divide-y">
           {clients.map((client) => (
-            <div key={client.id} className="hover:bg-muted/30 transition-colors animate-fadeIn">
-              {/* Version Mobile */}
-              <div className="block md:hidden p-4">
-                <div className="flex justify-between items-start mb-2">
+            <div key={client.id} className={`p-4 transition-colors ${expandedClientId === client.id ? 'bg-muted/50' : 'hover:bg-muted/30'}`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="flex-shrink-0 h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
+                    {client.prenom.charAt(0)}{client.nom.charAt(0)}
+                  </div>
                   <div>
-                    <h3 
-                      className="text-lg font-bold cursor-pointer hover:text-primary transition-colors"
-                      onClick={() => navigateToClientProfile(client.id)}
-                    >
-                      {client.prenom} {client.nom}
-                    </h3>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <User className="h-3.5 w-3.5" />
-                      <span>ID: {client.id}</span>
+                    <h3 className="font-medium">{client.prenom} {client.nom}</h3>
+                    <div className="text-sm text-muted-foreground flex items-center gap-2">
+                      <span className="flex items-center gap-1">
+                        <Hash className="h-3 w-3" />
+                        {formatId(client.id)}
+                      </span>
+                      <span>•</span>
+                      <span>{client.telephone}</span>
                     </div>
-                  </div>
-                  <Badge
-                    variant={client.status === "active" ? "default" : "destructive"}
-                    className={`capitalize ${client.status === "active" ? "bg-green-500 hover:bg-green-600" : ""}`}
-                  >
-                    {client.status === "active" ? "Actif" : "Inactif"}
-                  </Badge>
-                </div>
-
-                <div className="grid grid-cols-2 gap-y-2 mb-3">
-                  <div className="flex items-center gap-1 text-sm">
-                    <Phone className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span>{client.telephone}</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-sm">
-                    <Mail className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="truncate">{client.email}</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-sm">
-                    <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span>{format(new Date(client.date_creation || ''), 'dd/MM/yyyy')}</span>
-                  </div>
-                  <div className="flex items-center text-sm">
-                    <span className={`${client.solde >= 0 ? 'text-green-600' : 'text-red-600'} font-semibold`}>
-                      {client.solde.toLocaleString()} {currency}
-                    </span>
                   </div>
                 </div>
                 
-                <div className="flex space-x-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1 flex items-center justify-center gap-1" 
-                    onClick={() => navigateToClientProfile(client.id)}
-                  >
-                    <Eye className="h-3.5 w-3.5" />
-                    <span>Profil</span>
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1 flex items-center justify-center gap-1"
-                    onClick={() => onEdit(client)}
-                  >
-                    <Edit className="h-3.5 w-3.5" />
-                    <span>Modifier</span>
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1 flex items-center justify-center gap-1 text-destructive hover:text-destructive" 
-                    onClick={() => onDelete(client)}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                    <span>Supprimer</span>
-                  </Button>
+                <div className="flex items-center gap-2">
+                  <div className={`px-2 py-1 rounded-full text-xs ${getStatusColor(client.status)}`}>
+                    {client.status === 'active' ? 'Actif' : client.status === 'inactive' ? 'Inactif' : client.status}
+                  </div>
+                  
+                  <div className="flex items-center">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                          onClick={() => toggleExpand(client.id)}
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Plus d'informations</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/50"
+                          onClick={() => handleView(client.id)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Voir le profil</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/50"
+                          onClick={() => onEdit(client)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Modifier</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/50"
+                          onClick={() => onDelete(client)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Supprimer</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
                 </div>
               </div>
               
-              {/* Version Desktop */}
-              <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-3 items-center">
-                <div className="col-span-3">
-                  <div 
-                    className="font-medium cursor-pointer hover:text-primary transition-colors flex items-center gap-2"
-                    onClick={() => navigateToClientProfile(client.id)}
-                  >
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <span>{client.prenom} {client.nom}</span>
+              {expandedClientId === client.id && (
+                <div className="mt-4 pl-14 text-sm grid gap-2">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-muted-foreground">Email</p>
+                      <p>{client.email}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Solde</p>
+                      <p className={client.solde >= 0 ? 'text-green-600' : 'text-red-600'}>
+                        {client.solde.toLocaleString()} TND
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Date de création</p>
+                      <p>{new Date(client.date_creation || '').toLocaleDateString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Dernière mise à jour</p>
+                      <p>{new Date().toLocaleDateString()}</p>
+                    </div>
                   </div>
-                  <div className="text-xs text-muted-foreground mt-0.5">
-                    ID: {client.id}
+                  <div className="mt-2 flex justify-end">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleView(client.id)}
+                    >
+                      Voir le profil complet
+                    </Button>
                   </div>
                 </div>
-                
-                <div className="col-span-2 space-y-1">
-                  <div className="flex items-center gap-1 text-sm">
-                    <Phone className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span>{client.telephone}</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-sm">
-                    <Mail className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="truncate">{client.email}</span>
-                  </div>
-                </div>
-                
-                <div className="col-span-2 text-sm">
-                  {format(new Date(client.date_creation || ''), 'dd/MM/yyyy')}
-                </div>
-                
-                <div className="col-span-2 font-medium">
-                  <span className={`${client.solde >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {client.solde.toLocaleString()} {currency}
-                  </span>
-                </div>
-                
-                <div className="col-span-1">
-                  <Badge
-                    variant={client.status === "active" ? "default" : "destructive"}
-                    className={`capitalize ${client.status === "active" ? "bg-green-500 hover:bg-green-600" : ""}`}
-                  >
-                    {client.status === "active" ? "Actif" : "Inactif"}
-                  </Badge>
-                </div>
-                
-                <div className="col-span-2 flex justify-end space-x-2">
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={() => navigateToClientProfile(client.id)}
-                    className="h-8 w-8"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={() => onEdit(client)}
-                    className="h-8 w-8"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={() => onDelete(client)} 
-                    className="h-8 w-8 text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
+              )}
             </div>
           ))}
         </div>
-      </Card>
-    </div>
+      </CardContent>
+    </Card>
   );
 };

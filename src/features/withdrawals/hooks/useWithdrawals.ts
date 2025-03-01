@@ -1,8 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { Withdrawal } from "../types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { formatId } from "@/utils/formatId";
 
 export const useWithdrawals = () => {
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
@@ -86,7 +86,7 @@ export const useWithdrawals = () => {
     setLoading(true);
     
     try {
-      console.log("Début de la suppression du retrait avec ID:", withdrawalToDelete.id);
+      console.log("Début de la suppression du retrait avec ID:", formatId(withdrawalToDelete.id));
       console.log("Type de l'ID:", typeof withdrawalToDelete.id);
       
       const { data: { session } } = await supabase.auth.getSession();
@@ -160,7 +160,7 @@ export const useWithdrawals = () => {
         throw deleteError;
       }
       
-      console.log("Retrait supprimé avec succès, ID:", withdrawalToDelete.id);
+      console.log("Retrait supprimé avec succès, ID:", formatId(withdrawalToDelete.id));
       toast.success("Retrait supprimé avec succès");
       
       fetchWithdrawals();

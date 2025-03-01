@@ -1,11 +1,12 @@
 
 import { format } from "date-fns";
-import { User, Phone, Mail, Calendar, Wallet } from "lucide-react";
+import { User, Phone, Mail, Calendar, Wallet, Hash } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Client } from "../types";
 import { ClientQRCode } from "./ClientQRCode";
 import { cn } from "@/lib/utils";
 import { RefObject } from "react";
+import { formatId } from "@/utils/formatId";
 
 interface ClientPersonalInfoProps {
   client: Client;
@@ -23,7 +24,15 @@ export const ClientPersonalInfo = ({
   return (
     <Card className="md:col-span-3">
       <CardHeader>
-        <CardTitle>Informations personnelles</CardTitle>
+        <CardTitle className="flex items-center justify-between">
+          Informations personnelles
+          {clientId && (
+            <div className="flex items-center gap-2 text-sm bg-muted px-3 py-1 rounded-full">
+              <Hash className="h-4 w-4 text-muted-foreground" />
+              <span>ID: {formatId(clientId)}</span>
+            </div>
+          )}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid gap-6 md:grid-cols-3">
