@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import { Card } from '@/components/ui/card';
@@ -11,9 +10,10 @@ import { useNavigate } from 'react-router-dom';
 interface ClientQRCodeProps {
   clientId: number;
   clientName: string;
+  size?: number;
 }
 
-export const ClientQRCode = ({ clientId, clientName }: ClientQRCodeProps) => {
+export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const { toast } = useToast();
@@ -56,7 +56,6 @@ export const ClientQRCode = ({ clientId, clientName }: ClientQRCodeProps) => {
 
       if (profile) {
         setUserRole(profile.role);
-        // Ajout du rôle 'cashier' aux rôles autorisés
         setHasAccess(['supervisor', 'manager', 'cashier'].includes(profile.role));
       }
     };
@@ -89,7 +88,7 @@ export const ClientQRCode = ({ clientId, clientName }: ClientQRCodeProps) => {
           canvasRef.current,
           url,
           {
-            width: 256,
+            width: size,
             margin: 1,
             color: {
               dark: '#000000',
@@ -146,8 +145,8 @@ export const ClientQRCode = ({ clientId, clientName }: ClientQRCodeProps) => {
   }
 
   return (
-    <Card className="p-6 bg-white shadow-lg">
-      <div className="flex flex-col items-center gap-4">
+    <Card className="p-4 bg-white shadow-lg">
+      <div className="flex flex-col items-center gap-2">
         <div className="bg-white p-2 rounded-lg shadow-inner relative">
           {isLoading ? (
             <div className="absolute inset-0 flex items-center justify-center bg-white/80">
@@ -171,21 +170,21 @@ export const ClientQRCode = ({ clientId, clientName }: ClientQRCodeProps) => {
             <Button 
               variant="outline" 
               size="sm" 
-              className="gap-2"
+              className="gap-2 text-xs"
               onClick={handleCopyLink}
               disabled={!accessToken || isLoading}
             >
-              <Copy className="h-4 w-4" />
+              <Copy className="h-3 w-3" />
               Copier le lien
             </Button>
             <Button
               variant="outline"
               size="sm"
-              className="gap-2"
+              className="gap-2 text-xs"
               onClick={handleRegenerateQR}
               disabled={isLoading}
             >
-              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`h-3 w-3 ${isLoading ? 'animate-spin' : ''}`} />
               Régénérer
             </Button>
           </div>

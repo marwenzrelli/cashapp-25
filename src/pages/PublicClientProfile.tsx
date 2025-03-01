@@ -1,7 +1,6 @@
 
 import { useParams } from "react-router-dom";
 import { usePublicClientProfile } from "@/features/clients/hooks/usePublicClientProfile";
-import { PublicClientBalanceCard } from "@/features/clients/components/PublicClientBalanceCard";
 import { PublicClientPersonalInfo } from "@/features/clients/components/PublicClientPersonalInfo";
 import { PublicClientOperationsHistory } from "@/features/clients/components/PublicClientOperationsHistory";
 import { PublicClientLoading } from "@/features/clients/components/PublicClientLoading";
@@ -22,10 +21,7 @@ const PublicClientProfile = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950/50 dark:to-blue-950/50 p-2 sm:p-8">
       <div className="max-w-7xl mx-auto space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <PublicClientPersonalInfo client={client} />
-          <PublicClientBalanceCard client={client} />
-        </div>
+        <PublicClientPersonalInfo client={client} />
         <PublicClientOperationsHistory operations={operations} />
       </div>
     </div>

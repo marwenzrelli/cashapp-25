@@ -5,7 +5,6 @@ import { useClientProfile } from "@/features/clients/hooks/useClientProfile";
 import { ClientPersonalInfo } from "@/features/clients/components/ClientPersonalInfo";
 import { ClientOperationsHistory } from "@/features/clients/components/ClientOperationsHistory";
 import { OperationsDetailCards } from "@/features/clients/components/OperationsDetailCards";
-import { ClientBalanceCard } from "@/features/clients/components/ClientBalanceCard";
 
 const ClientProfile = () => {
   const {
@@ -61,17 +60,12 @@ const ClientProfile = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <ClientPersonalInfo client={client} />
-          <ClientBalanceCard
-            client={client}
-            clientId={clientId}
-            qrCodeRef={qrCodeRef}
-            exportToExcel={exportToExcel}
-            exportToPDF={exportToPDF}
-            formatAmount={formatAmount}
-          />
-        </div>
+        <ClientPersonalInfo 
+          client={client} 
+          clientId={clientId}
+          qrCodeRef={qrCodeRef}
+          formatAmount={formatAmount}
+        />
 
         <ClientOperationsHistory
           operations={clientOperations}
