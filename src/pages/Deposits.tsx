@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
@@ -24,6 +23,7 @@ const Deposits = () => {
     amount: "",
     notes: ""
   });
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const { 
     deposits, 
@@ -49,9 +49,10 @@ const Deposits = () => {
       return;
     }
     
+    setIsDeleting(true);
     console.log("Confirmation de suppression pour:", selectedDeposit);
+    
     try {
-      // S'assurer que le depositToDelete est correctement défini dans useDeposits
       const success = await confirmDeleteDeposit();
       
       if (success) {
@@ -60,13 +61,23 @@ const Deposits = () => {
           description: `Le versement de ${selectedDeposit.amount} TND a été supprimé.`
         });
       } else {
-        toast.error("Échec de la suppression du versement");
+        console.error("La suppression a échoué mais sans erreur lancée");
+        toast.error("Échec de la suppression du versement", {
+          description: "La suppression n'a pas pu être effectuée. Veuillez réessayer."
+        });
       }
-    } catch (error) {
-      console.error("Erreur lors de la suppression:", error);
-      toast.error("Échec de la suppression du versement", {
-        description: "Une erreur est survenue lors de la suppression"
+    } catch (error: any) {
+      console.error("Erreur détaillée lors de la suppression:", {
+        message: error.message,
+        stack: error.stack,
+        error: error
       });
+      
+      toast.error("Échec de la suppression du versement", {
+        description: error.message || "Une erreur est survenue lors de la suppression"
+      });
+    } finally {
+      setIsDeleting(false);
     }
   };
 

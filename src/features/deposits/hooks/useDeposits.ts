@@ -151,7 +151,67 @@ export const useDeposits = () => {
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id;
       
-      // Récupérer et vérifier que l'ID est bien au format numérique
+      // Récupération des détails complets du versement depuis la base de données
+      const { data: depositData, error: fetchError } = await supabase
+        .from('deposits')
+        .select('*')
+        .eq('id', deposit.id)
+        .single();
+        
+      if (fetchError || !depositData) {
+        console.error("Erreur lors de la récupération des détails du versement:", fetchError);
+        toast.error("Erreur lors de la récupération des détails du versement");
+        return false;
+      }
+      
+      console.log("Données récupérées du versement:", depositData);
+      
+      // Préparation des données pour le log avec le format correct
+      const logEntry = {
+        original_id: deposit.id.toString(), // Assurez-vous que c'est une chaîne
+        operation_type: 'deposit',
+        client_name: depositData.client_name,
+        amount: depositData.amount,
+        operation_date: depositData.operation_date,
+        reason: depositData.notes || null,
+        from_client: depositData.client_name,
+        to_client: depositData.client_name,
+        deleted_by: userId
+      };
+      
+      console.log("Données préparées pour le log:", logEntry);
+      
+      // Vérification de la structure de la table deleted_transfers_log
+      const { data: tableInfo, error: tableInfoError } = await supabase
+        .rpc('get_table_details', { table_name: 'deleted_transfers_log' });
+        
+      if (tableInfoError) {
+        console.error("Impossible de vérifier la structure de la table deleted_transfers_log:", tableInfoError);
+      } else {
+        console.log("Structure de la table deleted_transfers_log:", tableInfo);
+      }
+      
+      // Création du log de suppression avec gestion d'erreur détaillée
+      const { data: logData, error: logError } = await supabase
+        .from('deleted_transfers_log')
+        .insert(logEntry)
+        .select();
+        
+      if (logError) {
+        console.error("Erreur détaillée lors de la création du log de suppression:", {
+          message: logError.message,
+          details: logError.details,
+          hint: logError.hint,
+          code: logError.code
+        });
+        
+        // On continue malgré l'erreur de log pour tenter de supprimer le versement
+        console.warn("Poursuite de la suppression malgré l'échec de création du log");
+      } else {
+        console.log("Log de suppression créé avec succès:", logData);
+      }
+      
+      // Suppression du versement après vérification de l'ID
       const depositId = parseInt(deposit.id.toString(), 10);
       if (isNaN(depositId)) {
         console.error("L'ID du versement n'est pas un nombre valide:", deposit.id);
@@ -159,42 +219,20 @@ export const useDeposits = () => {
         return false;
       }
       
-      // Préparation des données pour le log
-      const logEntry = {
-        original_id: depositId.toString(),
-        operation_type: 'deposit',
-        client_name: deposit.client_name,
-        amount: deposit.amount,
-        operation_date: deposit.operation_date || deposit.created_at,
-        reason: deposit.description || null,
-        from_client: deposit.client_name,
-        to_client: deposit.client_name,
-        deleted_by: userId || null
-      };
+      console.log("Tentative de suppression du versement avec ID:", depositId);
       
-      console.log("Données préparées pour le log:", logEntry);
-      
-      // Création du log de suppression
-      const { error: logError } = await supabase
-        .from('deleted_transfers_log')
-        .insert(logEntry);
-        
-      if (logError) {
-        console.error("Erreur lors de la création du log de suppression:", logError);
-        toast.error("Erreur lors de la création du log de suppression");
-        return false;
-      }
-      
-      console.log("Log de suppression créé avec succès, suppression du versement...");
-      
-      // Suppression du versement
       const { error: deleteError } = await supabase
         .from('deposits')
         .delete()
         .eq('id', depositId);
         
       if (deleteError) {
-        console.error("Erreur lors de la suppression du versement:", deleteError);
+        console.error("Erreur détaillée lors de la suppression du versement:", {
+          message: deleteError.message,
+          details: deleteError.details,
+          hint: deleteError.hint,
+          code: deleteError.code
+        });
         toast.error("Erreur lors de la suppression du versement");
         return false;
       }
@@ -213,7 +251,7 @@ export const useDeposits = () => {
       
       return true;
     } catch (error) {
-      console.error("Erreur critique lors de la suppression du versement:", error);
+      console.error("Erreur critique détaillée lors de la suppression du versement:", error);
       toast.error("Erreur lors de la suppression du versement");
       return false;
     }
