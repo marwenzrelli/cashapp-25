@@ -45,7 +45,7 @@ export const useWithdrawals = () => {
         return;
       }
 
-      // Ajout de la date formatée à chaque retrait pour un affichage cohérent
+      // Format the operation_date for consistent display
       const formattedWithdrawals = data.map(withdrawal => ({
         ...withdrawal,
         formattedDate: formatDateTime(withdrawal.operation_date)

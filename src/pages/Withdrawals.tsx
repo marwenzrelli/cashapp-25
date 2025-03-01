@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -128,7 +127,6 @@ const Withdrawals = () => {
       }
 
       if (data) {
-        // Ajout de la date formatée à chaque retrait
         const formattedWithdrawals = data.map(withdrawal => ({
           ...withdrawal,
           formattedDate: formatDateTime(withdrawal.operation_date)
@@ -186,6 +184,7 @@ const Withdrawals = () => {
       }
 
       const clientFullName = `${selectedClient.prenom} ${selectedClient.nom}`;
+      const operationDate = new Date(newWithdrawal.date);
       
       if (selectedWithdrawal) {
         const { error } = await supabase
@@ -193,7 +192,7 @@ const Withdrawals = () => {
           .update({
             client_name: clientFullName,
             amount: parseFloat(newWithdrawal.amount),
-            operation_date: new Date(newWithdrawal.date).toISOString(),
+            operation_date: operationDate.toISOString(),
             notes: newWithdrawal.notes,
             created_by: session.user.id,
             status: 'completed'
@@ -217,7 +216,7 @@ const Withdrawals = () => {
           .insert({
             client_name: clientFullName,
             amount: parseFloat(newWithdrawal.amount),
-            operation_date: new Date(newWithdrawal.date).toISOString(),
+            operation_date: operationDate.toISOString(),
             notes: newWithdrawal.notes,
             created_by: session.user.id,
             status: 'completed'
