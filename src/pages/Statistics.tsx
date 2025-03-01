@@ -33,8 +33,10 @@ interface FilteredData {
 const Statistics = () => {
   const { deposits, isLoading: isLoadingDeposits } = useDeposits();
   const { withdrawals, isLoading: isLoadingWithdrawals } = useWithdrawals();
-  const { transfers } = useTransfersList();
+  const { transfers = [] } = useTransfersList();
   const { currency } = useCurrency();
+
+  const transfersArray = Array.isArray(transfers) ? transfers : [];
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: subDays(new Date(), 30),
@@ -70,7 +72,7 @@ const Statistics = () => {
   const filteredDeposits = filterData(deposits as FilteredData[], "deposits");
   const filteredWithdrawals = filterData(withdrawals as FilteredData[], "withdrawals");
   const filteredTransfers = filterData(
-    transfers.map(t => ({
+    transfersArray.map(t => ({
       fromClient: t.fromClient,
       toClient: t.toClient,
       amount: t.amount,

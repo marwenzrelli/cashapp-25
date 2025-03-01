@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Transfer } from "../types";
 import { formatDateTime } from "@/features/operations/types";
 
-const fetchTransfers = async (): Promise<Transfer[]> => {
+const fetchTransfersData = async (): Promise<Transfer[]> => {
   try {
     const { data, error } = await supabase
       .from('transfers')
@@ -44,10 +44,10 @@ export const useTransfersList = () => {
     data: transfers = [], 
     isLoading, 
     error, 
-    refetch: fetchTransfers 
+    refetch 
   } = useQuery({
     queryKey: ['transfers'],
-    queryFn: fetchTransfers,
+    queryFn: fetchTransfersData,
   });
 
   if (error) {
@@ -57,6 +57,6 @@ export const useTransfersList = () => {
   return {
     transfers,
     isLoading,
-    fetchTransfers
+    fetchTransfers: refetch
   };
 };

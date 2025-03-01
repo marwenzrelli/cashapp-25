@@ -18,7 +18,7 @@ const Transfers = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [itemsPerPage, setItemsPerPage] = useState("10");
   
-  const { transfers, isLoading, fetchTransfers } = useTransfersList();
+  const { transfers = [], isLoading, fetchTransfers } = useTransfersList();
   const {
     selectedTransfer,
     isEditDialogOpen,
@@ -42,7 +42,10 @@ const Transfers = () => {
     });
   };
 
-  const visibleTransfers = transfers.slice(0, parseInt(itemsPerPage));
+  // Ensure transfers is always an array before slicing
+  const visibleTransfers = Array.isArray(transfers) 
+    ? transfers.slice(0, parseInt(itemsPerPage)) 
+    : [];
 
   if (isLoading) {
     return (
@@ -67,7 +70,7 @@ const Transfers = () => {
       <TransferPagination
         itemsPerPage={itemsPerPage}
         setItemsPerPage={setItemsPerPage}
-        totalTransfers={transfers.length}
+        totalTransfers={Array.isArray(transfers) ? transfers.length : 0}
       />
 
       <TransferList
