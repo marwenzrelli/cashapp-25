@@ -142,9 +142,9 @@ const Operations = () => {
       )}
       
       <DeleteOperationDialog
-        open={showDeleteDialog}
-        onOpenChange={setShowDeleteDialog}
-        onConfirm={confirmDeleteOperation}
+        isOpen={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        onDelete={confirmDeleteOperation}
         operation={operationToDelete}
       />
     </div>

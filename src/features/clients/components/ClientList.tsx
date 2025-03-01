@@ -41,8 +41,8 @@ export const ClientList = ({ clients, onEdit, onDelete }: ClientListProps) => {
                 </div>
               </div>
               <Badge
-                variant={client.status === "active" ? "success" : "destructive"}
-                className="capitalize"
+                variant={client.status === "active" ? "default" : "destructive"}
+                className={`capitalize ${client.status === "active" ? "bg-green-500 hover:bg-green-600" : ""}`}
               >
                 {client.status === "active" ? "Actif" : "Inactif"}
               </Badge>
