@@ -34,8 +34,8 @@ export const formatDateTime = (dateString: string) => {
     return "Date invalide";
   }
   
-  // On utilise le même format que useDeposits pour garantir une cohérence
-  return date.toLocaleDateString('fr-FR', {
+  // On utilise le format exact de useDeposits pour garantir une cohérence parfaite
+  return date.toLocaleString('fr-FR', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',

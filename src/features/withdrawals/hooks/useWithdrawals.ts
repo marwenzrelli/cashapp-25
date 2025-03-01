@@ -45,7 +45,7 @@ export const useWithdrawals = () => {
         return;
       }
 
-      // Utiliser le même format que dans useDeposits
+      // Utilisons exactement le même formatage que useDeposits
       const formattedWithdrawals = data.map(withdrawal => {
         return {
           ...withdrawal,
@@ -53,7 +53,7 @@ export const useWithdrawals = () => {
         };
       });
 
-      console.log("Retraits formatés avec le format des versements:", formattedWithdrawals);
+      console.log("Retraits formatés:", formattedWithdrawals);
       setWithdrawals(formattedWithdrawals);
     } catch (error) {
       console.error("Erreur lors du chargement des retraits:", error);
