@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarIcon, Trash, ArrowDownCircle, ArrowUpCircle, RefreshCcw } from "lucide-react";
+import { CalendarIcon, Trash, ArrowDownCircle, ArrowUpCircle, RefreshCcw, Activity } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -33,12 +33,26 @@ interface DeletedTransaction {
   deleted_at: string;
 }
 
+interface OperationLogEntry {
+  id: string;
+  type: string;
+  amount: number;
+  date: string;
+  client_name?: string;
+  from_client?: string;
+  to_client?: string;
+  created_by?: string;
+  created_by_name?: string;
+  description: string;
+}
+
 export const SystemAuditLog = () => {
   const [activeTab, setActiveTab] = useState("user-activity");
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [deletedDeposits, setDeletedDeposits] = useState<AuditLogEntry[]>([]);
   const [deletedWithdrawals, setDeletedWithdrawals] = useState<AuditLogEntry[]>([]);
   const [deletedTransfers, setDeletedTransfers] = useState<AuditLogEntry[]>([]);
+  const [operationsLog, setOperationsLog] = useState<OperationLogEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -130,6 +144,9 @@ export const SystemAuditLog = () => {
             amount: transaction.amount
           }));
 
+        // Fetch recent operations (new code)
+        await fetchRecentOperations();
+
         setAuditLogs(formattedLoginData);
         setDeletedDeposits(deposits);
         setDeletedWithdrawals(withdrawals);
@@ -143,6 +160,92 @@ export const SystemAuditLog = () => {
 
     fetchData();
   }, []);
+
+  // Function to fetch recent operations
+  const fetchRecentOperations = async () => {
+    try {
+      // Récupérer les opérateurs
+      const { data: usersData } = await supabase
+        .from('profiles')
+        .select('id, full_name');
+      
+      const usersMap = (usersData || []).reduce((acc, user) => {
+        acc[user.id] = user.full_name;
+        return acc;
+      }, {} as Record<string, string>);
+
+      // Fetch deposits
+      const { data: deposits, error: depositsError } = await supabase
+        .from('deposits')
+        .select('*')
+        .order('operation_date', { ascending: false })
+        .limit(20);
+
+      if (depositsError) throw depositsError;
+
+      // Fetch withdrawals
+      const { data: withdrawals, error: withdrawalsError } = await supabase
+        .from('withdrawals')
+        .select('*')
+        .order('operation_date', { ascending: false })
+        .limit(20);
+
+      if (withdrawalsError) throw withdrawalsError;
+
+      // Fetch transfers
+      const { data: transfers, error: transfersError } = await supabase
+        .from('transfers')
+        .select('*')
+        .order('operation_date', { ascending: false })
+        .limit(20);
+
+      if (transfersError) throw transfersError;
+
+      // Combine and format all operations
+      const formattedDeposits = deposits.map(d => ({
+        id: `deposit-${d.id}`,
+        type: 'deposit',
+        amount: d.amount,
+        date: format(new Date(d.operation_date), 'dd/MM/yyyy HH:mm'),
+        client_name: d.client_name,
+        created_by: d.created_by,
+        created_by_name: d.created_by ? usersMap[d.created_by] || 'Utilisateur inconnu' : 'Système',
+        description: `Versement pour ${d.client_name}`
+      }));
+
+      const formattedWithdrawals = withdrawals.map(w => ({
+        id: `withdrawal-${w.id}`,
+        type: 'withdrawal',
+        amount: w.amount,
+        date: format(new Date(w.operation_date), 'dd/MM/yyyy HH:mm'),
+        client_name: w.client_name,
+        created_by: w.created_by,
+        created_by_name: w.created_by ? usersMap[w.created_by] || 'Utilisateur inconnu' : 'Système',
+        description: `Retrait par ${w.client_name}`
+      }));
+
+      const formattedTransfers = transfers.map(t => ({
+        id: `transfer-${t.id}`,
+        type: 'transfer',
+        amount: t.amount,
+        date: format(new Date(t.operation_date), 'dd/MM/yyyy HH:mm'),
+        from_client: t.from_client,
+        to_client: t.to_client,
+        created_by: t.created_by,
+        created_by_name: t.created_by ? usersMap[t.created_by] || 'Utilisateur inconnu' : 'Système',
+        description: `Virement de ${t.from_client} vers ${t.to_client}`
+      }));
+
+      // Combine all operations and sort by date (newest first)
+      const allOperations = [...formattedDeposits, ...formattedWithdrawals, ...formattedTransfers]
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, 50); // Limit to 50 most recent
+
+      setOperationsLog(allOperations);
+    } catch (error) {
+      console.error("Erreur lors du chargement des opérations récentes:", error);
+    }
+  };
 
   // Function to render transaction log entry
   const renderTransactionLogEntry = (log: AuditLogEntry, index: number) => (
@@ -174,6 +277,49 @@ export const SystemAuditLog = () => {
               {log.amount.toLocaleString()} TND
             </Badge>
           )}
+        </div>
+      </div>
+    </div>
+  );
+
+  // Function to render operation log entry
+  const renderOperationLogEntry = (operation: OperationLogEntry, index: number) => (
+    <div 
+      key={operation.id} 
+      className={`flex items-start p-3 gap-4 ${index % 2 === 0 ? 'bg-muted/30' : 'bg-background'}`}
+    >
+      <div className="flex-shrink-0 mt-1">
+        {getOperationIcon(operation.type)}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <p className="font-medium text-sm">
+              {operation.type === 'deposit' ? 'Versement' : 
+               operation.type === 'withdrawal' ? 'Retrait' : 'Virement'}
+            </p>
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <CalendarIcon className="h-3 w-3" />
+              <span>{operation.date}</span>
+            </div>
+          </div>
+          <Badge variant="outline" className="w-fit text-xs">
+            {operation.created_by_name || 'Système'}
+          </Badge>
+        </div>
+        <p className="text-sm mt-1">{operation.description}</p>
+        <div className="flex items-center justify-between mt-2">
+          <span className="text-xs text-muted-foreground">{operation.id.split('-')[1]}</span>
+          <Badge 
+            variant="secondary" 
+            className={`font-semibold ${
+              operation.type === 'deposit' ? 'bg-green-100 text-green-800' : 
+              operation.type === 'withdrawal' ? 'bg-red-100 text-red-800' : 
+              'bg-blue-100 text-blue-800'
+            }`}
+          >
+            {operation.amount.toLocaleString()} TND
+          </Badge>
         </div>
       </div>
     </div>
@@ -214,16 +360,16 @@ export const SystemAuditLog = () => {
     </div>
   );
 
-  const getTransactionIcon = (type: string) => {
+  const getOperationIcon = (type: string) => {
     switch (type) {
       case 'deposit':
-        return <ArrowUpCircle className="h-4 w-4 text-green-500" />;
+        return <ArrowUpCircle className="h-5 w-5 text-green-500" />;
       case 'withdrawal':
-        return <ArrowDownCircle className="h-4 w-4 text-red-500" />;
+        return <ArrowDownCircle className="h-5 w-5 text-red-500" />;
       case 'transfer':
-        return <RefreshCcw className="h-4 w-4 text-purple-500" />;
+        return <RefreshCcw className="h-5 w-5 text-blue-500" />;
       default:
-        return <Trash className="h-4 w-4 text-red-500" />;
+        return <Activity className="h-5 w-5 text-gray-500" />;
     }
   };
 
@@ -232,13 +378,14 @@ export const SystemAuditLog = () => {
       <CardHeader>
         <CardTitle>Journal d'audit du système</CardTitle>
         <CardDescription>
-          Historique des connexions et des opérations supprimées
+          Historique des connexions, des opérations réalisées et supprimées
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-4 mb-4">
+          <TabsList className="grid grid-cols-5 mb-4">
             <TabsTrigger value="user-activity">Connexions</TabsTrigger>
+            <TabsTrigger value="operations-history">Opérations réalisées</TabsTrigger>
             <TabsTrigger value="deleted-deposits">Versements supprimés</TabsTrigger>
             <TabsTrigger value="deleted-withdrawals">Retraits supprimés</TabsTrigger>
             <TabsTrigger value="deleted-transfers">Virements supprimés</TabsTrigger>
@@ -257,6 +404,24 @@ export const SystemAuditLog = () => {
               ) : (
                 <div className="divide-y divide-border">
                   {auditLogs.map((log, index) => renderAuditLogEntry(log, index))}
+                </div>
+              )}
+            </ScrollArea>
+          </TabsContent>
+          
+          <TabsContent value="operations-history">
+            <ScrollArea className="h-[50vh]">
+              {isLoading ? (
+                <div className="flex items-center justify-center py-10">
+                  <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
+                </div>
+              ) : operationsLog.length === 0 ? (
+                <div className="text-center py-10 text-muted-foreground">
+                  Aucune opération enregistrée
+                </div>
+              ) : (
+                <div className="divide-y divide-border">
+                  {operationsLog.map((operation, index) => renderOperationLogEntry(operation, index))}
                 </div>
               )}
             </ScrollArea>
