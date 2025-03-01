@@ -98,12 +98,21 @@ export const useWithdrawals = () => {
         .single();
         
       if (fetchError) {
+        console.error("Erreur lors de la récupération des détails du retrait:", fetchError);
         throw fetchError;
       }
       
-      if (withdrawalData) {
-        // Enregistrer dans deleted_transfers_log
-        const { error: logError } = await supabase.from('deleted_transfers_log').insert({
+      if (!withdrawalData) {
+        console.error("Aucune donnée de retrait trouvée pour l'ID:", withdrawalToDelete.id);
+        throw new Error("Retrait introuvable");
+      }
+      
+      console.log("Enregistrement dans deleted_transfers_log du retrait:", withdrawalData);
+      
+      // Enregistrer dans deleted_transfers_log
+      const { error: logError } = await supabase
+        .from('deleted_transfers_log')
+        .insert({
           original_id: withdrawalToDelete.id,
           operation_type: 'withdrawal',
           client_name: withdrawalData.client_name,
@@ -115,9 +124,11 @@ export const useWithdrawals = () => {
           deleted_by: userId || null,
         });
         
-        if (logError) {
-          console.error("Erreur lors de l'enregistrement dans deleted_transfers_log:", logError);
-        }
+      if (logError) {
+        console.error("Erreur lors de l'enregistrement dans deleted_transfers_log:", logError);
+        // Continuer avec la suppression même si l'enregistrement du log échoue
+      } else {
+        console.log("Retrait enregistré avec succès dans deleted_transfers_log");
       }
       
       // Supprimer le retrait
@@ -127,9 +138,11 @@ export const useWithdrawals = () => {
         .eq('id', withdrawalToDelete.id);
         
       if (deleteError) {
+        console.error("Erreur lors de la suppression du retrait:", deleteError);
         throw deleteError;
       }
       
+      console.log("Retrait supprimé avec succès, ID:", withdrawalToDelete.id);
       toast.success("Retrait supprimé avec succès");
       
       // Rafraîchir la liste
