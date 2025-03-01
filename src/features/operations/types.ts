@@ -34,15 +34,13 @@ export const formatDateTime = (dateString: string) => {
     return "Date invalide";
   }
   
-  // Utiliser toLocaleString pour garantir un affichage correct de la date et de l'heure
-  // en tenant compte de la timezone locale
-  return date.toLocaleString('fr-FR', {
+  // On utilise le même format que useDeposits pour garantir une cohérence
+  return date.toLocaleDateString('fr-FR', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
-    second: '2-digit',
     hour12: false
   });
 };
