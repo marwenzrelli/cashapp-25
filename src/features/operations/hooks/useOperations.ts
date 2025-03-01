@@ -85,9 +85,32 @@ export const useOperations = () => {
     try {
       setIsLoading(true);
       let error;
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
       
       switch (operationToDelete.type) {
         case "deposit":
+          // Récupérer les détails du versement avant la suppression
+          const { data: depositData } = await supabase
+            .from('deposits')
+            .select('*')
+            .eq('id', parseInt(operationToDelete.id))
+            .single();
+            
+          if (depositData) {
+            // Enregistrer dans deleted_deposits_log
+            await supabase.from('deleted_transfers_log').insert({
+              original_id: operationToDelete.id,
+              operation_type: 'deposit',
+              client_name: depositData.client_name,
+              amount: depositData.amount,
+              operation_date: depositData.operation_date,
+              notes: depositData.notes,
+              deleted_by: userId || null,
+            });
+          }
+            
+          // Supprimer le versement
           const { error: depositError } = await supabase
             .from('deposits')
             .delete()
@@ -96,6 +119,27 @@ export const useOperations = () => {
           break;
           
         case "withdrawal":
+          // Récupérer les détails du retrait avant la suppression
+          const { data: withdrawalData } = await supabase
+            .from('withdrawals')
+            .select('*')
+            .eq('id', operationToDelete.id)
+            .single();
+            
+          if (withdrawalData) {
+            // Enregistrer dans deleted_transfers_log
+            await supabase.from('deleted_transfers_log').insert({
+              original_id: operationToDelete.id,
+              operation_type: 'withdrawal',
+              client_name: withdrawalData.client_name,
+              amount: withdrawalData.amount,
+              operation_date: withdrawalData.operation_date,
+              notes: withdrawalData.notes,
+              deleted_by: userId || null,
+            });
+          }
+          
+          // Supprimer le retrait
           const { error: withdrawalError } = await supabase
             .from('withdrawals')
             .delete()
@@ -104,6 +148,28 @@ export const useOperations = () => {
           break;
           
         case "transfer":
+          // Récupérer les détails du virement avant la suppression
+          const { data: transferData } = await supabase
+            .from('transfers')
+            .select('*')
+            .eq('id', operationToDelete.id)
+            .single();
+            
+          if (transferData) {
+            // Enregistrer dans deleted_transfers_log
+            await supabase.from('deleted_transfers_log').insert({
+              original_id: operationToDelete.id,
+              operation_type: 'transfer',
+              from_client: transferData.from_client,
+              to_client: transferData.to_client,
+              amount: transferData.amount,
+              reason: transferData.reason,
+              operation_date: transferData.operation_date,
+              deleted_by: userId || null,
+            });
+          }
+          
+          // Supprimer le virement
           const { error: transferError } = await supabase
             .from('transfers')
             .delete()

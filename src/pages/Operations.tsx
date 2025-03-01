@@ -8,6 +8,7 @@ import { Printer, DownloadIcon } from "lucide-react";
 import { jsPDF } from "jspdf";
 import 'jspdf-autotable';
 import { DeleteOperationDialog } from "@/features/operations/components/DeleteOperationDialog";
+import { DateRange } from "react-day-picker";
 
 const Operations = () => {
   const { 
@@ -21,10 +22,7 @@ const Operations = () => {
   } = useOperations();
   const [filterType, setFilterType] = useState<string | null>(null);
   const [filterClient, setFilterClient] = useState("");
-  const [dateRange, setDateRange] = useState<{
-    from?: Date;
-    to?: Date;
-  }>({});
+  const [dateRange, setDateRange] = useState<DateRange>({});
 
   const filteredOperations = operations.filter((op) => {
     const matchesType = !filterType || op.type === filterType;
@@ -108,12 +106,12 @@ const Operations = () => {
       </div>
 
       <OperationFilters
-        filterType={filterType}
-        setFilterType={setFilterType}
-        filterClient={filterClient}
-        setFilterClient={setFilterClient}
-        dateRange={dateRange}
-        setDateRange={setDateRange}
+        type={filterType}
+        setType={setFilterType}
+        client={filterClient}
+        setClient={setFilterClient}
+        date={dateRange}
+        setDate={setDateRange}
       />
 
       {isLoading ? (
