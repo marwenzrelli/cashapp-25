@@ -91,7 +91,7 @@ export const useOperations = () => {
           const { error: depositError } = await supabase
             .from('deposits')
             .delete()
-            .eq('id', operationToDelete.id);
+            .eq('id', parseInt(operationToDelete.id));
           error = depositError;
           break;
           

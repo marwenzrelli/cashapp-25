@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +16,18 @@ interface AuditLogEntry {
   target_id: string;
   target_name?: string;
   amount?: number;
+}
+
+interface DeletedTransfer {
+  id: string;
+  original_id: string;
+  from_client: string;
+  to_client: string;
+  amount: number;
+  reason?: string;
+  operation_date: string;
+  deleted_by: string;
+  deleted_at: string;
 }
 
 export const SystemAuditLog = () => {
@@ -136,7 +147,7 @@ export const SystemAuditLog = () => {
       }));
       
       // Ajouter les virements supprimés s'ils existent
-      const deletedTransferLogs: AuditLogEntry[] = deletedTransfers ? deletedTransfers.map(transfer => ({
+      const deletedTransferLogs: AuditLogEntry[] = deletedTransfers ? deletedTransfers.map((transfer: DeletedTransfer) => ({
         id: `deleted-transfer-${transfer.id}`,
         action_type: 'transfer_deleted',
         action_date: transfer.deleted_at,
