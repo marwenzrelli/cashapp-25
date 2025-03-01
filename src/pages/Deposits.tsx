@@ -123,7 +123,7 @@ const Deposits = () => {
             </div>
           </div>
           <CardDescription>
-            Gérez les versements et accédez à leurs informations détaillées
+            Gérez les versements et accédez à leurs informations détaillées avec horodatage précis
           </CardDescription>
         </CardHeader>
         <CardContent>
