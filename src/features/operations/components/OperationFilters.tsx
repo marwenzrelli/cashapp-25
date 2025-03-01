@@ -1,126 +1,100 @@
 
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { Search, Calendar, ListFilter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DatePickerWithRange } from "@/components/ui/date-range-picker";
-import { Operation } from "@/features/operations/types";
 import { DateRange } from "react-day-picker";
-import { Dispatch, SetStateAction } from "react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Operation } from "../types";
+import { format } from "date-fns";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 
-export interface OperationFiltersProps {
-  // Original props
-  type?: string | null;
-  setType?: (type: string | null) => void;
-  client?: string;
-  setClient?: (client: string) => void;
-  date?: DateRange | undefined;
-  setDate?: (date: DateRange | undefined) => void;
-  
-  // New props for ClientProfile.tsx
-  selectedType?: Operation["type"] | "all";
-  searchTerm?: string;
-  isCustomRange?: boolean;
-  onTypeSelect?: Dispatch<SetStateAction<Operation["type"] | "all">>;
-  onSearch?: Dispatch<SetStateAction<string>>;
-  onDateChange?: Dispatch<SetStateAction<{ from: Date; to: Date }>>;
-  onCustomRangeChange?: Dispatch<SetStateAction<boolean>>;
+interface OperationFiltersProps {
+  type: string | null;
+  setType: (type: string | null) => void;
+  client: string;
+  setClient: (client: string) => void;
+  date: DateRange | undefined;
+  setDate: (date: DateRange | undefined) => void;
 }
 
 export const OperationFilters = ({
-  // Handle both original and new props
   type,
   setType,
   client,
   setClient,
   date,
   setDate,
-  
-  // New props
-  selectedType,
-  searchTerm,
-  isCustomRange,
-  onTypeSelect,
-  onSearch,
-  onDateChange,
-  onCustomRangeChange,
 }: OperationFiltersProps) => {
-  // Determine which props to use based on what was passed
-  const isUsingNewProps = selectedType !== undefined;
-  
-  // Handler for the type selection
-  const handleTypeChange = (value: string) => {
-    if (isUsingNewProps && onTypeSelect) {
-      onTypeSelect(value as Operation["type"] | "all");
-    } else if (setType) {
-      setType(value === "" ? null : value);
-    }
-  };
-  
-  // Handler for search/client input
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (isUsingNewProps && onSearch) {
-      onSearch(e.target.value);
-    } else if (setClient) {
-      setClient(e.target.value);
-    }
-  };
-  
-  // Handler for date changes
-  const handleDateChange = (newDate: DateRange | undefined) => {
-    if (isUsingNewProps && onDateChange && newDate?.from) {
-      onDateChange({
-        from: newDate.from,
-        to: newDate.to || newDate.from,
-      });
-      
-      if (onCustomRangeChange) {
-        onCustomRangeChange(true);
-      }
-    } else if (setDate) {
-      setDate(newDate);
-    }
-  };
-  
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="w-full sm:w-1/2">
-          <Input
-            placeholder={isUsingNewProps ? "Rechercher..." : "Rechercher par client..."}
-            value={isUsingNewProps ? searchTerm : client}
-            onChange={handleSearchChange}
-            className="w-full"
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <Select 
-            value={isUsingNewProps 
-              ? selectedType
-              : (type || "")} 
-            onValueChange={handleTypeChange}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Type d'opération" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">Toutes les opérations</SelectItem>
-              <SelectItem value="all">Toutes les opérations</SelectItem>
-              <SelectItem value="deposit">Versements</SelectItem>
-              <SelectItem value="withdrawal">Retraits</SelectItem>
-              <SelectItem value="transfer">Virements</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
-      <div className="flex items-center gap-2">
-        <DatePickerWithRange 
-          date={isUsingNewProps 
-            ? { from: date?.from, to: date?.to }
-            : date} 
-          onDateChange={handleDateChange} 
+  const handleTypeChange = (value: string) => {
+    setType(value === "all" ? null : value);
+  };
+
+  return (
+    <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex-1 relative">
+        <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+        <Input
+          placeholder="Rechercher par nom, description..."
+          value={client}
+          onChange={(e) => setClient(e.target.value)}
+          className="pl-9"
         />
       </div>
+      
+      <Select value={type || "all"} onValueChange={handleTypeChange}>
+        <SelectTrigger className="w-full sm:w-[180px] bg-primary/5 border-primary/20 hover:bg-primary/10 transition-colors">
+          <ListFilter className="h-4 w-4 mr-2 text-primary" />
+          <SelectValue placeholder="Type d'opération" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Toutes les opérations</SelectItem>
+          <SelectItem value="deposit">Versements</SelectItem>
+          <SelectItem value="withdrawal">Retraits</SelectItem>
+          <SelectItem value="transfer">Virements</SelectItem>
+        </SelectContent>
+      </Select>
+
+      <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            className={cn(
+              "w-full sm:w-[260px] flex justify-between items-center bg-primary/5 border-primary/20 hover:bg-primary/10 transition-colors",
+              !date && "text-muted-foreground"
+            )}
+          >
+            <div className="flex items-center">
+              <Calendar className="h-4 w-4 mr-2 text-primary" />
+              {date?.from ? (
+                date.to ? (
+                  <>
+                    {format(date.from, "dd/MM/yyyy")} - {format(date.to, "dd/MM/yyyy")}
+                  </>
+                ) : (
+                  format(date.from, "dd/MM/yyyy")
+                )
+              ) : (
+                <span>Sélectionner une période</span>
+              )}
+            </div>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <CalendarComponent
+            initialFocus
+            mode="range"
+            defaultMonth={date?.from}
+            selected={date}
+            onSelect={setDate}
+            numberOfMonths={2}
+          />
+        </PopoverContent>
+      </Popover>
     </div>
   );
 };

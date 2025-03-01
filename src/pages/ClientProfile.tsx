@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +18,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import html2canvas from 'html2canvas';
 import { cn } from "@/lib/utils";
+import { DateRange } from "react-day-picker";
 
 const ClientProfile = () => {
   const { id } = useParams();
@@ -29,7 +29,7 @@ const ClientProfile = () => {
   const qrCodeRef = useRef<HTMLDivElement>(null);
   const [selectedType, setSelectedType] = useState<Operation["type"] | "all">("all");
   const [searchTerm, setSearchTerm] = useState("");
-  const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: startOfDay(new Date(new Date().setDate(new Date().getDate() - 30))),
     to: endOfDay(new Date())
   });
@@ -50,6 +50,7 @@ const ClientProfile = () => {
 
   const filteredOperations = clientOperations
     .filter(op => {
+      if (!dateRange?.from || !dateRange?.to) return true;
       const operationDate = parseISO(op.date);
       return isWithinInterval(operationDate, {
         start: dateRange.from,
@@ -452,14 +453,12 @@ const ClientProfile = () => {
             <CardContent>
               <div className="mb-6">
                 <OperationFilters
-                  selectedType={selectedType}
-                  searchTerm={searchTerm}
+                  type={selectedType as any}
+                  setType={setSelectedType as any}
+                  client={searchTerm}
+                  setClient={setSearchTerm}
                   date={dateRange}
-                  isCustomRange={isCustomRange}
-                  onTypeSelect={setSelectedType}
-                  onSearch={setSearchTerm}
-                  onDateChange={setDateRange}
-                  onCustomRangeChange={setIsCustomRange}
+                  setDate={setDateRange}
                 />
               </div>
 
