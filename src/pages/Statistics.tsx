@@ -33,7 +33,7 @@ interface FilteredData {
 const Statistics = () => {
   const { deposits, isLoading: isLoadingDeposits } = useDeposits();
   const { withdrawals, isLoading: isLoadingWithdrawals } = useWithdrawals();
-  const { transfers = [] } = useTransfersList();
+  const { transfers, isLoading: isLoadingTransfers } = useTransfersList();
   const { currency } = useCurrency();
 
   const transfersArray = Array.isArray(transfers) ? transfers : [];
@@ -245,7 +245,7 @@ const Statistics = () => {
     return "text-gray-600 dark:text-gray-400";
   };
 
-  if (isLoadingDeposits || isLoadingWithdrawals) {
+  if (isLoadingDeposits || isLoadingWithdrawals || isLoadingTransfers) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
@@ -362,7 +362,7 @@ const Statistics = () => {
               {totalTransfers.toLocaleString()} TND
             </div>
             <p className="text-xs text-muted-foreground">
-              {transfers.length} virements effectués
+              {transfersArray.length} virements effectués
             </p>
           </CardContent>
         </Card>

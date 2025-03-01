@@ -5,7 +5,7 @@ import { TransferSuggestions } from "@/features/transfers/components/TransferSug
 import { TransferList } from "@/features/transfers/components/TransferList";
 import { EditTransferDialog } from "@/features/transfers/components/EditTransferDialog";
 import { DeleteTransferDialog } from "@/features/transfers/components/DeleteTransferDialog";
-import { type Suggestion } from "@/features/transfers/types";
+import { type Suggestion, type Transfer } from "@/features/transfers/types";
 import { TransferHeader } from "@/features/transfers/components/TransferHeader";
 import { TransferPagination } from "@/features/transfers/components/TransferPagination";
 import { useTransfersList } from "@/features/transfers/hooks/useTransfersList";
@@ -18,7 +18,7 @@ const Transfers = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [itemsPerPage, setItemsPerPage] = useState("10");
   
-  const { transfers = [], isLoading, fetchTransfers } = useTransfersList();
+  const { transfers, isLoading, fetchTransfers } = useTransfersList();
   const {
     selectedTransfer,
     isEditDialogOpen,
@@ -42,10 +42,9 @@ const Transfers = () => {
     });
   };
 
-  // Ensure transfers is always an array before slicing
-  const visibleTransfers = Array.isArray(transfers) 
-    ? transfers.slice(0, parseInt(itemsPerPage)) 
-    : [];
+  // Ensure transfers is always treated as an array
+  const transfersArray: Transfer[] = Array.isArray(transfers) ? transfers : [];
+  const visibleTransfers = transfersArray.slice(0, parseInt(itemsPerPage));
 
   if (isLoading) {
     return (
@@ -70,7 +69,7 @@ const Transfers = () => {
       <TransferPagination
         itemsPerPage={itemsPerPage}
         setItemsPerPage={setItemsPerPage}
-        totalTransfers={Array.isArray(transfers) ? transfers.length : 0}
+        totalTransfers={transfersArray.length}
       />
 
       <TransferList

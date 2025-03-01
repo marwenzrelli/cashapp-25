@@ -55,7 +55,7 @@ export const useTransfersList = () => {
   }
 
   return {
-    transfers,
+    transfers: transfers as Transfer[],
     isLoading,
     fetchTransfers: refetch
   };
