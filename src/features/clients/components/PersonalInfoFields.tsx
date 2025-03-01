@@ -14,7 +14,7 @@ export const PersonalInfoFields = ({
   formatAmount = (amount) => `${amount.toLocaleString()} €`
 }: PersonalInfoFieldsProps) => {
   return (
-    <div className="grid gap-6 md:grid-cols-3">
+    <div className="space-y-6">
       <div className="space-y-4">
         <div className="flex items-center gap-3">
           <User className="h-5 w-5 text-primary" />
@@ -33,6 +33,7 @@ export const PersonalInfoFields = ({
           </div>
         </div>
       </div>
+      
       <div className="space-y-4">
         <div className="flex items-center gap-3">
           <Mail className="h-5 w-5 text-primary" />
