@@ -3,11 +3,10 @@ import { ArrowUpCircle, ArrowDownCircle, RefreshCcw, Calendar, FileText, User } 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Operation } from "@/features/operations/types";
-import { OperationCard } from "@/features/operations/components/OperationCard";
-import { getTypeStyle, getTypeIcon, getTypeLabel } from "@/features/operations/utils/operation-helpers";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { cn } from "@/lib/utils";
+import { getTypeStyle, getTypeIcon, getTypeLabel } from "@/features/operations/utils/operation-helpers";
 
 interface PublicClientOperationsHistoryProps {
   operations: Operation[];
@@ -84,15 +83,50 @@ export const PublicClientOperationsHistory = ({ operations }: PublicClientOperat
           </Table>
         </div>
         
-        {/* Cards for mobile */}
-        <div className="md:hidden space-y-2">
+        {/* Enhanced cards for mobile */}
+        <div className="md:hidden space-y-3">
           {filteredOperations.map((operation) => (
-            <OperationCard
-              key={operation.id}
-              operation={operation}
-              onEdit={undefined}
-              onDelete={undefined}
-            />
+            <div key={operation.id} className="bg-white dark:bg-gray-800 rounded-lg border p-3 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <div className={`w-9 h-9 rounded-full flex items-center justify-center ${getTypeStyle(operation.type)}`}>
+                    {getTypeIcon(operation.type)}
+                  </div>
+                  <div>
+                    <div className="font-medium">{getTypeLabel(operation.type)}</div>
+                    <div className="text-xs text-muted-foreground">{operation.formattedDate || operation.date}</div>
+                  </div>
+                </div>
+                <div className={cn("font-semibold text-right", getAmountColor(operation.type))}>
+                  {operation.type === "withdrawal" ? "-" : ""}{operation.amount.toLocaleString()} {currency}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-1 text-sm border-t pt-2">
+                <div className="flex items-start">
+                  <FileText className="h-4 w-4 mr-2 mt-0.5 text-muted-foreground" />
+                  <span className="flex-1">{operation.description}</span>
+                </div>
+                
+                {operation.type === "transfer" ? (
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center">
+                      <User className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <span>De: {operation.fromClient}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <User className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <span>À: {operation.toClient}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center">
+                    <User className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <span>{operation.fromClient}</span>
+                  </div>
+                )}
+              </div>
+            </div>
           ))}
         </div>
       </>
