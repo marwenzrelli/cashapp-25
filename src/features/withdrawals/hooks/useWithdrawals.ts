@@ -120,8 +120,10 @@ export const useWithdrawals = () => {
           operation_date_iso: operationDateIso
         });
         
-        // Formater la date
-        const formattedDate = formatDate(operationDateIso);
+        // Formater la date avec contrôle de valeur null
+        const formattedDate = operationDateIso !== null 
+          ? formatDate(operationDateIso) 
+          : "Date non disponible";
         
         return {
           ...withdrawal,
