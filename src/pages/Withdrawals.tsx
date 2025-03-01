@@ -118,7 +118,7 @@ const Withdrawals = () => {
       const { data, error } = await supabase
         .from('withdrawals')
         .select('*')
-        .order('operation_date', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (error) {
         toast.error("Erreur lors du chargement des retraits");
@@ -133,15 +133,14 @@ const Withdrawals = () => {
           console.log("Withdrawals.tsx - Détail du premier retrait:", {
             id: data[0].id,
             created_at: data[0].created_at,
-            operation_date: data[0].operation_date,
-            operation_date_type: typeof data[0].operation_date,
-            operation_date_json: JSON.stringify(data[0].operation_date)
+            created_at_type: typeof data[0].created_at,
+            created_at_json: JSON.stringify(data[0].created_at)
           });
         }
 
         const formattedWithdrawals = data.map(withdrawal => {
           try {
-            if (!withdrawal.operation_date) {
+            if (!withdrawal.created_at) {
               console.error(`Date manquante pour le retrait ${withdrawal.id}`);
               return {
                 ...withdrawal,
@@ -149,7 +148,7 @@ const Withdrawals = () => {
               };
             }
             
-            const dateStr = String(withdrawal.operation_date);
+            const dateStr = String(withdrawal.created_at);
             const formatted = formatDateTime(dateStr);
             
             console.log(`Withdrawals.tsx - Formatage du retrait ${withdrawal.id}:`, {

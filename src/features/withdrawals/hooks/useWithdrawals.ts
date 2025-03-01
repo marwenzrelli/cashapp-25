@@ -82,7 +82,7 @@ export const useWithdrawals = () => {
       const { data, error } = await supabase
         .from('withdrawals')
         .select('*')
-        .order('operation_date', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (error) {
         toast.error("Erreur lors du chargement des retraits");
@@ -93,37 +93,37 @@ export const useWithdrawals = () => {
       console.log("--- DONNÉES REÇUES DE SUPABASE ---");
       if (data && data.length > 0) {
         console.log("Premier retrait brut:", JSON.stringify(data[0], null, 2));
-        console.log("Type de operation_date:", typeof data[0].operation_date);
-        console.log("Valeur de operation_date:", data[0].operation_date);
+        console.log("Type de created_at:", typeof data[0].created_at);
+        console.log("Valeur de created_at:", data[0].created_at);
       }
       
       // Traitement des withdrawals avec un nouveau formatage des dates
       const formattedWithdrawals = data.map(withdrawal => {
         // Obtention de l'horodatage ISO complet depuis la base de données
-        let operationDateIso: string | null = withdrawal.operation_date;
+        // Utiliser created_at au lieu de operation_date
+        let createdAtIso: string | null = withdrawal.created_at;
         
         // Si c'est un objet, tenter de l'extraire (cas particulier pour certaines implémentations Supabase)
-        if (typeof operationDateIso === 'object' && operationDateIso !== null) {
-          console.log("operation_date est un objet:", operationDateIso);
+        if (typeof createdAtIso === 'object' && createdAtIso !== null) {
+          console.log("created_at est un objet:", createdAtIso);
           // Tenter de trouver une propriété qui contient la date
-          if ('toISOString' in operationDateIso) {
-            operationDateIso = (operationDateIso as Date).toISOString();
+          if ('toISOString' in createdAtIso) {
+            createdAtIso = (createdAtIso as Date).toISOString();
           } else {
             // Dernier recours: convertir en JSON et espérer qu'il y a une information de date
-            operationDateIso = JSON.stringify(operationDateIso);
+            createdAtIso = JSON.stringify(createdAtIso);
           }
         }
         
         // Log détaillé pour le débogage
         console.log(`Retrait ${withdrawal.id}:`, {
-          operation_date_brut: withdrawal.operation_date,
-          operation_date_type: typeof withdrawal.operation_date,
-          operation_date_iso: operationDateIso
+          created_at_brut: withdrawal.created_at,
+          created_at_type: typeof withdrawal.created_at,
+          created_at_iso: createdAtIso
         });
         
-        // Nous devons indiquer explicitement à TypeScript que formatDate peut accepter une valeur null
-        // La fonction formatDate elle-même est déjà conçue pour gérer les valeurs null
-        const formattedDate = formatDate(operationDateIso);
+        // La fonction formatDate est déjà conçue pour gérer les valeurs null
+        const formattedDate = formatDate(createdAtIso);
         
         return {
           ...withdrawal,
