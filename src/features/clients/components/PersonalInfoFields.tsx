@@ -15,7 +15,7 @@ export const PersonalInfoFields = ({
   client, 
   formatAmount = (amount) => `${amount.toLocaleString()} €`,
   showBalanceOnMobile = false,
-  showBalance = false
+  showBalance = true
 }: PersonalInfoFieldsProps) => {
   return (
     <div className="space-y-6">
@@ -55,6 +55,21 @@ export const PersonalInfoFields = ({
             </p>
           </div>
         </div>
+        
+        {showBalance && (
+          <div className="flex items-center gap-3">
+            <Wallet className="h-5 w-5 text-primary" />
+            <div>
+              <p className="text-sm text-muted-foreground">Solde</p>
+              <p className={cn(
+                "font-medium",
+                client.solde >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
+              )}>
+                {formatAmount(client.solde)}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -33,7 +33,7 @@ export const ClientPersonalInfo = ({
             <PersonalInfoFields 
               client={client} 
               formatAmount={formatAmount} 
-              showBalance={false}
+              showBalance={true}
             />
           </div>
           {clientId && qrCodeRef && (
