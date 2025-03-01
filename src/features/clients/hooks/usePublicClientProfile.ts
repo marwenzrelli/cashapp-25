@@ -96,13 +96,13 @@ export const usePublicClientProfile = (token: string | undefined) => {
           console.log("Virements trouvés:", transfers);
         }
 
-        // Transformer les données en format unifié avec date formatée
+        // Transformer les données en format unifié - utiliser created_at comme date principale
         const allOperations: Operation[] = [
           ...(deposits || []).map((d): Operation => ({
             id: d.id.toString().slice(-6),
             type: "deposit",
             amount: d.amount,
-            date: d.operation_date,
+            date: d.created_at, // Utiliser created_at au lieu de operation_date
             createdAt: d.created_at,
             description: `Versement de ${d.client_name}`,
             fromClient: d.client_name,
@@ -112,7 +112,7 @@ export const usePublicClientProfile = (token: string | undefined) => {
             id: w.id.toString().slice(-6),
             type: "withdrawal",
             amount: w.amount,
-            date: w.operation_date,
+            date: w.created_at, // Utiliser created_at au lieu de operation_date
             createdAt: w.created_at,
             description: `Retrait par ${w.client_name}`,
             fromClient: w.client_name,
@@ -122,7 +122,7 @@ export const usePublicClientProfile = (token: string | undefined) => {
             id: t.id.toString().slice(-6),
             type: "transfer",
             amount: t.amount,
-            date: t.operation_date,
+            date: t.created_at, // Utiliser created_at au lieu de operation_date
             createdAt: t.created_at,
             description: t.reason || "Virement",
             fromClient: t.from_client,

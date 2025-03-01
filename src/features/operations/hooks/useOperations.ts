@@ -36,13 +36,13 @@ export const useOperations = () => {
 
       if (transfersError) throw transfersError;
 
-      // Transformer les données en format unifié
+      // Transformer les données en format unifié - utiliser created_at pour la date principale
       const formattedOperations: Operation[] = [
         ...deposits.map((d): Operation => ({
           id: d.id.toString(),
           type: "deposit",
           amount: d.amount,
-          date: d.operation_date,
+          date: d.created_at, // Utiliser created_at au lieu de operation_date
           createdAt: d.created_at,
           description: `Versement de ${d.client_name}`,
           fromClient: d.client_name,
@@ -52,7 +52,7 @@ export const useOperations = () => {
           id: w.id,
           type: "withdrawal",
           amount: w.amount,
-          date: w.operation_date,
+          date: w.created_at, // Utiliser created_at au lieu de operation_date
           createdAt: w.created_at,
           description: `Retrait par ${w.client_name}`,
           fromClient: w.client_name,
@@ -62,7 +62,7 @@ export const useOperations = () => {
           id: t.id,
           type: "transfer",
           amount: t.amount,
-          date: t.operation_date,
+          date: t.created_at, // Utiliser created_at au lieu de operation_date
           createdAt: t.created_at,
           description: t.reason,
           fromClient: t.from_client,

@@ -3,20 +3,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Transfer } from "../types";
-
-// Fonction utilitaire pour formater la date avec l'heure en format 24h incluant les secondes
-const formatDateTime = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('fr-FR', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false
-  });
-};
+import { formatDateTime } from "@/features/operations/types";
 
 export const useTransfersList = () => {
   const [transfers, setTransfers] = useState<Transfer[]>([]);
@@ -28,7 +15,7 @@ export const useTransfersList = () => {
       const { data, error } = await supabase
         .from('transfers')
         .select('*')
-        .order('operation_date', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error("Error fetching transfers:", error);
@@ -42,7 +29,7 @@ export const useTransfersList = () => {
           fromClient: transfer.from_client,
           toClient: transfer.to_client,
           amount: transfer.amount,
-          date: formatDateTime(transfer.operation_date),
+          date: formatDateTime(transfer.created_at), // Utiliser formatDateTime pour la cohérence
           reason: transfer.reason
         }));
         console.log("Virements récupérés:", formattedTransfers);
