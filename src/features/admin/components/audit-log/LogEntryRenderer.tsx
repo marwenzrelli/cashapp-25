@@ -1,7 +1,7 @@
-
-import { CalendarIcon, Trash, ArrowDownCircle, ArrowUpCircle, RefreshCcw, Activity } from "lucide-react";
+import { CalendarIcon, Trash, ArrowDownCircle, ArrowUpCircle, RefreshCcw, Activity, Hash } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { formatId } from "@/utils/formatId";
 
 export interface AuditLogEntry {
   id: string;
@@ -94,7 +94,10 @@ export const LogEntryRenderer = ({ entry, index, type }: LogEntryRendererProps) 
           </div>
           <p className="text-sm mt-1">{log.details}</p>
           <div className="flex items-center justify-between mt-2">
-            <span className="text-xs text-muted-foreground">ID: {log.target_id}</span>
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <Hash className="h-3 w-3" />
+              {log.target_id ? formatId(log.target_id) : 'N/A'}
+            </span>
             {log.amount && (
               <Badge variant="secondary" className="font-semibold">
                 {log.amount.toLocaleString()} TND
@@ -132,10 +135,11 @@ export const LogEntryRenderer = ({ entry, index, type }: LogEntryRendererProps) 
           </div>
           <p className="text-sm mt-1">{operation.description}</p>
           <div className="flex items-center justify-between mt-2">
-            <span className="text-xs text-muted-foreground">
-              {operation.id.includes("deposit-") || operation.id.includes("withdrawal-") || operation.id.includes("transfer-")
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <Hash className="h-3 w-3" />
+              {formatId(operation.id.includes("deposit-") || operation.id.includes("withdrawal-") || operation.id.includes("transfer-")
                 ? operation.id.split('-')[1]
-                : operation.id}
+                : operation.id)}
             </span>
             <Badge 
               variant="secondary" 
