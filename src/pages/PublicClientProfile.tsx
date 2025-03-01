@@ -10,6 +10,19 @@ import { OperationCard } from "@/features/operations/components/OperationCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
+// Fonction utilitaire pour formater la date avec l'heure en format 24h
+const formatDateTime = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('fr-FR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
+};
+
 const PublicClientProfile = () => {
   const { token } = useParams();
   const [client, setClient] = useState<Client | null>(null);
@@ -103,7 +116,7 @@ const PublicClientProfile = () => {
           console.log("Virements trouvés:", transfers);
         }
 
-        // Transformer les données en format unifié
+        // Transformer les données en format unifié avec date formatée
         const allOperations: Operation[] = [
           ...(deposits || []).map((d): Operation => ({
             id: d.id.toString().slice(-6),
@@ -111,7 +124,8 @@ const PublicClientProfile = () => {
             amount: d.amount,
             date: d.operation_date,
             description: `Versement de ${d.client_name}`,
-            fromClient: d.client_name
+            fromClient: d.client_name,
+            formattedDate: formatDateTime(d.operation_date)
           })),
           ...(withdrawals || []).map((w): Operation => ({
             id: w.id.toString().slice(-6),
@@ -119,7 +133,8 @@ const PublicClientProfile = () => {
             amount: w.amount,
             date: w.operation_date,
             description: `Retrait par ${w.client_name}`,
-            fromClient: w.client_name
+            fromClient: w.client_name,
+            formattedDate: formatDateTime(w.operation_date)
           })),
           ...(transfers || []).map((t): Operation => ({
             id: t.id.toString().slice(-6),
@@ -128,7 +143,8 @@ const PublicClientProfile = () => {
             date: t.operation_date,
             description: t.reason || "Virement",
             fromClient: t.from_client,
-            toClient: t.to_client
+            toClient: t.to_client,
+            formattedDate: formatDateTime(t.operation_date)
           }))
         ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 

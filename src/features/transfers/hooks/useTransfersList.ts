@@ -4,6 +4,19 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Transfer } from "../types";
 
+// Fonction utilitaire pour formater la date avec l'heure en format 24h
+const formatDateTime = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('fr-FR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
+};
+
 export const useTransfersList = () => {
   const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -28,13 +41,7 @@ export const useTransfersList = () => {
           fromClient: transfer.from_client,
           toClient: transfer.to_client,
           amount: transfer.amount,
-          date: new Date(transfer.operation_date).toLocaleDateString('fr-FR', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
-          }),
+          date: formatDateTime(transfer.operation_date),
           reason: transfer.reason
         }));
         console.log("Virements récupérés:", formattedTransfers);

@@ -8,6 +8,7 @@ export interface Deposit {
   status: string;
   created_at: string;
   created_by: string | null;
+  operation_date?: string; // Ajout du champ operation_date
 }
 
 export interface AISuggestion {

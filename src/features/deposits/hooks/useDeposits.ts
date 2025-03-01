@@ -5,6 +5,19 @@ import { toast } from "sonner";
 import { type Deposit } from "@/components/deposits/types";
 import { useNavigate } from "react-router-dom";
 
+// Fonction utilitaire pour formater la date avec l'heure en format 24h
+const formatDateTime = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('fr-FR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
+};
+
 export const useDeposits = () => {
   const navigate = useNavigate();
   const [deposits, setDeposits] = useState<Deposit[]>([]);
@@ -36,12 +49,13 @@ export const useDeposits = () => {
       const formattedDeposits: Deposit[] = data.map(d => ({
         id: d.id,
         amount: Number(d.amount),
-        date: new Date(d.operation_date).toLocaleDateString(),
+        date: formatDateTime(d.operation_date),
         description: d.notes || '',
         client_name: d.client_name,
         status: d.status,
         created_at: d.created_at,
-        created_by: d.created_by
+        created_by: d.created_by,
+        operation_date: d.operation_date
       }));
 
       setDeposits(formattedDeposits);

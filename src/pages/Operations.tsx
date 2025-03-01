@@ -9,6 +9,7 @@ import { jsPDF } from "jspdf";
 import 'jspdf-autotable';
 import { DeleteOperationDialog } from "@/features/operations/components/DeleteOperationDialog";
 import { DateRange } from "react-day-picker";
+import { formatDateTime } from "@/features/operations/types";
 
 const Operations = () => {
   const { 
@@ -37,6 +38,12 @@ const Operations = () => {
         new Date(op.date) <= new Date(dateRange.to));
     return matchesType && matchesClient && matchesDate;
   });
+
+  // Assurons-nous que chaque opération a sa date formatée correctement
+  const operationsWithFormattedDates = filteredOperations.map(op => ({
+    ...op,
+    formattedDate: formatDateTime(op.date)
+  }));
 
   // Function to generate PDF
   const generatePDF = () => {
@@ -118,13 +125,13 @@ const Operations = () => {
         <div className="flex justify-center py-10">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
         </div>
-      ) : filteredOperations.length === 0 ? (
+      ) : operationsWithFormattedDates.length === 0 ? (
         <div className="text-center py-10">
           <p className="text-muted-foreground">Aucune opération trouvée</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 print:grid-cols-2">
-          {filteredOperations.map((operation) => (
+          {operationsWithFormattedDates.map((operation) => (
             <OperationCard 
               key={`${operation.type}-${operation.id}`} 
               operation={operation}
