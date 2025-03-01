@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -134,35 +135,71 @@ export const useTransferActions = (onSuccess: () => void) => {
     try {
       console.log("Début de la suppression du virement:", selectedTransfer);
 
-      const fromClient = await findClientByFullName(selectedTransfer.fromClient);
-      const toClient = await findClientByFullName(selectedTransfer.toClient);
-
-      // Sauvegarde du transfert dans la table deleted_transfers avant suppression
+      // Récupérer la session utilisateur pour tracer qui supprime le virement
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id;
       
-      // Enregistrer les détails du transfert dans deleted_transfers
-      const { error: logError } = await supabase
-        .from('deleted_transfers')
-        .insert({
-          original_id: selectedTransfer.id,
-          from_client: selectedTransfer.fromClient,
-          to_client: selectedTransfer.toClient,
-          amount: selectedTransfer.amount,
-          operation_date: new Date().toISOString(), // Utiliser la date actuelle
-          reason: selectedTransfer.reason,
-          deleted_by: userId,
-          status: 'completed'
+      console.log("Session utilisateur:", session);
+      console.log("User ID pour la suppression:", userId);
+      
+      // Récupérer les détails complets du virement avant suppression
+      const { data: transferData, error: fetchError } = await supabase
+        .from('transfers')
+        .select('*')
+        .eq('id', selectedTransfer.id)
+        .single();
+        
+      if (fetchError) {
+        console.error("Erreur lors de la récupération des détails du virement:", fetchError);
+        toast.error("Erreur lors de la récupération des détails du virement", {
+          description: fetchError.message
         });
+        throw fetchError;
+      }
+      
+      if (!transferData) {
+        console.error("Aucune donnée de virement trouvée pour l'ID:", selectedTransfer.id);
+        toast.error("Virement introuvable", {
+          description: "Impossible de trouver les détails du virement à supprimer."
+        });
+        throw new Error("Virement introuvable");
+      }
+      
+      console.log("Récupération des détails du virement réussie:", transferData);
+      
+      // Préparer les données à insérer dans deleted_transfers
+      const logEntry = {
+        original_id: transferData.id,
+        from_client: transferData.from_client,
+        to_client: transferData.to_client,
+        amount: Number(transferData.amount),
+        operation_date: transferData.operation_date || transferData.created_at,
+        reason: transferData.reason || null,
+        deleted_by: userId || null,
+        status: transferData.status
+      };
 
+      console.log("Données à insérer dans deleted_transfers:", JSON.stringify(logEntry));
+      
+      // Insérer dans la table des virements supprimés
+      const { data: logData, error: logError } = await supabase
+        .from('deleted_transfers')
+        .insert(logEntry);
+        
       if (logError) {
         console.error("Erreur lors de l'enregistrement dans deleted_transfers:", logError);
-        toast.error("Erreur lors de la sauvegarde des données de suppression");
-      } else {
-        console.log("Transfert enregistré avec succès dans deleted_transfers");
-      }
+        console.error("Détails de l'erreur:", logError.message, logError.details, logError.hint);
+        console.error("Code de l'erreur:", logError.code);
+        throw logError;
+      } 
+      
+      console.log("Virement enregistré avec succès dans deleted_transfers");
 
-      // Suppression du transfert
+      // Rechercher les IDs des clients pour mettre à jour les soldes après suppression
+      const fromClient = await findClientByFullName(selectedTransfer.fromClient);
+      const toClient = await findClientByFullName(selectedTransfer.toClient);
+      
+      // Suppression du virement original
       const { error: deleteError } = await supabase
         .from('transfers')
         .delete()
