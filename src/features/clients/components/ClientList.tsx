@@ -1,12 +1,11 @@
-
 import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Client } from "../types";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Client } from "../types";
-import { PencilIcon, TrashIcon, EyeIcon, Wallet } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-import { useCurrency } from "@/contexts/CurrencyContext";
+import { MoreHorizontal, Edit, Trash2, Eye, Hash } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { formatId } from "@/utils/formatId";
 
 interface ClientListProps {
   clients: Client[];
@@ -15,94 +14,168 @@ interface ClientListProps {
 }
 
 export const ClientList = ({ clients, onEdit, onDelete }: ClientListProps) => {
-  const [hoveredClient, setHoveredClient] = useState<number | null>(null);
   const navigate = useNavigate();
-  const { currency } = useCurrency();
+  const [expandedClientId, setExpandedClientId] = useState<number | null>(null);
 
-  const formatAmount = (amount: number) => `${amount.toLocaleString()} ${currency}`;
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
+      case 'inactive':
+        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
+      default:
+        return 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400';
+    }
+  };
+
+  const toggleExpand = (clientId: number) => {
+    if (expandedClientId === clientId) {
+      setExpandedClientId(null);
+    } else {
+      setExpandedClientId(clientId);
+    }
+  };
+
+  const handleView = (clientId: number) => {
+    navigate(`/clients/${clientId}`);
+  };
 
   return (
-    <div className="rounded-md border">
-      <table className="w-full">
-        <thead>
-          <tr className="border-b bg-muted/50">
-            <th className="py-3 px-4 text-left font-medium">Nom</th>
-            <th className="py-3 px-4 text-left font-medium">Email</th>
-            <th className="py-3 px-4 text-left font-medium">Téléphone</th>
-            <th className="py-3 px-4 text-left font-medium">Solde</th>
-            <th className="py-3 px-4 text-left font-medium">Status</th>
-            <th className="py-3 px-4 text-right font-medium">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
+    <Card className="w-full">
+      <CardContent className="p-0">
+        <div className="divide-y">
           {clients.map((client) => (
-            <tr
-              key={client.id}
-              className="border-b hover:bg-muted/50 transition-colors"
-              onMouseEnter={() => setHoveredClient(client.id)}
-              onMouseLeave={() => setHoveredClient(null)}
-            >
-              <td className="py-3 px-4 align-middle">
-                <div className="font-medium">
-                  {client.prenom} {client.nom}
+            <div key={client.id} className={`p-4 transition-colors ${expandedClientId === client.id ? 'bg-muted/50' : 'hover:bg-muted/30'}`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="flex-shrink-0 h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
+                    {client.prenom.charAt(0)}{client.nom.charAt(0)}
+                  </div>
+                  <div>
+                    <h3 className="font-medium">{client.prenom} {client.nom}</h3>
+                    <div className="text-sm text-muted-foreground flex items-center gap-2">
+                      <span className="flex items-center gap-1">
+                        <Hash className="h-3 w-3" />
+                        {formatId(client.id)}
+                      </span>
+                      <span>•</span>
+                      <span>{client.telephone}</span>
+                    </div>
+                  </div>
                 </div>
-              </td>
-              <td className="py-3 px-4 align-middle">{client.email}</td>
-              <td className="py-3 px-4 align-middle">{client.telephone}</td>
-              <td className="py-3 px-4 align-middle">
+                
                 <div className="flex items-center gap-2">
-                  <Wallet className="h-4 w-4 text-muted-foreground" />
-                  <span className={cn(
-                    client.solde >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400",
-                    "font-medium"
-                  )}>
-                    {formatAmount(client.solde)}
-                  </span>
+                  <div className={`px-2 py-1 rounded-full text-xs ${getStatusColor(client.status)}`}>
+                    {client.status === 'active' ? 'Actif' : client.status === 'inactive' ? 'Inactif' : client.status}
+                  </div>
+                  
+                  <div className="flex items-center">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                          onClick={() => toggleExpand(client.id)}
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Plus d'informations</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/50"
+                          onClick={() => handleView(client.id)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Voir le profil</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/50"
+                          onClick={() => onEdit(client)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Modifier</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/50"
+                          onClick={() => onDelete(client)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Supprimer</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
                 </div>
-              </td>
-              <td className="py-3 px-4 align-middle">
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    "capitalize",
-                    client.status === "active"
-                      ? "border-green-500 text-green-500"
-                      : "border-red-500 text-red-500"
-                  )}
-                >
-                  {client.status}
-                </Badge>
-              </td>
-              <td className="py-3 px-4 align-middle">
-                <div className="flex items-center justify-between">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => navigate(`/client/${client.id}`)}
-                    className="ml-auto"
-                  >
-                    <EyeIcon className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onEdit(client)}
-                  >
-                    <PencilIcon className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onDelete(client)}
-                  >
-                    <TrashIcon className="h-4 w-4" />
-                  </Button>
+              </div>
+              
+              {expandedClientId === client.id && (
+                <div className="mt-4 pl-14 text-sm grid gap-2">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-muted-foreground">Email</p>
+                      <p>{client.email}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Solde</p>
+                      <p className={client.solde >= 0 ? 'text-green-600' : 'text-red-600'}>
+                        {client.solde.toLocaleString()} TND
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Date de création</p>
+                      <p>{new Date(client.date_creation || '').toLocaleDateString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Dernière mise à jour</p>
+                      <p>{new Date().toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                  <div className="mt-2 flex justify-end">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleView(client.id)}
+                    >
+                      Voir le profil complet
+                    </Button>
+                  </div>
                 </div>
-              </td>
-            </tr>
+              )}
+            </div>
           ))}
-        </tbody>
-      </table>
-    </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
