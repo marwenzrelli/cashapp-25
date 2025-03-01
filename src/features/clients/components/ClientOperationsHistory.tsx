@@ -1,11 +1,20 @@
 
 import { format } from "date-fns";
-import { ArrowUpCircle, ArrowDownCircle, RefreshCcw } from "lucide-react";
+import { ArrowUpCircle, ArrowDownCircle, RefreshCcw, Calendar, FileText, User } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Operation } from "@/features/operations/types";
 import { OperationFilters } from "@/features/operations/components/OperationFilters";
 import { DateRange } from "react-day-picker";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { getTypeStyle, getTypeIcon, getTypeLabel } from "./ClientOperationsHistory";
 
 interface ClientOperationsHistoryProps {
   operations: Operation[];
@@ -65,93 +74,279 @@ export const ClientOperationsHistory = ({
           </TabsList>
 
           <TabsContent value="all">
-            <div className="rounded-md border">
-              <div className="grid grid-cols-5 gap-4 p-4 bg-muted/50 font-medium text-sm">
-                <div>Type</div>
-                <div>Date</div>
-                <div>Description</div>
-                <div className="text-right">Montant</div>
-                <div>Client</div>
-              </div>
+            {/* Desktop version */}
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead className="text-right">Montant</TableHead>
+                    <TableHead>Client</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredOperations.map((operation) => (
+                    <TableRow key={operation.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center ${getTypeStyle(operation.type)}`}>
+                            {getTypeIcon(operation.type)}
+                          </div>
+                          <span>{getTypeLabel(operation.type)}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</TableCell>
+                      <TableCell className="max-w-[200px] truncate">{operation.description}</TableCell>
+                      <TableCell className="text-right font-medium">{Math.round(operation.amount)} TND</TableCell>
+                      <TableCell className="max-w-[200px] truncate">
+                        {operation.type === "transfer" ? (
+                          <>{operation.fromClient} → {operation.toClient}</>
+                        ) : (
+                          operation.fromClient
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Mobile version */}
+            <div className="md:hidden space-y-3">
               {filteredOperations.map((operation) => (
-                <div key={operation.id} className="grid grid-cols-5 gap-4 p-4 border-t">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${getTypeStyle(operation.type)}`}>
-                      {getTypeIcon(operation.type)}
+                <div key={operation.id} className="p-3 border rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${getTypeStyle(operation.type)}`}>
+                        {getTypeIcon(operation.type)}
+                      </div>
+                      <span className="font-medium">{getTypeLabel(operation.type)}</span>
                     </div>
-                    <span>{getTypeLabel(operation.type)}</span>
+                    <span className="font-semibold">{Math.round(operation.amount)} TND</span>
                   </div>
-                  <div>{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</div>
-                  <div className="truncate">{operation.description}</div>
-                  <div className="text-right font-medium">{Math.round(operation.amount)} TND</div>
-                  <div className="truncate">
-                    {operation.type === "transfer" ? (
-                      <>{operation.fromClient} → {operation.toClient}</>
-                    ) : (
-                      operation.fromClient
-                    )}
+                  
+                  <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-sm">
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <Calendar className="h-3.5 w-3.5" />
+                      <span>{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <User className="h-3.5 w-3.5" />
+                      {operation.type === "transfer" ? (
+                        <span className="truncate">{operation.fromClient} → {operation.toClient}</span>
+                      ) : (
+                        <span className="truncate">{operation.fromClient}</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1 text-muted-foreground col-span-2">
+                      <FileText className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">{operation.description}</span>
+                    </div>
                   </div>
                 </div>
               ))}
+              
+              {filteredOperations.length === 0 && (
+                <div className="text-center py-6">
+                  <p className="text-muted-foreground">Aucune opération trouvée</p>
+                </div>
+              )}
             </div>
           </TabsContent>
 
           <TabsContent value="deposits">
-            <div className="rounded-md border">
-              <div className="grid grid-cols-4 gap-4 p-4 bg-muted/50 font-medium text-sm">
-                <div>Date</div>
-                <div>Description</div>
-                <div className="text-right">Montant</div>
-                <div>Client</div>
-              </div>
+            {/* Desktop version */}
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead className="text-right">Montant</TableHead>
+                    <TableHead>Client</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredOperations.filter(op => op.type === "deposit").map((operation) => (
+                    <TableRow key={operation.id}>
+                      <TableCell>{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</TableCell>
+                      <TableCell className="max-w-[200px] truncate">{operation.description}</TableCell>
+                      <TableCell className="text-right font-medium">{Math.round(operation.amount)} TND</TableCell>
+                      <TableCell className="max-w-[200px] truncate">{operation.fromClient}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Mobile version */}
+            <div className="md:hidden space-y-3">
               {filteredOperations.filter(op => op.type === "deposit").map((operation) => (
-                <div key={operation.id} className="grid grid-cols-4 gap-4 p-4 border-t">
-                  <div>{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</div>
-                  <div className="truncate">{operation.description}</div>
-                  <div className="text-right font-medium">{Math.round(operation.amount)} TND</div>
-                  <div className="truncate">{operation.fromClient}</div>
+                <div key={operation.id} className="p-3 border rounded-lg">
+                  <div className="flex justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${getTypeStyle(operation.type)}`}>
+                        {getTypeIcon(operation.type)}
+                      </div>
+                      <span className="font-medium">Versement</span>
+                    </div>
+                    <span className="font-semibold text-green-600">{Math.round(operation.amount)} TND</span>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-sm">
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <Calendar className="h-3.5 w-3.5" />
+                      <span>{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <User className="h-3.5 w-3.5" />
+                      <span className="truncate">{operation.fromClient}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-muted-foreground col-span-2">
+                      <FileText className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">{operation.description}</span>
+                    </div>
+                  </div>
                 </div>
               ))}
+              
+              {filteredOperations.filter(op => op.type === "deposit").length === 0 && (
+                <div className="text-center py-6">
+                  <p className="text-muted-foreground">Aucun versement trouvé</p>
+                </div>
+              )}
             </div>
           </TabsContent>
 
           <TabsContent value="withdrawals">
-            <div className="rounded-md border">
-              <div className="grid grid-cols-4 gap-4 p-4 bg-muted/50 font-medium text-sm">
-                <div>Date</div>
-                <div>Description</div>
-                <div className="text-right">Montant</div>
-                <div>Client</div>
-              </div>
+            {/* Desktop version */}
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead className="text-right">Montant</TableHead>
+                    <TableHead>Client</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredOperations.filter(op => op.type === "withdrawal").map((operation) => (
+                    <TableRow key={operation.id}>
+                      <TableCell>{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</TableCell>
+                      <TableCell className="max-w-[200px] truncate">{operation.description}</TableCell>
+                      <TableCell className="text-right font-medium">{Math.round(operation.amount)} TND</TableCell>
+                      <TableCell className="max-w-[200px] truncate">{operation.fromClient}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Mobile version */}
+            <div className="md:hidden space-y-3">
               {filteredOperations.filter(op => op.type === "withdrawal").map((operation) => (
-                <div key={operation.id} className="grid grid-cols-4 gap-4 p-4 border-t">
-                  <div>{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</div>
-                  <div className="truncate">{operation.description}</div>
-                  <div className="text-right font-medium">{Math.round(operation.amount)} TND</div>
-                  <div className="truncate">{operation.fromClient}</div>
+                <div key={operation.id} className="p-3 border rounded-lg">
+                  <div className="flex justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${getTypeStyle(operation.type)}`}>
+                        {getTypeIcon(operation.type)}
+                      </div>
+                      <span className="font-medium">Retrait</span>
+                    </div>
+                    <span className="font-semibold text-red-600">-{Math.round(operation.amount)} TND</span>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-sm">
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <Calendar className="h-3.5 w-3.5" />
+                      <span>{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <User className="h-3.5 w-3.5" />
+                      <span className="truncate">{operation.fromClient}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-muted-foreground col-span-2">
+                      <FileText className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">{operation.description}</span>
+                    </div>
+                  </div>
                 </div>
               ))}
+              
+              {filteredOperations.filter(op => op.type === "withdrawal").length === 0 && (
+                <div className="text-center py-6">
+                  <p className="text-muted-foreground">Aucun retrait trouvé</p>
+                </div>
+              )}
             </div>
           </TabsContent>
 
           <TabsContent value="transfers">
-            <div className="rounded-md border">
-              <div className="grid grid-cols-5 gap-4 p-4 bg-muted/50 font-medium text-sm">
-                <div>Date</div>
-                <div>Description</div>
-                <div className="text-right">Montant</div>
-                <div>De</div>
-                <div>À</div>
-              </div>
+            {/* Desktop version */}
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead className="text-right">Montant</TableHead>
+                    <TableHead>De</TableHead>
+                    <TableHead>À</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredOperations.filter(op => op.type === "transfer").map((operation) => (
+                    <TableRow key={operation.id}>
+                      <TableCell>{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</TableCell>
+                      <TableCell className="max-w-[200px] truncate">{operation.description}</TableCell>
+                      <TableCell className="text-right font-medium">{Math.round(operation.amount)} TND</TableCell>
+                      <TableCell className="max-w-[200px] truncate">{operation.fromClient}</TableCell>
+                      <TableCell className="max-w-[200px] truncate">{operation.toClient}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Mobile version */}
+            <div className="md:hidden space-y-3">
               {filteredOperations.filter(op => op.type === "transfer").map((operation) => (
-                <div key={operation.id} className="grid grid-cols-5 gap-4 p-4 border-t">
-                  <div>{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</div>
-                  <div className="truncate">{operation.description}</div>
-                  <div className="text-right font-medium">{Math.round(operation.amount)} TND</div>
-                  <div className="truncate">{operation.fromClient}</div>
-                  <div className="truncate">{operation.toClient}</div>
+                <div key={operation.id} className="p-3 border rounded-lg">
+                  <div className="flex justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${getTypeStyle(operation.type)}`}>
+                        {getTypeIcon(operation.type)}
+                      </div>
+                      <span className="font-medium">Virement</span>
+                    </div>
+                    <span className="font-semibold text-purple-600">{Math.round(operation.amount)} TND</span>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-sm">
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <Calendar className="h-3.5 w-3.5" />
+                      <span>{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-muted-foreground col-span-2">
+                      <User className="h-3.5 w-3.5" />
+                      <span className="truncate">De: {operation.fromClient} • À: {operation.toClient}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-muted-foreground col-span-2">
+                      <FileText className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">{operation.description}</span>
+                    </div>
+                  </div>
                 </div>
               ))}
+              
+              {filteredOperations.filter(op => op.type === "transfer").length === 0 && (
+                <div className="text-center py-6">
+                  <p className="text-muted-foreground">Aucun virement trouvé</p>
+                </div>
+              )}
             </div>
           </TabsContent>
         </Tabs>
