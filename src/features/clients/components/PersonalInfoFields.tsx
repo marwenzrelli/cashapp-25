@@ -1,8 +1,7 @@
 
-import { User, Phone, Mail, Calendar, Wallet } from "lucide-react";
+import { User, Phone, Mail, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import { Client } from "../types";
-import { cn } from "@/lib/utils";
 
 interface PersonalInfoFieldsProps {
   client: Client;
@@ -41,7 +40,7 @@ export const PersonalInfoFields = ({
           <Mail className="h-5 w-5 text-primary" />
           <div>
             <p className="text-sm text-muted-foreground">Email</p>
-            <p className="font-medium">{client.email}</p>
+            <p className="font-medium">{client.email || "Non renseigné"}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">

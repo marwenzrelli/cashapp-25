@@ -1,11 +1,10 @@
 
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Client } from "@/features/clients/types";
 
 export const useRealtimeSubscriptions = (
   clientId: number | null | undefined,
-  fetchClientData: () => Promise<void>
+  fetchClientData: () => Promise<void> | void
 ) => {
   useEffect(() => {
     if (!clientId) return;
