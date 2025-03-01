@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -181,15 +180,10 @@ export const useDeposits = () => {
       
       console.log("Données préparées pour le log:", logEntry);
       
-      // Vérification de la structure de la table deleted_transfers_log
-      const { data: tableInfo, error: tableInfoError } = await supabase
-        .rpc('get_table_details', { table_name: 'deleted_transfers_log' });
-        
-      if (tableInfoError) {
-        console.error("Impossible de vérifier la structure de la table deleted_transfers_log:", tableInfoError);
-      } else {
-        console.log("Structure de la table deleted_transfers_log:", tableInfo);
-      }
+      // Suppression de la vérification de structure de la table qui causait l'erreur
+      // Cette ligne causait l'erreur TS2345 car get_table_details n'est pas dans la liste des fonctions RPC autorisées
+      // const { data: tableInfo, error: tableInfoError } = await supabase
+      //  .rpc('get_table_details', { table_name: 'deleted_transfers_log' });
       
       // Création du log de suppression avec gestion d'erreur détaillée
       const { data: logData, error: logError } = await supabase
