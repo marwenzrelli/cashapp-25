@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -138,9 +137,74 @@ export const useDeposits = () => {
     }
   };
 
-  const deleteDeposit = (deposit: Deposit) => {
-    setDepositToDelete(deposit);
-    setShowDeleteDialog(true);
+  // Modified to accept a Deposit object instead of just an ID
+  const deleteDeposit = async (deposit: Deposit) => {
+    try {
+      console.log("Beginning deletion process for deposit:", deposit);
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      
+      // Prepare data for deleted_transfers_log
+      const logEntry = {
+        original_id: deposit.id.toString(), // Convert numeric ID to string
+        operation_type: 'deposit',
+        client_name: deposit.client_name,
+        amount: Number(deposit.amount), // Ensure amount is a number
+        operation_date: deposit.operation_date || deposit.created_at,
+        reason: deposit.description || null,
+        from_client: deposit.client_name,
+        to_client: deposit.client_name,
+        deleted_by: userId || null,
+        deleted_at: new Date().toISOString(),
+      };
+      
+      console.log("Data to insert into deleted_transfers_log:", logEntry);
+      
+      // First insert into deleted_transfers_log
+      const { data: logData, error: logError } = await supabase
+        .from('deleted_transfers_log')
+        .insert(logEntry)
+        .select();
+        
+      if (logError) {
+        console.error("Error logging deposit deletion:", logError);
+        console.error("Details:", logError.message, logError.details, logError.hint);
+        toast.error("Error creating deletion log");
+        return false;
+      }
+      
+      console.log("Successfully logged deletion, returned data:", logData);
+      
+      // Then delete the deposit
+      const { error: deleteError } = await supabase
+        .from('deposits')
+        .delete()
+        .eq('id', deposit.id);
+        
+      if (deleteError) {
+        console.error("Error deleting deposit:", deleteError);
+        toast.error("Error during deposit deletion");
+        return false;
+      }
+      
+      console.log("Deposit successfully deleted");
+      
+      // Update the local state
+      setDeposits(prevDeposits => 
+        prevDeposits.filter(d => d.id !== deposit.id)
+      );
+      
+      toast.success("Deposit deleted", {
+        description: `The deposit has been removed from the database.`
+      });
+      
+      return true;
+    } catch (error) {
+      console.error("Critical error during deposit deletion:", error);
+      toast.error("Error deleting deposit");
+      return false;
+    }
   };
 
   const confirmDeleteDeposit = async () => {

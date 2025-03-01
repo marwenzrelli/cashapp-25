@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
@@ -33,7 +34,8 @@ const Deposits = () => {
 
   const confirmDelete = async () => {
     if (!selectedDeposit) return;
-    const success = await deleteDeposit(selectedDeposit.id);
+    // Pass the deposit object instead of just the ID
+    const success = await deleteDeposit(selectedDeposit);
     if (success) {
       setIsDeleteDialogOpen(false);
     }
