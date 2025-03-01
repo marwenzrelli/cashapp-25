@@ -1,7 +1,8 @@
 
-import { User, Phone, Mail, Calendar } from "lucide-react";
+import { User, Phone, Mail, Calendar, Wallet } from "lucide-react";
 import { format } from "date-fns";
 import { Client } from "../types";
+import { cn } from "@/lib/utils";
 
 interface PersonalInfoFieldsProps {
   client: Client;
