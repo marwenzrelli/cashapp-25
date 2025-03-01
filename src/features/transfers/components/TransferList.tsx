@@ -1,4 +1,3 @@
-
 import { Search, ArrowLeftRight, ArrowRight, Pencil, Trash2 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -30,15 +29,10 @@ export const TransferList = ({
     return "text-gray-600 dark:text-gray-400";
   };
 
-  // Mise à jour pour afficher 6 chiffres d'ID
   const formatTransferId = (id: string) => {
-    // Si l'ID est numérique ou peut être converti en numéro
     if (!isNaN(Number(id))) {
-      // Convertir en nombre et formater avec padding à gauche
       return id.padStart(6, '0');
     }
-    
-    // Pour les ID au format UUID, prendre les 6 premiers caractères
     return id.slice(0, 6);
   };
 

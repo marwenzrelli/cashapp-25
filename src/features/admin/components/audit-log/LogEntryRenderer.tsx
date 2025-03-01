@@ -34,6 +34,14 @@ interface LogEntryRendererProps {
 }
 
 export const LogEntryRenderer = ({ entry, index, type }: LogEntryRendererProps) => {
+  const formatTransactionId = (id: string) => {
+    if (!isNaN(Number(id))) {
+      return id.padStart(6, '0');
+    }
+    
+    return id.slice(0, 6);
+  };
+
   if (type === 'audit') {
     const log = entry as AuditLogEntry;
     return (
@@ -96,7 +104,7 @@ export const LogEntryRenderer = ({ entry, index, type }: LogEntryRendererProps) 
           <div className="flex items-center justify-between mt-2">
             <span className="text-xs text-muted-foreground flex items-center gap-1">
               <Hash className="h-3 w-3" />
-              {log.target_id ? formatId(log.target_id) : 'N/A'}
+              {log.target_id ? formatTransactionId(log.target_id) : 'N/A'}
             </span>
             {log.amount && (
               <Badge variant="secondary" className="font-semibold">
@@ -137,7 +145,7 @@ export const LogEntryRenderer = ({ entry, index, type }: LogEntryRendererProps) 
           <div className="flex items-center justify-between mt-2">
             <span className="text-xs text-muted-foreground flex items-center gap-1">
               <Hash className="h-3 w-3" />
-              {formatId(operation.id.includes("deposit-") || operation.id.includes("withdrawal-") || operation.id.includes("transfer-")
+              {formatTransactionId(operation.id.includes("deposit-") || operation.id.includes("withdrawal-") || operation.id.includes("transfer-")
                 ? operation.id.split('-')[1]
                 : operation.id)}
             </span>

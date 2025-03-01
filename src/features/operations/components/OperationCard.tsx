@@ -1,3 +1,4 @@
+
 import { Operation } from "../types";
 import { Button } from "@/components/ui/button";
 import { Edit2, Trash2, ArrowUpCircle, ArrowDownCircle, RefreshCcw, User, Hash } from "lucide-react";
@@ -54,6 +55,18 @@ const getTypeLabel = (type: Operation["type"]) => {
   }
 };
 
+// Format transaction ID to 6 digits
+const formatOperationId = (id: string) => {
+  // If the ID is numeric or can be converted to a number
+  if (!isNaN(Number(id))) {
+    // Pad with leading zeros to get 6 digits
+    return id.padStart(6, '0');
+  }
+  
+  // For UUID format, take first 6 characters
+  return id.slice(0, 6);
+};
+
 export const OperationCard = ({ operation, onEdit, onDelete }: OperationCardProps) => {
   return (
     <div className="group flex items-center justify-between p-3 hover:bg-muted/50 rounded-lg transition-colors border-b last:border-b-0">
@@ -67,7 +80,7 @@ export const OperationCard = ({ operation, onEdit, onDelete }: OperationCardProp
             <span className="font-medium truncate">{operation.description}</span>
             <span className="text-xs text-muted-foreground flex items-center gap-1">
               <Hash className="h-3 w-3" />
-              {formatId(operation.id.slice(0, 4))}
+              {formatOperationId(operation.id.slice(0, 4))}
             </span>
           </div>
           <div className="text-sm text-muted-foreground flex items-center gap-1.5 overflow-hidden">
