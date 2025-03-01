@@ -128,12 +128,13 @@ const Withdrawals = () => {
 
       if (data) {
         const formattedWithdrawals = data.map(withdrawal => {
+          console.log("Date d'opération brute:", withdrawal.operation_date);
           return {
             ...withdrawal,
             formattedDate: formatDateTime(withdrawal.operation_date)
           };
         });
-        console.log("Retraits formatés dans Withdrawals.tsx:", formattedWithdrawals);
+        console.log("Retraits avec dates formatées dans Withdrawals.tsx:", formattedWithdrawals);
         setWithdrawals(formattedWithdrawals);
       }
     } catch (error) {

@@ -45,15 +45,17 @@ export const useWithdrawals = () => {
         return;
       }
 
-      // Utilisons exactement le même formatage que useDeposits
+      // Formatons chaque retrait avec sa date exacte
       const formattedWithdrawals = data.map(withdrawal => {
+        console.log("Date brute du retrait:", withdrawal.operation_date);
+        // Utiliser la date d'opération pour l'affichage
         return {
           ...withdrawal,
           formattedDate: formatDateTime(withdrawal.operation_date)
         };
       });
 
-      console.log("Retraits formatés:", formattedWithdrawals);
+      console.log("Retraits avec dates formatées:", formattedWithdrawals);
       setWithdrawals(formattedWithdrawals);
     } catch (error) {
       console.error("Erreur lors du chargement des retraits:", error);

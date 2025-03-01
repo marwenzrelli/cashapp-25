@@ -34,13 +34,14 @@ export const formatDateTime = (dateString: string) => {
     return "Date invalide";
   }
   
-  // On utilise le format exact de useDeposits pour garantir une cohérence parfaite
+  // Formatage complet de la date et de l'heure
   return date.toLocaleString('fr-FR', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
+    second: '2-digit',
     hour12: false
   });
 };
