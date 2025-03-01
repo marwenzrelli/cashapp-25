@@ -146,13 +146,17 @@ export const useDeposits = () => {
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id;
       
-      // Création du log de suppression
-      console.log("Création du log de suppression avec ID:", deposit.id);
+      // Convertir explicitement l'ID en chaîne de caractères
+      const depositIdString = String(deposit.id);
+      console.log("ID du versement converti en string:", depositIdString);
+      
+      // Création du log de suppression avec un format UUID correct
+      console.log("Création du log de suppression avec ID:", depositIdString);
       
       const { error: logError } = await supabase
         .from('deleted_transfers_log')
         .insert({
-          original_id: deposit.id.toString(), // Convertir explicitement en string
+          original_id: depositIdString,
           operation_type: 'deposit',
           client_name: deposit.client_name,
           amount: deposit.amount,
@@ -160,8 +164,7 @@ export const useDeposits = () => {
           reason: deposit.description || null,
           from_client: deposit.client_name,
           to_client: deposit.client_name,
-          deleted_by: userId || null,
-          deleted_at: new Date().toISOString(),
+          deleted_by: userId || null
         });
         
       if (logError) {

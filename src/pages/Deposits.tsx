@@ -50,15 +50,22 @@ const Deposits = () => {
     }
     
     console.log("Confirmation de suppression pour:", selectedDeposit);
-    const success = await confirmDeleteDeposit();
-    
-    if (success) {
-      setIsDeleteDialogOpen(false);
-      toast.success("Versement supprimé avec succès", {
-        description: `Le versement de ${selectedDeposit.amount} TND a été supprimé.`
+    try {
+      const success = await confirmDeleteDeposit();
+      
+      if (success) {
+        setIsDeleteDialogOpen(false);
+        toast.success("Versement supprimé avec succès", {
+          description: `Le versement de ${selectedDeposit.amount} TND a été supprimé.`
+        });
+      } else {
+        toast.error("Échec de la suppression du versement");
+      }
+    } catch (error) {
+      console.error("Erreur lors de la suppression:", error);
+      toast.error("Échec de la suppression du versement", {
+        description: "Une erreur est survenue lors de la suppression"
       });
-    } else {
-      toast.error("Échec de la suppression du versement");
     }
   };
 
