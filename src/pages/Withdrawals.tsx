@@ -59,6 +59,7 @@ interface Withdrawal {
   status: string;
   created_at: string;
   created_by: string | null;
+  formattedDate?: string; // Added formattedDate property
 }
 
 const Withdrawals = () => {
@@ -256,7 +257,6 @@ const Withdrawals = () => {
         return;
       }
 
-      // Trouver le client associé au retrait
       const clientName = selectedWithdrawal.client_name.split(' ');
       const client = clients.find(c => 
         c.prenom === clientName[0] && c.nom === clientName[1]
@@ -278,7 +278,6 @@ const Withdrawals = () => {
         return;
       }
 
-      // Mise à jour du solde du client
       await refreshClientBalance(client.id);
 
       setIsDeleteDialogOpen(false);
