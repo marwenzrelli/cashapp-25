@@ -1,8 +1,9 @@
+
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarIcon, Trash, ArrowDownCircle, ArrowUpCircle, RefreshCcw, Activity, FileText, User } from "lucide-react";
+import { CalendarIcon, Trash, ArrowDownCircle, ArrowUpCircle, RefreshCcw, Activity } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -262,14 +263,14 @@ export const SystemAuditLog = () => {
     queryFn: fetchDeletedOperations,
     staleTime: 5000, // Reduce stale time to 5 seconds for faster refreshes
     refetchOnWindowFocus: true,
-    refetchInterval: 10000 // Auto refresh every 10 seconds
+    refetchInterval: 5000 // Auto refresh every 5 seconds
   });
   
   // Utilisez React Query pour charger les données des opérations récentes
   const { data: operationsLog = [], isLoading: isLoadingOperations, refetch: refetchOperations } = useQuery({
     queryKey: ['recent-operations'],
     queryFn: fetchRecentOperations,
-    staleTime: 60000,
+    staleTime: 30000,
     refetchOnWindowFocus: true
   });
 

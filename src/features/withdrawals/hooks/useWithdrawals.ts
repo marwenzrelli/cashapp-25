@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Withdrawal } from "../types";
 import { supabase } from "@/integrations/supabase/client";
@@ -91,6 +92,9 @@ export const useWithdrawals = () => {
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id;
       
+      console.log("Session utilisateur:", session);
+      console.log("User ID pour la suppression:", userId);
+      
       const { data: withdrawalData, error: fetchError } = await supabase
         .from('withdrawals')
         .select('*')
@@ -132,8 +136,7 @@ export const useWithdrawals = () => {
       
       const { data: logData, error: logError } = await supabase
         .from('deleted_transfers_log')
-        .insert(logEntry)
-        .select();
+        .insert(logEntry);
         
       if (logError) {
         console.error("Erreur lors de l'enregistrement dans deleted_transfers_log:", logError);
@@ -142,7 +145,7 @@ export const useWithdrawals = () => {
         throw logError;
       } 
       
-      console.log("Retrait enregistré avec succès dans deleted_transfers_log, données retournées:", logData);
+      console.log("Retrait enregistré avec succès dans deleted_transfers_log");
       
       const { error: deleteError } = await supabase
         .from('withdrawals')
