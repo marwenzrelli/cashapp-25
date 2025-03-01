@@ -25,20 +25,40 @@ const Deposits = () => {
     notes: ""
   });
   
-  const { deposits, createDeposit, deleteDeposit, updateDeposit, confirmDeleteDeposit, setShowDeleteDialog } = useDeposits();
+  const { 
+    deposits, 
+    createDeposit, 
+    deleteDeposit, 
+    updateDeposit, 
+    confirmDeleteDeposit, 
+    setShowDeleteDialog, 
+    setDepositToDelete 
+  } = useDeposits();
 
   const handleDelete = (deposit: Deposit) => {
+    console.log("Demande de suppression pour le versement:", deposit);
     setSelectedDeposit(deposit);
+    setDepositToDelete(deposit);
     setIsDeleteDialogOpen(true);
     setShowDeleteDialog(true);
   };
 
   const confirmDelete = async () => {
-    if (!selectedDeposit) return;
+    if (!selectedDeposit) {
+      toast.error("Aucun versement sélectionné");
+      return;
+    }
     
+    console.log("Confirmation de suppression pour:", selectedDeposit);
     const success = await confirmDeleteDeposit();
+    
     if (success) {
       setIsDeleteDialogOpen(false);
+      toast.success("Versement supprimé avec succès", {
+        description: `Le versement de ${selectedDeposit.amount} TND a été supprimé.`
+      });
+    } else {
+      toast.error("Échec de la suppression du versement");
     }
   };
 
