@@ -1,11 +1,13 @@
+
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Client } from "../types";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Edit, Trash2, Eye, Hash } from "lucide-react";
+import { MoreHorizontal, Edit, Trash2, Eye, Hash, Wallet } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatId } from "@/utils/formatId";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface ClientListProps {
   clients: Client[];
@@ -16,6 +18,7 @@ interface ClientListProps {
 export const ClientList = ({ clients, onEdit, onDelete }: ClientListProps) => {
   const navigate = useNavigate();
   const [expandedClientId, setExpandedClientId] = useState<number | null>(null);
+  const { currency } = useCurrency();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -71,70 +74,79 @@ export const ClientList = ({ clients, onEdit, onDelete }: ClientListProps) => {
                     {client.status === 'active' ? 'Actif' : client.status === 'inactive' ? 'Inactif' : client.status}
                   </div>
                   
-                  <div className="flex items-center">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                          onClick={() => toggleExpand(client.id)}
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Plus d'informations</p>
-                      </TooltipContent>
-                    </Tooltip>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
+                      <Wallet className="h-4 w-4 text-muted-foreground" />
+                      <span className={`font-medium ${client.solde >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {client.solde.toLocaleString()} {currency}
+                      </span>
+                    </div>
                     
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/50"
-                          onClick={() => handleView(client.id)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Voir le profil</p>
-                      </TooltipContent>
-                    </Tooltip>
-                    
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/50"
-                          onClick={() => onEdit(client)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Modifier</p>
-                      </TooltipContent>
-                    </Tooltip>
-                    
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/50"
-                          onClick={() => onDelete(client)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Supprimer</p>
-                      </TooltipContent>
-                    </Tooltip>
+                    <div className="flex items-center">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                            onClick={() => toggleExpand(client.id)}
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Plus d'informations</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/50"
+                            onClick={() => handleView(client.id)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Voir le profil</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/50"
+                            onClick={() => onEdit(client)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Modifier</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/50"
+                            onClick={() => onDelete(client)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Supprimer</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
                   </div>
                 </div>
               </div>
