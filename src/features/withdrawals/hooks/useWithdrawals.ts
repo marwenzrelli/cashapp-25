@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Withdrawal } from "../types";
 import { supabase } from "@/integrations/supabase/client";
@@ -76,12 +77,16 @@ export const useWithdrawals = () => {
   };
 
   const deleteWithdrawal = (withdrawal: Withdrawal) => {
+    console.log("Préparation de la suppression du retrait:", withdrawal);
     setWithdrawalToDelete(withdrawal);
     setShowDeleteDialog(true);
   };
 
   const confirmDeleteWithdrawal = async () => {
-    if (!withdrawalToDelete) return;
+    if (!withdrawalToDelete) {
+      console.error("Aucun retrait sélectionné pour la suppression");
+      return;
+    }
     
     setLoading(true);
     
@@ -144,6 +149,7 @@ export const useWithdrawals = () => {
       
       console.log("Retrait enregistré avec succès dans deleted_withdrawals");
       
+      // Maintenant supprimer le retrait original
       const { error: deleteError } = await supabase
         .from('withdrawals')
         .delete()
@@ -160,7 +166,7 @@ export const useWithdrawals = () => {
       console.log("Retrait supprimé avec succès, ID:", formatId(withdrawalToDelete.id));
       toast.success("Retrait supprimé avec succès");
       
-      fetchWithdrawals();
+      await fetchWithdrawals();
       return true;
     } catch (error: any) {
       console.error("Erreur lors de la suppression du retrait:", error);

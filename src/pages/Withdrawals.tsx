@@ -31,14 +31,12 @@ import {
   Trash2, 
   BadgeDollarSign,
   ScrollText,
-  Sparkles,
-  AlertCircle,
   ListFilter
 } from "lucide-react";
 import { useClients } from "@/features/clients/hooks/useClients";
 import { useEffect } from "react";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { supabase } from "@/integrations/supabase/client";
+import { useWithdrawals } from "@/features/withdrawals/hooks/useWithdrawals";
 import { formatDateTime } from "@/features/operations/types";
 
 interface Client {
@@ -51,24 +49,10 @@ interface Client {
   dateCreation: string;
 }
 
-interface Withdrawal {
-  id: string;
-  client_name: string;
-  amount: number;
-  operation_date: string;
-  notes: string | null;
-  status: string;
-  created_at: string;
-  created_by: string | null;
-  formattedDate?: string;
-}
-
 const Withdrawals = () => {
   const { currency } = useCurrency();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedWithdrawal, setSelectedWithdrawal] = useState<Withdrawal | null>(null);
-  const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
+  const [selectedWithdrawal, setSelectedWithdrawal] = useState(null);
   const [itemsPerPage, setItemsPerPage] = useState("10");
   const [newWithdrawal, setNewWithdrawal] = useState({
     clientId: "",
@@ -76,6 +60,16 @@ const Withdrawals = () => {
     notes: "",
     date: new Date().toISOString().split('T')[0],
   });
+
+  const { 
+    withdrawals, 
+    isLoading,
+    fetchWithdrawals, 
+    deleteWithdrawal,
+    confirmDeleteWithdrawal,
+    showDeleteDialog,
+    setShowDeleteDialog
+  } = useWithdrawals();
 
   const { clients, fetchClients, refreshClientBalance } = useClients();
 
@@ -106,86 +100,11 @@ const Withdrawals = () => {
     };
   }, []);
 
-  const fetchWithdrawals = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        toast.error("Vous devez être connecté pour accéder aux retraits");
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('withdrawals')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        toast.error("Erreur lors du chargement des retraits");
-        console.error("Error fetching withdrawals:", error);
-        return;
-      }
-
-      if (data) {
-        console.log("Withdrawals.tsx - Données brutes reçues:", data);
-        
-        if (data.length > 0) {
-          console.log("Withdrawals.tsx - Détail du premier retrait:", {
-            id: data[0].id,
-            created_at: data[0].created_at,
-            created_at_type: typeof data[0].created_at,
-            created_at_json: JSON.stringify(data[0].created_at)
-          });
-        }
-
-        const formattedWithdrawals = data.map(withdrawal => {
-          try {
-            if (!withdrawal.created_at) {
-              console.error(`Date manquante pour le retrait ${withdrawal.id}`);
-              return {
-                ...withdrawal,
-                formattedDate: "Date inconnue"
-              };
-            }
-            
-            const dateStr = String(withdrawal.created_at);
-            const formatted = formatDateTime(dateStr);
-            
-            console.log(`Withdrawals.tsx - Formatage du retrait ${withdrawal.id}:`, {
-              date_brute: dateStr,
-              date_formatee: formatted,
-              date_type: typeof dateStr,
-              date_json: JSON.stringify(dateStr)
-            });
-            
-            return {
-              ...withdrawal,
-              formattedDate: formatted
-            };
-          } catch (err) {
-            console.error(`Erreur lors du formatage de la date pour le retrait ${withdrawal.id}:`, err);
-            return {
-              ...withdrawal,
-              formattedDate: "Erreur de date"
-            };
-          }
-        });
-        
-        console.log("Withdrawals.tsx - Retraits après formatage:", formattedWithdrawals);
-        setWithdrawals(formattedWithdrawals);
-      }
-    } catch (error) {
-      console.error("Error in fetchWithdrawals:", error);
-      toast.error("Une erreur est survenue");
-    }
+  const handleDelete = (withdrawal) => {
+    deleteWithdrawal(withdrawal);
   };
 
-  const handleDelete = (withdrawal: Withdrawal) => {
-    setSelectedWithdrawal(withdrawal);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const handleEdit = (withdrawal: Withdrawal) => {
+  const handleEdit = (withdrawal) => {
     const clientName = withdrawal.client_name.split(' ');
     const client = clients.find(c => 
       c.prenom === clientName[0] && c.nom === clientName[1]
@@ -196,7 +115,7 @@ const Withdrawals = () => {
       clientId: client?.id.toString() || "",
       amount: withdrawal.amount.toString(),
       notes: withdrawal.notes || "",
-      date: new Date(withdrawal.operation_date).toISOString().split('T')[0]
+      date: new Date(withdrawal.operation_date || withdrawal.created_at).toISOString().split('T')[0]
     });
     setIsDialogOpen(true);
     toast.info("Mode édition", {
@@ -289,52 +208,6 @@ const Withdrawals = () => {
       await fetchClients();
     } catch (error) {
       console.error("Error in handleCreateWithdrawal:", error);
-      toast.error("Une erreur est survenue");
-    }
-  };
-
-  const confirmDelete = async () => {
-    if (!selectedWithdrawal) return;
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        toast.error("Vous devez être connecté pour supprimer un retrait");
-        return;
-      }
-
-      const client = findClientById(selectedWithdrawal.client_name);
-
-      if (!client) {
-        toast.error("Client non trouvé", {
-          description: `Impossible de trouver le client "${selectedWithdrawal.client_name}" dans la base de données.`
-        });
-        return;
-      }
-
-      const { error } = await supabase
-        .from('withdrawals')
-        .delete()
-        .eq('id', selectedWithdrawal.id);
-
-      if (error) {
-        toast.error("Erreur lors de la suppression du retrait");
-        console.error("Error deleting withdrawal:", error);
-        return;
-      }
-
-      await refreshClientBalance(client.id);
-
-      setIsDeleteDialogOpen(false);
-      toast.success("Retrait supprimé", {
-        description: `Le retrait a été retiré de la base de données.`
-      });
-      
-      await fetchWithdrawals();
-      await fetchClients();
-    } catch (error) {
-      console.error("Error in confirmDelete:", error);
       toast.error("Une erreur est survenue");
     }
   };
@@ -614,7 +487,7 @@ const Withdrawals = () => {
         </CardContent>
       </Card>
 
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent className="sm:max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
@@ -625,9 +498,9 @@ const Withdrawals = () => {
             </AlertDialogTitle>
             <AlertDialogDescription className="space-y-2">
               <p>Êtes-vous sûr de vouloir supprimer ce retrait ?</p>
-              {selectedWithdrawal && (
+              {withdrawals && (
                 <div className="rounded-lg border bg-muted/50 p-4 font-medium text-foreground">
-                  Retrait de {selectedWithdrawal.amount} {currency}
+                  Retrait de {withdrawals[0]?.amount} {currency}
                 </div>
               )}
               <p className="text-destructive font-medium">Cette action est irréversible.</p>
@@ -636,7 +509,7 @@ const Withdrawals = () => {
           <AlertDialogFooter>
             <AlertDialogCancel>Annuler</AlertDialogCancel>
             <AlertDialogAction
-              onClick={confirmDelete}
+              onClick={confirmDeleteWithdrawal}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
             >
               Supprimer
