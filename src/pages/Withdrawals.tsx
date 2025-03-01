@@ -304,13 +304,12 @@ const Withdrawals = () => {
         return;
       }
 
-      const clientName = selectedWithdrawal.client_name.split(' ');
-      const client = clients.find(c => 
-        c.prenom === clientName[0] && c.nom === clientName[1]
-      );
+      const client = findClientById(selectedWithdrawal.client_name);
 
       if (!client) {
-        toast.error("Client non trouvé");
+        toast.error("Client non trouvé", {
+          description: `Impossible de trouver le client "${selectedWithdrawal.client_name}" dans la base de données.`
+        });
         return;
       }
 
