@@ -1,3 +1,4 @@
+
 export interface Operation {
   id: string;
   type: "deposit" | "withdrawal" | "transfer";
@@ -27,7 +28,14 @@ export const formatDateTime = (dateString: string) => {
   // Convertir la chaîne de date en objet Date
   const date = new Date(dateString);
   
-  // Utiliser le même format que celui utilisé dans useDeposits.ts
+  // S'assurer que la date est valide
+  if (isNaN(date.getTime())) {
+    console.error(`Date invalide: ${dateString}`);
+    return "Date invalide";
+  }
+  
+  // Utiliser exactement le même format que dans les autres parties de l'application
+  // pour garantir une cohérence
   return date.toLocaleDateString('fr-FR', {
     year: 'numeric',
     month: '2-digit',

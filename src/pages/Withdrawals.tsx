@@ -128,10 +128,15 @@ const Withdrawals = () => {
 
       if (data) {
         // Format the operation_date for consistent display, using the same approach as in Deposits.tsx
-        const formattedWithdrawals = data.map(withdrawal => ({
-          ...withdrawal,
-          formattedDate: formatDateTime(withdrawal.operation_date)
-        }));
+        const formattedWithdrawals = data.map(withdrawal => {
+          console.log(`Page - Retrait original date: ${withdrawal.operation_date}`);
+          const formatted = formatDateTime(withdrawal.operation_date);
+          console.log(`Page - Retrait formatted date: ${formatted}`);
+          return {
+            ...withdrawal,
+            formattedDate: formatted
+          };
+        });
         console.log("Retraits formatés dans Withdrawals.tsx:", formattedWithdrawals);
         setWithdrawals(formattedWithdrawals);
       }
