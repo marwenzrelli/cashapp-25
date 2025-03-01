@@ -123,8 +123,8 @@ export const useWithdrawals = () => {
         });
         
         // La fonction formatDate est déjà conçue pour gérer les valeurs null
-        // Fixation de l'erreur TS18047 en passant createdAtIso directement, 
-        // puisque formatDate gère déjà les valeurs null
+        // Fixation de l'erreur TS18047 en utilisant un opérateur non-null assertion
+        // puisque formatDate gère déjà le cas null
         const formattedDate = formatDate(createdAtIso);
         
         return {

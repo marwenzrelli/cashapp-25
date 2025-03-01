@@ -30,8 +30,16 @@ export const TransferList = ({
     return "text-gray-600 dark:text-gray-400";
   };
 
+  // Mise à jour pour afficher 6 chiffres d'ID
   const formatTransferId = (id: string) => {
-    return id.slice(0, 8) + "...";
+    // Si l'ID est numérique ou peut être converti en numéro
+    if (!isNaN(Number(id))) {
+      // Convertir en nombre et formater avec padding à gauche
+      return id.padStart(6, '0');
+    }
+    
+    // Pour les ID au format UUID, prendre les 6 premiers caractères
+    return id.slice(0, 6);
   };
 
   const filteredTransfers = transfers.filter(
