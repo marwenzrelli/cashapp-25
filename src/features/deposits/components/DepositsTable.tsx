@@ -52,6 +52,19 @@ export const DepositsTable = ({ deposits, itemsPerPage, onEdit, onDelete }: Depo
     }
   };
 
+  // Format the date to include time in 24-hour format
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleString('fr-FR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+  };
+
   return (
     <div className="relative w-full overflow-auto rounded-lg border">
       <div className="hidden md:block"> {/* Version desktop */}
@@ -92,7 +105,9 @@ export const DepositsTable = ({ deposits, itemsPerPage, onEdit, onDelete }: Depo
                     {deposit.amount.toLocaleString()} TND
                   </div>
                 </td>
-                <td className="p-3 text-muted-foreground">{deposit.date}</td>
+                <td className="p-3 text-muted-foreground">
+                  {formatDateTime(deposit.created_at)}
+                </td>
                 <td className="p-3 text-muted-foreground">{deposit.description}</td>
                 <td className="p-3">
                   <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
@@ -147,7 +162,7 @@ export const DepositsTable = ({ deposits, itemsPerPage, onEdit, onDelete }: Depo
               </div>
             </div>
             <div className="space-y-1 text-sm text-muted-foreground mb-3">
-              <p>{deposit.date}</p>
+              <p>{formatDateTime(deposit.created_at)}</p>
               <p>{deposit.description}</p>
             </div>
             <div className="flex gap-2 justify-end">
