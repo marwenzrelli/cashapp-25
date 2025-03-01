@@ -39,7 +39,7 @@ export const PersonalInfoFields = ({ client, formatAmount }: PersonalInfoFieldsP
         <Calendar className="h-6 w-6 text-primary mt-1" />
         <div>
           <p className="text-sm text-muted-foreground">Date de création</p>
-          <p className="text-lg">{client.date_ajout ? format(new Date(client.date_ajout), 'dd/MM/yyyy') : 'Non disponible'}</p>
+          <p className="text-lg">{client.date_creation ? format(new Date(client.date_creation), 'dd/MM/yyyy') : 'Non disponible'}</p>
         </div>
       </div>
       <div className="md:hidden flex items-start gap-3">
