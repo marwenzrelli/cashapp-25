@@ -7,6 +7,7 @@ import { QuickActions } from "./QuickActions";
 import { WithdrawalTable } from "./WithdrawalTable";
 import { useClientLookup } from "./useClientLookup";
 import { WithdrawalDialogContainer } from "./WithdrawalDialogContainer";
+import { DeleteWithdrawalDialog } from "./DeleteWithdrawalDialog";
 
 interface WithdrawalsContentProps {
   withdrawals: Withdrawal[];
