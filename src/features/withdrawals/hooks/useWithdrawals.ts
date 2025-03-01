@@ -45,9 +45,19 @@ export const useWithdrawals = () => {
         return;
       }
 
+      // Afficher les dates brutes de la base de données pour le débogage
+      console.log("Dates brutes des retraits de la base de données:");
+      data.forEach(withdrawal => {
+        console.log(`ID: ${withdrawal.id}, Date: ${withdrawal.operation_date}`);
+      });
+
       // Format the operation_date for consistent display
       const formattedWithdrawals = data.map(withdrawal => {
         console.log(`Retrait original date: ${withdrawal.operation_date}`);
+        // Préserver la date originale avant formatage
+        const originalDate = new Date(withdrawal.operation_date);
+        console.log(`Parsed date object: ${originalDate.toString()}`);
+        
         const formatted = formatDateTime(withdrawal.operation_date);
         console.log(`Retrait formatted date: ${formatted}`);
         return {

@@ -127,9 +127,19 @@ const Withdrawals = () => {
       }
 
       if (data) {
-        // Format the operation_date for consistent display, using the same approach as in Deposits.tsx
+        // Afficher les dates brutes de la base de données pour le débogage
+        console.log("Dates brutes des retraits de la base de données (page):");
+        data.forEach(withdrawal => {
+          console.log(`ID: ${withdrawal.id}, Date: ${withdrawal.operation_date}, Type: ${typeof withdrawal.operation_date}`);
+        });
+
+        // Format the operation_date for consistent display
         const formattedWithdrawals = data.map(withdrawal => {
           console.log(`Page - Retrait original date: ${withdrawal.operation_date}`);
+          // Préserver la date originale avant formatage
+          const originalDate = new Date(withdrawal.operation_date);
+          console.log(`Page - Parsed date object: ${originalDate.toString()}`);
+          
           const formatted = formatDateTime(withdrawal.operation_date);
           console.log(`Page - Retrait formatted date: ${formatted}`);
           return {
