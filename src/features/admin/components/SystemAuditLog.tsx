@@ -53,6 +53,7 @@ export const SystemAuditLog = () => {
   const [deletedWithdrawals, setDeletedWithdrawals] = useState<AuditLogEntry[]>([]);
   const [deletedTransfers, setDeletedTransfers] = useState<AuditLogEntry[]>([]);
   const [operationsLog, setOperationsLog] = useState<OperationLogEntry[]>([]);
+  const [deletedOperationsLog, setDeletedOperationsLog] = useState<OperationLogEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -144,6 +145,38 @@ export const SystemAuditLog = () => {
             amount: transaction.amount
           }));
 
+        // Format deleted operations for unified view
+        const formattedDeletedOperations = deletedData.map((transaction: DeletedTransaction) => {
+          let type = transaction.operation_type;
+          let description = '';
+          let clientInfo = {};
+
+          if (type === 'deposit') {
+            description = `Versement supprimé pour ${transaction.client_name}`;
+            clientInfo = { client_name: transaction.client_name };
+          } else if (type === 'withdrawal') {
+            description = `Retrait supprimé pour ${transaction.client_name}`;
+            clientInfo = { client_name: transaction.client_name };
+          } else if (type === 'transfer') {
+            description = `Virement supprimé de ${transaction.from_client} vers ${transaction.to_client}`;
+            clientInfo = { 
+              from_client: transaction.from_client,
+              to_client: transaction.to_client
+            };
+          }
+
+          return {
+            id: transaction.id,
+            type,
+            amount: transaction.amount,
+            date: format(new Date(transaction.deleted_at), 'dd/MM/yyyy HH:mm'),
+            created_by: transaction.deleted_by,
+            created_by_name: usersMap[transaction.deleted_by] || 'Utilisateur inconnu',
+            description,
+            ...clientInfo
+          };
+        });
+
         // Fetch recent operations (new code)
         await fetchRecentOperations();
 
@@ -151,6 +184,7 @@ export const SystemAuditLog = () => {
         setDeletedDeposits(deposits);
         setDeletedWithdrawals(withdrawals);
         setDeletedTransfers(transfers);
+        setDeletedOperationsLog(formattedDeletedOperations);
       } catch (error) {
         console.error("Erreur lors du chargement des logs d'audit:", error);
       } finally {
@@ -383,9 +417,10 @@ export const SystemAuditLog = () => {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-5 mb-4">
+          <TabsList className="grid grid-cols-6 mb-4">
             <TabsTrigger value="user-activity">Connexions</TabsTrigger>
             <TabsTrigger value="operations-history">Opérations réalisées</TabsTrigger>
+            <TabsTrigger value="deleted-operations">Opérations supprimées</TabsTrigger>
             <TabsTrigger value="deleted-deposits">Versements supprimés</TabsTrigger>
             <TabsTrigger value="deleted-withdrawals">Retraits supprimés</TabsTrigger>
             <TabsTrigger value="deleted-transfers">Virements supprimés</TabsTrigger>
@@ -422,6 +457,24 @@ export const SystemAuditLog = () => {
               ) : (
                 <div className="divide-y divide-border">
                   {operationsLog.map((operation, index) => renderOperationLogEntry(operation, index))}
+                </div>
+              )}
+            </ScrollArea>
+          </TabsContent>
+          
+          <TabsContent value="deleted-operations">
+            <ScrollArea className="h-[50vh]">
+              {isLoading ? (
+                <div className="flex items-center justify-center py-10">
+                  <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
+                </div>
+              ) : deletedOperationsLog.length === 0 ? (
+                <div className="text-center py-10 text-muted-foreground">
+                  Aucune opération supprimée
+                </div>
+              ) : (
+                <div className="divide-y divide-border">
+                  {deletedOperationsLog.map((operation, index) => renderOperationLogEntry(operation, index))}
                 </div>
               )}
             </ScrollArea>
