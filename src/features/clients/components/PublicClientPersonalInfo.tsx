@@ -16,49 +16,53 @@ export const PublicClientPersonalInfo = ({ client }: PublicClientPersonalInfoPro
   return (
     <Card className="backdrop-blur-xl bg-white/50 dark:bg-gray-950/50 md:col-span-3">
       <CardHeader>
-        <CardTitle className="text-lg">Informations personnelles</CardTitle>
+        <CardTitle className="text-xl">Informations personnelles</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-4">
+        <div className="grid gap-6 md:grid-cols-3">
+          <div className="space-y-6">
             <div className="flex items-center gap-3">
               <User className="h-5 w-5 text-primary" />
               <div>
                 <p className="text-sm text-muted-foreground">Nom complet</p>
-                <p className="font-medium">{client.prenom} {client.nom}</p>
+                <p className="text-lg font-semibold">{client.prenom} {client.nom}</p>
               </div>
             </div>
+            
             <div className="flex items-center gap-3">
               <Phone className="h-5 w-5 text-primary" />
               <div>
                 <p className="text-sm text-muted-foreground">Téléphone</p>
-                <p className="font-medium">{client.telephone}</p>
+                <p className="text-lg font-semibold">{client.telephone}</p>
               </div>
             </div>
           </div>
-          <div className="space-y-4">
+          
+          <div className="space-y-6">
             <div className="flex items-center gap-3">
               <Mail className="h-5 w-5 text-primary" />
               <div>
                 <p className="text-sm text-muted-foreground">Email</p>
-                <p className="font-medium">{client.email}</p>
+                <p className="text-lg font-semibold">{client.email}</p>
               </div>
             </div>
+            
             <div className="flex items-center gap-3">
               <Calendar className="h-5 w-5 text-primary" />
               <div>
                 <p className="text-sm text-muted-foreground">Date de création</p>
-                <p className="font-medium">{format(new Date(client.date_creation || ''), 'dd/MM/yyyy')}</p>
+                <p className="text-lg font-semibold">{format(new Date(client.date_creation || ''), 'dd/MM/yyyy')}</p>
               </div>
             </div>
           </div>
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <Wallet className="h-5 w-5 text-primary" />
+          
+          <div>
+            <div className="flex items-start gap-3">
+              <Wallet className="h-6 w-6 text-primary mt-1" />
               <div>
                 <p className="text-sm text-muted-foreground">Solde actuel</p>
                 <p className={cn(
-                  "text-2xl font-bold",
+                  "text-3xl font-bold",
                   client.solde >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
                 )}>
                   {client.solde.toLocaleString()} {currency}
