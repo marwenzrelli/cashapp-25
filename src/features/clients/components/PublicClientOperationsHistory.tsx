@@ -22,7 +22,7 @@ export const PublicClientOperationsHistory = ({ operations }: PublicClientOperat
       case "withdrawal":
         return "text-red-600 dark:text-red-400";
       case "transfer":
-        return "text-purple-600 dark:text-purple-400";
+        return "text-green-600 dark:text-green-400";
     }
   };
 
