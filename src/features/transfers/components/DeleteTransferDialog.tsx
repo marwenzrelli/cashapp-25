@@ -25,7 +25,7 @@ export const DeleteTransferDialog = ({
   transfer,
   onConfirm,
 }: DeleteTransferDialogProps) => {
-  const { currency } = useCurrency();
+  const { formatCurrency } = useCurrency();
   
   if (!transfer) return null;
 
@@ -41,7 +41,7 @@ export const DeleteTransferDialog = ({
               <div className="mt-2 space-y-1 text-sm">
                 <p>De : {transfer.fromClient}</p>
                 <p>À : {transfer.toClient}</p>
-                <p>Montant : {transfer.amount.toLocaleString()} TND</p>
+                <p>Montant : {formatCurrency(transfer.amount)}</p>
                 <p>Date : {transfer.date}</p>
               </div>
             </div>
