@@ -5,6 +5,7 @@ import { ClientInsights } from "./ClientInsights";
 import { ClientSearch } from "./ClientSearch";
 import { Loader2, AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AISuggestion } from "../types";
 
 interface ClientsPageContentProps {
   clients: Client[];
@@ -31,17 +32,18 @@ export const ClientsPageContent = ({
   handleRetry,
   openNewClientDialog,
 }: ClientsPageContentProps) => {
-  const aiSuggestions = [
+  // Fixed the type issue by explicitly setting the type properties to valid values
+  const aiSuggestions: AISuggestion[] = [
     {
       id: "1",
       message: "Nouveau client potentiel détecté",
-      type: "success",
+      type: "success", // Changed from string to specific union type value
       clientId: "1",
     },
     {
       id: "2",
       message: "Mise à jour des informations recommandée",
-      type: "info",
+      type: "info", // Changed from string to specific union type value
       clientId: "3",
     },
   ];

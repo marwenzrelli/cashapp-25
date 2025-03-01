@@ -125,6 +125,8 @@ export const useClientsPage = () => {
     setIsDialogOpen,
     setIsEditDialogOpen,
     setIsDeleteDialogOpen,
+    setEditForm,     // Export the missing state setter
+    setNewClient,    // Export the missing state setter
     
     // Client actions
     handleRetry,

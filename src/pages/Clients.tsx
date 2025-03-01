@@ -25,6 +25,8 @@ const Clients = () => {
     setIsDialogOpen,
     setIsEditDialogOpen,
     setIsDeleteDialogOpen,
+    setNewClient, // Add missing state setter
+    setEditForm,  // Add missing state setter
     
     // Client actions
     handleRetry,
