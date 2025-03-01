@@ -57,7 +57,12 @@ export const ClientList = ({ clients, onEdit, onDelete }: ClientListProps) => {
                     {client.prenom.charAt(0)}{client.nom.charAt(0)}
                   </div>
                   <div>
-                    <h3 className="font-medium">{client.prenom} {client.nom}</h3>
+                    <h3 
+                      className="font-medium cursor-pointer hover:text-primary hover:underline"
+                      onClick={() => handleView(client.id)}
+                    >
+                      {client.prenom} {client.nom}
+                    </h3>
                     <div className="text-sm text-muted-foreground flex items-center gap-2">
                       <span className="flex items-center gap-1">
                         <Hash className="h-3 w-3" />
