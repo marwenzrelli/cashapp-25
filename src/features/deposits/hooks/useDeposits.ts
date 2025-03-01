@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import { type Deposit } from "@/components/deposits/types";
 import { useNavigate } from "react-router-dom";
 
-// Fonction utilitaire pour formater la date avec l'heure en format 24h incluant les secondes
 const formatDateTime = (dateString: string) => {
   const date = new Date(dateString);
   return date.toLocaleDateString('fr-FR', {
@@ -137,112 +136,73 @@ export const useDeposits = () => {
     }
   };
 
-  const deleteDeposit = async (deposit: Deposit) => {
+  const deleteDeposit = async (depositId: number) => {
     try {
-      if (!deposit || !deposit.id) {
-        console.error("Données de versement invalides pour la suppression");
-        return false;
-      }
-      
-      console.log("Début de la suppression du versement:", deposit);
-      console.log("ID du versement:", deposit.id, "Type:", typeof deposit.id);
-      
-      const { data: { session } } = await supabase.auth.getSession();
-      const userId = session?.user?.id;
-      
-      // Récupération des détails complets du versement depuis la base de données
-      const { data: depositData, error: fetchError } = await supabase
+      console.log(`Tentative de suppression du dépôt avec l'ID: ${depositId}`);
+      setIsLoading(true);
+
+      const { data: depositToDelete, error: fetchError } = await supabase
         .from('deposits')
         .select('*')
-        .eq('id', deposit.id)
+        .eq('id', depositId)
         .single();
-        
-      if (fetchError || !depositData) {
-        console.error("Erreur lors de la récupération des détails du versement:", fetchError);
-        toast.error("Erreur lors de la récupération des détails du versement");
-        return false;
+
+      if (fetchError) {
+        console.error("Erreur lors de la récupération des détails du dépôt:", fetchError);
+        throw new Error(`Impossible de récupérer les détails du dépôt: ${fetchError.message}`);
       }
-      
-      console.log("Données récupérées du versement:", depositData);
-      
-      // Préparation des données pour le log avec le format correct
-      const logEntry = {
-        original_id: String(deposit.id), // Conversion explicite en chaîne
-        operation_type: 'deposit',
-        client_name: depositData.client_name,
-        amount: depositData.amount,
-        operation_date: depositData.operation_date,
-        reason: depositData.notes || null,
-        from_client: depositData.client_name,
-        to_client: depositData.client_name,
-        deleted_by: userId,
-        deleted_at: new Date().toISOString()
-      };
-      
-      console.log("Données préparées pour le log:", logEntry);
-      
-      // Création du log de suppression avec gestion d'erreur détaillée
-      const { data: logData, error: logError } = await supabase
-        .from('deleted_transfers_log')
-        .insert(logEntry);
-        
-      if (logError) {
-        console.error("Erreur détaillée lors de la création du log de suppression:", {
-          message: logError.message,
-          details: logError.details,
-          hint: logError.hint,
-          code: logError.code
-        });
-        
-        // On continue malgré l'erreur de log pour tenter de supprimer le versement
-        console.warn("Poursuite de la suppression malgré l'échec de création du log");
-      } else {
-        console.log("Log de suppression créé avec succès:", logData);
+
+      if (!depositToDelete) {
+        throw new Error(`Dépôt avec l'ID ${depositId} non trouvé`);
       }
-      
-      // Suppression du versement après vérification de l'ID
-      const depositId = parseInt(String(deposit.id), 10);
-      if (isNaN(depositId)) {
-        console.error("L'ID du versement n'est pas un nombre valide:", deposit.id);
-        toast.error("Erreur: ID de versement invalide");
-        return false;
+
+      console.log("Détails du dépôt à supprimer:", depositToDelete);
+
+      try {
+        const { error: logError } = await supabase
+          .from('deleted_transfers_log')
+          .insert({
+            original_id: depositToDelete.id.toString(),
+            from_client: depositToDelete.client_name,
+            to_client: depositToDelete.client_name,
+            amount: depositToDelete.amount,
+            operation_date: depositToDelete.operation_date,
+            operation_type: 'deposit',
+            reason: depositToDelete.notes || 'Aucune raison fournie',
+            deleted_at: new Date().toISOString(),
+            client_name: depositToDelete.client_name
+          });
+
+        if (logError) {
+          console.error("Erreur lors de la création du log de suppression:", logError);
+        } else {
+          console.log("Log de suppression créé avec succès");
+        }
+      } catch (logError) {
+        console.error("Exception lors de la création du log:", logError);
       }
-      
-      console.log("Tentative de suppression du versement avec ID:", depositId);
-      
+
       const { error: deleteError } = await supabase
         .from('deposits')
         .delete()
         .eq('id', depositId);
-        
+
       if (deleteError) {
-        console.error("Erreur détaillée lors de la suppression du versement:", {
-          message: deleteError.message,
-          details: deleteError.details,
-          hint: deleteError.hint,
-          code: deleteError.code
-        });
-        toast.error("Erreur lors de la suppression du versement");
-        return false;
+        throw new Error(`Erreur lors de la suppression du dépôt: ${deleteError.message}`);
       }
+
+      setDeposits(prevDeposits => prevDeposits.filter(deposit => deposit.id !== depositId));
       
-      console.log("Versement supprimé avec succès");
-      
-      // Mise à jour de l'état local
-      setDeposits(prevDeposits => 
-        prevDeposits.filter(d => d.id !== deposit.id)
-      );
-      
-      // Afficher une notification de succès
-      toast.success("Versement supprimé", {
-        description: `Le versement de ${deposit.amount} TND a été supprimé avec succès.`
-      });
-      
+      toast.success("Dépôt supprimé avec succès");
       return true;
     } catch (error) {
-      console.error("Erreur critique détaillée lors de la suppression du versement:", error);
-      toast.error("Erreur lors de la suppression du versement");
+      console.error("Erreur complète lors de la suppression:", error);
+      toast.error("Erreur lors de la suppression du versement", {
+        description: error instanceof Error ? error.message : "Une erreur inconnue est survenue"
+      });
       return false;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -257,7 +217,7 @@ export const useDeposits = () => {
     try {
       console.log("Confirmation de la suppression du versement:", depositToDelete);
       
-      const success = await deleteDeposit(depositToDelete);
+      const success = await deleteDeposit(depositToDelete.id);
       
       if (success) {
         setDepositToDelete(null);

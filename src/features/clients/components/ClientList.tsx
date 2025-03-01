@@ -1,13 +1,11 @@
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { UserCircle, Pencil, Trash2 } from "lucide-react";
 import { Client } from "../types";
-import { useCurrency } from "@/contexts/CurrencyContext";
-import { formatAmount } from "@/utils/formatCurrency";
-import { cn } from "@/lib/utils";
+import { Card, CardContent } from "@/components/ui/card";
+import { Eye, Edit, Trash2, CreditCard, QrCode, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
 
 interface ClientListProps {
   clients: Client[];
@@ -16,110 +14,92 @@ interface ClientListProps {
 }
 
 export const ClientList = ({ clients, onEdit, onDelete }: ClientListProps) => {
-  const { currency } = useCurrency();
   const navigate = useNavigate();
 
-  const getBalanceColor = (solde: number) => {
-    if (solde > 0) return "text-green-600 dark:text-green-400";
-    if (solde < 0) return "text-red-600 dark:text-red-400";
-    return "text-gray-600 dark:text-gray-400";
-  };
-
-  // Fonction pour formater l'ID sur 3 chiffres
-  const formatClientId = (id: number): string => {
-    return id.toString().padStart(3, '0');
+  // Fonction pour naviguer vers le profil du client avec son ID
+  const navigateToClientProfile = (clientId: number) => {
+    console.log("Navigation vers le profil client:", clientId);
+    navigate(`/clients/${clientId}`);
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <UserCircle className="h-6 w-6 text-primary" />
-          Liste des clients ({clients.length})
-        </CardTitle>
-        <CardDescription>
-          Gérez vos clients et accédez à leurs informations détaillées
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="relative w-full overflow-auto rounded-lg border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Client</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Solde</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {clients.map((client) => (
-                <TableRow key={client.id} className="group">
-                  <TableCell>
-                    <div 
-                      className="flex items-center gap-3 cursor-pointer hover:text-primary transition-colors"
-                      onClick={() => navigate(`/clients/${client.id}`)}
-                    >
-                      <div className="relative">
-                        <UserCircle className="h-10 w-10 text-primary/20 transition-colors group-hover:text-primary/40" />
-                        <div className="absolute inset-0 animate-pulse rounded-full bg-primary/5" />
-                      </div>
-                      <div>
-                        <p className="font-medium">
-                          {client.prenom} {client.nom}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          ID: {formatClientId(client.id)}
-                        </p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <p className="font-medium group-hover:text-primary transition-colors">
-                        {client.email}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {client.telephone}
-                      </p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className={cn(
-                      "font-medium tabular-nums transition-colors",
-                      getBalanceColor(client.solde)
-                    )}>
-                      {formatAmount(client.solde, currency)}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 ease-in-out">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onEdit(client)}
-                        className="relative hover:bg-blue-50 dark:hover:bg-blue-950/50 text-blue-600 hover:text-blue-600 transition-all duration-300"
-                      >
-                        <Pencil className="h-4 w-4 transition-all duration-300 ease-in-out transform hover:scale-125 hover:rotate-[360deg]" />
-                        <span className="absolute inset-0 rounded-full bg-blue-100 dark:bg-blue-900/20 opacity-0 group-hover:opacity-100 animate-ping" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onDelete(client)}
-                        className="relative hover:bg-red-50 dark:hover:bg-red-950/50 text-red-600 hover:text-red-600 transition-all duration-300"
-                      >
-                        <Trash2 className="h-4 w-4 transition-all duration-300 ease-in-out transform hover:scale-125 hover:-translate-y-1" />
-                        <span className="absolute inset-0 rounded-full bg-red-100 dark:bg-red-900/20 opacity-0 group-hover:opacity-100 animate-ping" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      {clients.map((client) => (
+        <Card key={client.id} className="overflow-hidden animate-fadeIn">
+          <div className="p-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 
+                  className="text-lg font-bold mb-1 cursor-pointer hover:text-primary transition-colors"
+                  onClick={() => navigateToClientProfile(client.id)}
+                >
+                  {client.prenom} {client.nom}
+                </h3>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <User className="h-3.5 w-3.5" />
+                  <span>ID: {client.id}</span>
+                </div>
+              </div>
+              <Badge
+                variant={client.status === "active" ? "success" : "destructive"}
+                className="capitalize"
+              >
+                {client.status === "active" ? "Actif" : "Inactif"}
+              </Badge>
+            </div>
+
+            <div className="mt-4 space-y-2">
+              <div className="flex items-center text-sm">
+                <span className="text-muted-foreground w-20">Téléphone:</span>
+                <span>{client.telephone}</span>
+              </div>
+              <div className="flex items-center text-sm">
+                <span className="text-muted-foreground w-20">Email:</span>
+                <span className="truncate">{client.email}</span>
+              </div>
+              <div className="flex items-center text-sm">
+                <span className="text-muted-foreground w-20">Créé le:</span>
+                <span>{format(new Date(client.date_creation || ''), 'dd/MM/yyyy')}</span>
+              </div>
+            </div>
+
+            <div className="mt-5 flex items-center justify-between">
+              <div className={`${client.solde >= 0 ? 'text-green-600' : 'text-red-600'} font-semibold`}>
+                {client.solde.toLocaleString()} €
+              </div>
+              <div className="flex space-x-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex items-center gap-1" 
+                  onClick={() => navigateToClientProfile(client.id)}
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Profil</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex items-center gap-1"
+                  onClick={() => onEdit(client)}
+                >
+                  <Edit className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Modifier</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex items-center gap-1 text-destructive hover:text-destructive" 
+                  onClick={() => onDelete(client)}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Supprimer</span>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </Card>
+      ))}
+    </div>
   );
 };

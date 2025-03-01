@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,6 +37,9 @@ const ClientProfile = () => {
 
   const clientId = id ? Number(id) : null;
 
+  console.log("ID du client depuis l'URL:", id);
+  console.log("Client ID converti:", clientId);
+
   const clientOperations = operations.filter(op => {
     if (client) {
       const clientFullName = `${client.prenom} ${client.nom}`;
@@ -70,14 +74,27 @@ const ClientProfile = () => {
   useEffect(() => {
     const fetchClient = async () => {
       try {
-        if (!clientId) return;
+        if (!clientId) {
+          console.error("Client ID manquant dans l'URL");
+          setIsLoading(false);
+          return;
+        }
+        
+        console.log("Tentative de récupération du client avec ID:", clientId);
+        
         const { data, error } = await supabase
           .from('clients')
           .select('*')
           .eq('id', clientId)
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error("Erreur lors du chargement du client:", error);
+          toast.error("Impossible de charger les informations du client");
+          throw error;
+        }
+
+        console.log("Client récupéré avec succès:", data);
         setClient(data);
       } catch (error) {
         console.error("Erreur lors du chargement du client:", error);
