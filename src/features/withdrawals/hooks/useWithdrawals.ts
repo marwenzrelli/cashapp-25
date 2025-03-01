@@ -8,6 +8,8 @@ export const useWithdrawals = () => {
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [withdrawalToDelete, setWithdrawalToDelete] = useState<Withdrawal | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const formatDate = (dateString?: string | null) => {
     if (!dateString) return "Date inconnue";
@@ -74,6 +76,76 @@ export const useWithdrawals = () => {
     }
   };
 
+  const deleteWithdrawal = (withdrawal: Withdrawal) => {
+    setWithdrawalToDelete(withdrawal);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteWithdrawal = async () => {
+    if (!withdrawalToDelete) return;
+    
+    setLoading(true);
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      
+      // Récupérer les détails complets du retrait avant la suppression
+      const { data: withdrawalData, error: fetchError } = await supabase
+        .from('withdrawals')
+        .select('*')
+        .eq('id', withdrawalToDelete.id)
+        .single();
+        
+      if (fetchError) {
+        throw fetchError;
+      }
+      
+      if (withdrawalData) {
+        // Enregistrer dans deleted_transfers_log
+        const { error: logError } = await supabase.from('deleted_transfers_log').insert({
+          original_id: withdrawalToDelete.id,
+          operation_type: 'withdrawal',
+          client_name: withdrawalData.client_name,
+          amount: withdrawalData.amount,
+          operation_date: withdrawalData.operation_date,
+          reason: withdrawalData.notes || null,
+          from_client: withdrawalData.client_name, // Pour maintenir la structure de la table
+          to_client: withdrawalData.client_name, // Pour maintenir la structure de la table
+          deleted_by: userId || null,
+        });
+        
+        if (logError) {
+          console.error("Erreur lors de l'enregistrement dans deleted_transfers_log:", logError);
+        }
+      }
+      
+      // Supprimer le retrait
+      const { error: deleteError } = await supabase
+        .from('withdrawals')
+        .delete()
+        .eq('id', withdrawalToDelete.id);
+        
+      if (deleteError) {
+        throw deleteError;
+      }
+      
+      toast.success("Retrait supprimé avec succès");
+      
+      // Rafraîchir la liste
+      fetchWithdrawals();
+    } catch (error: any) {
+      console.error("Erreur lors de la suppression du retrait:", error);
+      toast.error("Erreur lors de la suppression", {
+        description: error.message || "Une erreur s'est produite lors de la suppression du retrait.",
+      });
+    } finally {
+      setLoading(false);
+      setWithdrawalToDelete(null);
+      setShowDeleteDialog(false);
+    }
+  };
+
   useEffect(() => {
     fetchWithdrawals();
   }, []);
@@ -84,5 +156,10 @@ export const useWithdrawals = () => {
     isLoading: loading,
     error,
     fetchWithdrawals,
+    deleteWithdrawal,
+    confirmDeleteWithdrawal,
+    withdrawalToDelete,
+    showDeleteDialog,
+    setShowDeleteDialog
   };
 };
