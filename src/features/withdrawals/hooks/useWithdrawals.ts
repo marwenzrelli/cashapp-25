@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Withdrawal } from "../types";
 import { supabase } from "@/integrations/supabase/client";
@@ -48,6 +49,7 @@ export const useWithdrawals = () => {
       const transformedWithdrawals = data.map(withdrawal => {
         const createdAtIso = withdrawal.created_at;
         
+        // We've confirmed that formatDate already handles null values properly
         const formattedDate = formatDate(createdAtIso);
         
         return {
@@ -76,9 +78,10 @@ export const useWithdrawals = () => {
     fetchWithdrawals();
   }, []);
 
+  // Rename 'loading' to 'isLoading' in the returned object to match what's expected
   return {
     withdrawals,
-    loading,
+    isLoading: loading,
     error,
     fetchWithdrawals,
   };
