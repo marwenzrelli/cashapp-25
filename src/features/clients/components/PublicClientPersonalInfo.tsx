@@ -26,7 +26,11 @@ export const PublicClientPersonalInfo = ({ client }: PublicClientPersonalInfoPro
       <CardContent>
         <div className="grid gap-6 md:grid-cols-3">
           <div className="md:col-span-2">
-            <PersonalInfoFields client={client} />
+            <PersonalInfoFields 
+              client={client} 
+              showBalance={false}
+              showBalanceOnMobile={false}
+            />
           </div>
           <div className="mt-0">
             <div className="flex items-start gap-3">

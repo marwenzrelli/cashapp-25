@@ -7,12 +7,14 @@ interface PersonalInfoFieldsProps {
   client: Client;
   formatAmount?: (amount: number) => string;
   showBalanceOnMobile?: boolean;
+  showBalance?: boolean;
 }
 
 export const PersonalInfoFields = ({ 
   client, 
   formatAmount = (amount) => `${amount.toLocaleString()} €`,
-  showBalanceOnMobile = false
+  showBalanceOnMobile = false,
+  showBalance = false
 }: PersonalInfoFieldsProps) => {
   return (
     <div className="space-y-6">
