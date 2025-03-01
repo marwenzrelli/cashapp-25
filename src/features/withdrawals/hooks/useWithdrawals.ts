@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Withdrawal } from "../types";
 import { supabase } from "@/integrations/supabase/client";
@@ -98,6 +99,7 @@ export const useWithdrawals = () => {
       console.log("Session utilisateur:", session);
       console.log("User ID pour la suppression:", userId);
       
+      // Récupérer les détails complets du retrait avant suppression
       const { data: withdrawalData, error: fetchError } = await supabase
         .from('withdrawals')
         .select('*')
@@ -122,6 +124,7 @@ export const useWithdrawals = () => {
       
       console.log("Récupération des détails du retrait réussie:", withdrawalData);
       
+      // Préparer les données à insérer dans deleted_withdrawals
       const logEntry = {
         original_id: withdrawalData.id,
         client_name: withdrawalData.client_name,
@@ -134,6 +137,7 @@ export const useWithdrawals = () => {
 
       console.log("Données à insérer dans deleted_withdrawals:", JSON.stringify(logEntry));
       
+      // Insérer dans la table des retraits supprimés
       const { data: logData, error: logError } = await supabase
         .from('deleted_withdrawals')
         .insert(logEntry);
