@@ -36,23 +36,68 @@ export const useTransferActions = (onSuccess: () => void) => {
 
   const findClientByFullName = async (fullName: string) => {
     console.log("Recherche du client:", fullName);
-    const [prenom, ...nomParts] = fullName.split(' ');
-    const nom = nomParts.join(' ');
-
-    const { data, error } = await supabase
-      .from('clients')
-      .select('id')
-      .eq('prenom', prenom)
-      .eq('nom', nom)
-      .single();
-
-    if (error) {
+    
+    try {
+      // Méthode 1: Recherche exacte du nom complet comme concaténation de prénom et nom
+      const [prenom, ...nomParts] = fullName.split(' ');
+      const nom = nomParts.join(' ');
+      
+      // Vérifier si les deux parties sont présentes
+      if (prenom && nom) {
+        const { data: exactMatch, error: exactError } = await supabase
+          .from('clients')
+          .select('id')
+          .eq('prenom', prenom)
+          .eq('nom', nom)
+          .single();
+          
+        if (!exactError && exactMatch) {
+          console.log("Client trouvé avec correspondance exacte:", exactMatch);
+          return exactMatch;
+        }
+      }
+      
+      // Méthode 2: Recherche par nom complet dans les deux champs
+      const { data: clients, error: clientsError } = await supabase
+        .from('clients')
+        .select('id, prenom, nom');
+      
+      if (clientsError) {
+        console.error("Erreur lors de la recherche des clients:", clientsError);
+        return null;
+      }
+      
+      // Recherche du client qui correspond le mieux au nom complet
+      const matchedClient = clients.find(client => {
+        const clientFullName = `${client.prenom} ${client.nom}`.trim();
+        return clientFullName === fullName.trim();
+      });
+      
+      if (matchedClient) {
+        console.log("Client trouvé par nom complet:", matchedClient);
+        return matchedClient;
+      }
+      
+      // Méthode 3: Recherche partielle pour les cas où le format pourrait être différent
+      console.log("Tentative de recherche partielle...");
+      const normalizedFullName = fullName.toLowerCase().trim();
+      
+      const partialMatch = clients.find(client => {
+        const clientFullName = `${client.prenom} ${client.nom}`.toLowerCase().trim();
+        return clientFullName.includes(normalizedFullName) || normalizedFullName.includes(clientFullName);
+      });
+      
+      if (partialMatch) {
+        console.log("Client trouvé par correspondance partielle:", partialMatch);
+        return partialMatch;
+      }
+      
+      console.log("Aucun client correspondant trouvé pour:", fullName);
+      return null;
+    } catch (error) {
       console.error("Erreur lors de la recherche du client:", error);
       return null;
     }
-
-    console.log("Client trouvé:", data);
-    return data;
   };
 
   const confirmEdit = async () => {
@@ -95,7 +140,24 @@ export const useTransferActions = (onSuccess: () => void) => {
 
       if (!fromClient || !toClient) {
         console.error("Impossible de trouver un ou plusieurs clients");
-        toast.error("Impossible de trouver un ou plusieurs clients");
+        console.log("Client expéditeur recherché:", selectedTransfer.fromClient);
+        console.log("Client destinataire recherché:", selectedTransfer.toClient);
+        
+        // Continuer avec la suppression même si les clients ne sont pas trouvés
+        const { error: deleteError } = await supabase
+          .from('transfers')
+          .delete()
+          .eq('id', selectedTransfer.id);
+
+        if (deleteError) {
+          console.error("Erreur lors de la suppression du virement:", deleteError);
+          toast.error("Erreur lors de la suppression du virement");
+          return;
+        }
+        
+        toast.success("Virement supprimé avec succès");
+        setIsDeleteDialogOpen(false);
+        onSuccess();
         return;
       }
 
