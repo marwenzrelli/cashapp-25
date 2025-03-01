@@ -99,15 +99,21 @@ export const useWithdrawals = () => {
         
       if (fetchError) {
         console.error("Erreur lors de la récupération des détails du retrait:", fetchError);
+        toast.error("Erreur lors de la récupération des détails du retrait", {
+          description: fetchError.message
+        });
         throw fetchError;
       }
       
       if (!withdrawalData) {
         console.error("Aucune donnée de retrait trouvée pour l'ID:", withdrawalToDelete.id);
+        toast.error("Retrait introuvable", {
+          description: "Impossible de trouver les détails du retrait à supprimer."
+        });
         throw new Error("Retrait introuvable");
       }
       
-      console.log("Enregistrement dans deleted_transfers_log du retrait:", withdrawalData);
+      console.log("Préparation à l'enregistrement dans deleted_transfers_log du retrait:", withdrawalData);
       
       // S'assurer que l'enregistrement dans deleted_transfers_log contient tous les champs nécessaires
       const logEntry = {
@@ -115,7 +121,7 @@ export const useWithdrawals = () => {
         operation_type: 'withdrawal',
         client_name: withdrawalData.client_name,
         amount: withdrawalData.amount,
-        operation_date: withdrawalData.operation_date,
+        operation_date: withdrawalData.operation_date || withdrawalData.created_at,
         reason: withdrawalData.notes || null,
         from_client: withdrawalData.client_name, // Pour maintenir la structure de la table
         to_client: withdrawalData.client_name, // Pour maintenir la structure de la table
@@ -125,7 +131,7 @@ export const useWithdrawals = () => {
 
       console.log("Données à insérer dans deleted_transfers_log:", logEntry);
       
-      // Enregistrer EXPLICITEMENT dans deleted_transfers_log
+      // ÉTAPE 1: Enregistrer d'abord dans deleted_transfers_log
       const { error: logError } = await supabase
         .from('deleted_transfers_log')
         .insert(logEntry);
@@ -133,12 +139,15 @@ export const useWithdrawals = () => {
       if (logError) {
         console.error("Erreur lors de l'enregistrement dans deleted_transfers_log:", logError);
         console.error("Détails de l'erreur:", logError.message, logError.details, logError.hint);
-        toast.error("Erreur lors de l'enregistrement du log de suppression");
-      } else {
-        console.log("Retrait enregistré avec succès dans deleted_transfers_log");
-      }
+        toast.error("Erreur lors de l'enregistrement du log de suppression", {
+          description: logError.message
+        });
+        throw logError; // Arrêter le processus en cas d'échec de l'enregistrement du log
+      } 
       
-      // Supprimer le retrait APRÈS l'enregistrement du log
+      console.log("Retrait enregistré avec succès dans deleted_transfers_log");
+      
+      // ÉTAPE 2: Supprimer le retrait SEULEMENT si l'enregistrement du log a réussi
       const { error: deleteError } = await supabase
         .from('withdrawals')
         .delete()
@@ -146,6 +155,9 @@ export const useWithdrawals = () => {
         
       if (deleteError) {
         console.error("Erreur lors de la suppression du retrait:", deleteError);
+        toast.error("Erreur lors de la suppression du retrait", {
+          description: deleteError.message
+        });
         throw deleteError;
       }
       
