@@ -1,8 +1,9 @@
+
 import { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Copy, RefreshCw, Shield } from 'lucide-react';
+import { Copy, ExternalLink, RefreshCw, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
@@ -132,6 +133,18 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
     }
   };
 
+  const handleOpenLink = () => {
+    if (qrUrl) {
+      window.open(qrUrl, '_blank');
+    } else {
+      toast({
+        title: "Erreur",
+        description: "Le lien n'est pas encore disponible.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleRegenerateQR = () => {
     generateQRAccess();
   };
@@ -166,7 +179,7 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
           <p className="text-sm text-center text-muted-foreground">
             Code QR unique du client
           </p>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap justify-center">
             <Button 
               variant="outline" 
               size="sm" 
@@ -176,6 +189,16 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
             >
               <Copy className="h-3 w-3" />
               Copier le lien
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="gap-2 text-xs"
+              onClick={handleOpenLink}
+              disabled={!accessToken || isLoading}
+            >
+              <ExternalLink className="h-3 w-3" />
+              Ouvrir le lien
             </Button>
             <Button
               variant="outline"
