@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarIcon, Trash, ArrowDownCircle, ArrowUpCircle, RefreshCcw, Activity } from "lucide-react";
+import { CalendarIcon, Trash, ArrowDownCircle, ArrowUpCircle, RefreshCcw, Activity, FileText, User } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 
 interface AuditLogEntry {
   id: string;
@@ -46,19 +47,231 @@ interface OperationLogEntry {
   description: string;
 }
 
+const fetchDeletedOperations = async () => {
+  console.log("Début de la récupération des opérations supprimées");
+  const { data: deletedData, error: deletedError } = await supabase
+    .from('deleted_transfers_log')
+    .select('*')
+    .order('deleted_at', { ascending: false });
+
+  if (deletedError) {
+    console.error("Erreur lors de la récupération des opérations supprimées:", deletedError);
+    toast.error("Erreur lors de la récupération des opérations supprimées");
+    throw deletedError;
+  }
+
+  // Log the data to help debug
+  console.log("Données des opérations supprimées:", deletedData);
+  console.log("Nombre d'opérations supprimées récupérées:", deletedData ? deletedData.length : 0);
+
+  // Get user details for deleted_by IDs
+  const userIds = [...new Set(deletedData.map(item => item.deleted_by))].filter(Boolean);
+  console.log("Récupération des détails pour les utilisateurs:", userIds);
+  
+  let usersMap: Record<string, string> = {};
+  
+  if (userIds.length > 0) {
+    const { data: userData, error: userError } = await supabase
+      .from('profiles')
+      .select('id, full_name')
+      .in('id', userIds);
+    
+    if (userError) {
+      console.error("Erreur lors de la récupération des utilisateurs:", userError);
+    } else {
+      console.log("Données utilisateurs récupérées:", userData);
+      usersMap = (userData || []).reduce((acc, user) => {
+        acc[user.id] = user.full_name;
+        return acc;
+      }, {} as Record<string, string>);
+    }
+  }
+
+  // Format deleted operations for unified view
+  const formattedDeletedOperations = deletedData.map((transaction: DeletedTransaction) => {
+    let type = transaction.operation_type;
+    let description = '';
+    let clientInfo: any = {};
+
+    if (type === 'deposit') {
+      description = `Versement supprimé pour ${transaction.client_name}`;
+      clientInfo = { client_name: transaction.client_name };
+    } else if (type === 'withdrawal') {
+      description = `Retrait supprimé pour ${transaction.client_name}`;
+      clientInfo = { client_name: transaction.client_name };
+    } else if (type === 'transfer') {
+      description = `Virement supprimé de ${transaction.from_client} vers ${transaction.to_client}`;
+      clientInfo = { 
+        from_client: transaction.from_client,
+        to_client: transaction.to_client
+      };
+    }
+
+    return {
+      id: transaction.id,
+      type,
+      amount: transaction.amount,
+      date: format(new Date(transaction.deleted_at), 'dd/MM/yyyy HH:mm'),
+      created_by: transaction.deleted_by,
+      created_by_name: usersMap[transaction.deleted_by] || 'Utilisateur inconnu',
+      description,
+      ...clientInfo
+    };
+  });
+
+  return {
+    deletedOperations: formattedDeletedOperations,
+    deposits: deletedData.filter(transaction => transaction.operation_type === 'deposit')
+      .map((transaction: DeletedTransaction) => ({
+        id: transaction.id,
+        action_type: 'Versement supprimé',
+        action_date: format(new Date(transaction.deleted_at), 'dd/MM/yyyy HH:mm'),
+        performed_by: usersMap[transaction.deleted_by] || 'Utilisateur inconnu',
+        details: `Versement supprimé pour ${transaction.client_name}`,
+        target_id: transaction.original_id,
+        target_name: transaction.client_name || '',
+        amount: transaction.amount
+      })),
+    withdrawals: deletedData.filter(transaction => transaction.operation_type === 'withdrawal')
+      .map((transaction: DeletedTransaction) => ({
+        id: transaction.id,
+        action_type: 'Retrait supprimé',
+        action_date: format(new Date(transaction.deleted_at), 'dd/MM/yyyy HH:mm'),
+        performed_by: usersMap[transaction.deleted_by] || 'Utilisateur inconnu',
+        details: `Retrait supprimé pour ${transaction.client_name}`,
+        target_id: transaction.original_id,
+        target_name: transaction.client_name || '',
+        amount: transaction.amount
+      })),
+    transfers: deletedData.filter(transaction => transaction.operation_type === 'transfer')
+      .map((transaction: DeletedTransaction) => ({
+        id: transaction.id,
+        action_type: 'Virement supprimé',
+        action_date: format(new Date(transaction.deleted_at), 'dd/MM/yyyy HH:mm'),
+        performed_by: usersMap[transaction.deleted_by] || 'Utilisateur inconnu',
+        details: `Virement de ${transaction.from_client} vers ${transaction.to_client}`,
+        target_id: transaction.original_id,
+        target_name: `${transaction.from_client} → ${transaction.to_client}`,
+        amount: transaction.amount
+      }))
+  };
+};
+
+const fetchRecentOperations = async () => {
+  try {
+    // Récupérer les opérateurs
+    const { data: usersData } = await supabase
+      .from('profiles')
+      .select('id, full_name');
+    
+    const usersMap = (usersData || []).reduce((acc, user) => {
+      acc[user.id] = user.full_name;
+      return acc;
+    }, {} as Record<string, string>);
+
+    // Fetch deposits
+    const { data: deposits, error: depositsError } = await supabase
+      .from('deposits')
+      .select('*')
+      .order('operation_date', { ascending: false })
+      .limit(20);
+
+    if (depositsError) throw depositsError;
+
+    // Fetch withdrawals
+    const { data: withdrawals, error: withdrawalsError } = await supabase
+      .from('withdrawals')
+      .select('*')
+      .order('operation_date', { ascending: false })
+      .limit(20);
+
+    if (withdrawalsError) throw withdrawalsError;
+
+    // Fetch transfers
+    const { data: transfers, error: transfersError } = await supabase
+      .from('transfers')
+      .select('*')
+      .order('operation_date', { ascending: false })
+      .limit(20);
+
+    if (transfersError) throw transfersError;
+
+    // Combine and format all operations
+    const formattedDeposits = deposits.map(d => ({
+      id: `deposit-${d.id}`,
+      type: 'deposit',
+      amount: d.amount,
+      date: format(new Date(d.operation_date), 'dd/MM/yyyy HH:mm'),
+      client_name: d.client_name,
+      created_by: d.created_by,
+      created_by_name: d.created_by ? usersMap[d.created_by] || 'Utilisateur inconnu' : 'Système',
+      description: `Versement pour ${d.client_name}`
+    }));
+
+    const formattedWithdrawals = withdrawals.map(w => ({
+      id: `withdrawal-${w.id}`,
+      type: 'withdrawal',
+      amount: w.amount,
+      date: format(new Date(w.operation_date), 'dd/MM/yyyy HH:mm'),
+      client_name: w.client_name,
+      created_by: w.created_by,
+      created_by_name: w.created_by ? usersMap[w.created_by] || 'Utilisateur inconnu' : 'Système',
+      description: `Retrait par ${w.client_name}`
+    }));
+
+    const formattedTransfers = transfers.map(t => ({
+      id: `transfer-${t.id}`,
+      type: 'transfer',
+      amount: t.amount,
+      date: format(new Date(t.operation_date), 'dd/MM/yyyy HH:mm'),
+      from_client: t.from_client,
+      to_client: t.to_client,
+      created_by: t.created_by,
+      created_by_name: t.created_by ? usersMap[t.created_by] || 'Utilisateur inconnu' : 'Système',
+      description: `Virement de ${t.from_client} vers ${t.to_client}`
+    }));
+
+    // Combine all operations and sort by date (newest first)
+    const allOperations = [...formattedDeposits, ...formattedWithdrawals, ...formattedTransfers]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 50); // Limit to 50 most recent
+
+    return allOperations;
+  } catch (error) {
+    console.error("Erreur lors du chargement des opérations récentes:", error);
+    toast.error("Erreur lors du chargement des opérations récentes");
+    throw error;
+  }
+};
+
 export const SystemAuditLog = () => {
   const [activeTab, setActiveTab] = useState("user-activity");
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
-  const [deletedDeposits, setDeletedDeposits] = useState<AuditLogEntry[]>([]);
-  const [deletedWithdrawals, setDeletedWithdrawals] = useState<AuditLogEntry[]>([]);
-  const [deletedTransfers, setDeletedTransfers] = useState<AuditLogEntry[]>([]);
-  const [operationsLog, setOperationsLog] = useState<OperationLogEntry[]>([]);
-  const [deletedOperationsLog, setDeletedOperationsLog] = useState<OperationLogEntry[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  
+  // Utilisez React Query pour charger les données des opérations supprimées
+  const { data: deletedData, isLoading: isLoadingDeleted, refetch: refetchDeleted } = useQuery({
+    queryKey: ['deleted-operations'],
+    queryFn: fetchDeletedOperations,
+    staleTime: 60000, // Les données restent "fresh" pendant 1 minute
+    refetchOnWindowFocus: true
+  });
+  
+  // Utilisez React Query pour charger les données des opérations récentes
+  const { data: operationsLog = [], isLoading: isLoadingOperations, refetch: refetchOperations } = useQuery({
+    queryKey: ['recent-operations'],
+    queryFn: fetchRecentOperations,
+    staleTime: 60000,
+    refetchOnWindowFocus: true
+  });
+
+  const isLoading = isLoadingDeleted || isLoadingOperations;
+  const deletedDeposits = deletedData?.deposits || [];
+  const deletedWithdrawals = deletedData?.withdrawals || [];
+  const deletedTransfers = deletedData?.transfers || [];
+  const deletedOperationsLog = deletedData?.deletedOperations || [];
 
   useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
+    const fetchLoginActivity = async () => {
       try {
         // Fetch user login activity
         const { data: loginData, error: loginError } = await supabase
@@ -80,234 +293,15 @@ export const SystemAuditLog = () => {
           target_name: user.full_name
         }));
 
-        // Fetch deleted transactions logs with explicit debugging
-        console.log("Début de la récupération des opérations supprimées");
-        const { data: deletedData, error: deletedError } = await supabase
-          .from('deleted_transfers_log')
-          .select('*')
-          .order('deleted_at', { ascending: false });
-
-        if (deletedError) {
-          console.error("Erreur lors de la récupération des opérations supprimées:", deletedError);
-          toast.error("Erreur lors de la récupération des opérations supprimées");
-          throw deletedError;
-        }
-
-        // Log the data to help debug
-        console.log("Données des opérations supprimées:", deletedData);
-        console.log("Nombre d'opérations supprimées récupérées:", deletedData ? deletedData.length : 0);
-
-        // Get user details for deleted_by IDs
-        const userIds = [...new Set(deletedData.map(item => item.deleted_by))].filter(Boolean);
-        console.log("Récupération des détails pour les utilisateurs:", userIds);
-        
-        let usersMap: Record<string, string> = {};
-        
-        if (userIds.length > 0) {
-          const { data: userData, error: userError } = await supabase
-            .from('profiles')
-            .select('id, full_name')
-            .in('id', userIds);
-          
-          if (userError) {
-            console.error("Erreur lors de la récupération des utilisateurs:", userError);
-          } else {
-            console.log("Données utilisateurs récupérées:", userData);
-            usersMap = (userData || []).reduce((acc, user) => {
-              acc[user.id] = user.full_name;
-              return acc;
-            }, {} as Record<string, string>);
-          }
-        }
-
-        // Process deleted transactions by type with better logging
-        console.log("Traitement des transactions supprimées par type");
-        
-        const deposits = deletedData
-          .filter(transaction => transaction.operation_type === 'deposit')
-          .map((transaction: DeletedTransaction) => ({
-            id: transaction.id,
-            action_type: 'Versement supprimé',
-            action_date: format(new Date(transaction.deleted_at), 'dd/MM/yyyy HH:mm'),
-            performed_by: usersMap[transaction.deleted_by] || 'Utilisateur inconnu',
-            details: `Versement supprimé pour ${transaction.client_name}`,
-            target_id: transaction.original_id,
-            target_name: transaction.client_name || '',
-            amount: transaction.amount
-          }));
-        
-        console.log("Versements supprimés traités:", deposits.length);
-
-        const withdrawals = deletedData
-          .filter(transaction => transaction.operation_type === 'withdrawal')
-          .map((transaction: DeletedTransaction) => ({
-            id: transaction.id,
-            action_type: 'Retrait supprimé',
-            action_date: format(new Date(transaction.deleted_at), 'dd/MM/yyyy HH:mm'),
-            performed_by: usersMap[transaction.deleted_by] || 'Utilisateur inconnu',
-            details: `Retrait supprimé pour ${transaction.client_name}`,
-            target_id: transaction.original_id,
-            target_name: transaction.client_name || '',
-            amount: transaction.amount
-          }));
-        
-        console.log("Retraits supprimés traités:", withdrawals.length);
-
-        const transfers = deletedData
-          .filter(transaction => transaction.operation_type === 'transfer')
-          .map((transaction: DeletedTransaction) => ({
-            id: transaction.id,
-            action_type: 'Virement supprimé',
-            action_date: format(new Date(transaction.deleted_at), 'dd/MM/yyyy HH:mm'),
-            performed_by: usersMap[transaction.deleted_by] || 'Utilisateur inconnu',
-            details: `Virement de ${transaction.from_client} vers ${transaction.to_client}`,
-            target_id: transaction.original_id,
-            target_name: `${transaction.from_client} → ${transaction.to_client}`,
-            amount: transaction.amount
-          }));
-        
-        console.log("Virements supprimés traités:", transfers.length);
-
-        // Format deleted operations for unified view with better logging
-        console.log("Création de la vue unifiée des opérations supprimées");
-        const formattedDeletedOperations = deletedData.map((transaction: DeletedTransaction) => {
-          let type = transaction.operation_type;
-          let description = '';
-          let clientInfo: any = {};
-
-          if (type === 'deposit') {
-            description = `Versement supprimé pour ${transaction.client_name}`;
-            clientInfo = { client_name: transaction.client_name };
-          } else if (type === 'withdrawal') {
-            description = `Retrait supprimé pour ${transaction.client_name}`;
-            clientInfo = { client_name: transaction.client_name };
-          } else if (type === 'transfer') {
-            description = `Virement supprimé de ${transaction.from_client} vers ${transaction.to_client}`;
-            clientInfo = { 
-              from_client: transaction.from_client,
-              to_client: transaction.to_client
-            };
-          }
-
-          return {
-            id: transaction.id,
-            type,
-            amount: transaction.amount,
-            date: format(new Date(transaction.deleted_at), 'dd/MM/yyyy HH:mm'),
-            created_by: transaction.deleted_by,
-            created_by_name: usersMap[transaction.deleted_by] || 'Utilisateur inconnu',
-            description,
-            ...clientInfo
-          };
-        });
-
-        console.log("Opérations supprimées formatées:", formattedDeletedOperations);
-
-        // Fetch recent operations
-        await fetchRecentOperations();
-
         setAuditLogs(formattedLoginData);
-        setDeletedDeposits(deposits);
-        setDeletedWithdrawals(withdrawals);
-        setDeletedTransfers(transfers);
-        setDeletedOperationsLog(formattedDeletedOperations);
       } catch (error) {
         console.error("Erreur lors du chargement des logs d'audit:", error);
         toast.error("Erreur lors du chargement des logs d'audit");
-      } finally {
-        setIsLoading(false);
       }
     };
 
-    fetchData();
+    fetchLoginActivity();
   }, []);
-
-  // Function to fetch recent operations
-  const fetchRecentOperations = async () => {
-    try {
-      // Récupérer les opérateurs
-      const { data: usersData } = await supabase
-        .from('profiles')
-        .select('id, full_name');
-      
-      const usersMap = (usersData || []).reduce((acc, user) => {
-        acc[user.id] = user.full_name;
-        return acc;
-      }, {} as Record<string, string>);
-
-      // Fetch deposits
-      const { data: deposits, error: depositsError } = await supabase
-        .from('deposits')
-        .select('*')
-        .order('operation_date', { ascending: false })
-        .limit(20);
-
-      if (depositsError) throw depositsError;
-
-      // Fetch withdrawals
-      const { data: withdrawals, error: withdrawalsError } = await supabase
-        .from('withdrawals')
-        .select('*')
-        .order('operation_date', { ascending: false })
-        .limit(20);
-
-      if (withdrawalsError) throw withdrawalsError;
-
-      // Fetch transfers
-      const { data: transfers, error: transfersError } = await supabase
-        .from('transfers')
-        .select('*')
-        .order('operation_date', { ascending: false })
-        .limit(20);
-
-      if (transfersError) throw transfersError;
-
-      // Combine and format all operations
-      const formattedDeposits = deposits.map(d => ({
-        id: `deposit-${d.id}`,
-        type: 'deposit',
-        amount: d.amount,
-        date: format(new Date(d.operation_date), 'dd/MM/yyyy HH:mm'),
-        client_name: d.client_name,
-        created_by: d.created_by,
-        created_by_name: d.created_by ? usersMap[d.created_by] || 'Utilisateur inconnu' : 'Système',
-        description: `Versement pour ${d.client_name}`
-      }));
-
-      const formattedWithdrawals = withdrawals.map(w => ({
-        id: `withdrawal-${w.id}`,
-        type: 'withdrawal',
-        amount: w.amount,
-        date: format(new Date(w.operation_date), 'dd/MM/yyyy HH:mm'),
-        client_name: w.client_name,
-        created_by: w.created_by,
-        created_by_name: w.created_by ? usersMap[w.created_by] || 'Utilisateur inconnu' : 'Système',
-        description: `Retrait par ${w.client_name}`
-      }));
-
-      const formattedTransfers = transfers.map(t => ({
-        id: `transfer-${t.id}`,
-        type: 'transfer',
-        amount: t.amount,
-        date: format(new Date(t.operation_date), 'dd/MM/yyyy HH:mm'),
-        from_client: t.from_client,
-        to_client: t.to_client,
-        created_by: t.created_by,
-        created_by_name: t.created_by ? usersMap[t.created_by] || 'Utilisateur inconnu' : 'Système',
-        description: `Virement de ${t.from_client} vers ${t.to_client}`
-      }));
-
-      // Combine all operations and sort by date (newest first)
-      const allOperations = [...formattedDeposits, ...formattedWithdrawals, ...formattedTransfers]
-        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-        .slice(0, 50); // Limit to 50 most recent
-
-      setOperationsLog(allOperations);
-    } catch (error) {
-      console.error("Erreur lors du chargement des opérations récentes:", error);
-      toast.error("Erreur lors du chargement des opérations récentes");
-    }
-  };
 
   // Function to render transaction log entry
   const renderTransactionLogEntry = (log: AuditLogEntry, index: number) => (
