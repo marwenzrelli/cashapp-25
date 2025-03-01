@@ -120,32 +120,29 @@ export const useWithdrawals = () => {
       console.log("Récupération des détails du retrait réussie:", withdrawalData);
       
       const logEntry = {
-        original_id: withdrawalData.id, 
-        operation_type: 'withdrawal',
+        original_id: withdrawalData.id,
         client_name: withdrawalData.client_name,
         amount: Number(withdrawalData.amount),
         operation_date: withdrawalData.operation_date || withdrawalData.created_at,
-        reason: withdrawalData.notes || null,
-        from_client: withdrawalData.client_name,
-        to_client: withdrawalData.client_name,
+        notes: withdrawalData.notes || null,
         deleted_by: userId || null,
-        deleted_at: new Date().toISOString(),
+        status: withdrawalData.status
       };
 
-      console.log("Données à insérer dans deleted_transfers_log:", JSON.stringify(logEntry));
+      console.log("Données à insérer dans deleted_withdrawals:", JSON.stringify(logEntry));
       
       const { data: logData, error: logError } = await supabase
-        .from('deleted_transfers_log')
+        .from('deleted_withdrawals')
         .insert(logEntry);
         
       if (logError) {
-        console.error("Erreur lors de l'enregistrement dans deleted_transfers_log:", logError);
+        console.error("Erreur lors de l'enregistrement dans deleted_withdrawals:", logError);
         console.error("Détails de l'erreur:", logError.message, logError.details, logError.hint);
         console.error("Code de l'erreur:", logError.code);
         throw logError;
       } 
       
-      console.log("Retrait enregistré avec succès dans deleted_transfers_log");
+      console.log("Retrait enregistré avec succès dans deleted_withdrawals");
       
       const { error: deleteError } = await supabase
         .from('withdrawals')
