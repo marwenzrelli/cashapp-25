@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { formatDateTime } from "@/features/operations/types";
 
 interface Withdrawal {
   id: string;
@@ -13,6 +14,7 @@ interface Withdrawal {
   notes: string | null;
   status: string;
   created_by: string | null;
+  formattedDate?: string; // Add formatted date field
 }
 
 export const useWithdrawals = () => {
@@ -43,7 +45,13 @@ export const useWithdrawals = () => {
         return;
       }
 
-      setWithdrawals(data);
+      // Add formatted date to each withdrawal
+      const formattedWithdrawals = data.map(withdrawal => ({
+        ...withdrawal,
+        formattedDate: formatDateTime(withdrawal.operation_date)
+      }));
+
+      setWithdrawals(formattedWithdrawals);
     } catch (error) {
       console.error("Erreur lors du chargement des retraits:", error);
       toast.error("Erreur lors du chargement des retraits");

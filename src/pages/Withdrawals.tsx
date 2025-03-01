@@ -521,7 +521,7 @@ const Withdrawals = () => {
                         </div>
                       </td>
                       <td className="p-3 text-muted-foreground">
-                        {new Date(withdrawal.operation_date).toLocaleDateString()}
+                        {withdrawal.formattedDate || new Date(withdrawal.operation_date).toLocaleDateString()}
                       </td>
                       <td className="p-3 text-muted-foreground">{withdrawal.notes}</td>
                       <td className="p-3">
