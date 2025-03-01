@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
@@ -81,7 +80,8 @@ export const SystemAuditLog = () => {
           target_name: user.full_name
         }));
 
-        // Fetch deleted transactions logs
+        // Fetch deleted transactions logs with explicit debugging
+        console.log("Début de la récupération des opérations supprimées");
         const { data: deletedData, error: deletedError } = await supabase
           .from('deleted_transfers_log')
           .select('*')
@@ -94,26 +94,35 @@ export const SystemAuditLog = () => {
         }
 
         // Log the data to help debug
-        console.log("Deleted operations data:", deletedData);
+        console.log("Données des opérations supprimées:", deletedData);
+        console.log("Nombre d'opérations supprimées récupérées:", deletedData ? deletedData.length : 0);
 
         // Get user details for deleted_by IDs
         const userIds = [...new Set(deletedData.map(item => item.deleted_by))].filter(Boolean);
+        console.log("Récupération des détails pour les utilisateurs:", userIds);
         
         let usersMap: Record<string, string> = {};
         
         if (userIds.length > 0) {
-          const { data: userData } = await supabase
+          const { data: userData, error: userError } = await supabase
             .from('profiles')
             .select('id, full_name')
             .in('id', userIds);
           
-          usersMap = (userData || []).reduce((acc, user) => {
-            acc[user.id] = user.full_name;
-            return acc;
-          }, {} as Record<string, string>);
+          if (userError) {
+            console.error("Erreur lors de la récupération des utilisateurs:", userError);
+          } else {
+            console.log("Données utilisateurs récupérées:", userData);
+            usersMap = (userData || []).reduce((acc, user) => {
+              acc[user.id] = user.full_name;
+              return acc;
+            }, {} as Record<string, string>);
+          }
         }
 
-        // Process deleted transactions by type
+        // Process deleted transactions by type with better logging
+        console.log("Traitement des transactions supprimées par type");
+        
         const deposits = deletedData
           .filter(transaction => transaction.operation_type === 'deposit')
           .map((transaction: DeletedTransaction) => ({
@@ -126,6 +135,8 @@ export const SystemAuditLog = () => {
             target_name: transaction.client_name || '',
             amount: transaction.amount
           }));
+        
+        console.log("Versements supprimés traités:", deposits.length);
 
         const withdrawals = deletedData
           .filter(transaction => transaction.operation_type === 'withdrawal')
@@ -139,6 +150,8 @@ export const SystemAuditLog = () => {
             target_name: transaction.client_name || '',
             amount: transaction.amount
           }));
+        
+        console.log("Retraits supprimés traités:", withdrawals.length);
 
         const transfers = deletedData
           .filter(transaction => transaction.operation_type === 'transfer')
@@ -152,8 +165,11 @@ export const SystemAuditLog = () => {
             target_name: `${transaction.from_client} → ${transaction.to_client}`,
             amount: transaction.amount
           }));
+        
+        console.log("Virements supprimés traités:", transfers.length);
 
-        // Format deleted operations for unified view
+        // Format deleted operations for unified view with better logging
+        console.log("Création de la vue unifiée des opérations supprimées");
         const formattedDeletedOperations = deletedData.map((transaction: DeletedTransaction) => {
           let type = transaction.operation_type;
           let description = '';
@@ -185,7 +201,7 @@ export const SystemAuditLog = () => {
           };
         });
 
-        console.log("Formatted deleted operations:", formattedDeletedOperations);
+        console.log("Opérations supprimées formatées:", formattedDeletedOperations);
 
         // Fetch recent operations
         await fetchRecentOperations();

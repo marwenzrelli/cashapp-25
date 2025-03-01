@@ -109,24 +109,31 @@ export const useWithdrawals = () => {
       
       console.log("Enregistrement dans deleted_transfers_log du retrait:", withdrawalData);
       
+      // S'assurer que l'enregistrement dans deleted_transfers_log contient tous les champs nécessaires
+      const logEntry = {
+        original_id: withdrawalToDelete.id,
+        operation_type: 'withdrawal',
+        client_name: withdrawalData.client_name,
+        amount: withdrawalData.amount,
+        operation_date: withdrawalData.operation_date,
+        reason: withdrawalData.notes || null,
+        from_client: withdrawalData.client_name, // Pour maintenir la structure de la table
+        to_client: withdrawalData.client_name, // Pour maintenir la structure de la table
+        deleted_by: userId || null,
+        deleted_at: new Date().toISOString(),
+      };
+
+      console.log("Données à insérer dans deleted_transfers_log:", logEntry);
+      
       // Enregistrer dans deleted_transfers_log
       const { error: logError } = await supabase
         .from('deleted_transfers_log')
-        .insert({
-          original_id: withdrawalToDelete.id,
-          operation_type: 'withdrawal',
-          client_name: withdrawalData.client_name,
-          amount: withdrawalData.amount,
-          operation_date: withdrawalData.operation_date,
-          reason: withdrawalData.notes || null,
-          from_client: withdrawalData.client_name, // Pour maintenir la structure de la table
-          to_client: withdrawalData.client_name, // Pour maintenir la structure de la table
-          deleted_by: userId || null,
-        });
+        .insert(logEntry);
         
       if (logError) {
         console.error("Erreur lors de l'enregistrement dans deleted_transfers_log:", logError);
         // Continuer avec la suppression même si l'enregistrement du log échoue
+        console.error("Détails de l'erreur:", logError.message, logError.details, logError.hint);
       } else {
         console.log("Retrait enregistré avec succès dans deleted_transfers_log");
       }
