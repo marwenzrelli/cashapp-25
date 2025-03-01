@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Transfer } from "../types";
 
-// Fonction utilitaire pour formater la date avec l'heure en format 24h
+// Fonction utilitaire pour formater la date avec l'heure en format 24h incluant les secondes
 const formatDateTime = (dateString: string) => {
   const date = new Date(dateString);
   return date.toLocaleDateString('fr-FR', {
@@ -13,6 +13,7 @@ const formatDateTime = (dateString: string) => {
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
+    second: '2-digit',
     hour12: false
   });
 };

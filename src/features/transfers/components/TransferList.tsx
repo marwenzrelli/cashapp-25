@@ -59,6 +59,9 @@ export const TransferList = ({
             />
           </div>
         </div>
+        <p className="text-sm text-muted-foreground">
+          Consultez l'historique détaillé des virements avec horodatage précis
+        </p>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
