@@ -1,174 +1,146 @@
 
 import { useState } from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Search, ListFilter } from "lucide-react";
-import { toast } from "sonner";
-import { format, isWithinInterval, parseISO, subDays, startOfDay, endOfDay } from "date-fns";
-import { useOperations } from "@/features/operations/hooks/useOperations";
-import { Operation } from "@/features/operations/types";
 import { OperationCard } from "@/features/operations/components/OperationCard";
 import { OperationFilters } from "@/features/operations/components/OperationFilters";
-import { EditOperationDialog } from "@/features/operations/components/EditOperationDialog";
+import { useOperations } from "@/features/operations/hooks/useOperations";
+import { Button } from "@/components/ui/button";
+import { Printer, DownloadIcon } from "lucide-react";
+import { jsPDF } from "jspdf";
+import 'jspdf-autotable';
 import { DeleteOperationDialog } from "@/features/operations/components/DeleteOperationDialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 const Operations = () => {
-  const { operations, isLoading } = useOperations();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedType, setSelectedType] = useState<Operation["type"] | "all">("all");
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedOperation, setSelectedOperation] = useState<Operation | null>(null);
-  const [itemsPerPage, setItemsPerPage] = useState("10");
-  const [date, setDate] = useState<{ from: Date; to: Date }>({
-    from: subDays(new Date(), 30),
-    to: new Date(),
+  const { 
+    operations, 
+    isLoading, 
+    deleteOperation, 
+    showDeleteDialog, 
+    setShowDeleteDialog, 
+    confirmDeleteOperation,
+    operationToDelete
+  } = useOperations();
+  const [filterType, setFilterType] = useState<string | null>(null);
+  const [filterClient, setFilterClient] = useState("");
+  const [dateRange, setDateRange] = useState<{
+    from?: Date;
+    to?: Date;
+  }>({});
+
+  const filteredOperations = operations.filter((op) => {
+    const matchesType = !filterType || op.type === filterType;
+    const matchesClient =
+      !filterClient ||
+      op.fromClient?.toLowerCase().includes(filterClient.toLowerCase()) ||
+      op.toClient?.toLowerCase().includes(filterClient.toLowerCase());
+    const matchesDate =
+      (!dateRange.from ||
+        new Date(op.date) >= new Date(dateRange.from)) &&
+      (!dateRange.to ||
+        new Date(op.date) <= new Date(dateRange.to));
+    return matchesType && matchesClient && matchesDate;
   });
-  const [isCustomRange, setIsCustomRange] = useState(false);
 
-  const handleEdit = (operation: Operation) => {
-    setSelectedOperation(operation);
-    setIsEditDialogOpen(true);
-  };
-
-  const handleDelete = (operation: Operation) => {
-    setSelectedOperation(operation);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const handleConfirmEdit = () => {
-    if (!selectedOperation) return;
-    // À implémenter selon le type d'opération
-    setIsEditDialogOpen(false);
-    toast.success("Opération modifiée avec succès");
-  };
-
-  const handleConfirmDelete = () => {
-    if (!selectedOperation) return;
-    // À implémenter selon le type d'opération
-    setIsDeleteDialogOpen(false);
-    toast.success("Opération supprimée avec succès");
-  };
-
-  const filteredOperations = operations.filter(operation => {
-    const operationDate = parseISO(operation.date);
-    const matchesSearch = 
-      operation.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      operation.fromClient?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      operation.toClient?.toLowerCase().includes(searchTerm.toLowerCase());
+  // Function to generate PDF
+  const generatePDF = () => {
+    const doc = new jsPDF();
     
-    const matchesType = selectedType === "all" ? true : operation.type === selectedType;
+    // Add title
+    doc.setFontSize(18);
+    doc.text("Rapport des opérations", 14, 22);
     
-    const matchesDate = isWithinInterval(operationDate, {
-      start: startOfDay(date.from),
-      end: endOfDay(date.to)
+    // Add filters information
+    doc.setFontSize(10);
+    let filterText = "Filtres appliqués: ";
+    filterText += filterType ? `Type: ${filterType}, ` : "";
+    filterText += filterClient ? `Client: ${filterClient}, ` : "";
+    filterText += dateRange.from ? `Du: ${dateRange.from.toLocaleDateString()}, ` : "";
+    filterText += dateRange.to ? `Au: ${dateRange.to.toLocaleDateString()}, ` : "";
+    filterText = filterText.endsWith(", ") ? filterText.slice(0, -2) : filterText;
+    filterText = filterText === "Filtres appliqués: " ? "Aucun filtre appliqué" : filterText;
+    
+    doc.text(filterText, 14, 30);
+    
+    // Prepare data for the table
+    const tableData = filteredOperations.map(op => [
+      new Date(op.date).toLocaleDateString(),
+      op.type === "deposit" ? "Versement" : op.type === "withdrawal" ? "Retrait" : "Virement",
+      op.fromClient,
+      op.toClient || "-",
+      op.description,
+      `${op.amount.toLocaleString()} TND`
+    ]);
+    
+    // Add table
+    (doc as any).autoTable({
+      startY: 35,
+      head: [['Date', 'Type', 'De', 'Vers', 'Description', 'Montant']],
+      body: tableData,
+      theme: 'striped',
+      headStyles: { fillColor: [41, 128, 185], textColor: 255 },
+      styles: { fontSize: 8 }
     });
-
-    return matchesSearch && matchesType && matchesDate;
-  });
-
-  const visibleOperations = filteredOperations.slice(0, parseInt(itemsPerPage));
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+    
+    // Save the PDF
+    doc.save("operations-report.pdf");
+  };
 
   return (
-    <div className="space-y-8 animate-in">
-      <div>
-        <h1 className="text-3xl font-bold">Recherche d'opérations</h1>
-        <p className="text-muted-foreground">
-          Consultez et gérez l'historique des versements, retraits et virements
-        </p>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">Opérations</h1>
+          <p className="text-muted-foreground">
+            Gérez et visualisez toutes les opérations
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button variant="outline" onClick={generatePDF} className="flex items-center gap-2">
+            <DownloadIcon className="h-4 w-4" />
+            <span className="hidden sm:inline">Exporter en PDF</span>
+            <span className="sm:hidden">PDF</span>
+          </Button>
+          <Button variant="outline" onClick={() => window.print()} className="flex items-center gap-2">
+            <Printer className="h-4 w-4" />
+            <span className="hidden sm:inline">Imprimer</span>
+            <span className="sm:hidden">Imprimer</span>
+          </Button>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Search className="h-5 w-5 text-primary" />
-              Filtres de recherche
-            </CardTitle>
-            <div className="flex items-center gap-4">
-              <div className="text-sm text-muted-foreground">
-                Affichage de {Math.min(parseInt(itemsPerPage), filteredOperations.length)} sur {filteredOperations.length} opérations
-              </div>
-              <Select
-                value={itemsPerPage}
-                onValueChange={setItemsPerPage}
-              >
-                <SelectTrigger className="w-[180px] bg-primary/5 border-primary/20 hover:bg-primary/10 transition-colors">
-                  <ListFilter className="h-4 w-4 mr-2 text-primary" />
-                  <SelectValue placeholder="Nombre d'éléments" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="10">10 éléments</SelectItem>
-                  <SelectItem value="25">25 éléments</SelectItem>
-                  <SelectItem value="50">50 éléments</SelectItem>
-                  <SelectItem value="100">100 éléments</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <OperationFilters
-            selectedType={selectedType}
-            searchTerm={searchTerm}
-            date={date}
-            isCustomRange={isCustomRange}
-            onTypeSelect={setSelectedType}
-            onSearch={setSearchTerm}
-            onDateChange={setDate}
-            onCustomRangeChange={setIsCustomRange}
-          />
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {visibleOperations.map((operation) => (
-              <OperationCard
-                key={operation.id}
-                operation={operation}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-              />
-            ))}
-
-            {filteredOperations.length === 0 && (
-              <div className="text-center py-12">
-                <div className="rounded-full bg-muted w-12 h-12 flex items-center justify-center mx-auto mb-4">
-                  <Search className="h-6 w-6 text-muted-foreground" />
-                </div>
-                <h3 className="text-lg font-medium">Aucune opération trouvée</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Modifiez vos critères de recherche pour voir plus de résultats.
-                </p>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      <EditOperationDialog
-        open={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
-        operation={selectedOperation}
-        onOperationChange={setSelectedOperation}
-        onConfirm={handleConfirmEdit}
+      <OperationFilters
+        filterType={filterType}
+        setFilterType={setFilterType}
+        filterClient={filterClient}
+        setFilterClient={setFilterClient}
+        dateRange={dateRange}
+        setDateRange={setDateRange}
       />
 
+      {isLoading ? (
+        <div className="flex justify-center py-10">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      ) : filteredOperations.length === 0 ? (
+        <div className="text-center py-10">
+          <p className="text-muted-foreground">Aucune opération trouvée</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 print:grid-cols-2">
+          {filteredOperations.map((operation) => (
+            <OperationCard 
+              key={`${operation.type}-${operation.id}`} 
+              operation={operation}
+              onDelete={() => deleteOperation(operation)}
+            />
+          ))}
+        </div>
+      )}
+      
       <DeleteOperationDialog
-        open={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-        onConfirm={handleConfirmDelete}
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onConfirm={confirmDeleteOperation}
+        operation={operationToDelete}
       />
     </div>
   );

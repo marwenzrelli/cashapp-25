@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, CreditCard, ArrowDownUp, PlusCircle, Calendar, FileText } from "lucide-react";
+import { User, CreditCard, ArrowDownUp, PlusCircle, Calendar, FileText, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -10,7 +10,7 @@ import { toast } from "sonner";
 
 interface AuditLogEntry {
   id: string;
-  action_type: 'user_creation' | 'deposit' | 'withdrawal' | 'transfer';
+  action_type: 'user_creation' | 'deposit' | 'withdrawal' | 'transfer' | 'transfer_deleted';
   action_date: string;
   performed_by: string;
   details: string;
@@ -54,12 +54,23 @@ export const SystemAuditLog = () => {
         .select('id, amount, from_client, to_client, created_at, created_by, status');
       
       if (transfersError) throw transfersError;
+      
+      // Récupère les virements supprimés depuis la table des logs
+      const { data: deletedTransfers, error: deletedTransfersError } = await supabase
+        .from('deleted_transfers_log')
+        .select('*');
+      
+      if (deletedTransfersError) {
+        console.error("Erreur lors de la récupération des virements supprimés:", deletedTransfersError);
+        // Continue execution even if there's an error (table might not exist yet)
+      }
 
       // Récupère les détails des utilisateurs pour les IDs created_by
       const allCreatorIds = [
         ...deposits.map(d => d.created_by),
         ...withdrawals.map(w => w.created_by),
-        ...transfers.map(t => t.created_by)
+        ...transfers.map(t => t.created_by),
+        ...(deletedTransfers ? deletedTransfers.map(dt => dt.deleted_by) : [])
       ].filter(id => id !== null);
       
       const uniqueCreatorIds = [...new Set(allCreatorIds)];
@@ -123,13 +134,26 @@ export const SystemAuditLog = () => {
         target_name: `${transfer.from_client} → ${transfer.to_client}`,
         amount: transfer.amount
       }));
+      
+      // Ajouter les virements supprimés s'ils existent
+      const deletedTransferLogs: AuditLogEntry[] = deletedTransfers ? deletedTransfers.map(transfer => ({
+        id: `deleted-transfer-${transfer.id}`,
+        action_type: 'transfer_deleted',
+        action_date: transfer.deleted_at,
+        performed_by: creatorDetails[transfer.deleted_by] || 'Inconnu',
+        details: `Virement supprimé de ${transfer.from_client} à ${transfer.to_client}`,
+        target_id: transfer.original_id,
+        target_name: `${transfer.from_client} → ${transfer.to_client}`,
+        amount: transfer.amount
+      })) : [];
 
       // Combine tous les logs et trie par date (plus récents en premier)
       const allLogs = [
         ...userCreationLogs,
         ...depositLogs,
         ...withdrawalLogs,
-        ...transferLogs
+        ...transferLogs,
+        ...deletedTransferLogs
       ].sort((a, b) => new Date(b.action_date).getTime() - new Date(a.action_date).getTime());
 
       setAuditLogs(allLogs);
@@ -155,6 +179,7 @@ export const SystemAuditLog = () => {
       case 'deposit': return <PlusCircle className="h-4 w-4 text-green-500" />;
       case 'withdrawal': return <CreditCard className="h-4 w-4 text-red-500" />;
       case 'transfer': return <ArrowDownUp className="h-4 w-4 text-orange-500" />;
+      case 'transfer_deleted': return <Trash2 className="h-4 w-4 text-purple-500" />;
       default: return <FileText className="h-4 w-4 text-gray-500" />;
     }
   };
@@ -165,6 +190,7 @@ export const SystemAuditLog = () => {
       case 'deposit': return "Versement";
       case 'withdrawal': return "Retrait";
       case 'transfer': return "Virement";
+      case 'transfer_deleted': return "Virement supprimé";
       default: return "Action inconnue";
     }
   };
@@ -175,6 +201,7 @@ export const SystemAuditLog = () => {
       case 'deposit': return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
       case 'withdrawal': return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
       case 'transfer': return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300";
+      case 'transfer_deleted': return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300";
       default: return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
     }
   };
@@ -206,6 +233,7 @@ export const SystemAuditLog = () => {
             <TabsTrigger value="deposit">Versements</TabsTrigger>
             <TabsTrigger value="withdrawal">Retraits</TabsTrigger>
             <TabsTrigger value="transfer">Virements</TabsTrigger>
+            <TabsTrigger value="transfer_deleted">Virements supprimés</TabsTrigger>
           </TabsList>
           
           <TabsContent value={activeTab} className="mt-0">
@@ -257,7 +285,7 @@ export const SystemAuditLog = () => {
                         </TableCell>
                         <TableCell className="text-right">
                           {log.amount !== undefined ? (
-                            <span className={log.action_type === 'withdrawal' ? 'text-red-600' : 'text-green-600'}>
+                            <span className={log.action_type === 'withdrawal' || log.action_type === 'transfer_deleted' ? 'text-red-600' : 'text-green-600'}>
                               {log.amount.toLocaleString()} TND
                             </span>
                           ) : (

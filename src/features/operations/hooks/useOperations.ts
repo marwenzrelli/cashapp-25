@@ -7,6 +7,8 @@ import { toast } from "sonner";
 export const useOperations = () => {
   const [operations, setOperations] = useState<Operation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [operationToDelete, setOperationToDelete] = useState<Operation | undefined>(undefined);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const fetchAllOperations = async () => {
     try {
@@ -71,6 +73,58 @@ export const useOperations = () => {
       setIsLoading(false);
     }
   };
+  
+  const deleteOperation = async (operation: Operation) => {
+    setOperationToDelete(operation);
+    setShowDeleteDialog(true);
+  };
+  
+  const confirmDeleteOperation = async () => {
+    if (!operationToDelete) return;
+    
+    try {
+      setIsLoading(true);
+      let error;
+      
+      switch (operationToDelete.type) {
+        case "deposit":
+          const { error: depositError } = await supabase
+            .from('deposits')
+            .delete()
+            .eq('id', operationToDelete.id);
+          error = depositError;
+          break;
+          
+        case "withdrawal":
+          const { error: withdrawalError } = await supabase
+            .from('withdrawals')
+            .delete()
+            .eq('id', operationToDelete.id);
+          error = withdrawalError;
+          break;
+          
+        case "transfer":
+          const { error: transferError } = await supabase
+            .from('transfers')
+            .delete()
+            .eq('id', operationToDelete.id);
+          error = transferError;
+          break;
+      }
+      
+      if (error) throw error;
+      
+      toast.success("Opération supprimée avec succès");
+      fetchAllOperations();
+    } catch (error) {
+      console.error("Erreur lors de la suppression de l'opération:", error);
+      toast.error("Erreur lors de la suppression de l'opération");
+    } finally {
+      setShowDeleteDialog(false);
+      setOperationToDelete(undefined);
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchAllOperations();
@@ -79,6 +133,11 @@ export const useOperations = () => {
   return {
     operations,
     isLoading,
-    fetchOperations: fetchAllOperations
+    fetchOperations: fetchAllOperations,
+    deleteOperation,
+    showDeleteDialog,
+    setShowDeleteDialog,
+    confirmDeleteOperation,
+    operationToDelete
   };
 };
