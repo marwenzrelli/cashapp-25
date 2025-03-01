@@ -163,25 +163,22 @@ export const useDeposits = () => {
 
       try {
         const { error: logError } = await supabase
-          .from('deleted_transfers_log')
+          .from('deleted_deposits')
           .insert({
-            original_id: depositToDelete.id.toString(),
-            from_client: depositToDelete.client_name,
-            to_client: depositToDelete.client_name,
+            original_id: depositToDelete.id,
             client_name: depositToDelete.client_name,
             amount: depositToDelete.amount,
             operation_date: depositToDelete.operation_date,
-            operation_type: 'deposit',
-            reason: depositToDelete.notes || 'Aucune raison fournie',
-            deleted_at: new Date().toISOString(),
-            deleted_by: userId
+            notes: depositToDelete.notes || null,
+            deleted_by: userId,
+            status: depositToDelete.status
           });
 
         if (logError) {
           console.error("Erreur lors de la création du log de suppression:", logError);
           console.error("Détails complets de l'erreur:", JSON.stringify(logError));
         } else {
-          console.log("Log de suppression créé avec succès");
+          console.log("Log de suppression créé avec succès dans deleted_deposits");
         }
       } catch (logError) {
         console.error("Exception lors de la création du log:", logError);

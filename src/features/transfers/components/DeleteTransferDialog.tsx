@@ -43,6 +43,7 @@ export const DeleteTransferDialog = ({
                 <p>À : {transfer.toClient}</p>
                 <p>Montant : {formatCurrency(transfer.amount)}</p>
                 <p>Date : {transfer.date}</p>
+                <p>Raison : {transfer.reason}</p>
               </div>
             </div>
           </AlertDialogDescription>

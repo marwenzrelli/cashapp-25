@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -138,31 +137,32 @@ export const useTransferActions = (onSuccess: () => void) => {
       const fromClient = await findClientByFullName(selectedTransfer.fromClient);
       const toClient = await findClientByFullName(selectedTransfer.toClient);
 
-      if (!fromClient || !toClient) {
-        console.error("Impossible de trouver un ou plusieurs clients");
-        console.log("Client expéditeur recherché:", selectedTransfer.fromClient);
-        console.log("Client destinataire recherché:", selectedTransfer.toClient);
-        
-        // Continuer avec la suppression même si les clients ne sont pas trouvés
-        const { error: deleteError } = await supabase
-          .from('transfers')
-          .delete()
-          .eq('id', selectedTransfer.id);
+      // Sauvegarde du transfert dans la table deleted_transfers avant suppression
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      
+      // Enregistrer les détails du transfert dans deleted_transfers
+      const { error: logError } = await supabase
+        .from('deleted_transfers')
+        .insert({
+          original_id: selectedTransfer.id,
+          from_client: selectedTransfer.fromClient,
+          to_client: selectedTransfer.toClient,
+          amount: selectedTransfer.amount,
+          operation_date: new Date().toISOString(), // Utiliser la date actuelle
+          reason: selectedTransfer.reason,
+          deleted_by: userId,
+          status: 'completed'
+        });
 
-        if (deleteError) {
-          console.error("Erreur lors de la suppression du virement:", deleteError);
-          toast.error("Erreur lors de la suppression du virement");
-          return;
-        }
-        
-        toast.success("Virement supprimé avec succès");
-        setIsDeleteDialogOpen(false);
-        onSuccess();
-        return;
+      if (logError) {
+        console.error("Erreur lors de l'enregistrement dans deleted_transfers:", logError);
+        toast.error("Erreur lors de la sauvegarde des données de suppression");
+      } else {
+        console.log("Transfert enregistré avec succès dans deleted_transfers");
       }
 
-      console.log("Clients trouvés - De:", fromClient.id, "À:", toClient.id);
-
+      // Suppression du transfert
       const { error: deleteError } = await supabase
         .from('transfers')
         .delete()
@@ -174,18 +174,21 @@ export const useTransferActions = (onSuccess: () => void) => {
         return;
       }
 
-      console.log("Virement supprimé, mise à jour des soldes...");
+      // Mise à jour des soldes si les clients ont été trouvés
+      if (fromClient && toClient) {
+        console.log("Clients trouvés - De:", fromClient.id, "À:", toClient.id);
 
-      // Mise à jour des soldes avec un délai pour laisser le temps aux triggers de s'exécuter
-      setTimeout(async () => {
-        await Promise.all([
-          refreshClientBalance(fromClient.id),
-          refreshClientBalance(toClient.id)
-        ]);
+        // Mise à jour des soldes avec un délai pour laisser le temps aux triggers de s'exécuter
+        setTimeout(async () => {
+          await Promise.all([
+            refreshClientBalance(fromClient.id),
+            refreshClientBalance(toClient.id)
+          ]);
 
-        await fetchClients();
-        console.log("Soldes mis à jour");
-      }, 1000);
+          await fetchClients();
+          console.log("Soldes mis à jour");
+        }, 1000);
+      }
 
       setIsDeleteDialogOpen(false);
       toast.success("Virement supprimé avec succès");

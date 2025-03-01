@@ -45,6 +45,81 @@ export type Database = {
         }
         Relationships: []
       }
+      deleted_deposits: {
+        Row: {
+          amount: number
+          client_name: string
+          deleted_at: string
+          deleted_by: string | null
+          id: string
+          notes: string | null
+          operation_date: string
+          original_id: number
+          status: string
+        }
+        Insert: {
+          amount: number
+          client_name: string
+          deleted_at?: string
+          deleted_by?: string | null
+          id?: string
+          notes?: string | null
+          operation_date: string
+          original_id: number
+          status?: string
+        }
+        Update: {
+          amount?: number
+          client_name?: string
+          deleted_at?: string
+          deleted_by?: string | null
+          id?: string
+          notes?: string | null
+          operation_date?: string
+          original_id?: number
+          status?: string
+        }
+        Relationships: []
+      }
+      deleted_transfers: {
+        Row: {
+          amount: number
+          deleted_at: string
+          deleted_by: string | null
+          from_client: string
+          id: string
+          operation_date: string
+          original_id: string
+          reason: string | null
+          status: string
+          to_client: string
+        }
+        Insert: {
+          amount: number
+          deleted_at?: string
+          deleted_by?: string | null
+          from_client: string
+          id?: string
+          operation_date: string
+          original_id: string
+          reason?: string | null
+          status?: string
+          to_client: string
+        }
+        Update: {
+          amount?: number
+          deleted_at?: string
+          deleted_by?: string | null
+          from_client?: string
+          id?: string
+          operation_date?: string
+          original_id?: string
+          reason?: string | null
+          status?: string
+          to_client?: string
+        }
+        Relationships: []
+      }
       deleted_transfers_log: {
         Row: {
           amount: number
@@ -84,6 +159,42 @@ export type Database = {
           original_id?: string
           reason?: string | null
           to_client?: string
+        }
+        Relationships: []
+      }
+      deleted_withdrawals: {
+        Row: {
+          amount: number
+          client_name: string
+          deleted_at: string
+          deleted_by: string | null
+          id: string
+          notes: string | null
+          operation_date: string
+          original_id: string
+          status: string
+        }
+        Insert: {
+          amount: number
+          client_name: string
+          deleted_at?: string
+          deleted_by?: string | null
+          id?: string
+          notes?: string | null
+          operation_date: string
+          original_id: string
+          status?: string
+        }
+        Update: {
+          amount?: number
+          client_name?: string
+          deleted_at?: string
+          deleted_by?: string | null
+          id?: string
+          notes?: string | null
+          operation_date?: string
+          original_id?: string
+          status?: string
         }
         Relationships: []
       }
