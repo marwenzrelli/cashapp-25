@@ -7,11 +7,13 @@ import { cn } from "@/lib/utils";
 interface PersonalInfoFieldsProps {
   client: Client;
   formatAmount?: (amount: number) => string;
+  showBalanceOnMobile?: boolean;
 }
 
 export const PersonalInfoFields = ({ 
   client, 
-  formatAmount = (amount) => `${amount.toLocaleString()} €`
+  formatAmount = (amount) => `${amount.toLocaleString()} €`,
+  showBalanceOnMobile = false
 }: PersonalInfoFieldsProps) => {
   return (
     <div className="space-y-6">
@@ -51,21 +53,23 @@ export const PersonalInfoFields = ({
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <Wallet className="h-5 w-5 text-primary" />
-          <div>
-            <p className="text-sm text-muted-foreground">Solde actuel</p>
-            <p className={cn(
-              "font-medium text-xl",
-              client.solde >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
-            )}>
-              {formatAmount(client.solde)}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Mis à jour le {format(new Date(), "dd/MM/yyyy HH:mm")}
-            </p>
+        {showBalanceOnMobile && (
+          <div className="flex items-center gap-3 md:hidden">
+            <Wallet className="h-5 w-5 text-primary" />
+            <div>
+              <p className="text-sm text-muted-foreground">Solde actuel</p>
+              <p className={cn(
+                "font-medium text-xl",
+                client.solde >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
+              )}>
+                {formatAmount(client.solde)}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Mis à jour le {format(new Date(), "dd/MM/yyyy HH:mm")}
+              </p>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
