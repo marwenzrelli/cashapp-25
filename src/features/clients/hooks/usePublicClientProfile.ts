@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Operation, formatDateTime } from "@/features/operations/types";
 import { Client } from "@/features/clients/types";
@@ -59,7 +60,7 @@ export const usePublicClientProfile = (token: string | undefined) => {
           .select('*')
           .eq('client_name', clientFullName)
           .eq('status', 'completed')
-          .order('operation_date', { ascending: false });
+          .order('created_at', { ascending: false });
 
         if (depositsError) {
           console.error("Erreur lors de la récupération des versements:", depositsError);
@@ -73,7 +74,7 @@ export const usePublicClientProfile = (token: string | undefined) => {
           .select('*')
           .eq('client_name', clientFullName)
           .eq('status', 'completed')
-          .order('operation_date', { ascending: false });
+          .order('created_at', { ascending: false });
 
         if (withdrawalsError) {
           console.error("Erreur lors de la récupération des retraits:", withdrawalsError);
@@ -87,7 +88,7 @@ export const usePublicClientProfile = (token: string | undefined) => {
           .select('*')
           .or(`from_client.eq."${clientFullName}",to_client.eq."${clientFullName}"`)
           .eq('status', 'completed')
-          .order('operation_date', { ascending: false });
+          .order('created_at', { ascending: false });
 
         if (transfersError) {
           console.error("Erreur lors de la récupération des virements:", transfersError);
@@ -102,30 +103,33 @@ export const usePublicClientProfile = (token: string | undefined) => {
             type: "deposit",
             amount: d.amount,
             date: d.operation_date,
+            createdAt: d.created_at,
             description: `Versement de ${d.client_name}`,
             fromClient: d.client_name,
-            formattedDate: formatDateTime(d.operation_date)
+            formattedDate: formatDateTime(d.created_at)
           })),
           ...(withdrawals || []).map((w): Operation => ({
             id: w.id.toString().slice(-6),
             type: "withdrawal",
             amount: w.amount,
             date: w.operation_date,
+            createdAt: w.created_at,
             description: `Retrait par ${w.client_name}`,
             fromClient: w.client_name,
-            formattedDate: formatDateTime(w.operation_date)
+            formattedDate: formatDateTime(w.created_at)
           })),
           ...(transfers || []).map((t): Operation => ({
             id: t.id.toString().slice(-6),
             type: "transfer",
             amount: t.amount,
             date: t.operation_date,
+            createdAt: t.created_at,
             description: t.reason || "Virement",
             fromClient: t.from_client,
             toClient: t.to_client,
-            formattedDate: formatDateTime(t.operation_date)
+            formattedDate: formatDateTime(t.created_at)
           }))
-        ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        ].sort((a, b) => new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime());
 
         console.log("Opérations transformées:", allOperations);
         setOperations(allOperations);

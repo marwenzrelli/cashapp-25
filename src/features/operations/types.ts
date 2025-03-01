@@ -4,6 +4,7 @@ export interface Operation {
   type: "deposit" | "withdrawal" | "transfer";
   amount: number;
   date: string;
+  createdAt?: string; // Add createdAt field
   description: string;
   fromClient?: string;
   toClient?: string;
