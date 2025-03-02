@@ -26,11 +26,13 @@ const Operations = () => {
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
   const filteredOperations = operations.filter((op) => {
+    // Filtrage par type
     const matchesType = !filterType || op.type === filterType;
     
-    // Enhanced search using the new utility function
+    // Utiliser la fonction améliorée pour la recherche de client
     const matchesClient = operationMatchesSearch(op, filterClient);
     
+    // Filtrage par date
     const matchesDate =
       (!dateRange?.from ||
         new Date(op.date) >= new Date(dateRange.from)) &&
