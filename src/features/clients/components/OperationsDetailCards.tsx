@@ -30,7 +30,7 @@ export const OperationsDetailCards = ({
                 <tr className="border-b bg-muted/50">
                   <th className="text-left p-4 font-medium text-sm">Date</th>
                   <th className="text-left p-4 font-medium text-sm">Description</th>
-                  <th className="text-right p-4 font-medium text-sm">Montant</th>
+                  <th className="text-center p-4 font-medium text-sm">Montant</th>
                 </tr>
               </thead>
               <tbody>
@@ -40,7 +40,7 @@ export const OperationsDetailCards = ({
                     <tr key={operation.id} className="border-b last:border-0">
                       <td className="p-4">{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</td>
                       <td className="p-4">{operation.description}</td>
-                      <td className="p-4 text-right font-medium text-green-600">{formatAmount(operation.amount)}</td>
+                      <td className="p-4 text-center font-medium text-green-600">{formatAmount(operation.amount)}</td>
                     </tr>
                 ))}
                 {clientOperations.filter(op => op.type === "deposit").length === 0 && (
@@ -69,7 +69,7 @@ export const OperationsDetailCards = ({
                 <tr className="border-b bg-muted/50">
                   <th className="text-left p-4 font-medium text-sm">Date</th>
                   <th className="text-left p-4 font-medium text-sm">Description</th>
-                  <th className="text-right p-4 font-medium text-sm">Montant</th>
+                  <th className="text-center p-4 font-medium text-sm">Montant</th>
                 </tr>
               </thead>
               <tbody>
@@ -79,7 +79,7 @@ export const OperationsDetailCards = ({
                     <tr key={operation.id} className="border-b last:border-0">
                       <td className="p-4">{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</td>
                       <td className="p-4">{operation.description}</td>
-                      <td className="p-4 text-right font-medium text-red-600">{formatAmount(operation.amount)}</td>
+                      <td className="p-4 text-center font-medium text-red-600">{formatAmount(operation.amount)}</td>
                     </tr>
                 ))}
                 {clientOperations.filter(op => op.type === "withdrawal").length === 0 && (
@@ -108,7 +108,7 @@ export const OperationsDetailCards = ({
                 <tr className="border-b bg-muted/50">
                   <th className="text-left p-4 font-medium text-sm">Date</th>
                   <th className="text-left p-4 font-medium text-sm">Description</th>
-                  <th className="text-right p-4 font-medium text-sm">Montant</th>
+                  <th className="text-center p-4 font-medium text-sm">Montant</th>
                   <th className="text-left p-4 font-medium text-sm">De</th>
                   <th className="text-left p-4 font-medium text-sm">À</th>
                 </tr>
@@ -120,7 +120,7 @@ export const OperationsDetailCards = ({
                     <tr key={operation.id} className="border-b last:border-0">
                       <td className="p-4">{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</td>
                       <td className="p-4">{operation.description}</td>
-                      <td className="p-4 text-right font-medium text-purple-600">{formatAmount(operation.amount)}</td>
+                      <td className="p-4 text-center font-medium text-purple-600">{formatAmount(operation.amount)}</td>
                       <td className="p-4">{operation.fromClient}</td>
                       <td className="p-4">{operation.toClient}</td>
                     </tr>

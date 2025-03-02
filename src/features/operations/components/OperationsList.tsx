@@ -49,8 +49,8 @@ export const OperationsList = ({ operations, isLoading, onDelete }: OperationsLi
                 <TableHead>Date</TableHead>
                 <TableHead>Description</TableHead>
                 <TableHead>Client(s)</TableHead>
-                <TableHead className="text-right">Montant</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="text-center">Montant</TableHead>
+                <TableHead className="text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -83,10 +83,10 @@ export const OperationsList = ({ operations, isLoading, onDelete }: OperationsLi
                       <span className="flex items-center gap-1"><User className="h-3 w-3" /> {operation.fromClient}</span>
                     )}
                   </TableCell>
-                  <TableCell className={`text-right font-medium ${getAmountColor(operation.type)}`}>
+                  <TableCell className={`text-center font-medium ${getAmountColor(operation.type)}`}>
                     {operation.type === "withdrawal" ? "-" : ""}{Math.round(operation.amount).toLocaleString()} TND
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-center">
                     <Button
                       variant="ghost"
                       size="icon"

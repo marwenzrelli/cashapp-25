@@ -28,7 +28,7 @@ export const TransferOperationsTab = ({ operations, currency = "TND" }: Transfer
             <TableRow>
               <TableHead>Date</TableHead>
               <TableHead>Description</TableHead>
-              <TableHead className="text-right">Montant</TableHead>
+              <TableHead className="text-center">Montant</TableHead>
               <TableHead>De</TableHead>
               <TableHead>À</TableHead>
             </TableRow>
@@ -38,7 +38,7 @@ export const TransferOperationsTab = ({ operations, currency = "TND" }: Transfer
               <TableRow key={operation.id}>
                 <TableCell>{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</TableCell>
                 <TableCell className="max-w-[200px] truncate">{operation.description}</TableCell>
-                <TableCell className="text-right font-medium text-green-600 dark:text-green-400">
+                <TableCell className="text-center font-medium text-green-600 dark:text-green-400">
                   {Math.round(operation.amount)} {currency}
                 </TableCell>
                 <TableCell className="max-w-[200px] truncate">{operation.fromClient}</TableCell>

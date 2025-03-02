@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -40,10 +41,10 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
             <thead className="bg-muted/50">
               <tr className="text-left">
                 <th className="p-3">Client</th>
-                <th className="p-3">Montant</th>
+                <th className="p-3 text-center">Montant</th>
                 <th className="p-3">Date</th>
                 <th className="p-3">Notes</th>
-                <th className="p-3">Actions</th>
+                <th className="p-3 text-center">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -69,8 +70,8 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
                         </div>
                       </div>
                     </td>
-                    <td className="p-3">
-                      <div className="flex items-center gap-2 text-danger">
+                    <td className="p-3 text-center">
+                      <div className="flex items-center justify-center gap-2 text-danger">
                         <ArrowDownCircle className="h-4 w-4" />
                         <span className="font-medium">
                           {withdrawal.amount.toLocaleString()} {currency}
@@ -81,8 +82,8 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
                       {withdrawal.date}
                     </td>
                     <td className="p-3 text-muted-foreground">{withdrawal.notes}</td>
-                    <td className="p-3">
-                      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 ease-in-out">
+                    <td className="p-3 text-center">
+                      <div className="flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 ease-in-out">
                         <Button
                           variant="ghost"
                           size="icon"
