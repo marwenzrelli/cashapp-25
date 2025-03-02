@@ -92,7 +92,7 @@ export const useDashboardData = () => {
       // Récupérer les versements récents
       const { data: recentDeposits, error: depositsError } = await supabase
         .from('deposits')
-        .select('id, amount, operation_date, client_name, status, motif')
+        .select('id, amount, operation_date, client_name, status, notes')
         .order('operation_date', { ascending: false })
         .limit(3);
 
@@ -101,7 +101,7 @@ export const useDashboardData = () => {
       // Récupérer les retraits récents
       const { data: recentWithdrawals, error: withdrawalsError } = await supabase
         .from('withdrawals')
-        .select('id, amount, operation_date, client_name, status, motif')
+        .select('id, amount, operation_date, client_name, status, notes')
         .order('operation_date', { ascending: false })
         .limit(3);
 
@@ -126,7 +126,7 @@ export const useDashboardData = () => {
           client_name: d.client_name,
           fromClient: d.client_name,
           status: d.status,
-          description: d.motif || `Versement pour ${d.client_name}`
+          description: d.notes || `Versement pour ${d.client_name}`
         })) || []),
         ...(recentWithdrawals?.map(w => ({
           id: w.id.toString(),
@@ -136,7 +136,7 @@ export const useDashboardData = () => {
           client_name: w.client_name,
           fromClient: w.client_name,
           status: w.status,
-          description: w.motif || `Retrait par ${w.client_name}`
+          description: w.notes || `Retrait par ${w.client_name}`
         })) || []),
         ...(recentTransfers?.map(t => ({
           id: t.id.toString(),
