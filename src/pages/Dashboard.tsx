@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from "recharts";
 import { ArrowUpCircle, ArrowDownCircle, RefreshCcw, TrendingUp, Users, AlertCircle, Sparkles, Send, ArrowLeftRight, Wallet } from "lucide-react";
@@ -13,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { OperationsMobileCard } from "@/features/clients/components/operations-history/OperationsMobileCard";
 
 interface DashboardStats {
   total_deposits: number;
@@ -32,6 +34,9 @@ interface RecentActivity {
   date: string;
   client_name: string;
   status: string;
+  description?: string;
+  fromClient?: string;
+  toClient?: string;
 }
 
 const Dashboard = () => {
@@ -126,7 +131,7 @@ const Dashboard = () => {
       // Récupérer les versements récents
       const { data: deposits, error: depositsError } = await supabase
         .from('deposits')
-        .select('id, amount, operation_date, client_name, status')
+        .select('id, amount, operation_date, client_name, status, description')
         .order('operation_date', { ascending: false })
         .limit(3);
 
@@ -135,7 +140,7 @@ const Dashboard = () => {
       // Récupérer les retraits récents
       const { data: withdrawals, error: withdrawalsError } = await supabase
         .from('withdrawals')
-        .select('id, amount, operation_date, client_name, status')
+        .select('id, amount, operation_date, client_name, status, description')
         .order('operation_date', { ascending: false })
         .limit(3);
 
@@ -144,7 +149,7 @@ const Dashboard = () => {
       // Récupérer les transferts récents
       const { data: transfers, error: transfersError } = await supabase
         .from('transfers')
-        .select('id, amount, operation_date, from_client, to_client, status')
+        .select('id, amount, operation_date, from_client, to_client, status, reason')
         .order('operation_date', { ascending: false })
         .limit(3);
 
@@ -158,7 +163,9 @@ const Dashboard = () => {
           amount: d.amount,
           date: d.operation_date,
           client_name: d.client_name,
-          status: d.status
+          fromClient: d.client_name,
+          status: d.status,
+          description: d.description || `Versement pour ${d.client_name}`
         })) || []),
         ...(withdrawals?.map(w => ({
           id: w.id.toString(),
@@ -166,7 +173,9 @@ const Dashboard = () => {
           amount: w.amount,
           date: w.operation_date,
           client_name: w.client_name,
-          status: w.status
+          fromClient: w.client_name,
+          status: w.status,
+          description: w.description || `Retrait par ${w.client_name}`
         })) || []),
         ...(transfers?.map(t => ({
           id: t.id.toString(),
@@ -174,7 +183,10 @@ const Dashboard = () => {
           amount: t.amount,
           date: t.operation_date,
           client_name: `${t.from_client} → ${t.to_client}`,
-          status: t.status
+          fromClient: t.from_client,
+          toClient: t.to_client,
+          status: t.status,
+          description: t.reason || `Virement de ${t.from_client} vers ${t.to_client}`
         })) || [])
       ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
         .slice(0, 5);
@@ -409,47 +421,68 @@ const Dashboard = () => {
         <CardContent>
           <div className="space-y-4">
             {recentActivity.map((activity) => (
-              <div
-                key={activity.id}
-                className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/10 transition-colors"
-              >
-                <div className="flex items-center gap-4">
-                  {activity.type === 'deposit' && (
-                    <div className="p-2 rounded-full bg-green-100 dark:bg-green-900/20">
-                      <ArrowUpCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+              <div key={activity.id}>
+                {/* Desktop version */}
+                <div className="hidden md:flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/10 transition-colors">
+                  <div className="flex items-center gap-4">
+                    {activity.type === 'deposit' && (
+                      <div className="p-2 rounded-full bg-green-100 dark:bg-green-900/20">
+                        <ArrowUpCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                      </div>
+                    )}
+                    {activity.type === 'withdrawal' && (
+                      <div className="p-2 rounded-full bg-red-100 dark:bg-red-900/20">
+                        <ArrowDownCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
+                      </div>
+                    )}
+                    {activity.type === 'transfer' && (
+                      <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/20">
+                        <ArrowLeftRight className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      </div>
+                    )}
+                    <div>
+                      <p className="font-medium">
+                        {activity.type === 'deposit' && 'Versement'}
+                        {activity.type === 'withdrawal' && 'Retrait'}
+                        {activity.type === 'transfer' && 'Virement'}
+                      </p>
+                      <p className="text-sm text-muted-foreground">{activity.client_name}</p>
                     </div>
-                  )}
-                  {activity.type === 'withdrawal' && (
-                    <div className="p-2 rounded-full bg-red-100 dark:bg-red-900/20">
-                      <ArrowDownCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
-                    </div>
-                  )}
-                  {activity.type === 'transfer' && (
-                    <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/20">
-                      <ArrowLeftRight className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                    </div>
-                  )}
-                  <div>
-                    <p className="font-medium">
-                      {activity.type === 'deposit' && 'Versement'}
-                      {activity.type === 'withdrawal' && 'Retrait'}
-                      {activity.type === 'transfer' && 'Virement'}
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <p className={cn(
+                      "font-medium",
+                      activity.type === 'deposit' ? "text-green-600 dark:text-green-400" :
+                      activity.type === 'withdrawal' ? "text-red-600 dark:text-red-400" :
+                      "text-blue-600 dark:text-blue-400"
+                    )}>
+                      {activity.type === 'withdrawal' ? '-' : ''}{activity.amount.toLocaleString()} {currency}
                     </p>
-                    <p className="text-sm text-muted-foreground">{activity.client_name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {format(new Date(activity.date), "dd/MM/yyyy HH:mm")}
+                    </p>
                   </div>
                 </div>
-                <div className="flex flex-col items-end gap-1">
-                  <p className={cn(
-                    "font-medium",
-                    activity.type === 'deposit' ? "text-green-600 dark:text-green-400" :
-                    activity.type === 'withdrawal' ? "text-red-600 dark:text-red-400" :
-                    "text-blue-600 dark:text-blue-400"
-                  )}>
-                    {activity.type === 'withdrawal' ? '-' : ''}{activity.amount.toLocaleString()} {currency}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {format(new Date(activity.date), "dd MMM yyyy HH:mm", { locale: fr })}
-                  </p>
+                
+                {/* Mobile version using OperationsMobileCard */}
+                <div className="md:hidden">
+                  <OperationsMobileCard 
+                    operation={{
+                      id: activity.id,
+                      type: activity.type,
+                      amount: activity.amount,
+                      date: activity.date,
+                      fromClient: activity.fromClient || activity.client_name,
+                      toClient: activity.toClient,
+                      description: activity.description || ''
+                    }}
+                    currency={currency}
+                    colorClass={
+                      activity.type === 'deposit' ? "text-green-600 dark:text-green-400" :
+                      activity.type === 'withdrawal' ? "text-red-600 dark:text-red-400" :
+                      "text-blue-600 dark:text-blue-400"
+                    }
+                  />
                 </div>
               </div>
             ))}
