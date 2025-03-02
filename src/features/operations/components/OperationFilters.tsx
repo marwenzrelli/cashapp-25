@@ -39,7 +39,7 @@ export const OperationFilters = ({
       <div className="flex-1 relative">
         <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder="Rechercher par nom de client ou partie du nom..."
+          placeholder="Rechercher par ID, nom de client, ou plusieurs IDs séparés par virgule..."
           value={client}
           onChange={(e) => setClient(e.target.value)}
           className="pl-9"

@@ -9,6 +9,7 @@ import { Operation } from "@/features/operations/types";
 import { OperationsList } from "@/features/operations/components/OperationsList";
 import { OperationsHeader } from "@/features/operations/components/OperationsHeader";
 import { generatePDF } from "@/features/operations/utils/pdf-generator";
+import { operationMatchesSearch } from "@/features/operations/utils/display-helpers";
 
 const Operations = () => {
   const { 
@@ -27,12 +28,8 @@ const Operations = () => {
   const filteredOperations = operations.filter((op) => {
     const matchesType = !filterType || op.type === filterType;
     
-    // Improved client name filtering - search in both fromClient and toClient
-    // and also handle partial name matches better
-    const clientSearchTerm = filterClient.toLowerCase().trim();
-    const matchesClient = !clientSearchTerm || 
-      (op.fromClient && op.fromClient.toLowerCase().includes(clientSearchTerm)) || 
-      (op.toClient && op.toClient.toLowerCase().includes(clientSearchTerm));
+    // Enhanced search using the new utility function
+    const matchesClient = operationMatchesSearch(op, filterClient);
     
     const matchesDate =
       (!dateRange?.from ||
