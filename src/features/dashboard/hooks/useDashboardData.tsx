@@ -94,7 +94,7 @@ export const useDashboardData = () => {
         .from('deposits')
         .select('id, amount, created_at, client_name, status, notes')
         .order('created_at', { ascending: false })
-        .limit(3);
+        .limit(5);
 
       if (depositsError) throw depositsError;
 
@@ -103,7 +103,7 @@ export const useDashboardData = () => {
         .from('withdrawals')
         .select('id, amount, created_at, client_name, status, notes')
         .order('created_at', { ascending: false })
-        .limit(3);
+        .limit(5);
 
       if (withdrawalsError) throw withdrawalsError;
 
@@ -112,7 +112,7 @@ export const useDashboardData = () => {
         .from('transfers')
         .select('id, amount, created_at, from_client, to_client, status, reason')
         .order('created_at', { ascending: false })
-        .limit(3);
+        .limit(5);
 
       if (transfersError) throw transfersError;
 
@@ -150,7 +150,7 @@ export const useDashboardData = () => {
           description: t.reason || `Virement de ${t.from_client} vers ${t.to_client}`
         })) || [])
       ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-        .slice(0, 5);
+        .slice(0, 10);
 
       setRecentActivity(allActivity);
     } catch (error) {
