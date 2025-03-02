@@ -13,6 +13,10 @@ import { Search } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+interface ExtendedClient extends Client {
+  dateCreation: string;
+}
+
 interface WithdrawalsContentProps {
   withdrawals: Withdrawal[];
   clients: Client[];
@@ -48,7 +52,7 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
 
   const findClientById = (clientName: string) => {
     const client = clients.find(c => `${c.prenom} ${c.nom}` === clientName);
-    return client ? { ...client, dateCreation: client.dateCreation || new Date().toISOString() } : null;
+    return client ? { ...client, dateCreation: client.date_creation || new Date().toISOString() } : null;
   };
 
   const handleDeleteWithdrawal = (withdrawal: Withdrawal) => {
@@ -63,6 +67,11 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
     setShowDialog(true);
   };
 
+  const extendedClients: ExtendedClient[] = clients.map(client => ({
+    ...client,
+    dateCreation: client.date_creation || new Date().toISOString()
+  }));
+
   return (
     <div className="space-y-8 animate-in">
       <WithdrawalHeader />
@@ -70,7 +79,7 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <WithdrawalForm
-            clients={clients}
+            clients={extendedClients}
             fetchWithdrawals={fetchWithdrawals}
             refreshClientBalance={refreshClientBalance}
           />
@@ -82,6 +91,9 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
               setIsEditing(false);
               setShowDialog(true);
             }}
+            itemsPerPage={itemsPerPage}
+            setItemsPerPage={setItemsPerPage}
+            withdrawalsCount={withdrawals.length}
           />
           
           <Card>
@@ -141,12 +153,15 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
         setSelectedClient={setSelectedClient}
         isEditing={isEditing}
         selectedWithdrawal={selectedWithdrawal}
-        fetchWithdrawals={fetchWithdrawals}
+        fetchWithdrawals={async () => {
+          fetchWithdrawals();
+          return Promise.resolve();
+        }}
         refreshClientBalance={refreshClientBalance}
       />
 
       <DeleteWithdrawalDialog
-        isOpen={showDeleteDialog}
+        open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
         onConfirm={confirmDeleteWithdrawal}
         withdrawal={selectedWithdrawal}

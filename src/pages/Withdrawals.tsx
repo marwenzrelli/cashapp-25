@@ -21,6 +21,17 @@ const Withdrawals = () => {
 
   const { clients, fetchClients, refreshClientBalance } = useClients();
 
+  // Create a wrapper function to handle the type mismatch
+  const handleRefreshClientBalance = async (clientId: string): Promise<boolean> => {
+    try {
+      await refreshClientBalance(parseInt(clientId, 10));
+      return true;
+    } catch (error) {
+      console.error("Error refreshing client balance:", error);
+      return false;
+    }
+  };
+
   useEffect(() => {
     fetchClients();
     fetchWithdrawals();
@@ -56,7 +67,7 @@ const Withdrawals = () => {
       clients={clients}
       fetchWithdrawals={fetchWithdrawals}
       fetchClients={fetchClients}
-      refreshClientBalance={refreshClientBalance}
+      refreshClientBalance={handleRefreshClientBalance}
       deleteWithdrawal={deleteWithdrawal}
       showDeleteDialog={showDeleteDialog}
       setShowDeleteDialog={setShowDeleteDialog}

@@ -8,26 +8,32 @@ import { Client } from "@/features/clients/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrency } from "@/contexts/CurrencyContext";
 
+interface ExtendedClient extends Client {
+  dateCreation: string;
+}
+
 interface WithdrawalDialogContainerProps {
-  isDialogOpen: boolean;
-  setIsDialogOpen: (value: boolean) => void;
-  selectedWithdrawal: Withdrawal | null;
-  setSelectedWithdrawal: (withdrawal: Withdrawal | null) => void;
+  showDialog: boolean;
+  setShowDialog: (value: boolean) => void;
   clients: Client[];
-  fetchWithdrawals: () => Promise<void>;
-  refreshClientBalance: (clientId: number) => Promise<void>;
-  fetchClients: () => Promise<void>;
+  selectedClient: string;
+  setSelectedClient: (clientName: string) => void;
+  isEditing: boolean;
+  selectedWithdrawal: Withdrawal | null;
+  fetchWithdrawals: () => void;
+  refreshClientBalance: (clientId: string) => Promise<boolean>;
 }
 
 export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps> = ({
-  isDialogOpen,
-  setIsDialogOpen,
-  selectedWithdrawal,
-  setSelectedWithdrawal,
+  showDialog,
+  setShowDialog,
   clients,
+  selectedClient,
+  setSelectedClient,
+  isEditing,
+  selectedWithdrawal,
   fetchWithdrawals,
   refreshClientBalance,
-  fetchClients,
 }) => {
   const { currency } = useCurrency();
   const [newWithdrawal, setNewWithdrawal] = useState({
@@ -83,7 +89,7 @@ export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps>
           description: `Le retrait de ${parseFloat(newWithdrawal.amount)} ${currency} pour ${clientFullName} a été modifié.`
         });
 
-        await refreshClientBalance(selectedClient.id);
+        await refreshClientBalance(selectedClient.id.toString());
       } else {
         const { error } = await supabase
           .from('withdrawals')
@@ -106,11 +112,10 @@ export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps>
           description: `Le retrait de ${parseFloat(newWithdrawal.amount)} ${currency} pour ${clientFullName} a été enregistré.`
         });
 
-        await refreshClientBalance(selectedClient.id);
+        await refreshClientBalance(selectedClient.id.toString());
       }
 
-      setIsDialogOpen(false);
-      setSelectedWithdrawal(null);
+      setShowDialog(false);
       setNewWithdrawal({
         clientId: "",
         amount: "",
@@ -118,27 +123,15 @@ export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps>
         date: new Date().toISOString().split('T')[0]
       });
       
-      await fetchWithdrawals();
-      await fetchClients();
+      fetchWithdrawals();
     } catch (error) {
       console.error("Error in handleCreateWithdrawal:", error);
       toast.error("Une erreur est survenue");
     }
   };
 
-  const handleClose = () => {
-    setIsDialogOpen(false);
-    setSelectedWithdrawal(null);
-    setNewWithdrawal({
-      clientId: "",
-      amount: "",
-      notes: "",
-      date: new Date().toISOString().split('T')[0]
-    });
-  };
-
   return (
-    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+    <Dialog open={showDialog} onOpenChange={setShowDialog}>
       <WithdrawalForm 
         clients={clients.map(client => ({
           ...client,
@@ -146,9 +139,9 @@ export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps>
         }))}
         newWithdrawal={newWithdrawal}
         setNewWithdrawal={setNewWithdrawal}
-        onClose={handleClose}
+        onClose={() => setShowDialog(false)}
         onSubmit={handleCreateWithdrawal}
-        isEditing={!!selectedWithdrawal}
+        isEditing={isEditing}
       />
     </Dialog>
   );

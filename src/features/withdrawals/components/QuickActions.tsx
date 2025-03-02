@@ -13,19 +13,19 @@ import {
 } from "@/components/ui/select";
 
 interface QuickActionsProps {
-  itemsPerPage: string;
-  setItemsPerPage: (value: string) => void;
-  withdrawalsCount: number;
-  onNewWithdrawal: () => void;
+  itemsPerPage?: string;
+  setItemsPerPage?: (value: string) => void;
+  withdrawalsCount?: number;
+  onCreateClick: () => void;
   searchQuery?: string;
   setSearchQuery?: (query: string) => void;
 }
 
 export const QuickActions: React.FC<QuickActionsProps> = ({
-  itemsPerPage,
-  setItemsPerPage,
-  withdrawalsCount,
-  onNewWithdrawal,
+  itemsPerPage = "10",
+  setItemsPerPage = () => {},
+  withdrawalsCount = 0,
+  onCreateClick,
   searchQuery = "",
   setSearchQuery = () => {},
 }) => {
@@ -67,7 +67,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
               </div>
             </div>
           </div>
-          <Button onClick={onNewWithdrawal}>
+          <Button onClick={onCreateClick}>
             <Plus className="h-4 w-4 mr-2" />
             Nouveau retrait
           </Button>
