@@ -92,8 +92,8 @@ export const useDashboardData = () => {
       // Récupérer les versements récents
       const { data: recentDeposits, error: depositsError } = await supabase
         .from('deposits')
-        .select('id, amount, operation_date, client_name, status, notes')
-        .order('operation_date', { ascending: false })
+        .select('id, amount, created_at, client_name, status, notes')
+        .order('created_at', { ascending: false })
         .limit(3);
 
       if (depositsError) throw depositsError;
@@ -101,8 +101,8 @@ export const useDashboardData = () => {
       // Récupérer les retraits récents
       const { data: recentWithdrawals, error: withdrawalsError } = await supabase
         .from('withdrawals')
-        .select('id, amount, operation_date, client_name, status, notes')
-        .order('operation_date', { ascending: false })
+        .select('id, amount, created_at, client_name, status, notes')
+        .order('created_at', { ascending: false })
         .limit(3);
 
       if (withdrawalsError) throw withdrawalsError;
@@ -110,8 +110,8 @@ export const useDashboardData = () => {
       // Récupérer les transferts récents
       const { data: recentTransfers, error: transfersError } = await supabase
         .from('transfers')
-        .select('id, amount, operation_date, from_client, to_client, status, reason')
-        .order('operation_date', { ascending: false })
+        .select('id, amount, created_at, from_client, to_client, status, reason')
+        .order('created_at', { ascending: false })
         .limit(3);
 
       if (transfersError) throw transfersError;
@@ -122,7 +122,7 @@ export const useDashboardData = () => {
           id: d.id.toString(),
           type: 'deposit' as const,
           amount: d.amount,
-          date: d.operation_date,
+          date: d.created_at,
           client_name: d.client_name,
           fromClient: d.client_name,
           status: d.status,
@@ -132,7 +132,7 @@ export const useDashboardData = () => {
           id: w.id.toString(),
           type: 'withdrawal' as const,
           amount: w.amount,
-          date: w.operation_date,
+          date: w.created_at,
           client_name: w.client_name,
           fromClient: w.client_name,
           status: w.status,
@@ -142,7 +142,7 @@ export const useDashboardData = () => {
           id: t.id.toString(),
           type: 'transfer' as const,
           amount: t.amount,
-          date: t.operation_date,
+          date: t.created_at,
           client_name: `${t.from_client} → ${t.to_client}`,
           fromClient: t.from_client,
           toClient: t.to_client,

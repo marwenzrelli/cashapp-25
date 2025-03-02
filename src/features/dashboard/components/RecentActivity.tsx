@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { OperationsMobileCard } from "@/features/clients/components/operations-history/OperationsMobileCard";
 import { RecentActivity } from "../types";
+import { formatDateTime } from "@/features/operations/types";
 
 interface RecentActivityProps {
   activities: RecentActivity[];
@@ -58,7 +59,7 @@ export const RecentActivityCard = ({ activities, currency }: RecentActivityProps
                     {activity.type === 'withdrawal' ? '-' : ''}{activity.amount.toLocaleString()} {currency}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {format(new Date(activity.date), "dd/MM/yyyy HH:mm")}
+                    {formatDateTime(activity.date)}
                   </p>
                 </div>
               </div>
