@@ -35,42 +35,47 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
         <CardTitle>Actions rapides</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4 flex-1">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Rechercher un retrait..."
-                className="pl-9"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <Select
-                value={itemsPerPage}
-                onValueChange={setItemsPerPage}
-              >
-                <SelectTrigger className="w-[180px] bg-primary/5 border-primary/20 hover:bg-primary/10 transition-colors">
-                  <ListFilter className="h-4 w-4 mr-2 text-primary" />
-                  <SelectValue placeholder="Nombre d'éléments" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="10">10 éléments</SelectItem>
-                  <SelectItem value="25">25 éléments</SelectItem>
-                  <SelectItem value="50">50 éléments</SelectItem>
-                  <SelectItem value="100">100 éléments</SelectItem>
-                </SelectContent>
-              </Select>
-              <div className="text-sm text-muted-foreground">
-                {withdrawalsCount} résultats
-              </div>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Rechercher un retrait..."
+              className="pl-9"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Button 
+              onClick={onCreateClick}
+              size="sm"
+              className="whitespace-nowrap"
+            >
+              <Plus className="h-3.5 w-3.5 mr-1.5" />
+              Nouveau
+            </Button>
+            <Select
+              value={itemsPerPage}
+              onValueChange={setItemsPerPage}
+            >
+              <SelectTrigger className="w-[110px] bg-primary/5 border-primary/20 hover:bg-primary/10 transition-colors">
+                <ListFilter className="h-3.5 w-3.5 mr-1.5 text-primary" />
+                <SelectValue placeholder="Items" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10 éléments</SelectItem>
+                <SelectItem value="25">25 éléments</SelectItem>
+                <SelectItem value="50">50 éléments</SelectItem>
+                <SelectItem value="100">100 éléments</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="text-xs text-muted-foreground hidden md:block">
+              {withdrawalsCount} résultats
             </div>
           </div>
-          <Button onClick={onCreateClick}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nouveau retrait
-          </Button>
+        </div>
+        <div className="text-xs text-muted-foreground mt-2 md:hidden">
+          {withdrawalsCount} résultats trouvés
         </div>
       </CardContent>
     </Card>

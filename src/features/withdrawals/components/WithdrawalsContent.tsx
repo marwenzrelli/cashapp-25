@@ -72,6 +72,12 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
     dateCreation: client.date_creation || new Date().toISOString()
   }));
 
+  // Cette fonction est ajoutée pour retourner une Promise à partir de fetchWithdrawals
+  const handleFetchWithdrawals = async (): Promise<void> => {
+    fetchWithdrawals();
+    return Promise.resolve();
+  };
+
   return (
     <div className="space-y-8 animate-in">
       <WithdrawalHeader />
@@ -80,7 +86,7 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
         <div className="lg:col-span-2">
           <StandaloneWithdrawalForm
             clients={extendedClients}
-            fetchWithdrawals={fetchWithdrawals}
+            fetchWithdrawals={handleFetchWithdrawals}
             refreshClientBalance={refreshClientBalance}
           />
         </div>
@@ -153,10 +159,7 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
         setSelectedClient={setSelectedClient}
         isEditing={isEditing}
         selectedWithdrawal={selectedWithdrawal}
-        fetchWithdrawals={async () => {
-          fetchWithdrawals();
-          return Promise.resolve();
-        }}
+        fetchWithdrawals={handleFetchWithdrawals}
         refreshClientBalance={refreshClientBalance}
       />
 
