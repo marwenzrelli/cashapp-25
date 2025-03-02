@@ -45,8 +45,8 @@ export const SearchBar = ({
                 value={itemsPerPage}
                 onValueChange={onItemsPerPageChange}
               >
-                <SelectTrigger className="w-full md:w-[180px] bg-primary/5 border-primary/20 hover:bg-primary/10 transition-colors">
-                  <ListFilter className="h-4 w-4 mr-2 text-primary" />
+                <SelectTrigger className="w-full md:w-[180px] bg-green-50/50 border-green-200/50 hover:bg-green-100/50 transition-colors">
+                  <ListFilter className="h-4 w-4 mr-2 text-green-600" />
                   <SelectValue placeholder="Nombre d'éléments" />
                 </SelectTrigger>
                 <SelectContent>
