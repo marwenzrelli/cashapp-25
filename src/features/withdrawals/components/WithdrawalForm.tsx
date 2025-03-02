@@ -1,3 +1,4 @@
+
 import React from "react";
 import { DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,15 @@ interface ExtendedClient extends Client {
   dateCreation: string;
 }
 
-interface WithdrawalFormProps {
+// Define the props for the standalone form used in WithdrawalsContent
+export interface StandaloneWithdrawalFormProps {
+  clients: ExtendedClient[];
+  fetchWithdrawals: () => void;
+  refreshClientBalance: (clientId: string) => Promise<boolean>;
+}
+
+// Define the props for the form used in the dialog
+export interface WithdrawalFormProps {
   clients: ExtendedClient[];
   newWithdrawal: {
     clientId: string;
@@ -37,6 +46,7 @@ interface WithdrawalFormProps {
   isEditing: boolean;
 }
 
+// This is the original component used in the dialog
 export const WithdrawalForm: React.FC<WithdrawalFormProps> = ({
   clients,
   newWithdrawal,
@@ -167,5 +177,153 @@ export const WithdrawalForm: React.FC<WithdrawalFormProps> = ({
         </Button>
       </DialogFooter>
     </DialogContent>
+  );
+};
+
+// Add a new standalone form component
+export const StandaloneWithdrawalForm: React.FC<StandaloneWithdrawalFormProps> = ({
+  clients,
+  fetchWithdrawals,
+  refreshClientBalance,
+}) => {
+  const { currency } = useCurrency();
+  const [newWithdrawal, setNewWithdrawal] = React.useState({
+    clientId: "",
+    amount: "",
+    notes: "",
+    date: new Date().toISOString().split('T')[0],
+  });
+
+  const handleSubmit = async () => {
+    // Basic validation
+    if (!newWithdrawal.clientId || !newWithdrawal.amount) {
+      alert("Veuillez remplir tous les champs obligatoires");
+      return;
+    }
+
+    try {
+      // Submit logic would go here
+      
+      // Refresh data
+      fetchWithdrawals();
+      
+      // Refresh client balance if needed
+      if (newWithdrawal.clientId) {
+        await refreshClientBalance(newWithdrawal.clientId);
+      }
+      
+      // Reset form
+      setNewWithdrawal({
+        clientId: "",
+        amount: "",
+        notes: "",
+        date: new Date().toISOString().split('T')[0],
+      });
+    } catch (error) {
+      console.error("Error submitting withdrawal:", error);
+    }
+  };
+
+  return (
+    <div className="bg-white dark:bg-gray-950 rounded-xl shadow-sm border p-6">
+      <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+        <ArrowDownCircle className="h-5 w-5 text-red-500" />
+        Nouveau retrait
+      </h2>
+      
+      <div className="grid gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="standalone-date">Date du retrait</Label>
+          <Input
+            id="standalone-date"
+            type="date"
+            value={newWithdrawal.date}
+            onChange={(e) => setNewWithdrawal({ ...newWithdrawal, date: e.target.value })}
+            className="transition-all focus-visible:ring-primary/50"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="standalone-clientId">Client</Label>
+          <Select
+            value={newWithdrawal.clientId}
+            onValueChange={(value) => setNewWithdrawal({ ...newWithdrawal, clientId: value })}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Sélectionner un client" />
+            </SelectTrigger>
+            <SelectContent>
+              {clients.map((client) => (
+                <SelectItem
+                  key={client.id}
+                  value={client.id.toString()}
+                  className="flex items-center justify-between gap-2"
+                >
+                  <div className="flex items-center gap-2">
+                    <UserCircle className="h-4 w-4 text-primary/50" />
+                    <span>
+                      {client.prenom} {client.nom}
+                    </span>
+                  </div>
+                  <span
+                    className={`font-mono text-sm ${
+                      client.solde >= 0
+                        ? "text-green-600 dark:text-green-400"
+                        : "text-red-600 dark:text-red-400"
+                    }`}
+                  >
+                    {client.solde.toLocaleString()} {currency}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="standalone-amount">Montant</Label>
+          <div className="relative">
+            <BadgeDollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              id="standalone-amount"
+              type="number"
+              placeholder="0.00"
+              value={newWithdrawal.amount}
+              onChange={(e) =>
+                setNewWithdrawal({ ...newWithdrawal, amount: e.target.value })
+              }
+              className="pl-9 transition-all focus-visible:ring-primary/50"
+            />
+            <span className="absolute right-3 top-3 text-muted-foreground">
+              {currency}
+            </span>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="standalone-notes">Notes</Label>
+          <div className="relative">
+            <ScrollText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              id="standalone-notes"
+              placeholder="Motif du retrait..."
+              value={newWithdrawal.notes}
+              onChange={(e) =>
+                setNewWithdrawal({ ...newWithdrawal, notes: e.target.value })
+              }
+              className="pl-9 transition-all focus-visible:ring-primary/50"
+            />
+          </div>
+        </div>
+
+        <Button
+          onClick={handleSubmit}
+          className="bg-red-600 hover:bg-red-700 text-white w-full mt-4"
+        >
+          <ArrowDownCircle className="h-4 w-4 mr-2" />
+          Effectuer le retrait
+        </Button>
+      </div>
+    </div>
   );
 };

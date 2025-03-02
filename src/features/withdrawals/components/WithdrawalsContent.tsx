@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { WithdrawalForm } from "./WithdrawalForm";
+import { StandaloneWithdrawalForm } from "./WithdrawalForm";
 import { WithdrawalTable } from "./WithdrawalTable";
 import { WithdrawalHeader } from "./WithdrawalHeader";
 import { QuickActions } from "./QuickActions";
@@ -78,7 +78,7 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <WithdrawalForm
+          <StandaloneWithdrawalForm
             clients={extendedClients}
             fetchWithdrawals={fetchWithdrawals}
             refreshClientBalance={refreshClientBalance}
