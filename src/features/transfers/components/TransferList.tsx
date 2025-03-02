@@ -1,3 +1,4 @@
+
 import { Search, ArrowLeftRight, ArrowRight, Pencil, Trash2 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -5,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { type Transfer } from "../types";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { cn } from "@/lib/utils";
+import { containsPartialText, operationMatchesSearch } from "@/features/operations/utils/display-helpers";
 
 interface TransferListProps {
   transfers: Transfer[];
@@ -37,10 +39,30 @@ export const TransferList = ({
   };
 
   const filteredTransfers = transfers.filter(
-    (transfer) =>
-      transfer.fromClient.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transfer.toClient.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transfer.reason.toLowerCase().includes(searchTerm.toLowerCase())
+    (transfer) => {
+      if (!searchTerm.trim()) return true;
+      
+      const searchTerms = searchTerm.toLowerCase().split(',').map(term => term.trim());
+      
+      return searchTerms.some(term => {
+        // Chercher dans le fromClient (expéditeur)
+        if (containsPartialText(transfer.fromClient, term)) return true;
+        
+        // Chercher dans le toClient (destinataire)
+        if (containsPartialText(transfer.toClient, term)) return true;
+        
+        // Chercher dans la raison/description
+        if (containsPartialText(transfer.reason, term)) return true;
+        
+        // Chercher dans l'ID
+        if (transfer.id.toString().includes(term)) return true;
+        
+        // Chercher dans le montant (correspondance exacte)
+        if (transfer.amount.toString().includes(term)) return true;
+        
+        return false;
+      });
+    }
   );
 
   return (
@@ -54,7 +76,7 @@ export const TransferList = ({
           <div className="relative w-64">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Rechercher..."
+              placeholder="Rechercher par nom, description, ou ID..."
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
               className="pl-9"

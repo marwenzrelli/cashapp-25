@@ -4,6 +4,7 @@ import { Operation } from "@/features/operations/types";
 import { DateRange } from "react-day-picker";
 import { isWithinInterval, parseISO } from "date-fns";
 import { Client } from "@/features/clients/types";
+import { containsPartialText } from "@/features/operations/utils/display-helpers";
 
 export const useClientOperationsFilter = (operations: Operation[], client: Client | null) => {
   const [selectedType, setSelectedType] = useState<Operation["type"] | "all">("all");
@@ -38,14 +39,28 @@ export const useClientOperationsFilter = (operations: Operation[], client: Clien
       return op.type === selectedType;
     })
     .filter(op => {
-      if (!searchTerm) return true;
-      const searchLower = searchTerm.toLowerCase();
-      return (
-        op.description.toLowerCase().includes(searchLower) ||
-        op.fromClient?.toLowerCase().includes(searchLower) ||
-        op.toClient?.toLowerCase().includes(searchLower) ||
-        op.amount.toString().includes(searchLower)
-      );
+      if (!searchTerm.trim()) return true;
+      
+      const searchTerms = searchTerm.toLowerCase().split(',').map(term => term.trim());
+      
+      return searchTerms.some(term => {
+        // Chercher dans la description
+        if (op.description && containsPartialText(op.description, term)) return true;
+        
+        // Chercher dans le fromClient (expéditeur)
+        if (op.fromClient && containsPartialText(op.fromClient, term)) return true;
+        
+        // Chercher dans le toClient (destinataire)
+        if (op.toClient && containsPartialText(op.toClient, term)) return true;
+        
+        // Chercher dans le montant
+        if (op.amount.toString().includes(term)) return true;
+        
+        // Chercher dans l'ID
+        if (op.id.toString().includes(term)) return true;
+        
+        return false;
+      });
     });
 
   return {
