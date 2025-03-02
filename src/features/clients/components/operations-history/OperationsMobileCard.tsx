@@ -28,7 +28,7 @@ export const OperationsMobileCard = ({
           )}
           <span className="font-medium">{getTypeLabel(operation.type)}</span>
         </div>
-        <span className={`font-semibold text-center ${colorClass}`}>
+        <span className={`font-semibold text-center pl-4 ${colorClass}`}>
           {operation.type === "withdrawal" ? "-" : ""}
           {Math.round(operation.amount)} {currency}
         </span>

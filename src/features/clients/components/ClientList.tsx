@@ -74,13 +74,13 @@ export const ClientList = ({ clients, onEdit, onDelete }: ClientListProps) => {
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-6">
                   <div className={`px-2 py-1 rounded-full text-xs ${getStatusColor(client.status)}`}>
                     {client.status === 'active' ? 'Actif' : client.status === 'inactive' ? 'Inactif' : client.status}
                   </div>
                   
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-8">
+                    <div className="flex items-center gap-1 pr-6 border-r border-transparent">
                       <Wallet className="h-4 w-4 text-muted-foreground" />
                       <span className={`font-medium ${client.solde >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                         {client.solde.toLocaleString()} {currency}
