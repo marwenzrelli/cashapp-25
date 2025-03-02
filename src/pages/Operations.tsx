@@ -1,15 +1,19 @@
 
 import { useState } from "react";
-import { OperationCard } from "@/features/operations/components/OperationCard";
 import { OperationFilters } from "@/features/operations/components/OperationFilters";
 import { useOperations } from "@/features/operations/hooks/useOperations";
 import { Button } from "@/components/ui/button";
-import { Printer, DownloadIcon } from "lucide-react";
+import { Printer, DownloadIcon, ArrowUpCircle, ArrowDownCircle, RefreshCcw, User, Hash, FileText, Trash2 } from "lucide-react";
 import { jsPDF } from "jspdf";
 import 'jspdf-autotable';
 import { DeleteOperationDialog } from "@/features/operations/components/DeleteOperationDialog";
 import { DateRange } from "react-day-picker";
 import { formatDateTime } from "@/features/operations/types";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
+import { getTypeStyle, getTypeIcon, getTypeLabel } from "@/features/operations/utils/operation-helpers";
+import { Operation } from "@/features/operations/types";
 
 const Operations = () => {
   const { 
@@ -95,6 +99,29 @@ const Operations = () => {
     return true; // Return true to indicate successful deletion
   };
 
+  const getAmountColor = (type: Operation["type"]) => {
+    switch (type) {
+      case "deposit":
+        return "text-green-600 dark:text-green-400";
+      case "withdrawal":
+        return "text-red-600 dark:text-red-400";
+      case "transfer":
+        return "text-purple-600 dark:text-purple-400";
+    }
+  };
+
+  // Format transaction ID to 6 digits
+  const formatOperationId = (id: string) => {
+    // If the ID is numeric or can be converted to a number
+    if (!isNaN(Number(id))) {
+      // Pad with leading zeros to get 6 digits
+      return id.padStart(6, '0');
+    }
+    
+    // For UUID format, take first 6 characters
+    return id.slice(0, 6);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -136,15 +163,124 @@ const Operations = () => {
           <p className="text-muted-foreground">Aucune opération trouvée</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 print:grid-cols-2">
-          {operationsWithFormattedDates.map((operation) => (
-            <OperationCard 
-              key={`${operation.type}-${operation.id}`} 
-              operation={operation}
-              onDelete={() => deleteOperation(operation)}
-            />
-          ))}
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Liste des opérations</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            {/* Table pour la vue desktop */}
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Type</TableHead>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Client(s)</TableHead>
+                    <TableHead className="text-right">Montant</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {operationsWithFormattedDates.map((operation) => (
+                    <TableRow key={`${operation.type}-${operation.id}`} className="group">
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center ${getTypeStyle(operation.type)}`}>
+                            {getTypeIcon(operation.type)}
+                          </div>
+                          <span>{getTypeLabel(operation.type)}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-mono text-xs text-muted-foreground">
+                        #{formatOperationId(operation.id)}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground whitespace-nowrap">
+                        {operation.formattedDate}
+                      </TableCell>
+                      <TableCell className="max-w-[200px] truncate">
+                        {operation.description}
+                      </TableCell>
+                      <TableCell>
+                        {operation.type === "transfer" ? (
+                          <div className="flex flex-col">
+                            <span className="text-sm flex items-center gap-1"><User className="h-3 w-3" /> De: {operation.fromClient}</span>
+                            <span className="text-sm flex items-center gap-1"><User className="h-3 w-3" /> À: {operation.toClient}</span>
+                          </div>
+                        ) : (
+                          <span className="flex items-center gap-1"><User className="h-3 w-3" /> {operation.fromClient}</span>
+                        )}
+                      </TableCell>
+                      <TableCell className={`text-right font-medium ${getAmountColor(operation.type)}`}>
+                        {operation.type === "withdrawal" ? "-" : ""}{Math.round(operation.amount).toLocaleString()} TND
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => deleteOperation(operation)}
+                          className="h-8 w-8 relative hover:bg-red-50 dark:hover:bg-red-950/50 text-red-600 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Liste pour mobile */}
+            <div className="md:hidden divide-y">
+              {operationsWithFormattedDates.map((operation) => (
+                <div key={`${operation.type}-${operation.id}`} className="p-4 flex items-start justify-between">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${getTypeStyle(operation.type)}`}>
+                        {getTypeIcon(operation.type)}
+                      </div>
+                      <span className="font-medium">{getTypeLabel(operation.type)}</span>
+                      <span className="text-xs text-muted-foreground">#{formatOperationId(operation.id)}</span>
+                    </div>
+                    
+                    <p className="text-sm text-muted-foreground mb-1">
+                      {operation.formattedDate}
+                    </p>
+                    
+                    <p className="mb-1 truncate">{operation.description}</p>
+                    
+                    <div className="text-xs text-muted-foreground">
+                      {operation.type === "transfer" ? (
+                        <>
+                          <div className="flex items-center gap-1"><User className="h-3 w-3" /> De: {operation.fromClient}</div>
+                          <div className="flex items-center gap-1"><User className="h-3 w-3" /> À: {operation.toClient}</div>
+                        </>
+                      ) : (
+                        <div className="flex items-center gap-1"><User className="h-3 w-3" /> {operation.fromClient}</div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col items-end gap-2">
+                    <span className={`font-semibold whitespace-nowrap ${getAmountColor(operation.type)}`}>
+                      {operation.type === "withdrawal" ? "-" : ""}{Math.round(operation.amount).toLocaleString()} TND
+                    </span>
+                    
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => deleteOperation(operation)}
+                      className="h-8 w-8 text-red-600"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
       
       <DeleteOperationDialog
@@ -158,3 +294,4 @@ const Operations = () => {
 };
 
 export default Operations;
+
