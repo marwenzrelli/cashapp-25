@@ -31,19 +31,24 @@ const Operations = () => {
 
   const filteredOperations = operations.filter((op) => {
     const matchesType = !filterType || op.type === filterType;
-    const matchesClient =
-      !filterClient ||
-      op.fromClient?.toLowerCase().includes(filterClient.toLowerCase()) ||
-      op.toClient?.toLowerCase().includes(filterClient.toLowerCase());
+    
+    // Improved client name filtering - search in both fromClient and toClient
+    // and also handle partial name matches better
+    const clientSearchTerm = filterClient.toLowerCase().trim();
+    const matchesClient = !clientSearchTerm || 
+      (op.fromClient && op.fromClient.toLowerCase().includes(clientSearchTerm)) || 
+      (op.toClient && op.toClient.toLowerCase().includes(clientSearchTerm));
+    
     const matchesDate =
       (!dateRange?.from ||
         new Date(op.date) >= new Date(dateRange.from)) &&
       (!dateRange?.to ||
         new Date(op.date) <= new Date(dateRange.to));
+    
     return matchesType && matchesClient && matchesDate;
   });
 
-  // Assurons-nous que chaque opération a sa date formatée correctement
+  // Format dates for display
   const operationsWithFormattedDates = filteredOperations.map(op => ({
     ...op,
     formattedDate: formatDateTime(op.date)
@@ -294,4 +299,3 @@ const Operations = () => {
 };
 
 export default Operations;
-
