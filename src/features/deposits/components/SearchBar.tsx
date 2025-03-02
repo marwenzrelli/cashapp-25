@@ -64,6 +64,8 @@ export const SearchBar = ({
           <Button
             className="w-full"
             onClick={onNewDeposit}
+            variant="destructive"
+            style={{ backgroundColor: "#16a34a", borderColor: "#16a34a" }}
           >
             <Plus className="h-4 w-4 mr-2" />
             Nouveau versement
