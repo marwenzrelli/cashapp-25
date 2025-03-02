@@ -10,6 +10,7 @@ import { DepositDialog } from "@/features/deposits/components/DepositDialog";
 import { useDeposits } from "@/features/deposits/hooks/useDeposits";
 import { toast } from "sonner";
 import { EditDepositDialog } from "@/components/deposits/EditDepositDialog";
+import { containsPartialText } from "@/features/operations/utils/display-helpers";
 
 const Deposits = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -126,9 +127,21 @@ const Deposits = () => {
     }
   };
 
-  const filteredDeposits = deposits.filter(deposit => 
-    deposit.client_name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredDeposits = deposits.filter(deposit => {
+    if (!searchTerm.trim()) return true;
+    
+    const searchTerms = searchTerm.toLowerCase().split(',').map(term => term.trim());
+    
+    return searchTerms.some(term => {
+      if (containsPartialText(deposit.client_name, term)) return true;
+      
+      if (deposit.description && containsPartialText(deposit.description, term)) return true;
+      
+      if (deposit.id.toString().includes(term)) return true;
+      
+      return false;
+    });
+  });
 
   return (
     <div className="space-y-8 animate-in">
