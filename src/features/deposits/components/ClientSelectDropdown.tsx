@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { Search, UserCircle } from "lucide-react";
 import * as Hammer from "hammerjs";
@@ -30,27 +31,43 @@ export const ClientSelectDropdown = ({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   
+  // Filtrer les clients en fonction de la recherche - amélioration de la recherche
   const filteredClients = clients.filter(client => {
+    if (!clientSearch.trim()) return true;
+    
     const fullName = `${client.prenom} ${client.nom}`.toLowerCase();
-    const searchTerm = clientSearch.toLowerCase();
-    return fullName.includes(searchTerm) || client.telephone.includes(searchTerm);
+    const searchTerm = clientSearch.toLowerCase().trim();
+    
+    // Chercher dans le nom, prénom ou numéro de téléphone
+    return fullName.includes(searchTerm) || 
+           (client.telephone && client.telephone.includes(searchTerm)) ||
+           client.id.toString().includes(searchTerm);
   });
 
+  // Focus sur le champ de recherche lorsque le dropdown est ouvert
   useEffect(() => {
     if (openState && searchInputRef.current) {
       setTimeout(() => {
         searchInputRef.current?.focus();
       }, 100);
+    } else {
+      // Réinitialiser la recherche quand on ferme le dropdown
+      if (!openState) {
+        setClientSearch("");
+      }
     }
   }, [openState]);
   
+  // Configuration de Hammer.js pour les gestes tactiles
   useEffect(() => {
     const scrollArea = scrollAreaRef.current;
     
     if (scrollArea && openState) {
       const hammer = new Hammer.Manager(scrollArea);
       const swipe = new Hammer.Swipe({
-        direction: Hammer.DIRECTION_HORIZONTAL
+        direction: Hammer.DIRECTION_HORIZONTAL,
+        threshold: 10, // Seuil plus bas pour une détection plus sensible
+        velocity: 0.3  // Vitesse plus basse pour une détection plus facile
       });
       
       hammer.add(swipe);
@@ -59,10 +76,6 @@ export const ClientSelectDropdown = ({
         if (e.direction === Hammer.DIRECTION_LEFT) {
           console.log('Swipe à gauche détecté');
           setOpenState(false);
-        }
-        
-        if (e.direction === Hammer.DIRECTION_RIGHT) {
-          console.log('Swipe à droite détecté');
         }
       });
       
@@ -85,6 +98,12 @@ export const ClientSelectDropdown = ({
     return client ? `${client.prenom} ${client.nom}` : "Sélectionner un client";
   };
 
+  // Fonction pour effacer la recherche
+  const clearSearch = () => {
+    setClientSearch("");
+    searchInputRef.current?.focus();
+  };
+
   return (
     <Select 
       value={selectedClient} 
@@ -98,7 +117,7 @@ export const ClientSelectDropdown = ({
         </SelectValue>
       </SelectTrigger>
       <SelectContent 
-        className="max-h-[70vh] max-w-[calc(100vw-2rem)] p-0 overflow-hidden" 
+        className="max-h-[80vh] max-w-[calc(100vw-2rem)] p-0 overflow-hidden" 
         position="popper"
         sideOffset={5}
         onEscapeKeyDown={(e) => {
@@ -120,22 +139,30 @@ export const ClientSelectDropdown = ({
               placeholder="Rechercher un client..."
               value={clientSearch}
               onChange={(e) => setClientSearch(e.target.value)}
-              className="pl-8"
+              className="pl-8 pr-8"
               onClick={(e) => e.stopPropagation()}
               onTouchStart={(e) => e.stopPropagation()}
               autoComplete="off"
             />
+            {clientSearch && (
+              <button 
+                className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground"
+                onClick={clearSearch}
+              >
+                ✕
+              </button>
+            )}
           </div>
         </div>
         <ScrollArea 
-          className="h-[50vh] max-h-[300px] touch-auto overflow-y-auto overscroll-contain"
+          className="h-[60vh] max-h-[450px] touch-auto overflow-y-auto overscroll-contain"
           ref={scrollAreaRef}
         >
-          <div className="text-xs text-muted-foreground px-2 py-1 bg-muted/30">
-            <span>← Glisser vers la gauche pour fermer</span>
+          <div className="text-xs text-muted-foreground px-2 py-2 bg-muted/30 sticky top-0 z-10">
+            <span>← Glisser vers la gauche pour fermer • {filteredClients.length} clients</span>
           </div>
           {filteredClients.length === 0 ? (
-            <div className="p-2 text-center text-muted-foreground">
+            <div className="p-4 text-center text-muted-foreground">
               Aucun client trouvé
             </div>
           ) : (
@@ -143,7 +170,7 @@ export const ClientSelectDropdown = ({
               <SelectItem 
                 key={client.id} 
                 value={client.id.toString()}
-                className="flex items-center justify-between py-4 px-2 cursor-pointer touch-manipulation select-none active:bg-primary/10"
+                className="flex items-center justify-between py-5 px-3 cursor-pointer touch-manipulation select-none active:bg-primary/10"
                 onPointerDown={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -159,7 +186,7 @@ export const ClientSelectDropdown = ({
                 }}
               >
                 <div className="flex items-center gap-2">
-                  <UserCircle className="h-5 w-5 text-primary/80 flex-shrink-0" />
+                  <UserCircle className="h-6 w-6 text-primary/80 flex-shrink-0" />
                   <span className="font-medium">
                     {client.prenom} {client.nom}
                   </span>
@@ -170,6 +197,7 @@ export const ClientSelectDropdown = ({
               </SelectItem>
             ))
           )}
+          <div className="h-12"></div> {/* Espace supplémentaire en bas pour faciliter le défilement */}
         </ScrollArea>
       </SelectContent>
     </Select>

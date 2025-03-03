@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import {
   Dialog,
@@ -41,7 +42,9 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
     if (dialogElement && open) {
       const hammer = new Hammer.Manager(dialogElement);
       const swipe = new Hammer.Swipe({
-        direction: Hammer.DIRECTION_DOWN
+        direction: Hammer.DIRECTION_DOWN,
+        threshold: 10,  // Seuil plus bas pour une détection plus sensible
+        velocity: 0.3   // Vitesse plus basse pour une détection plus facile
       });
       
       hammer.add(swipe);
@@ -127,7 +130,7 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
         ref={dialogContentRef}
-        className="sm:max-w-md w-[calc(100%-2rem)] max-h-[90vh] overflow-y-auto"
+        className="sm:max-w-md w-[calc(100%-2rem)] max-h-[95vh] overflow-y-auto overscroll-contain"
       >
         <div className="absolute top-0 left-0 right-0 h-1.5 flex justify-center">
           <div className="w-12 h-1.5 bg-muted rounded-full mt-2"></div>
@@ -141,7 +144,7 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
             </span>
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 py-4">
+        <div className="space-y-5 py-4">
           <div className="space-y-2">
             <div className="space-y-2">
               <label className="text-sm font-medium leading-none">Client</label>
@@ -168,7 +171,7 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
             onDescriptionChange={setDescription}
           />
         </div>
-        <DialogFooter className="flex-col sm:flex-row gap-2">
+        <DialogFooter className="flex-col sm:flex-row gap-3">
           <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
             Annuler
           </Button>
