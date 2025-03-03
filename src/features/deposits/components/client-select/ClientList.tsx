@@ -60,10 +60,6 @@ export const ClientList = ({
       
       <ScrollArea 
         className="h-[calc(100vh-220px)] max-h-[430px] client-scrollable-area"
-        style={{
-          scrollbarWidth: 'thin',
-          msOverflowStyle: '-ms-autohiding-scrollbar',
-        }}
       >
         <div className="py-0.5">
           {clients.map(client => (

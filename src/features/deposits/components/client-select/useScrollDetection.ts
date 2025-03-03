@@ -1,5 +1,5 @@
 
-import { useState, useRef, RefObject } from "react";
+import { useState, useRef, RefObject, useEffect } from "react";
 import { useTouchMomentum } from "./useTouchMomentum";
 import { useScrollVelocity } from "./useScrollVelocity";
 
@@ -9,6 +9,42 @@ export const useScrollDetection = (
   const [isScrolling, setIsScrolling] = useState(false);
   const scrollTimerRef = useRef<number | null>(null);
   const scrollStateTimeoutRef = useRef<number | null>(null);
+  const scrollableRef = useRef<HTMLElement | null>(null);
+
+  // Find the scrollable element when contentRef changes
+  useEffect(() => {
+    if (contentRef.current) {
+      // Look for the radix viewport element
+      const radixViewport = contentRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (radixViewport) {
+        scrollableRef.current = radixViewport as HTMLElement;
+        return;
+      }
+      
+      // Look for any scrollable element
+      const findScrollableElement = (element: HTMLElement): HTMLElement | null => {
+        // Check if this element is scrollable
+        const computedStyle = window.getComputedStyle(element);
+        const hasScroll = element.scrollHeight > element.clientHeight && 
+                        (computedStyle.overflowY === 'auto' || 
+                        computedStyle.overflowY === 'scroll');
+        
+        if (hasScroll) {
+          return element;
+        }
+        
+        // Recursively check children
+        for (let i = 0; i < element.children.length; i++) {
+          const result = findScrollableElement(element.children[i] as HTMLElement);
+          if (result) return result;
+        }
+        
+        return null;
+      };
+      
+      scrollableRef.current = findScrollableElement(contentRef.current);
+    }
+  }, [contentRef]);
 
   const clearScrolling = () => {
     setIsScrolling(false);
@@ -21,16 +57,6 @@ export const useScrollDetection = (
       scrollStateTimeoutRef.current = null;
     }
   };
-
-  // Helper to get the scrollable element
-  const getScrollableElement = (): HTMLElement | null => {
-    if (!contentRef.current) return null;
-    const scrollableArea = contentRef.current.querySelector('.overflow-y-auto') as HTMLElement;
-    return scrollableArea || null;
-  };
-
-  // Create a ref for the scrollable element
-  const scrollableRef = useRef<HTMLElement | null>(getScrollableElement());
 
   // Use our custom hooks for scroll and touch handling
   useScrollVelocity(scrollableRef as RefObject<HTMLElement>, {

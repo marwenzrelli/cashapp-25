@@ -31,11 +31,34 @@ export const SelectDropdownContent = ({
 
   // Function to scroll to the bottom of the list
   const scrollToBottom = () => {
-    const scrollArea = contentRef.current?.querySelector('.scrollarea-viewport') as HTMLElement;
+    // Find the Radix UI ScrollArea viewport
+    const scrollArea = contentRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
     if (scrollArea) {
+      console.log('SelectDropdownContent: scrolling to bottom via ScrollArea');
       scrollArea.scrollTo({
         top: scrollArea.scrollHeight,
         behavior: 'smooth'
+      });
+      return;
+    }
+    
+    // Fallback to any scrollable element in the content
+    const scrollableElements = contentRef.current?.querySelectorAll('*');
+    if (scrollableElements) {
+      scrollableElements.forEach(el => {
+        const element = el as HTMLElement;
+        const computedStyle = window.getComputedStyle(element);
+        const hasScroll = element.scrollHeight > element.clientHeight && 
+                        (computedStyle.overflowY === 'auto' || 
+                         computedStyle.overflowY === 'scroll');
+        
+        if (hasScroll) {
+          console.log('SelectDropdownContent: found scrollable element', element);
+          element.scrollTo({
+            top: element.scrollHeight,
+            behavior: 'smooth'
+          });
+        }
       });
     }
   };
@@ -68,24 +91,24 @@ export const SelectDropdownContent = ({
     }
   }, [openState, contentRef]);
 
-  // Set up an effect to ensure the scroll hint works on initial open
+  // Set up an effect to manually hook up the scroll hint
   useEffect(() => {
     if (openState) {
-      // When the dropdown opens, ensure scroll works
-      const handleTouchOnScrollHint = () => {
-        const scrollHint = contentRef.current?.querySelector('.client-list-container > div:first-child') as HTMLElement;
+      // When the dropdown opens, ensure the scroll hint works
+      const scrollTimeout = setTimeout(() => {
+        // Try to find the ScrollHint component
+        const scrollHint = contentRef.current?.querySelector('.client-list-container > div:first-child');
         if (scrollHint) {
-          scrollHint.addEventListener('click', scrollToBottom, { passive: false });
+          scrollHint.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            scrollToBottom();
+          });
         }
-      };
-      
-      setTimeout(handleTouchOnScrollHint, 100);
+      }, 100);
       
       return () => {
-        const scrollHint = contentRef.current?.querySelector('.client-list-container > div:first-child') as HTMLElement;
-        if (scrollHint) {
-          scrollHint.removeEventListener('click', scrollToBottom);
-        }
+        clearTimeout(scrollTimeout);
       };
     }
   }, [openState, contentRef]);
@@ -93,7 +116,7 @@ export const SelectDropdownContent = ({
   return (
     <SelectContent 
       ref={contentRef} 
-      className="client-select-content h-[calc(100vh-200px)] max-h-[500px] w-full p-0 overflow-hidden"
+      className="client-select-content h-[calc(100vh-200px)] max-h-[500px] w-full p-0 overflow-hidden bg-white dark:bg-zinc-950"
       style={{ touchAction: 'pan-y' }}
       onPointerDownOutside={(e) => {
         // Only close if clicking outside the component, not when interacting within
