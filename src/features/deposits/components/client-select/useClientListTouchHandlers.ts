@@ -68,7 +68,8 @@ export const useClientListTouchHandlers = (
       
       // Apply iOS-style momentum scrolling
       scrollAreaElement.style.overscrollBehavior = 'touch';
-      scrollAreaElement.style.WebkitOverflowScrolling = 'touch';
+      // Use standard property without webkit prefix
+      scrollAreaElement.style.setProperty('overflow-scrolling', 'touch');
     };
     
     const handleTouchMove = (e: TouchEvent) => {

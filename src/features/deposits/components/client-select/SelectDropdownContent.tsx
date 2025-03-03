@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { SelectContent } from "@/components/ui/select";
 import { ClientSearchInput } from "./ClientSearchInput";
 import { ClientList } from "./ClientList";
@@ -29,6 +29,17 @@ export const SelectDropdownContent = ({
   contentRef
 }: SelectDropdownContentProps) => {
 
+  // Function to scroll to the bottom of the list
+  const scrollToBottom = () => {
+    const scrollArea = contentRef.current?.querySelector('.scrollarea-viewport') as HTMLElement;
+    if (scrollArea) {
+      scrollArea.scrollTo({
+        top: scrollArea.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   const handleClientRemove = (clientId: string) => {
     // Clearing the selection
     onClientSelect("");
@@ -39,11 +50,33 @@ export const SelectDropdownContent = ({
     }, 300);
   };
 
+  // Set up an effect to ensure the scroll hint works on initial open
+  useEffect(() => {
+    if (openState) {
+      // When the dropdown opens, ensure scroll works
+      const handleTouchOnScrollHint = () => {
+        const scrollHint = contentRef.current?.querySelector('.client-list-container > div:first-child') as HTMLElement;
+        if (scrollHint) {
+          scrollHint.addEventListener('click', scrollToBottom, { passive: false });
+        }
+      };
+      
+      setTimeout(handleTouchOnScrollHint, 100);
+      
+      return () => {
+        const scrollHint = contentRef.current?.querySelector('.client-list-container > div:first-child') as HTMLElement;
+        if (scrollHint) {
+          scrollHint.removeEventListener('click', scrollToBottom);
+        }
+      };
+    }
+  }, [openState, contentRef]);
+
   return (
     <SelectContent 
       ref={contentRef} 
       className="client-select-content h-[calc(100vh-200px)] max-h-[500px] w-full p-0 overflow-hidden"
-      style={{ touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' }}
+      style={{ touchAction: 'pan-y' }}
     >
       <div className="sticky top-0 z-10 bg-white dark:bg-zinc-950 pt-0.5 px-2 pb-0.5">
         <ClientSearchInput 

@@ -54,7 +54,13 @@ export const ClientList = ({
       {/* Visual hint for vertical swiping - only show with more than 5 clients */}
       <ScrollHint show={clients.length > 5} />
       
-      <ScrollArea className="h-[calc(100vh-220px)] max-h-[430px]">
+      <ScrollArea 
+        className="h-[calc(100vh-220px)] max-h-[430px] scrollarea-viewport"
+        style={{
+          scrollbarWidth: 'thin',
+          msOverflowStyle: 'autohiding-scrollbar',
+        }}
+      >
         <div className="py-0.5">
           {clients.map(client => (
             <ClientListItem 

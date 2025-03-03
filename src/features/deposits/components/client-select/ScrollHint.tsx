@@ -44,14 +44,16 @@ export const ScrollHint = ({ show }: ScrollHintProps) => {
   return (
     <div 
       ref={hintRef}
-      className="flex justify-center items-center py-2 text-xs text-muted-foreground cursor-pointer transition-all"
-      onClick={() => {
-        // Find the scrollable element and scroll it
-        const scrollArea = document.querySelector('.client-list-container .simplebar-content-wrapper') as HTMLElement;
+      className="sticky top-0 flex justify-center items-center py-2 text-xs text-muted-foreground cursor-pointer hover:bg-muted/30 active:bg-muted/50 transition-all"
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
         
+        // Find the ScrollArea viewport and scroll to the bottom
+        const scrollArea = document.querySelector('.client-list-container .scrollarea-viewport') as HTMLElement;
         if (scrollArea) {
-          scrollArea.scrollBy({
-            top: 150,
+          scrollArea.scrollTo({
+            top: scrollArea.scrollHeight,
             behavior: 'smooth'
           });
         }
@@ -59,16 +61,6 @@ export const ScrollHint = ({ show }: ScrollHintProps) => {
       onTouchStart={(e) => {
         // Prevent default to avoid any interference with the scroll
         e.stopPropagation();
-        
-        // Find the scrollable element and scroll it
-        const scrollArea = document.querySelector('.client-list-container .simplebar-content-wrapper') as HTMLElement;
-        
-        if (scrollArea) {
-          scrollArea.scrollBy({
-            top: 150,
-            behavior: 'smooth'
-          });
-        }
       }}
     >
       <ChevronDown className="h-4 w-4 mr-1 animate-bounce" />
