@@ -60,10 +60,22 @@ export const ClientSelectDropdown = ({
           setOpenState(false);
         }} 
         onPointerDownOutside={e => {
-          // Prevent closing during scrolling or interactions inside
+          // Completely prevent closing on pointer down outside during scrolling
+          if (isScrolling) {
+            e.preventDefault();
+            return;
+          }
+          // Prevent closing during interactions inside
           const target = e.target as HTMLElement;
           if (!target.closest('[data-radix-select-content]')) {
             e.preventDefault();
+          }
+        }}
+        onInteractOutside={e => {
+          // Prevent dropdown closing when scrolling
+          if (isScrolling) {
+            e.preventDefault();
+            return;
           }
         }}
       >

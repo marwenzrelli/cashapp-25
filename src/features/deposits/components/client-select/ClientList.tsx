@@ -59,6 +59,7 @@ export const ClientList = ({
               // Ignore touch events during scrolling
               if (isScrolling) {
                 console.log('Toucher final ignoré - défilement en cours');
+                e.preventDefault();
                 return;
               }
               
@@ -69,7 +70,11 @@ export const ClientList = ({
               handleClientClick(client.id.toString());
             }}
             // Prevent dropdown closing during scroll
-            onTouchMove={e => e.stopPropagation()}
+            onTouchMove={e => {
+              e.stopPropagation();
+              // Set stopPropagation to prevent bubbling up to parent elements
+              // which might close the dropdown
+            }}
           >
             <div className="flex items-center gap-2">
               <UserCircle className="h-6 w-6 text-primary/80 flex-shrink-0" />
