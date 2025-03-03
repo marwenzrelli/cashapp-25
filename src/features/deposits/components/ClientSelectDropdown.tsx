@@ -34,6 +34,11 @@ export const ClientSelectDropdown = ({
     return fullName.includes(searchTerm) || client.telephone.includes(searchTerm);
   });
 
+  const handleClientClick = (clientId: string) => {
+    // Prevent default to avoid closing the dropdown
+    onClientSelect(clientId);
+  };
+
   return (
     <Select 
       value={selectedClient} 
@@ -46,6 +51,8 @@ export const ClientSelectDropdown = ({
         className="max-h-[70vh] overflow-hidden" 
         position="popper"
         sideOffset={5}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+        onPointerDownOutside={(e) => e.preventDefault()}
       >
         <div className="p-2 sticky top-0 bg-popover z-10 border-b mb-1">
           <div className="relative">
@@ -69,6 +76,11 @@ export const ClientSelectDropdown = ({
                 key={client.id} 
                 value={client.id.toString()}
                 className="flex items-center justify-between py-4 px-2 cursor-pointer touch-manipulation"
+                onPointerDown={(e) => {
+                  // Prevent default to maintain the dropdown open
+                  e.preventDefault();
+                  handleClientClick(client.id.toString());
+                }}
               >
                 <div className="flex items-center gap-2">
                   <UserCircle className="h-5 w-5 text-primary/80 flex-shrink-0" />
