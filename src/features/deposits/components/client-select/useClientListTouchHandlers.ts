@@ -9,20 +9,25 @@ export const useClientListTouchHandlers = (
     const listElement = listRef.current;
     if (!listElement) return;
     
+    // Get the ScrollArea element
+    const scrollAreaElement = listElement.querySelector('.simplebar-content-wrapper') as HTMLElement;
+    if (!scrollAreaElement) return;
+    
     // Enhanced touch behavior for better scrolling
     let startY = 0;
     let lastY = 0;
     let velocity = 0;
     let lastTime = 0;
     let isAnimating = false;
+    let touchMoved = false;
     
     const calculateMomentum = (distance: number, time: number) => {
       // Calculate momentum based on distance and time
       return distance / time * 0.3;
     };
     
-    const animateMomentumScroll = (parent: HTMLElement, initialVelocity: number) => {
-      if (!parent) return;
+    const animateMomentumScroll = (scrollElement: HTMLElement, initialVelocity: number) => {
+      if (!scrollElement) return;
       
       let currentVelocity = initialVelocity;
       let lastTimestamp = performance.now();
@@ -38,7 +43,7 @@ export const useClientListTouchHandlers = (
         currentVelocity *= friction;
         
         // Apply scroll
-        parent.scrollBy(0, currentVelocity * elapsed);
+        scrollElement.scrollBy(0, currentVelocity * elapsed);
         
         // Continue animation until velocity is negligible
         if (Math.abs(currentVelocity) > 0.1) {
@@ -59,12 +64,11 @@ export const useClientListTouchHandlers = (
       lastY = startY;
       lastTime = performance.now();
       velocity = 0;
+      touchMoved = false;
       
-      const parent = listElement.parentElement;
-      if (parent) {
-        // Remove any existing inertia scrolling
-        parent.style.setProperty('scroll-behavior', 'auto');
-      }
+      // Apply iOS-style momentum scrolling
+      scrollAreaElement.style.overscrollBehavior = 'touch';
+      scrollAreaElement.style.WebkitOverflowScrolling = 'touch';
     };
     
     const handleTouchMove = (e: TouchEvent) => {
@@ -72,6 +76,8 @@ export const useClientListTouchHandlers = (
       const deltaY = currentY - lastY;
       const currentTime = performance.now();
       const timeElapsed = currentTime - lastTime;
+      
+      touchMoved = true;
       
       if (timeElapsed > 0) {
         // Calculate instantaneous velocity (pixels per ms)
@@ -83,23 +89,25 @@ export const useClientListTouchHandlers = (
     };
     
     const handleTouchEnd = (e: TouchEvent) => {
-      const parent = listElement.parentElement;
-      if (!parent) return;
+      if (!touchMoved) return;
       
       // Apply momentum scrolling based on final velocity
       if (Math.abs(velocity) > 0.1) {
-        animateMomentumScroll(parent, velocity * 20); // Amplify for better feel
+        animateMomentumScroll(scrollAreaElement, velocity * 30); // Amplify for better feel
       }
     };
     
-    listElement.addEventListener('touchstart', handleTouchStart, { passive: true });
-    listElement.addEventListener('touchmove', handleTouchMove, { passive: true });
-    listElement.addEventListener('touchend', handleTouchEnd, { passive: true });
+    // Add event listeners to the scroll area
+    scrollAreaElement.addEventListener('touchstart', handleTouchStart, { passive: true });
+    scrollAreaElement.addEventListener('touchmove', handleTouchMove, { passive: true });
+    scrollAreaElement.addEventListener('touchend', handleTouchEnd, { passive: true });
     
     return () => {
-      listElement.removeEventListener('touchstart', handleTouchStart);
-      listElement.removeEventListener('touchmove', handleTouchMove);
-      listElement.removeEventListener('touchend', handleTouchEnd);
+      if (scrollAreaElement) {
+        scrollAreaElement.removeEventListener('touchstart', handleTouchStart);
+        scrollAreaElement.removeEventListener('touchmove', handleTouchMove);
+        scrollAreaElement.removeEventListener('touchend', handleTouchEnd);
+      }
     };
-  }, []);
+  }, [listRef]);
 };

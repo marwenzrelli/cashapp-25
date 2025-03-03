@@ -43,7 +43,7 @@ export const SelectDropdownContent = ({
     <SelectContent 
       ref={contentRef} 
       className="client-select-content h-[calc(100vh-200px)] max-h-[500px] w-full p-0 overflow-hidden"
-      style={{ touchAction: 'pan-y' }}
+      style={{ touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' }}
     >
       <div className="sticky top-0 z-10 bg-white dark:bg-zinc-950 pt-0.5 px-2 pb-0.5">
         <ClientSearchInput 

@@ -46,13 +46,26 @@ export const ScrollHint = ({ show }: ScrollHintProps) => {
       ref={hintRef}
       className="flex justify-center items-center py-2 text-xs text-muted-foreground cursor-pointer transition-all"
       onClick={() => {
-        // Find the parent scrollable container and scroll down a bit
-        const scrollContainer = document.querySelector('.client-list-container .scrollbar-track-y') as HTMLElement;
+        // Find the scrollable element and scroll it
         const scrollArea = document.querySelector('.client-list-container .simplebar-content-wrapper') as HTMLElement;
         
         if (scrollArea) {
           scrollArea.scrollBy({
-            top: 100,
+            top: 150,
+            behavior: 'smooth'
+          });
+        }
+      }}
+      onTouchStart={(e) => {
+        // Prevent default to avoid any interference with the scroll
+        e.stopPropagation();
+        
+        // Find the scrollable element and scroll it
+        const scrollArea = document.querySelector('.client-list-container .simplebar-content-wrapper') as HTMLElement;
+        
+        if (scrollArea) {
+          scrollArea.scrollBy({
+            top: 150,
             behavior: 'smooth'
           });
         }

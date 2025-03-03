@@ -68,7 +68,7 @@ export const ClientList = ({
         </div>
         
         {/* Extra padding at the bottom to allow scrolling to see the last items */}
-        <div className="h-4" aria-hidden="true"></div>
+        <div className="h-8" aria-hidden="true"></div>
       </ScrollArea>
     </div>
   );
