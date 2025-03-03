@@ -142,7 +142,11 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Sélectionner un client" />
               </SelectTrigger>
-              <SelectContent className="max-h-[60vh]">
+              <SelectContent 
+                className="max-h-[70vh] overflow-hidden" 
+                position="popper"
+                sideOffset={5}
+              >
                 <div className="p-2 sticky top-0 bg-popover z-10 border-b mb-1">
                   <div className="relative">
                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -154,7 +158,7 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
                     />
                   </div>
                 </div>
-                <ScrollArea className="max-h-[40vh]">
+                <ScrollArea className="h-[50vh] touch-auto overflow-y-auto overscroll-contain">
                   {filteredClients.length === 0 ? (
                     <div className="p-2 text-center text-muted-foreground">
                       Aucun client trouvé
@@ -164,7 +168,7 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
                       <SelectItem 
                         key={client.id} 
                         value={client.id.toString()}
-                        className="flex items-center justify-between py-3 cursor-pointer"
+                        className="flex items-center justify-between py-4 px-2 cursor-pointer touch-manipulation"
                       >
                         <div className="flex items-center gap-2">
                           <UserCircle className="h-5 w-5 text-primary/80 flex-shrink-0" />
