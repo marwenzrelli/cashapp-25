@@ -15,11 +15,13 @@ export const ClientSearchInput = ({ value, onChange, isOpen, count }: ClientSear
 
   // Focus on search input when dropdown opens
   useEffect(() => {
-    if (isOpen && searchInputRef.current) {
-      setTimeout(() => {
-        searchInputRef.current?.focus();
-      }, 100);
-    }
+    if (!isOpen || !searchInputRef.current) return;
+    
+    const timerRef = setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 100);
+    
+    return () => clearTimeout(timerRef);
   }, [isOpen]);
 
   // Clear search function

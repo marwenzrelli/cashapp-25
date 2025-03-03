@@ -29,36 +29,14 @@ export const SelectDropdownContent = ({
   contentRef
 }: SelectDropdownContentProps) => {
 
-  // Function to scroll to the bottom of the list
+  // Function to scroll to the bottom of the list - simplified to avoid inconsistent hook rendering
   const scrollToBottom = () => {
     // Find the Radix UI ScrollArea viewport
     const scrollArea = contentRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
     if (scrollArea) {
-      console.log('SelectDropdownContent: scrolling to bottom via ScrollArea');
       scrollArea.scrollTo({
         top: scrollArea.scrollHeight,
         behavior: 'smooth'
-      });
-      return;
-    }
-    
-    // Fallback to any scrollable element in the content
-    const scrollableElements = contentRef.current?.querySelectorAll('*');
-    if (scrollableElements) {
-      scrollableElements.forEach(el => {
-        const element = el as HTMLElement;
-        const computedStyle = window.getComputedStyle(element);
-        const hasScroll = element.scrollHeight > element.clientHeight && 
-                        (computedStyle.overflowY === 'auto' || 
-                         computedStyle.overflowY === 'scroll');
-        
-        if (hasScroll) {
-          console.log('SelectDropdownContent: found scrollable element', element);
-          element.scrollTo({
-            top: element.scrollHeight,
-            behavior: 'smooth'
-          });
-        }
       });
     }
   };
@@ -73,44 +51,40 @@ export const SelectDropdownContent = ({
     }, 300);
   };
 
-  // Prevent dropdown from closing when clicking inside
+  // Prevent dropdown from closing when clicking inside - using a single, consistent effect
   useEffect(() => {
-    if (openState && contentRef.current) {
-      const handleContentClick = (e: MouseEvent) => {
-        // Prevent event from bubbling up to parent elements
-        e.stopPropagation();
-      };
-      
-      contentRef.current.addEventListener('click', handleContentClick);
-      
-      return () => {
-        if (contentRef.current) {
-          contentRef.current.removeEventListener('click', handleContentClick);
-        }
-      };
-    }
-  }, [openState, contentRef]);
-
-  // Set up an effect to manually hook up the scroll hint
-  useEffect(() => {
-    if (openState) {
-      // When the dropdown opens, ensure the scroll hint works
-      const scrollTimeout = setTimeout(() => {
-        // Try to find the ScrollHint component
-        const scrollHint = contentRef.current?.querySelector('.client-list-container > div:first-child');
-        if (scrollHint) {
-          scrollHint.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            scrollToBottom();
-          });
-        }
-      }, 100);
-      
-      return () => {
-        clearTimeout(scrollTimeout);
-      };
-    }
+    if (!openState || !contentRef.current) return;
+    
+    const currentRef = contentRef.current;
+    
+    // Handler for content clicks
+    const handleContentClick = (e: MouseEvent) => {
+      e.stopPropagation();
+    };
+    
+    // Handler for scroll hint
+    const setupScrollHint = () => {
+      const scrollHint = currentRef.querySelector('.client-list-container > div:first-child');
+      if (scrollHint) {
+        scrollHint.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          scrollToBottom();
+        });
+      }
+    };
+    
+    // Set up both handlers
+    currentRef.addEventListener('click', handleContentClick);
+    
+    // Run scroll hint setup with a delay
+    const scrollTimeout = setTimeout(setupScrollHint, 100);
+    
+    // Clean up all event listeners on unmount
+    return () => {
+      currentRef.removeEventListener('click', handleContentClick);
+      clearTimeout(scrollTimeout);
+    };
   }, [openState, contentRef]);
 
   return (

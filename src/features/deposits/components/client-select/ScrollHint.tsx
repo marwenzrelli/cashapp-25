@@ -9,14 +9,12 @@ interface ScrollHintProps {
 export const ScrollHint = ({ show }: ScrollHintProps) => {
   const hintRef = useRef<HTMLDivElement>(null);
   
-  if (!show) return null;
-  
-  // Better function to scroll to bottom of list
+  // Always define the scroll to bottom function, whether visible or not
   const scrollToBottom = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!show) return; // Skip operation if not shown
+    
     e.preventDefault();
     e.stopPropagation();
-    
-    console.log('ScrollHint: attempting to scroll to bottom');
     
     // Direct targeting of the ScrollArea viewport
     const container = document.querySelector('.client-list-container');
@@ -24,8 +22,6 @@ export const ScrollHint = ({ show }: ScrollHintProps) => {
     
     const scrollAreaViewport = container.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
     if (scrollAreaViewport) {
-      console.log('ScrollHint: found ScrollArea viewport, scrolling to bottom');
-      
       // Calculate the height of all content
       const contentHeight = scrollAreaViewport.scrollHeight;
       const containerHeight = scrollAreaViewport.clientHeight;
@@ -45,22 +41,22 @@ export const ScrollHint = ({ show }: ScrollHintProps) => {
           }
         }, 200);
       }
-      
-      return;
     }
   };
   
-  // Enhanced touch interactions
+  // Enhanced touch interactions - always defined, not conditional on show
   useEffect(() => {
     const hintElement = hintRef.current;
     if (!hintElement) return;
     
     const handleTouchStart = (e: TouchEvent) => {
+      if (!show) return; // Skip operation if not shown
       e.stopPropagation();
       hintElement.classList.add('bg-muted/70');
     };
     
     const handleTouchEnd = (e: TouchEvent) => {
+      if (!show) return; // Skip operation if not shown
       e.stopPropagation();
       hintElement.classList.remove('bg-muted/70');
       scrollToBottom(e as unknown as React.TouchEvent);
@@ -73,7 +69,9 @@ export const ScrollHint = ({ show }: ScrollHintProps) => {
       hintElement.removeEventListener('touchstart', handleTouchStart);
       hintElement.removeEventListener('touchend', handleTouchEnd);
     };
-  }, []);
+  }, [show]); // Include show in dependencies to properly react to changes
+  
+  if (!show) return null;
   
   return (
     <div 
