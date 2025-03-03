@@ -6,6 +6,7 @@ import { useClientListTouchHandlers } from "./useClientListTouchHandlers";
 import { ClientListItem } from "./ClientListItem";
 import { ScrollHint } from "./ScrollHint";
 import { EmptyClientList } from "./EmptyClientList";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ClientListProps {
   clients: Client[];
@@ -49,24 +50,26 @@ export const ClientList = ({
   }
 
   return (
-    <div ref={listRef} className="client-list-container overflow-y-auto max-h-[calc(100%-40px)] pb-8">
+    <div ref={listRef} className="client-list-container overflow-hidden max-h-[calc(100%-40px)]">
       {/* Visual hint for vertical swiping - only show with more than 5 clients */}
       <ScrollHint show={clients.length > 5} />
       
-      <div className="py-0.5">
-        {clients.map(client => (
-          <ClientListItem 
-            key={client.id}
-            client={client}
-            isSelected={selectedClient === client.id.toString()}
-            onClick={handleClientClick}
-            onRemove={onClientRemove}
-          />
-        ))}
-      </div>
-      
-      {/* Extra padding at the bottom to allow scrolling to see the last items */}
-      <div className="h-4" aria-hidden="true"></div>
+      <ScrollArea className="h-[calc(100vh-220px)] max-h-[430px]">
+        <div className="py-0.5">
+          {clients.map(client => (
+            <ClientListItem 
+              key={client.id}
+              client={client}
+              isSelected={selectedClient === client.id.toString()}
+              onClick={handleClientClick}
+              onRemove={onClientRemove}
+            />
+          ))}
+        </div>
+        
+        {/* Extra padding at the bottom to allow scrolling to see the last items */}
+        <div className="h-4" aria-hidden="true"></div>
+      </ScrollArea>
     </div>
   );
 };
