@@ -25,8 +25,8 @@ const Clients = () => {
     setIsDialogOpen,
     setIsEditDialogOpen,
     setIsDeleteDialogOpen,
-    setNewClient, // Add missing state setter
-    setEditForm,  // Add missing state setter
+    setNewClient,
+    setEditForm,
     
     // Client actions
     handleRetry,
@@ -38,7 +38,7 @@ const Clients = () => {
   } = useClientsPage();
 
   return (
-    <>
+    <div className="container mx-auto max-w-7xl pb-8">
       <ClientsPageContent
         clients={clients}
         filteredClients={filteredClients}
@@ -68,7 +68,7 @@ const Clients = () => {
         onNewClientChange={setNewClient}
         onEditFormChange={setEditForm}
       />
-    </>
+    </div>
   );
 };
 

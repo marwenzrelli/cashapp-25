@@ -106,15 +106,15 @@ export const ClientsPageContent = ({
 
   return (
     <>
-      <div className="space-y-8 animate-in">
+      <div className="space-y-6 animate-in px-2 md:px-0">
         <div>
-          <h1 className="text-3xl font-bold">Gestion des clients</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl md:text-3xl font-bold">Gestion des clients</h1>
+          <p className="text-sm md:text-base text-muted-foreground">
             Gérez vos clients avec l'aide de l'intelligence artificielle
           </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-4 md:gap-6 md:grid-cols-2">
           <ClientInsights suggestions={aiSuggestions} />
           <ClientSearch
             searchTerm={searchTerm}
