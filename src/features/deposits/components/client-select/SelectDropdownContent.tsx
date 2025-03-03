@@ -42,10 +42,10 @@ export const SelectDropdownContent = ({
   return (
     <SelectContent 
       ref={contentRef} 
-      className="client-select-content h-96 w-full p-0 overflow-hidden"
+      className="client-select-content h-[450px] w-full p-0 overflow-hidden"
       style={{ touchAction: 'manipulation' }}
     >
-      <div className="sticky top-0 z-10 bg-white dark:bg-zinc-950 pt-1 px-3 pb-1">
+      <div className="sticky top-0 z-10 bg-white dark:bg-zinc-950 pt-1 px-2 pb-1">
         <ClientSearchInput 
           value={clientSearch} 
           onChange={setClientSearch} 
