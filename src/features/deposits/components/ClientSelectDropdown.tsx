@@ -1,13 +1,12 @@
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
+import { ChevronDown } from "lucide-react";
 import { Select, SelectContent, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { type Client } from "@/features/clients/types";
 import { ClientSearchInput } from "./client-select/ClientSearchInput";
 import { ClientList } from "./client-select/ClientList";
 import { useClientFilter } from "./client-select/useClientFilter";
 import { useScrollDetection } from "./client-select/useScrollDetection";
-import { useSwipeToClose } from "./client-select/useSwipeToClose";
 
 interface ClientSelectDropdownProps {
   clients: Client[];
@@ -21,12 +20,11 @@ export const ClientSelectDropdown = ({
   onClientSelect
 }: ClientSelectDropdownProps) => {
   const [openState, setOpenState] = useState(false);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   
   // Use our custom hooks
   const { clientSearch, setClientSearch, filteredClients } = useClientFilter(clients, openState);
-  const [isScrolling, clearScrolling] = useScrollDetection(scrollAreaRef);
-  useSwipeToClose(scrollAreaRef, openState, () => setOpenState(false), isScrolling);
+  const [isScrolling, clearScrolling] = useScrollDetection(contentRef);
 
   const getSelectedClientName = () => {
     const client = clients.find(c => c.id.toString() === selectedClient);
@@ -38,8 +36,22 @@ export const ClientSelectDropdown = ({
     // Close after selection with a slight delay to prevent UI jumps
     setTimeout(() => {
       setOpenState(false);
-    }, 50);
+    }, 100);
   };
+
+  // Prevent automatic closing from Select component when touching inside our custom content
+  useEffect(() => {
+    const handleTouchMove = (e: TouchEvent) => {
+      if (openState && contentRef.current?.contains(e.target as Node)) {
+        e.stopPropagation();
+      }
+    };
+
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    return () => {
+      document.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, [openState]);
 
   return (
     <Select 
@@ -65,35 +77,32 @@ export const ClientSelectDropdown = ({
           // Completely prevent closing on pointer down outside during scrolling
           if (isScrolling) {
             e.preventDefault();
-            return;
-          }
-          // Prevent closing during interactions inside
-          const target = e.target as HTMLElement;
-          if (!target.closest('[data-radix-select-content]')) {
-            e.preventDefault();
           }
         }}
       >
-        <ClientSearchInput 
-          value={clientSearch} 
-          onChange={setClientSearch} 
-          isOpen={openState} 
-        />
-        <ScrollArea 
-          className="h-[60vh] max-h-[450px] touch-auto overflow-y-auto overscroll-contain" 
-          ref={scrollAreaRef}
+        <div 
+          ref={contentRef} 
+          className="overflow-hidden flex flex-col h-[70vh] max-h-[500px]"
         >
-          <div className="text-xs text-muted-foreground px-2 py-2 bg-muted/30 sticky top-0 z-10">
+          <ClientSearchInput 
+            value={clientSearch} 
+            onChange={setClientSearch} 
+            isOpen={openState} 
+          />
+          <div className="text-xs text-muted-foreground px-2 py-2 bg-muted/30 z-10">
             <span>← Glisser fortement vers la gauche pour fermer • {filteredClients.length} clients</span>
           </div>
-          <ClientList 
-            clients={filteredClients} 
-            selectedClient={selectedClient} 
-            isScrolling={isScrolling} 
-            onClientSelect={handleClientSelect}
-            setOpenState={setOpenState}
-          />
-        </ScrollArea>
+          <div className="touch-auto overflow-y-auto overscroll-contain h-full">
+            <ClientList 
+              clients={filteredClients} 
+              selectedClient={selectedClient} 
+              isScrolling={isScrolling} 
+              onClientSelect={handleClientSelect}
+              setOpenState={setOpenState}
+            />
+            <div className="h-12"></div> {/* Extra space at bottom for easier scrolling */}
+          </div>
+        </div>
       </SelectContent>
     </Select>
   );
