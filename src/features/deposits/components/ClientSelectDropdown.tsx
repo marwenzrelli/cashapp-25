@@ -1,6 +1,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Search, UserCircle } from "lucide-react";
+import Hammer from "hammerjs";
 import { 
   Select,
   SelectContent,
@@ -28,6 +29,7 @@ export const ClientSelectDropdown = ({
   const [clientSearch, setClientSearch] = useState("");
   const [openState, setOpenState] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
   
   // Filtrer les clients en fonction de la recherche
   const filteredClients = clients.filter(client => {
@@ -44,9 +46,45 @@ export const ClientSelectDropdown = ({
       }, 100);
     }
   }, [openState]);
+  
+  // Configuration de Hammer.js pour les gestes tactiles
+  useEffect(() => {
+    const scrollArea = scrollAreaRef.current;
+    
+    if (scrollArea && openState) {
+      const hammer = new Hammer(scrollArea);
+      
+      // Configuration pour détecter les swipes horizontaux
+      hammer.get('swipe').set({ direction: Hammer.DIRECTION_HORIZONTAL });
+      
+      // Gestionnaire de swipe
+      hammer.on('swipe', (e) => {
+        // Swipe vers la gauche (pour fermer le dropdown)
+        if (e.direction === Hammer.DIRECTION_LEFT) {
+          console.log('Swipe à gauche détecté');
+          setOpenState(false);
+        }
+        
+        // Swipe vers la droite (pour une action alternative si nécessaire)
+        if (e.direction === Hammer.DIRECTION_RIGHT) {
+          console.log('Swipe à droite détecté');
+          // Vous pouvez ajouter une action différente ici si nécessaire
+        }
+      });
+      
+      // Nettoyage des événements Hammer au démontage
+      return () => {
+        hammer.destroy();
+      };
+    }
+  }, [openState]);
 
   const handleClientClick = (clientId: string) => {
     onClientSelect(clientId);
+    // Vibration tactile légère si supportée (pour les appareils modernes)
+    if (window.navigator && window.navigator.vibrate) {
+      window.navigator.vibrate(20); // vibration de 20ms
+    }
     // Fermer le dropdown après un délai pour montrer la sélection à l'utilisateur
     setTimeout(() => setOpenState(false), 300);
   };
@@ -63,7 +101,7 @@ export const ClientSelectDropdown = ({
       open={openState}
       onOpenChange={setOpenState}
     >
-      <SelectTrigger className="w-full min-h-[42px]">
+      <SelectTrigger className="w-full min-h-[42px] touch-manipulation">
         <SelectValue placeholder="Sélectionner un client">
           {selectedClient ? getSelectedClientName() : "Sélectionner un client"}
         </SelectValue>
@@ -99,7 +137,13 @@ export const ClientSelectDropdown = ({
             />
           </div>
         </div>
-        <ScrollArea className="h-[50vh] max-h-[300px] touch-auto overflow-y-auto overscroll-contain">
+        <ScrollArea 
+          className="h-[50vh] max-h-[300px] touch-auto overflow-y-auto overscroll-contain"
+          ref={scrollAreaRef}
+        >
+          <div className="text-xs text-muted-foreground px-2 py-1 bg-muted/30">
+            <span>← Glisser vers la gauche pour fermer</span>
+          </div>
           {filteredClients.length === 0 ? (
             <div className="p-2 text-center text-muted-foreground">
               Aucun client trouvé
@@ -109,7 +153,7 @@ export const ClientSelectDropdown = ({
               <SelectItem 
                 key={client.id} 
                 value={client.id.toString()}
-                className="flex items-center justify-between py-4 px-2 cursor-pointer touch-manipulation select-none"
+                className="flex items-center justify-between py-4 px-2 cursor-pointer touch-manipulation select-none active:bg-primary/10"
                 onPointerDown={(e) => {
                   // Prevent default to maintain the dropdown open
                   e.preventDefault();
@@ -143,3 +187,4 @@ export const ClientSelectDropdown = ({
     </Select>
   );
 };
+

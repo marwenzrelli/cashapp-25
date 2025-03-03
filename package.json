@@ -46,6 +46,7 @@
     "cmdk": "^1.0.0",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.3.0",
+    "hammerjs": "file:latest @types/hammerjs@latest",
     "input-otp": "^1.2.4",
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.4",

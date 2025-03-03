@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
+import Hammer from "hammerjs";
 import { useClients } from "@/features/clients/hooks/useClients";
 import { toast } from "sonner";
 import { type DepositDialogProps } from "@/features/deposits/types";
@@ -27,12 +28,37 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
   const [description, setDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { clients, fetchClients } = useClients();
+  const dialogContentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (open) {
       fetchClients();
     }
   }, [open, fetchClients]);
+
+  // Configuration de Hammer.js pour détecter le swipe down pour fermer le modal
+  useEffect(() => {
+    const dialogElement = dialogContentRef.current;
+    
+    if (dialogElement && open) {
+      const hammer = new Hammer(dialogElement);
+      
+      // Configuration pour détecter les swipes verticaux
+      hammer.get('swipe').set({ direction: Hammer.DIRECTION_DOWN });
+      
+      // Gestionnaire de swipe vers le bas
+      hammer.on('swipe', (e) => {
+        if (e.direction === Hammer.DIRECTION_DOWN) {
+          console.log('Swipe vers le bas détecté');
+          onOpenChange(false);
+        }
+      });
+      
+      return () => {
+        hammer.destroy();
+      };
+    }
+  }, [open, onOpenChange]);
 
   // Écouter les changements en temps réel sur la table clients
   useEffect(() => {
@@ -101,11 +127,20 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md w-[calc(100%-2rem)] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent 
+        ref={dialogContentRef}
+        className="sm:max-w-md w-[calc(100%-2rem)] max-h-[90vh] overflow-y-auto"
+      >
+        <div className="absolute top-0 left-0 right-0 h-1.5 flex justify-center">
+          <div className="w-12 h-1.5 bg-muted rounded-full mt-2"></div>
+        </div>
+        <DialogHeader className="pt-4">
           <DialogTitle>Nouveau versement</DialogTitle>
           <DialogDescription>
             Enregistrez un nouveau versement pour un client.
+            <span className="block text-xs text-muted-foreground mt-1">
+              Glissez vers le bas pour fermer
+            </span>
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
@@ -147,3 +182,4 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
     </Dialog>
   );
 };
+
