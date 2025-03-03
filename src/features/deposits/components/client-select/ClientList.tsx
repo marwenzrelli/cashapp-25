@@ -59,7 +59,7 @@ export const ClientList = ({
       <ScrollHint show={clients.length > 5} />
       
       <ScrollArea 
-        className="h-[calc(100vh-220px)] max-h-[430px] scrollarea-viewport"
+        className="h-[calc(100vh-220px)] max-h-[430px] client-scrollable-area"
         style={{
           scrollbarWidth: 'thin',
           msOverflowStyle: '-ms-autohiding-scrollbar',

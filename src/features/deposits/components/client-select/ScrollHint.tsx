@@ -1,5 +1,5 @@
 
-import { ChevronDown } from "lucide-react";
+import { ArrowDown } from "lucide-react";
 import { useRef, useEffect } from "react";
 
 interface ScrollHintProps {
@@ -9,35 +9,7 @@ interface ScrollHintProps {
 export const ScrollHint = ({ show }: ScrollHintProps) => {
   const hintRef = useRef<HTMLDivElement>(null);
   
-  useEffect(() => {
-    if (!show || !hintRef.current) return;
-    
-    // Add subtle animation to make the hint more noticeable
-    const element = hintRef.current;
-    let direction = 1;
-    let position = 0;
-    
-    const animate = () => {
-      if (!element) return;
-      
-      position += 0.3 * direction;
-      
-      if (position > 4) {
-        direction = -1;
-      } else if (position < 0) {
-        direction = 1;
-      }
-      
-      element.style.transform = `translateY(${position}px)`;
-      requestAnimationFrame(animate);
-    };
-    
-    const animationId = requestAnimationFrame(animate);
-    
-    return () => {
-      cancelAnimationFrame(animationId);
-    };
-  }, [show]);
+  // We'll remove the existing animation as it's causing issues
   
   if (!show) return null;
   
@@ -46,60 +18,89 @@ export const ScrollHint = ({ show }: ScrollHintProps) => {
     e.preventDefault();
     e.stopPropagation();
     
-    // Get the correct scroll area target - search for both Radix ScrollArea and fallback
-    const scrollAreas = document.querySelectorAll('.scrollarea-viewport');
-    const radixViewport = document.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+    console.log('ScrollHint: attempting to scroll to bottom');
     
+    // Try multiple methods to find the scrollable container
+    
+    // Method 1: Try the Radix viewport directly
+    const radixViewport = document.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
     if (radixViewport) {
-      console.log('ScrollHint: scrolling Radix viewport to bottom');
+      console.log('ScrollHint: found Radix viewport, scrolling to bottom');
       radixViewport.scrollTo({
         top: radixViewport.scrollHeight,
         behavior: 'smooth'
       });
-    } else if (scrollAreas.length > 0) {
-      // Use the most recently rendered scroll area (likely the one in view)
+      return;
+    }
+    
+    // Method 2: Try scrollarea-viewport class
+    const scrollAreas = document.querySelectorAll('.scrollarea-viewport');
+    if (scrollAreas.length > 0) {
       const scrollArea = scrollAreas[scrollAreas.length - 1] as HTMLElement;
-      console.log('ScrollHint: scrolling to bottom, element found:', !!scrollArea);
-      if (scrollArea) {
-        scrollArea.scrollTo({
-          top: scrollArea.scrollHeight,
-          behavior: 'smooth'
-        });
-      }
-    } else {
-      // Last resort - try to find any scrollable container in the dropdown
-      const dropdown = document.querySelector('.client-select-content');
-      if (dropdown) {
-        const scrollableElements = dropdown.querySelectorAll('div');
-        scrollableElements.forEach(el => {
-          if (el.scrollHeight > el.clientHeight) {
-            console.log('ScrollHint: found scrollable element', el);
-            (el as HTMLElement).scrollTo({
-              top: el.scrollHeight,
-              behavior: 'smooth'
-            });
-          }
-        });
-      } else {
-        console.log('ScrollHint: no scrollable elements found');
-      }
+      console.log('ScrollHint: found scrollarea-viewport, scrolling to bottom');
+      scrollArea.scrollTo({
+        top: scrollArea.scrollHeight,
+        behavior: 'smooth'
+      });
+      return;
+    }
+    
+    // Method 3: Find any element with overflow in the dropdown
+    const clientListContainer = document.querySelector('.client-list-container');
+    if (clientListContainer) {
+      const scrollElements = clientListContainer.querySelectorAll('*');
+      let scrolled = false;
+      
+      scrollElements.forEach(el => {
+        const element = el as HTMLElement;
+        const computedStyle = window.getComputedStyle(element);
+        const hasScroll = element.scrollHeight > element.clientHeight && 
+                         (computedStyle.overflowY === 'auto' || 
+                          computedStyle.overflowY === 'scroll');
+        
+        if (hasScroll) {
+          console.log('ScrollHint: found scrollable element', element);
+          element.scrollTo({
+            top: element.scrollHeight,
+            behavior: 'smooth'
+          });
+          scrolled = true;
+        }
+      });
+      
+      if (scrolled) return;
+    }
+    
+    // Last resort: try to find the ScrollArea component
+    const scrollArea = document.querySelector('.h-\\[calc\\(100vh-220px\\)\\]');
+    if (scrollArea) {
+      const scrollables = scrollArea.querySelectorAll('*');
+      scrollables.forEach(el => {
+        const element = el as HTMLElement;
+        if (element.scrollHeight > element.clientHeight) {
+          console.log('ScrollHint: found scrollable element in ScrollArea', element);
+          element.scrollTo({
+            top: element.scrollHeight,
+            behavior: 'smooth'
+          });
+        }
+      });
     }
   };
   
   return (
     <div 
       ref={hintRef}
-      className="sticky top-0 z-20 flex justify-center items-center py-2 text-xs font-medium text-muted-foreground bg-white/95 dark:bg-zinc-950/95 cursor-pointer hover:bg-muted/50 active:bg-muted transition-colors rounded-sm"
+      className="sticky top-0 z-20 flex justify-center items-center py-3 px-2 text-sm font-medium text-primary bg-white/95 dark:bg-zinc-950/95 cursor-pointer hover:bg-muted/50 active:bg-muted/80 transition-colors rounded-sm shadow-sm border-b"
       onClick={scrollToBottom}
       onTouchStart={(e) => {
-        // Prevent default to avoid any interference with the scroll
         e.stopPropagation();
       }}
       onTouchEnd={scrollToBottom}
       aria-label="Voir plus de clients"
       role="button"
     >
-      <ChevronDown className="h-4 w-4 mr-1" />
+      <ArrowDown className="h-5 w-5 mr-2 text-primary" />
       <span>Afficher plus de clients</span>
     </div>
   );
