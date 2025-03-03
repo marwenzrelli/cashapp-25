@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { CalendarIcon, UserCircle } from "lucide-react";
+import { CalendarIcon, UserCircle, Search } from "lucide-react";
 import { useClients } from "@/features/clients/hooks/useClients";
 import { toast } from "sonner";
 import {
@@ -33,6 +33,7 @@ import { type DepositDialogProps } from "@/features/deposits/types";
 import { type Deposit } from "@/components/deposits/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogProps) => {
   const { currency } = useCurrency();
@@ -41,6 +42,7 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
   const [date, setDate] = useState<Date>(new Date());
   const [description, setDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [clientSearch, setClientSearch] = useState("");
   const { clients, fetchClients } = useClients();
 
   useEffect(() => {
@@ -114,6 +116,13 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
     }
   };
 
+  // Filtrer les clients en fonction de la recherche
+  const filteredClients = clients.filter(client => {
+    const fullName = `${client.prenom} ${client.nom}`.toLowerCase();
+    const searchTerm = clientSearch.toLowerCase();
+    return fullName.includes(searchTerm) || client.telephone.includes(searchTerm);
+  });
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -133,22 +142,43 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Sélectionner un client" />
               </SelectTrigger>
-              <SelectContent>
-                {clients.map((client) => (
-                  <SelectItem 
-                    key={client.id} 
-                    value={client.id.toString()}
-                    className="flex items-center justify-between gap-2"
-                  >
-                    <div className="flex items-center gap-2">
-                      <UserCircle className="h-4 w-4 text-primary/50" />
-                      <span>{client.prenom} {client.nom}</span>
+              <SelectContent className="max-h-[60vh]">
+                <div className="p-2 sticky top-0 bg-popover z-10 border-b mb-1">
+                  <div className="relative">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Rechercher un client..."
+                      value={clientSearch}
+                      onChange={(e) => setClientSearch(e.target.value)}
+                      className="pl-8"
+                    />
+                  </div>
+                </div>
+                <ScrollArea className="max-h-[40vh]">
+                  {filteredClients.length === 0 ? (
+                    <div className="p-2 text-center text-muted-foreground">
+                      Aucun client trouvé
                     </div>
-                    <span className={`font-mono text-sm ${client.solde >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                      {client.solde.toLocaleString()} {currency}
-                    </span>
-                  </SelectItem>
-                ))}
+                  ) : (
+                    filteredClients.map((client) => (
+                      <SelectItem 
+                        key={client.id} 
+                        value={client.id.toString()}
+                        className="flex items-center justify-between py-3 cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2">
+                          <UserCircle className="h-5 w-5 text-primary/80 flex-shrink-0" />
+                          <span className="font-medium">
+                            {client.prenom} {client.nom}
+                          </span>
+                        </div>
+                        <span className={`font-mono text-sm ${client.solde >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                          {client.solde.toLocaleString()} {currency}
+                        </span>
+                      </SelectItem>
+                    ))
+                  )}
+                </ScrollArea>
               </SelectContent>
             </Select>
           </div>
