@@ -40,7 +40,7 @@ export const ClientSelectDropdown = ({
     }, 100);
   };
 
-  // Ensure proper scroll behavior on mobile
+  // Setup touch interactions and scrolling behavior
   useEffect(() => {
     if (openState && scrollableAreaRef.current) {
       // Add passive touch listeners for better scrolling
@@ -49,12 +49,58 @@ export const ClientSelectDropdown = ({
       // Set CSS properties directly as strings to avoid TypeScript errors
       scrollElement.style.cssText += 'overscroll-behavior: contain; -webkit-overflow-scrolling: touch;';
       
-      // Force layout recalculation to make sure scrolling works
+      // Setup initial scroll position to enable swipe from top
       setTimeout(() => {
-        scrollElement.style.display = 'none';
-        scrollElement.offsetHeight; // Trigger reflow
-        scrollElement.style.display = 'block';
-      }, 50);
+        // Initial small scroll to enable momentum scrolling on iOS
+        if (scrollElement.scrollTop === 0) {
+          scrollElement.scrollTop = 1;
+        }
+      }, 100);
+
+      // Add touchstart handler to detect initial touch position
+      let startY = 0;
+      let startTime = 0;
+      let isScrollingDown = false;
+
+      const handleTouchStart = (e: TouchEvent) => {
+        startY = e.touches[0].clientY;
+        startTime = Date.now();
+        isScrollingDown = false;
+      };
+
+      const handleTouchMove = (e: TouchEvent) => {
+        const currentY = e.touches[0].clientY;
+        const deltaY = currentY - startY;
+        
+        // If moving finger down and content is at the top, start scrolling
+        if (deltaY > 5 && scrollElement.scrollTop <= 1) {
+          isScrollingDown = true;
+          
+          // Calculate velocity-based scrolling
+          const timeDelta = Date.now() - startTime;
+          const velocity = Math.abs(deltaY) / timeDelta;
+          
+          // Apply scroll based on finger movement and velocity
+          const scrollAmount = deltaY * (1 + velocity * 10);
+          
+          // Apply some resistance at the beginning for natural feel
+          const dampenedScroll = Math.min(scrollAmount / 2, 50);
+          
+          // Smooth scroll based on touch movement
+          scrollElement.scrollBy({
+            top: dampenedScroll,
+            behavior: 'auto'
+          });
+        }
+      };
+
+      scrollElement.addEventListener('touchstart', handleTouchStart, { passive: true });
+      scrollElement.addEventListener('touchmove', handleTouchMove, { passive: true });
+      
+      return () => {
+        scrollElement.removeEventListener('touchstart', handleTouchStart);
+        scrollElement.removeEventListener('touchmove', handleTouchMove);
+      };
     }
   }, [openState]);
 

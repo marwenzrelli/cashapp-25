@@ -9,6 +9,8 @@ export const useScrollDetection = (
   const lastTouchY = useRef<number | null>(null);
   const scrollStateTimeoutRef = useRef<number | null>(null);
   const lastScrollTop = useRef<number>(0);
+  const scrollVelocityRef = useRef<number>(0);
+  const lastScrollTimeRef = useRef<number>(Date.now());
 
   const clearScrolling = () => {
     setIsScrolling(false);
@@ -30,10 +32,25 @@ export const useScrollDetection = (
     const scrollableArea = contentArea.querySelector('.overflow-y-auto') as HTMLElement;
     if (!scrollableArea) return;
     
+    // Calculate scroll velocity
+    const calculateScrollVelocity = (newScrollTop: number) => {
+      const now = Date.now();
+      const timeDelta = now - lastScrollTimeRef.current;
+      const scrollDelta = Math.abs(newScrollTop - lastScrollTop.current);
+      
+      if (timeDelta > 0) {
+        // Calculate pixels per millisecond
+        scrollVelocityRef.current = scrollDelta / timeDelta;
+      }
+      
+      lastScrollTimeRef.current = now;
+    };
+    
     // Handler for actual scroll events
     const handleScroll = () => {
       // Check if scroll position actually changed
       if (lastScrollTop.current !== scrollableArea.scrollTop) {
+        calculateScrollVelocity(scrollableArea.scrollTop);
         setIsScrolling(true);
         lastScrollTop.current = scrollableArea.scrollTop;
         
@@ -43,9 +60,11 @@ export const useScrollDetection = (
         }
         
         // Keep scrolling state active for a delay after last scroll
+        // Use velocity to determine how long to keep scrolling state
+        const scrollDelay = Math.min(300, Math.max(150, 200 * scrollVelocityRef.current));
         scrollTimerRef.current = window.setTimeout(() => {
           setIsScrolling(false);
-        }, 200);
+        }, scrollDelay);
       }
     };
     
@@ -55,7 +74,7 @@ export const useScrollDetection = (
       lastTouchY.current = e.touches[0].clientY;
     };
     
-    // Touch move - detect scrolling
+    // Touch move - detect scrolling and calculate direction/velocity
     const handleTouchMove = (e: TouchEvent) => {
       if (touchStartY.current === null || lastTouchY.current === null) return;
       
@@ -86,9 +105,11 @@ export const useScrollDetection = (
       }
       
       // Delay longer to prevent accidental taps right after scrolling
+      // Apply longer delay for higher velocity scrolls
+      const endDelay = Math.min(300, Math.max(150, 150 + 1000 * scrollVelocityRef.current));
       scrollStateTimeoutRef.current = window.setTimeout(() => {
         setIsScrolling(false);
-      }, 150);
+      }, endDelay);
     };
     
     // Add all listeners
