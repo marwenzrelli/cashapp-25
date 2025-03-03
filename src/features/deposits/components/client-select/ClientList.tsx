@@ -41,7 +41,7 @@ export const ClientList = ({
       if (!isScrolling) {
         handleClientClick(client.id.toString(), e);
       }
-    }} data-client-id={client.id.toString()} className="rounded-lg my-[10px] mx-[10px]">
+    }} data-client-id={client.id.toString()} className="my-[10px] mx-[10px] rounded">
             <div className="flex items-center gap-3">
               <UserCircle className="h-10 w-10 text-primary/80 flex-shrink-0" />
               <div className="flex flex-col">
