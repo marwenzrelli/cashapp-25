@@ -54,6 +54,7 @@ export const ClientList = ({
                 handleClientClick(client.id.toString(), e);
               }
             }}
+            data-client-id={client.id.toString()}
           >
             <div className="flex items-center gap-3">
               <UserCircle className="h-10 w-10 text-primary/80 flex-shrink-0" />

@@ -21,6 +21,7 @@ export const ClientSelectDropdown = ({
 }: ClientSelectDropdownProps) => {
   const [openState, setOpenState] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+  const scrollableAreaRef = useRef<HTMLDivElement>(null);
   
   // Use our custom hooks
   const { clientSearch, setClientSearch, filteredClients } = useClientFilter(clients, openState);
@@ -38,6 +39,24 @@ export const ClientSelectDropdown = ({
       setOpenState(false);
     }, 100);
   };
+
+  // Ensure proper scroll behavior on mobile
+  useEffect(() => {
+    if (openState && scrollableAreaRef.current) {
+      // Add passive touch listeners for better scrolling
+      const scrollElement = scrollableAreaRef.current;
+      
+      // Enable momentum scrolling on iOS
+      scrollElement.style.WebkitOverflowScrolling = 'touch';
+      
+      // Force layout recalculation to make sure scrolling works
+      setTimeout(() => {
+        scrollElement.style.display = 'none';
+        scrollElement.offsetHeight; // Trigger reflow
+        scrollElement.style.display = 'block';
+      }, 50);
+    }
+  }, [openState]);
 
   // Prevent automatic closing from Select component when touching inside our custom content
   useEffect(() => {
@@ -92,7 +111,11 @@ export const ClientSelectDropdown = ({
           <div className="text-xs text-muted-foreground px-2 py-2 bg-muted/30 z-10">
             <span>← Glisser fortement vers la gauche pour fermer • {filteredClients.length} clients</span>
           </div>
-          <div className="touch-auto overflow-y-auto overscroll-contain h-full">
+          <div 
+            ref={scrollableAreaRef}
+            className="touch-pan-y overflow-y-auto overscroll-contain h-full -webkit-overflow-scrolling-touch"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
             <ClientList 
               clients={filteredClients} 
               selectedClient={selectedClient} 
@@ -100,7 +123,7 @@ export const ClientSelectDropdown = ({
               onClientSelect={handleClientSelect}
               setOpenState={setOpenState}
             />
-            <div className="h-12"></div> {/* Extra space at bottom for easier scrolling */}
+            <div className="h-24"></div> {/* Extra space at bottom for easier scrolling */}
           </div>
         </div>
       </SelectContent>

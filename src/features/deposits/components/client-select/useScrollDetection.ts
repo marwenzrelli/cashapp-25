@@ -8,6 +8,7 @@ export const useScrollDetection = (
   const touchStartY = useRef<number | null>(null);
   const lastTouchY = useRef<number | null>(null);
   const scrollStateTimeoutRef = useRef<number | null>(null);
+  const lastScrollTop = useRef<number>(0);
 
   const clearScrolling = () => {
     setIsScrolling(false);
@@ -31,17 +32,21 @@ export const useScrollDetection = (
     
     // Handler for actual scroll events
     const handleScroll = () => {
-      setIsScrolling(true);
-      
-      // Clear existing timeout
-      if (scrollTimerRef.current) {
-        window.clearTimeout(scrollTimerRef.current);
+      // Check if scroll position actually changed
+      if (lastScrollTop.current !== scrollableArea.scrollTop) {
+        setIsScrolling(true);
+        lastScrollTop.current = scrollableArea.scrollTop;
+        
+        // Clear existing timeout
+        if (scrollTimerRef.current) {
+          window.clearTimeout(scrollTimerRef.current);
+        }
+        
+        // Keep scrolling state active for a delay after last scroll
+        scrollTimerRef.current = window.setTimeout(() => {
+          setIsScrolling(false);
+        }, 200);
       }
-      
-      // Keep scrolling state active for a delay after last scroll
-      scrollTimerRef.current = window.setTimeout(() => {
-        setIsScrolling(false);
-      }, 200);
     };
     
     // Touch start - record initial position
@@ -88,16 +93,16 @@ export const useScrollDetection = (
     
     // Add all listeners
     scrollableArea.addEventListener('scroll', handleScroll, { passive: true });
-    contentArea.addEventListener('touchstart', handleTouchStart, { passive: true });
-    contentArea.addEventListener('touchmove', handleTouchMove, { passive: true });
-    contentArea.addEventListener('touchend', handleTouchEnd, { passive: true });
+    scrollableArea.addEventListener('touchstart', handleTouchStart, { passive: true });
+    scrollableArea.addEventListener('touchmove', handleTouchMove, { passive: true });
+    scrollableArea.addEventListener('touchend', handleTouchEnd, { passive: true });
     
     return () => {
       // Remove all listeners
       scrollableArea.removeEventListener('scroll', handleScroll);
-      contentArea.removeEventListener('touchstart', handleTouchStart);
-      contentArea.removeEventListener('touchmove', handleTouchMove);
-      contentArea.removeEventListener('touchend', handleTouchEnd);
+      scrollableArea.removeEventListener('touchstart', handleTouchStart);
+      scrollableArea.removeEventListener('touchmove', handleTouchMove);
+      scrollableArea.removeEventListener('touchend', handleTouchEnd);
       
       // Clear any pending timeouts
       clearScrolling();
