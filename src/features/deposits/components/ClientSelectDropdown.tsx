@@ -155,7 +155,7 @@ export const ClientSelectDropdown = ({
             isOpen={openState} 
           />
           <div className="text-xs text-muted-foreground px-2 py-2 bg-muted/30 z-10">
-            <span>← Glisser fortement vers la gauche pour fermer • {filteredClients.length} clients</span>
+            <span>{filteredClients.length} clients</span>
           </div>
           <div 
             ref={scrollableAreaRef}

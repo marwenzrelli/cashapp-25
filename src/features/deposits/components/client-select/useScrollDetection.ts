@@ -32,6 +32,12 @@ export const useScrollDetection = (
     const scrollableArea = contentArea.querySelector('.overflow-y-auto') as HTMLElement;
     if (!scrollableArea) return;
     
+    // Enhanced momentum scrolling for touch devices
+    let startY = 0;
+    let lastY = 0;
+    let startTime = 0;
+    let velocityY = 0;
+    
     // Calculate scroll velocity
     const calculateScrollVelocity = (newScrollTop: number) => {
       const now = Date.now();
@@ -72,6 +78,10 @@ export const useScrollDetection = (
     const handleTouchStart = (e: TouchEvent) => {
       touchStartY.current = e.touches[0].clientY;
       lastTouchY.current = e.touches[0].clientY;
+      startY = e.touches[0].clientY;
+      lastY = startY;
+      startTime = Date.now();
+      velocityY = 0;
     };
     
     // Touch move - detect scrolling and calculate direction/velocity
@@ -80,6 +90,14 @@ export const useScrollDetection = (
       
       const currentY = e.touches[0].clientY;
       const deltaY = Math.abs(currentY - lastTouchY.current);
+      
+      // Calculate touch velocity
+      const currentTime = Date.now();
+      const timeElapsed = currentTime - startTime;
+      if (timeElapsed > 0) {
+        velocityY = (lastY - currentY) / timeElapsed;
+      }
+      lastY = currentY;
       
       // If significant movement, consider it scrolling
       if (deltaY > 3) {
@@ -95,7 +113,25 @@ export const useScrollDetection = (
     };
     
     // Touch end - schedule end of scrolling state
-    const handleTouchEnd = () => {
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (velocityY !== 0) {
+        // Apply momentum scrolling based on final velocity
+        const momentum = velocityY * 100; // Adjust multiplier for desired momentum effect
+        const animateMomentumScroll = () => {
+          velocityY *= 0.95; // Gradually reduce velocity with friction
+          
+          scrollableArea.scrollBy(0, velocityY * 10);
+          
+          if (Math.abs(velocityY) > 0.01) {
+            requestAnimationFrame(animateMomentumScroll);
+          }
+        };
+        
+        if (Math.abs(velocityY) > 0.05) {
+          requestAnimationFrame(animateMomentumScroll);
+        }
+      }
+      
       touchStartY.current = null;
       lastTouchY.current = null;
       
