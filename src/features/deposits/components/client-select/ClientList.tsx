@@ -49,11 +49,11 @@ export const ClientList = ({
   }
 
   return (
-    <div ref={listRef} className="client-list-container overflow-y-auto max-h-[calc(100%-50px)] pb-10">
+    <div ref={listRef} className="client-list-container overflow-y-auto max-h-[calc(100%-40px)] pb-8">
       {/* Visual hint for vertical swiping - only show with more than 5 clients */}
       <ScrollHint show={clients.length > 5} />
       
-      <div className="py-1">
+      <div className="py-0.5">
         {clients.map(client => (
           <ClientListItem 
             key={client.id}
@@ -66,7 +66,7 @@ export const ClientList = ({
       </div>
       
       {/* Extra padding at the bottom to allow scrolling to see the last items */}
-      <div className="h-6" aria-hidden="true"></div>
+      <div className="h-4" aria-hidden="true"></div>
     </div>
   );
 };
