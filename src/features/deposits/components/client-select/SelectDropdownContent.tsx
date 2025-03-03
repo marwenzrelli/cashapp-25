@@ -54,7 +54,7 @@ export const SelectDropdownContent = ({
       <TouchPropagationHandler contentRef={contentRef} openState={openState} />
       
       <SelectContent 
-        className="max-h-[80vh] max-w-[calc(100vw-2rem)] p-0 overflow-hidden" 
+        className="max-h-[85vh] max-w-[calc(100vw-2rem)] p-0 overflow-hidden rounded-lg border-2 shadow-lg" 
         position="popper" 
         sideOffset={5} 
         onEscapeKeyDown={e => {
@@ -77,14 +77,15 @@ export const SelectDropdownContent = ({
             onChange={setClientSearch} 
             isOpen={openState} 
           />
-          <div className="text-xs text-muted-foreground px-2 py-2 bg-muted/30 z-10 sticky top-0">
+          <div className="text-xs text-muted-foreground px-4 py-2 bg-muted/30 z-10 sticky top-0 border-b">
             <span>{filteredClients.length} clients</span>
           </div>
           <div 
             ref={scrollableAreaRef}
             className="touch-pan-y overflow-y-auto overscroll-contain h-full"
             style={{ 
-              overscrollBehavior: 'contain'
+              overscrollBehavior: 'contain',
+              WebkitOverflowScrolling: 'touch'
             }}
           >
             <ClientList 

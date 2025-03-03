@@ -44,7 +44,7 @@ export const ClientSelectDropdown = ({
       open={openState} 
       onOpenChange={setOpenState}
     >
-      <SelectTrigger className="w-full min-h-[42px] touch-manipulation text-zinc-950">
+      <SelectTrigger className="w-full min-h-[42px] py-3 px-4 bg-white dark:bg-black shadow-sm rounded-lg border-input text-zinc-950 dark:text-zinc-50 font-medium touch-manipulation">
         <SelectValue placeholder="Sélectionner un client">
           {selectedClient ? getSelectedClientName() : "Sélectionner un client"}
         </SelectValue>

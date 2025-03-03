@@ -138,7 +138,7 @@ export const ClientList = ({
   };
 
   return (
-    <div ref={listRef} className="client-list-container pb-48">
+    <div ref={listRef} className="client-list-container pb-56">
       {clients.length === 0 ? (
         <div className="p-4 text-center text-muted-foreground">
           Aucun client trouvé
@@ -147,11 +147,11 @@ export const ClientList = ({
         <>
           {/* Visual hint for vertical swiping - only show with more than 5 clients */}
           {clients.length > 5 && (
-            <div className="flex justify-center items-center py-2 text-xs text-muted-foreground animate-pulse">
+            <div className="flex justify-center items-center py-3 text-xs text-muted-foreground">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
-                <path d="M12 19V5M5 12l7-7 7 7"/>
+                <path d="M12 5v14M19 12l-7 7-7-7"/>
               </svg>
-              <span>Glisser pour faire défiler</span>
+              <span>Glisser pour voir tous les clients</span>
             </div>
           )}
           
@@ -167,11 +167,15 @@ export const ClientList = ({
               }} 
               data-client-id={client.id.toString()} 
               className={`
-                rounded-lg my-2 mx-3 p-2 transition-colors
+                rounded-lg my-2 mx-3 p-3 transition-all
                 ${selectedClient === client.id.toString() 
-                  ? 'bg-primary/15 border-l-4 border-primary' 
-                  : 'hover:bg-muted/50'}
+                  ? 'bg-primary/15 border-l-4 border-primary shadow-sm' 
+                  : 'hover:bg-muted/50 active:bg-muted/70'}
               `}
+              style={{
+                WebkitTapHighlightColor: 'transparent',
+                touchAction: 'manipulation'
+              }}
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
@@ -191,6 +195,9 @@ export const ClientList = ({
               <SelectItem value={client.id.toString()} className="sr-only" />
             </div>
           ))}
+          
+          {/* Extra padding at the bottom to allow scrolling to see the last items */}
+          <div className="h-10" aria-hidden="true"></div>
         </>
       )}
     </div>
