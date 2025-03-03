@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import {
   Dialog,
@@ -10,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
-import Hammer from "hammerjs";
+import * as Hammer from "hammerjs";
 import { useClients } from "@/features/clients/hooks/useClients";
 import { toast } from "sonner";
 import { type DepositDialogProps } from "@/features/deposits/types";
@@ -36,17 +35,17 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
     }
   }, [open, fetchClients]);
 
-  // Configuration de Hammer.js pour détecter le swipe down pour fermer le modal
   useEffect(() => {
     const dialogElement = dialogContentRef.current;
     
     if (dialogElement && open) {
-      const hammer = new Hammer(dialogElement);
+      const hammer = new Hammer.Manager(dialogElement);
+      const swipe = new Hammer.Swipe({
+        direction: Hammer.DIRECTION_DOWN
+      });
       
-      // Configuration pour détecter les swipes verticaux
-      hammer.get('swipe').set({ direction: Hammer.DIRECTION_DOWN });
+      hammer.add(swipe);
       
-      // Gestionnaire de swipe vers le bas
       hammer.on('swipe', (e) => {
         if (e.direction === Hammer.DIRECTION_DOWN) {
           console.log('Swipe vers le bas détecté');
@@ -60,7 +59,6 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
     }
   }, [open, onOpenChange]);
 
-  // Écouter les changements en temps réel sur la table clients
   useEffect(() => {
     const channel = supabase
       .channel('public:clients')
@@ -182,4 +180,3 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
     </Dialog>
   );
 };
-
