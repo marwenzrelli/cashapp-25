@@ -50,6 +50,24 @@ export const SelectDropdownContent = ({
     }, 300);
   };
 
+  // Prevent dropdown from closing when clicking inside
+  useEffect(() => {
+    if (openState && contentRef.current) {
+      const handleContentClick = (e: MouseEvent) => {
+        // Prevent event from bubbling up to parent elements
+        e.stopPropagation();
+      };
+      
+      contentRef.current.addEventListener('click', handleContentClick);
+      
+      return () => {
+        if (contentRef.current) {
+          contentRef.current.removeEventListener('click', handleContentClick);
+        }
+      };
+    }
+  }, [openState, contentRef]);
+
   // Set up an effect to ensure the scroll hint works on initial open
   useEffect(() => {
     if (openState) {
@@ -77,6 +95,14 @@ export const SelectDropdownContent = ({
       ref={contentRef} 
       className="client-select-content h-[calc(100vh-200px)] max-h-[500px] w-full p-0 overflow-hidden"
       style={{ touchAction: 'pan-y' }}
+      onPointerDownOutside={(e) => {
+        // Only close if clicking outside the component, not when interacting within
+        if (!contentRef.current?.contains(e.target as Node)) {
+          setOpenState(false);
+        } else {
+          e.preventDefault();
+        }
+      }}
     >
       <div className="sticky top-0 z-10 bg-white dark:bg-zinc-950 pt-0.5 px-2 pb-0.5">
         <ClientSearchInput 

@@ -50,7 +50,11 @@ export const ClientList = ({
   }
 
   return (
-    <div ref={listRef} className="client-list-container overflow-hidden max-h-[calc(100%-40px)]">
+    <div 
+      ref={listRef} 
+      className="client-list-container overflow-hidden max-h-[calc(100%-40px)]"
+      onClick={(e) => e.stopPropagation()} // Prevent clicks from bubbling up and closing dropdown
+    >
       {/* Visual hint for vertical swiping - only show with more than 5 clients */}
       <ScrollHint show={clients.length > 5} />
       

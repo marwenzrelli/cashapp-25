@@ -30,16 +30,16 @@ export const ClientSelectDropdown = ({
   };
 
   const handleClientSelect = (clientId: string) => {
-    onClientSelect(clientId);
-    // Close after selection with a slight delay to prevent UI jumps
-    if (!clientId) {
-      // If selection is cleared, close immediately
+    // Only update if a new selection is made
+    if (clientId && clientId !== selectedClient) {
+      onClientSelect(clientId);
+      // Don't close automatically - let user click outside or manually close
+      // We'll let the user decide when to close by clicking outside
+    } else if (!clientId) {
+      // If selection is cleared, process it
+      onClientSelect(clientId);
+      // Close immediately only when clearing selection
       setOpenState(false);
-    } else if (clientId !== selectedClient) {
-      // Only close if a different client is selected
-      setTimeout(() => {
-        setOpenState(false);
-      }, 100);
     }
   };
 

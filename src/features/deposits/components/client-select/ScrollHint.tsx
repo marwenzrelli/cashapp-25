@@ -41,27 +41,38 @@ export const ScrollHint = ({ show }: ScrollHintProps) => {
   
   if (!show) return null;
   
+  // Function to scroll to bottom of list
+  const scrollToBottom = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Get the correct scroll area target
+    const scrollAreas = document.querySelectorAll('.scrollarea-viewport');
+    if (scrollAreas.length > 0) {
+      // Use the most recently rendered scroll area (likely the one in view)
+      const scrollArea = scrollAreas[scrollAreas.length - 1] as HTMLElement;
+      console.log('ScrollHint: scrolling to bottom, element found:', !!scrollArea);
+      if (scrollArea) {
+        scrollArea.scrollTo({
+          top: scrollArea.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
+    } else {
+      console.log('ScrollHint: no scrollarea-viewport found');
+    }
+  };
+  
   return (
     <div 
       ref={hintRef}
-      className="sticky top-0 flex justify-center items-center py-2 text-xs text-muted-foreground cursor-pointer hover:bg-muted/30 active:bg-muted/50 transition-all"
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        // Find the ScrollArea viewport and scroll to the bottom
-        const scrollArea = document.querySelector('.scrollarea-viewport') as HTMLElement;
-        if (scrollArea) {
-          scrollArea.scrollTo({
-            top: scrollArea.scrollHeight,
-            behavior: 'smooth'
-          });
-        }
-      }}
+      className="sticky top-0 z-20 flex justify-center items-center py-2 text-xs text-muted-foreground bg-white/90 dark:bg-zinc-950/90 cursor-pointer active:bg-muted transition-colors"
+      onClick={scrollToBottom}
       onTouchStart={(e) => {
         // Prevent default to avoid any interference with the scroll
         e.stopPropagation();
       }}
+      onTouchEnd={scrollToBottom}
     >
       <ChevronDown className="h-4 w-4 mr-1 animate-bounce" />
       <span>Glisser pour voir tous les clients</span>
