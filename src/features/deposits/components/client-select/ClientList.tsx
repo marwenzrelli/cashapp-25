@@ -41,7 +41,7 @@ export const ClientList = ({
       if (!isScrolling) {
         handleClientClick(client.id.toString(), e);
       }
-    }} data-client-id={client.id.toString()} className="my-[10px] mx-[10px] rounded">
+    }} data-client-id={client.id.toString()} className="rounded-lg my-[10px] mx-[10px]">
             <div className="flex items-center gap-3">
               <UserCircle className="h-10 w-10 text-primary/80 flex-shrink-0" />
               <div className="flex flex-col">
@@ -50,7 +50,7 @@ export const ClientList = ({
                 </span>
               </div>
             </div>
-            <span className="text-center">
+            <span className={`font-mono text-lg font-semibold ${client.solde >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
               {client.solde.toLocaleString()} {currency}
             </span>
             
