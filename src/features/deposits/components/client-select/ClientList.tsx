@@ -49,22 +49,24 @@ export const ClientList = ({
   }
 
   return (
-    <div ref={listRef} className="client-list-container pb-56">
+    <div ref={listRef} className="client-list-container overflow-y-auto max-h-[calc(100%-50px)] pb-10">
       {/* Visual hint for vertical swiping - only show with more than 5 clients */}
       <ScrollHint show={clients.length > 5} />
       
-      {clients.map(client => (
-        <ClientListItem 
-          key={client.id}
-          client={client}
-          isSelected={selectedClient === client.id.toString()}
-          onClick={handleClientClick}
-          onRemove={onClientRemove}
-        />
-      ))}
+      <div className="py-1">
+        {clients.map(client => (
+          <ClientListItem 
+            key={client.id}
+            client={client}
+            isSelected={selectedClient === client.id.toString()}
+            onClick={handleClientClick}
+            onRemove={onClientRemove}
+          />
+        ))}
+      </div>
       
       {/* Extra padding at the bottom to allow scrolling to see the last items */}
-      <div className="h-10" aria-hidden="true"></div>
+      <div className="h-6" aria-hidden="true"></div>
     </div>
   );
 };

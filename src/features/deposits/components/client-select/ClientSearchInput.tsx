@@ -35,9 +35,9 @@ export const ClientSearchInput = ({ value, onChange, isOpen, count }: ClientSear
   };
 
   return (
-    <div className="p-2 sticky top-0 bg-popover z-10 border-b mb-1">
+    <div className="bg-popover z-10 mb-1">
       <div className="relative">
-        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Search className="absolute left-2 top-2 h-4 w-4 text-muted-foreground" />
         <Input 
           ref={searchInputRef} 
           placeholder="Rechercher un client..." 
@@ -45,14 +45,14 @@ export const ClientSearchInput = ({ value, onChange, isOpen, count }: ClientSear
           onChange={handleInputChange} 
           onClick={e => e.stopPropagation()} 
           onTouchStart={e => e.stopPropagation()}
-          onKeyDown={e => e.stopPropagation()} // Prevent keyboard events from bubbling up
+          onKeyDown={e => e.stopPropagation()} 
           autoComplete="off" 
-          className="pl-8 pr-8 rounded-md" 
+          className="pl-8 pr-8 py-1 h-8 rounded-md" 
         />
         {value && (
           <button 
             type="button"
-            className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground" 
+            className="absolute right-2 top-2 h-4 w-4 text-muted-foreground" 
             onClick={(e) => {
               e.stopPropagation();
               clearSearch();
