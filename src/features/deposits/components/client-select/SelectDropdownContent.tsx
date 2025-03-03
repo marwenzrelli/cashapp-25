@@ -1,5 +1,5 @@
 
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import { SelectContent } from "@/components/ui/select";
 import { ClientSearchInput } from "./ClientSearchInput";
 import { ClientList } from "./ClientList";
@@ -32,6 +32,16 @@ export const SelectDropdownContent = ({
   contentRef
 }: SelectDropdownContentProps) => {
   const scrollableAreaRef = useRef<HTMLDivElement>(null);
+  
+  // Setup scrollable ref for the scrollable element
+  useEffect(() => {
+    if (contentRef.current) {
+      const scrollableArea = contentRef.current.querySelector('.overflow-y-auto') as HTMLDivElement;
+      if (scrollableArea) {
+        scrollableAreaRef.current = scrollableArea;
+      }
+    }
+  }, [contentRef, openState]);
   
   // Use the touch interaction hook
   useDropdownTouchInteractions(scrollableAreaRef, {
