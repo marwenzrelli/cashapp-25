@@ -82,6 +82,10 @@ export const useScrollDetection = (
       lastY = startY;
       startTime = Date.now();
       velocityY = 0;
+      
+      // Ensure the scroll area is ready for touch interaction
+      scrollableArea.style.overscrollBehavior = 'contain';
+      scrollableArea.style.WebkitOverflowScrolling = 'touch';
     };
     
     // Touch move - detect scrolling and calculate direction/velocity
@@ -95,12 +99,12 @@ export const useScrollDetection = (
       const currentTime = Date.now();
       const timeElapsed = currentTime - startTime;
       if (timeElapsed > 0) {
-        velocityY = (lastY - currentY) / timeElapsed;
+        velocityY = Math.abs(lastY - currentY) / timeElapsed;
       }
       lastY = currentY;
       
       // If significant movement, consider it scrolling
-      if (deltaY > 3) {
+      if (deltaY > 2) {
         setIsScrolling(true);
         
         // Reset timer on each significant movement
@@ -112,41 +116,73 @@ export const useScrollDetection = (
       lastTouchY.current = currentY;
     };
     
-    // Touch end - schedule end of scrolling state
+    // Touch end - schedule end of scrolling state and apply momentum
     const handleTouchEnd = (e: TouchEvent) => {
-      if (velocityY !== 0) {
+      if (Math.abs(velocityY) > 0.05) {
         // Apply momentum scrolling based on final velocity
-        const momentum = velocityY * 100; // Adjust multiplier for desired momentum effect
+        let currentVelocity = velocityY * 100; // Amplify velocity
+        const direction = lastY < startY ? 1 : -1; // 1 for down, -1 for up
+        
+        // Create smoother momentum effect
         const animateMomentumScroll = () => {
-          velocityY *= 0.95; // Gradually reduce velocity with friction
+          if (Math.abs(currentVelocity) < 0.05) return;
           
-          scrollableArea.scrollBy(0, velocityY * 10);
+          // Apply scroll with direction
+          scrollableArea.scrollBy({
+            top: direction * currentVelocity * 5,
+            behavior: 'auto'
+          });
           
-          if (Math.abs(velocityY) > 0.01) {
+          // Reduce velocity with friction
+          currentVelocity *= 0.92;
+          
+          if (Math.abs(currentVelocity) > 0.05) {
             requestAnimationFrame(animateMomentumScroll);
+          } else {
+            // End scrolling state after momentum finishes
+            setTimeout(() => {
+              setIsScrolling(false);
+            }, 100);
           }
         };
         
-        if (Math.abs(velocityY) > 0.05) {
-          requestAnimationFrame(animateMomentumScroll);
-        }
+        requestAnimationFrame(animateMomentumScroll);
       }
       
       touchStartY.current = null;
       lastTouchY.current = null;
       
-      // Keep scrolling state active briefly after touch ends
+      // Keep scrolling state active briefly after touch ends if no momentum
       if (scrollStateTimeoutRef.current) {
         window.clearTimeout(scrollStateTimeoutRef.current);
       }
       
-      // Delay longer to prevent accidental taps right after scrolling
-      // Apply longer delay for higher velocity scrolls
-      const endDelay = Math.min(300, Math.max(150, 150 + 1000 * scrollVelocityRef.current));
-      scrollStateTimeoutRef.current = window.setTimeout(() => {
-        setIsScrolling(false);
-      }, endDelay);
+      // Shorter delay if no significant momentum
+      if (Math.abs(velocityY) <= 0.05) {
+        scrollStateTimeoutRef.current = window.setTimeout(() => {
+          setIsScrolling(false);
+        }, 100);
+      }
     };
+    
+    // Ensure scrolling to end is possible - add padding
+    const ensureFullScrollable = () => {
+      // Add extra padding at bottom if needed
+      const listContainer = scrollableArea.querySelector('.client-list-container');
+      if (listContainer) {
+        const extraPadding = document.createElement('div');
+        extraPadding.className = 'h-48'; // 12rem extra space
+        extraPadding.id = 'extra-scroll-padding';
+        
+        // Only add if not already present
+        if (!scrollableArea.querySelector('#extra-scroll-padding')) {
+          listContainer.appendChild(extraPadding);
+        }
+      }
+    };
+    
+    // Initial setup to ensure full scrollability
+    setTimeout(ensureFullScrollable, 300);
     
     // Add all listeners
     scrollableArea.addEventListener('scroll', handleScroll, { passive: true });

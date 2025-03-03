@@ -46,10 +46,10 @@ export const ClientSelectDropdown = ({
       // Add passive touch listeners for better scrolling
       const scrollElement = scrollableAreaRef.current;
       
-      // Set CSS properties directly as strings to avoid TypeScript errors
+      // Set CSS properties for better touch scrolling
       scrollElement.style.cssText += 'overscroll-behavior: contain; -webkit-overflow-scrolling: touch;';
       
-      // Setup initial scroll position to enable swipe from top
+      // Setup initial scroll position to enable smooth scrolling
       setTimeout(() => {
         // Initial small scroll to enable momentum scrolling on iOS
         if (scrollElement.scrollTop === 0) {
@@ -57,49 +57,77 @@ export const ClientSelectDropdown = ({
         }
       }, 100);
 
-      // Add touchstart handler to detect initial touch position
+      // Enhanced touch handling for intuitive scrolling
       let startY = 0;
+      let lastY = 0;
+      let velocity = 0;
       let startTime = 0;
-      let isScrollingDown = false;
+      let isSwipingDown = false;
 
       const handleTouchStart = (e: TouchEvent) => {
         startY = e.touches[0].clientY;
+        lastY = startY;
         startTime = Date.now();
-        isScrollingDown = false;
+        isSwipingDown = false;
+        velocity = 0;
       };
 
       const handleTouchMove = (e: TouchEvent) => {
         const currentY = e.touches[0].clientY;
-        const deltaY = currentY - startY;
+        const deltaY = currentY - lastY;
+        const currentTime = Date.now();
+        const timeElapsed = currentTime - startTime;
         
-        // If moving finger down and content is at the top, start scrolling
-        if (deltaY > 5 && scrollElement.scrollTop <= 1) {
-          isScrollingDown = true;
+        // Calculate velocity in px/ms
+        if (timeElapsed > 0) {
+          velocity = deltaY / timeElapsed;
+        }
+        
+        // If at top of list and swiping down, apply natural resistance
+        if (deltaY > 0 && scrollElement.scrollTop <= 1) {
+          isSwipingDown = true;
+          // Apply some resistance for natural feel
+          scrollElement.scrollTop = 0;
+          // Prevent default only when needed
+          e.preventDefault();
+        }
+        
+        // Update for next move
+        lastY = currentY;
+      };
+      
+      const handleTouchEnd = (e: TouchEvent) => {
+        // Apply momentum scrolling on touch end
+        if (Math.abs(velocity) > 0.1) {
+          let currentVelocity = velocity * 20; // Amplify for better feel
+          const direction = Math.sign(currentVelocity);
           
-          // Calculate velocity-based scrolling
-          const timeDelta = Date.now() - startTime;
-          const velocity = Math.abs(deltaY) / timeDelta;
+          const animateMomentumScroll = () => {
+            scrollElement.scrollBy(0, currentVelocity);
+            currentVelocity *= 0.95; // Apply friction
+            
+            if (Math.abs(currentVelocity) > 0.5) {
+              requestAnimationFrame(animateMomentumScroll);
+            }
+          };
           
-          // Apply scroll based on finger movement and velocity
-          const scrollAmount = deltaY * (1 + velocity * 10);
-          
-          // Apply some resistance at the beginning for natural feel
-          const dampenedScroll = Math.min(scrollAmount / 2, 50);
-          
-          // Smooth scroll based on touch movement
-          scrollElement.scrollBy({
-            top: dampenedScroll,
-            behavior: 'auto'
-          });
+          requestAnimationFrame(animateMomentumScroll);
+        }
+        
+        // If swiping down at top of list with force, consider it a close gesture
+        if (isSwipingDown && velocity > 0.5) {
+          setOpenState(false);
         }
       };
 
       scrollElement.addEventListener('touchstart', handleTouchStart, { passive: true });
-      scrollElement.addEventListener('touchmove', handleTouchMove, { passive: true });
+      scrollElement.addEventListener('touchmove', handleTouchMove, { passive: false });
+      scrollElement.addEventListener('touchend', handleTouchEnd, { passive: true });
       
       return () => {
         scrollElement.removeEventListener('touchstart', handleTouchStart);
         scrollElement.removeEventListener('touchmove', handleTouchMove);
+        scrollElement.removeEventListener('touchend', handleTouchEnd);
       };
     }
   }, [openState]);
@@ -160,7 +188,10 @@ export const ClientSelectDropdown = ({
           <div 
             ref={scrollableAreaRef}
             className="touch-pan-y overflow-y-auto overscroll-contain h-full"
-            style={{ overscrollBehavior: 'contain' }}
+            style={{ 
+              overscrollBehavior: 'contain', 
+              WebkitOverflowScrolling: 'touch'
+            }}
           >
             <ClientList 
               clients={filteredClients} 
@@ -169,7 +200,6 @@ export const ClientSelectDropdown = ({
               onClientSelect={handleClientSelect}
               setOpenState={setOpenState}
             />
-            <div className="h-24"></div> {/* Extra space at bottom for easier scrolling */}
           </div>
         </div>
       </SelectContent>
