@@ -71,13 +71,6 @@ export const ClientSelectDropdown = ({
             e.preventDefault();
           }
         }}
-        onInteractOutside={e => {
-          // Prevent dropdown closing when scrolling
-          if (isScrolling) {
-            e.preventDefault();
-            return;
-          }
-        }}
       >
         <ClientSearchInput 
           value={clientSearch} 
