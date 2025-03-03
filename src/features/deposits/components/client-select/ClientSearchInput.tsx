@@ -27,6 +27,12 @@ export const ClientSearchInput = ({ value, onChange, isOpen }: ClientSearchInput
     searchInputRef.current?.focus();
   };
 
+  // Handle input changes without triggering selection
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation(); // Prevent the event from bubbling up to parent components
+    onChange(e.target.value);
+  };
+
   return (
     <div className="p-2 sticky top-0 bg-popover z-10 border-b mb-1">
       <div className="relative">
@@ -35,14 +41,23 @@ export const ClientSearchInput = ({ value, onChange, isOpen }: ClientSearchInput
           ref={searchInputRef} 
           placeholder="Rechercher un client..." 
           value={value} 
-          onChange={e => onChange(e.target.value)} 
+          onChange={handleInputChange} 
           onClick={e => e.stopPropagation()} 
           onTouchStart={e => e.stopPropagation()}
+          onKeyDown={e => e.stopPropagation()} // Prevent keyboard events from bubbling up
           autoComplete="off" 
           className="pl-8 pr-8 rounded-md" 
         />
         {value && (
-          <button className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground" onClick={clearSearch}>
+          <button 
+            type="button"
+            className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground" 
+            onClick={(e) => {
+              e.stopPropagation();
+              clearSearch();
+            }}
+            onTouchStart={e => e.stopPropagation()}
+          >
             ✕
           </button>
         )}
