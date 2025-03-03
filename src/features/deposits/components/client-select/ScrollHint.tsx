@@ -11,78 +11,58 @@ export const ScrollHint = ({ show }: ScrollHintProps) => {
   
   if (!show) return null;
   
-  // Improved function to scroll to bottom of list
+  // Better function to scroll to bottom of list
   const scrollToBottom = (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
     console.log('ScrollHint: attempting to scroll to bottom');
     
-    // Try multiple methods to find the scrollable container
+    // Direct targeting of the ScrollArea viewport
+    const container = document.querySelector('.client-list-container');
+    if (!container) return;
     
-    // Method 1: Try the ScrollArea viewport
-    const scrollAreaViewport = document.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+    const scrollAreaViewport = container.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
     if (scrollAreaViewport) {
       console.log('ScrollHint: found ScrollArea viewport, scrolling to bottom');
-      // Use smooth scrolling for better UX
+      
+      // Calculate the height of all content
+      const contentHeight = scrollAreaViewport.scrollHeight;
+      const containerHeight = scrollAreaViewport.clientHeight;
+      
+      // Use smooth scrolling with sufficient distance
       scrollAreaViewport.scrollTo({
-        top: scrollAreaViewport.scrollHeight,
+        top: contentHeight - containerHeight,
         behavior: 'smooth'
       });
-      return;
-    }
-    
-    // Method 2: Try the client-scrollable-area class
-    const scrollableArea = document.querySelector('.client-scrollable-area [data-radix-scroll-area-viewport]') as HTMLElement;
-    if (scrollableArea) {
-      console.log('ScrollHint: found client-scrollable-area, scrolling to bottom');
-      scrollableArea.scrollTo({
-        top: scrollableArea.scrollHeight,
-        behavior: 'smooth'
-      });
-      return;
-    }
-    
-    // Method 3: Find any element with overflow in the dropdown
-    const clientListContainer = document.querySelector('.client-list-container');
-    if (clientListContainer) {
-      const scrollElements = clientListContainer.querySelectorAll('*');
-      let scrolled = false;
       
-      scrollElements.forEach(el => {
-        const element = el as HTMLElement;
-        const computedStyle = window.getComputedStyle(element);
-        const hasScroll = element.scrollHeight > element.clientHeight && 
-                        (computedStyle.overflowY === 'auto' || 
-                         computedStyle.overflowY === 'scroll');
-        
-        if (hasScroll) {
-          console.log('ScrollHint: found scrollable element in client list', element);
-          element.scrollTo({
-            top: element.scrollHeight,
-            behavior: 'smooth'
-          });
-          scrolled = true;
-        }
-      });
+      // Add a quick feedback visual effect
+      if (hintRef.current) {
+        hintRef.current.classList.add('bg-muted/70');
+        setTimeout(() => {
+          if (hintRef.current) {
+            hintRef.current.classList.remove('bg-muted/70');
+          }
+        }, 200);
+      }
       
-      if (scrolled) return;
+      return;
     }
   };
   
-  // Use effect to enhance touch interactions
+  // Enhanced touch interactions
   useEffect(() => {
     const hintElement = hintRef.current;
     if (!hintElement) return;
     
     const handleTouchStart = (e: TouchEvent) => {
       e.stopPropagation();
-      hintElement.classList.add('bg-muted/50');
+      hintElement.classList.add('bg-muted/70');
     };
     
     const handleTouchEnd = (e: TouchEvent) => {
       e.stopPropagation();
-      hintElement.classList.remove('bg-muted/50');
+      hintElement.classList.remove('bg-muted/70');
       scrollToBottom(e as unknown as React.TouchEvent);
     };
     
@@ -103,7 +83,7 @@ export const ScrollHint = ({ show }: ScrollHintProps) => {
       aria-label="Voir plus de clients"
       role="button"
     >
-      <ArrowDown className="h-5 w-5 mr-2 text-primary" />
+      <ArrowDown className="h-5 w-5 mr-2 text-primary animate-bounce" />
       <span>Afficher plus de clients</span>
     </div>
   );
