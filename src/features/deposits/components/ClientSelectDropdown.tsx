@@ -24,8 +24,10 @@ export const ClientSelectDropdown = ({
   } = useCurrency();
   const [clientSearch, setClientSearch] = useState("");
   const [openState, setOpenState] = useState(false);
+  const [isScrolling, setIsScrolling] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const scrollTimerRef = useRef<number | null>(null);
 
   // Filtrer les clients en fonction de la recherche - amélioration de la recherche
   const filteredClients = clients.filter(client => {
@@ -49,6 +51,7 @@ export const ClientSelectDropdown = ({
       // Réinitialiser la recherche quand on ferme le dropdown
       if (!openState) {
         setClientSearch("");
+        setIsScrolling(false);
       }
     }
   }, [openState]);
@@ -60,29 +63,68 @@ export const ClientSelectDropdown = ({
       const hammer = new Hammer.Manager(scrollArea);
       const swipe = new Hammer.Swipe({
         direction: Hammer.DIRECTION_HORIZONTAL,
-        // Augmenter ces valeurs pour rendre le swipe moins sensible
-        threshold: 30, // Augmenté de 10 à 30
-        velocity: 0.5  // Augmenté de 0.3 à 0.5
+        // Valeurs encore plus élevées pour éviter les fermetures accidentelles
+        threshold: 50, // Augmenté à 50
+        velocity: 0.7  // Augmenté à 0.7
       });
+      
       hammer.add(swipe);
+      
+      // Détection du début de défilement
+      scrollArea.addEventListener('touchstart', () => {
+        setIsScrolling(true);
+      }, { passive: true });
+      
+      // Détection de la fin de défilement avec un délai
+      scrollArea.addEventListener('touchend', () => {
+        if (scrollTimerRef.current) {
+          window.clearTimeout(scrollTimerRef.current);
+        }
+        
+        scrollTimerRef.current = window.setTimeout(() => {
+          setIsScrolling(false);
+        }, 200); // Délai avant de considérer que le défilement est terminé
+      }, { passive: true });
+      
       hammer.on('swipe', e => {
-        // Ne détecter que les swipes horizontaux intentionnels
-        if (e.direction === Hammer.DIRECTION_LEFT && e.distance > 50) { // Ajouter une distance minimale
-          console.log('Swipe horizontal gauche détecté');
+        // Ignorer les swipes pendant le défilement vertical ou juste après
+        if (isScrolling) return;
+        
+        // Ne détecter que les swipes horizontaux très intentionnels
+        if (e.direction === Hammer.DIRECTION_LEFT && e.distance > 80 && Math.abs(e.velocityX) > 0.8) {
+          console.log('Swipe horizontal gauche intentionnel détecté', {
+            distance: e.distance,
+            velocity: e.velocityX,
+            direction: e.direction
+          });
           setOpenState(false);
         }
       });
+      
       return () => {
         hammer.destroy();
+        scrollArea.removeEventListener('touchstart', () => setIsScrolling(true));
+        scrollArea.removeEventListener('touchend', () => setIsScrolling(false));
+        if (scrollTimerRef.current) {
+          window.clearTimeout(scrollTimerRef.current);
+        }
       };
     }
-  }, [openState]);
+  }, [openState, isScrolling]);
 
   const handleClientClick = (clientId: string) => {
+    // Ignorer les clics immédiatement après le défilement
+    if (isScrolling) {
+      console.log('Clic ignoré - défilement en cours');
+      return;
+    }
+    
     onClientSelect(clientId);
     if (window.navigator && window.navigator.vibrate) {
       window.navigator.vibrate(20);
     }
+    
+    // Ajouter un délai avant de fermer pour s'assurer que les animations sont terminées
     setTimeout(() => setOpenState(false), 300);
   };
 
@@ -98,7 +140,12 @@ export const ClientSelectDropdown = ({
   };
 
   return (
-    <Select value={selectedClient} onValueChange={onClientSelect} open={openState} onOpenChange={setOpenState}>
+    <Select 
+      value={selectedClient} 
+      onValueChange={onClientSelect} 
+      open={openState} 
+      onOpenChange={setOpenState}
+    >
       <SelectTrigger className="w-full min-h-[42px] touch-manipulation text-zinc-950">
         <SelectValue placeholder="Sélectionner un client">
           {selectedClient ? getSelectedClientName() : "Sélectionner un client"}
@@ -145,7 +192,7 @@ export const ClientSelectDropdown = ({
           ref={scrollAreaRef}
         >
           <div className="text-xs text-muted-foreground px-2 py-2 bg-muted/30 sticky top-0 z-10">
-            <span>← Glisser vers la gauche pour fermer • {filteredClients.length} clients</span>
+            <span>← Glisser fortement vers la gauche pour fermer • {filteredClients.length} clients</span>
           </div>
           {filteredClients.length === 0 ? (
             <div className="p-4 text-center text-muted-foreground">
@@ -158,25 +205,37 @@ export const ClientSelectDropdown = ({
                 value={client.id.toString()}
                 className="flex items-center justify-between py-5 px-3 cursor-pointer touch-manipulation select-none active:bg-primary/10"
                 onPointerDown={e => {
+                  // Ignorer les clics immédiatement après le défilement
+                  if (isScrolling) {
+                    e.preventDefault();
+                    return;
+                  }
                   e.preventDefault();
                   e.stopPropagation();
                   handleClientClick(client.id.toString());
                 }}
-                // Modifier les gestionnaires d'événements tactiles pour éviter les fermetures indésirables
+                // Gestion améliorée des événements tactiles
                 onTouchStart={e => {
-                  // Juste arrêter la propagation, ne pas prévenir le comportement par défaut
+                  // Simplement arrêter la propagation sans empêcher le comportement par défaut
                   e.stopPropagation();
                 }}
                 onTouchEnd={e => {
-                  // Prévenir le comportement par défaut seulement sur la fin du toucher
-                  // pour éviter les fermetures accidentelles pendant le défilement
+                  // Ignorer les événements tactiles pendant ou juste après le défilement
+                  if (isScrolling) {
+                    console.log('Toucher final ignoré - défilement en cours');
+                    return;
+                  }
+                  
                   if (!e.currentTarget.contains(e.target as Node)) return;
+                  
+                  // Seulement maintenant prévenir le comportement par défaut
                   e.preventDefault();
                   e.stopPropagation();
                   handleClientClick(client.id.toString());
                 }}
                 // Empêcher le défilement de fermer le dropdown
                 onTouchMove={e => {
+                  setIsScrolling(true);
                   e.stopPropagation();
                 }}
               >
