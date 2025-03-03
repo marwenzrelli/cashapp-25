@@ -1,12 +1,13 @@
 
-import { useState, useEffect, useRef } from "react";
-import { Search, UserCircle } from "lucide-react";
-import * as Hammer from "hammerjs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
+import { useRef, useState } from "react";
+import { Select, SelectContent, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { type Client } from "@/features/clients/types";
-import { useCurrency } from "@/contexts/CurrencyContext";
+import { ClientSearchInput } from "./client-select/ClientSearchInput";
+import { ClientList } from "./client-select/ClientList";
+import { useClientFilter } from "./client-select/useClientFilter";
+import { useScrollDetection } from "./client-select/useScrollDetection";
+import { useSwipeToClose } from "./client-select/useSwipeToClose";
 
 interface ClientSelectDropdownProps {
   clients: Client[];
@@ -19,130 +20,29 @@ export const ClientSelectDropdown = ({
   selectedClient,
   onClientSelect
 }: ClientSelectDropdownProps) => {
-  const {
-    currency
-  } = useCurrency();
-  const [clientSearch, setClientSearch] = useState("");
   const [openState, setOpenState] = useState(false);
-  const [isScrolling, setIsScrolling] = useState(false);
-  const searchInputRef = useRef<HTMLInputElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const scrollTimerRef = useRef<number | null>(null);
-
-  // Filtrer les clients en fonction de la recherche - amélioration de la recherche
-  const filteredClients = clients.filter(client => {
-    if (!clientSearch.trim()) return true;
-    const fullName = `${client.prenom} ${client.nom}`.toLowerCase();
-    const searchTerm = clientSearch.toLowerCase().trim();
-
-    // Chercher dans le nom, prénom ou numéro de téléphone
-    return fullName.includes(searchTerm) || 
-           (client.telephone && client.telephone.includes(searchTerm)) || 
-           client.id.toString().includes(searchTerm);
-  });
-
-  // Focus sur le champ de recherche lorsque le dropdown est ouvert
-  useEffect(() => {
-    if (openState && searchInputRef.current) {
-      setTimeout(() => {
-        searchInputRef.current?.focus();
-      }, 100);
-    } else {
-      // Réinitialiser la recherche quand on ferme le dropdown
-      if (!openState) {
-        setClientSearch("");
-        setIsScrolling(false);
-      }
-    }
-  }, [openState]);
-
-  // Configuration de Hammer.js pour les gestes tactiles
-  useEffect(() => {
-    const scrollArea = scrollAreaRef.current;
-    if (scrollArea && openState) {
-      const hammer = new Hammer.Manager(scrollArea);
-      const swipe = new Hammer.Swipe({
-        direction: Hammer.DIRECTION_HORIZONTAL,
-        // Valeurs encore plus élevées pour éviter les fermetures accidentelles
-        threshold: 50, // Augmenté à 50
-        velocity: 0.7  // Augmenté à 0.7
-      });
-      
-      hammer.add(swipe);
-      
-      // Détection du début de défilement
-      scrollArea.addEventListener('touchstart', () => {
-        setIsScrolling(true);
-      }, { passive: true });
-      
-      // Détection de la fin de défilement avec un délai
-      scrollArea.addEventListener('touchend', () => {
-        if (scrollTimerRef.current) {
-          window.clearTimeout(scrollTimerRef.current);
-        }
-        
-        scrollTimerRef.current = window.setTimeout(() => {
-          setIsScrolling(false);
-        }, 200); // Délai avant de considérer que le défilement est terminé
-      }, { passive: true });
-      
-      hammer.on('swipe', e => {
-        // Ignorer les swipes pendant le défilement vertical ou juste après
-        if (isScrolling) return;
-        
-        // Ne détecter que les swipes horizontaux très intentionnels
-        if (e.direction === Hammer.DIRECTION_LEFT && e.distance > 80 && Math.abs(e.velocityX) > 0.8) {
-          console.log('Swipe horizontal gauche intentionnel détecté', {
-            distance: e.distance,
-            velocity: e.velocityX,
-            direction: e.direction
-          });
-          setOpenState(false);
-        }
-      });
-      
-      return () => {
-        hammer.destroy();
-        scrollArea.removeEventListener('touchstart', () => setIsScrolling(true));
-        scrollArea.removeEventListener('touchend', () => setIsScrolling(false));
-        if (scrollTimerRef.current) {
-          window.clearTimeout(scrollTimerRef.current);
-        }
-      };
-    }
-  }, [openState, isScrolling]);
-
-  const handleClientClick = (clientId: string) => {
-    // Ignorer les clics immédiatement après le défilement
-    if (isScrolling) {
-      console.log('Clic ignoré - défilement en cours');
-      return;
-    }
-    
-    onClientSelect(clientId);
-    if (window.navigator && window.navigator.vibrate) {
-      window.navigator.vibrate(20);
-    }
-    
-    // Ajouter un délai avant de fermer pour s'assurer que les animations sont terminées
-    setTimeout(() => setOpenState(false), 300);
-  };
+  
+  // Use our custom hooks
+  const { clientSearch, setClientSearch, filteredClients } = useClientFilter(clients, openState);
+  const [isScrolling, clearScrolling] = useScrollDetection(scrollAreaRef);
+  useSwipeToClose(scrollAreaRef, openState, () => setOpenState(false), isScrolling);
 
   const getSelectedClientName = () => {
     const client = clients.find(c => c.id.toString() === selectedClient);
     return client ? `${client.prenom} ${client.nom}` : "Sélectionner un client";
   };
 
-  // Fonction pour effacer la recherche
-  const clearSearch = () => {
-    setClientSearch("");
-    searchInputRef.current?.focus();
+  const handleClientSelect = (clientId: string) => {
+    onClientSelect(clientId);
+    // Add a delay before closing to ensure animations are completed
+    setTimeout(() => setOpenState(false), 300);
   };
 
   return (
     <Select 
       value={selectedClient} 
-      onValueChange={onClientSelect} 
+      onValueChange={handleClientSelect} 
       open={openState} 
       onOpenChange={setOpenState}
     >
@@ -160,33 +60,18 @@ export const ClientSelectDropdown = ({
           setOpenState(false);
         }} 
         onPointerDownOutside={e => {
-          // Empêcher la fermeture pendant le défilement ou les interactions à l'intérieur
+          // Prevent closing during scrolling or interactions inside
           const target = e.target as HTMLElement;
           if (!target.closest('[data-radix-select-content]')) {
             e.preventDefault();
           }
         }}
       >
-        <div className="p-2 sticky top-0 bg-popover z-10 border-b mb-1">
-          <div className="relative">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input 
-              ref={searchInputRef} 
-              placeholder="Rechercher un client..." 
-              value={clientSearch} 
-              onChange={e => setClientSearch(e.target.value)} 
-              onClick={e => e.stopPropagation()} 
-              onTouchStart={e => e.stopPropagation()}
-              autoComplete="off" 
-              className="pl-8 pr-8 rounded-md" 
-            />
-            {clientSearch && (
-              <button className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground" onClick={clearSearch}>
-                ✕
-              </button>
-            )}
-          </div>
-        </div>
+        <ClientSearchInput 
+          value={clientSearch} 
+          onChange={setClientSearch} 
+          isOpen={openState} 
+        />
         <ScrollArea 
           className="h-[60vh] max-h-[450px] touch-auto overflow-y-auto overscroll-contain" 
           ref={scrollAreaRef}
@@ -194,64 +79,12 @@ export const ClientSelectDropdown = ({
           <div className="text-xs text-muted-foreground px-2 py-2 bg-muted/30 sticky top-0 z-10">
             <span>← Glisser fortement vers la gauche pour fermer • {filteredClients.length} clients</span>
           </div>
-          {filteredClients.length === 0 ? (
-            <div className="p-4 text-center text-muted-foreground">
-              Aucun client trouvé
-            </div>
-          ) : (
-            filteredClients.map(client => (
-              <SelectItem
-                key={client.id}
-                value={client.id.toString()}
-                className="flex items-center justify-between py-5 px-3 cursor-pointer touch-manipulation select-none active:bg-primary/10"
-                onPointerDown={e => {
-                  // Ignorer les clics immédiatement après le défilement
-                  if (isScrolling) {
-                    e.preventDefault();
-                    return;
-                  }
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleClientClick(client.id.toString());
-                }}
-                // Gestion améliorée des événements tactiles
-                onTouchStart={e => {
-                  // Simplement arrêter la propagation sans empêcher le comportement par défaut
-                  e.stopPropagation();
-                }}
-                onTouchEnd={e => {
-                  // Ignorer les événements tactiles pendant ou juste après le défilement
-                  if (isScrolling) {
-                    console.log('Toucher final ignoré - défilement en cours');
-                    return;
-                  }
-                  
-                  if (!e.currentTarget.contains(e.target as Node)) return;
-                  
-                  // Seulement maintenant prévenir le comportement par défaut
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleClientClick(client.id.toString());
-                }}
-                // Empêcher le défilement de fermer le dropdown
-                onTouchMove={e => {
-                  setIsScrolling(true);
-                  e.stopPropagation();
-                }}
-              >
-                <div className="flex items-center gap-2">
-                  <UserCircle className="h-6 w-6 text-primary/80 flex-shrink-0" />
-                  <span className="font-medium">
-                    {client.prenom} {client.nom}
-                  </span>
-                </div>
-                <span className={`font-mono text-sm ${client.solde >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                  {client.solde.toLocaleString()} {currency}
-                </span>
-              </SelectItem>
-            ))
-          )}
-          <div className="h-12"></div> {/* Espace supplémentaire en bas pour faciliter le défilement */}
+          <ClientList 
+            clients={filteredClients} 
+            selectedClient={selectedClient} 
+            isScrolling={isScrolling} 
+            onClientSelect={handleClientSelect} 
+          />
         </ScrollArea>
       </SelectContent>
     </Select>
