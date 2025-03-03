@@ -101,7 +101,7 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md w-[calc(100%-2rem)] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Nouveau versement</DialogTitle>
           <DialogDescription>
@@ -135,11 +135,11 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
             onDescriptionChange={setDescription}
           />
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="flex-col sm:flex-row gap-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
             Annuler
           </Button>
-          <Button onClick={handleSubmit} disabled={isLoading}>
+          <Button onClick={handleSubmit} disabled={isLoading} className="w-full sm:w-auto">
             {isLoading ? "Enregistrement..." : "Enregistrer"}
           </Button>
         </DialogFooter>
