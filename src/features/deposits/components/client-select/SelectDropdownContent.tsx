@@ -1,3 +1,4 @@
+
 import React from "react";
 import { SelectContent } from "@/components/ui/select";
 import { ClientSearchInput } from "./ClientSearchInput";
@@ -49,6 +50,7 @@ export const SelectDropdownContent = ({
           value={clientSearch} 
           onChange={setClientSearch} 
           count={filteredClients.length}
+          isOpen={openState}
         />
       </div>
       

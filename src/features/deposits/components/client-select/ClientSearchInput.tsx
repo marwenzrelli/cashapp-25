@@ -6,10 +6,11 @@ import { Input } from "@/components/ui/input";
 interface ClientSearchInputProps {
   value: string;
   onChange: (value: string) => void;
-  isOpen: boolean;
+  isOpen?: boolean;
+  count?: number;
 }
 
-export const ClientSearchInput = ({ value, onChange, isOpen }: ClientSearchInputProps) => {
+export const ClientSearchInput = ({ value, onChange, isOpen, count }: ClientSearchInputProps) => {
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Focus on search input when dropdown opens
@@ -62,6 +63,11 @@ export const ClientSearchInput = ({ value, onChange, isOpen }: ClientSearchInput
           </button>
         )}
       </div>
+      {count !== undefined && (
+        <div className="text-xs text-muted-foreground mt-1 ml-1">
+          {count} {count === 1 ? 'client trouvé' : 'clients trouvés'}
+        </div>
+      )}
     </div>
   );
 };
