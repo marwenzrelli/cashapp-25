@@ -50,7 +50,7 @@ export const ScrollHint = ({ show }: ScrollHintProps) => {
         e.stopPropagation();
         
         // Find the ScrollArea viewport and scroll to the bottom
-        const scrollArea = document.querySelector('.client-list-container .scrollarea-viewport') as HTMLElement;
+        const scrollArea = document.querySelector('.scrollarea-viewport') as HTMLElement;
         if (scrollArea) {
           scrollArea.scrollTo({
             top: scrollArea.scrollHeight,

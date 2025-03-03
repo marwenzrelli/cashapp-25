@@ -58,7 +58,7 @@ export const ClientList = ({
         className="h-[calc(100vh-220px)] max-h-[430px] scrollarea-viewport"
         style={{
           scrollbarWidth: 'thin',
-          msOverflowStyle: 'autohiding-scrollbar',
+          msOverflowStyle: '-ms-autohiding-scrollbar',
         }}
       >
         <div className="py-0.5">
