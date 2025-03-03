@@ -26,6 +26,7 @@ export const ClientSelectDropdown = ({
 }: ClientSelectDropdownProps) => {
   const { currency } = useCurrency();
   const [clientSearch, setClientSearch] = useState("");
+  const [openState, setOpenState] = useState(false);
   
   // Filtrer les clients en fonction de la recherche
   const filteredClients = clients.filter(client => {
@@ -37,12 +38,16 @@ export const ClientSelectDropdown = ({
   const handleClientClick = (clientId: string) => {
     // Prevent default to avoid closing the dropdown
     onClientSelect(clientId);
+    // Don't close the dropdown immediately on mobile to allow the user to see their selection
+    setTimeout(() => setOpenState(false), 300);
   };
 
   return (
     <Select 
       value={selectedClient} 
       onValueChange={onClientSelect}
+      open={openState}
+      onOpenChange={setOpenState}
     >
       <SelectTrigger className="w-full">
         <SelectValue placeholder="Sélectionner un client" />
@@ -51,8 +56,17 @@ export const ClientSelectDropdown = ({
         className="max-h-[70vh] overflow-hidden" 
         position="popper"
         sideOffset={5}
-        onEscapeKeyDown={(e) => e.preventDefault()}
-        onPointerDownOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => {
+          e.preventDefault();
+          setOpenState(false);
+        }}
+        onPointerDownOutside={(e) => {
+          const target = e.target as HTMLElement;
+          // Only close if not clicking inside the dropdown
+          if (!target.closest('[data-radix-select-content]')) {
+            e.preventDefault();
+          }
+        }}
       >
         <div className="p-2 sticky top-0 bg-popover z-10 border-b mb-1">
           <div className="relative">
@@ -62,6 +76,7 @@ export const ClientSelectDropdown = ({
               value={clientSearch}
               onChange={(e) => setClientSearch(e.target.value)}
               className="pl-8"
+              onClick={(e) => e.stopPropagation()}
             />
           </div>
         </div>
@@ -79,7 +94,12 @@ export const ClientSelectDropdown = ({
                 onPointerDown={(e) => {
                   // Prevent default to maintain the dropdown open
                   e.preventDefault();
+                  e.stopPropagation();
                   handleClientClick(client.id.toString());
+                }}
+                onTouchStart={(e) => {
+                  // Prevent default touch behavior on mobile
+                  e.stopPropagation();
                 }}
               >
                 <div className="flex items-center gap-2">
