@@ -1,5 +1,6 @@
 
 import { useRef } from "react";
+import { SelectItem } from "@/components/ui/select";
 import { type Client } from "@/features/clients/types";
 import { useClientListTouchHandlers } from "./useClientListTouchHandlers";
 import { ClientListItem } from "./ClientListItem";
@@ -48,24 +49,22 @@ export const ClientList = ({
   }
 
   return (
-    <div 
-      ref={listRef} 
-      className="client-list-container max-h-[calc(100%-40px)] overflow-y-auto"
-    >
+    <div ref={listRef} className="client-list-container pb-56">
       {/* Visual hint for vertical swiping - only show with more than 5 clients */}
       <ScrollHint show={clients.length > 5} />
       
-      <div className="pt-1 pb-12">
-        {clients.map(client => (
-          <ClientListItem 
-            key={client.id}
-            client={client}
-            isSelected={selectedClient === client.id.toString()}
-            onClick={handleClientClick}
-            onRemove={onClientRemove}
-          />
-        ))}
-      </div>
+      {clients.map(client => (
+        <ClientListItem 
+          key={client.id}
+          client={client}
+          isSelected={selectedClient === client.id.toString()}
+          onClick={handleClientClick}
+          onRemove={onClientRemove}
+        />
+      ))}
+      
+      {/* Extra padding at the bottom to allow scrolling to see the last items */}
+      <div className="h-10" aria-hidden="true"></div>
     </div>
   );
 };
