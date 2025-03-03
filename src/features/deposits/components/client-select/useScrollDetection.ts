@@ -38,6 +38,9 @@ export const useScrollDetection = (
     let startTime = 0;
     let velocityY = 0;
     
+    // Apply webkit overflow scrolling for better iOS performance
+    (scrollableArea.style as any)['-webkit-overflow-scrolling'] = 'touch';
+    
     // Calculate scroll velocity
     const calculateScrollVelocity = (newScrollTop: number) => {
       const now = Date.now();
@@ -164,25 +167,6 @@ export const useScrollDetection = (
         }, 100);
       }
     };
-    
-    // Ensure scrolling to end is possible - add padding
-    const ensureFullScrollable = () => {
-      // Add extra padding at bottom if needed
-      const listContainer = scrollableArea.querySelector('.client-list-container');
-      if (listContainer) {
-        const extraPadding = document.createElement('div');
-        extraPadding.className = 'h-48'; // 12rem extra space
-        extraPadding.id = 'extra-scroll-padding';
-        
-        // Only add if not already present
-        if (!scrollableArea.querySelector('#extra-scroll-padding')) {
-          listContainer.appendChild(extraPadding);
-        }
-      }
-    };
-    
-    // Initial setup to ensure full scrollability
-    setTimeout(ensureFullScrollable, 300);
     
     // Add all listeners
     scrollableArea.addEventListener('scroll', handleScroll, { passive: true });

@@ -138,7 +138,7 @@ export const ClientList = ({
   };
 
   return (
-    <div ref={listRef} className="client-list-container">
+    <div ref={listRef} className="client-list-container pb-48">
       {clients.length === 0 ? (
         <div className="p-4 text-center text-muted-foreground">
           Aucun client trouvé
@@ -166,9 +166,14 @@ export const ClientList = ({
                 }
               }} 
               data-client-id={client.id.toString()} 
-              className={`rounded-lg my-[10px] mx-[10px] ${selectedClient === client.id.toString() ? 'bg-primary/10' : ''}`}
+              className={`
+                rounded-lg my-2 mx-3 p-2 transition-colors
+                ${selectedClient === client.id.toString() 
+                  ? 'bg-primary/15 border-l-4 border-primary' 
+                  : 'hover:bg-muted/50'}
+              `}
             >
-              <div className="flex items-center justify-between gap-3 p-2">
+              <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <UserCircle className="h-10 w-10 text-primary/80 flex-shrink-0" />
                   <div className="flex flex-col">
@@ -186,9 +191,6 @@ export const ClientList = ({
               <SelectItem value={client.id.toString()} className="sr-only" />
             </div>
           ))}
-
-          {/* Extra space au bas de la liste pour faciliter le défilement jusqu'en bas */}
-          <div className="h-48"></div>
         </>
       )}
     </div>

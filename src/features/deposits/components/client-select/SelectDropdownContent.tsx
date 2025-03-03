@@ -67,15 +67,14 @@ export const SelectDropdownContent = ({
             onChange={setClientSearch} 
             isOpen={openState} 
           />
-          <div className="text-xs text-muted-foreground px-2 py-2 bg-muted/30 z-10">
+          <div className="text-xs text-muted-foreground px-2 py-2 bg-muted/30 z-10 sticky top-0">
             <span>{filteredClients.length} clients</span>
           </div>
           <div 
             ref={scrollableAreaRef}
             className="touch-pan-y overflow-y-auto overscroll-contain h-full"
             style={{ 
-              overscrollBehavior: 'contain', 
-              WebkitOverflowScrolling: 'touch'
+              overscrollBehavior: 'contain'
             }}
           >
             <ClientList 
