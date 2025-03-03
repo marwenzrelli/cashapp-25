@@ -1,11 +1,7 @@
-
-import { useRef, useEffect } from "react";
+import React from "react";
 import { SelectContent } from "@/components/ui/select";
 import { ClientSearchInput } from "./ClientSearchInput";
 import { ClientList } from "./ClientList";
-import { useScrollDetection } from "./useScrollDetection";
-import { useDropdownTouchInteractions } from "./useDropdownTouchInteractions";
-import { TouchPropagationHandler } from "./TouchPropagationHandler";
 import { type Client } from "@/features/clients/types";
 
 interface SelectDropdownContentProps {
@@ -13,7 +9,7 @@ interface SelectDropdownContentProps {
   setOpenState: (open: boolean) => void;
   isScrolling: boolean;
   clientSearch: string;
-  setClientSearch: (value: string) => void;
+  setClientSearch: (search: string) => void;
   filteredClients: Client[];
   selectedClient: string;
   onClientSelect: (clientId: string) => void;
@@ -31,73 +27,39 @@ export const SelectDropdownContent = ({
   onClientSelect,
   contentRef
 }: SelectDropdownContentProps) => {
-  const scrollableAreaRef = useRef<HTMLDivElement>(null);
-  
-  // Setup scrollable ref for the scrollable element
-  useEffect(() => {
-    if (contentRef.current) {
-      const scrollableArea = contentRef.current.querySelector('.overflow-y-auto') as HTMLDivElement;
-      if (scrollableArea) {
-        scrollableAreaRef.current = scrollableArea;
-      }
-    }
-  }, [contentRef, openState]);
-  
-  // Use the touch interaction hook
-  useDropdownTouchInteractions(scrollableAreaRef, {
-    openState,
-    onClose: () => setOpenState(false)
-  });
+
+  const handleClientRemove = (clientId: string) => {
+    // Clearing the selection
+    onClientSelect("");
+    
+    // Close the dropdown after a short delay
+    setTimeout(() => {
+      setOpenState(false);
+    }, 300);
+  };
 
   return (
-    <>
-      <TouchPropagationHandler contentRef={contentRef} openState={openState} />
+    <SelectContent 
+      ref={contentRef} 
+      className="client-select-content h-80 w-full p-0 overflow-hidden"
+      style={{ touchAction: 'manipulation' }}
+    >
+      <div className="sticky top-0 z-10 bg-white dark:bg-zinc-950 pt-1 px-4 pb-2">
+        <ClientSearchInput 
+          value={clientSearch} 
+          onChange={setClientSearch} 
+          count={filteredClients.length}
+        />
+      </div>
       
-      <SelectContent 
-        className="max-h-[85vh] max-w-[calc(100vw-2rem)] p-0 overflow-hidden rounded-lg border-2 shadow-lg" 
-        position="popper" 
-        sideOffset={5} 
-        onEscapeKeyDown={e => {
-          e.preventDefault();
-          setOpenState(false);
-        }} 
-        onPointerDownOutside={e => {
-          // Completely prevent closing on pointer down outside during scrolling
-          if (isScrolling) {
-            e.preventDefault();
-          }
-        }}
-      >
-        <div 
-          ref={contentRef} 
-          className="overflow-hidden flex flex-col h-[70vh] max-h-[500px]"
-        >
-          <ClientSearchInput 
-            value={clientSearch} 
-            onChange={setClientSearch} 
-            isOpen={openState} 
-          />
-          <div className="text-xs text-muted-foreground px-4 py-2 bg-muted/30 z-10 sticky top-0 border-b">
-            <span>{filteredClients.length} clients</span>
-          </div>
-          <div 
-            ref={scrollableAreaRef}
-            className="touch-pan-y overflow-y-auto overscroll-contain h-full"
-            style={{ 
-              overscrollBehavior: 'contain',
-              WebkitOverflowScrolling: 'touch'
-            }}
-          >
-            <ClientList 
-              clients={filteredClients} 
-              selectedClient={selectedClient} 
-              isScrolling={isScrolling} 
-              onClientSelect={onClientSelect}
-              setOpenState={setOpenState}
-            />
-          </div>
-        </div>
-      </SelectContent>
-    </>
+      <ClientList 
+        clients={filteredClients}
+        selectedClient={selectedClient}
+        isScrolling={isScrolling}
+        onClientSelect={onClientSelect}
+        onClientRemove={handleClientRemove}
+        setOpenState={setOpenState}
+      />
+    </SelectContent>
   );
 };

@@ -12,6 +12,7 @@ interface ClientListProps {
   selectedClient: string;
   isScrolling: boolean;
   onClientSelect: (clientId: string) => void;
+  onClientRemove?: (clientId: string) => void;
   setOpenState: (open: boolean) => void;
 }
 
@@ -20,6 +21,7 @@ export const ClientList = ({
   selectedClient,
   isScrolling,
   onClientSelect,
+  onClientRemove,
   setOpenState
 }: ClientListProps) => {
   const listRef = useRef<HTMLDivElement>(null);
@@ -57,6 +59,7 @@ export const ClientList = ({
           client={client}
           isSelected={selectedClient === client.id.toString()}
           onClick={handleClientClick}
+          onRemove={onClientRemove}
         />
       ))}
       

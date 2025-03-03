@@ -1,5 +1,5 @@
 
-import { UserCircle } from "lucide-react";
+import { UserCircle, Check } from "lucide-react";
 import { SelectItem } from "@/components/ui/select";
 import { type Client } from "@/features/clients/types";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -8,14 +8,24 @@ interface ClientListItemProps {
   client: Client;
   isSelected: boolean;
   onClick: (clientId: string, e: React.MouseEvent | React.TouchEvent) => void;
+  onRemove?: (clientId: string) => void;
 }
 
 export const ClientListItem = ({
   client,
   isSelected,
-  onClick
+  onClick,
+  onRemove
 }: ClientListItemProps) => {
   const { currency } = useCurrency();
+
+  const handleRemove = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (onRemove) {
+      onRemove(client.id.toString());
+    }
+  };
 
   return (
     <div 
@@ -23,7 +33,7 @@ export const ClientListItem = ({
       onTouchEnd={e => onClick(client.id.toString(), e)} 
       data-client-id={client.id.toString()} 
       className={`
-        rounded-lg my-2 mx-3 p-3 transition-all
+        rounded-lg my-2 mx-3 p-3 transition-all relative
         ${isSelected 
           ? 'bg-primary/15 border-l-4 border-primary shadow-sm' 
           : 'hover:bg-muted/50 active:bg-muted/70'}
@@ -46,6 +56,15 @@ export const ClientListItem = ({
           {client.solde.toLocaleString()} {currency}
         </span>
       </div>
+      
+      {isSelected && (
+        <div 
+          className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-primary flex items-center justify-center cursor-pointer hover:bg-primary/80"
+          onClick={handleRemove}
+        >
+          <Check className="h-5 w-5 text-white" />
+        </div>
+      )}
       
       {/* Hidden SelectItem to maintain the Select's value state */}
       <SelectItem value={client.id.toString()} className="sr-only" />
