@@ -50,7 +50,7 @@ export const ClientList = ({
                 </span>
               </div>
             </div>
-            <span className={`font-mono text-lg font-semibold ${client.solde >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+            <span className="text-center">
               {client.solde.toLocaleString()} {currency}
             </span>
             
