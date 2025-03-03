@@ -60,14 +60,15 @@ export const ClientSelectDropdown = ({
       const hammer = new Hammer.Manager(scrollArea);
       const swipe = new Hammer.Swipe({
         direction: Hammer.DIRECTION_HORIZONTAL,
-        threshold: 10,
-        // Seuil plus bas pour une détection plus sensible
-        velocity: 0.3 // Vitesse plus basse pour une détection plus facile
+        // Augmenter ces valeurs pour rendre le swipe moins sensible
+        threshold: 30, // Augmenté de 10 à 30
+        velocity: 0.5  // Augmenté de 0.3 à 0.5
       });
       hammer.add(swipe);
       hammer.on('swipe', e => {
-        if (e.direction === Hammer.DIRECTION_LEFT) {
-          console.log('Swipe à gauche détecté');
+        // Ne détecter que les swipes horizontaux intentionnels
+        if (e.direction === Hammer.DIRECTION_LEFT && e.distance > 50) { // Ajouter une distance minimale
+          console.log('Swipe horizontal gauche détecté');
           setOpenState(false);
         }
       });
@@ -103,19 +104,35 @@ export const ClientSelectDropdown = ({
           {selectedClient ? getSelectedClientName() : "Sélectionner un client"}
         </SelectValue>
       </SelectTrigger>
-      <SelectContent className="max-h-[80vh] max-w-[calc(100vw-2rem)] p-0 overflow-hidden" position="popper" sideOffset={5} onEscapeKeyDown={e => {
-      e.preventDefault();
-      setOpenState(false);
-    }} onPointerDownOutside={e => {
-      const target = e.target as HTMLElement;
-      if (!target.closest('[data-radix-select-content]')) {
-        e.preventDefault();
-      }
-    }}>
+      <SelectContent 
+        className="max-h-[80vh] max-w-[calc(100vw-2rem)] p-0 overflow-hidden" 
+        position="popper" 
+        sideOffset={5} 
+        onEscapeKeyDown={e => {
+          e.preventDefault();
+          setOpenState(false);
+        }} 
+        onPointerDownOutside={e => {
+          // Empêcher la fermeture pendant le défilement ou les interactions à l'intérieur
+          const target = e.target as HTMLElement;
+          if (!target.closest('[data-radix-select-content]')) {
+            e.preventDefault();
+          }
+        }}
+      >
         <div className="p-2 sticky top-0 bg-popover z-10 border-b mb-1">
           <div className="relative">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input ref={searchInputRef} placeholder="Rechercher un client..." value={clientSearch} onChange={e => setClientSearch(e.target.value)} onClick={e => e.stopPropagation()} onTouchStart={e => e.stopPropagation()} autoComplete="off" className="pl-8 pr-8 rounded-md" />
+            <Input 
+              ref={searchInputRef} 
+              placeholder="Rechercher un client..." 
+              value={clientSearch} 
+              onChange={e => setClientSearch(e.target.value)} 
+              onClick={e => e.stopPropagation()} 
+              onTouchStart={e => e.stopPropagation()}
+              autoComplete="off" 
+              className="pl-8 pr-8 rounded-md" 
+            />
             {clientSearch && (
               <button className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground" onClick={clearSearch}>
                 ✕
@@ -123,7 +140,10 @@ export const ClientSelectDropdown = ({
             )}
           </div>
         </div>
-        <ScrollArea className="h-[60vh] max-h-[450px] touch-auto overflow-y-auto overscroll-contain" ref={scrollAreaRef}>
+        <ScrollArea 
+          className="h-[60vh] max-h-[450px] touch-auto overflow-y-auto overscroll-contain" 
+          ref={scrollAreaRef}
+        >
           <div className="text-xs text-muted-foreground px-2 py-2 bg-muted/30 sticky top-0 z-10">
             <span>← Glisser vers la gauche pour fermer • {filteredClients.length} clients</span>
           </div>
@@ -142,13 +162,22 @@ export const ClientSelectDropdown = ({
                   e.stopPropagation();
                   handleClientClick(client.id.toString());
                 }}
+                // Modifier les gestionnaires d'événements tactiles pour éviter les fermetures indésirables
                 onTouchStart={e => {
+                  // Juste arrêter la propagation, ne pas prévenir le comportement par défaut
                   e.stopPropagation();
                 }}
                 onTouchEnd={e => {
+                  // Prévenir le comportement par défaut seulement sur la fin du toucher
+                  // pour éviter les fermetures accidentelles pendant le défilement
+                  if (!e.currentTarget.contains(e.target as Node)) return;
                   e.preventDefault();
                   e.stopPropagation();
                   handleClientClick(client.id.toString());
+                }}
+                // Empêcher le défilement de fermer le dropdown
+                onTouchMove={e => {
+                  e.stopPropagation();
                 }}
               >
                 <div className="flex items-center gap-2">
