@@ -35,8 +35,10 @@ export const ClientSelectDropdown = ({
 
   const handleClientSelect = (clientId: string) => {
     onClientSelect(clientId);
-    // Close immediately without animation delay
-    setOpenState(false);
+    // Close after selection with a slight delay to prevent UI jumps
+    setTimeout(() => {
+      setOpenState(false);
+    }, 50);
   };
 
   return (
@@ -88,7 +90,8 @@ export const ClientSelectDropdown = ({
             clients={filteredClients} 
             selectedClient={selectedClient} 
             isScrolling={isScrolling} 
-            onClientSelect={handleClientSelect} 
+            onClientSelect={handleClientSelect}
+            setOpenState={setOpenState}
           />
         </ScrollArea>
       </SelectContent>

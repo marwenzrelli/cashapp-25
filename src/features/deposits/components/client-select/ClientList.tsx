@@ -9,23 +9,30 @@ interface ClientListProps {
   selectedClient: string;
   isScrolling: boolean;
   onClientSelect: (clientId: string) => void;
+  setOpenState: (open: boolean) => void;
 }
 
 export const ClientList = ({ 
   clients, 
   selectedClient, 
   isScrolling, 
-  onClientSelect 
+  onClientSelect,
+  setOpenState
 }: ClientListProps) => {
   const { currency } = useCurrency();
 
-  const handleClientClick = (clientId: string) => {
+  const handleClientClick = (clientId: string, e: React.MouseEvent | React.TouchEvent) => {
+    // Prevent event propagation to stop dropdown from closing
+    e.preventDefault();
+    e.stopPropagation();
+    
     // Ignore clicks during or immediately after scrolling
     if (isScrolling) {
       console.log('Clic ignoré - défilement en cours');
       return;
     }
     
+    // Manual selection handling to prevent auto-closing
     onClientSelect(clientId);
   };
 
@@ -37,43 +44,15 @@ export const ClientList = ({
         </div>
       ) : (
         clients.map(client => (
-          <SelectItem
+          <div
             key={client.id}
-            value={client.id.toString()}
-            className="flex items-center justify-between py-5 px-3 cursor-pointer touch-manipulation select-none"
-            onPointerDown={e => {
-              // Ignore clicks during scrolling
-              if (isScrolling) {
-                e.preventDefault();
-                return;
+            className="flex items-center justify-between py-5 px-3 cursor-pointer touch-manipulation select-none hover:bg-accent"
+            onClick={(e) => handleClientClick(client.id.toString(), e)}
+            onTouchEnd={(e) => {
+              // Only handle touch if it wasn't a scroll
+              if (!isScrolling) {
+                handleClientClick(client.id.toString(), e);
               }
-              e.preventDefault();
-              e.stopPropagation();
-              handleClientClick(client.id.toString());
-            }}
-            // Better touch event handling
-            onTouchStart={e => {
-              e.stopPropagation();
-            }}
-            onTouchEnd={e => {
-              // Ignore touch events during scrolling
-              if (isScrolling) {
-                console.log('Toucher final ignoré - défilement en cours');
-                e.preventDefault();
-                return;
-              }
-              
-              if (!e.currentTarget.contains(e.target as Node)) return;
-              
-              e.preventDefault();
-              e.stopPropagation();
-              handleClientClick(client.id.toString());
-            }}
-            // Prevent dropdown closing during scroll
-            onTouchMove={e => {
-              e.stopPropagation();
-              // Set stopPropagation to prevent bubbling up to parent elements
-              // which might close the dropdown
             }}
           >
             <div className="flex items-center gap-2">
@@ -85,7 +64,13 @@ export const ClientList = ({
             <span className={`font-mono text-sm ${client.solde >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
               {client.solde.toLocaleString()} {currency}
             </span>
-          </SelectItem>
+            
+            {/* Hidden SelectItem to maintain the Select's value state */}
+            <SelectItem
+              value={client.id.toString()}
+              className="sr-only"
+            />
+          </div>
         ))
       )}
       <div className="h-12"></div> {/* Extra space at bottom for easier scrolling */}

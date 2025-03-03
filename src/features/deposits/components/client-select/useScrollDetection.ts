@@ -8,82 +8,78 @@ export const useScrollDetection = (
   const touchStartY = useRef<number | null>(null);
   const touchStartTime = useRef<number | null>(null);
   const lastScrollTop = useRef<number>(0);
+  const scrollStateTimeoutRef = useRef<number | null>(null);
 
   const clearScrolling = () => {
     setIsScrolling(false);
+    if (scrollTimerRef.current) {
+      window.clearTimeout(scrollTimerRef.current);
+      scrollTimerRef.current = null;
+    }
+    if (scrollStateTimeoutRef.current) {
+      window.clearTimeout(scrollStateTimeoutRef.current);
+      scrollStateTimeoutRef.current = null;
+    }
   };
 
   useEffect(() => {
     const scrollArea = scrollAreaRef.current;
     
     if (scrollArea) {
-      // Detect actual scroll events (most reliable)
-      const handleScroll = () => {
-        if (!isScrolling) {
-          setIsScrolling(true);
-        }
-        
-        // Track scroll position to detect actual movement
-        const currentScrollTop = scrollArea.scrollTop;
-        if (Math.abs(currentScrollTop - lastScrollTop.current) > 3) {
-          // Real scrolling is happening
-          setIsScrolling(true);
-          lastScrollTop.current = currentScrollTop;
-        }
-        
-        // Reset scrolling state after a delay
-        if (scrollTimerRef.current) {
-          window.clearTimeout(scrollTimerRef.current);
-        }
-        
-        scrollTimerRef.current = window.setTimeout(() => {
-          setIsScrolling(false);
-        }, 500); // Longer timeout to avoid premature interaction
-      };
-      
-      // Detect touch start to prepare for potential scroll
+      // Track when touch interaction starts
       const handleTouchStart = (e: TouchEvent) => {
         if (e.touches.length === 1) {
           touchStartY.current = e.touches[0].clientY;
           touchStartTime.current = Date.now();
-          // Initially set scrolling when touch starts
-          setIsScrolling(true);
+          // Do not immediately set scrolling=true to avoid false positives
+          // for simple taps/clicks
         }
       };
       
-      // Track movement to detect actual scrolling
+      // Track actual scroll events
+      const handleScroll = () => {
+        setIsScrolling(true);
+        
+        // Reset any existing timeout
+        if (scrollTimerRef.current) {
+          window.clearTimeout(scrollTimerRef.current);
+        }
+        
+        // Keep scrolling state active for a delay after last scroll event
+        scrollTimerRef.current = window.setTimeout(() => {
+          setIsScrolling(false);
+        }, 300);
+      };
+      
+      // Track touch movements to detect scrolling intent
       const handleTouchMove = (e: TouchEvent) => {
-        if (
-          touchStartY.current !== null && 
-          touchStartTime.current !== null && 
-          e.touches.length === 1
-        ) {
-          const currentY = e.touches[0].clientY;
-          const deltaY = Math.abs(currentY - touchStartY.current);
+        if (touchStartY.current !== null && e.touches.length === 1) {
+          const moveDistance = Math.abs(e.touches[0].clientY - touchStartY.current);
           
-          // If movement is significant, definitely scrolling
-          if (deltaY > 5) {
+          // If significant vertical movement, consider it scrolling
+          if (moveDistance > 10) {
             setIsScrolling(true);
           }
         }
       };
       
-      // Detect scroll end with delay
+      // Handle touch end
       const handleTouchEnd = () => {
+        // Reset touch tracking
         touchStartY.current = null;
-        touchStartTime.current = null;
         
-        // Keep scrolling state active for a short time after touch ends
-        if (scrollTimerRef.current) {
-          window.clearTimeout(scrollTimerRef.current);
+        // Keep scrolling state active briefly after touch ends
+        // to prevent premature selection
+        if (scrollStateTimeoutRef.current) {
+          window.clearTimeout(scrollStateTimeoutRef.current);
         }
         
-        scrollTimerRef.current = window.setTimeout(() => {
+        scrollStateTimeoutRef.current = window.setTimeout(() => {
           setIsScrolling(false);
-        }, 400); // Increased delay to avoid premature interaction
+        }, 200);
       };
       
-      // Add all relevant event listeners
+      // Add all event listeners
       scrollArea.addEventListener('scroll', handleScroll, { passive: true });
       scrollArea.addEventListener('touchstart', handleTouchStart, { passive: true });
       scrollArea.addEventListener('touchmove', handleTouchMove, { passive: true });
@@ -94,12 +90,12 @@ export const useScrollDetection = (
         scrollArea.removeEventListener('touchstart', handleTouchStart);
         scrollArea.removeEventListener('touchmove', handleTouchMove);
         scrollArea.removeEventListener('touchend', handleTouchEnd);
-        if (scrollTimerRef.current) {
-          window.clearTimeout(scrollTimerRef.current);
-        }
+        
+        // Clear any pending timeouts
+        clearScrolling();
       };
     }
-  }, [scrollAreaRef, isScrolling]);
+  }, [scrollAreaRef]);
 
   return [isScrolling, clearScrolling];
 };
