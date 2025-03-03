@@ -35,7 +35,7 @@ export const ClientSearchInput = ({ value, onChange, isOpen, count }: ClientSear
   };
 
   return (
-    <div className="p-2 sticky top-0 bg-popover z-10 border-b mb-1">
+    <div className="p-1 sticky top-0 bg-popover z-10 border-b mb-0">
       <div className="relative">
         <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input 
@@ -47,7 +47,7 @@ export const ClientSearchInput = ({ value, onChange, isOpen, count }: ClientSear
           onTouchStart={e => e.stopPropagation()}
           onKeyDown={e => e.stopPropagation()} // Prevent keyboard events from bubbling up
           autoComplete="off" 
-          className="pl-8 pr-8 rounded-md" 
+          className="pl-8 pr-8 rounded-md h-9 min-h-9" 
         />
         {value && (
           <button 

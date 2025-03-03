@@ -1,8 +1,7 @@
 
-import { UserCircle, Check } from "lucide-react";
-import { SelectItem } from "@/components/ui/select";
+import React from "react";
+import { Check } from "lucide-react";
 import { type Client } from "@/features/clients/types";
-import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface ClientListItemProps {
   client: Client;
@@ -11,15 +10,18 @@ interface ClientListItemProps {
   onRemove?: (clientId: string) => void;
 }
 
-export const ClientListItem = ({
-  client,
-  isSelected,
+export const ClientListItem = ({ 
+  client, 
+  isSelected, 
   onClick,
   onRemove
 }: ClientListItemProps) => {
-  const { currency } = useCurrency();
+  
+  const handleClick = (e: React.MouseEvent | React.TouchEvent) => {
+    onClick(client.id.toString(), e);
+  };
 
-  const handleRemove = (e: React.MouseEvent) => {
+  const handleRemove = (e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation();
     e.preventDefault();
     if (onRemove) {
@@ -29,45 +31,34 @@ export const ClientListItem = ({
 
   return (
     <div 
-      onClick={e => onClick(client.id.toString(), e)} 
-      onTouchEnd={e => onClick(client.id.toString(), e)} 
-      data-client-id={client.id.toString()} 
       className={`
-        rounded-lg my-2 mx-3 p-3 transition-all relative
-        ${isSelected 
-          ? 'bg-primary/15 border-l-4 border-primary shadow-sm' 
-          : 'hover:bg-muted/50 active:bg-muted/70'}
+        px-3 py-2 cursor-pointer hover:bg-muted/50
+        ${isSelected ? 'bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400' : ''}
       `}
-      style={{
-        WebkitTapHighlightColor: 'transparent',
-        touchAction: 'manipulation'
-      }}
+      onClick={handleClick}
+      onTouchStart={handleClick}
+      data-client-id={client.id}
     >
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <UserCircle className="h-10 w-10 text-primary/80 flex-shrink-0" />
-          <div className="flex flex-col">
-            <span className="font-medium text-base">
-              {client.prenom} {client.nom}
-            </span>
+      <div className="flex justify-between items-center">
+        <div className="flex-1">
+          <div className="font-medium">
+            {client.prenom} {client.nom}
+          </div>
+          <div className="text-sm text-muted-foreground">
+            {client.email || client.telephone || ''}
           </div>
         </div>
-        <span className={`font-mono text-lg font-semibold ${client.solde >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-          {client.solde.toLocaleString()} {currency}
-        </span>
+        
+        {isSelected && (
+          <button
+            className="ml-2 h-6 w-6 flex items-center justify-center rounded-full bg-blue-500 text-white"
+            onClick={handleRemove}
+            onTouchStart={handleRemove}
+          >
+            <Check className="h-4 w-4" />
+          </button>
+        )}
       </div>
-      
-      {isSelected && (
-        <div 
-          className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-primary flex items-center justify-center cursor-pointer hover:bg-primary/80"
-          onClick={handleRemove}
-        >
-          <Check className="h-5 w-5 text-white" />
-        </div>
-      )}
-      
-      {/* Hidden SelectItem to maintain the Select's value state */}
-      <SelectItem value={client.id.toString()} className="sr-only" />
     </div>
   );
 };
