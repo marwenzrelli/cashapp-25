@@ -46,8 +46,8 @@ export const ClientSelectDropdown = ({
       // Add passive touch listeners for better scrolling
       const scrollElement = scrollableAreaRef.current;
       
-      // Enable momentum scrolling on iOS
-      scrollElement.style.WebkitOverflowScrolling = 'touch';
+      // Set CSS properties directly as strings to avoid TypeScript errors
+      scrollElement.style.cssText += 'overscroll-behavior: contain; -webkit-overflow-scrolling: touch;';
       
       // Force layout recalculation to make sure scrolling works
       setTimeout(() => {
@@ -113,8 +113,8 @@ export const ClientSelectDropdown = ({
           </div>
           <div 
             ref={scrollableAreaRef}
-            className="touch-pan-y overflow-y-auto overscroll-contain h-full -webkit-overflow-scrolling-touch"
-            style={{ WebkitOverflowScrolling: 'touch' }}
+            className="touch-pan-y overflow-y-auto overscroll-contain h-full"
+            style={{ overscrollBehavior: 'contain' }}
           >
             <ClientList 
               clients={filteredClients} 
