@@ -85,7 +85,7 @@ export const useScrollDetection = (
       
       // Ensure the scroll area is ready for touch interaction
       scrollableArea.style.overscrollBehavior = 'contain';
-      scrollableArea.style.WebkitOverflowScrolling = 'touch';
+      (scrollableArea.style as any)['-webkit-overflow-scrolling'] = 'touch';
     };
     
     // Touch move - detect scrolling and calculate direction/velocity
