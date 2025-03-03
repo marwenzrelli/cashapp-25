@@ -35,8 +35,8 @@ export const ClientSelectDropdown = ({
 
   const handleClientSelect = (clientId: string) => {
     onClientSelect(clientId);
-    // Add a delay before closing to ensure animations are completed
-    setTimeout(() => setOpenState(false), 300);
+    // Close immediately without animation delay
+    setOpenState(false);
   };
 
   return (

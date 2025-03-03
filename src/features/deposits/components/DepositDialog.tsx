@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import {
   Dialog,
@@ -43,8 +42,8 @@ export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogPr
       const hammer = new Hammer.Manager(dialogElement);
       const swipe = new Hammer.Swipe({
         direction: Hammer.DIRECTION_DOWN,
-        threshold: 10,  // Seuil plus bas pour une détection plus sensible
-        velocity: 0.3   // Vitesse plus basse pour une détection plus facile
+        threshold: 10,
+        velocity: 0.3
       });
       
       hammer.add(swipe);

@@ -1,3 +1,4 @@
+
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,8 +22,8 @@ export const DatePickerField = ({ date, onDateChange }: DatePickerFieldProps) =>
   
   const handleDateSelect = (newDate: Date | undefined) => {
     onDateChange(newDate);
-    // Close the popover after selection on mobile
-    setTimeout(() => setOpen(false), 300);
+    // Close the popover immediately without animation
+    setOpen(false);
   };
 
   return (
@@ -48,7 +49,7 @@ export const DatePickerField = ({ date, onDateChange }: DatePickerFieldProps) =>
           sideOffset={8}
         >
           <div 
-            className="touch-manipulation" // Improve touch behavior
+            className="touch-manipulation"
             onTouchStart={(e) => e.stopPropagation()}
             onTouchMove={(e) => e.stopPropagation()}
           >
@@ -61,13 +62,13 @@ export const DatePickerField = ({ date, onDateChange }: DatePickerFieldProps) =>
               }
               initialFocus
               classNames={{
-                day: "h-10 w-10 text-center p-0 focus-visible:bg-primary/20 hover:bg-primary/20 aria-selected:bg-primary", // Increase touch target size
+                day: "h-10 w-10 text-center p-0 focus-visible:bg-primary/20 hover:bg-primary/20 aria-selected:bg-primary",
                 caption: "px-4 py-2 flex items-center justify-between",
-                caption_label: "text-base font-medium", // Larger font
-                nav_button: "h-9 w-9 bg-transparent p-0 opacity-70 hover:opacity-100", // Larger buttons
-                table: "w-full border-collapse space-y-2", // More space 
-                head_cell: "text-muted-foreground w-10 font-normal text-[0.9rem]", // Larger headers
-                cell: "text-center text-sm p-0 relative h-10 w-10", // Larger cells
+                caption_label: "text-base font-medium",
+                nav_button: "h-9 w-9 bg-transparent p-0 opacity-70 hover:opacity-100",
+                table: "w-full border-collapse space-y-2",
+                head_cell: "text-muted-foreground w-10 font-normal text-[0.9rem]",
+                cell: "text-center text-sm p-0 relative h-10 w-10",
               }}
             />
           </div>

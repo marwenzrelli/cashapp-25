@@ -27,9 +27,6 @@ export const ClientList = ({
     }
     
     onClientSelect(clientId);
-    if (window.navigator && window.navigator.vibrate) {
-      window.navigator.vibrate(20);
-    }
   };
 
   return (
@@ -43,7 +40,7 @@ export const ClientList = ({
           <SelectItem
             key={client.id}
             value={client.id.toString()}
-            className="flex items-center justify-between py-5 px-3 cursor-pointer touch-manipulation select-none active:bg-primary/10"
+            className="flex items-center justify-between py-5 px-3 cursor-pointer touch-manipulation select-none"
             onPointerDown={e => {
               // Ignore clicks during scrolling
               if (isScrolling) {
