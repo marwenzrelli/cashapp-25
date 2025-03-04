@@ -29,7 +29,7 @@ export const StandaloneDepositForm = ({
   const [selectedClient, setSelectedClient] = useState("");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState<Date>(new Date());
-  const [time, setTime] = useState(format(new Date(), "HH:mm"));
+  const [time, setTime] = useState(format(new Date(), "HH:mm:ss")); // Include seconds
   const [description, setDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { currency } = useCurrency();
@@ -43,14 +43,15 @@ export const StandaloneDepositForm = ({
       const client = clients.find(c => c.id.toString() === selectedClient);
       if (!client) return;
 
-      const [hours, minutes] = time.split(':').map(Number);
+      // Split time string to get hours, minutes, and seconds
+      const [hours, minutes, seconds] = time.split(':').map(Number);
       const depositDateTime = new Date(date);
-      depositDateTime.setHours(hours, minutes);
+      depositDateTime.setHours(hours, minutes, seconds || 0); // Set seconds if available
 
       const newDeposit: Partial<Deposit> = {
         client_name: `${client.prenom} ${client.nom}`,
         amount: parseFloat(amount),
-        date: format(depositDateTime, "yyyy-MM-dd'T'HH:mm"),
+        date: format(depositDateTime, "yyyy-MM-dd'T'HH:mm:ss"), // Include seconds
         description
       };
 
@@ -61,7 +62,7 @@ export const StandaloneDepositForm = ({
       setAmount("");
       setDescription("");
       setDate(new Date());
-      setTime(format(new Date(), "HH:mm"));
+      setTime(format(new Date(), "HH:mm:ss")); // Reset with seconds
     } catch (error) {
       console.error("Error submitting deposit:", error);
     } finally {
@@ -101,6 +102,7 @@ export const StandaloneDepositForm = ({
                 <Input
                   id="time"
                   type="time"
+                  step="1" // Enable seconds selection
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
                   className="transition-all focus-visible:ring-primary/50"

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -14,15 +13,17 @@ export const DateField: React.FC<DateFieldProps> = ({
   onChange, 
   id = "date" 
 }) => {
+  // Extract date and time components from the ISO string
   const [date, time] = value.includes('T') 
     ? value.split('T') 
-    : [value, '00:00'];
-
+    : [value, ''];
+  
+  // Ensure we keep the exact hours, minutes and seconds
   const handleDateChange = (newDate: string) => {
-    const [currentDate] = value.includes('T') 
-      ? value.split('T') 
-      : [value, '00:00'];
-    onChange(`${newDate}T${time}`);
+    const currentTime = value.includes('T') 
+      ? value.split('T')[1] 
+      : new Date().toTimeString().split(' ')[0];
+    onChange(`${newDate}T${currentTime}`);
   };
 
   const handleTimeChange = (newTime: string) => {
@@ -45,7 +46,8 @@ export const DateField: React.FC<DateFieldProps> = ({
         <div>
           <Input
             id={`${id}-time`}
-            type="time"
+            type="time" 
+            step="1" // This allows seconds to be entered
             value={time}
             onChange={(e) => handleTimeChange(e.target.value)}
             className="transition-all focus-visible:ring-primary/50"

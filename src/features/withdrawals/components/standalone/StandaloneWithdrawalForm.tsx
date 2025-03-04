@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowDownCircle } from "lucide-react";
@@ -32,11 +31,10 @@ export const StandaloneWithdrawalForm: React.FC<StandaloneWithdrawalFormProps> =
     clientId: "",
     amount: "",
     notes: "",
-    date: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
+    date: format(new Date(), "yyyy-MM-dd'T'HH:mm:ss"),
   });
 
   const handleSubmit = async () => {
-    // Basic validation
     if (!newWithdrawal.clientId || !newWithdrawal.amount) {
       toast.error("Veuillez remplir tous les champs obligatoires");
       return;
@@ -56,7 +54,6 @@ export const StandaloneWithdrawalForm: React.FC<StandaloneWithdrawalFormProps> =
         return;
       }
 
-      // Format the date-time to ISO string
       const dateObj = new Date(newWithdrawal.date);
       
       const { data, error } = await supabase
@@ -76,20 +73,17 @@ export const StandaloneWithdrawalForm: React.FC<StandaloneWithdrawalFormProps> =
 
       toast.success("Retrait ajouté avec succès");
       
-      // Refresh data
       await fetchWithdrawals();
       
-      // Refresh client balance if needed
       if (newWithdrawal.clientId) {
         await refreshClientBalance(newWithdrawal.clientId);
       }
       
-      // Reset form
       setNewWithdrawal({
         clientId: "",
         amount: "",
         notes: "",
-        date: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
+        date: format(new Date(), "yyyy-MM-dd'T'HH:mm:ss"),
       });
     } catch (error) {
       console.error("Error submitting withdrawal:", error);

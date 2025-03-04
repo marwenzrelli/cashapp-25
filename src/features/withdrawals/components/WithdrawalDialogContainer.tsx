@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog } from "@/components/ui/dialog";
 import { toast } from "sonner";
@@ -40,7 +39,7 @@ export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps>
     clientId: "",
     amount: "",
     notes: "",
-    date: new Date().toISOString().split('T')[0],
+    date: new Date().toISOString().slice(0, 19),
   });
 
   const handleCreateWithdrawal = async () => {
@@ -64,6 +63,7 @@ export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps>
       }
 
       const clientFullName = `${selectedClient.prenom} ${selectedClient.nom}`;
+      
       const operationDate = new Date(newWithdrawal.date);
       
       if (selectedWithdrawal) {
@@ -120,7 +120,7 @@ export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps>
         clientId: "",
         amount: "",
         notes: "",
-        date: new Date().toISOString().split('T')[0]
+        date: new Date().toISOString().slice(0, 19)
       });
       
       fetchWithdrawals();

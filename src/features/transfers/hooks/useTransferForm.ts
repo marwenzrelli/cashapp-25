@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Client } from "@/features/clients/types";
+import { format } from "date-fns";
 
 export const useTransferForm = (onSuccess?: () => void) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -10,6 +11,8 @@ export const useTransferForm = (onSuccess?: () => void) => {
   const [toClient, setToClient] = useState("");
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
+  const [operationDate, setOperationDate] = useState(new Date());
+  const [operationTime, setOperationTime] = useState(format(new Date(), "HH:mm:ss"));
   const [clients, setClients] = useState<Client[]>([]);
 
   useEffect(() => {
@@ -74,6 +77,11 @@ export const useTransferForm = (onSuccess?: () => void) => {
       const fromClientFullName = `${fromClientData.prenom} ${fromClientData.nom}`;
       const toClientFullName = `${toClientData.prenom} ${toClientData.nom}`;
 
+      // Create a date with the exact time including seconds
+      const [hours, minutes, seconds] = operationTime.split(':').map(Number);
+      const exactDate = new Date(operationDate);
+      exactDate.setHours(hours, minutes, seconds || 0);
+      
       const { error } = await supabase
         .from('transfers')
         .insert({
@@ -82,7 +90,8 @@ export const useTransferForm = (onSuccess?: () => void) => {
           amount: parseFloat(amount),
           reason,
           created_by: session.user.id,
-          status: 'completed'
+          status: 'completed',
+          operation_date: exactDate.toISOString() // Store with exact timestamp
         });
 
       if (error) {
@@ -97,6 +106,8 @@ export const useTransferForm = (onSuccess?: () => void) => {
       setToClient("");
       setAmount("");
       setReason("");
+      setOperationDate(new Date());
+      setOperationTime(format(new Date(), "HH:mm:ss"));
       onSuccess?.();
     } catch (error) {
       console.error("Error in handleTransfer:", error);
@@ -116,6 +127,10 @@ export const useTransferForm = (onSuccess?: () => void) => {
     setAmount,
     reason,
     setReason,
+    operationDate,
+    setOperationDate,
+    operationTime,
+    setOperationTime,
     clients,
     handleTransfer
   };
