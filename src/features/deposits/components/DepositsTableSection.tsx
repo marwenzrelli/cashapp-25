@@ -38,7 +38,6 @@ export const DepositsTableSection = ({
       <CardContent>
         <DepositsTable
           deposits={filteredDeposits}
-          itemsPerPage={itemsPerPage}
           onEdit={onEdit}
           onDelete={onDelete}
         />

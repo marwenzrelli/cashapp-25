@@ -17,6 +17,7 @@ const defaultSuggestions: Suggestion[] = [];
 const Transfers = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [itemsPerPage, setItemsPerPage] = useState("10");
+  const [currentPage, setCurrentPage] = useState(1);
   
   const { transfers, isLoading, fetchTransfers } = useTransfersList();
   const {
@@ -44,7 +45,10 @@ const Transfers = () => {
 
   // Ensure transfers is always treated as an array
   const transfersArray: Transfer[] = Array.isArray(transfers) ? transfers : [];
-  const visibleTransfers = transfersArray.slice(0, parseInt(itemsPerPage));
+  
+  // Calculate pagination
+  const startIndex = (currentPage - 1) * parseInt(itemsPerPage);
+  const visibleTransfers = transfersArray.slice(startIndex, startIndex + parseInt(itemsPerPage));
 
   if (isLoading) {
     return (
@@ -69,7 +73,9 @@ const Transfers = () => {
       <TransferPagination
         itemsPerPage={itemsPerPage}
         setItemsPerPage={setItemsPerPage}
-        totalTransfers={transfersArray.length}
+        totalItems={transfersArray.length}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
       />
 
       <TransferList
