@@ -1,4 +1,3 @@
-
 import React from "react";
 import { StandaloneDepositForm } from "./DepositForm";
 import { DepositsTable } from "./DepositsTable";
@@ -8,7 +7,6 @@ import { DeleteDepositDialog } from "./DeleteDepositDialog";
 import { DepositDialogContainer } from "./DepositDialogContainer";
 import { Deposit } from "../types";
 import { useClients } from "@/features/clients/hooks/useClients";
-
 interface DepositsContentProps {
   deposits: Deposit[];
   searchTerm: string;
@@ -30,7 +28,6 @@ interface DepositsContentProps {
   handleConfirmEdit: () => Promise<void>;
   handleCreateDeposit: (deposit: Deposit) => Promise<void>;
 }
-
 export const DepositsContent = ({
   deposits,
   searchTerm,
@@ -52,9 +49,11 @@ export const DepositsContent = ({
   handleConfirmEdit,
   handleCreateDeposit
 }: DepositsContentProps) => {
-  const { clients, refreshClientBalance } = useClients();
+  const {
+    clients,
+    refreshClientBalance
+  } = useClients();
   const filteredDeposits = deposits;
-
   const handleRefreshClientBalance = async (clientId: string): Promise<boolean> => {
     try {
       await refreshClientBalance(parseInt(clientId, 10));
@@ -64,59 +63,21 @@ export const DepositsContent = ({
       return false;
     }
   };
-
-  return (
-    <div className="space-y-8 animate-in">
-      <DepositsHeader 
-        deposits={deposits}
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        itemsPerPage={itemsPerPage}
-        onItemsPerPageChange={setItemsPerPage}
-        onNewDeposit={() => setIsDialogOpen(true)}
-        filteredDeposits={filteredDeposits}
-      />
+  return <div className="space-y-8 animate-in">
+      <DepositsHeader deposits={deposits} searchTerm={searchTerm} onSearchChange={setSearchTerm} itemsPerPage={itemsPerPage} onItemsPerPageChange={setItemsPerPage} onNewDeposit={() => setIsDialogOpen(true)} filteredDeposits={filteredDeposits} />
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <StandaloneDepositForm
-            clients={clients}
-            onConfirm={handleCreateDeposit}
-            refreshClientBalance={handleRefreshClientBalance}
-          />
+          <StandaloneDepositForm clients={clients} onConfirm={handleCreateDeposit} refreshClientBalance={handleRefreshClientBalance} />
         </div>
         
-        <div>
-          <QuickActions
-            onCreateClick={() => setIsDialogOpen(true)}
-            itemsPerPage={itemsPerPage}
-            setItemsPerPage={setItemsPerPage}
-            depositsCount={deposits.length}
-          />
-        </div>
+        
       </div>
 
-      <DepositsTable
-        deposits={deposits}
-        itemsPerPage={itemsPerPage}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
+      <DepositsTable deposits={deposits} itemsPerPage={itemsPerPage} onEdit={handleEdit} onDelete={handleDelete} />
 
-      <DepositDialogContainer
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        clients={clients}
-        onConfirm={handleCreateDeposit}
-        refreshClientBalance={handleRefreshClientBalance}
-      />
+      <DepositDialogContainer open={isDialogOpen} onOpenChange={setIsDialogOpen} clients={clients} onConfirm={handleCreateDeposit} refreshClientBalance={handleRefreshClientBalance} />
 
-      <DeleteDepositDialog
-        isOpen={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-        onConfirm={confirmDelete}
-        selectedDeposit={selectedDeposit}
-      />
-    </div>
-  );
+      <DeleteDepositDialog isOpen={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen} onConfirm={confirmDelete} selectedDeposit={selectedDeposit} />
+    </div>;
 };
