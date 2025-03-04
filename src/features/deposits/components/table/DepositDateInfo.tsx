@@ -1,5 +1,5 @@
 
-import { Clock } from "lucide-react";
+import { Clock, Calendar } from "lucide-react";
 import { 
   Tooltip, 
   TooltipContent, 
@@ -27,11 +27,12 @@ export const DepositDateInfo = ({ deposit }: DepositDateInfoProps) => {
         <TooltipTrigger asChild>
           <div className="flex items-center gap-1 cursor-help">
             {deposit.date}
+            {hasCustomDate && <Calendar className="h-3.5 w-3.5 text-blue-500" />}
             {hasBeenModified && <Clock className="h-3.5 w-3.5 text-amber-500" />}
           </div>
         </TooltipTrigger>
         <TooltipContent>
-          <p>Date de création</p>
+          <p>Date de création: {formatDateTime(deposit.created_at)}</p>
           {hasCustomDate && (
             <p>Date d'opération personnalisée: {formatDateTime(deposit.operation_date)}</p>
           )}
