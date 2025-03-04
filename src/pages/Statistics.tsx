@@ -3,7 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { 
   Sparkles, TrendingUp, Users, ArrowUpCircle, ArrowDownCircle, 
   AlertTriangle, UserCheck, Calendar, ArrowLeftRight, Activity,
-  TrendingDown, BanknoteIcon
+  TrendingDown, BanknoteIcon, RefreshCw
 } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useDeposits } from "@/features/deposits/hooks/useDeposits";
@@ -16,10 +16,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { Input } from "@/components/ui/input";
 import { addDays } from "date-fns";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DateRange } from "react-day-picker";
 import { ClientStats } from "@/features/operations/types";
 import { Transfer } from "@/features/transfers/types";
+import { useDashboardData } from "@/features/dashboard/hooks/useDashboardData";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface FilteredData {
   client_name?: string;
@@ -34,6 +37,7 @@ const Statistics = () => {
   const { deposits, isLoading: isLoadingDeposits } = useDeposits();
   const { withdrawals, isLoading: isLoadingWithdrawals } = useWithdrawals();
   const { transfers, isLoading: isLoadingTransfers } = useTransfersList();
+  const { stats, isLoading: isLoadingStats, recentActivity, handleRefresh } = useDashboardData();
   const { currency } = useCurrency();
 
   const transfersArray = Array.isArray(transfers) ? transfers : [];
@@ -44,6 +48,20 @@ const Statistics = () => {
   });
   const [clientFilter, setClientFilter] = useState("");
   const [transactionType, setTransactionType] = useState<"all" | "deposits" | "withdrawals" | "transfers">("all");
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const refreshData = async () => {
+    setIsSyncing(true);
+    try {
+      await handleRefresh();
+      toast.success("Données synchronisées avec succès");
+    } catch (error) {
+      toast.error("Erreur lors de la synchronisation des données");
+      console.error("Error refreshing data:", error);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const filterData = (data: FilteredData[], type: string) => {
     return data.filter(item => {
@@ -245,7 +263,7 @@ const Statistics = () => {
     return "text-gray-600 dark:text-gray-400";
   };
 
-  if (isLoadingDeposits || isLoadingWithdrawals || isLoadingTransfers) {
+  if (isLoadingDeposits || isLoadingWithdrawals || isLoadingTransfers || isLoadingStats) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
@@ -255,11 +273,22 @@ const Statistics = () => {
 
   return (
     <div className="space-y-8 animate-in">
-      <div>
-        <h1 className="text-3xl font-bold">Statistiques</h1>
-        <p className="text-muted-foreground">
-          Vue d'ensemble et analyses détaillées
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Statistiques</h1>
+          <p className="text-muted-foreground">
+            Vue d'ensemble et analyses détaillées
+          </p>
+        </div>
+        <Button 
+          onClick={refreshData} 
+          variant="outline" 
+          className="flex items-center gap-2"
+          disabled={isSyncing}
+        >
+          <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
+          {isSyncing ? 'Synchronisation...' : 'Synchroniser'}
+        </Button>
       </div>
 
       <Card>
@@ -315,9 +344,9 @@ const Statistics = () => {
           <CardContent>
             <div className={cn(
               "text-2xl font-bold",
-              getAmountColor(totalDeposits)
+              getAmountColor(stats.total_deposits)
             )}>
-              {totalDeposits.toLocaleString()} TND
+              {stats.total_deposits.toLocaleString()} {currency}
             </div>
             <p className="text-xs text-muted-foreground">
               <span className={getPercentageColor(percentageChange)}>
@@ -336,9 +365,9 @@ const Statistics = () => {
           <CardContent>
             <div className={cn(
               "text-2xl font-bold",
-              getAmountColor(-totalWithdrawals)
+              getAmountColor(-stats.total_withdrawals)
             )}>
-              {totalWithdrawals.toLocaleString()} TND
+              {stats.total_withdrawals.toLocaleString()} {currency}
             </div>
             <p className="text-xs text-muted-foreground">
               <span className={getPercentageColor(-percentageChange)}>
@@ -357,12 +386,12 @@ const Statistics = () => {
           <CardContent>
             <div className={cn(
               "text-2xl font-bold",
-              getAmountColor(totalTransfers)
+              getAmountColor(stats.sent_transfers)
             )}>
-              {totalTransfers.toLocaleString()} TND
+              {stats.sent_transfers.toLocaleString()} {currency}
             </div>
             <p className="text-xs text-muted-foreground">
-              {transfersArray.length} virements effectués
+              {stats.transfer_count} virements effectués
             </p>
           </CardContent>
         </Card>
@@ -381,7 +410,7 @@ const Statistics = () => {
               "text-2xl font-bold",
               getAmountColor(netFlow)
             )}>
-              {netFlow.toLocaleString()} TND
+              {netFlow.toLocaleString()} {currency}
             </div>
             <p className="text-xs text-muted-foreground">
               Balance des mouvements
@@ -395,7 +424,7 @@ const Statistics = () => {
             <UserCheck className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{activeClients}</div>
+            <div className="text-2xl font-bold">{stats.client_count}</div>
             <p className="text-xs text-muted-foreground">
               {averageTransactionsPerDay.toFixed(1)} transactions/jour
             </p>
@@ -546,7 +575,7 @@ const Statistics = () => {
                 <div>
                   <p className="font-medium">Transaction moyenne</p>
                   <p className="text-sm mt-1">
-                    {(totalDeposits / deposits.length).toFixed(0)} TND par opération
+                    {deposits.length > 0 ? (stats.total_deposits / deposits.length).toFixed(0) : 0} {currency} par opération
                   </p>
                 </div>
               </div>
