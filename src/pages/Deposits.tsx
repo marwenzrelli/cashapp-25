@@ -15,9 +15,12 @@ const Deposits = () => {
     selectedDeposit,
     itemsPerPage, 
     setItemsPerPage,
+    currentPage,
+    setCurrentPage,
     editForm,
     deposits,
     filteredDeposits,
+    paginatedDeposits,
     handleDelete,
     confirmDelete,
     handleEdit,
@@ -29,6 +32,7 @@ const Deposits = () => {
   return (
     <DepositsContent
       deposits={filteredDeposits}
+      paginatedDeposits={paginatedDeposits}
       searchTerm={searchTerm}
       setSearchTerm={setSearchTerm}
       isDialogOpen={isDialogOpen}
@@ -40,6 +44,8 @@ const Deposits = () => {
       selectedDeposit={selectedDeposit}
       itemsPerPage={itemsPerPage}
       setItemsPerPage={setItemsPerPage}
+      currentPage={currentPage}
+      setCurrentPage={setCurrentPage}
       editForm={editForm}
       handleDelete={handleDelete}
       confirmDelete={confirmDelete}

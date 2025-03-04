@@ -7,9 +7,11 @@ import { DeleteDepositDialog } from "./DeleteDepositDialog";
 import { Deposit } from "../types";
 import { useClients } from "@/features/clients/hooks/useClients";
 import { StandaloneDepositForm } from "./DepositForm";
+import { TransferPagination } from "@/features/transfers/components/TransferPagination";
 
 interface DepositsContentProps {
   deposits: Deposit[];
+  paginatedDeposits: Deposit[];
   searchTerm: string;
   setSearchTerm: (term: string) => void;
   isDialogOpen: boolean;
@@ -21,6 +23,8 @@ interface DepositsContentProps {
   selectedDeposit: Deposit | null;
   itemsPerPage: string;
   setItemsPerPage: (value: string) => void;
+  currentPage: number;
+  setCurrentPage: (page: number) => void;
   editForm: any;
   handleDelete: (deposit: Deposit) => void;
   confirmDelete: () => Promise<void>;
@@ -32,6 +36,7 @@ interface DepositsContentProps {
 
 export const DepositsContent = ({
   deposits,
+  paginatedDeposits,
   searchTerm,
   setSearchTerm,
   isDialogOpen,
@@ -43,6 +48,8 @@ export const DepositsContent = ({
   selectedDeposit,
   itemsPerPage,
   setItemsPerPage,
+  currentPage,
+  setCurrentPage,
   editForm,
   handleDelete,
   confirmDelete,
@@ -95,9 +102,17 @@ export const DepositsContent = ({
           totalDeposits={filteredDeposits.length}
         />
         
+        <TransferPagination
+          itemsPerPage={itemsPerPage}
+          setItemsPerPage={setItemsPerPage}
+          totalItems={filteredDeposits.length}
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          label="versements"
+        />
+        
         <DepositsTable 
-          deposits={filteredDeposits} 
-          itemsPerPage={itemsPerPage} 
+          deposits={paginatedDeposits} 
           onEdit={handleEdit} 
           onDelete={handleDelete} 
         />

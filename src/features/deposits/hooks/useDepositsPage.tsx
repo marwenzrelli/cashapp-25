@@ -11,6 +11,7 @@ export const useDepositsPage = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedDeposit, setSelectedDeposit] = useState<Deposit | null>(null);
   const [itemsPerPage, setItemsPerPage] = useState("10");
+  const [currentPage, setCurrentPage] = useState(1);
   const [editForm, setEditForm] = useState<EditFormData>({
     clientName: "",
     amount: "",
@@ -135,10 +136,28 @@ export const useDepositsPage = () => {
     });
   });
 
+  // Calculate pagination
+  const paginatedDeposits = filteredDeposits.slice(
+    (currentPage - 1) * parseInt(itemsPerPage),
+    currentPage * parseInt(itemsPerPage)
+  );
+
+  // Reset to first page when search changes
+  const handleSearchChange = (term: string) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
+  };
+
+  // Reset to first page when items per page changes
+  const handleItemsPerPageChange = (value: string) => {
+    setItemsPerPage(value);
+    setCurrentPage(1);
+  };
+
   return {
     // State
     searchTerm,
-    setSearchTerm,
+    setSearchTerm: handleSearchChange,
     isDialogOpen,
     setIsDialogOpen,
     isDeleteDialogOpen,
@@ -148,10 +167,13 @@ export const useDepositsPage = () => {
     selectedDeposit,
     setSelectedDeposit,
     itemsPerPage,
-    setItemsPerPage,
+    setItemsPerPage: handleItemsPerPageChange,
+    currentPage,
+    setCurrentPage,
     editForm,
     deposits,
     filteredDeposits,
+    paginatedDeposits,
     isDeleting,
     
     // Actions

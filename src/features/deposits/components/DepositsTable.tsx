@@ -10,12 +10,11 @@ import { formatId } from "@/utils/formatId";
 
 interface DepositsTableProps {
   deposits: Deposit[];
-  itemsPerPage: string;
   onEdit: (deposit: Deposit) => void;
   onDelete: (deposit: Deposit) => void;
 }
 
-export const DepositsTable = ({ deposits, itemsPerPage, onEdit, onDelete }: DepositsTableProps) => {
+export const DepositsTable = ({ deposits, onEdit, onDelete }: DepositsTableProps) => {
   const navigate = useNavigate();
   
   const getAmountColor = (amount: number) => {
@@ -63,7 +62,7 @@ export const DepositsTable = ({ deposits, itemsPerPage, onEdit, onDelete }: Depo
             </tr>
           </thead>
           <tbody>
-            {deposits.slice(0, parseInt(itemsPerPage)).map((deposit) => (
+            {deposits.map((deposit) => (
               <tr key={deposit.id} className="group border-b transition-colors hover:bg-muted/50">
                 <td className="p-3">
                   <div className="flex items-center gap-3">
@@ -121,7 +120,7 @@ export const DepositsTable = ({ deposits, itemsPerPage, onEdit, onDelete }: Depo
       </div>
 
       <div className="md:hidden space-y-4">
-        {deposits.slice(0, parseInt(itemsPerPage)).map((deposit) => (
+        {deposits.map((deposit) => (
           <div key={deposit.id} className="p-4 border-b last:border-b-0">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-3">
