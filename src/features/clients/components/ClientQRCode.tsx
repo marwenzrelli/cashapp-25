@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import { Card } from '@/components/ui/card';
@@ -6,6 +7,7 @@ import { Copy, ExternalLink, RefreshCw, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { showErrorToast, showSuccessToast } from '../hooks/utils/errorUtils';
 
 interface ClientQRCodeProps {
   clientId: number;
@@ -85,11 +87,12 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
       if (existingTokens) {
         token = existingTokens.access_token;
       } else {
+        // Création d'un nouveau token permanent (sans date d'expiration)
         const { data: newToken, error } = await supabase
           .from('qr_access')
           .insert([{ 
             client_id: clientId,
-            expires_at: null
+            expires_at: null  // Le token n'expire jamais
           }])
           .select('access_token')
           .single();
@@ -121,11 +124,7 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
       }
     } catch (error: any) {
       console.error("Erreur lors de la génération du QR code:", error);
-      toast({
-        title: "Erreur",
-        description: error.message || "Impossible de générer le QR code",
-        variant: "destructive",
-      });
+      showErrorToast("Erreur", error);
     } finally {
       setIsLoading(false);
     }
@@ -140,17 +139,9 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(qrUrl);
-      toast({
-        title: "Lien copié !",
-        description: "Le lien du QR code a été copié dans le presse-papier.",
-        duration: 3000,
-      });
+      showSuccessToast("Lien copié !", "Le lien du QR code a été copié dans le presse-papier.");
     } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Impossible de copier le lien.",
-        variant: "destructive",
-      });
+      showErrorToast("Erreur", "Impossible de copier le lien.");
     }
   };
 
@@ -158,11 +149,7 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
     if (qrUrl) {
       window.open(qrUrl, '_blank');
     } else {
-      toast({
-        title: "Erreur",
-        description: "Le lien n'est pas encore disponible.",
-        variant: "destructive",
-      });
+      showErrorToast("Erreur", "Le lien n'est pas encore disponible.");
     }
   };
 
