@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Deposit } from "@/components/deposits/types";
@@ -24,8 +23,12 @@ export const useFetchDeposits = (
       }
 
       const formattedDeposits: Deposit[] = data.map(d => {
-        // Use operation_date for display if it exists, otherwise use created_at
-        const displayDate = d.operation_date ? 
+        // Only use operation_date if it's different from created_at
+        // Otherwise use created_at
+        const isCustomDate = d.operation_date && 
+          new Date(d.operation_date).getTime() !== new Date(d.created_at).getTime();
+        
+        const displayDate = isCustomDate ? 
           formatDateTime(d.operation_date) : 
           formatDateTime(d.created_at);
         
