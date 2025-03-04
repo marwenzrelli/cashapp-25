@@ -10,10 +10,20 @@ const PublicClientProfile = () => {
   const { token } = useParams();
   const { client, operations, isLoading, error } = usePublicClientProfile(token);
 
+  // Debug logging to help identify issues
+  console.log("PublicClientProfile render state:", { 
+    token, 
+    hasClient: !!client, 
+    operationsCount: operations?.length, 
+    isLoading, 
+    error 
+  });
+
   if (isLoading) {
     return <PublicClientLoading />;
   }
 
+  // Explicit error handling with informative error component
   if (error || !client) {
     return <PublicClientError error={error} />;
   }

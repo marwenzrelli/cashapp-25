@@ -14,15 +14,16 @@ export const usePublicClientData = (token: string | undefined) => {
 
   const fetchClientData = async () => {
     try {
+      setIsLoading(true);
+      
       if (!token) {
         setError("Token d'accès manquant");
-        setIsLoading(false);
         return;
       }
 
       console.log("Début de la récupération des données avec le token:", token);
 
-      // Récupérer d'abord l'accès QR
+      // Récupérer d'abord l'accès QR avec une limite explicite et gestion d'erreur
       const { data: qrAccess, error: qrError } = await supabase
         .from('qr_access')
         .select('client_id, expires_at')
@@ -70,105 +71,114 @@ export const usePublicClientData = (token: string | undefined) => {
         await fetchOperations(clientData);
       } catch (opsError) {
         console.error("Erreur lors de la récupération des opérations:", opsError);
-        // Don't rethrow, just log
+        // Don't rethrow, just log and set empty operations
+        setOperations([]);
       }
     } catch (err) {
       console.error("Erreur complète:", err);
       setError(handleSupabaseError(err));
+      setClient(null);
+      setOperations([]);
     } finally {
       setIsLoading(false);
     }
   };
 
   const fetchOperations = async (clientData: Client) => {
+    if (!clientData) {
+      console.error("Tentative de récupération d'opérations sans client valide");
+      return;
+    }
+    
     // Récupérer toutes les opérations
     const clientFullName = `${clientData.prenom} ${clientData.nom}`;
     console.log("Recherche des opérations pour:", clientFullName);
 
-    // Récupérer les versements
-    const { data: deposits, error: depositsError } = await supabase
-      .from('deposits')
-      .select('*')
-      .eq('client_name', clientFullName)
-      .eq('status', 'completed')
-      .order('created_at', { ascending: false });
+    try {
+      // Récupérer les versements
+      const { data: deposits, error: depositsError } = await supabase
+        .from('deposits')
+        .select('*')
+        .eq('client_name', clientFullName)
+        .eq('status', 'completed')
+        .order('created_at', { ascending: false });
 
-    if (depositsError) {
-      console.error("Erreur lors de la récupération des versements:", depositsError);
-    } else {
-      console.log("Versements trouvés:", deposits);
+      if (depositsError) {
+        console.error("Erreur lors de la récupération des versements:", depositsError);
+      } else {
+        console.log("Versements trouvés:", deposits?.length || 0);
+      }
+
+      // Récupérer les retraits
+      const { data: withdrawals, error: withdrawalsError } = await supabase
+        .from('withdrawals')
+        .select('*')
+        .eq('client_name', clientFullName)
+        .eq('status', 'completed')
+        .order('created_at', { ascending: false });
+
+      if (withdrawalsError) {
+        console.error("Erreur lors de la récupération des retraits:", withdrawalsError);
+      } else {
+        console.log("Retraits trouvés:", withdrawals?.length || 0);
+      }
+
+      // Récupérer les virements
+      const { data: transfers, error: transfersError } = await supabase
+        .from('transfers')
+        .select('*')
+        .or(`from_client.eq."${clientFullName}",to_client.eq."${clientFullName}"`)
+        .eq('status', 'completed')
+        .order('created_at', { ascending: false });
+
+      if (transfersError) {
+        console.error("Erreur lors de la récupération des virements:", transfersError);
+      } else {
+        console.log("Virements trouvés:", transfers?.length || 0);
+      }
+
+      // Transformer les données en format unifié
+      const allOperations: Operation[] = [
+        ...(deposits || []).map((d): Operation => ({
+          id: d.id.toString().slice(-6),
+          type: "deposit",
+          amount: d.amount,
+          date: d.created_at,
+          createdAt: d.created_at,
+          description: `Versement de ${d.client_name}`,
+          fromClient: d.client_name,
+          formattedDate: formatDateTime(d.created_at)
+        })),
+        ...(withdrawals || []).map((w): Operation => ({
+          id: w.id.toString().slice(-6),
+          type: "withdrawal",
+          amount: w.amount,
+          date: w.created_at,
+          createdAt: w.created_at,
+          description: `Retrait par ${w.client_name}`,
+          fromClient: w.client_name,
+          formattedDate: formatDateTime(w.created_at)
+        })),
+        ...(transfers || []).map((t): Operation => ({
+          id: t.id.toString().slice(-6),
+          type: "transfer",
+          amount: t.amount,
+          date: t.created_at,
+          createdAt: t.created_at,
+          description: t.reason || "Virement",
+          fromClient: t.from_client,
+          toClient: t.to_client,
+          formattedDate: formatDateTime(t.created_at)
+        }))
+      ].sort((a, b) => new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime());
+
+      console.log("Opérations transformées:", allOperations.length);
+      setOperations(allOperations);
+    } catch (err) {
+      console.error("Erreur lors de la transformation des opérations:", err);
+      throw err;
     }
-
-    // Récupérer les retraits
-    const { data: withdrawals, error: withdrawalsError } = await supabase
-      .from('withdrawals')
-      .select('*')
-      .eq('client_name', clientFullName)
-      .eq('status', 'completed')
-      .order('created_at', { ascending: false });
-
-    if (withdrawalsError) {
-      console.error("Erreur lors de la récupération des retraits:", withdrawalsError);
-    } else {
-      console.log("Retraits trouvés:", withdrawals);
-    }
-
-    // Récupérer les virements
-    const { data: transfers, error: transfersError } = await supabase
-      .from('transfers')
-      .select('*')
-      .or(`from_client.eq."${clientFullName}",to_client.eq."${clientFullName}"`)
-      .eq('status', 'completed')
-      .order('created_at', { ascending: false });
-
-    if (transfersError) {
-      console.error("Erreur lors de la récupération des virements:", transfersError);
-    } else {
-      console.log("Virements trouvés:", transfers);
-    }
-
-    // Transformer les données en format unifié - utiliser created_at comme date principale
-    const allOperations: Operation[] = [
-      ...(deposits || []).map((d): Operation => ({
-        id: d.id.toString().slice(-6),
-        type: "deposit",
-        amount: d.amount,
-        date: d.created_at, // Utiliser created_at au lieu de operation_date
-        createdAt: d.created_at,
-        description: `Versement de ${d.client_name}`,
-        fromClient: d.client_name,
-        formattedDate: formatDateTime(d.created_at)
-      })),
-      ...(withdrawals || []).map((w): Operation => ({
-        id: w.id.toString().slice(-6),
-        type: "withdrawal",
-        amount: w.amount,
-        date: w.created_at, // Utiliser created_at au lieu de operation_date
-        createdAt: w.created_at,
-        description: `Retrait par ${w.client_name}`,
-        fromClient: w.client_name,
-        formattedDate: formatDateTime(w.created_at)
-      })),
-      ...(transfers || []).map((t): Operation => ({
-        id: t.id.toString().slice(-6),
-        type: "transfer",
-        amount: t.amount,
-        date: t.created_at, // Utiliser created_at au lieu de operation_date
-        createdAt: t.created_at,
-        description: t.reason || "Virement",
-        fromClient: t.from_client,
-        toClient: t.to_client,
-        formattedDate: formatDateTime(t.created_at)
-      }))
-    ].sort((a, b) => new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime());
-
-    console.log("Opérations transformées:", allOperations);
-    setOperations(allOperations);
   };
-
-  useEffect(() => {
-    fetchClientData();
-  }, [token]);
 
   return {
     client,

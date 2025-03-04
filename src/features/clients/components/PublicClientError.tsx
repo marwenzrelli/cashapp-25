@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 
 interface PublicClientErrorProps {
   error: string | null;
@@ -13,13 +13,23 @@ export const PublicClientError = ({ error }: PublicClientErrorProps) => {
                          error?.toLowerCase().includes('connexion') ||
                          error?.toLowerCase().includes('internet');
 
-  const errorTitle = isNetworkError 
-    ? "Problème de connexion" 
-    : (error || "Client non trouvé");
+  const isExpiredError = error?.toLowerCase().includes('expir');
+                       
+  const errorTitle = isExpiredError 
+    ? "Lien expiré" 
+    : (isNetworkError 
+      ? "Problème de connexion" 
+      : (error || "Client non trouvé"));
 
-  const errorMessage = isNetworkError
-    ? "Impossible de se connecter au serveur. Veuillez vérifier votre connexion internet et réessayer."
-    : "Impossible d'accéder aux informations du client. Veuillez vérifier le lien ou contacter l'administrateur.";
+  const errorMessage = isExpiredError
+    ? "Ce lien a expiré ou n'est plus valide. Veuillez demander un nouveau QR code."
+    : (isNetworkError
+      ? "Impossible de se connecter au serveur. Veuillez vérifier votre connexion internet et réessayer."
+      : "Impossible d'accéder aux informations du client. Veuillez vérifier le lien ou contacter l'administrateur.");
+
+  const handleRefresh = () => {
+    window.location.reload();
+  };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
@@ -32,13 +42,23 @@ export const PublicClientError = ({ error }: PublicClientErrorProps) => {
           <p className="text-muted-foreground mb-4">
             {errorMessage}
           </p>
-          <Button 
-            variant="outline" 
-            onClick={() => window.location.href = '/'}
-            className="mt-2"
-          >
-            Retour à l'accueil
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button 
+              variant="outline" 
+              onClick={handleRefresh}
+              className="gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Actualiser
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => window.location.href = '/'}
+              className="mt-0"
+            >
+              Retour à l'accueil
+            </Button>
+          </div>
         </div>
       </div>
     </div>
