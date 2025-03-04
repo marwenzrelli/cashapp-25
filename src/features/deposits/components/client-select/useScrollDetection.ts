@@ -1,4 +1,3 @@
-
 import { useState, useRef, RefObject, useEffect } from "react";
 import { useTouchMomentum } from "./useTouchMomentum";
 import { useScrollVelocity } from "./useScrollVelocity";
@@ -12,27 +11,34 @@ export const useScrollDetection = (
   const scrollableRef = useRef<HTMLElement | null>(null);
   const touchIsActiveRef = useRef(false);
   const lastTouchTime = useRef(Date.now());
+  const iOSref = useRef(typeof navigator !== 'undefined' && 
+    /iPad|iPhone|iPod/.test(navigator.userAgent) && 
+    !(window as any).MSStream);
 
-  // Find the scrollable element when contentRef changes
   useEffect(() => {
     if (contentRef.current) {
-      // Enhanced search for the radix viewport element
       const findScrollArea = () => {
-        // Look first for the direct radix viewport
-        const radixViewport = contentRef.current?.querySelector('[data-radix-scroll-area-viewport]');
-        if (radixViewport) {
-          scrollableRef.current = radixViewport as HTMLElement;
-          console.log('Found direct radix viewport');
-          return true;
-        }
+        const selectors = [
+          '[data-radix-scroll-area-viewport]',
+          '[data-radix-select-viewport]',
+          '.client-scrollable-area [data-radix-scroll-area-viewport]'
+        ];
         
-        // Next try finding in the client list container
-        const clientListContainer = contentRef.current?.querySelector('.client-list-container');
-        if (clientListContainer) {
-          const containerViewport = clientListContainer.querySelector('[data-radix-scroll-area-viewport]');
-          if (containerViewport) {
-            scrollableRef.current = containerViewport as HTMLElement;
-            console.log('Found viewport in client list container');
+        for (const selector of selectors) {
+          const element = contentRef.current?.querySelector(selector);
+          if (element) {
+            scrollableRef.current = element as HTMLElement;
+            console.log(`Found scrollable element using selector: ${selector}`);
+            
+            if (iOSref.current) {
+              scrollableRef.current.style.WebkitOverflowScrolling = 'touch';
+              scrollableRef.current.style.overscrollBehavior = 'contain';
+              scrollableRef.current.style.touchAction = 'pan-y';
+              scrollableRef.current.style.transform = 'translateZ(0)';
+              scrollableRef.current.style.WebkitBackfaceVisibility = 'hidden';
+              console.log('Applied iOS-specific scroll optimizations');
+            }
+            
             return true;
           }
         }
@@ -40,35 +46,18 @@ export const useScrollDetection = (
         return false;
       };
       
-      // Try to find the scrollable element, and if not found, try again after a short delay
       if (!findScrollArea()) {
-        const retryFindInterval = setInterval(() => {
+        const retryInterval = setInterval(() => {
           if (findScrollArea()) {
-            clearInterval(retryFindInterval);
-            
-            // Apply optimizations when found
-            if (scrollableRef.current) {
-              (scrollableRef.current.style as any)['-webkit-overflow-scrolling'] = 'touch';
-              scrollableRef.current.style.overscrollBehavior = 'contain';
-              scrollableRef.current.style.touchAction = 'pan-y';
-              console.log('Applied touch optimizations to scrollable area');
-            }
+            clearInterval(retryInterval);
           }
-        }, 100);
+        }, 50);
         
-        // Clear interval after 2 seconds if nothing found
-        setTimeout(() => clearInterval(retryFindInterval), 2000);
-      } else if (scrollableRef.current) {
-        // Apply optimizations immediately if found
-        (scrollableRef.current.style as any)['-webkit-overflow-scrolling'] = 'touch';
-        scrollableRef.current.style.overscrollBehavior = 'contain';
-        scrollableRef.current.style.touchAction = 'pan-y';
-        console.log('Applied touch optimizations to scrollable area');
+        setTimeout(() => clearInterval(retryInterval), 2000);
       }
     }
   }, [contentRef]);
 
-  // Add enhanced direct touch handlers
   useEffect(() => {
     const scrollElement = scrollableRef.current;
     if (!scrollElement) return;
@@ -83,6 +72,11 @@ export const useScrollDetection = (
       lastY = startY;
       lastTouchTime.current = Date.now();
       setIsScrolling(true);
+      
+      if (iOSref.current) {
+        scrollElement.style.overflow = 'auto';
+        scrollElement.style.WebkitOverflowScrolling = 'touch';
+      }
     };
     
     const handleTouchMove = (e: TouchEvent) => {
@@ -90,7 +84,6 @@ export const useScrollDetection = (
       const deltaY = lastY - currentY;
       lastY = currentY;
       
-      // Calculate velocity
       const now = Date.now();
       const timeDelta = now - lastTouchTime.current;
       lastTouchTime.current = now;
@@ -99,21 +92,24 @@ export const useScrollDetection = (
         velocityY = Math.abs(deltaY) / timeDelta;
       }
       
+      if (iOSref.current && Math.abs(deltaY) > 0) {
+        scrollElement.scrollTop += deltaY * (iOSref.current ? 1.2 : 1);
+      }
+      
       setIsScrolling(true);
     };
     
     const handleTouchEnd = () => {
       touchIsActiveRef.current = false;
       
-      // Delay the end of scrolling based on final velocity
-      const scrollingDelay = Math.min(500, Math.max(200, velocityY * 300));
+      const scrollingDelay = iOSref.current 
+        ? Math.min(800, Math.max(300, velocityY * 400))
+        : Math.min(500, Math.max(200, velocityY * 300));
       
-      // Clear any existing timeout
       if (scrollStateTimeoutRef.current) {
         window.clearTimeout(scrollStateTimeoutRef.current);
       }
       
-      // Set new timeout
       scrollStateTimeoutRef.current = window.setTimeout(() => {
         if (!touchIsActiveRef.current) {
           setIsScrolling(false);
@@ -121,7 +117,6 @@ export const useScrollDetection = (
       }, scrollingDelay);
     };
     
-    // Add direct touch handlers with passive true for better performance
     scrollElement.addEventListener('touchstart', handleTouchStart, { passive: true });
     scrollElement.addEventListener('touchmove', handleTouchMove, { passive: true });
     scrollElement.addEventListener('touchend', handleTouchEnd, { passive: true });
@@ -149,10 +144,9 @@ export const useScrollDetection = (
     }
   };
 
-  // Use our custom hooks with improved options
   useScrollVelocity(scrollableRef as RefObject<HTMLElement>, {
     onScrollStateChange: setIsScrolling,
-    scrollDelay: 300 // Increased for better detection
+    scrollDelay: 300
   });
 
   useTouchMomentum(scrollableRef as RefObject<HTMLElement>, {

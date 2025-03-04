@@ -27,20 +27,35 @@ export const ClientListItem = ({
     }
   };
 
+  // iOS-optimized handler
+  const handleIOSTouch = (e: React.TouchEvent) => {
+    // Prevent default behavior that might interfere
+    e.stopPropagation();
+    
+    // For iOS, delay the click handler slightly to ensure it's registered as a tap
+    setTimeout(() => {
+      onClick(client.id.toString(), e);
+    }, 10);
+  };
+
   return (
     <div 
       onClick={e => onClick(client.id.toString(), e)} 
-      onTouchEnd={e => onClick(client.id.toString(), e)} 
+      onTouchEnd={handleIOSTouch}
       data-client-id={client.id.toString()} 
       className={`
-        rounded-lg my-0.5 mx-1.5 py-1 px-1.5 transition-all relative
+        rounded-lg my-0.5 mx-1.5 py-1 px-1.5 transition-all relative ios-friendly-touch
         ${isSelected 
           ? 'bg-primary/15 border-l-4 border-primary shadow-sm' 
           : 'hover:bg-muted/50 active:bg-muted/70'}
       `}
       style={{
         WebkitTapHighlightColor: 'transparent',
-        touchAction: 'manipulation'
+        touchAction: 'manipulation',
+        WebkitUserSelect: 'none',
+        userSelect: 'none',
+        WebkitTouchCallout: 'none',
+        cursor: 'pointer'
       }}
     >
       <div className="flex items-center justify-between gap-2">

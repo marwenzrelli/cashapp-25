@@ -1,3 +1,4 @@
+
 import { useRef, useEffect } from "react";
 import { type Client } from "@/features/clients/types";
 import { ClientListItem } from "./ClientListItem";
@@ -24,8 +25,7 @@ export const ClientList = ({
 }: ClientListProps) => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   
-  // Filter clients that should be displayed (in this case, we're keeping all clients
-  // since they're already filtered at a higher level if needed)
+  // Filter clients that should be displayed
   const filteredClients = clients;
   
   useEffect(() => {
@@ -33,10 +33,17 @@ export const ClientList = ({
       const scrollAreaViewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
       
       if (scrollAreaViewport) {
+        // Apply iOS-specific optimizations
         scrollAreaViewport.style.overscrollBehavior = 'contain';
         (scrollAreaViewport.style as any)['-webkit-overflow-scrolling'] = 'touch';
         scrollAreaViewport.style.touchAction = 'pan-y';
+        scrollAreaViewport.style.WebkitBackfaceVisibility = 'hidden';
         
+        // Force iOS to recognize this as a scrollable area
+        scrollAreaViewport.style.height = '100%';
+        scrollAreaViewport.style.position = 'relative';
+        
+        // Enhanced touch handling for iOS
         let startY = 0;
         let lastY = 0;
         let touchVelocity = 0;
@@ -61,7 +68,8 @@ export const ClientList = ({
           const currentY = e.touches[0].clientY;
           const deltaY = lastY - currentY;
           
-          scrollAreaViewport.scrollTop += deltaY * 1.2;
+          // Use more aggressive scrolling for iOS
+          scrollAreaViewport.scrollTop += deltaY * 1.5;
           
           const currentTime = Date.now();
           const timeElapsed = currentTime - startTime;
@@ -75,13 +83,13 @@ export const ClientList = ({
         };
         
         const handleTouchEnd = () => {
-          momentum = touchVelocity * 15;
+          momentum = touchVelocity * 20; // Increase momentum for better iOS experience
           
           if (Math.abs(momentum) > 0.1) {
             const applyMomentum = () => {
-              scrollAreaViewport.scrollTop += momentum * 10;
+              scrollAreaViewport.scrollTop += momentum * 12;
               
-              momentum *= 0.95;
+              momentum *= 0.92;
               
               if (Math.abs(momentum) > 0.1) {
                 animationFrame = requestAnimationFrame(applyMomentum);
@@ -94,6 +102,7 @@ export const ClientList = ({
           }
         };
         
+        // Add iOS-specific passive listeners for better performance
         scrollAreaViewport.addEventListener('touchstart', handleTouchStart, { passive: true });
         scrollAreaViewport.addEventListener('touchmove', handleTouchMove, { passive: true });
         scrollAreaViewport.addEventListener('touchend', handleTouchEnd, { passive: true });
@@ -129,7 +138,7 @@ export const ClientList = ({
 
   return (
     <div 
-      className="client-list-container overflow-hidden max-h-[calc(100%-40px)]"
+      className="client-list-container overflow-hidden relative max-h-[calc(100%-40px)]"
       onClick={(e) => e.stopPropagation()}
     >
       {filteredClients.length > 5 && !isScrolling && (

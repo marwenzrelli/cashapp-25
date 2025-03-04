@@ -1,4 +1,5 @@
-import { useRef, useState } from "react";
+
+import { useRef, useState, useEffect } from "react";
 import { Select, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { type Client } from "@/features/clients/types";
 import { useClientFilter } from "./client-select/useClientFilter";
@@ -18,10 +19,31 @@ export const ClientSelectDropdown = ({
 }: ClientSelectDropdownProps) => {
   const [openState, setOpenState] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+  const [forceSelection, setForceSelection] = useState(false);
   
   // Use our custom hooks
   const { clientSearch, setClientSearch, filteredClients } = useClientFilter(clients, openState);
   const [isScrolling, clearScrolling] = useScrollDetection(contentRef);
+
+  // Force iOS redraw on open/close state change
+  useEffect(() => {
+    if (openState) {
+      // Force iOS to display content with a slight delay
+      const timeout = setTimeout(() => {
+        if (contentRef.current) {
+          // Toggle a property to force redraw
+          contentRef.current.style.opacity = '0.99';
+          setTimeout(() => {
+            if (contentRef.current) {
+              contentRef.current.style.opacity = '1';
+            }
+          }, 10);
+        }
+      }, 50);
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [openState]);
 
   const getSelectedClientName = () => {
     const client = clients.find(c => c.id.toString() === selectedClient);
@@ -29,16 +51,24 @@ export const ClientSelectDropdown = ({
   };
 
   const handleClientSelect = (clientId: string) => {
-    // Only update if a selection is made
+    // Check if this is a real selection vs a clear operation
     if (clientId) {
       onClientSelect(clientId);
-      // Keep dropdown open to allow the user to confirm or choose another option
-      // Will close on click outside
+      // On iOS, we need a slight delay to ensure UI updates properly
+      setTimeout(() => {
+        setOpenState(false);
+      }, 100);
     } else if (clientId === "") {
-      // If selection is cleared, process it
       onClientSelect("");
-      // Close dropdown on clearing selection
       setOpenState(false);
+    }
+  };
+
+  // Handle iOS-specific touchend issues
+  const handleTriggerTouch = () => {
+    // This helps iOS recognize the dropdown should open on touch
+    if (!openState) {
+      setOpenState(true);
     }
   };
 
@@ -49,7 +79,14 @@ export const ClientSelectDropdown = ({
       open={openState} 
       onOpenChange={setOpenState}
     >
-      <SelectTrigger className="w-full min-h-[42px] py-3 px-4 bg-white dark:bg-black shadow-sm rounded-lg border-input text-zinc-950 dark:text-zinc-50 font-medium touch-manipulation">
+      <SelectTrigger 
+        className="w-full min-h-[42px] py-3 px-4 bg-white dark:bg-black shadow-sm rounded-lg border-input text-zinc-950 dark:text-zinc-50 font-medium touch-manipulation"
+        onTouchEnd={handleTriggerTouch}
+        style={{
+          WebkitTapHighlightColor: 'transparent',
+          WebkitTouchCallout: 'none',
+        }}
+      >
         <SelectValue placeholder="Sélectionner un client">
           {selectedClient ? getSelectedClientName() : "Sélectionner un client"}
         </SelectValue>

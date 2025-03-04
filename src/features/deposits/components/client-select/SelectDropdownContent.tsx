@@ -1,5 +1,5 @@
 
-import { RefObject } from "react";
+import { RefObject, useEffect } from "react";
 import { SelectContent } from "@/components/ui/select";
 import { Client } from "@/features/clients/types";
 import { ClientList } from "./ClientList";
@@ -29,6 +29,31 @@ export const SelectDropdownContent = ({
   onClientSelect,
   contentRef
 }: SelectDropdownContentProps) => {
+  // Force iOS redraw on component mount
+  useEffect(() => {
+    if (contentRef.current) {
+      // Force iOS to recalculate and display the content
+      const forceIOSRedraw = () => {
+        if (contentRef.current) {
+          // Get viewport element
+          const viewport = contentRef.current.querySelector('[data-radix-select-viewport]');
+          if (viewport) {
+            // Force repaint by toggling a style
+            (viewport as HTMLElement).style.display = 'none';
+            setTimeout(() => {
+              if (viewport) {
+                (viewport as HTMLElement).style.display = '';
+              }
+            }, 10);
+          }
+        }
+      };
+      
+      // Apply on mount with slight delay to ensure DOM is ready
+      setTimeout(forceIOSRedraw, 50);
+    }
+  }, [contentRef, openState]);
+
   const handlePointerDownOutside = (e: any) => {
     // If we're scrolling, prevent closing
     if (isScrolling) {
@@ -42,9 +67,18 @@ export const SelectDropdownContent = ({
   return (
     <SelectContent
       ref={contentRef}
-      className="max-h-[60vh] overflow-hidden p-0"
-      style={{ touchAction: "pan-y" }}
+      className="max-h-[60vh] overflow-hidden p-0 ios-select-content"
+      style={{ 
+        touchAction: "pan-y",
+        WebkitOverflowScrolling: 'touch'
+      }}
       onPointerDownOutside={handlePointerDownOutside}
+      onOpenAutoFocus={(e) => {
+        // Prevent auto focus which can cause problems on iOS
+        e.preventDefault();
+      }}
+      position="popper"
+      sideOffset={0}
     >
       <div className="sticky top-0 z-10 bg-white dark:bg-black border-b p-2">
         <ClientSearchInput
