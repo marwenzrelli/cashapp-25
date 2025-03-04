@@ -103,7 +103,7 @@ export const DepositsTable = ({ deposits, itemsPerPage, onEdit, onDelete }: Depo
                   </div>
                 </td>
                 <td className="p-3 text-muted-foreground">
-                  {formatDateTime(deposit.created_at)}
+                  {deposit.date}
                 </td>
                 <td className="p-3 text-muted-foreground">{deposit.description}</td>
                 <td className="p-3">
@@ -159,7 +159,7 @@ export const DepositsTable = ({ deposits, itemsPerPage, onEdit, onDelete }: Depo
               </div>
             </div>
             <div className="space-y-1 text-sm text-muted-foreground mb-3">
-              <p>{formatDateTime(deposit.created_at)}</p>
+              <p>{deposit.date}</p>
               <p>{deposit.description}</p>
             </div>
             <div className="flex gap-2 justify-end">
