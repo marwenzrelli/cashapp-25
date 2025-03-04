@@ -28,3 +28,14 @@ export interface SearchBarProps {
   onItemsPerPageChange: (value: string) => void;
   totalDeposits: number;
 }
+
+// Extend EditFormData to include additional fields needed for the enhanced dialog
+export interface ExtendedEditFormData {
+  id?: number;
+  clientName: string;
+  amount: string;
+  notes: string;
+  date?: string;
+  time?: string;
+  clientBalance?: string;
+}

@@ -2,10 +2,14 @@
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ArrowUpCircle } from "lucide-react";
+import { Pencil, Calendar, Clock, User, DollarSign, ScrollText } from "lucide-react";
 import { NotesField } from "@/features/withdrawals/components/form-fields/NotesField";
 import { AmountField } from "@/features/withdrawals/components/form-fields/AmountField";
+import { DateField } from "@/features/withdrawals/components/form-fields/DateField";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { EditFormData } from "@/components/deposits/types";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 export interface EditDepositDialogProps {
   isOpen: boolean;
@@ -24,63 +28,114 @@ export const EditDepositDialog: React.FC<EditDepositDialogProps> = ({
   onConfirm,
   isLoading = false,
 }) => {
+  const { currency } = useCurrency();
+  
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-2xl">
             <div className="rounded-xl bg-blue-100 dark:bg-blue-900/20 p-2">
-              <ArrowUpCircle className="h-6 w-6 text-blue-600" />
+              <Pencil className="h-6 w-6 text-blue-600" />
             </div>
             Modifier le versement
           </DialogTitle>
-          <DialogDescription className="text-base">
+          <DialogDescription className="text-base text-gray-500">
             Modifiez les informations du versement
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-6 py-4">
-          <div className="relative overflow-hidden rounded-lg border bg-gradient-to-b from-background to-muted/50 p-6">
-            <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))]" />
-            <div className="relative grid gap-4">
-              <div className="space-y-2">
-                <label htmlFor="clientName" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Client
-                </label>
-                <input
-                  id="clientName"
-                  value={editForm.clientName}
-                  onChange={(e) => onEditFormChange('clientName', e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  readOnly
+        <div className="py-4 space-y-6">
+          {/* Date and Time */}
+          <div className="space-y-2">
+            <Label htmlFor="depositDate" className="text-base font-medium">Date et heure du versement</Label>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="relative">
+                <Input
+                  id="depositDate"
+                  type="date"
+                  className="pl-10 border rounded-lg bg-gray-50"
+                  value={editForm.date || ""}
+                  onChange={(e) => onEditFormChange('date', e.target.value)}
                 />
+                <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
               </div>
-
-              <AmountField
-                value={editForm.amount}
-                onChange={(value) => onEditFormChange('amount', value)}
+              <div className="relative">
+                <Input
+                  id="depositTime"
+                  type="time"
+                  step="1"
+                  className="pl-10 border rounded-lg bg-gray-50"
+                  value={editForm.time || ""}
+                  onChange={(e) => onEditFormChange('time', e.target.value)}
+                />
+                <Clock className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+              </div>
+            </div>
+          </div>
+          
+          {/* Client */}
+          <div className="space-y-2">
+            <Label htmlFor="clientName" className="text-base font-medium">Client</Label>
+            <div className="relative">
+              <Input
+                id="clientName"
+                value={editForm.clientName}
+                onChange={(e) => onEditFormChange('clientName', e.target.value)}
+                className="pl-10 border rounded-lg bg-gray-50"
+                readOnly
+              />
+              <User className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+            </div>
+            {editForm.clientBalance && (
+              <p className="text-sm text-red-500">{editForm.clientBalance} {currency}</p>
+            )}
+          </div>
+          
+          {/* Amount */}
+          <div className="space-y-2">
+            <Label htmlFor="edit-amount" className="text-base font-medium">Montant</Label>
+            <div className="relative">
+              <Input
                 id="edit-amount"
+                type="number"
+                placeholder="0.00"
+                value={editForm.amount}
+                onChange={(e) => onEditFormChange('amount', e.target.value)}
+                className="pl-10 border rounded-lg bg-gray-50"
               />
-
-              <NotesField
-                value={editForm.notes || ""}
-                onChange={(value) => onEditFormChange('notes', value)}
+              <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+            </div>
+          </div>
+          
+          {/* Description */}
+          <div className="space-y-2">
+            <Label htmlFor="edit-notes" className="text-base font-medium">Description</Label>
+            <div className="relative">
+              <textarea
                 id="edit-notes"
+                placeholder="Description du versement..."
+                value={editForm.notes || ""}
+                onChange={(e) => onEditFormChange('notes', e.target.value)}
+                className="w-full min-h-[100px] pl-10 pt-2 border rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+              <ScrollText className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
             </div>
           </div>
         </div>
 
-        <DialogFooter className="sm:justify-between">
-          <Button variant="ghost" onClick={() => onOpenChange(false)} className="gap-2">
+        <hr className="mt-6" />
+
+        <DialogFooter className="mt-4 sm:justify-between">
+          <Button variant="ghost" onClick={() => onOpenChange(false)} className="text-base">
             Annuler
           </Button>
           <Button
             onClick={onConfirm}
-            className="bg-blue-600 hover:bg-blue-700 text-white gap-2 min-w-[200px]"
+            className="bg-blue-600 hover:bg-blue-700 text-white gap-2 px-6 py-2 rounded-full text-base"
             disabled={isLoading}
           >
-            <ArrowUpCircle className="h-4 w-4" />
+            <Pencil className="h-4 w-4" />
             {isLoading ? "En cours..." : "Modifier le versement"}
           </Button>
         </DialogFooter>
