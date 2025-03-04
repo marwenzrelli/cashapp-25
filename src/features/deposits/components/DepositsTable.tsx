@@ -1,3 +1,4 @@
+
 import { User, Pencil, Trash2, Hash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { type Deposit } from "@/components/deposits/types";
@@ -46,19 +47,6 @@ export const DepositsTable = ({ deposits, itemsPerPage, onEdit, onDelete }: Depo
       
       navigate(`/clients?search=${encodeURIComponent(clientName)}`);
     }
-  };
-
-  const formatDateTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleString('fr-FR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false
-    });
   };
 
   return (

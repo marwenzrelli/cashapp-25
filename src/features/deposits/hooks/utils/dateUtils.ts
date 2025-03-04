@@ -1,7 +1,9 @@
 
 export const formatDateTime = (dateString: string) => {
+  if (!dateString) return '';
+  
   const date = new Date(dateString);
-  return date.toLocaleDateString('fr-FR', {
+  return date.toLocaleString('fr-FR', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
