@@ -101,47 +101,48 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
             setItemsPerPage={setItemsPerPage}
             withdrawalsCount={withdrawals.length}
           />
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Recherche intelligente</CardTitle>
-              <CardDescription>
-                Trouvez rapidement un retrait
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    placeholder="Rechercher par nom, notes, ou ID..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
-                <Select
-                  value={itemsPerPage}
-                  onValueChange={setItemsPerPage}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Nombre d'éléments" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="10">10 éléments</SelectItem>
-                    <SelectItem value="25">25 éléments</SelectItem>
-                    <SelectItem value="50">50 éléments</SelectItem>
-                    <SelectItem value="100">100 éléments</SelectItem>
-                  </SelectContent>
-                </Select>
-                <div className="text-sm text-muted-foreground">
-                  {withdrawals.length} résultats trouvés
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Recherche intelligente</CardTitle>
+          <CardDescription>
+            Trouvez rapidement un retrait
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-4 items-center">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Rechercher par nom, notes, ou ID..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <Select
+              value={itemsPerPage}
+              onValueChange={setItemsPerPage}
+              className="w-auto min-w-[160px]"
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Nombre d'éléments" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10 éléments</SelectItem>
+                <SelectItem value="25">25 éléments</SelectItem>
+                <SelectItem value="50">50 éléments</SelectItem>
+                <SelectItem value="100">100 éléments</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="text-sm text-muted-foreground">
+              {withdrawals.length} résultats trouvés
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <WithdrawalTable
         withdrawals={withdrawals}
