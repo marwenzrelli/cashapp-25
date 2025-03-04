@@ -1,5 +1,4 @@
-
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Select, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { type Client } from "@/features/clients/types";
 import { useClientFilter } from "./client-select/useClientFilter";
@@ -30,15 +29,15 @@ export const ClientSelectDropdown = ({
   };
 
   const handleClientSelect = (clientId: string) => {
-    // Only update if a new selection is made
-    if (clientId && clientId !== selectedClient) {
+    // Only update if a selection is made
+    if (clientId) {
       onClientSelect(clientId);
-      // Don't close automatically - let user click outside or manually close
-      // We'll let the user decide when to close by clicking outside
-    } else if (!clientId) {
+      // Keep dropdown open to allow the user to confirm or choose another option
+      // Will close on click outside
+    } else if (clientId === "") {
       // If selection is cleared, process it
-      onClientSelect(clientId);
-      // Close immediately only when clearing selection
+      onClientSelect("");
+      // Close dropdown on clearing selection
       setOpenState(false);
     }
   };
@@ -70,6 +69,3 @@ export const ClientSelectDropdown = ({
     </Select>
   );
 };
-
-// We need to import useState at the top
-import { useState } from "react";

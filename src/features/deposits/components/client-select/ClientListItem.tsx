@@ -66,8 +66,10 @@ export const ClientListItem = ({
         </div>
       )}
       
-      {/* Hidden SelectItem with sr-only to keep value state but hide from view */}
-      <SelectItem value={client.id.toString()} className="hidden" />
+      {/* This SelectItem is crucial for Radix UI Select to work properly */}
+      <SelectItem value={client.id.toString()} className="sr-only">
+        {client.prenom} {client.nom}
+      </SelectItem>
     </div>
   );
 };

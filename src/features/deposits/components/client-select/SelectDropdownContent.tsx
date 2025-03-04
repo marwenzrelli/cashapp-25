@@ -29,7 +29,7 @@ export const SelectDropdownContent = ({
   contentRef
 }: SelectDropdownContentProps) => {
 
-  // Function to scroll to the bottom of the list - simplified to avoid inconsistent hook rendering
+  // Function to scroll to the bottom of the list
   const scrollToBottom = () => {
     // Find the Radix UI ScrollArea viewport
     const scrollArea = contentRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
@@ -51,7 +51,7 @@ export const SelectDropdownContent = ({
     }, 300);
   };
 
-  // Prevent dropdown from closing when clicking inside - using a single, consistent effect
+  // Prevent dropdown from closing when clicking inside
   useEffect(() => {
     if (!openState || !contentRef.current) return;
     
@@ -62,28 +62,12 @@ export const SelectDropdownContent = ({
       e.stopPropagation();
     };
     
-    // Handler for scroll hint
-    const setupScrollHint = () => {
-      const scrollHint = currentRef.querySelector('.client-list-container > div:first-child');
-      if (scrollHint) {
-        scrollHint.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          scrollToBottom();
-        });
-      }
-    };
-    
     // Set up both handlers
     currentRef.addEventListener('click', handleContentClick);
-    
-    // Run scroll hint setup with a delay
-    const scrollTimeout = setTimeout(setupScrollHint, 100);
     
     // Clean up all event listeners on unmount
     return () => {
       currentRef.removeEventListener('click', handleContentClick);
-      clearTimeout(scrollTimeout);
     };
   }, [openState, contentRef]);
 
@@ -97,6 +81,12 @@ export const SelectDropdownContent = ({
         if (!contentRef.current?.contains(e.target as Node)) {
           setOpenState(false);
         } else {
+          e.preventDefault();
+        }
+      }}
+      onInteractOutside={(e) => {
+        // Prevent interactions outside from closing when interacting with the dropdown
+        if (contentRef.current?.contains(e.target as Node)) {
           e.preventDefault();
         }
       }}
