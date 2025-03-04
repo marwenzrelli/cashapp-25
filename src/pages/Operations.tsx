@@ -10,6 +10,7 @@ import { OperationsList } from "@/features/operations/components/OperationsList"
 import { OperationsHeader } from "@/features/operations/components/OperationsHeader";
 import { generatePDF } from "@/features/operations/utils/pdf-generator";
 import { operationMatchesSearch } from "@/features/operations/utils/display-helpers";
+import { TransferPagination } from "@/features/transfers/components/TransferPagination";
 
 const Operations = () => {
   const { 
@@ -24,6 +25,8 @@ const Operations = () => {
   const [filterType, setFilterType] = useState<string | null>(null);
   const [filterClient, setFilterClient] = useState("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [itemsPerPage, setItemsPerPage] = useState("10");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const filteredOperations = operations.filter((op) => {
     // Filtrage par type
@@ -47,6 +50,12 @@ const Operations = () => {
     ...op,
     formattedDate: formatDateTime(op.date)
   }));
+
+  // Pagination des opérations
+  const paginatedOperations = operationsWithFormattedDates.slice(
+    (currentPage - 1) * parseInt(itemsPerPage),
+    currentPage * parseInt(itemsPerPage)
+  );
 
   // Export PDF functionality
   const handleExportPDF = () => {
@@ -75,8 +84,17 @@ const Operations = () => {
         setDate={setDateRange}
       />
 
+      <TransferPagination
+        itemsPerPage={itemsPerPage}
+        setItemsPerPage={setItemsPerPage}
+        totalItems={filteredOperations.length}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+        label="opérations"
+      />
+
       <OperationsList 
-        operations={operationsWithFormattedDates} 
+        operations={paginatedOperations} 
         isLoading={isLoading} 
         onDelete={deleteOperation} 
       />
