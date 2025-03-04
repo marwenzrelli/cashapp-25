@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
@@ -73,9 +74,9 @@ export const StandaloneDepositForm = ({
   const selectedClientData = clients.find(c => c.id.toString() === selectedClient);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Nouveau versement</CardTitle>
+    <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-100 shadow-md">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base text-blue-700">Nouveau versement</CardTitle>
         <CardDescription>
           Créez un nouveau versement pour un client
         </CardDescription>
