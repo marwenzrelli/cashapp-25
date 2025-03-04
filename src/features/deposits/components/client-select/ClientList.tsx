@@ -1,4 +1,3 @@
-
 import { useRef, useEffect } from "react";
 import { type Client } from "@/features/clients/types";
 import { ClientListItem } from "./ClientListItem";
@@ -24,6 +23,10 @@ export const ClientList = ({
   setOpenState
 }: ClientListProps) => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  
+  // Filter clients that should be displayed (in this case, we're keeping all clients
+  // since they're already filtered at a higher level if needed)
+  const filteredClients = clients;
   
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -120,7 +123,7 @@ export const ClientList = ({
     onClientSelect(clientId);
   };
 
-  if (clients.length === 0) {
+  if (filteredClients.length === 0) {
     return <EmptyClientList />;
   }
 
@@ -129,8 +132,8 @@ export const ClientList = ({
       className="client-list-container overflow-hidden max-h-[calc(100%-40px)]"
       onClick={(e) => e.stopPropagation()}
     >
-      {clients.length > 5 && !isScrolling && (
-        <ScrollHint show={clients.length > 5} />
+      {filteredClients.length > 5 && !isScrolling && (
+        <ScrollHint show={filteredClients.length > 5} />
       )}
       
       <ScrollArea 
@@ -143,7 +146,7 @@ export const ClientList = ({
         }}
       >
         <div className="py-0.5">
-          {clients.map(client => (
+          {filteredClients.map(client => (
             <ClientListItem 
               key={client.id}
               client={client}
