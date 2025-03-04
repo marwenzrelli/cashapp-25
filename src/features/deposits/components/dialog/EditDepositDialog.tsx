@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowUpCircle } from "lucide-react";
 import { NotesField } from "@/features/withdrawals/components/form-fields/NotesField";
 import { AmountField } from "@/features/withdrawals/components/form-fields/AmountField";
-import { EditFormData } from "@/features/deposits/types";
+import { EditFormData } from "@/components/deposits/types";
 
 export interface EditDepositDialogProps {
   isOpen: boolean;
