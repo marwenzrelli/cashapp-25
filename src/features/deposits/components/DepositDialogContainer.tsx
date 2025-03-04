@@ -1,5 +1,5 @@
 
-import { Dialog } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Deposit } from "@/features/deposits/types";
 import { StandaloneDepositForm } from "./DepositForm";
 import { Client } from "@/features/clients/types";
@@ -21,11 +21,19 @@ export const DepositDialogContainer = ({
 }: DepositDialogContainerProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <StandaloneDepositForm
-        clients={clients}
-        onConfirm={onConfirm}
-        refreshClientBalance={refreshClientBalance}
-      />
+      <DialogContent className="sm:max-w-[600px]">
+        <DialogHeader>
+          <DialogTitle>Nouveau versement</DialogTitle>
+        </DialogHeader>
+        <StandaloneDepositForm
+          clients={clients}
+          onConfirm={async (deposit) => {
+            await onConfirm(deposit);
+            onOpenChange(false);
+          }}
+          refreshClientBalance={refreshClientBalance}
+        />
+      </DialogContent>
     </Dialog>
   );
 };

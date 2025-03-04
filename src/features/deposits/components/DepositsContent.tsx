@@ -1,6 +1,5 @@
 
 import React from "react";
-import { StandaloneDepositForm } from "./DepositForm";
 import { DepositsTable } from "./DepositsTable";
 import { DepositsHeader } from "./DepositsHeader";
 import { SearchBar } from "./SearchBar";
@@ -8,6 +7,7 @@ import { DeleteDepositDialog } from "./DeleteDepositDialog";
 import { DepositDialogContainer } from "./DepositDialogContainer";
 import { Deposit } from "../types";
 import { useClients } from "@/features/clients/hooks/useClients";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface DepositsContentProps {
   deposits: Deposit[];
@@ -78,15 +78,23 @@ export const DepositsContent = ({
         filteredDeposits={filteredDeposits}
       />
 
-      <div className="grid gap-6">
-        <div>
-          <StandaloneDepositForm 
-            clients={clients} 
-            onConfirm={handleCreateDeposit} 
-            refreshClientBalance={handleRefreshClientBalance} 
-          />
-        </div>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Nouveau versement</CardTitle>
+          <CardDescription>
+            Créez un nouveau versement pour un client
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {/* Only show the New Deposit button here, not the full form */}
+          <button 
+            onClick={() => setIsDialogOpen(true)}
+            className="w-full py-3 px-4 border-2 border-dashed border-muted-foreground/20 rounded-lg text-muted-foreground hover:bg-muted/50 transition-colors flex items-center justify-center"
+          >
+            + Créer un nouveau versement
+          </button>
+        </CardContent>
+      </Card>
 
       <div className="space-y-4">
         <SearchBar

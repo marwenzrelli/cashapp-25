@@ -1,4 +1,3 @@
-
 import { CalendarIcon, Trash, ArrowDownCircle, ArrowUpCircle, RefreshCcw, Activity, Hash } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -189,4 +188,3 @@ const getOperationIcon = (type: string) => {
       return <Activity className="h-5 w-5 text-gray-500" />;
   }
 };
-
