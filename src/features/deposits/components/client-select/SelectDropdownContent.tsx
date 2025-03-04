@@ -1,9 +1,12 @@
 
-import React, { useEffect } from "react";
+import { RefObject } from "react";
 import { SelectContent } from "@/components/ui/select";
-import { ClientSearchInput } from "./ClientSearchInput";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Client } from "@/features/clients/types";
 import { ClientList } from "./ClientList";
-import { type Client } from "@/features/clients/types";
+import { ClientSearchInput } from "./ClientSearchInput";
+import { EmptyClientList } from "./EmptyClientList";
+import { ScrollHint } from "./ScrollHint";
 
 interface SelectDropdownContentProps {
   openState: boolean;
@@ -14,7 +17,7 @@ interface SelectDropdownContentProps {
   filteredClients: Client[];
   selectedClient: string;
   onClientSelect: (clientId: string) => void;
-  contentRef: React.RefObject<HTMLDivElement>;
+  contentRef: RefObject<HTMLDivElement>;
 }
 
 export const SelectDropdownContent = ({
@@ -28,86 +31,45 @@ export const SelectDropdownContent = ({
   onClientSelect,
   contentRef
 }: SelectDropdownContentProps) => {
-
-  // Function to scroll to the bottom of the list
-  const scrollToBottom = () => {
-    // Find the Radix UI ScrollArea viewport
-    const scrollArea = contentRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
-    if (scrollArea) {
-      scrollArea.scrollTo({
-        top: scrollArea.scrollHeight,
-        behavior: 'smooth'
-      });
+  const handlePointerDownOutside = (e: any) => {
+    // If we're scrolling, prevent closing
+    if (isScrolling) {
+      e.preventDefault();
+      return;
     }
   };
 
-  const handleClientRemove = (clientId: string) => {
-    // Clearing the selection
-    onClientSelect("");
-    
-    // Close the dropdown after a short delay
-    setTimeout(() => {
-      setOpenState(false);
-    }, 300);
-  };
-
-  // Prevent dropdown from closing when clicking inside
-  useEffect(() => {
-    if (!openState || !contentRef.current) return;
-    
-    const currentRef = contentRef.current;
-    
-    // Handler for content clicks
-    const handleContentClick = (e: MouseEvent) => {
-      e.stopPropagation();
-    };
-    
-    // Set up both handlers
-    currentRef.addEventListener('click', handleContentClick);
-    
-    // Clean up all event listeners on unmount
-    return () => {
-      currentRef.removeEventListener('click', handleContentClick);
-    };
-  }, [openState, contentRef]);
+  const hasNoResults = clientSearch.length > 0 && filteredClients.length === 0;
+  const showScrollHint = filteredClients.length > 5 && !isScrolling;
 
   return (
-    <SelectContent 
-      ref={contentRef} 
-      className="client-select-content h-[calc(100vh-200px)] max-h-[500px] w-full p-0 overflow-hidden bg-white dark:bg-zinc-950"
-      style={{ touchAction: 'pan-y' }}
-      onPointerDownOutside={(e) => {
-        // Only close if clicking outside the component, not when interacting within
-        if (!contentRef.current?.contains(e.target as Node)) {
-          setOpenState(false);
-        } else {
-          e.preventDefault();
-        }
-      }}
-      onInteractOutside={(e) => {
-        // Prevent interactions outside from closing when interacting with the dropdown
-        if (contentRef.current?.contains(e.target as Node)) {
-          e.preventDefault();
-        }
-      }}
+    <SelectContent
+      ref={contentRef}
+      className="max-h-[60vh] overflow-hidden p-0"
+      style={{ touchAction: "pan-y" }}
+      onPointerDownOutside={handlePointerDownOutside}
     >
-      <div className="sticky top-0 z-10 bg-white dark:bg-zinc-950 pt-0.5 px-2 pb-0.5">
-        <ClientSearchInput 
-          value={clientSearch} 
-          onChange={setClientSearch} 
-          count={filteredClients.length}
-          isOpen={openState}
+      <div className="sticky top-0 z-10 bg-white dark:bg-black border-b p-2">
+        <ClientSearchInput
+          value={clientSearch}
+          onChange={setClientSearch}
+          isScrolling={isScrolling}
         />
       </div>
-      
-      <ClientList 
-        clients={filteredClients}
-        selectedClient={selectedClient}
-        isScrolling={isScrolling}
-        onClientSelect={onClientSelect}
-        onClientRemove={handleClientRemove}
-        setOpenState={setOpenState}
-      />
+
+      <ScrollArea className="max-h-[50vh] overflow-y-auto px-1 pt-1 pb-2">
+        {hasNoResults ? (
+          <EmptyClientList searchTerm={clientSearch} />
+        ) : (
+          <ClientList
+            clients={filteredClients}
+            selectedClient={selectedClient}
+            onClientSelect={onClientSelect}
+          />
+        )}
+      </ScrollArea>
+
+      {showScrollHint && <ScrollHint />}
     </SelectContent>
   );
 };
