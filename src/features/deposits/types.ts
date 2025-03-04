@@ -1,5 +1,5 @@
 
-import { type Deposit } from "@/components/deposits/types";
+import { type Deposit, type EditFormData } from "@/components/deposits/types";
 
 export type { Deposit } from "@/components/deposits/types";
 export type { EditFormData } from "@/components/deposits/types";
@@ -33,4 +33,3 @@ export interface SearchBarProps {
 export interface ExtendedEditFormData extends EditFormData {
   id?: number;
 }
-
