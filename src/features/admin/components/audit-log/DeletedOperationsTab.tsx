@@ -8,14 +8,16 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-// Define the type for the deleted operations
 interface DeletedOperation {
-  id: number;
-  operation_id: number | null;
-  operation_type: string | null;
+  id: string;
+  original_id: string;
+  amount: number;
+  client_name: string;
   deleted_by: string;
   deleted_at: string;
-  operation_details: string | null;
+  notes: string | null;
+  operation_date: string;
+  status: string;
 }
 
 export const DeletedOperationsTab = () => {
@@ -32,14 +34,14 @@ export const DeletedOperationsTab = () => {
     queryFn: async () => {
       try {
         // Get total count for pagination
-        const { data: countData, error: countError } = await supabase
+        const { count, error: countError } = await supabase
           .from('deleted_withdrawals')
-          .select('count', { count: 'exact', head: true });
+          .select('*', { count: 'exact', head: true });
           
         if (countError) throw countError;
         
         // Calculate total pages
-        const totalItems = countData?.[0]?.count || 0;
+        const totalItems = count || 0;
         setTotalPages(Math.ceil(totalItems / operationsPerPage));
         
         // Fetch deleted operations with pagination
@@ -77,9 +79,9 @@ export const DeletedOperationsTab = () => {
     action_type: "Suppression",
     action_date: op.deleted_at,
     performed_by: op.deleted_by,
-    details: op.operation_details || "Opération supprimée",
-    target_id: op.operation_id?.toString() || '',
-    target_name: op.operation_type || ''
+    details: op.notes || "Opération supprimée",
+    target_id: op.original_id?.toString() || '',
+    target_name: op.client_name || ''
   })) || [];
 
   if (error) {

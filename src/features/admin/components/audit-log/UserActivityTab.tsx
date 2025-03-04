@@ -19,14 +19,14 @@ export const UserActivityTab = () => {
     queryFn: async () => {
       try {
         // Get total count for pagination
-        const { data: countData, error: countError } = await supabase
+        const { count, error: countError } = await supabase
           .from('profiles')
-          .select('count', { count: 'exact', head: true });
+          .select('*', { count: 'exact', head: true });
           
         if (countError) throw countError;
         
         // Calculate total pages
-        const totalItems = countData?.[0]?.count || 0;
+        const totalItems = count || 0;
         setTotalPages(Math.ceil(totalItems / logsPerPage));
         
         // Fetch user login activity with pagination

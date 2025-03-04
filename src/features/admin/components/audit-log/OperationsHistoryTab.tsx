@@ -7,16 +7,18 @@ import { LogEntryRenderer, AuditLogEntry } from "./LogEntryRenderer";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { formatDateTime } from "@/features/deposits/hooks/utils/dateUtils";
 
 // Define the type for operations history
 interface OperationHistory {
-  id: number;
+  id: string;
   operation_type: string;
   created_at: string;
   performed_by: string;
   details: string;
-  target_id: number | null;
+  target_id: string | null;
   target_name: string | null;
+  amount: number;
 }
 
 export const OperationsHistoryTab = () => {
@@ -33,14 +35,14 @@ export const OperationsHistoryTab = () => {
     queryFn: async () => {
       try {
         // Get total count for pagination
-        const { data: countData, error: countError } = await supabase
+        const { count, error: countError } = await supabase
           .from('withdrawals')
-          .select('count', { count: 'exact', head: true });
+          .select('*', { count: 'exact', head: true });
           
         if (countError) throw countError;
         
         // Calculate total pages
-        const totalItems = countData?.[0]?.count || 0;
+        const totalItems = count || 0;
         setTotalPages(Math.ceil(totalItems / operationsPerPage));
         
         // Fetch operations with pagination
@@ -53,14 +55,15 @@ export const OperationsHistoryTab = () => {
         if (error) throw error;
         
         // Format the data to match the expected OperationHistory structure
-        const formattedData: OperationHistory[] = (data || []).map(withdrawal => ({
+        const formattedData = (data || []).map(withdrawal => ({
           id: withdrawal.id,
           operation_type: 'Retrait',
           created_at: withdrawal.created_at,
           performed_by: withdrawal.created_by || 'Utilisateur système',
           details: `Retrait de ${withdrawal.amount} pour ${withdrawal.client_name}`,
           target_id: withdrawal.id,
-          target_name: withdrawal.client_name
+          target_name: withdrawal.client_name,
+          amount: withdrawal.amount
         }));
         
         return formattedData;
@@ -88,11 +91,12 @@ export const OperationsHistoryTab = () => {
   const formattedOperations: AuditLogEntry[] = recentOperations?.map(op => ({
     id: op.id.toString(),
     action_type: op.operation_type,
-    action_date: op.created_at,
+    action_date: formatDateTime(op.created_at),
     performed_by: op.performed_by,
     details: op.details,
     target_id: op.target_id?.toString() || '',
-    target_name: op.target_name || ''
+    target_name: op.target_name || '',
+    amount: op.amount
   })) || [];
 
   if (error) {
