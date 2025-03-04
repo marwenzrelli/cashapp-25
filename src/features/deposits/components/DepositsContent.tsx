@@ -134,6 +134,7 @@ export const DepositsContent = ({
         onEditFormChange={handleEditFormChange}
         onConfirm={handleConfirmEdit}
         selectedDeposit={selectedDeposit}
+        clients={clients}
       />
     </div>
   );

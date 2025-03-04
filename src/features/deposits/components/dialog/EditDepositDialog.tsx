@@ -2,7 +2,7 @@
 import React, { useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Pencil, Calendar, Clock, User, DollarSign, ScrollText } from "lucide-react";
+import { Pencil, Calendar, Clock, User, DollarSign, ScrollText, ChevronDown } from "lucide-react";
 import { NotesField } from "@/features/withdrawals/components/form-fields/NotesField";
 import { AmountField } from "@/features/withdrawals/components/form-fields/AmountField";
 import { DateField } from "@/features/withdrawals/components/form-fields/DateField";
@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { EditFormData } from "@/components/deposits/types";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { Client } from "@/features/clients/types";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export interface EditDepositDialogProps {
   isOpen: boolean;
@@ -19,6 +21,7 @@ export interface EditDepositDialogProps {
   onConfirm: () => Promise<void>;
   isLoading?: boolean;
   selectedDeposit?: any;
+  clients?: Client[];
 }
 
 export const EditDepositDialog: React.FC<EditDepositDialogProps> = ({
@@ -28,7 +31,8 @@ export const EditDepositDialog: React.FC<EditDepositDialogProps> = ({
   onEditFormChange,
   onConfirm,
   isLoading = false,
-  selectedDeposit
+  selectedDeposit,
+  clients = []
 }) => {
   const { currency } = useCurrency();
 
@@ -93,19 +97,33 @@ export const EditDepositDialog: React.FC<EditDepositDialogProps> = ({
             </div>
           </div>
           
-          {/* Client */}
+          {/* Client Select Dropdown */}
           <div className="space-y-2">
-            <Label htmlFor="clientName" className="text-base font-medium">Client</Label>
-            <div className="relative">
-              <Input
-                id="clientName"
-                value={editForm.clientName}
-                onChange={(e) => onEditFormChange('clientName', e.target.value)}
-                className="pl-10 border rounded-lg bg-gray-50"
-                readOnly
-              />
-              <User className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
-            </div>
+            <Label htmlFor="clientSelect" className="text-base font-medium">Client</Label>
+            <Select 
+              value={editForm.clientName} 
+              onValueChange={(value) => onEditFormChange('clientName', value)}
+            >
+              <SelectTrigger id="clientSelect" className="relative pl-10 border rounded-lg bg-gray-50">
+                <User className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                <SelectValue placeholder="Sélectionner un client" />
+              </SelectTrigger>
+              <SelectContent className="max-h-[300px]">
+                {clients.map((client) => (
+                  <SelectItem 
+                    key={client.id} 
+                    value={`${client.prenom} ${client.nom}`}
+                  >
+                    {client.prenom} {client.nom}
+                    {client.solde < 0 && (
+                      <span className="ml-2 text-red-500">
+                        {client.solde.toLocaleString()} {currency}
+                      </span>
+                    )}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             {editForm.clientBalance && (
               <p className="text-sm text-red-500">{editForm.clientBalance} {currency}</p>
             )}
