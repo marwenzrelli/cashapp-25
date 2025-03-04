@@ -112,20 +112,19 @@ export const useDepositsPage = () => {
     console.log("Confirmation des modifications pour:", selectedDeposit);
     console.log("Nouvelles valeurs:", editForm);
 
-    // Create the operation_date by combining date and time
-    let operationDate = null;
-    if (editForm.date && editForm.time) {
-      // Create a valid date string by combining date and time
-      operationDate = `${editForm.date}T${editForm.time}`;
-      console.log("Date d'opération formatée (locale):", operationDate);
-    }
+    // Ensure we always have a date value
+    const dateToUse = editForm.date || new Date().toISOString().split('T')[0];
+    const timeToUse = editForm.time || '00:00:00';
 
     const updates = {
       client_name: editForm.clientName,
       amount: Number(editForm.amount),
       notes: editForm.notes,
-      operation_date: operationDate // Save the selected date/time as the operation_date
+      date: dateToUse,
+      time: timeToUse
     };
+
+    console.log("Final updates being sent:", updates);
 
     const success = await updateDeposit(selectedDeposit.id, updates);
     if (success) {

@@ -16,8 +16,16 @@ export const useUpdateDeposit = (
   }) => {
     try {
       // Create the operation_date from date and time inputs (in local timezone)
-      const operation_date = updates.date ? 
-        createISOString(updates.date, updates.time || '00:00:00') : null;
+      // If date is not provided, we need to use the current date to avoid null violation
+      let operation_date;
+      
+      if (updates.date) {
+        operation_date = createISOString(updates.date, updates.time || '00:00:00');
+      } else {
+        // Fallback to current date-time if no date is provided
+        operation_date = new Date().toISOString();
+        console.log("No date provided, using current date:", operation_date);
+      }
       
       console.log("Updating deposit with data:", {
         depositId,
@@ -38,8 +46,8 @@ export const useUpdateDeposit = (
           client_name: updates.client_name,
           amount: updates.amount,
           notes: updates.notes,
-          operation_date: operation_date,
-          last_modified_at: new Date().toISOString() // Add current timestamp
+          operation_date: operation_date, // This will never be null now
+          last_modified_at: new Date().toISOString()
         })
         .eq('id', depositId);
 
