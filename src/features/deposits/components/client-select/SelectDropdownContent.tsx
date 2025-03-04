@@ -53,6 +53,8 @@ export const SelectDropdownContent = ({
         <ClientSearchInput
           value={clientSearch}
           onChange={setClientSearch}
+          isOpen={openState}
+          count={filteredClients.length}
           isScrolling={isScrolling}
         />
       </div>

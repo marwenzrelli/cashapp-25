@@ -1,4 +1,3 @@
-
 import { useRef, useEffect } from "react";
 import { type Client } from "@/features/clients/types";
 import { ClientListItem } from "./ClientListItem";
@@ -26,19 +25,15 @@ export const ClientList = ({
   const listRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   
-  // Enhanced touch optimization when component mounts
   useEffect(() => {
     if (listRef.current) {
-      // Find the ScrollArea viewport element
       const scrollAreaViewport = listRef.current.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
       
       if (scrollAreaViewport) {
-        // Apply iOS-style momentum scrolling
         scrollAreaViewport.style.overscrollBehavior = 'contain';
         (scrollAreaViewport.style as any)['-webkit-overflow-scrolling'] = 'touch';
         scrollAreaViewport.style.touchAction = 'pan-y';
         
-        // Add direct touch event listeners for better control
         let startY = 0;
         let lastY = 0;
         let touchVelocity = 0;
@@ -47,7 +42,6 @@ export const ClientList = ({
         let animationFrame: number | null = null;
         
         const handleTouchStart = (e: TouchEvent) => {
-          // Cancel any ongoing momentum animation
           if (animationFrame) {
             cancelAnimationFrame(animationFrame);
             animationFrame = null;
@@ -64,10 +58,8 @@ export const ClientList = ({
           const currentY = e.touches[0].clientY;
           const deltaY = lastY - currentY;
           
-          // Apply small amplification factor for more responsive feel
           scrollAreaViewport.scrollTop += deltaY * 1.2;
           
-          // Calculate velocity (pixels per ms)
           const currentTime = Date.now();
           const timeElapsed = currentTime - startTime;
           startTime = currentTime;
@@ -80,14 +72,12 @@ export const ClientList = ({
         };
         
         const handleTouchEnd = () => {
-          // Apply momentum based on final velocity
-          momentum = touchVelocity * 15; // Amplify for better feel
+          momentum = touchVelocity * 15;
           
           if (Math.abs(momentum) > 0.1) {
             const applyMomentum = () => {
               scrollAreaViewport.scrollTop += momentum * 10;
               
-              // Apply friction to gradually slow down
               momentum *= 0.95;
               
               if (Math.abs(momentum) > 0.1) {
@@ -101,12 +91,10 @@ export const ClientList = ({
           }
         };
         
-        // Add event listeners with passive true for performance
         scrollAreaViewport.addEventListener('touchstart', handleTouchStart, { passive: true });
         scrollAreaViewport.addEventListener('touchmove', handleTouchMove, { passive: true });
         scrollAreaViewport.addEventListener('touchend', handleTouchEnd, { passive: true });
         
-        // Cleanup function
         return () => {
           scrollAreaViewport.removeEventListener('touchstart', handleTouchStart);
           scrollAreaViewport.removeEventListener('touchmove', handleTouchMove);
@@ -121,17 +109,14 @@ export const ClientList = ({
   }, []);
 
   const handleClientClick = (clientId: string, e: React.MouseEvent | React.TouchEvent) => {
-    // Prevent event propagation to stop dropdown from closing
     e.preventDefault();
     e.stopPropagation();
 
-    // Ignore clicks during or immediately after scrolling
     if (isScrolling) {
       console.log('Clic ignoré - défilement en cours');
       return;
     }
 
-    // Manual selection handling to prevent auto-closing
     onClientSelect(clientId);
   };
 
@@ -143,9 +128,8 @@ export const ClientList = ({
     <div 
       ref={listRef} 
       className="client-list-container overflow-hidden max-h-[calc(100%-40px)]"
-      onClick={(e) => e.stopPropagation()} // Prevent clicks from bubbling up and closing dropdown
+      onClick={(e) => e.stopPropagation()}
     >
-      {/* Visual hint for vertical swiping - only show with more than 5 clients */}
       <ScrollHint show={clients.length > 5} />
       
       <ScrollArea 
@@ -169,7 +153,6 @@ export const ClientList = ({
           ))}
         </div>
         
-        {/* Extra padding at the bottom to allow scrolling to see the last items */}
         <div className="h-8" aria-hidden="true"></div>
       </ScrollArea>
     </div>
