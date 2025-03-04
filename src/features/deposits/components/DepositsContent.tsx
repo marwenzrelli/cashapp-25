@@ -61,8 +61,14 @@ export const DepositsContent = ({
 }: DepositsContentProps) => {
   const {
     clients,
-    refreshClientBalance
+    refreshClientBalance,
+    fetchClients
   } = useClients();
+  
+  // Make sure clients are loaded when the component mounts
+  React.useEffect(() => {
+    fetchClients();
+  }, [fetchClients]);
   
   const filteredDeposits = deposits.filter(deposit => 
     deposit.client_name.toLowerCase().includes(searchTerm.toLowerCase())
