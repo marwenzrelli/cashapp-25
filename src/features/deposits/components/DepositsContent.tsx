@@ -58,6 +58,7 @@ export const DepositsContent = ({
   handleCreateDeposit
 }: DepositsContentProps) => {
   const { clients, fetchClients, refreshClientBalance } = useClients();
+  const filteredDeposits = deposits; // This can be expanded if additional filtering is needed
 
   const handleRefreshClientBalance = async (clientId: string): Promise<boolean> => {
     try {
@@ -71,7 +72,15 @@ export const DepositsContent = ({
 
   return (
     <div className="space-y-8 animate-in">
-      <DepositsHeader />
+      <DepositsHeader 
+        deposits={deposits}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        itemsPerPage={itemsPerPage}
+        onItemsPerPageChange={setItemsPerPage}
+        onNewDeposit={() => setIsDialogOpen(true)}
+        filteredDeposits={filteredDeposits}
+      />
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
@@ -147,10 +156,10 @@ export const DepositsContent = ({
       />
 
       <DeleteDepositDialog
-        open={isDeleteDialogOpen}
+        isOpen={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
         onConfirm={confirmDelete}
-        deposit={selectedDeposit}
+        selectedDeposit={selectedDeposit}
       />
     </div>
   );
