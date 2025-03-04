@@ -8,7 +8,8 @@ export interface Deposit {
   status: string;
   created_at: string;
   created_by: string | null;
-  operation_date?: string; // Ajout du champ operation_date
+  operation_date?: string;
+  last_modified_at?: string; // New field to track modifications
 }
 
 export interface AISuggestion {
@@ -26,4 +27,3 @@ export interface EditFormData {
   time?: string;
   clientBalance?: string;
 }
-

@@ -1,5 +1,5 @@
 
-import { User, Pencil, Trash2, Hash } from "lucide-react";
+import { User, Pencil, Trash2, Hash, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { type Deposit } from "@/components/deposits/types";
 import { cn } from "@/lib/utils";
@@ -7,6 +7,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatId } from "@/utils/formatId";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { formatDateTime } from "@/features/deposits/hooks/utils/dateUtils";
 
 interface DepositsTableProps {
   deposits: Deposit[];
@@ -46,6 +48,29 @@ export const DepositsTable = ({ deposits, onEdit, onDelete }: DepositsTableProps
       
       navigate(`/clients?search=${encodeURIComponent(clientName)}`);
     }
+  };
+
+  // Helper function to render date with modification tooltip if needed
+  const renderDateWithModificationInfo = (deposit: Deposit) => {
+    if (!deposit.last_modified_at) {
+      return <span>{deposit.date}</span>;
+    }
+    
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="flex items-center gap-1 cursor-help">
+              {deposit.date}
+              <Clock className="h-3.5 w-3.5 text-amber-500" />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Modifié le {formatDateTime(deposit.last_modified_at)}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
   };
 
   return (
@@ -90,7 +115,7 @@ export const DepositsTable = ({ deposits, onEdit, onDelete }: DepositsTableProps
                   </div>
                 </td>
                 <td className="p-3 text-muted-foreground">
-                  {deposit.date}
+                  {renderDateWithModificationInfo(deposit)}
                 </td>
                 <td className="p-3 text-muted-foreground">{deposit.description}</td>
                 <td className="p-3">
@@ -146,7 +171,9 @@ export const DepositsTable = ({ deposits, onEdit, onDelete }: DepositsTableProps
               </div>
             </div>
             <div className="space-y-1 text-sm text-muted-foreground mb-3">
-              <p>{deposit.date}</p>
+              <div className="flex items-center gap-1">
+                {renderDateWithModificationInfo(deposit)}
+              </div>
               <p>{deposit.description}</p>
             </div>
             <div className="flex gap-2 justify-end">

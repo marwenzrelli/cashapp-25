@@ -24,13 +24,15 @@ export const useUpdateDeposit = (
         return false;
       }
 
+      // Add the last_modified_at field with the current timestamp
       const { error } = await supabase
         .from('deposits')
         .update({
           client_name: updates.client_name,
           amount: updates.amount,
           notes: updates.notes,
-          operation_date: updates.operation_date
+          operation_date: updates.operation_date,
+          last_modified_at: new Date().toISOString() // Add current timestamp
         })
         .eq('id', depositId);
 

@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Deposit } from "@/components/deposits/types";
-import { formatDateTime } from "@/features/deposits/hooks/utils/dateUtils"; // Fixed import path
+import { formatDateTime } from "@/features/deposits/hooks/utils/dateUtils";
 
 export const useFetchDeposits = (
   setDeposits: React.Dispatch<React.SetStateAction<Deposit[]>>,
@@ -34,7 +34,8 @@ export const useFetchDeposits = (
           status: d.status,
           created_at: d.created_at,
           created_by: d.created_by || null,
-          operation_date: d.operation_date
+          operation_date: d.operation_date,
+          last_modified_at: d.last_modified_at || null
         };
       });
 
