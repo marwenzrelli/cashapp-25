@@ -1,3 +1,4 @@
+
 import { useRef, useEffect } from "react";
 import { type Client } from "@/features/clients/types";
 import { ClientListItem } from "./ClientListItem";
@@ -8,10 +9,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 interface ClientListProps {
   clients: Client[];
   selectedClient: string;
-  isScrolling: boolean;
+  isScrolling?: boolean;
   onClientSelect: (clientId: string) => void;
   onClientRemove?: (clientId: string) => void;
-  setOpenState: (open: boolean) => void;
+  setOpenState?: (open: boolean) => void;
 }
 
 export const ClientList = ({

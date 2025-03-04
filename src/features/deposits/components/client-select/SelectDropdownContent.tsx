@@ -65,11 +65,13 @@ export const SelectDropdownContent = ({
             clients={filteredClients}
             selectedClient={selectedClient}
             onClientSelect={onClientSelect}
+            isScrolling={isScrolling}
+            setOpenState={setOpenState}
           />
         )}
       </ScrollArea>
 
-      {showScrollHint && <ScrollHint />}
+      {showScrollHint && <ScrollHint show={showScrollHint} />}
     </SelectContent>
   );
 };

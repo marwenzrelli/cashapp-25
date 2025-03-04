@@ -1,4 +1,3 @@
-
 import { useRef, useEffect } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -8,12 +7,12 @@ interface ClientSearchInputProps {
   onChange: (value: string) => void;
   isOpen?: boolean;
   count?: number;
+  isScrolling?: boolean;
 }
 
-export const ClientSearchInput = ({ value, onChange, isOpen, count }: ClientSearchInputProps) => {
+export const ClientSearchInput = ({ value, onChange, isOpen, count, isScrolling }: ClientSearchInputProps) => {
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Focus on search input when dropdown opens
   useEffect(() => {
     if (!isOpen || !searchInputRef.current) return;
     
@@ -24,15 +23,13 @@ export const ClientSearchInput = ({ value, onChange, isOpen, count }: ClientSear
     return () => clearTimeout(timerRef);
   }, [isOpen]);
 
-  // Clear search function
   const clearSearch = () => {
     onChange("");
     searchInputRef.current?.focus();
   };
 
-  // Handle input changes without triggering selection
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.stopPropagation(); // Prevent the event from bubbling up to parent components
+    e.stopPropagation();
     onChange(e.target.value);
   };
 
@@ -50,6 +47,7 @@ export const ClientSearchInput = ({ value, onChange, isOpen, count }: ClientSear
           onKeyDown={e => e.stopPropagation()} 
           autoComplete="off" 
           className="pl-7 pr-7 py-1 h-7 text-sm rounded-md" 
+          disabled={isScrolling}
         />
         {value && (
           <button 
