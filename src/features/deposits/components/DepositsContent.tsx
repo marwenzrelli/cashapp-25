@@ -7,6 +7,8 @@ import { DeleteDepositDialog } from "./DeleteDepositDialog";
 import { DepositDialogContainer } from "./DepositDialogContainer";
 import { Deposit } from "../types";
 import { useClients } from "@/features/clients/hooks/useClients";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 
 interface DepositsContentProps {
   deposits: Deposit[];
@@ -76,6 +78,14 @@ export const DepositsContent = ({
         deposits={deposits}
         filteredDeposits={filteredDeposits}
       />
+      
+      {/* Add the "Nouveau versement" button right after the header (which includes statistics) */}
+      <div className="flex justify-end">
+        <Button onClick={() => setIsDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nouveau versement
+        </Button>
+      </div>
 
       <div className="space-y-4">
         <SearchBar
@@ -83,7 +93,6 @@ export const DepositsContent = ({
           onSearchChange={setSearchTerm}
           itemsPerPage={itemsPerPage}
           onItemsPerPageChange={setItemsPerPage}
-          onNewDeposit={() => setIsDialogOpen(true)}
           totalDeposits={filteredDeposits.length}
         />
         

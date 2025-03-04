@@ -1,8 +1,7 @@
 
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, ListFilter } from "lucide-react";
+import { Search, ListFilter } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { type SearchBarProps } from "../types";
 
@@ -11,7 +10,6 @@ export const SearchBar = ({
   onSearchChange,
   itemsPerPage,
   onItemsPerPageChange,
-  onNewDeposit,
   totalDeposits
 }: SearchBarProps) => {
   return (
@@ -33,10 +31,6 @@ export const SearchBar = ({
               className="pl-8"
             />
           </div>
-          <Button size="sm" onClick={onNewDeposit}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nouveau
-          </Button>
         </div>
         <div className="flex items-center">
           <Select value={itemsPerPage} onValueChange={onItemsPerPageChange}>

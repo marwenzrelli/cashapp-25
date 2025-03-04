@@ -25,6 +25,5 @@ export interface SearchBarProps {
   onSearchChange: (value: string) => void;
   itemsPerPage: string;
   onItemsPerPageChange: (value: string) => void;
-  onNewDeposit: () => void;
   totalDeposits: number;
 }
