@@ -64,8 +64,9 @@ export const ClientSelectDropdown = ({
   };
 
   // Handle iOS-specific touchend issues
-  const handleTriggerTouch = () => {
+  const handleTriggerTouch = (e: React.TouchEvent) => {
     // This helps iOS recognize the dropdown should open on touch
+    e.preventDefault(); // Empêcher le comportement par défaut
     if (!openState) {
       setOpenState(true);
     }
