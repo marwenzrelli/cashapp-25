@@ -23,12 +23,11 @@ export const ClientList = ({
   onClientRemove,
   setOpenState
 }: ClientListProps) => {
-  const listRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
-    if (listRef.current) {
-      const scrollAreaViewport = listRef.current.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+    if (scrollAreaRef.current) {
+      const scrollAreaViewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
       
       if (scrollAreaViewport) {
         scrollAreaViewport.style.overscrollBehavior = 'contain';
@@ -127,7 +126,6 @@ export const ClientList = ({
 
   return (
     <div 
-      ref={listRef} 
       className="client-list-container overflow-hidden max-h-[calc(100%-40px)]"
       onClick={(e) => e.stopPropagation()}
     >
