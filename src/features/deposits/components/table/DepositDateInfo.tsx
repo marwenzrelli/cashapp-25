@@ -14,7 +14,7 @@ interface DepositDateInfoProps {
 }
 
 export const DepositDateInfo = ({ deposit }: DepositDateInfoProps) => {
-  // Check if operation_date exists and is different from created_at
+  // Vérifier si operation_date existe et est différent de created_at
   const hasCustomDate = deposit.operation_date !== undefined && 
     deposit.operation_date !== null && 
     new Date(deposit.operation_date).getTime() !== new Date(deposit.created_at).getTime();
