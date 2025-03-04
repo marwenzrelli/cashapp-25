@@ -19,7 +19,6 @@ export const ClientSelectDropdown = ({
 }: ClientSelectDropdownProps) => {
   const [openState, setOpenState] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
-  const [forceSelection, setForceSelection] = useState(false);
   
   // Use our custom hooks
   const { clientSearch, setClientSearch, filteredClients } = useClientFilter(clients, openState);

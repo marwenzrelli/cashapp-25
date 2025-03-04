@@ -1,3 +1,4 @@
+
 import { useRef, useEffect } from "react";
 import { type Client } from "@/features/clients/types";
 import { ClientListItem } from "./ClientListItem";
