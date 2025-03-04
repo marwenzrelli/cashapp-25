@@ -110,7 +110,7 @@ const Statistics = () => {
     ...filteredTransfers.map(transfer => transfer.toClient)
   ]).size;
   
-  const netFlow = totalDeposits - totalWithdrawals;
+  const netFlow = stats.total_deposits - stats.total_withdrawals;
 
   const currentMonth = new Date();
   const startOfCurrentMonth = startOfMonth(currentMonth);
