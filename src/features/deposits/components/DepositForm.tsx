@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
@@ -95,7 +96,7 @@ export const StandaloneDepositForm = ({
                       setDate(new Date(e.target.value));
                     }
                   }}
-                  className="pl-12 md:pl-9 transition-all focus-visible:ring-primary/50"
+                  className="pl-14 md:pl-9 transition-all focus-visible:ring-primary/50"
                 />
               </div>
               <div className="relative">
@@ -105,7 +106,7 @@ export const StandaloneDepositForm = ({
                   type="time"
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
-                  className="pl-12 md:pl-9 transition-all focus-visible:ring-primary/50"
+                  className="pl-14 md:pl-9 transition-all focus-visible:ring-primary/50"
                 />
               </div>
             </div>
@@ -154,7 +155,7 @@ export const StandaloneDepositForm = ({
                 placeholder="0.00"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="pl-12 md:pl-9 transition-all focus-visible:ring-primary/50"
+                className="pl-14 md:pl-9 transition-all focus-visible:ring-primary/50"
               />
               <span className="absolute right-3 top-3 text-muted-foreground">
                 {currency}
@@ -171,7 +172,7 @@ export const StandaloneDepositForm = ({
                 placeholder="Description du versement..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="pl-12 md:pl-9 transition-all focus-visible:ring-primary/50"
+                className="pl-14 md:pl-9 transition-all focus-visible:ring-primary/50"
               />
             </div>
           </div>
