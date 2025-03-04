@@ -8,11 +8,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Wallet } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ClientBalanceDisplay } from "@/features/clients/components/client-list/ClientBalanceDisplay";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface StandaloneDepositFormProps {
   clients: Client[];
@@ -30,6 +32,7 @@ export const StandaloneDepositForm = ({
   const [date, setDate] = useState<Date>(new Date());
   const [description, setDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { currency } = useCurrency();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,6 +64,9 @@ export const StandaloneDepositForm = ({
     }
   };
 
+  // Find the selected client to display their balance
+  const selectedClientData = clients.find(c => c.id.toString() === selectedClient);
+
   return (
     <Card>
       <CardHeader>
@@ -79,12 +85,27 @@ export const StandaloneDepositForm = ({
               </SelectTrigger>
               <SelectContent>
                 {clients.map(client => (
-                  <SelectItem key={client.id} value={client.id.toString()}>
-                    {client.prenom} {client.nom}
+                  <SelectItem key={client.id} value={client.id.toString()} className="flex items-center justify-between py-2">
+                    <div className="flex-1">
+                      {client.prenom} {client.nom}
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <Wallet className="h-3 w-3 mr-1 text-muted-foreground" />
+                      <span className={`${client.solde >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {client.solde.toLocaleString()} {currency}
+                      </span>
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+
+            {selectedClientData && (
+              <div className="mt-2 p-2 bg-muted/50 rounded-md flex items-center justify-between">
+                <span className="text-sm">Solde actuel:</span>
+                <ClientBalanceDisplay solde={selectedClientData.solde} />
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
