@@ -11,9 +11,6 @@ export const PublicClientLoading = () => {
           <p className="text-muted-foreground">
             Récupération des informations client en cours
           </p>
-          <p className="text-xs text-muted-foreground mt-4">
-            Cela peut prendre quelques instants. Si le chargement persiste, veuillez actualiser la page.
-          </p>
         </div>
       </div>
     </div>

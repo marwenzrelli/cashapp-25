@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { type Deposit, type EditFormData } from "@/components/deposits/types";
 import { useDeposits } from "@/features/deposits/hooks/useDeposits";
 import { toast } from "sonner";
@@ -19,11 +18,9 @@ export const useDepositsPage = () => {
     notes: ""
   });
   const [isDeleting, setIsDeleting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   
   const { 
     deposits, 
-    isLoading,
     createDeposit, 
     deleteDeposit, 
     updateDeposit, 
@@ -31,18 +28,6 @@ export const useDepositsPage = () => {
     setShowDeleteDialog, 
     setDepositToDelete 
   } = useDeposits();
-
-  useEffect(() => {
-    console.log("useDepositsPage - Component mounted, deposits count:", deposits.length);
-    
-    return () => {
-      console.log("useDepositsPage - Component unmounted");
-    };
-  }, []);
-
-  useEffect(() => {
-    console.log("useDepositsPage - Deposits updated:", deposits.length);
-  }, [deposits]);
 
   const handleDelete = (deposit: Deposit) => {
     console.log("Demande de suppression pour le versement:", deposit);
@@ -85,7 +70,6 @@ export const useDepositsPage = () => {
       toast.error("Échec de la suppression du versement", {
         description: error.message || "Une erreur est survenue lors de la suppression"
       });
-      setError(error.message || "Erreur lors de la suppression");
     } finally {
       setIsDeleting(false);
     }
@@ -142,43 +126,19 @@ export const useDepositsPage = () => {
 
     console.log("Final updates being sent:", updates);
 
-    try {
-      const success = await updateDeposit(selectedDeposit.id, updates);
-      if (success) {
-        setIsEditDialogOpen(false);
-        toast.success("Versement mis à jour", {
-          description: `Le versement a été modifié avec succès.`
-        });
-      } else {
-        throw new Error("Échec de la mise à jour du versement");
-      }
-    } catch (error: any) {
-      console.error("Erreur lors de la mise à jour:", error);
-      toast.error("Échec de la mise à jour", {
-        description: error.message || "Une erreur est survenue lors de la mise à jour"
+    const success = await updateDeposit(selectedDeposit.id, updates);
+    if (success) {
+      setIsEditDialogOpen(false);
+      toast.success("Versement mis à jour", {
+        description: `Le versement a été modifié avec succès.`
       });
-      setError(error.message || "Erreur lors de la mise à jour");
     }
   };
 
   const handleCreateDeposit = async (deposit: Deposit) => {
-    try {
-      console.log("Création d'un nouveau versement:", deposit);
-      const success = await createDeposit(deposit);
-      if (success) {
-        setIsDialogOpen(false);
-        toast.success("Versement créé avec succès", {
-          description: `Un versement de ${deposit.amount} TND a été ajouté.`
-        });
-      } else {
-        throw new Error("Échec de la création du versement");
-      }
-    } catch (error: any) {
-      console.error("Erreur lors de la création du versement:", error);
-      toast.error("Échec de la création", {
-        description: error.message || "Une erreur est survenue lors de la création"
-      });
-      setError(error.message || "Erreur lors de la création");
+    const success = await createDeposit(deposit);
+    if (success) {
+      setIsDialogOpen(false);
     }
   };
 
@@ -233,8 +193,6 @@ export const useDepositsPage = () => {
     filteredDeposits,
     paginatedDeposits,
     isDeleting,
-    isLoading,
-    error,
     
     handleDelete,
     confirmDelete,

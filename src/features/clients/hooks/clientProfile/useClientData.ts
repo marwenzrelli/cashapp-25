@@ -7,47 +7,34 @@ import { toast } from "sonner";
 export const useClientData = (clientId: number | null) => {
   const [client, setClient] = useState<Client | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchClient = async () => {
       try {
         if (!clientId) {
           console.error("Client ID manquant dans l'URL");
-          setError("ID client manquant");
           setIsLoading(false);
           return;
         }
         
         console.log("Tentative de récupération du client avec ID:", clientId);
         
-        const { data, error: supabaseError } = await supabase
+        const { data, error } = await supabase
           .from('clients')
           .select('*')
           .eq('id', clientId)
-          .maybeSingle();
+          .single();
 
-        if (supabaseError) {
-          console.error("Erreur lors du chargement du client:", supabaseError);
-          setError(supabaseError.message);
+        if (error) {
+          console.error("Erreur lors du chargement du client:", error);
           toast.error("Impossible de charger les informations du client");
-          setIsLoading(false);
-          return;
-        }
-
-        if (!data) {
-          console.error("Client non trouvé avec ID:", clientId);
-          setError(`Client avec ID ${clientId} non trouvé`);
-          setIsLoading(false);
-          return;
+          throw error;
         }
 
         console.log("Client récupéré avec succès:", data);
         setClient(data);
-        setError(null);
-      } catch (error: any) {
+      } catch (error) {
         console.error("Erreur lors du chargement du client:", error);
-        setError(error.message || "Erreur inconnue");
         toast.error("Impossible de charger les informations du client");
       } finally {
         setIsLoading(false);
@@ -110,5 +97,5 @@ export const useClientData = (clientId: number | null) => {
     };
   }, [clientId]);
 
-  return { client, isLoading, error };
+  return { client, isLoading };
 };
