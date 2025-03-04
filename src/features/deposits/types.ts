@@ -29,13 +29,8 @@ export interface SearchBarProps {
   totalDeposits: number;
 }
 
-// Extend EditFormData to include additional fields needed for the enhanced dialog
-export interface ExtendedEditFormData {
+// This interface is now redundant as EditFormData already includes all these fields
+export interface ExtendedEditFormData extends EditFormData {
   id?: number;
-  clientName: string;
-  amount: string;
-  notes: string;
-  date?: string;
-  time?: string;
-  clientBalance?: string;
 }
+

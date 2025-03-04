@@ -22,4 +22,8 @@ export interface EditFormData {
   clientName: string;
   amount: string;
   notes: string;
+  date?: string;
+  time?: string;
+  clientBalance?: string;
 }
+
