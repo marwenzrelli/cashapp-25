@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { StandaloneWithdrawalForm } from "./WithdrawalForm";
 import { WithdrawalTable } from "./WithdrawalTable";
@@ -12,9 +11,11 @@ import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 interface ExtendedClient extends Client {
   dateCreation: string;
 }
+
 interface WithdrawalsContentProps {
   withdrawals: Withdrawal[];
   clients: Client[];
@@ -28,6 +29,7 @@ interface WithdrawalsContentProps {
   searchTerm?: string;
   setSearchTerm?: (term: string) => void;
 }
+
 export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
   withdrawals,
   clients,
@@ -46,6 +48,7 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
   const [selectedWithdrawal, setSelectedWithdrawal] = useState<Withdrawal | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [itemsPerPage, setItemsPerPage] = useState("10");
+
   const findClientById = (clientName: string) => {
     const client = clients.find(c => `${c.prenom} ${c.nom}` === clientName);
     return client ? {
@@ -53,35 +56,34 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
       dateCreation: client.date_creation || new Date().toISOString()
     } : null;
   };
+
   const handleDeleteWithdrawal = (withdrawal: Withdrawal) => {
     setSelectedWithdrawal(withdrawal);
     deleteWithdrawal(withdrawal);
   };
+
   const handleEdit = (withdrawal: Withdrawal) => {
     setSelectedWithdrawal(withdrawal);
     setSelectedClient(withdrawal.client_name);
     setIsEditing(true);
     setShowDialog(true);
   };
+
   const extendedClients: ExtendedClient[] = clients.map(client => ({
     ...client,
     dateCreation: client.date_creation || new Date().toISOString()
   }));
 
-  // Cette fonction est ajoutée pour retourner une Promise à partir de fetchWithdrawals
   const handleFetchWithdrawals = async (): Promise<void> => {
     fetchWithdrawals();
     return Promise.resolve();
   };
+
   return <div className="space-y-8 animate-in">
       <WithdrawalHeader withdrawals={withdrawals} />
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <StandaloneWithdrawalForm clients={extendedClients} fetchWithdrawals={handleFetchWithdrawals} refreshClientBalance={refreshClientBalance} />
-        </div>
-        
-        
+      <div className="w-full">
+        <StandaloneWithdrawalForm clients={extendedClients} fetchWithdrawals={handleFetchWithdrawals} refreshClientBalance={refreshClientBalance} />
       </div>
 
       <Card>
