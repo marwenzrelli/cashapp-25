@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { StandaloneWithdrawalForm } from "./WithdrawalForm";
 import { WithdrawalTable } from "./WithdrawalTable";
@@ -10,7 +11,7 @@ import { Client } from "@/features/clients/types";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TransferPagination } from "@/features/transfers/components/TransferPagination";
 
 interface ExtendedClient extends Client {
   dateCreation: string;
@@ -18,6 +19,7 @@ interface ExtendedClient extends Client {
 
 interface WithdrawalsContentProps {
   withdrawals: Withdrawal[];
+  paginatedWithdrawals: Withdrawal[];
   clients: Client[];
   fetchWithdrawals: () => void;
   fetchClients: () => void;
@@ -28,10 +30,15 @@ interface WithdrawalsContentProps {
   confirmDeleteWithdrawal: () => Promise<boolean>;
   searchTerm?: string;
   setSearchTerm?: (term: string) => void;
+  itemsPerPage: string;
+  setItemsPerPage: (value: string) => void;
+  currentPage: number;
+  setCurrentPage: (page: number) => void;
 }
 
 export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
   withdrawals,
+  paginatedWithdrawals,
   clients,
   fetchWithdrawals,
   fetchClients,
@@ -41,13 +48,16 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
   setShowDeleteDialog,
   confirmDeleteWithdrawal,
   searchTerm = "",
-  setSearchTerm = () => {}
+  setSearchTerm = () => {},
+  itemsPerPage,
+  setItemsPerPage,
+  currentPage,
+  setCurrentPage
 }) => {
   const [showDialog, setShowDialog] = useState(false);
   const [selectedClient, setSelectedClient] = useState<string>("");
   const [selectedWithdrawal, setSelectedWithdrawal] = useState<Withdrawal | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [itemsPerPage, setItemsPerPage] = useState("10");
 
   const findClientById = (clientName: string) => {
     const client = clients.find(c => `${c.prenom} ${c.nom}` === clientName);
@@ -99,17 +109,6 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input placeholder="Rechercher par nom, notes, ou ID..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9" />
             </div>
-            <Select value={itemsPerPage} onValueChange={setItemsPerPage}>
-              <SelectTrigger className="w-auto min-w-[160px]">
-                <SelectValue placeholder="Nombre d'éléments" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10">10 éléments</SelectItem>
-                <SelectItem value="25">25 éléments</SelectItem>
-                <SelectItem value="50">50 éléments</SelectItem>
-                <SelectItem value="100">100 éléments</SelectItem>
-              </SelectContent>
-            </Select>
             <div className="text-sm text-muted-foreground">
               {withdrawals.length} résultats trouvés
             </div>
@@ -117,7 +116,21 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
         </CardContent>
       </Card>
 
-      <WithdrawalTable withdrawals={withdrawals} itemsPerPage={itemsPerPage} onEdit={handleEdit} onDelete={handleDeleteWithdrawal} findClientById={findClientById} />
+      <TransferPagination
+        itemsPerPage={itemsPerPage}
+        setItemsPerPage={setItemsPerPage}
+        totalItems={withdrawals.length}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+        label="retraits"
+      />
+
+      <WithdrawalTable 
+        withdrawals={paginatedWithdrawals} 
+        onEdit={handleEdit} 
+        onDelete={handleDeleteWithdrawal} 
+        findClientById={findClientById} 
+      />
 
       <WithdrawalDialogContainer showDialog={showDialog} setShowDialog={setShowDialog} clients={clients} selectedClient={selectedClient} setSelectedClient={setSelectedClient} isEditing={isEditing} selectedWithdrawal={selectedWithdrawal} fetchWithdrawals={handleFetchWithdrawals} refreshClientBalance={refreshClientBalance} />
 

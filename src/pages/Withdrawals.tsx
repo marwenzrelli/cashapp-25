@@ -18,6 +18,8 @@ const Withdrawals = () => {
   } = useWithdrawals();
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [itemsPerPage, setItemsPerPage] = useState("10");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const { clients, fetchClients, refreshClientBalance } = useClients();
 
@@ -61,9 +63,16 @@ const Withdrawals = () => {
     });
   });
 
+  // Pagination des retraits
+  const paginatedWithdrawals = filteredWithdrawals.slice(
+    (currentPage - 1) * parseInt(itemsPerPage),
+    currentPage * parseInt(itemsPerPage)
+  );
+
   return (
     <WithdrawalsContent
       withdrawals={filteredWithdrawals}
+      paginatedWithdrawals={paginatedWithdrawals}
       clients={clients}
       fetchWithdrawals={fetchWithdrawals}
       fetchClients={fetchClients}
@@ -74,6 +83,10 @@ const Withdrawals = () => {
       confirmDeleteWithdrawal={confirmDeleteWithdrawal}
       searchTerm={searchTerm}
       setSearchTerm={setSearchTerm}
+      itemsPerPage={itemsPerPage}
+      setItemsPerPage={setItemsPerPage}
+      currentPage={currentPage}
+      setCurrentPage={setCurrentPage}
     />
   );
 };

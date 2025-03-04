@@ -9,7 +9,6 @@ import { Client } from "@/features/clients/types";
 
 interface WithdrawalTableProps {
   withdrawals: Withdrawal[];
-  itemsPerPage: string;
   onEdit: (withdrawal: Withdrawal) => void;
   onDelete: (withdrawal: Withdrawal) => void;
   findClientById: (clientFullName: string) => (Client & { dateCreation: string }) | null;
@@ -17,7 +16,6 @@ interface WithdrawalTableProps {
 
 export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
   withdrawals,
-  itemsPerPage,
   onEdit,
   onDelete,
   findClientById,
@@ -30,8 +28,7 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
         <div className="flex items-center justify-between">
           <CardTitle>Liste des retraits</CardTitle>
           <div className="text-sm text-muted-foreground">
-            Affichage de {Math.min(parseInt(itemsPerPage), withdrawals.length)} sur{" "}
-            {withdrawals.length} retraits
+            Affichage de {withdrawals.length} retraits
           </div>
         </div>
       </CardHeader>
@@ -48,7 +45,7 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
               </tr>
             </thead>
             <tbody>
-              {withdrawals.slice(0, parseInt(itemsPerPage)).map((withdrawal) => {
+              {withdrawals.map((withdrawal) => {
                 const client = findClientById(withdrawal.client_name);
 
                 return (
