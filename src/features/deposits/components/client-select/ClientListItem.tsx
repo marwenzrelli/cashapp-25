@@ -50,7 +50,7 @@ export const ClientListItem = ({
             <span className="font-medium text-sm">
               {client.prenom} {client.nom}
             </span>
-            {/* Suppression de la répétition du nom du client */}
+            {/* No more duplicate client name here */}
           </div>
         </div>
         <span className={`font-mono text-sm font-semibold ${client.solde >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
