@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
-import { CalendarIcon, Wallet } from "lucide-react";
+import { ScrollText, UserCircle, BadgeDollarSign, CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -86,14 +86,16 @@ export const StandaloneDepositForm = ({
               <SelectContent>
                 {clients.map(client => (
                   <SelectItem key={client.id} value={client.id.toString()} className="flex items-center justify-between py-2">
-                    <div className="flex-1">
-                      {client.prenom} {client.nom}
+                    <div className="flex items-center gap-2">
+                      <UserCircle className="h-4 w-4 text-primary/50" />
+                      <span>{client.prenom} {client.nom}</span>
                     </div>
-                    <div className="flex items-center text-sm">
-                      <Wallet className="h-3 w-3 mr-1 text-muted-foreground" />
-                      <span className={`${client.solde >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {client.solde.toLocaleString()} {currency}
-                      </span>
+                    <div className={`font-mono text-sm ${
+                      client.solde >= 0
+                        ? "text-green-600 dark:text-green-400"
+                        : "text-red-600 dark:text-red-400"
+                    }`}>
+                      {client.solde.toLocaleString()} {currency}
                     </div>
                   </SelectItem>
                 ))}
@@ -109,50 +111,50 @@ export const StandaloneDepositForm = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="amount">Montant</Label>
+            <Label htmlFor="date">Date du versement</Label>
             <Input
-              id="amount"
-              type="number"
-              placeholder="Montant"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              id="date"
+              type="date"
+              value={format(date, "yyyy-MM-dd")}
+              onChange={(e) => {
+                if (e.target.value) {
+                  setDate(new Date(e.target.value));
+                }
+              }}
+              className="transition-all focus-visible:ring-primary/50"
             />
           </div>
 
           <div className="space-y-2">
-            <Label>Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "PPP") : <span>Pick a date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={(newDate) => newDate && setDate(newDate)}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
+            <Label htmlFor="amount">Montant</Label>
+            <div className="relative">
+              <BadgeDollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="amount"
+                type="number"
+                placeholder="0.00"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="pl-9 transition-all focus-visible:ring-primary/50"
+              />
+              <span className="absolute right-3 top-3 text-muted-foreground">
+                {currency}
+              </span>
+            </div>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
-            <Input
-              id="description"
-              placeholder="Description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
+            <div className="relative">
+              <ScrollText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="description"
+                placeholder="Description du versement..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="pl-9 transition-all focus-visible:ring-primary/50"
+              />
+            </div>
           </div>
 
           <Button type="submit" className="w-full" disabled={isLoading}>
