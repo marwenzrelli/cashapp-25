@@ -24,11 +24,11 @@ export const UserActivityTab = () => {
 
         if (loginError) throw loginError;
 
-        // Format login data for the audit log using the consistent formatting function
+        // Format login data for the audit log to match other operations display
         const formattedLoginData = loginData.map(user => ({
           id: `login-${user.id}`,
           action_type: 'Connexion',
-          action_date: user.last_login ? formatDateTime(user.last_login) : 'Jamais',
+          action_date: user.last_login ? format(new Date(user.last_login), "dd/MM/yyyy HH:mm:ss") : 'Jamais',
           performed_by: user.full_name,
           details: 'Connexion au système',
           target_id: user.id,

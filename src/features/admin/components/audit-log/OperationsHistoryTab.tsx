@@ -1,3 +1,4 @@
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
@@ -46,12 +47,13 @@ export const fetchRecentOperations = async () => {
 
     if (transfersError) throw transfersError;
 
-    // Combine and format all operations with the actual operation_date field
+    // Combine and format all operations with the exact dates as stored in the database
     const formattedDeposits = deposits.map(d => ({
       id: `deposit-${d.id}`,
       type: 'deposit',
       amount: d.amount,
-      date: d.operation_date, // Use the raw date from the database
+      date: d.operation_date,
+      raw_date: d.operation_date, // Keep the raw date for exact formatting
       client_name: d.client_name,
       created_by: d.created_by,
       created_by_name: d.created_by ? usersMap[d.created_by] || 'Utilisateur inconnu' : 'Système',
@@ -62,7 +64,8 @@ export const fetchRecentOperations = async () => {
       id: `withdrawal-${w.id}`,
       type: 'withdrawal',
       amount: w.amount,
-      date: w.operation_date, // Use the raw date from the database
+      date: w.operation_date,
+      raw_date: w.operation_date, // Keep the raw date for exact formatting
       client_name: w.client_name,
       created_by: w.created_by,
       created_by_name: w.created_by ? usersMap[w.created_by] || 'Utilisateur inconnu' : 'Système',
@@ -73,7 +76,8 @@ export const fetchRecentOperations = async () => {
       id: `transfer-${t.id}`,
       type: 'transfer',
       amount: t.amount,
-      date: t.operation_date, // Use the raw date from the database
+      date: t.operation_date,
+      raw_date: t.operation_date, // Keep the raw date for exact formatting
       from_client: t.from_client,
       to_client: t.to_client,
       created_by: t.created_by,

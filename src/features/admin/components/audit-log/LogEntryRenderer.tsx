@@ -20,6 +20,7 @@ export interface OperationLogEntry {
   type: string;
   amount: number;
   date: string;
+  raw_date?: string;
   client_name?: string;
   from_client?: string;
   to_client?: string;
@@ -119,13 +120,8 @@ export const LogEntryRenderer = ({ entry, index, type }: LogEntryRendererProps) 
   } else {
     const operation = entry as OperationLogEntry;
     
-    let formattedDate = '';
-    try {
-      formattedDate = formatDateTime(operation.date);
-    } catch (error) {
-      console.error("Error formatting date:", error);
-      formattedDate = operation.date;
-    }
+    const displayDate = operation.raw_date || operation.date;
+    const formattedDate = format(new Date(displayDate), "dd/MM/yyyy HH:mm:ss");
 
     return (
       <div 
