@@ -6,6 +6,7 @@ import { LogEntryRenderer, OperationLogEntry } from "./LogEntryRenderer";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { formatDateTime } from "@/features/operations/types";
 
 export const fetchRecentOperations = async () => {
   try {
@@ -51,34 +52,34 @@ export const fetchRecentOperations = async () => {
       id: `deposit-${d.id}`,
       type: 'deposit',
       amount: d.amount,
-      date: format(new Date(d.operation_date), 'dd/MM/yyyy HH:mm'),
+      date: d.operation_date,
       client_name: d.client_name,
       created_by: d.created_by,
       created_by_name: d.created_by ? usersMap[d.created_by] || 'Utilisateur inconnu' : 'Système',
-      description: `Versement pour ${d.client_name}`
+      description: d.notes || `Versement pour ${d.client_name}`
     }));
 
     const formattedWithdrawals = withdrawals.map(w => ({
       id: `withdrawal-${w.id}`,
       type: 'withdrawal',
       amount: w.amount,
-      date: format(new Date(w.operation_date), 'dd/MM/yyyy HH:mm'),
+      date: w.operation_date,
       client_name: w.client_name,
       created_by: w.created_by,
       created_by_name: w.created_by ? usersMap[w.created_by] || 'Utilisateur inconnu' : 'Système',
-      description: `Retrait par ${w.client_name}`
+      description: w.notes || `Retrait par ${w.client_name}`
     }));
 
     const formattedTransfers = transfers.map(t => ({
       id: `transfer-${t.id}`,
       type: 'transfer',
       amount: t.amount,
-      date: format(new Date(t.operation_date), 'dd/MM/yyyy HH:mm'),
+      date: t.operation_date,
       from_client: t.from_client,
       to_client: t.to_client,
       created_by: t.created_by,
       created_by_name: t.created_by ? usersMap[t.created_by] || 'Utilisateur inconnu' : 'Système',
-      description: `Virement de ${t.from_client} vers ${t.to_client}`
+      description: t.reason || `Virement de ${t.from_client} vers ${t.to_client}`
     }));
 
     // Combine all operations and sort by date (newest first)

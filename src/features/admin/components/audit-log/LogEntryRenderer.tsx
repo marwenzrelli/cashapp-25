@@ -1,7 +1,9 @@
+
 import { CalendarIcon, Trash, ArrowDownCircle, ArrowUpCircle, RefreshCcw, Activity, Hash } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { formatId } from "@/utils/formatId";
+import { formatDateTime } from "@/features/operations/types";
 
 export interface AuditLogEntry {
   id: string;
@@ -117,6 +119,21 @@ export const LogEntryRenderer = ({ entry, index, type }: LogEntryRendererProps) 
     );
   } else {
     const operation = entry as OperationLogEntry;
+    // Parse the date and format it to match the deposits/withdrawals format
+    let formattedDate = operation.date;
+    try {
+      // Try to parse the date. If it's already in "dd/MM/yyyy HH:mm" format, we convert it for proper formatting
+      if (operation.date.includes('/')) {
+        const [day, month, year, time] = operation.date.replace(/\//g, ' ').replace(':', ' ').split(' ');
+        const dateObj = new Date(`${year}-${month}-${day}T${time}:00`);
+        formattedDate = formatDateTime(dateObj.toISOString());
+      } else {
+        formattedDate = formatDateTime(operation.date);
+      }
+    } catch (error) {
+      console.error("Error formatting date:", error);
+    }
+
     return (
       <div 
         key={operation.id} 
@@ -134,7 +151,7 @@ export const LogEntryRenderer = ({ entry, index, type }: LogEntryRendererProps) 
               </p>
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <CalendarIcon className="h-3 w-3" />
-                <span>{operation.date}</span>
+                <span>{formattedDate}</span>
               </div>
             </div>
             <Badge variant="outline" className="w-fit text-xs">

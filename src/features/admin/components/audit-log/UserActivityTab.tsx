@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { LogEntryRenderer, AuditLogEntry } from "./LogEntryRenderer";
+import { formatDateTime } from "@/features/operations/types";
 
 export const UserActivityTab = () => {
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
@@ -27,7 +27,7 @@ export const UserActivityTab = () => {
         const formattedLoginData = loginData.map(user => ({
           id: `login-${user.id}`,
           action_type: 'Connexion',
-          action_date: user.last_login ? format(new Date(user.last_login), 'dd/MM/yyyy HH:mm') : 'Jamais',
+          action_date: user.last_login ? formatDateTime(user.last_login) : 'Jamais',
           performed_by: user.full_name,
           details: 'Connexion au système',
           target_id: user.id,
