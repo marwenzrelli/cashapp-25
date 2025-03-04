@@ -1,25 +1,14 @@
 
 import { StatsCard } from "@/features/deposits/components/StatsCard";
-import { SearchBar } from "@/features/deposits/components/SearchBar";
 import { type Deposit } from "@/components/deposits/types";
 
 interface DepositsHeaderProps {
   deposits: Deposit[];
-  searchTerm: string;
-  onSearchChange: (value: string) => void;
-  itemsPerPage: string;
-  onItemsPerPageChange: (value: string) => void;
-  onNewDeposit: () => void;
   filteredDeposits: Deposit[];
 }
 
 export const DepositsHeader = ({
   deposits,
-  searchTerm,
-  onSearchChange,
-  itemsPerPage,
-  onItemsPerPageChange,
-  onNewDeposit,
   filteredDeposits
 }: DepositsHeaderProps) => {
   return (
@@ -31,16 +20,8 @@ export const DepositsHeader = ({
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-1">
         <StatsCard deposits={deposits} />
-        <SearchBar
-          searchTerm={searchTerm}
-          onSearchChange={onSearchChange}
-          itemsPerPage={itemsPerPage}
-          onItemsPerPageChange={onItemsPerPageChange}
-          onNewDeposit={onNewDeposit}
-          totalDeposits={filteredDeposits.length}
-        />
       </div>
     </>
   );

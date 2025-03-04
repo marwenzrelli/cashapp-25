@@ -33,8 +33,12 @@ export const SearchBar = ({
               className="pl-8"
             />
           </div>
+          <Button size="sm" onClick={onNewDeposit}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nouveau
+          </Button>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center">
           <Select value={itemsPerPage} onValueChange={onItemsPerPageChange}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Nombre par page" />
@@ -46,10 +50,6 @@ export const SearchBar = ({
               <SelectItem value="50">50 par page</SelectItem>
             </SelectContent>
           </Select>
-          <Button size="sm" onClick={onNewDeposit}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nouveau
-          </Button>
         </div>
       </CardContent>
     </Card>

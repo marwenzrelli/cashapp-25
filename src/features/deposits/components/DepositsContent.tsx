@@ -3,7 +3,7 @@ import React from "react";
 import { StandaloneDepositForm } from "./DepositForm";
 import { DepositsTable } from "./DepositsTable";
 import { DepositsHeader } from "./DepositsHeader";
-import { QuickActions } from "./QuickActions";
+import { SearchBar } from "./SearchBar";
 import { DeleteDepositDialog } from "./DeleteDepositDialog";
 import { DepositDialogContainer } from "./DepositDialogContainer";
 import { Deposit } from "../types";
@@ -74,39 +74,37 @@ export const DepositsContent = ({
   return (
     <div className="space-y-8 animate-in">
       <DepositsHeader 
-        deposits={deposits} 
-        searchTerm={searchTerm} 
-        onSearchChange={setSearchTerm} 
-        itemsPerPage={itemsPerPage} 
-        onItemsPerPageChange={setItemsPerPage} 
-        onNewDeposit={() => setIsDialogOpen(true)} 
+        deposits={deposits}
         filteredDeposits={filteredDeposits}
       />
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+      <div className="grid gap-6">
+        <div>
           <StandaloneDepositForm 
             clients={clients} 
             onConfirm={handleCreateDeposit} 
             refreshClientBalance={handleRefreshClientBalance} 
           />
         </div>
-        <div>
-          <QuickActions 
-            onCreateClick={() => setIsDialogOpen(true)}
-            itemsPerPage={itemsPerPage}
-            setItemsPerPage={setItemsPerPage}
-            depositsCount={filteredDeposits.length}
-          />
-        </div>
       </div>
 
-      <DepositsTable 
-        deposits={filteredDeposits} 
-        itemsPerPage={itemsPerPage} 
-        onEdit={handleEdit} 
-        onDelete={handleDelete} 
-      />
+      <div className="space-y-4">
+        <SearchBar
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          itemsPerPage={itemsPerPage}
+          onItemsPerPageChange={setItemsPerPage}
+          onNewDeposit={() => setIsDialogOpen(true)}
+          totalDeposits={filteredDeposits.length}
+        />
+        
+        <DepositsTable 
+          deposits={filteredDeposits} 
+          itemsPerPage={itemsPerPage} 
+          onEdit={handleEdit} 
+          onDelete={handleDelete} 
+        />
+      </div>
 
       <DepositDialogContainer 
         open={isDialogOpen} 
