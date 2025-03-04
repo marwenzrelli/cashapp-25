@@ -1,4 +1,3 @@
-
 export interface Operation {
   id: string;
   type: "deposit" | "withdrawal" | "transfer";
@@ -24,10 +23,13 @@ export const TIME_RANGES = [
   { label: "90 derniers jours", days: 90 },
 ] as const;
 
-// Fonction utilitaire pour formater les dates uniformément dans l'application
+/**
+ * Fonction utilitaire pour formater les dates uniformément dans l'application
+ * Affiche les dates en heure locale
+ */
 export const formatDateTime = (dateString: string) => {
   try {
-    // Convertir la chaîne de date en objet Date
+    // Convertir la chaîne de date en objet Date (local time)
     const date = new Date(dateString);
     
     // S'assurer que la date est valide
@@ -36,7 +38,7 @@ export const formatDateTime = (dateString: string) => {
       return "Date invalide";
     }
     
-    // Formatage complet de la date et de l'heure avec les secondes pour plus de précision
+    // Formatage complet de la date et de l'heure avec les secondes en temps local
     return date.toLocaleString('fr-FR', {
       year: 'numeric',
       month: '2-digit',

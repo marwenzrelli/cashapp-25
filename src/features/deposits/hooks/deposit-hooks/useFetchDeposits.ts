@@ -41,7 +41,7 @@ export const useFetchDeposits = (
         };
       });
 
-      console.log("Versements chargés:", formattedDeposits);
+      console.log("Versements chargés (en heure locale):", formattedDeposits);
       setDeposits(formattedDeposits);
     } catch (error) {
       console.error("Erreur lors du chargement des versements:", error);

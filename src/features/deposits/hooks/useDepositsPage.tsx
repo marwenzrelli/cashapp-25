@@ -115,9 +115,9 @@ export const useDepositsPage = () => {
     // Create the operation_date by combining date and time
     let operationDate = null;
     if (editForm.date && editForm.time) {
-      // Properly format the date and time
+      // Create a valid date string by combining date and time
       operationDate = `${editForm.date}T${editForm.time}`;
-      console.log("Date d'opération formatée:", operationDate);
+      console.log("Date d'opération formatée (locale):", operationDate);
     }
 
     const updates = {
