@@ -73,7 +73,7 @@ export const SelectDropdownContent = ({
         WebkitOverflowScrolling: 'touch'
       }}
       onPointerDownOutside={handlePointerDownOutside}
-      onOpenAutoFocus={(e) => {
+      onCloseAutoFocus={(e) => {
         // Prevent auto focus which can cause problems on iOS
         e.preventDefault();
       }}

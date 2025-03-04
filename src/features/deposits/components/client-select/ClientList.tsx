@@ -35,9 +35,9 @@ export const ClientList = ({
       if (scrollAreaViewport) {
         // Apply iOS-specific optimizations
         scrollAreaViewport.style.overscrollBehavior = 'contain';
-        (scrollAreaViewport.style as any)['-webkit-overflow-scrolling'] = 'touch';
+        scrollAreaViewport.style.webkitOverflowScrolling = 'touch';
         scrollAreaViewport.style.touchAction = 'pan-y';
-        scrollAreaViewport.style.WebkitBackfaceVisibility = 'hidden';
+        scrollAreaViewport.style.webkitBackfaceVisibility = 'hidden';
         
         // Force iOS to recognize this as a scrollable area
         scrollAreaViewport.style.height = '100%';

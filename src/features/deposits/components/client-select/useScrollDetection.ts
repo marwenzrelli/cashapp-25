@@ -1,3 +1,4 @@
+
 import { useState, useRef, RefObject, useEffect } from "react";
 import { useTouchMomentum } from "./useTouchMomentum";
 import { useScrollVelocity } from "./useScrollVelocity";
@@ -31,11 +32,11 @@ export const useScrollDetection = (
             console.log(`Found scrollable element using selector: ${selector}`);
             
             if (iOSref.current) {
-              scrollableRef.current.style.WebkitOverflowScrolling = 'touch';
+              scrollableRef.current.style.webkitOverflowScrolling = 'touch';
               scrollableRef.current.style.overscrollBehavior = 'contain';
               scrollableRef.current.style.touchAction = 'pan-y';
               scrollableRef.current.style.transform = 'translateZ(0)';
-              scrollableRef.current.style.WebkitBackfaceVisibility = 'hidden';
+              scrollableRef.current.style.webkitBackfaceVisibility = 'hidden';
               console.log('Applied iOS-specific scroll optimizations');
             }
             
@@ -75,7 +76,7 @@ export const useScrollDetection = (
       
       if (iOSref.current) {
         scrollElement.style.overflow = 'auto';
-        scrollElement.style.WebkitOverflowScrolling = 'touch';
+        scrollElement.style.webkitOverflowScrolling = 'touch';
       }
     };
     
