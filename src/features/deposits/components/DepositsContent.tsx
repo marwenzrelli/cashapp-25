@@ -77,8 +77,8 @@ export const DepositsContent = ({
         filteredDeposits={filteredDeposits}
       />
       
-      {/* Place the deposit form directly below statistics */}
-      <div className="mx-auto max-w-3xl">
+      {/* Place the deposit form directly below statistics with the same width */}
+      <div>
         <StandaloneDepositForm
           clients={clients}
           onConfirm={handleCreateDeposit}
