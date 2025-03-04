@@ -13,6 +13,13 @@ export const useFetchDeposits = (
       console.log("Fetching deposits...");
       setIsLoading(true);
       
+      // Vérifier que la connexion Supabase est disponible
+      if (!supabase) {
+        console.error("La connexion Supabase n'est pas disponible");
+        toast.error("Erreur de connexion à la base de données");
+        return;
+      }
+      
       const { data, error } = await supabase
         .from('deposits')
         .select('*')
@@ -33,6 +40,7 @@ export const useFetchDeposits = (
       }
 
       console.log("Nombre de versements récupérés:", data.length);
+      console.log("Premier versement:", data[0]);
 
       const formattedDeposits: Deposit[] = data.map(d => {
         // Toujours utiliser created_at pour la date d'affichage principale

@@ -38,27 +38,37 @@ export const useDeposits = () => {
 
   useEffect(() => {
     console.log("useDeposits - Initializing component");
+    let isMounted = true;
+    
     const init = async () => {
       try {
         console.log("useDeposits - Checking authentication");
         const isAuthenticated = await checkAuth();
+        
+        if (!isMounted) return;
+        
         if (isAuthenticated) {
           console.log("useDeposits - User is authenticated, fetching deposits");
           await fetchDeposits();
         } else {
           console.log("useDeposits - User is not authenticated");
           toast.error("Veuillez vous connecter pour accéder à cette page");
+          navigate('/login');
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("useDeposits - Error during initialization:", error);
-        toast.error("Erreur lors de l'initialisation", {
-          description: "Veuillez rafraîchir la page"
-        });
+        if (isMounted) {
+          toast.error("Erreur lors de l'initialisation", {
+            description: error.message || "Veuillez rafraîchir la page"
+          });
+        }
       }
     };
+    
     init();
 
     return () => {
+      isMounted = false;
       console.log("useDeposits - Component unmounting");
     };
   }, []);
