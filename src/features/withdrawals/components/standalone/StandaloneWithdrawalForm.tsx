@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowDownCircle } from "lucide-react";
@@ -93,15 +94,15 @@ export const StandaloneWithdrawalForm: React.FC<StandaloneWithdrawalFormProps> =
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Nouveau retrait</CardTitle>
+    <Card className="border rounded-lg shadow-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-2xl font-bold">Nouveau retrait</CardTitle>
         <CardDescription>
           Enregistrez un nouveau retrait pour un client
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid gap-4">
+        <div className="space-y-5">
           <DateField
             value={newWithdrawal.date}
             onChange={(value) => setNewWithdrawal({ ...newWithdrawal, date: value })}
@@ -129,10 +130,9 @@ export const StandaloneWithdrawalForm: React.FC<StandaloneWithdrawalFormProps> =
 
           <Button
             onClick={handleSubmit}
-            className="bg-red-600 hover:bg-red-700 text-white w-full mt-4"
+            className="bg-[#ea384c] hover:bg-red-700 text-white w-full py-6 rounded-md"
             disabled={isLoading}
           >
-            <ArrowDownCircle className="h-4 w-4 mr-2" />
             {isLoading ? "En cours..." : "Effectuer le retrait"}
           </Button>
         </div>
