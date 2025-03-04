@@ -41,7 +41,7 @@ export const DateField: React.FC<DateFieldProps> = ({
             type="date"
             value={date}
             onChange={(e) => handleDateChange(e.target.value)}
-            className="pl-9 transition-all focus-visible:ring-primary/50"
+            className="pl-12 md:pl-9 transition-all focus-visible:ring-primary/50"
           />
         </div>
         <div className="relative">
@@ -51,7 +51,7 @@ export const DateField: React.FC<DateFieldProps> = ({
             type="time"
             value={time}
             onChange={(e) => handleTimeChange(e.target.value)}
-            className="pl-9 transition-all focus-visible:ring-primary/50"
+            className="pl-12 md:pl-9 transition-all focus-visible:ring-primary/50"
           />
         </div>
       </div>
