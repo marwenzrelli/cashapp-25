@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Deposit } from "@/components/deposits/types";
-import { formatDateTime } from "../utils/dateUtils";
+import { formatDateTime } from "@/features/deposits/hooks/utils/dateUtils"; // Fixed import path
 
 export const useFetchDeposits = (
   setDeposits: React.Dispatch<React.SetStateAction<Deposit[]>>,
