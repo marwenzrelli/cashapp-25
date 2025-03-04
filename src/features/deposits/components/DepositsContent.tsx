@@ -4,11 +4,9 @@ import { DepositsTable } from "./DepositsTable";
 import { DepositsHeader } from "./DepositsHeader";
 import { SearchBar } from "./SearchBar";
 import { DeleteDepositDialog } from "./DeleteDepositDialog";
-import { DepositDialogContainer } from "./DepositDialogContainer";
 import { Deposit } from "../types";
 import { useClients } from "@/features/clients/hooks/useClients";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { StandaloneDepositForm } from "./DepositForm";
 
 interface DepositsContentProps {
   deposits: Deposit[];
@@ -79,12 +77,13 @@ export const DepositsContent = ({
         filteredDeposits={filteredDeposits}
       />
       
-      {/* Add the "Nouveau versement" button right after the header (which includes statistics) */}
-      <div className="flex justify-end">
-        <Button onClick={() => setIsDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nouveau versement
-        </Button>
+      {/* Place the deposit form directly below statistics */}
+      <div className="mx-auto max-w-3xl">
+        <StandaloneDepositForm
+          clients={clients}
+          onConfirm={handleCreateDeposit}
+          refreshClientBalance={handleRefreshClientBalance}
+        />
       </div>
 
       <div className="space-y-4">
@@ -103,14 +102,6 @@ export const DepositsContent = ({
           onDelete={handleDelete} 
         />
       </div>
-
-      <DepositDialogContainer 
-        open={isDialogOpen} 
-        onOpenChange={setIsDialogOpen} 
-        clients={clients} 
-        onConfirm={handleCreateDeposit} 
-        refreshClientBalance={handleRefreshClientBalance} 
-      />
 
       <DeleteDepositDialog 
         isOpen={isDeleteDialogOpen} 
