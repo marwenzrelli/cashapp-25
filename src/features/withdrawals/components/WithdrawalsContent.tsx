@@ -80,7 +80,7 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
 
   return (
     <div className="space-y-8 animate-in">
-      <WithdrawalHeader />
+      <WithdrawalHeader withdrawals={withdrawals} />
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
