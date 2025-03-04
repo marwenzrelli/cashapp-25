@@ -67,7 +67,7 @@ export const EditDepositDialog: React.FC<EditDepositDialogProps> = ({
   // Creation date (this is what will be shown in the list)
   const creationDate = selectedDeposit ? formatDateTime(selectedDeposit.created_at) : '';
   
-  // Custom operation date info (if it exists)
+  // Custom operation date info (if it exists) - displayed in local time
   const operationDate = selectedDeposit?.operation_date ? 
     formatDateTime(selectedDeposit.operation_date) : null;
 
@@ -132,7 +132,7 @@ export const EditDepositDialog: React.FC<EditDepositDialogProps> = ({
               </div>
             </div>
             <p className="text-xs text-muted-foreground">
-              Cette date sera utilisée comme date d'opération personnalisée.
+              Cette date sera utilisée comme date d'opération personnalisée (heure locale).
               La date de création restera visible dans la liste des versements.
             </p>
           </div>
