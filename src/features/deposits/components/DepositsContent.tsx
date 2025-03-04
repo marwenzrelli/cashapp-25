@@ -1,6 +1,5 @@
 
 import React from "react";
-import { StandaloneDepositForm } from "./DepositForm";
 import { DepositsTable } from "./DepositsTable";
 import { DepositsHeader } from "./DepositsHeader";
 import { SearchBar } from "./SearchBar";
@@ -77,16 +76,6 @@ export const DepositsContent = ({
         deposits={deposits}
         filteredDeposits={filteredDeposits}
       />
-
-      <div className="grid gap-6">
-        <div>
-          <StandaloneDepositForm 
-            clients={clients} 
-            onConfirm={handleCreateDeposit} 
-            refreshClientBalance={handleRefreshClientBalance} 
-          />
-        </div>
-      </div>
 
       <div className="space-y-4">
         <SearchBar
