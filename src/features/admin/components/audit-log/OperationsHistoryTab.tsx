@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
@@ -7,6 +7,17 @@ import { LogEntryRenderer, AuditLogEntry } from "./LogEntryRenderer";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+
+// Define the type for operations history
+interface OperationHistory {
+  id: number;
+  operation_type: string;
+  created_at: string;
+  performed_by: string;
+  details: string;
+  target_id: number | null;
+  target_name: string | null;
+}
 
 export const OperationsHistoryTab = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -22,25 +33,37 @@ export const OperationsHistoryTab = () => {
     queryFn: async () => {
       try {
         // Get total count for pagination
-        const { count: totalCount, error: countError } = await supabase
-          .from('operations_history')
-          .count();
+        const { data: countData, error: countError } = await supabase
+          .from('withdrawals')
+          .select('count', { count: 'exact', head: true });
           
         if (countError) throw countError;
         
         // Calculate total pages
-        const totalItems = totalCount || 0;
+        const totalItems = countData?.[0]?.count || 0;
         setTotalPages(Math.ceil(totalItems / operationsPerPage));
         
         // Fetch operations with pagination
         const { data, error } = await supabase
-          .from('operations_history')
+          .from('withdrawals')
           .select('*')
           .order('created_at', { ascending: false })
           .range((currentPage - 1) * operationsPerPage, currentPage * operationsPerPage - 1);
 
         if (error) throw error;
-        return data || [];
+        
+        // Format the data to match the expected OperationHistory structure
+        const formattedData: OperationHistory[] = (data || []).map(withdrawal => ({
+          id: withdrawal.id,
+          operation_type: 'Retrait',
+          created_at: withdrawal.created_at,
+          performed_by: withdrawal.created_by || 'Utilisateur système',
+          details: `Retrait de ${withdrawal.amount} pour ${withdrawal.client_name}`,
+          target_id: withdrawal.id,
+          target_name: withdrawal.client_name
+        }));
+        
+        return formattedData;
       } catch (error) {
         console.error("Error fetching recent operations:", error);
         toast.error("Erreur lors du chargement des opérations récentes");

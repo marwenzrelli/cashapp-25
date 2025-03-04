@@ -8,6 +8,16 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+// Define the type for the deleted operations
+interface DeletedOperation {
+  id: number;
+  operation_id: number | null;
+  operation_type: string | null;
+  deleted_by: string;
+  deleted_at: string;
+  operation_details: string | null;
+}
+
 export const DeletedOperationsTab = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -22,25 +32,25 @@ export const DeletedOperationsTab = () => {
     queryFn: async () => {
       try {
         // Get total count for pagination
-        const { count: totalCount, error: countError } = await supabase
-          .from('deleted_operations')
-          .count();
+        const { data: countData, error: countError } = await supabase
+          .from('deleted_withdrawals')
+          .select('count', { count: 'exact', head: true });
           
         if (countError) throw countError;
         
         // Calculate total pages
-        const totalItems = totalCount || 0;
+        const totalItems = countData?.[0]?.count || 0;
         setTotalPages(Math.ceil(totalItems / operationsPerPage));
         
         // Fetch deleted operations with pagination
         const { data, error } = await supabase
-          .from('deleted_operations')
+          .from('deleted_withdrawals')
           .select('*')
           .order('deleted_at', { ascending: false })
           .range((currentPage - 1) * operationsPerPage, currentPage * operationsPerPage - 1);
 
         if (error) throw error;
-        return data || [];
+        return data as DeletedOperation[] || [];
       } catch (error) {
         console.error("Error fetching deleted operations:", error);
         toast.error("Erreur lors du chargement des opérations supprimées");
@@ -90,7 +100,7 @@ export const DeletedOperationsTab = () => {
         ) : (
           <div className="divide-y divide-border">
             {formattedOperations.map((log, index) => (
-              <LogEntryRenderer key={log.id} entry={log} index={index} type="deletion" />
+              <LogEntryRenderer key={log.id} entry={log} index={index} type="operation" />
             ))}
           </div>
         )}
