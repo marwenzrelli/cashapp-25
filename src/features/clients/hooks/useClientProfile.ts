@@ -1,7 +1,6 @@
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { startOfDay, endOfDay } from "date-fns";
 import { useOperations } from "@/features/operations/hooks/useOperations";
 import { useClientData } from "./clientProfile/useClientData";
 import { useClientOperationsFilter } from "./clientProfile/useClientOperationsFilter";
@@ -20,9 +19,12 @@ export const useClientProfile = () => {
   const { client, isLoading, error: clientDataError } = useClientData(clientId);
   
   // Set error state if client data fetch fails
-  if (clientDataError && !error) {
-    setError(handleSupabaseError(clientDataError));
-  }
+  useEffect(() => {
+    if (clientDataError && !error) {
+      console.error("ClientProfile - Error from useClientData:", clientDataError);
+      setError(handleSupabaseError(clientDataError));
+    }
+  }, [clientDataError, error]);
   
   // Filter operations
   const {

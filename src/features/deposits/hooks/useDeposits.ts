@@ -8,6 +8,7 @@ import { useFetchDeposits } from "./deposit-hooks/useFetchDeposits";
 import { useCreateDeposit } from "./deposit-hooks/useCreateDeposit";
 import { useUpdateDeposit } from "./deposit-hooks/useUpdateDeposit";
 import { useDeleteDeposit } from "./deposit-hooks/useDeleteDeposit";
+import { toast } from "sonner";
 
 export const useDeposits = () => {
   const navigate = useNavigate();
@@ -36,13 +37,30 @@ export const useDeposits = () => {
   );
 
   useEffect(() => {
+    console.log("useDeposits - Initializing component");
     const init = async () => {
-      const isAuthenticated = await checkAuth();
-      if (isAuthenticated) {
-        await fetchDeposits();
+      try {
+        console.log("useDeposits - Checking authentication");
+        const isAuthenticated = await checkAuth();
+        if (isAuthenticated) {
+          console.log("useDeposits - User is authenticated, fetching deposits");
+          await fetchDeposits();
+        } else {
+          console.log("useDeposits - User is not authenticated");
+          toast.error("Veuillez vous connecter pour accéder à cette page");
+        }
+      } catch (error) {
+        console.error("useDeposits - Error during initialization:", error);
+        toast.error("Erreur lors de l'initialisation", {
+          description: "Veuillez rafraîchir la page"
+        });
       }
     };
     init();
+
+    return () => {
+      console.log("useDeposits - Component unmounting");
+    };
   }, []);
 
   return {

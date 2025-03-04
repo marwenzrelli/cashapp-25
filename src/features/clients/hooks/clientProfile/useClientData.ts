@@ -31,12 +31,14 @@ export const useClientData = (clientId: number | null) => {
           console.error("Erreur lors du chargement du client:", supabaseError);
           setError(supabaseError.message);
           toast.error("Impossible de charger les informations du client");
-          throw supabaseError;
+          setIsLoading(false);
+          return;
         }
 
         if (!data) {
           console.error("Client non trouvé avec ID:", clientId);
           setError(`Client avec ID ${clientId} non trouvé`);
+          setIsLoading(false);
           return;
         }
 

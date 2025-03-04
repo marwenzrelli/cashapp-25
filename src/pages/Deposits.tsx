@@ -1,6 +1,8 @@
 
 import { DepositsContent } from "@/features/deposits/components/DepositsContent";
 import { useDepositsPage } from "@/features/deposits/hooks/useDepositsPage";
+import { useEffect } from "react";
+import { toast } from "sonner";
 
 const Deposits = () => {
   const {
@@ -26,10 +28,44 @@ const Deposits = () => {
     handleEdit,
     handleEditFormChange,
     handleConfirmEdit,
-    handleCreateDeposit
+    handleCreateDeposit,
+    isLoading,
+    error
   } = useDepositsPage();
 
-  console.log("Deposits page render - isEditDialogOpen:", isEditDialogOpen);
+  useEffect(() => {
+    console.log("Deposits page mounted");
+    
+    return () => {
+      console.log("Deposits page unmounted");
+    };
+  }, []);
+
+  useEffect(() => {
+    if (error) {
+      toast.error("Erreur lors du chargement des versements", {
+        description: error
+      });
+    }
+  }, [error]);
+
+  console.log("Deposits page render:", { 
+    depositsCount: deposits.length,
+    paginatedCount: paginatedDeposits.length,
+    isLoading,
+    isEditDialogOpen
+  });
+  
+  if (isLoading) {
+    return (
+      <div className="container mx-auto p-8 flex justify-center items-center min-h-[70vh]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-12 w-12 rounded-full border-t-2 border-primary animate-spin"></div>
+          <p className="text-lg">Chargement des versements...</p>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <DepositsContent

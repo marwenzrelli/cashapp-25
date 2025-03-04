@@ -10,6 +10,7 @@ export const useFetchDeposits = (
 ) => {
   const fetchDeposits = async () => {
     try {
+      console.log("Fetching deposits...");
       setIsLoading(true);
       
       const { data, error } = await supabase
@@ -18,10 +19,20 @@ export const useFetchDeposits = (
         .order('created_at', { ascending: false });
 
       if (error) {
-        toast.error("Erreur lors du chargement des versements");
-        console.error("Erreur:", error);
+        console.error("Erreur lors du chargement des versements:", error);
+        toast.error("Erreur lors du chargement des versements", {
+          description: error.message,
+        });
         return;
       }
+
+      if (!data || data.length === 0) {
+        console.log("Aucun versement trouvé");
+        setDeposits([]);
+        return;
+      }
+
+      console.log("Nombre de versements récupérés:", data.length);
 
       const formattedDeposits: Deposit[] = data.map(d => {
         // Toujours utiliser created_at pour la date d'affichage principale
@@ -41,13 +52,16 @@ export const useFetchDeposits = (
         };
       });
 
-      console.log("Versements chargés (en heure locale):", formattedDeposits);
+      console.log("Versements formatés (premier élément):", formattedDeposits[0] || "aucun élément");
       setDeposits(formattedDeposits);
-    } catch (error) {
-      console.error("Erreur lors du chargement des versements:", error);
-      toast.error("Erreur lors du chargement des versements");
+    } catch (error: any) {
+      console.error("Erreur inattendue lors du chargement des versements:", error);
+      toast.error("Erreur lors du chargement des versements", {
+        description: error.message || "Une erreur inattendue s'est produite"
+      });
     } finally {
       setIsLoading(false);
+      console.log("Chargement des versements terminé");
     }
   };
 
