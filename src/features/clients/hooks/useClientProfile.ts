@@ -1,11 +1,12 @@
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { startOfDay, endOfDay } from "date-fns";
 import { useOperations } from "@/features/operations/hooks/useOperations";
 import { useClientData } from "./clientProfile/useClientData";
 import { useClientOperationsFilter } from "./clientProfile/useClientOperationsFilter";
 import { useClientProfileExport } from "./clientProfile/useClientProfileExport";
+import { handleSupabaseError } from "./utils/errorUtils";
 
 export const useClientProfile = () => {
   const { id } = useParams();
@@ -13,9 +14,15 @@ export const useClientProfile = () => {
   const { operations } = useOperations();
   const qrCodeRef = useRef<HTMLDivElement>(null);
   const clientId = id ? Number(id) : null;
+  const [error, setError] = useState<string | null>(null);
   
-  // Get client data
-  const { client, isLoading } = useClientData(clientId);
+  // Get client data with improved error handling
+  const { client, isLoading, error: clientDataError } = useClientData(clientId);
+  
+  // Set error state if client data fetch fails
+  if (clientDataError && !error) {
+    setError(handleSupabaseError(clientDataError));
+  }
   
   // Filter operations
   const {
@@ -44,6 +51,7 @@ export const useClientProfile = () => {
     clientOperations,
     filteredOperations,
     isLoading,
+    error,
     navigate,
     qrCodeRef,
     selectedType,

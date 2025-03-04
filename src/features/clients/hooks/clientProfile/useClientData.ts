@@ -7,34 +7,45 @@ import { toast } from "sonner";
 export const useClientData = (clientId: number | null) => {
   const [client, setClient] = useState<Client | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchClient = async () => {
       try {
         if (!clientId) {
           console.error("Client ID manquant dans l'URL");
+          setError("ID client manquant");
           setIsLoading(false);
           return;
         }
         
         console.log("Tentative de récupération du client avec ID:", clientId);
         
-        const { data, error } = await supabase
+        const { data, error: supabaseError } = await supabase
           .from('clients')
           .select('*')
           .eq('id', clientId)
-          .single();
+          .maybeSingle();
 
-        if (error) {
-          console.error("Erreur lors du chargement du client:", error);
+        if (supabaseError) {
+          console.error("Erreur lors du chargement du client:", supabaseError);
+          setError(supabaseError.message);
           toast.error("Impossible de charger les informations du client");
-          throw error;
+          throw supabaseError;
+        }
+
+        if (!data) {
+          console.error("Client non trouvé avec ID:", clientId);
+          setError(`Client avec ID ${clientId} non trouvé`);
+          return;
         }
 
         console.log("Client récupéré avec succès:", data);
         setClient(data);
-      } catch (error) {
+        setError(null);
+      } catch (error: any) {
         console.error("Erreur lors du chargement du client:", error);
+        setError(error.message || "Erreur inconnue");
         toast.error("Impossible de charger les informations du client");
       } finally {
         setIsLoading(false);
@@ -97,5 +108,5 @@ export const useClientData = (clientId: number | null) => {
     };
   }, [clientId]);
 
-  return { client, isLoading };
+  return { client, isLoading, error };
 };
