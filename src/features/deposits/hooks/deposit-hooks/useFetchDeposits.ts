@@ -24,8 +24,8 @@ export const useFetchDeposits = (
       }
 
       const formattedDeposits: Deposit[] = data.map(d => {
-        // Use operation_date for display if it exists, otherwise use created_at
-        const displayDate = d.operation_date ? formatDateTime(d.operation_date) : formatDateTime(d.created_at);
+        // Always use created_at for display in the list
+        const displayDate = formatDateTime(d.created_at);
         
         return {
           id: d.id,

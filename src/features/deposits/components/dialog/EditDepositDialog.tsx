@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -63,16 +64,16 @@ export const EditDepositDialog: React.FC<EditDepositDialogProps> = ({
     }
   }, [selectedDeposit, editForm.date, editForm.time, onEditFormChange]);
 
-  // Use created_at for display date, matching the deposit list display
-  const displayDate = selectedDeposit ? formatDateTime(selectedDeposit.created_at) : '';
+  // Creation date (this is what will be shown in the list)
+  const creationDate = selectedDeposit ? formatDateTime(selectedDeposit.created_at) : '';
   
+  // Custom operation date info (if it exists)
+  const operationDate = selectedDeposit?.operation_date ? 
+    formatDateTime(selectedDeposit.operation_date) : null;
+
   // Last modification info
   const lastModified = selectedDeposit?.last_modified_at ? 
     formatDateTime(selectedDeposit.last_modified_at) : null;
-
-  // Operation date info (custom date set by user)
-  const operationDate = selectedDeposit?.operation_date ? 
-    formatDateTime(selectedDeposit.operation_date) : null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -85,7 +86,7 @@ export const EditDepositDialog: React.FC<EditDepositDialogProps> = ({
             Modifier le versement
           </DialogTitle>
           <DialogDescription className="text-base text-gray-500">
-            Modifiez les informations du versement du {displayDate}
+            Versement créé le {creationDate}
             
             {operationDate && (
               <div className="mt-1 flex items-center gap-1.5 text-xs text-blue-600">
@@ -131,7 +132,8 @@ export const EditDepositDialog: React.FC<EditDepositDialogProps> = ({
               </div>
             </div>
             <p className="text-xs text-muted-foreground">
-              Cette date sera affichée dans la liste des versements.
+              Cette date sera utilisée comme date d'opération personnalisée.
+              La date de création restera visible dans la liste des versements.
             </p>
           </div>
           

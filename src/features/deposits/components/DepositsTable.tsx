@@ -50,33 +50,11 @@ export const DepositsTable = ({ deposits, onEdit, onDelete }: DepositsTableProps
   };
 
   const renderDateWithInfo = (deposit: Deposit) => {
-    const isOperationDate = deposit.operation_date !== undefined && deposit.operation_date !== null;
+    const hasCustomDate = deposit.operation_date !== undefined && deposit.operation_date !== null;
+    const hasBeenModified = deposit.last_modified_at !== undefined && deposit.last_modified_at !== null;
     
-    const dateDisplay = (
-      <div className="flex items-center gap-1">
-        {deposit.date}
-        {isOperationDate && (
-          <Calendar className="h-3.5 w-3.5 text-blue-500" />
-        )}
-      </div>
-    );
-    
-    if (!deposit.last_modified_at) {
-      if (isOperationDate) {
-        return (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="cursor-help">{dateDisplay}</div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Date d'opération choisie</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        );
-      }
-      return dateDisplay;
+    if (!hasCustomDate && !hasBeenModified) {
+      return <div>{deposit.date}</div>;
     }
     
     return (
@@ -84,16 +62,18 @@ export const DepositsTable = ({ deposits, onEdit, onDelete }: DepositsTableProps
         <Tooltip>
           <TooltipTrigger asChild>
             <div className="flex items-center gap-1 cursor-help">
-              {dateDisplay}
-              <Clock className="h-3.5 w-3.5 text-amber-500" />
+              {deposit.date}
+              {hasBeenModified && <Clock className="h-3.5 w-3.5 text-amber-500" />}
             </div>
           </TooltipTrigger>
           <TooltipContent>
-            <p>
-              {isOperationDate ? "Date d'opération choisie" : "Date de création"}
-              <br />
-              Modifié le {formatDateTime(deposit.last_modified_at)}
-            </p>
+            <p>Date de création</p>
+            {hasCustomDate && (
+              <p>Date d'opération personnalisée: {formatDateTime(deposit.operation_date)}</p>
+            )}
+            {hasBeenModified && (
+              <p>Modifié le {formatDateTime(deposit.last_modified_at)}</p>
+            )}
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
