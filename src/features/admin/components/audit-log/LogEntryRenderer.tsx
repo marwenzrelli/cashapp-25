@@ -1,4 +1,3 @@
-
 import { CalendarIcon, Trash, ArrowDownCircle, ArrowUpCircle, RefreshCcw, Activity, Hash } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -119,19 +118,13 @@ export const LogEntryRenderer = ({ entry, index, type }: LogEntryRendererProps) 
     );
   } else {
     const operation = entry as OperationLogEntry;
-    // Parse the date and format it to match the deposits/withdrawals format
-    let formattedDate = operation.date;
+    
+    let formattedDate = '';
     try {
-      // Try to parse the date. If it's already in "dd/MM/yyyy HH:mm" format, we convert it for proper formatting
-      if (operation.date.includes('/')) {
-        const [day, month, year, time] = operation.date.replace(/\//g, ' ').replace(':', ' ').split(' ');
-        const dateObj = new Date(`${year}-${month}-${day}T${time}:00`);
-        formattedDate = formatDateTime(dateObj.toISOString());
-      } else {
-        formattedDate = formatDateTime(operation.date);
-      }
+      formattedDate = formatDateTime(operation.date);
     } catch (error) {
       console.error("Error formatting date:", error);
+      formattedDate = operation.date;
     }
 
     return (

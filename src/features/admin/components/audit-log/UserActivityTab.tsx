@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -23,7 +24,7 @@ export const UserActivityTab = () => {
 
         if (loginError) throw loginError;
 
-        // Format login data for the audit log
+        // Format login data for the audit log using the consistent formatting function
         const formattedLoginData = loginData.map(user => ({
           id: `login-${user.id}`,
           action_type: 'Connexion',
