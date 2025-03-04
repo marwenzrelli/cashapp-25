@@ -63,7 +63,7 @@ export const EditDepositDialog: React.FC<EditDepositDialogProps> = ({
               />
 
               <NotesField
-                value={editForm.notes}
+                value={editForm.notes || ""}
                 onChange={(value) => onEditFormChange('notes', value)}
                 id="edit-notes"
               />

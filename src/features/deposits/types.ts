@@ -1,7 +1,8 @@
 
 import { type Deposit } from "@/components/deposits/types";
 
-export type { Deposit, EditFormData } from "@/components/deposits/types";
+export type { Deposit } from "@/components/deposits/types";
+export type { EditFormData } from "@/components/deposits/types";
 
 export interface DepositDialogProps {
   open: boolean;
