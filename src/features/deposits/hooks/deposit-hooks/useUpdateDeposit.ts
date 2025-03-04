@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { createISOString } from "../utils/dateUtils";
 
 export const useUpdateDeposit = (
   fetchDeposits: () => Promise<void>,
@@ -10,12 +11,18 @@ export const useUpdateDeposit = (
     client_name: string; 
     amount: number; 
     notes?: string;
-    operation_date?: string | null;
+    date?: string;
+    time?: string;
   }) => {
     try {
-      console.log("Mise à jour du versement avec les données:", {
+      // Create the operation_date from date and time inputs (in local timezone)
+      const operation_date = updates.date ? 
+        createISOString(updates.date, updates.time || '00:00:00') : null;
+      
+      console.log("Updating deposit with data:", {
         depositId,
-        updates
+        updates,
+        operation_date
       });
       
       const { data: { session } } = await supabase.auth.getSession();
@@ -31,7 +38,7 @@ export const useUpdateDeposit = (
           client_name: updates.client_name,
           amount: updates.amount,
           notes: updates.notes,
-          operation_date: updates.operation_date,
+          operation_date: operation_date,
           last_modified_at: new Date().toISOString() // Add current timestamp
         })
         .eq('id', depositId);

@@ -2,7 +2,6 @@
 import React from "react";
 import { Calendar, Clock, InfoIcon } from "lucide-react";
 import { DialogDescription } from "@/components/ui/dialog";
-import { formatDateTime } from "@/features/deposits/hooks/utils/dateUtils";
 
 interface DepositInfoProps {
   creationDate: string;

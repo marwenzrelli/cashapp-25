@@ -67,7 +67,7 @@ export const formatISODateTime = (dateString: string) => {
     const seconds = String(date.getSeconds()).padStart(2, '0');
     const formattedTime = `${hours}:${minutes}:${seconds}`;
     
-    console.log("Date formatée en temps local:", {
+    console.log("Formatted to local time:", {
       original: dateString,
       formatted: { date: formattedDate, time: formattedTime },
       localDate: date.toString()
@@ -77,5 +77,44 @@ export const formatISODateTime = (dateString: string) => {
   } catch (error) {
     console.error("Error formatting ISO date:", error);
     return { date: '', time: '' };
+  }
+};
+
+/**
+ * Creates an ISO string from date and time inputs, properly handling timezone
+ * @param dateString - Date string in YYYY-MM-DD format
+ * @param timeString - Time string in HH:MM:SS format
+ * @returns ISO date string
+ */
+export const createISOString = (dateString: string, timeString: string) => {
+  if (!dateString) return null;
+  
+  try {
+    // Create a date string that combines the date and time
+    // The resulting string will be interpreted in the local timezone
+    const combinedString = `${dateString}T${timeString || '00:00:00'}`;
+    const date = new Date(combinedString);
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      console.error("Invalid date:", combinedString);
+      return null;
+    }
+    
+    // Return the ISO string
+    const isoString = date.toISOString();
+    
+    console.log("Created ISO string from local inputs:", {
+      dateInput: dateString,
+      timeInput: timeString,
+      combinedLocal: combinedString,
+      resultingISO: isoString,
+      resultingLocalString: date.toString()
+    });
+    
+    return isoString;
+  } catch (error) {
+    console.error("Error creating ISO string:", error);
+    return null;
   }
 };

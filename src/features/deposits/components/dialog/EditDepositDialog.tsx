@@ -2,9 +2,8 @@
 import React, { useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { EditFormData } from "@/components/deposits/types";
-import { useCurrency } from "@/contexts/CurrencyContext";
-import { Client } from "@/features/clients/types";
 import { formatDateTime, formatISODateTime } from "@/features/deposits/hooks/utils/dateUtils";
+import { Client } from "@/features/clients/types";
 import { DialogHeader } from "./edit-deposit/DialogHeader";
 import { EditDateTimeSection } from "./edit-deposit/EditDateTimeSection";
 import { EditClientSection } from "./edit-deposit/EditClientSection";
@@ -36,6 +35,8 @@ export const EditDepositDialog: React.FC<EditDepositDialogProps> = ({
   // Effect to set the date/time from either operation_date (if exists) or created_at
   useEffect(() => {
     if (!selectedDeposit) return;
+    
+    console.log("Setting date/time for deposit editing:", selectedDeposit);
     
     // Prioritize operation_date if it exists
     if (selectedDeposit.operation_date) {
