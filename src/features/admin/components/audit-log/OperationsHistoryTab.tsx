@@ -1,154 +1,188 @@
 
-import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { toast } from "sonner";
-import { LogEntryRenderer, AuditLogEntry } from "./LogEntryRenderer";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { LogEntryRenderer, OperationLogEntry } from "./LogEntryRenderer";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { formatDateTime } from "@/features/deposits/hooks/utils/dateUtils";
 
-// Define the type for operations history
-interface OperationHistory {
-  id: string;
-  operation_type: string;
-  created_at: string;
-  performed_by: string;
-  details: string;
-  target_id: string | null;
-  target_name: string | null;
-  amount: number;
-}
+export const fetchRecentOperations = async () => {
+  try {
+    // Récupérer les opérateurs
+    const { data: usersData } = await supabase
+      .from('profiles')
+      .select('id, full_name');
+    
+    const usersMap = (usersData || []).reduce((acc, user) => {
+      acc[user.id] = user.full_name;
+      return acc;
+    }, {} as Record<string, string>);
+
+    // Fetch deposits
+    const { data: deposits, error: depositsError } = await supabase
+      .from('deposits')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(20);
+
+    if (depositsError) throw depositsError;
+
+    // Fetch withdrawals
+    const { data: withdrawals, error: withdrawalsError } = await supabase
+      .from('withdrawals')
+      .select('*')
+      .order('operation_date', { ascending: false })
+      .limit(20);
+
+    if (withdrawalsError) throw withdrawalsError;
+
+    // Fetch transfers
+    const { data: transfers, error: transfersError } = await supabase
+      .from('transfers')
+      .select('*')
+      .order('operation_date', { ascending: false })
+      .limit(20);
+
+    if (transfersError) throw transfersError;
+
+    // Combine and format all operations with the exact dates as stored in the database
+    const formattedDeposits = deposits.map(d => ({
+      id: `deposit-${d.id}`,
+      type: 'deposit',
+      amount: d.amount,
+      date: formatDateTime(d.created_at),
+      raw_date: d.created_at, // Keep the raw date for exact formatting
+      client_name: d.client_name,
+      created_by: d.created_by,
+      created_by_name: d.created_by ? usersMap[d.created_by] || 'Utilisateur inconnu' : 'Système',
+      description: d.notes || `Versement pour ${d.client_name}`
+    }));
+
+    const formattedWithdrawals = withdrawals.map(w => ({
+      id: `withdrawal-${w.id}`,
+      type: 'withdrawal',
+      amount: w.amount,
+      date: w.operation_date,
+      raw_date: w.operation_date, // Keep the raw date for exact formatting
+      client_name: w.client_name,
+      created_by: w.created_by,
+      created_by_name: w.created_by ? usersMap[w.created_by] || 'Utilisateur inconnu' : 'Système',
+      description: w.notes || `Retrait par ${w.client_name}`
+    }));
+
+    const formattedTransfers = transfers.map(t => ({
+      id: `transfer-${t.id}`,
+      type: 'transfer',
+      amount: t.amount,
+      date: t.operation_date,
+      raw_date: t.operation_date, // Keep the raw date for exact formatting
+      from_client: t.from_client,
+      to_client: t.to_client,
+      created_by: t.created_by,
+      created_by_name: t.created_by ? usersMap[t.created_by] || 'Utilisateur inconnu' : 'Système',
+      description: t.reason || `Virement de ${t.from_client} vers ${t.to_client}`
+    }));
+
+    // Combine all operations and sort by date (newest first)
+    const allOperations = [...formattedDeposits, ...formattedWithdrawals, ...formattedTransfers]
+      .sort((a, b) => {
+        const dateA = a.raw_date ? new Date(a.raw_date).getTime() : new Date(a.date).getTime();
+        const dateB = b.raw_date ? new Date(b.raw_date).getTime() : new Date(b.date).getTime();
+        return dateB - dateA;
+      })
+      .slice(0, 50); // Limit to 50 most recent
+
+    return allOperations;
+  } catch (error) {
+    console.error("Erreur lors du chargement des opérations récentes:", error);
+    toast.error("Erreur lors du chargement des opérations récentes");
+    throw error;
+  }
+};
 
 export const OperationsHistoryTab = () => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const operationsPerPage = 10;
-
-  const { 
-    data: recentOperations,
-    isLoading,
-    error
-  } = useQuery({
-    queryKey: ['recent-operations', currentPage],
-    queryFn: async () => {
-      try {
-        // Get total count for pagination
-        const { count, error: countError } = await supabase
-          .from('withdrawals')
-          .select('*', { count: 'exact', head: true });
-          
-        if (countError) throw countError;
-        
-        // Calculate total pages
-        const totalItems = count || 0;
-        setTotalPages(Math.ceil(totalItems / operationsPerPage));
-        
-        // Fetch operations with pagination
-        const { data, error } = await supabase
-          .from('withdrawals')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .range((currentPage - 1) * operationsPerPage, currentPage * operationsPerPage - 1);
-
-        if (error) throw error;
-        
-        // Format the data to match the expected OperationHistory structure
-        const formattedData = (data || []).map(withdrawal => ({
-          id: withdrawal.id,
-          operation_type: 'Retrait',
-          created_at: withdrawal.created_at,
-          performed_by: withdrawal.created_by || 'Utilisateur système',
-          details: `Retrait de ${withdrawal.amount} pour ${withdrawal.client_name}`,
-          target_id: withdrawal.id,
-          target_name: withdrawal.client_name,
-          amount: withdrawal.amount
-        }));
-        
-        return formattedData;
-      } catch (error) {
-        console.error("Error fetching recent operations:", error);
-        toast.error("Erreur lors du chargement des opérations récentes");
-        return [];
-      }
-    }
+  const { data: operationsLog = [], isLoading } = useQuery({
+    queryKey: ['recent-operations'],
+    queryFn: fetchRecentOperations,
+    staleTime: 30000,
+    refetchOnWindowFocus: true
   });
 
-  const goToNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(prev => prev + 1);
+  const renderOperationsByType = (type: string) => {
+    const filteredOperations = operationsLog.filter(op => op.type === type);
+    
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center py-10">
+          <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
+        </div>
+      );
     }
-  };
-
-  const goToPreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(prev => prev - 1);
+    
+    if (filteredOperations.length === 0) {
+      return (
+        <div className="text-center py-10 text-muted-foreground">
+          Aucune opération de ce type
+        </div>
+      );
     }
+    
+    return (
+      <div className="divide-y divide-border">
+        {filteredOperations.map((operation, index) => (
+          <LogEntryRenderer key={operation.id} entry={operation} index={index} type="operation" />
+        ))}
+      </div>
+    );
   };
-
-  // Format the operations data for the log renderer
-  const formattedOperations: AuditLogEntry[] = recentOperations?.map(op => ({
-    id: op.id.toString(),
-    action_type: op.operation_type,
-    action_date: formatDateTime(op.created_at),
-    performed_by: op.performed_by,
-    details: op.details,
-    target_id: op.target_id?.toString() || '',
-    target_name: op.target_name || '',
-    amount: op.amount
-  })) || [];
-
-  if (error) {
-    toast.error("Erreur lors du chargement des opérations récentes");
-  }
 
   return (
-    <div className="flex flex-col h-full">
-      <ScrollArea className="flex-1 h-[45vh]">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-10">
-            <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
-          </div>
-        ) : formattedOperations.length === 0 ? (
-          <div className="text-center py-10 text-muted-foreground">
-            Aucune opération enregistrée
-          </div>
-        ) : (
-          <div className="divide-y divide-border">
-            {formattedOperations.map((log, index) => (
-              <LogEntryRenderer key={log.id} entry={log} index={index} type="operation" />
-            ))}
-          </div>
-        )}
-      </ScrollArea>
+    <Tabs defaultValue="all">
+      <TabsList className="grid grid-cols-4 mb-4">
+        <TabsTrigger value="all">Toutes les opérations</TabsTrigger>
+        <TabsTrigger value="deposit">Versements</TabsTrigger>
+        <TabsTrigger value="withdrawal">Retraits</TabsTrigger>
+        <TabsTrigger value="transfer">Virements</TabsTrigger>
+      </TabsList>
       
-      {/* Pagination controls */}
-      <div className="flex items-center justify-between border-t pt-4 mt-4">
-        <div className="text-sm text-muted-foreground">
-          Page {currentPage} sur {totalPages}
-        </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={goToPreviousPage}
-            disabled={currentPage === 1 || isLoading}
-            className="h-8"
-          >
-            <ChevronLeft className="h-4 w-4 mr-1" /> Précédent
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={goToNextPage}
-            disabled={currentPage === totalPages || isLoading}
-            className="h-8"
-          >
-            Suivant <ChevronRight className="h-4 w-4 ml-1" />
-          </Button>
-        </div>
-      </div>
-    </div>
+      <TabsContent value="all">
+        <ScrollArea className="h-[50vh]">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-10">
+              <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
+            </div>
+          ) : operationsLog.length === 0 ? (
+            <div className="text-center py-10 text-muted-foreground">
+              Aucune opération enregistrée
+            </div>
+          ) : (
+            <div className="divide-y divide-border">
+              {operationsLog.map((operation, index) => (
+                <LogEntryRenderer key={operation.id} entry={operation} index={index} type="operation" />
+              ))}
+            </div>
+          )}
+        </ScrollArea>
+      </TabsContent>
+      
+      <TabsContent value="deposit">
+        <ScrollArea className="h-[50vh]">
+          {renderOperationsByType('deposit')}
+        </ScrollArea>
+      </TabsContent>
+      
+      <TabsContent value="withdrawal">
+        <ScrollArea className="h-[50vh]">
+          {renderOperationsByType('withdrawal')}
+        </ScrollArea>
+      </TabsContent>
+      
+      <TabsContent value="transfer">
+        <ScrollArea className="h-[50vh]">
+          {renderOperationsByType('transfer')}
+        </ScrollArea>
+      </TabsContent>
+    </Tabs>
   );
 };
