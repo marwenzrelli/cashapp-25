@@ -1,12 +1,10 @@
 
 import { RefObject } from "react";
 import { SelectContent } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Client } from "@/features/clients/types";
 import { ClientList } from "./ClientList";
 import { ClientSearchInput } from "./ClientSearchInput";
 import { EmptyClientList } from "./EmptyClientList";
-import { ScrollHint } from "./ScrollHint";
 
 interface SelectDropdownContentProps {
   openState: boolean;
@@ -40,7 +38,6 @@ export const SelectDropdownContent = ({
   };
 
   const hasNoResults = clientSearch.length > 0 && filteredClients.length === 0;
-  const showScrollHint = filteredClients.length > 5 && !isScrolling;
 
   return (
     <SelectContent
@@ -59,21 +56,17 @@ export const SelectDropdownContent = ({
         />
       </div>
 
-      <ScrollArea className="max-h-[50vh] overflow-y-auto px-1 pt-1 pb-2">
-        {hasNoResults ? (
-          <EmptyClientList searchTerm={clientSearch} />
-        ) : (
-          <ClientList
-            clients={filteredClients}
-            selectedClient={selectedClient}
-            onClientSelect={onClientSelect}
-            isScrolling={isScrolling}
-            setOpenState={setOpenState}
-          />
-        )}
-      </ScrollArea>
-
-      {showScrollHint && <ScrollHint show={showScrollHint} />}
+      {hasNoResults ? (
+        <EmptyClientList searchTerm={clientSearch} />
+      ) : (
+        <ClientList
+          clients={filteredClients}
+          selectedClient={selectedClient}
+          onClientSelect={onClientSelect}
+          isScrolling={isScrolling}
+          setOpenState={setOpenState}
+        />
+      )}
     </SelectContent>
   );
 };

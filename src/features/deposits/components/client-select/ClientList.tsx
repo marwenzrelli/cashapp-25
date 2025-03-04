@@ -1,3 +1,4 @@
+
 import { useRef, useEffect } from "react";
 import { type Client } from "@/features/clients/types";
 import { ClientListItem } from "./ClientListItem";
@@ -130,7 +131,9 @@ export const ClientList = ({
       className="client-list-container overflow-hidden max-h-[calc(100%-40px)]"
       onClick={(e) => e.stopPropagation()}
     >
-      <ScrollHint show={clients.length > 5} />
+      {clients.length > 5 && !isScrolling && (
+        <ScrollHint show={clients.length > 5} />
+      )}
       
       <ScrollArea 
         ref={scrollAreaRef}
