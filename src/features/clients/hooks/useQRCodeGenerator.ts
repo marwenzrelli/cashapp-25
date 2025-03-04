@@ -28,38 +28,33 @@ export const useQRCodeGenerator = ({
     try {
       setIsLoading(true);
 
-      const { data: existingTokens, error: fetchError } = await supabase
+      // First, clean up potential duplicate tokens
+      // Set all existing tokens for this client to expired
+      const { error: cleanupError } = await supabase
         .from('qr_access')
-        .select('access_token')
+        .update({ expires_at: new Date().toISOString() })
         .eq('client_id', clientId)
-        .is('expires_at', null)
-        .maybeSingle();
-
-      let token;
-      
-      if (fetchError) {
-        throw fetchError;
-      }
-      
-      if (existingTokens) {
-        token = existingTokens.access_token;
-      } else {
-        const { data: newToken, error } = await supabase
-          .from('qr_access')
-          .insert([{ 
-            client_id: clientId,
-            expires_at: null
-          }])
-          .select('access_token')
-          .single();
-
-        if (error) {
-          throw error;
-        }
+        .is('expires_at', null);
         
-        token = newToken.access_token;
+      if (cleanupError) {
+        console.error("Error cleaning up existing tokens:", cleanupError);
       }
 
+      // Now, create a new token
+      const { data: newToken, error } = await supabase
+        .from('qr_access')
+        .insert([{ 
+          client_id: clientId,
+          expires_at: null
+        }])
+        .select('access_token')
+        .single();
+
+      if (error) {
+        throw error;
+      }
+      
+      const token = newToken.access_token;
       setAccessToken(token);
 
       if (canvasRef.current && token) {

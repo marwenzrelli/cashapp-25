@@ -27,6 +27,7 @@ export const usePublicClientData = (token: string | undefined) => {
         .from('qr_access')
         .select('client_id, expires_at')
         .eq('access_token', token)
+        .limit(1)
         .maybeSingle();
 
       if (qrError) {
