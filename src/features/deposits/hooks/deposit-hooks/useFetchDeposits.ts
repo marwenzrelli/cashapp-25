@@ -10,6 +10,8 @@ export const useFetchDeposits = (
 ) => {
   const fetchDeposits = async () => {
     try {
+      setIsLoading(true);
+      
       const { data, error } = await supabase
         .from('deposits')
         .select('*')

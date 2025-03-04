@@ -1,7 +1,7 @@
 
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, ListFilter } from "lucide-react";
+import { Search } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { type SearchBarProps } from "../types";
 
@@ -33,7 +33,10 @@ export const SearchBar = ({
           </div>
         </div>
         <div className="flex items-center">
-          <Select value={itemsPerPage} onValueChange={onItemsPerPageChange}>
+          <Select 
+            value={itemsPerPage.toString()} 
+            onValueChange={onItemsPerPageChange}
+          >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Nombre par page" />
             </SelectTrigger>
