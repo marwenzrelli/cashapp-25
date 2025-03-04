@@ -109,6 +109,7 @@ const Statistics = () => {
     ...filteredTransfers.map(transfer => transfer.fromClient),
     ...filteredTransfers.map(transfer => transfer.toClient)
   ]).size;
+  
   const netFlow = totalDeposits - totalWithdrawals;
 
   const currentMonth = new Date();
@@ -413,7 +414,7 @@ const Statistics = () => {
               {netFlow.toLocaleString()} {currency}
             </div>
             <p className="text-xs text-muted-foreground">
-              Balance des mouvements
+              Entrées Totales - Sorties Totales
             </p>
           </CardContent>
         </Card>
