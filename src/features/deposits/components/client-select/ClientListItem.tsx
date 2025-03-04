@@ -46,7 +46,7 @@ export const ClientListItem = ({
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <UserCircle className="h-7 w-7 text-primary/80 flex-shrink-0" />
-          <span className="font-bold text-sm">
+          <span className="font-extrabold text-sm tracking-tight">
             {client.prenom} {client.nom}
           </span>
         </div>
