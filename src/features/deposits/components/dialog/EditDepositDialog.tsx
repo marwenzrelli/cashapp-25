@@ -34,9 +34,24 @@ export const EditDepositDialog: React.FC<EditDepositDialogProps> = ({
 }) => {
   const { currency } = useCurrency();
 
-  // Effect to format date from created_at which is what's displayed in the deposit list
+  // Effect to set the date/time from either operation_date (if exists) or created_at
   useEffect(() => {
-    if (selectedDeposit?.created_at) {
+    if (!selectedDeposit) return;
+    
+    // Prioritize operation_date if it exists
+    if (selectedDeposit.operation_date) {
+      const formattedDateTime = formatISODateTime(selectedDeposit.operation_date);
+      
+      if (!editForm.date) {
+        onEditFormChange('date', formattedDateTime.date);
+      }
+      
+      if (!editForm.time) {
+        onEditFormChange('time', formattedDateTime.time);
+      }
+    } 
+    // Fall back to created_at
+    else if (selectedDeposit.created_at) {
       const formattedDateTime = formatISODateTime(selectedDeposit.created_at);
       
       if (!editForm.date) {
@@ -56,6 +71,10 @@ export const EditDepositDialog: React.FC<EditDepositDialogProps> = ({
   const lastModified = selectedDeposit?.last_modified_at ? 
     formatDateTime(selectedDeposit.last_modified_at) : null;
 
+  // Operation date info (custom date set by user)
+  const operationDate = selectedDeposit?.operation_date ? 
+    formatDateTime(selectedDeposit.operation_date) : null;
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -68,6 +87,14 @@ export const EditDepositDialog: React.FC<EditDepositDialogProps> = ({
           </DialogTitle>
           <DialogDescription className="text-base text-gray-500">
             Modifiez les informations du versement du {displayDate}
+            
+            {operationDate && (
+              <div className="mt-1 flex items-center gap-1.5 text-xs text-blue-600">
+                <Calendar className="h-3.5 w-3.5" />
+                Date d'opération personnalisée: {operationDate}
+              </div>
+            )}
+            
             {lastModified && (
               <div className="mt-1 flex items-center gap-1.5 text-xs text-amber-600">
                 <InfoIcon className="h-3.5 w-3.5" />
@@ -80,7 +107,7 @@ export const EditDepositDialog: React.FC<EditDepositDialogProps> = ({
         <div className="py-4 space-y-6">
           {/* Date and Time */}
           <div className="space-y-2">
-            <Label htmlFor="depositDate" className="text-base font-medium">Date et heure du versement</Label>
+            <Label htmlFor="depositDate" className="text-base font-medium">Date et heure d'opération</Label>
             <div className="grid grid-cols-2 gap-4">
               <div className="relative">
                 <Input
@@ -104,6 +131,9 @@ export const EditDepositDialog: React.FC<EditDepositDialogProps> = ({
                 <Clock className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
               </div>
             </div>
+            <p className="text-xs text-muted-foreground">
+              Cette date sera affichée dans la liste des versements.
+            </p>
           </div>
           
           {/* Client Select Dropdown */}

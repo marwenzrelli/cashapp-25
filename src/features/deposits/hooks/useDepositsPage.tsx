@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { type Deposit, type EditFormData } from "@/components/deposits/types";
 import { useDeposits } from "@/features/deposits/hooks/useDeposits";
@@ -103,7 +102,7 @@ export const useDepositsPage = () => {
       [field]: value
     }));
   };
-
+  
   const handleConfirmEdit = async () => {
     if (!selectedDeposit) {
       console.error("Aucun versement sélectionné pour la modification");
@@ -113,8 +112,10 @@ export const useDepositsPage = () => {
     console.log("Confirmation des modifications pour:", selectedDeposit);
     console.log("Nouvelles valeurs:", editForm);
 
+    // Create the operation_date by combining date and time
     let operationDate = null;
     if (editForm.date && editForm.time) {
+      // Properly format the date and time
       operationDate = `${editForm.date}T${editForm.time}`;
       console.log("Date d'opération formatée:", operationDate);
     }
@@ -123,7 +124,7 @@ export const useDepositsPage = () => {
       client_name: editForm.clientName,
       amount: Number(editForm.amount),
       notes: editForm.notes,
-      operation_date: operationDate
+      operation_date: operationDate // Save the selected date/time as the operation_date
     };
 
     const success = await updateDeposit(selectedDeposit.id, updates);

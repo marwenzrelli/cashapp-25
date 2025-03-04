@@ -1,5 +1,4 @@
-
-import { User, Pencil, Trash2, Hash, Clock } from "lucide-react";
+import { User, Pencil, Trash2, Hash, Clock, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { type Deposit } from "@/components/deposits/types";
 import { cn } from "@/lib/utils";
@@ -50,10 +49,34 @@ export const DepositsTable = ({ deposits, onEdit, onDelete }: DepositsTableProps
     }
   };
 
-  // Helper function to render date with modification tooltip if needed
-  const renderDateWithModificationInfo = (deposit: Deposit) => {
+  const renderDateWithInfo = (deposit: Deposit) => {
+    const isOperationDate = deposit.operation_date !== undefined && deposit.operation_date !== null;
+    
+    const dateDisplay = (
+      <div className="flex items-center gap-1">
+        {deposit.date}
+        {isOperationDate && (
+          <Calendar className="h-3.5 w-3.5 text-blue-500" />
+        )}
+      </div>
+    );
+    
     if (!deposit.last_modified_at) {
-      return <span>{deposit.date}</span>;
+      if (isOperationDate) {
+        return (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="cursor-help">{dateDisplay}</div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Date d'opération choisie</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        );
+      }
+      return dateDisplay;
     }
     
     return (
@@ -61,12 +84,16 @@ export const DepositsTable = ({ deposits, onEdit, onDelete }: DepositsTableProps
         <Tooltip>
           <TooltipTrigger asChild>
             <div className="flex items-center gap-1 cursor-help">
-              {deposit.date}
+              {dateDisplay}
               <Clock className="h-3.5 w-3.5 text-amber-500" />
             </div>
           </TooltipTrigger>
           <TooltipContent>
-            <p>Modifié le {formatDateTime(deposit.last_modified_at)}</p>
+            <p>
+              {isOperationDate ? "Date d'opération choisie" : "Date de création"}
+              <br />
+              Modifié le {formatDateTime(deposit.last_modified_at)}
+            </p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -115,7 +142,7 @@ export const DepositsTable = ({ deposits, onEdit, onDelete }: DepositsTableProps
                   </div>
                 </td>
                 <td className="p-3 text-muted-foreground">
-                  {renderDateWithModificationInfo(deposit)}
+                  {renderDateWithInfo(deposit)}
                 </td>
                 <td className="p-3 text-muted-foreground">{deposit.description}</td>
                 <td className="p-3">
@@ -172,7 +199,7 @@ export const DepositsTable = ({ deposits, onEdit, onDelete }: DepositsTableProps
             </div>
             <div className="space-y-1 text-sm text-muted-foreground mb-3">
               <div className="flex items-center gap-1">
-                {renderDateWithModificationInfo(deposit)}
+                {renderDateWithInfo(deposit)}
               </div>
               <p>{deposit.description}</p>
             </div>
