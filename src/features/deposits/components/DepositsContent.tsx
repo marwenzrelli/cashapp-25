@@ -8,7 +8,6 @@ import { Deposit } from "../types";
 import { useClients } from "@/features/clients/hooks/useClients";
 import { StandaloneDepositForm } from "./DepositForm";
 import { TransferPagination } from "@/features/transfers/components/TransferPagination";
-import { Dialog } from "@/components/ui/dialog";
 import { EditDepositDialog } from "./dialog/EditDepositDialog";
 
 interface DepositsContentProps {
@@ -127,7 +126,7 @@ export const DepositsContent = ({
         selectedDeposit={selectedDeposit} 
       />
 
-      {/* Nouveau modal d'édition de dépôt */}
+      {/* Modal d'édition de dépôt */}
       <EditDepositDialog
         isOpen={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
