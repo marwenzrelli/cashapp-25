@@ -3,8 +3,9 @@ import React from "react";
 import { Operation } from "@/features/operations/types";
 import { format } from "date-fns";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { EmptyOperations } from "./EmptyOperations";
+import { getTypeStyle, getTypeIcon } from "@/features/operations/utils/operation-helpers";
 import { OperationsMobileCard } from "./OperationsMobileCard";
+import { EmptyOperations } from "./EmptyOperations";
 
 interface DepositOperationsTabProps {
   operations: Operation[];
@@ -54,7 +55,7 @@ export const DepositOperationsTab = ({ operations, currency = "TND" }: DepositOp
             operation={operation} 
             currency={currency}
             showType={false}
-            colorClass="text-green-600 dark:text-green-400"
+            colorClass="text-green-600"
           />
         ))}
       </div>
