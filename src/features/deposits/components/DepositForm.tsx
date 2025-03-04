@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
@@ -8,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
-import { ScrollText, UserCircle, BadgeDollarSign, CalendarIcon, Clock } from "lucide-react";
+import { ScrollText, UserCircle, BadgeDollarSign } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -85,8 +84,7 @@ export const StandaloneDepositForm = ({
           <div className="space-y-2">
             <Label htmlFor="date">Date et heure du versement</Label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              <div className="relative">
-                <CalendarIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <div>
                 <Input
                   id="date"
                   type="date"
@@ -96,17 +94,16 @@ export const StandaloneDepositForm = ({
                       setDate(new Date(e.target.value));
                     }
                   }}
-                  className="pl-14 md:pl-9 transition-all focus-visible:ring-primary/50"
+                  className="transition-all focus-visible:ring-primary/50"
                 />
               </div>
-              <div className="relative">
-                <Clock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <div>
                 <Input
                   id="time"
                   type="time"
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
-                  className="pl-14 md:pl-9 transition-all focus-visible:ring-primary/50"
+                  className="transition-all focus-visible:ring-primary/50"
                 />
               </div>
             </div>
