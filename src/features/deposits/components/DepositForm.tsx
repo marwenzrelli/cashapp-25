@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
-import { ScrollText, UserCircle, BadgeDollarSign, CalendarIcon } from "lucide-react";
+import { ScrollText, UserCircle, BadgeDollarSign, CalendarIcon, Clock } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -30,6 +30,7 @@ export const StandaloneDepositForm = ({
   const [selectedClient, setSelectedClient] = useState("");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState<Date>(new Date());
+  const [time, setTime] = useState(format(new Date(), "HH:mm"));
   const [description, setDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { currency } = useCurrency();
@@ -43,10 +44,15 @@ export const StandaloneDepositForm = ({
       const client = clients.find(c => c.id.toString() === selectedClient);
       if (!client) return;
 
+      // Combine date and time
+      const [hours, minutes] = time.split(':').map(Number);
+      const depositDateTime = new Date(date);
+      depositDateTime.setHours(hours, minutes);
+
       const newDeposit: Partial<Deposit> = {
         client_name: `${client.prenom} ${client.nom}`,
         amount: parseFloat(amount),
-        date: format(date, "yyyy-MM-dd"),
+        date: format(depositDateTime, "yyyy-MM-dd'T'HH:mm"),
         description
       };
 
@@ -57,6 +63,7 @@ export const StandaloneDepositForm = ({
       setAmount("");
       setDescription("");
       setDate(new Date());
+      setTime(format(new Date(), "HH:mm"));
     } catch (error) {
       console.error("Error submitting deposit:", error);
     } finally {
@@ -78,20 +85,32 @@ export const StandaloneDepositForm = ({
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="date">Date du versement</Label>
-            <div className="relative">
-              <CalendarIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="date"
-                type="date"
-                value={format(date, "yyyy-MM-dd")}
-                onChange={(e) => {
-                  if (e.target.value) {
-                    setDate(new Date(e.target.value));
-                  }
-                }}
-                className="pl-9 transition-all focus-visible:ring-primary/50"
-              />
+            <Label htmlFor="date">Date et heure du versement</Label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <div className="relative">
+                <CalendarIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="date"
+                  type="date"
+                  value={format(date, "yyyy-MM-dd")}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      setDate(new Date(e.target.value));
+                    }
+                  }}
+                  className="pl-9 transition-all focus-visible:ring-primary/50"
+                />
+              </div>
+              <div className="relative">
+                <Clock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="time"
+                  type="time"
+                  value={time}
+                  onChange={(e) => setTime(e.target.value)}
+                  className="pl-9 transition-all focus-visible:ring-primary/50"
+                />
+              </div>
             </div>
           </div>
 
