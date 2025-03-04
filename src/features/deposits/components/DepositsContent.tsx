@@ -8,6 +8,10 @@ import { Deposit } from "../types";
 import { useClients } from "@/features/clients/hooks/useClients";
 import { StandaloneDepositForm } from "./DepositForm";
 import { TransferPagination } from "@/features/transfers/components/TransferPagination";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 
 interface DepositsContentProps {
   deposits: Deposit[];
@@ -124,6 +128,65 @@ export const DepositsContent = ({
         onConfirm={confirmDelete} 
         selectedDeposit={selectedDeposit} 
       />
+
+      {/* Add EditDepositDialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Modifier le versement</DialogTitle>
+            <DialogDescription>
+              Modifiez les informations du versement.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="clientName" className="text-right">
+                Client
+              </Label>
+              <Input
+                id="clientName"
+                value={editForm.clientName}
+                onChange={(e) => handleEditFormChange('clientName', e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="amount" className="text-right">
+                Montant
+              </Label>
+              <Input
+                id="amount"
+                type="number"
+                value={editForm.amount}
+                onChange={(e) => handleEditFormChange('amount', e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="notes" className="text-right">
+                Description
+              </Label>
+              <Input
+                id="notes"
+                value={editForm.notes}
+                onChange={(e) => handleEditFormChange('notes', e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsEditDialogOpen(false)}
+            >
+              Annuler
+            </Button>
+            <Button onClick={handleConfirmEdit}>
+              Enregistrer les modifications
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

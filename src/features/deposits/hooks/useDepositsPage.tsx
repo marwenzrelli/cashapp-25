@@ -76,11 +76,12 @@ export const useDepositsPage = () => {
   };
 
   const handleEdit = (deposit: Deposit) => {
+    console.log("Ouverture du modal d'édition pour:", deposit);
     setSelectedDeposit(deposit);
     setEditForm({
       clientName: deposit.client_name,
       amount: deposit.amount.toString(),
-      notes: deposit.description
+      notes: deposit.description || ""
     });
     setIsEditDialogOpen(true);
     toast.info("Mode édition", {
@@ -89,6 +90,7 @@ export const useDepositsPage = () => {
   };
 
   const handleEditFormChange = (field: keyof EditFormData, value: string) => {
+    console.log(`Mise à jour du champ ${field} avec la valeur:`, value);
     setEditForm(prev => ({
       ...prev,
       [field]: value
@@ -96,7 +98,13 @@ export const useDepositsPage = () => {
   };
 
   const handleConfirmEdit = async () => {
-    if (!selectedDeposit) return;
+    if (!selectedDeposit) {
+      console.error("Aucun versement sélectionné pour la modification");
+      return;
+    }
+
+    console.log("Confirmation des modifications pour:", selectedDeposit);
+    console.log("Nouvelles valeurs:", editForm);
 
     const updates = {
       client_name: editForm.clientName,

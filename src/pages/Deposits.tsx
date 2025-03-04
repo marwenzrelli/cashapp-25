@@ -29,9 +29,11 @@ const Deposits = () => {
     handleCreateDeposit
   } = useDepositsPage();
 
+  console.log("Deposits page render - isEditDialogOpen:", isEditDialogOpen);
+  
   return (
     <DepositsContent
-      deposits={filteredDeposits}
+      deposits={deposits}
       paginatedDeposits={paginatedDeposits}
       searchTerm={searchTerm}
       setSearchTerm={setSearchTerm}
