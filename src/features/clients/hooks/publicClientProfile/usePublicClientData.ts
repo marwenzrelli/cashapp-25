@@ -65,7 +65,13 @@ export const usePublicClientData = (token: string | undefined) => {
       console.log("Client trouvé:", clientData);
       setClient(clientData);
 
-      await fetchOperations(clientData);
+      // Allow operations fetch to fail without breaking the whole page
+      try {
+        await fetchOperations(clientData);
+      } catch (opsError) {
+        console.error("Erreur lors de la récupération des opérations:", opsError);
+        // Don't rethrow, just log
+      }
     } catch (err) {
       console.error("Erreur complète:", err);
       setError(handleSupabaseError(err));
