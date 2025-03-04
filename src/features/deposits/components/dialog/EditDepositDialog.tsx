@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Pencil, Calendar, Clock, User, DollarSign, ScrollText } from "lucide-react";
@@ -18,6 +18,7 @@ export interface EditDepositDialogProps {
   onEditFormChange: (field: keyof EditFormData, value: string) => void;
   onConfirm: () => Promise<void>;
   isLoading?: boolean;
+  selectedDeposit?: any;
 }
 
 export const EditDepositDialog: React.FC<EditDepositDialogProps> = ({
@@ -27,8 +28,26 @@ export const EditDepositDialog: React.FC<EditDepositDialogProps> = ({
   onEditFormChange,
   onConfirm,
   isLoading = false,
+  selectedDeposit
 }) => {
   const { currency } = useCurrency();
+
+  // Effect to format date from operation_date if it exists
+  useEffect(() => {
+    if (selectedDeposit?.operation_date) {
+      const operationDate = new Date(selectedDeposit.operation_date);
+      const formattedDate = operationDate.toISOString().split('T')[0];
+      const formattedTime = operationDate.toTimeString().slice(0, 8);
+      
+      if (!editForm.date) {
+        onEditFormChange('date', formattedDate);
+      }
+      
+      if (!editForm.time) {
+        onEditFormChange('time', formattedTime);
+      }
+    }
+  }, [selectedDeposit, editForm.date, editForm.time, onEditFormChange]);
   
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>

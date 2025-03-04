@@ -6,7 +6,12 @@ export const useUpdateDeposit = (
   fetchDeposits: () => Promise<void>,
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
-  const updateDeposit = async (depositId: number, updates: { client_name: string; amount: number; notes?: string }) => {
+  const updateDeposit = async (depositId: number, updates: { 
+    client_name: string; 
+    amount: number; 
+    notes?: string;
+    operation_date?: string | null;
+  }) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -19,7 +24,8 @@ export const useUpdateDeposit = (
         .update({
           client_name: updates.client_name,
           amount: updates.amount,
-          notes: updates.notes
+          notes: updates.notes,
+          operation_date: updates.operation_date
         })
         .eq('id', depositId);
 

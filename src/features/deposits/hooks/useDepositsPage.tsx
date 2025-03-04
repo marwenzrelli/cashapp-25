@@ -78,11 +78,30 @@ export const useDepositsPage = () => {
   const handleEdit = (deposit: Deposit) => {
     console.log("Ouverture du modal d'édition pour:", deposit);
     setSelectedDeposit(deposit);
+    
+    // Format the date and time from operation_date if available
+    let dateValue = "";
+    let timeValue = "";
+    
+    if (deposit.operation_date) {
+      const operationDate = new Date(deposit.operation_date);
+      dateValue = operationDate.toISOString().split('T')[0];
+      timeValue = operationDate.toTimeString().slice(0, 8);
+    } else if (deposit.created_at) {
+      // Fallback to created_at if operation_date is not available
+      const createdDate = new Date(deposit.created_at);
+      dateValue = createdDate.toISOString().split('T')[0];
+      timeValue = createdDate.toTimeString().slice(0, 8);
+    }
+    
     setEditForm({
       clientName: deposit.client_name,
       amount: deposit.amount.toString(),
-      notes: deposit.description || ""
+      notes: deposit.description || "",
+      date: dateValue,
+      time: timeValue
     });
+    
     setIsEditDialogOpen(true);
     toast.info("Mode édition", {
       description: `Modification du versement de ${deposit.amount} TND`
@@ -106,10 +125,17 @@ export const useDepositsPage = () => {
     console.log("Confirmation des modifications pour:", selectedDeposit);
     console.log("Nouvelles valeurs:", editForm);
 
+    // Prepare the date
+    let operationDate = null;
+    if (editForm.date && editForm.time) {
+      operationDate = `${editForm.date}T${editForm.time}`;
+    }
+
     const updates = {
       client_name: editForm.clientName,
       amount: Number(editForm.amount),
-      notes: editForm.notes
+      notes: editForm.notes,
+      operation_date: operationDate
     };
 
     const success = await updateDeposit(selectedDeposit.id, updates);
