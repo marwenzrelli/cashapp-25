@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -33,20 +34,9 @@ export const EditDepositDialog: React.FC<EditDepositDialogProps> = ({
 }) => {
   const { currency } = useCurrency();
 
-  // Effect to format date from operation_date if it exists
+  // Effect to format date from created_at which is what's displayed in the deposit list
   useEffect(() => {
-    if (selectedDeposit?.operation_date) {
-      const formattedDateTime = formatISODateTime(selectedDeposit.operation_date);
-      
-      if (!editForm.date) {
-        onEditFormChange('date', formattedDateTime.date);
-      }
-      
-      if (!editForm.time) {
-        onEditFormChange('time', formattedDateTime.time);
-      }
-    } else if (selectedDeposit?.created_at) {
-      // Fallback to created_at
+    if (selectedDeposit?.created_at) {
       const formattedDateTime = formatISODateTime(selectedDeposit.created_at);
       
       if (!editForm.date) {
@@ -59,6 +49,7 @@ export const EditDepositDialog: React.FC<EditDepositDialogProps> = ({
     }
   }, [selectedDeposit, editForm.date, editForm.time, onEditFormChange]);
 
+  // Use created_at for display date, matching the deposit list display
   const displayDate = selectedDeposit ? formatDateTime(selectedDeposit.created_at) : '';
   
   return (
