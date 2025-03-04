@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -9,7 +8,7 @@ import { EditFormData } from "@/components/deposits/types";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { Client } from "@/features/clients/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { formatDateTime } from "@/features/deposits/hooks/utils/dateUtils";
+import { formatDateTime, formatISODateTime } from "@/features/deposits/hooks/utils/dateUtils";
 
 export interface EditDepositDialogProps {
   isOpen: boolean;
@@ -37,40 +36,30 @@ export const EditDepositDialog: React.FC<EditDepositDialogProps> = ({
   // Effect to format date from operation_date if it exists
   useEffect(() => {
     if (selectedDeposit?.operation_date) {
-      const operationDate = new Date(selectedDeposit.operation_date);
+      const formattedDateTime = formatISODateTime(selectedDeposit.operation_date);
       
-      if (!isNaN(operationDate.getTime())) {
-        const formattedDate = operationDate.toISOString().split('T')[0];
-        const formattedTime = operationDate.toTimeString().slice(0, 8);
-        
-        if (!editForm.date) {
-          onEditFormChange('date', formattedDate);
-        }
-        
-        if (!editForm.time) {
-          onEditFormChange('time', formattedTime);
-        }
+      if (!editForm.date) {
+        onEditFormChange('date', formattedDateTime.date);
+      }
+      
+      if (!editForm.time) {
+        onEditFormChange('time', formattedDateTime.time);
       }
     } else if (selectedDeposit?.created_at) {
       // Fallback to created_at
-      const createdDate = new Date(selectedDeposit.created_at);
+      const formattedDateTime = formatISODateTime(selectedDeposit.created_at);
       
-      if (!isNaN(createdDate.getTime())) {
-        const formattedDate = createdDate.toISOString().split('T')[0];
-        const formattedTime = createdDate.toTimeString().slice(0, 8);
-        
-        if (!editForm.date) {
-          onEditFormChange('date', formattedDate);
-        }
-        
-        if (!editForm.time) {
-          onEditFormChange('time', formattedTime);
-        }
+      if (!editForm.date) {
+        onEditFormChange('date', formattedDateTime.date);
+      }
+      
+      if (!editForm.time) {
+        onEditFormChange('time', formattedDateTime.time);
       }
     }
   }, [selectedDeposit, editForm.date, editForm.time, onEditFormChange]);
 
-  const displayDate = selectedDeposit ? formatDateTime(selectedDeposit.operation_date || selectedDeposit.created_at) : '';
+  const displayDate = selectedDeposit ? formatDateTime(selectedDeposit.created_at) : '';
   
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>

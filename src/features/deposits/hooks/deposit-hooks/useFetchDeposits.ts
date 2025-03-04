@@ -26,7 +26,7 @@ export const useFetchDeposits = (
       const formattedDeposits: Deposit[] = data.map(d => ({
         id: d.id,
         amount: Number(d.amount),
-        date: formatDateTime(d.operation_date || d.created_at),
+        date: formatDateTime(d.created_at), // Use created_at for display
         description: d.notes || '',
         client_name: d.client_name,
         status: d.status,

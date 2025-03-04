@@ -25,3 +25,25 @@ export const formatDateTime = (dateString: string) => {
     return '';
   }
 };
+
+export const formatISODateTime = (dateString: string) => {
+  if (!dateString) return { date: '', time: '' };
+  
+  try {
+    const date = new Date(dateString);
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      console.error("Invalid date:", dateString);
+      return { date: '', time: '' };
+    }
+    
+    const formattedDate = date.toISOString().split('T')[0];
+    const formattedTime = date.toTimeString().slice(0, 8);
+    
+    return { date: formattedDate, time: formattedTime };
+  } catch (error) {
+    console.error("Error formatting ISO date:", error);
+    return { date: '', time: '' };
+  }
+};
