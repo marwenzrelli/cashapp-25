@@ -1,7 +1,6 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 
 interface QuickActionsProps {
@@ -22,7 +21,7 @@ export const QuickActions = ({
       <CardHeader>
         <CardTitle>Actions rapides</CardTitle>
         <CardDescription>
-          Créez un nouveau versement ou modifiez l'affichage
+          Créez un nouveau versement
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { StandaloneDepositForm } from "./DepositForm";
 import { DepositsTable } from "./DepositsTable";
 import { DepositsHeader } from "./DepositsHeader";
@@ -7,11 +7,6 @@ import { QuickActions } from "./QuickActions";
 import { DeleteDepositDialog } from "./DeleteDepositDialog";
 import { DepositDialogContainer } from "./DepositDialogContainer";
 import { Deposit } from "../types";
-import { Client } from "@/features/clients/types";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useClients } from "@/features/clients/hooks/useClients";
 
 interface DepositsContentProps {
@@ -57,8 +52,8 @@ export const DepositsContent = ({
   handleConfirmEdit,
   handleCreateDeposit
 }: DepositsContentProps) => {
-  const { clients, fetchClients, refreshClientBalance } = useClients();
-  const filteredDeposits = deposits; // This can be expanded if additional filtering is needed
+  const { clients, refreshClientBalance } = useClients();
+  const filteredDeposits = deposits;
 
   const handleRefreshClientBalance = async (clientId: string): Promise<boolean> => {
     try {
@@ -91,52 +86,13 @@ export const DepositsContent = ({
           />
         </div>
         
-        <div className="space-y-6">
+        <div>
           <QuickActions
             onCreateClick={() => setIsDialogOpen(true)}
             itemsPerPage={itemsPerPage}
             setItemsPerPage={setItemsPerPage}
             depositsCount={deposits.length}
           />
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Recherche intelligente</CardTitle>
-              <CardDescription>
-                Trouvez rapidement un versement
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    placeholder="Rechercher par nom, notes, ou ID..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
-                <Select
-                  value={itemsPerPage}
-                  onValueChange={setItemsPerPage}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Nombre d'éléments" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="10">10 éléments</SelectItem>
-                    <SelectItem value="25">25 éléments</SelectItem>
-                    <SelectItem value="50">50 éléments</SelectItem>
-                    <SelectItem value="100">100 éléments</SelectItem>
-                  </SelectContent>
-                </Select>
-                <div className="text-sm text-muted-foreground">
-                  {deposits.length} résultats trouvés
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
 

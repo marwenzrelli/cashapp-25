@@ -1,11 +1,8 @@
 
-import { useState } from "react";
 import { Dialog } from "@/components/ui/dialog";
-import { toast } from "sonner";
 import { Deposit } from "@/features/deposits/types";
 import { StandaloneDepositForm } from "./DepositForm";
 import { Client } from "@/features/clients/types";
-import { supabase } from "@/integrations/supabase/client";
 
 interface DepositDialogContainerProps {
   open: boolean;
