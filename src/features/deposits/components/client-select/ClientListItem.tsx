@@ -64,8 +64,8 @@ export const ClientListItem = ({
         </div>
       )}
       
-      {/* This SelectItem is crucial for Radix UI Select to work properly */}
-      <SelectItem value={client.id.toString()} className="sr-only">
+      {/* Ce SelectItem est nécessaire pour Radix UI Select mais doit être caché */}
+      <SelectItem value={client.id.toString()} className="hidden">
         {client.prenom} {client.nom}
       </SelectItem>
     </div>
