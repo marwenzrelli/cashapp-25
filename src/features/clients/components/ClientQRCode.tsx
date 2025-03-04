@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import { Card } from '@/components/ui/card';
@@ -70,20 +69,42 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
     try {
       setIsLoading(true);
 
-      const { data, error } = await supabase
+      const { data: existingTokens, error: fetchError } = await supabase
         .from('qr_access')
-        .insert([{ client_id: clientId }])
         .select('access_token')
-        .single();
+        .eq('client_id', clientId)
+        .is('expires_at', null)
+        .maybeSingle();
 
-      if (error) {
-        throw error;
+      let token;
+      
+      if (fetchError) {
+        throw fetchError;
+      }
+      
+      if (existingTokens) {
+        token = existingTokens.access_token;
+      } else {
+        const { data: newToken, error } = await supabase
+          .from('qr_access')
+          .insert([{ 
+            client_id: clientId,
+            expires_at: null
+          }])
+          .select('access_token')
+          .single();
+
+        if (error) {
+          throw error;
+        }
+        
+        token = newToken.access_token;
       }
 
-      setAccessToken(data.access_token);
+      setAccessToken(token);
 
-      if (canvasRef.current && data.access_token) {
-        const url = `${window.location.origin}/public/client/${data.access_token}`;
+      if (canvasRef.current && token) {
+        const url = `${window.location.origin}/public/client/${token}`;
         setQrUrl(url);
         await QRCode.toCanvas(
           canvasRef.current,

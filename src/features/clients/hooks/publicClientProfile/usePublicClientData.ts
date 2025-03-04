@@ -40,6 +40,7 @@ export const usePublicClientData = (token: string | undefined) => {
       
       console.log("QR Access trouvé:", qrAccess);
       
+      // Only check for expiration if the expires_at field is not null
       if (qrAccess.expires_at && new Date(qrAccess.expires_at) < new Date()) {
         throw new Error("Le lien a expiré");
       }
