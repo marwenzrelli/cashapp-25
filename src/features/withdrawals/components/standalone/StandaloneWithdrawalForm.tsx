@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowDownCircle } from "lucide-react";
 import { DateField } from "../form-fields/DateField";
@@ -7,6 +7,10 @@ import { ClientSelectField } from "../form-fields/ClientSelectField";
 import { AmountField } from "../form-fields/AmountField";
 import { NotesField } from "../form-fields/NotesField";
 import { Client } from "@/features/clients/types";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { format } from "date-fns";
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 
 interface ExtendedClient extends Client {
   dateCreation: string;
@@ -14,7 +18,7 @@ interface ExtendedClient extends Client {
 
 export interface StandaloneWithdrawalFormProps {
   clients: ExtendedClient[];
-  fetchWithdrawals: () => void;
+  fetchWithdrawals: () => Promise<void>;
   refreshClientBalance: (clientId: string) => Promise<boolean>;
 }
 
@@ -23,25 +27,57 @@ export const StandaloneWithdrawalForm: React.FC<StandaloneWithdrawalFormProps> =
   fetchWithdrawals,
   refreshClientBalance,
 }) => {
-  const [newWithdrawal, setNewWithdrawal] = React.useState({
+  const [isLoading, setIsLoading] = useState(false);
+  const [newWithdrawal, setNewWithdrawal] = useState({
     clientId: "",
     amount: "",
     notes: "",
-    date: new Date().toISOString().split('T')[0],
+    date: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
   });
 
   const handleSubmit = async () => {
     // Basic validation
     if (!newWithdrawal.clientId || !newWithdrawal.amount) {
-      alert("Veuillez remplir tous les champs obligatoires");
+      toast.error("Veuillez remplir tous les champs obligatoires");
       return;
     }
 
+    setIsLoading(true);
     try {
-      // Submit logic would go here
+      const selectedClient = clients.find(client => client.id.toString() === newWithdrawal.clientId);
+      if (!selectedClient) {
+        toast.error("Client non trouvé");
+        return;
+      }
+
+      const amount = parseFloat(newWithdrawal.amount);
+      if (isNaN(amount)) {
+        toast.error("Montant invalide");
+        return;
+      }
+
+      // Format the date-time to ISO string
+      const dateObj = new Date(newWithdrawal.date);
+      
+      const { data, error } = await supabase
+        .from('withdrawals')
+        .insert({
+          client_name: `${selectedClient.prenom} ${selectedClient.nom}`,
+          amount: amount,
+          operation_date: dateObj.toISOString(),
+          notes: newWithdrawal.notes
+        });
+
+      if (error) {
+        console.error("Erreur lors de l'ajout du retrait:", error);
+        toast.error("Erreur lors de l'ajout du retrait");
+        throw error;
+      }
+
+      toast.success("Retrait ajouté avec succès");
       
       // Refresh data
-      fetchWithdrawals();
+      await fetchWithdrawals();
       
       // Refresh client balance if needed
       if (newWithdrawal.clientId) {
@@ -53,54 +89,60 @@ export const StandaloneWithdrawalForm: React.FC<StandaloneWithdrawalFormProps> =
         clientId: "",
         amount: "",
         notes: "",
-        date: new Date().toISOString().split('T')[0],
+        date: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
       });
     } catch (error) {
       console.error("Error submitting withdrawal:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="bg-white dark:bg-gray-950 rounded-xl shadow-sm border p-6">
-      <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-        <ArrowDownCircle className="h-5 w-5 text-red-500" />
-        Nouveau retrait
-      </h2>
-      
-      <div className="grid gap-4">
-        <DateField
-          value={newWithdrawal.date}
-          onChange={(value) => setNewWithdrawal({ ...newWithdrawal, date: value })}
-          id="standalone-date"
-        />
+    <Card>
+      <CardHeader>
+        <CardTitle>Nouveau retrait</CardTitle>
+        <CardDescription>
+          Enregistrez un nouveau retrait pour un client
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid gap-4">
+          <DateField
+            value={newWithdrawal.date}
+            onChange={(value) => setNewWithdrawal({ ...newWithdrawal, date: value })}
+            id="standalone-date"
+          />
 
-        <ClientSelectField
-          value={newWithdrawal.clientId}
-          onChange={(value) => setNewWithdrawal({ ...newWithdrawal, clientId: value })}
-          clients={clients}
-          id="standalone-clientId"
-        />
+          <ClientSelectField
+            value={newWithdrawal.clientId}
+            onChange={(value) => setNewWithdrawal({ ...newWithdrawal, clientId: value })}
+            clients={clients}
+            id="standalone-clientId"
+          />
 
-        <AmountField
-          value={newWithdrawal.amount}
-          onChange={(value) => setNewWithdrawal({ ...newWithdrawal, amount: value })}
-          id="standalone-amount"
-        />
+          <AmountField
+            value={newWithdrawal.amount}
+            onChange={(value) => setNewWithdrawal({ ...newWithdrawal, amount: value })}
+            id="standalone-amount"
+          />
 
-        <NotesField
-          value={newWithdrawal.notes}
-          onChange={(value) => setNewWithdrawal({ ...newWithdrawal, notes: value })}
-          id="standalone-notes"
-        />
+          <NotesField
+            value={newWithdrawal.notes}
+            onChange={(value) => setNewWithdrawal({ ...newWithdrawal, notes: value })}
+            id="standalone-notes"
+          />
 
-        <Button
-          onClick={handleSubmit}
-          className="bg-red-600 hover:bg-red-700 text-white w-full mt-4"
-        >
-          <ArrowDownCircle className="h-4 w-4 mr-2" />
-          Effectuer le retrait
-        </Button>
-      </div>
-    </div>
+          <Button
+            onClick={handleSubmit}
+            className="bg-red-600 hover:bg-red-700 text-white w-full mt-4"
+            disabled={isLoading}
+          >
+            <ArrowDownCircle className="h-4 w-4 mr-2" />
+            {isLoading ? "En cours..." : "Effectuer le retrait"}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 };

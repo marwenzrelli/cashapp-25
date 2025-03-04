@@ -30,6 +30,7 @@ export interface WithdrawalFormDialogProps {
   onClose: () => void;
   onSubmit: () => void;
   isEditing: boolean;
+  isLoading?: boolean;
 }
 
 export const WithdrawalFormDialog: React.FC<WithdrawalFormDialogProps> = ({
@@ -39,6 +40,7 @@ export const WithdrawalFormDialog: React.FC<WithdrawalFormDialogProps> = ({
   onClose,
   onSubmit,
   isEditing,
+  isLoading = false,
 }) => {
   return (
     <DialogContent className="sm:max-w-md">
@@ -91,9 +93,14 @@ export const WithdrawalFormDialog: React.FC<WithdrawalFormDialogProps> = ({
         <Button
           onClick={onSubmit}
           className="bg-red-600 hover:bg-red-700 text-white gap-2 min-w-[200px]"
+          disabled={isLoading}
         >
           <ArrowDownCircle className="h-4 w-4" />
-          {isEditing ? "Modifier le retrait" : "Effectuer le retrait"}
+          {isLoading 
+            ? "En cours..." 
+            : isEditing 
+              ? "Modifier le retrait" 
+              : "Effectuer le retrait"}
         </Button>
       </DialogFooter>
     </DialogContent>
