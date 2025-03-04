@@ -1,8 +1,9 @@
+
 import { CalendarIcon, Trash, ArrowDownCircle, ArrowUpCircle, RefreshCcw, Activity, Hash } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { formatId } from "@/utils/formatId";
-import { formatDateTime } from "@/features/operations/types";
+import { formatDateTime } from "@/features/deposits/hooks/utils/dateUtils";
 
 export interface AuditLogEntry {
   id: string;
@@ -120,8 +121,12 @@ export const LogEntryRenderer = ({ entry, index, type }: LogEntryRendererProps) 
   } else {
     const operation = entry as OperationLogEntry;
     
-    const displayDate = operation.raw_date || operation.date;
-    const formattedDate = format(new Date(displayDate), "dd/MM/yyyy HH:mm:ss");
+    let formattedDate;
+    if (operation.raw_date) {
+      formattedDate = formatDateTime(operation.raw_date);
+    } else {
+      formattedDate = operation.date;
+    }
 
     return (
       <div 
@@ -184,3 +189,4 @@ const getOperationIcon = (type: string) => {
       return <Activity className="h-5 w-5 text-gray-500" />;
   }
 };
+

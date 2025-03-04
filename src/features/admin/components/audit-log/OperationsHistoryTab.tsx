@@ -3,10 +3,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
 import { LogEntryRenderer, OperationLogEntry } from "./LogEntryRenderer";
-import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { formatDateTime } from "@/features/operations/types";
+import { formatDateTime } from "@/features/deposits/hooks/utils/dateUtils";
 
 export const fetchRecentOperations = async () => {
   try {
@@ -24,7 +23,7 @@ export const fetchRecentOperations = async () => {
     const { data: deposits, error: depositsError } = await supabase
       .from('deposits')
       .select('*')
-      .order('operation_date', { ascending: false })
+      .order('created_at', { ascending: false })
       .limit(20);
 
     if (depositsError) throw depositsError;
@@ -52,8 +51,8 @@ export const fetchRecentOperations = async () => {
       id: `deposit-${d.id}`,
       type: 'deposit',
       amount: d.amount,
-      date: d.operation_date,
-      raw_date: d.operation_date, // Keep the raw date for exact formatting
+      date: formatDateTime(d.created_at),
+      raw_date: d.created_at, // Keep the raw date for exact formatting
       client_name: d.client_name,
       created_by: d.created_by,
       created_by_name: d.created_by ? usersMap[d.created_by] || 'Utilisateur inconnu' : 'Système',
@@ -87,7 +86,11 @@ export const fetchRecentOperations = async () => {
 
     // Combine all operations and sort by date (newest first)
     const allOperations = [...formattedDeposits, ...formattedWithdrawals, ...formattedTransfers]
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .sort((a, b) => {
+        const dateA = a.raw_date ? new Date(a.raw_date).getTime() : new Date(a.date).getTime();
+        const dateB = b.raw_date ? new Date(b.raw_date).getTime() : new Date(b.date).getTime();
+        return dateB - dateA;
+      })
       .slice(0, 50); // Limit to 50 most recent
 
     return allOperations;
