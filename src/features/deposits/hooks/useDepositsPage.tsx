@@ -1,8 +1,8 @@
-
 import { useState } from "react";
 import { type Deposit, type EditFormData } from "@/components/deposits/types";
 import { useDeposits } from "@/features/deposits/hooks/useDeposits";
 import { toast } from "sonner";
+import { formatISODateTime } from "@/features/deposits/hooks/utils/dateUtils";
 
 export const useDepositsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -79,27 +79,14 @@ export const useDepositsPage = () => {
     console.log("Ouverture du modal d'édition pour:", deposit);
     setSelectedDeposit(deposit);
     
-    // Format the date and time from operation_date if available
-    let dateValue = "";
-    let timeValue = "";
-    
-    if (deposit.operation_date) {
-      const operationDate = new Date(deposit.operation_date);
-      dateValue = operationDate.toISOString().split('T')[0];
-      timeValue = operationDate.toTimeString().slice(0, 8);
-    } else if (deposit.created_at) {
-      // Fallback to created_at if operation_date is not available
-      const createdDate = new Date(deposit.created_at);
-      dateValue = createdDate.toISOString().split('T')[0];
-      timeValue = createdDate.toTimeString().slice(0, 8);
-    }
+    const formattedDateTime = formatISODateTime(deposit.created_at);
     
     setEditForm({
       clientName: deposit.client_name,
       amount: deposit.amount.toString(),
       notes: deposit.description || "",
-      date: dateValue,
-      time: timeValue
+      date: formattedDateTime.date,
+      time: formattedDateTime.time
     });
     
     setIsEditDialogOpen(true);
@@ -125,7 +112,6 @@ export const useDepositsPage = () => {
     console.log("Confirmation des modifications pour:", selectedDeposit);
     console.log("Nouvelles valeurs:", editForm);
 
-    // Prepare the date
     let operationDate = null;
     if (editForm.date && editForm.time) {
       operationDate = `${editForm.date}T${editForm.time}`;
@@ -170,26 +156,22 @@ export const useDepositsPage = () => {
     });
   });
 
-  // Calculate pagination
   const paginatedDeposits = filteredDeposits.slice(
     (currentPage - 1) * parseInt(itemsPerPage),
     currentPage * parseInt(itemsPerPage)
   );
 
-  // Reset to first page when search changes
   const handleSearchChange = (term: string) => {
     setSearchTerm(term);
     setCurrentPage(1);
   };
 
-  // Reset to first page when items per page changes
   const handleItemsPerPageChange = (value: string) => {
     setItemsPerPage(value);
     setCurrentPage(1);
   };
 
   return {
-    // State
     searchTerm,
     setSearchTerm: handleSearchChange,
     isDialogOpen,
@@ -210,7 +192,6 @@ export const useDepositsPage = () => {
     paginatedDeposits,
     isDeleting,
     
-    // Actions
     handleDelete,
     confirmDelete,
     handleEdit,
