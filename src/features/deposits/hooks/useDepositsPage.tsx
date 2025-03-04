@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { type Deposit, type EditFormData } from "@/components/deposits/types";
 import { useDeposits } from "@/features/deposits/hooks/useDeposits";
@@ -115,6 +116,7 @@ export const useDepositsPage = () => {
     let operationDate = null;
     if (editForm.date && editForm.time) {
       operationDate = `${editForm.date}T${editForm.time}`;
+      console.log("Date d'opération formatée:", operationDate);
     }
 
     const updates = {

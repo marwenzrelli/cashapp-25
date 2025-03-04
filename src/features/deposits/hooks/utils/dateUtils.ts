@@ -47,6 +47,11 @@ export const formatISODateTime = (dateString: string) => {
     const seconds = String(date.getSeconds()).padStart(2, '0');
     const formattedTime = `${hours}:${minutes}:${seconds}`;
     
+    console.log("Date formatée:", {
+      original: dateString,
+      formatted: { date: formattedDate, time: formattedTime }
+    });
+    
     return { date: formattedDate, time: formattedTime };
   } catch (error) {
     console.error("Error formatting ISO date:", error);

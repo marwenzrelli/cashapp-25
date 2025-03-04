@@ -13,6 +13,11 @@ export const useUpdateDeposit = (
     operation_date?: string | null;
   }) => {
     try {
+      console.log("Mise à jour du versement avec les données:", {
+        depositId,
+        updates
+      });
+      
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         toast.error("Vous devez être connecté pour modifier un versement");
