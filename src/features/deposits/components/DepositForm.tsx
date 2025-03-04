@@ -78,6 +78,24 @@ export const StandaloneDepositForm = ({
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
+            <Label htmlFor="date">Date du versement</Label>
+            <div className="relative">
+              <CalendarIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="date"
+                type="date"
+                value={format(date, "yyyy-MM-dd")}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    setDate(new Date(e.target.value));
+                  }
+                }}
+                className="pl-9 transition-all focus-visible:ring-primary/50"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="client">Client</Label>
             <Select value={selectedClient} onValueChange={setSelectedClient}>
               <SelectTrigger>
@@ -108,21 +126,6 @@ export const StandaloneDepositForm = ({
                 <ClientBalanceDisplay solde={selectedClientData.solde} />
               </div>
             )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="date">Date du versement</Label>
-            <Input
-              id="date"
-              type="date"
-              value={format(date, "yyyy-MM-dd")}
-              onChange={(e) => {
-                if (e.target.value) {
-                  setDate(new Date(e.target.value));
-                }
-              }}
-              className="transition-all focus-visible:ring-primary/50"
-            />
           </div>
 
           <div className="space-y-2">
