@@ -2,16 +2,14 @@
 import React, { useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Pencil, Calendar, Clock, User, DollarSign, ScrollText, ChevronDown } from "lucide-react";
-import { NotesField } from "@/features/withdrawals/components/form-fields/NotesField";
-import { AmountField } from "@/features/withdrawals/components/form-fields/AmountField";
-import { DateField } from "@/features/withdrawals/components/form-fields/DateField";
+import { Pencil, Calendar, Clock, User, DollarSign, ScrollText } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { EditFormData } from "@/components/deposits/types";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { Client } from "@/features/clients/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { formatDateTime } from "@/features/deposits/hooks/utils/dateUtils";
 
 export interface EditDepositDialogProps {
   isOpen: boolean;
@@ -40,18 +38,39 @@ export const EditDepositDialog: React.FC<EditDepositDialogProps> = ({
   useEffect(() => {
     if (selectedDeposit?.operation_date) {
       const operationDate = new Date(selectedDeposit.operation_date);
-      const formattedDate = operationDate.toISOString().split('T')[0];
-      const formattedTime = operationDate.toTimeString().slice(0, 8);
       
-      if (!editForm.date) {
-        onEditFormChange('date', formattedDate);
+      if (!isNaN(operationDate.getTime())) {
+        const formattedDate = operationDate.toISOString().split('T')[0];
+        const formattedTime = operationDate.toTimeString().slice(0, 8);
+        
+        if (!editForm.date) {
+          onEditFormChange('date', formattedDate);
+        }
+        
+        if (!editForm.time) {
+          onEditFormChange('time', formattedTime);
+        }
       }
+    } else if (selectedDeposit?.created_at) {
+      // Fallback to created_at
+      const createdDate = new Date(selectedDeposit.created_at);
       
-      if (!editForm.time) {
-        onEditFormChange('time', formattedTime);
+      if (!isNaN(createdDate.getTime())) {
+        const formattedDate = createdDate.toISOString().split('T')[0];
+        const formattedTime = createdDate.toTimeString().slice(0, 8);
+        
+        if (!editForm.date) {
+          onEditFormChange('date', formattedDate);
+        }
+        
+        if (!editForm.time) {
+          onEditFormChange('time', formattedTime);
+        }
       }
     }
   }, [selectedDeposit, editForm.date, editForm.time, onEditFormChange]);
+
+  const displayDate = selectedDeposit ? formatDateTime(selectedDeposit.operation_date || selectedDeposit.created_at) : '';
   
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -64,7 +83,7 @@ export const EditDepositDialog: React.FC<EditDepositDialogProps> = ({
             Modifier le versement
           </DialogTitle>
           <DialogDescription className="text-base text-gray-500">
-            Modifiez les informations du versement
+            Modifiez les informations du versement du {displayDate}
           </DialogDescription>
         </DialogHeader>
 
