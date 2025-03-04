@@ -42,7 +42,7 @@ export const ClientSelectDropdown = ({
     }
   };
   return <Select value={selectedClient} onValueChange={handleClientSelect} open={openState} onOpenChange={setOpenState}>
-      <SelectTrigger className="w-full min-h-[42px] py-3 px-4 bg-white dark:bg-black shadow-sm rounded-lg border-input text-zinc-950 dark:text-zinc-50 font-medium touch-manipulation text-center">
+      <SelectTrigger className="w-full min-h-[42px] py-3 px-4 bg-white dark:bg-black shadow-sm rounded-lg border-input text-zinc-950 dark:text-zinc-50 font-medium touch-manipulation text-right">
         <SelectValue placeholder="Sélectionner un client">
           {selectedClient ? getSelectedClientName() : "Sélectionner un client"}
         </SelectValue>
