@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { StandaloneWithdrawalForm } from "./WithdrawalForm";
 import { WithdrawalTable } from "./WithdrawalTable";
@@ -96,8 +97,8 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input placeholder="Rechercher par nom, notes, ou ID..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9" />
             </div>
-            <Select value={itemsPerPage} onValueChange={setItemsPerPage} className="w-auto min-w-[160px]">
-              <SelectTrigger>
+            <Select value={itemsPerPage} onValueChange={setItemsPerPage}>
+              <SelectTrigger className="w-auto min-w-[160px]">
                 <SelectValue placeholder="Nombre d'éléments" />
               </SelectTrigger>
               <SelectContent>
