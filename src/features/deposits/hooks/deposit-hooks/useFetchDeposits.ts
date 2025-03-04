@@ -35,7 +35,7 @@ export const useFetchDeposits = (
           created_at: d.created_at,
           created_by: d.created_by || null,
           operation_date: d.operation_date,
-          last_modified_at: d.last_modified_at || null
+          last_modified_at: d.last_modified_at
         };
       });
 

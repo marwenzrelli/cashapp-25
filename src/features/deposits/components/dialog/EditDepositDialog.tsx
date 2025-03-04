@@ -2,7 +2,7 @@
 import React, { useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Pencil, Calendar, Clock, User, DollarSign, ScrollText } from "lucide-react";
+import { Pencil, Calendar, Clock, User, DollarSign, ScrollText, InfoIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { EditFormData } from "@/components/deposits/types";
@@ -52,6 +52,10 @@ export const EditDepositDialog: React.FC<EditDepositDialogProps> = ({
   // Use created_at for display date, matching the deposit list display
   const displayDate = selectedDeposit ? formatDateTime(selectedDeposit.created_at) : '';
   
+  // Last modification info
+  const lastModified = selectedDeposit?.last_modified_at ? 
+    formatDateTime(selectedDeposit.last_modified_at) : null;
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -64,6 +68,12 @@ export const EditDepositDialog: React.FC<EditDepositDialogProps> = ({
           </DialogTitle>
           <DialogDescription className="text-base text-gray-500">
             Modifiez les informations du versement du {displayDate}
+            {lastModified && (
+              <div className="mt-1 flex items-center gap-1.5 text-xs text-amber-600">
+                <InfoIcon className="h-3.5 w-3.5" />
+                Dernière modification le {lastModified}
+              </div>
+            )}
           </DialogDescription>
         </DialogHeader>
 
