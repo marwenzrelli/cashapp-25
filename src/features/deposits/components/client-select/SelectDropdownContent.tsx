@@ -70,7 +70,9 @@ export const SelectDropdownContent = ({
       className="max-h-[60vh] overflow-hidden p-0 ios-select-content"
       style={{ 
         touchAction: "pan-y",
-        WebkitOverflowScrolling: 'touch'
+        // Use string indexing for vendor prefixed property
+        ...(typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent) ? 
+          { ['-webkit-overflow-scrolling']: 'touch' } : {})
       }}
       onPointerDownOutside={handlePointerDownOutside}
       onCloseAutoFocus={(e) => {

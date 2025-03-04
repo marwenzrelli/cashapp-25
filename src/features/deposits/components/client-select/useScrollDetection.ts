@@ -32,11 +32,12 @@ export const useScrollDetection = (
             console.log(`Found scrollable element using selector: ${selector}`);
             
             if (iOSref.current) {
-              scrollableRef.current.style.webkitOverflowScrolling = 'touch';
+              // Use string indexing for vendor prefixed properties
+              (scrollableRef.current.style as any)['-webkit-overflow-scrolling'] = 'touch';
               scrollableRef.current.style.overscrollBehavior = 'contain';
               scrollableRef.current.style.touchAction = 'pan-y';
               scrollableRef.current.style.transform = 'translateZ(0)';
-              scrollableRef.current.style.webkitBackfaceVisibility = 'hidden';
+              (scrollableRef.current.style as any)['-webkit-backface-visibility'] = 'hidden';
               console.log('Applied iOS-specific scroll optimizations');
             }
             
@@ -76,7 +77,7 @@ export const useScrollDetection = (
       
       if (iOSref.current) {
         scrollElement.style.overflow = 'auto';
-        scrollElement.style.webkitOverflowScrolling = 'touch';
+        (scrollElement.style as any)['-webkit-overflow-scrolling'] = 'touch';
       }
     };
     

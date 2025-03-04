@@ -1,4 +1,3 @@
-
 import { useRef, useEffect } from "react";
 import { type Client } from "@/features/clients/types";
 import { ClientListItem } from "./ClientListItem";
@@ -35,9 +34,9 @@ export const ClientList = ({
       if (scrollAreaViewport) {
         // Apply iOS-specific optimizations
         scrollAreaViewport.style.overscrollBehavior = 'contain';
-        scrollAreaViewport.style.webkitOverflowScrolling = 'touch';
+        (scrollAreaViewport.style as any)['-webkit-overflow-scrolling'] = 'touch';
         scrollAreaViewport.style.touchAction = 'pan-y';
-        scrollAreaViewport.style.webkitBackfaceVisibility = 'hidden';
+        (scrollAreaViewport.style as any)['-webkit-backface-visibility'] = 'hidden';
         
         // Force iOS to recognize this as a scrollable area
         scrollAreaViewport.style.height = '100%';
@@ -149,7 +148,6 @@ export const ClientList = ({
         ref={scrollAreaRef}
         className="h-[calc(100vh-220px)] max-h-[430px] client-scrollable-area"
         style={{ 
-          WebkitOverflowScrolling: 'touch',
           touchAction: 'pan-y',
           overscrollBehavior: 'contain'
         }}
