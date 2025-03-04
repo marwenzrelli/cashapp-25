@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowDownCircle } from "lucide-react";
@@ -93,9 +94,9 @@ export const StandaloneWithdrawalForm: React.FC<StandaloneWithdrawalFormProps> =
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Nouveau retrait</CardTitle>
+    <Card className="bg-gradient-to-r from-red-50 to-rose-50 border-red-100 shadow-md">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base text-red-700">Nouveau retrait</CardTitle>
         <CardDescription>
           Enregistrez un nouveau retrait pour un client
         </CardDescription>
