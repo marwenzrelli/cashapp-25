@@ -1,6 +1,6 @@
 
 import { Link } from "react-router-dom";
-import { LayoutDashboard, Users, ArrowDownCircle, ArrowUpCircle, ArrowLeftRight, LineChart, Search, Shield } from "lucide-react";
+import { LayoutDashboard, Users, ArrowDownCircle, ArrowUpCircle, ArrowLeftRight, LineChart, Search, Shield, LucideIcon } from "lucide-react";
 import { NavItem } from "./NavItem";
 import { UserRole } from "@/types/admin";
 
@@ -14,7 +14,7 @@ interface NavigationLinksProps {
 interface NavItemType {
   path: string;
   label: string;
-  icon: React.ComponentType<any>;
+  icon: LucideIcon;
   roles?: UserRole[];
 }
 
