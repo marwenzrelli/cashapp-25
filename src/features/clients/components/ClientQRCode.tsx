@@ -70,20 +70,47 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
     try {
       setIsLoading(true);
 
-      const { data, error } = await supabase
+      // Vérifier d'abord si un token existe déjà pour ce client
+      const { data: existingToken, error: fetchError } = await supabase
         .from('qr_access')
-        .insert([{ client_id: clientId }])
         .select('access_token')
-        .single();
+        .eq('client_id', clientId)
+        .maybeSingle();
 
-      if (error) {
-        throw error;
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        throw fetchError;
       }
 
-      setAccessToken(data.access_token);
+      let token;
 
-      if (canvasRef.current && data.access_token) {
-        const url = `${window.location.origin}/public/client/${data.access_token}`;
+      // Si un token existe déjà, l'utiliser
+      if (existingToken && existingToken.access_token) {
+        token = existingToken.access_token;
+        console.log("Token existant trouvé:", token);
+      } else {
+        // Sinon, créer un nouveau token permanent
+        const { data: newToken, error } = await supabase
+          .from('qr_access')
+          .insert([{ 
+            client_id: clientId,
+            // Ne pas définir expires_at pour que le token soit permanent
+            expires_at: null
+          }])
+          .select('access_token')
+          .single();
+
+        if (error) {
+          throw error;
+        }
+
+        token = newToken.access_token;
+        console.log("Nouveau token créé:", token);
+      }
+
+      setAccessToken(token);
+
+      if (canvasRef.current && token) {
+        const url = `${window.location.origin}/public/client/${token}`;
         setQrUrl(url);
         await QRCode.toCanvas(
           canvasRef.current,
@@ -177,7 +204,7 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
         </div>
         <div className="flex flex-col items-center gap-2">
           <p className="text-sm text-center text-muted-foreground">
-            Code QR unique du client
+            Code QR unique permanent du client
           </p>
           <div className="flex gap-2 flex-wrap justify-center">
             <Button 
@@ -208,7 +235,7 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
               disabled={isLoading}
             >
               <RefreshCw className={`h-3 w-3 ${isLoading ? 'animate-spin' : ''}`} />
-              Régénérer
+              Rafraîchir
             </Button>
           </div>
         </div>
