@@ -15,14 +15,14 @@ export const usePublicClientData = (token: string | undefined) => {
   const fetchClientData = async () => {
     try {
       if (!token) {
-        setError("Missing access token");
+        setError("Token d'accès manquant");
         setIsLoading(false);
         return;
       }
 
-      console.log("Starting data retrieval with token:", token);
+      console.log("Début de la récupération des données avec le token:", token);
 
-      // First get the QR access
+      // Récupérer d'abord l'accès QR
       const { data: qrAccess, error: qrError } = await supabase
         .from('qr_access')
         .select('client_id, expires_at')
@@ -30,22 +30,21 @@ export const usePublicClientData = (token: string | undefined) => {
         .maybeSingle();
 
       if (qrError) {
-        console.error("QR Access Error:", qrError);
-        throw new Error("Invalid access token");
+        console.error("Erreur QR Access:", qrError);
+        throw new Error("Token d'accès invalide");
       }
       
       if (!qrAccess) {
-        throw new Error("Access token not found");
+        throw new Error("Token d'accès non trouvé");
       }
       
-      console.log("QR Access found:", qrAccess);
+      console.log("QR Access trouvé:", qrAccess);
       
-      // Check if the token has an expiration and if it's expired
       if (qrAccess.expires_at && new Date(qrAccess.expires_at) < new Date()) {
-        throw new Error("The link has expired");
+        throw new Error("Le lien a expiré");
       }
 
-      // Get client information
+      // Récupérer les informations du client
       const { data: clientData, error: clientError } = await supabase
         .from('clients')
         .select('*')
@@ -53,20 +52,20 @@ export const usePublicClientData = (token: string | undefined) => {
         .maybeSingle();
 
       if (clientError) {
-        console.error("Client Error:", clientError);
+        console.error("Erreur Client:", clientError);
         throw clientError;
       }
 
       if (!clientData) {
-        throw new Error("Client not found");
+        throw new Error("Client non trouvé");
       }
 
-      console.log("Client found:", clientData);
+      console.log("Client trouvé:", clientData);
       setClient(clientData);
 
       await fetchOperations(clientData);
     } catch (err) {
-      console.error("Complete error:", err);
+      console.error("Erreur complète:", err);
       setError(handleSupabaseError(err));
     } finally {
       setIsLoading(false);
