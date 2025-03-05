@@ -70,9 +70,13 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
     try {
       setIsLoading(true);
 
+      // Insertion avec expires_at défini comme NULL pour que le QR code n'expire jamais
       const { data, error } = await supabase
         .from('qr_access')
-        .insert([{ client_id: clientId }])
+        .insert([{ 
+          client_id: clientId,
+          expires_at: null // Définir comme null pour qu'il n'expire jamais
+        }])
         .select('access_token')
         .single();
 
@@ -177,7 +181,7 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
         </div>
         <div className="flex flex-col items-center gap-2">
           <p className="text-sm text-center text-muted-foreground">
-            Code QR unique du client
+            Code QR permanent du client
           </p>
           <div className="flex gap-2 flex-wrap justify-center">
             <Button 

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Client } from "@/features/clients/types";
 import { Operation } from "@/features/operations/types";
@@ -25,7 +24,7 @@ export const usePublicClientData = (token: string | undefined) => {
       // Récupérer d'abord l'accès QR
       const { data: qrAccess, error: qrError } = await supabase
         .from('qr_access')
-        .select('client_id, expires_at')
+        .select('client_id')
         .eq('access_token', token)
         .maybeSingle();
 
@@ -40,9 +39,7 @@ export const usePublicClientData = (token: string | undefined) => {
       
       console.log("QR Access trouvé:", qrAccess);
       
-      if (qrAccess.expires_at && new Date(qrAccess.expires_at) < new Date()) {
-        throw new Error("Le lien a expiré");
-      }
+      // Suppression de la vérification d'expiration puisque les QR codes n'expirent plus
 
       // Récupérer les informations du client
       const { data: clientData, error: clientError } = await supabase
