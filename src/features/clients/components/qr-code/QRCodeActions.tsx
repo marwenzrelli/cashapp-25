@@ -18,7 +18,7 @@ export const QRCodeActions = ({
   onRegenerateQR 
 }: QRCodeActionsProps) => {
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className="flex flex-col items-center gap-2 w-full">
       <p className="text-sm text-center text-muted-foreground">
         Client's unique permanent QR code
       </p>

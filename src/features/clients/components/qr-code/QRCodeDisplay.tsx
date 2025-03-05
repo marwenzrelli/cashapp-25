@@ -16,22 +16,26 @@ export const QRCodeDisplay = ({ accessToken, qrUrl, isLoading, size = 256 }: QRC
   useEffect(() => {
     const generateQRCode = async () => {
       if (canvasRef.current && qrUrl) {
-        await QRCode.toCanvas(
-          canvasRef.current,
-          qrUrl,
-          {
-            width: size,
-            margin: 1,
-            color: {
-              dark: '#000000',
-              light: '#FFFFFF'
+        try {
+          await QRCode.toCanvas(
+            canvasRef.current,
+            qrUrl,
+            {
+              width: size,
+              margin: 1,
+              color: {
+                dark: '#000000',
+                light: '#FFFFFF'
+              }
             }
-          }
-        );
+          );
+        } catch (error) {
+          console.error('Error generating QR code:', error);
+        }
       }
     };
 
-    if (accessToken) {
+    if (accessToken && qrUrl) {
       generateQRCode();
     }
   }, [accessToken, qrUrl, size]);
@@ -39,18 +43,18 @@ export const QRCodeDisplay = ({ accessToken, qrUrl, isLoading, size = 256 }: QRC
   return (
     <div className="bg-white p-2 rounded-lg shadow-inner relative">
       {isLoading ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-white/80">
+        <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
           <RefreshCw className="h-6 w-6 animate-spin text-primary" />
         </div>
       ) : !accessToken ? (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/80 gap-2">
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/80 z-10">
           <Shield className="h-8 w-8 text-muted-foreground" />
           <p className="text-sm text-muted-foreground text-center">
             Loading QR code...
           </p>
         </div>
       ) : null}
-      <canvas ref={canvasRef} className="rounded-lg" />
+      <canvas ref={canvasRef} className="rounded-lg" width={size} height={size} />
     </div>
   );
 };

@@ -1,6 +1,5 @@
 
-import { useState, useEffect } from 'react';
-import QRCode from 'qrcode';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -16,23 +15,26 @@ export const useClientQRCode = (clientId: number, clientName: string) => {
   const [hasAccess, setHasAccess] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+      if (!session) {
+        navigate('/login');
+      }
+      return session;
+    };
+
+    const authStateListener = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (!session) {
         navigate('/login');
       }
     });
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (!session) {
-        navigate('/login');
-      }
-    });
-
-    return () => subscription.unsubscribe();
+    checkSession();
+    return () => {
+      authStateListener.data.subscription.unsubscribe();
+    };
   }, [navigate]);
 
   useEffect(() => {
@@ -54,8 +56,8 @@ export const useClientQRCode = (clientId: number, clientName: string) => {
     checkUserRole();
   }, [session]);
 
-  const generateQRAccess = async () => {
-    if (!session || !hasAccess) return;
+  const generateQRAccess = useCallback(async () => {
+    if (!session || !hasAccess || !clientId) return null;
     
     try {
       setIsLoading(true);
@@ -113,9 +115,18 @@ export const useClientQRCode = (clientId: number, clientName: string) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [clientId, hasAccess, session, toast]);
 
   const handleCopyLink = async () => {
+    if (!qrUrl) {
+      toast({
+        title: "Error",
+        description: "QR code link not available yet",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       await navigator.clipboard.writeText(qrUrl);
       toast({
@@ -145,10 +156,10 @@ export const useClientQRCode = (clientId: number, clientName: string) => {
   };
 
   useEffect(() => {
-    if (session && hasAccess) {
+    if (session && hasAccess && clientId) {
       generateQRAccess();
     }
-  }, [clientId, clientName, session, hasAccess]);
+  }, [clientId, session, hasAccess, generateQRAccess]);
 
   return {
     accessToken,
