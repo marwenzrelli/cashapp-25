@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,31 +17,83 @@ const Login = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  // Vérifier la connexion à Supabase
-  const checkConnection = async () => {
+  // Vérifier la connexion à Supabase avec un délai maximum
+  const checkConnection = useCallback(async () => {
     setConnectionStatus('checking');
-    const isConnected = await testSupabaseConnection();
-    setConnectionStatus(isConnected ? 'connected' : 'disconnected');
-  };
+    try {
+      // Utiliser Promise.race pour limiter le temps d'attente
+      const connectionPromise = testSupabaseConnection();
+      const timeoutPromise = new Promise<boolean>((_, reject) => {
+        setTimeout(() => reject(new Error("La connexion a expiré")), 10000);
+      });
+      
+      const isConnected = await Promise.race([connectionPromise, timeoutPromise]);
+      setConnectionStatus(isConnected ? 'connected' : 'disconnected');
+    } catch (error) {
+      console.error("Erreur lors de la vérification de la connexion:", error);
+      setConnectionStatus('disconnected');
+    }
+  }, []);
 
   useEffect(() => {
     // Vérifier la session active et la connexion
     const getSession = async () => {
       try {
         setConnectionStatus('checking');
+        
+        // Vérifier si le navigateur est en ligne
+        if (!navigator.onLine) {
+          setConnectionStatus('disconnected');
+          setErrorMessage("Vous êtes hors ligne. Veuillez vérifier votre connexion internet.");
+          return;
+        }
+        
         await checkConnection();
 
-        const { data: { session } } = await supabase.auth.getSession();
+        // Utiliser Promise.race pour ajouter un délai d'expiration
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error("La requête de session a expiré")), 10000);
+        });
+        
+        const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]) as any;
         console.log("Session check:", { session });
         if (session?.user?.id) {
           navigate("/dashboard");
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Erreur lors de la vérification de la session:", error);
+        
+        // Traiter spécifiquement les erreurs de réseau
+        if (error.message?.includes("Failed to fetch") || 
+            error.message?.includes("NetworkError") ||
+            error.message?.includes("expiré") ||
+            !navigator.onLine) {
+          setErrorMessage("Problème de connexion réseau. Veuillez vérifier votre connexion internet.");
+        } else {
+          setErrorMessage("Erreur lors de la vérification de la session: " + error.message);
+        }
+        
         setConnectionStatus('disconnected');
       }
     };
     getSession();
+
+    // Gestionnaires d'événements réseau
+    const handleOnline = () => {
+      toast.success("Connexion internet rétablie");
+      checkConnection();
+      setErrorMessage(null);
+    };
+    
+    const handleOffline = () => {
+      setConnectionStatus('disconnected');
+      setErrorMessage("Vous êtes hors ligne. Veuillez vérifier votre connexion internet.");
+      toast.error("Vous êtes hors ligne. Veuillez vérifier votre connexion internet.");
+    };
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_OUT" || !session) {
@@ -51,8 +103,10 @@ const Login = () => {
 
     return () => {
       subscription.unsubscribe();
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
     };
-  }, [navigate]);
+  }, [navigate, checkConnection]);
 
   const handleRetryConnection = () => {
     checkConnection();
@@ -68,11 +122,23 @@ const Login = () => {
       return;
     }
 
+    // Verify the browser is online
+    if (!navigator.onLine) {
+      setErrorMessage("Vous êtes hors ligne. Veuillez vérifier votre connexion internet.");
+      setConnectionStatus('disconnected');
+      return;
+    }
+
     // Vérifier la connexion avant de tenter l'authentification
     if (connectionStatus !== 'connected') {
-      const isConnected = await testSupabaseConnection();
-      if (!isConnected) {
-        setErrorMessage("Impossible de se connecter au serveur. Veuillez vérifier votre connexion internet.");
+      try {
+        const isConnected = await testSupabaseConnection();
+        if (!isConnected) {
+          setErrorMessage("Impossible de se connecter au serveur. Veuillez vérifier votre connexion internet.");
+          return;
+        }
+      } catch (error) {
+        setErrorMessage("Problème de connexion réseau. Veuillez vérifier votre connexion internet.");
         return;
       }
     }
@@ -82,10 +148,18 @@ const Login = () => {
     try {
       const normalizedEmail = email.trim().toLowerCase();
       console.log("Début de la procédure de connexion");
-      const { data, error } = await supabase.auth.signInWithPassword({
+      
+      // Utiliser Promise.race pour ajouter un délai d'expiration
+      const loginPromise = supabase.auth.signInWithPassword({
         email: normalizedEmail,
         password,
       });
+      
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("La connexion a expiré")), 15000);
+      });
+      
+      const { data, error } = await Promise.race([loginPromise, timeoutPromise]) as any;
 
       console.log("Réponse connexion:", { data, error });
 
@@ -97,7 +171,10 @@ const Login = () => {
           errorMessage = "Email ou mot de passe incorrect";
         } else if (error.message.includes("Email not confirmed")) {
           errorMessage = "Veuillez confirmer votre email avant de vous connecter";
-        } else if (error.message.includes("Failed to fetch") || error.status === 0) {
+        } else if (error.message.includes("Failed to fetch") || 
+                  error.message.includes("NetworkError") || 
+                  error.message.includes("expiré") || 
+                  error.status === 0) {
           errorMessage = "Problème de connexion réseau. Veuillez vérifier votre connexion internet.";
           setConnectionStatus('disconnected');
         }
@@ -114,13 +191,20 @@ const Login = () => {
       }
     } catch (error: any) {
       console.error("Erreur détaillée d'authentification:", error);
-      const errorMsg = error.message || "Une erreur inattendue est survenue";
-      setErrorMessage(errorMsg);
-      toast.error(errorMsg);
+      let errorMsg = error.message || "Une erreur inattendue est survenue";
       
-      if (error.message?.includes("Failed to fetch") || error.toString().includes("network")) {
+      // Traiter spécifiquement les erreurs de réseau
+      if (error.message?.includes("Failed to fetch") || 
+          error.message?.includes("NetworkError") || 
+          error.message?.includes("expiré") || 
+          error.toString().includes("network") ||
+          !navigator.onLine) {
+        errorMsg = "Problème de connexion réseau. Veuillez vérifier votre connexion internet.";
         setConnectionStatus('disconnected');
       }
+      
+      setErrorMessage(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }

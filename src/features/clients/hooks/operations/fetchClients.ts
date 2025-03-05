@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Client } from "../../types";
 import { supabase } from "@/integrations/supabase/client";
 import { showErrorToast } from "../utils/errorUtils";
@@ -18,10 +18,41 @@ export const useFetchClients = (
   const errorNotifiedRef = useRef(false);
   // Utiliser une référence pour les opérations en cours
   const fetchingRef = useRef(false);
+  // État pour suivre si l'appareil est hors ligne
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  // Écouter les changements d'état du réseau
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOffline(false);
+      // Réinitialiser le drapeau de notification d'erreur lorsque le réseau revient
+      errorNotifiedRef.current = false;
+      // Tenter de récupérer les données une fois de retour en ligne
+      if (!fetchingRef.current) {
+        fetchClients(0, true);
+      }
+    };
+    
+    const handleOffline = () => {
+      setIsOffline(true);
+      if (!errorNotifiedRef.current) {
+        showErrorToast("Connexion perdue", new Error("Vous êtes hors ligne. Certaines fonctionnalités peuvent ne pas être disponibles."));
+        errorNotifiedRef.current = true;
+      }
+    };
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   // Fonction pour mettre à jour les soldes des clients
   const updateClientBalances = async (clientsList: Client[]) => {
-    if (!supabase || !clientsList.length) return;
+    if (!supabase || !clientsList.length || isOffline) return;
     
     try {
       // Traiter les clients par lots pour éviter de surcharger l'API
@@ -32,9 +63,22 @@ export const useFetchClients = (
         
         for (const client of batch) {
           try {
-            // Calculer le solde du client
-            const { data: balance, error: balanceError } = await supabase
-              .rpc('calculate_client_balance', { client_id: client.id });
+            // Vérifier si nous sommes toujours en ligne
+            if (!navigator.onLine) {
+              console.log("Mise à jour des soldes interrompue: appareil hors ligne");
+              return;
+            }
+            
+            // Calculer le solde du client avec timeout
+            const balancePromise = supabase.rpc('calculate_client_balance', { client_id: client.id });
+            const timeoutPromise = new Promise((_, reject) => {
+              setTimeout(() => reject(new Error("La requête a expiré")), 8000);
+            });
+            
+            const { data: balance, error: balanceError } = await Promise.race([
+              balancePromise, 
+              timeoutPromise
+            ]) as any;
 
             if (balanceError) {
               console.warn(`Impossible de calculer le solde pour ${client.prenom} ${client.nom}:`, balanceError);
@@ -42,10 +86,17 @@ export const useFetchClients = (
             }
 
             // Mettre à jour le solde dans la base de données
-            const { error: updateError } = await supabase
+            const updatePromise = supabase
               .from('clients')
               .update({ solde: balance || 0 })
               .eq('id', client.id);
+              
+            const { error: updateError } = await Promise.race([
+              updatePromise,
+              new Promise((_, reject) => {
+                setTimeout(() => reject(new Error("La mise à jour a expiré")), 8000);
+              })
+            ]) as any;
 
             if (updateError) {
               console.warn(`Impossible de mettre à jour le solde pour ${client.prenom} ${client.nom}:`, updateError);
@@ -80,6 +131,17 @@ export const useFetchClients = (
       return;
     }
     
+    // Vérifier si l'appareil est hors ligne
+    if (!navigator.onLine) {
+      if (showToast && !errorNotifiedRef.current) {
+        showErrorToast("Appareil hors ligne", new Error("Impossible de récupérer les données. Veuillez vérifier votre connexion internet."));
+        errorNotifiedRef.current = true;
+      }
+      setError("Problème de connexion réseau. Veuillez vérifier votre connexion internet.");
+      setLoading(false);
+      return;
+    }
+    
     fetchingRef.current = true;
     
     try {
@@ -102,14 +164,14 @@ export const useFetchClients = (
       
       // Récupérer les clients avec un timeout de sécurité
       const fetchWithTimeout = async () => {
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error("La requête a expiré")), 10000);
-        });
-        
         const fetchPromise = supabase
           .from('clients')
           .select('*')
           .order('date_creation', { ascending: false });
+          
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error("La requête a expiré")), 10000);
+        });
         
         return Promise.race([fetchPromise, timeoutPromise]);
       };
@@ -149,7 +211,7 @@ export const useFetchClients = (
       setClients(clientsData);
       
       // Pour éviter les problèmes de performance, limiter les appels à updateClientBalances
-      if (clientsData.length > 0 && retry === 0) {
+      if (clientsData.length > 0 && retry === 0 && navigator.onLine) {
         setTimeout(() => {
           try {
             updateClientBalances(clientsData);
@@ -161,6 +223,18 @@ export const useFetchClients = (
       
     } catch (error) {
       console.error("Erreur critique lors du chargement des clients:", error);
+      
+      // Si l'appareil est hors ligne, définir une erreur spécifique
+      if (!navigator.onLine) {
+        setError("Problème de connexion réseau. Veuillez vérifier votre connexion internet.");
+        if (showToast && !errorNotifiedRef.current) {
+          showErrorToast("Appareil hors ligne", new Error("Impossible de récupérer les données. Veuillez vérifier votre connexion internet."));
+          errorNotifiedRef.current = true;
+        }
+        setLoading(false);
+        fetchingRef.current = false;
+        return;
+      }
       
       if (retry < MAX_RETRIES) {
         console.log(`Nouvelle tentative dans ${RETRY_DELAY/1000} secondes...`);
@@ -181,7 +255,7 @@ export const useFetchClients = (
       }
       fetchingRef.current = false;
     }
-  }, [setClients, setLoading, setError]);
+  }, [setClients, setLoading, setError, isOffline]);
 
   return { fetchClients };
 };
