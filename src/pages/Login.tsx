@@ -31,8 +31,8 @@ const Login = () => {
         setConnectionStatus('checking');
         await checkConnection();
 
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        console.log("Session check:", { session, error: sessionError });
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log("Session check:", { session });
         if (session?.user?.id) {
           navigate("/dashboard");
         }
@@ -42,6 +42,16 @@ const Login = () => {
       }
     };
     getSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT" || !session) {
+        navigate("/login", { replace: true });
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   const handleRetryConnection = () => {

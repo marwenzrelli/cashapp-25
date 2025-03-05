@@ -20,46 +20,6 @@ export const supabase = createClient<Database>(
       flowType: 'implicit',
     },
     global: {
-      fetch: (input: RequestInfo | URL, init?: RequestInit) => {
-        // Augmenter le timeout pour éviter les problèmes de connexion
-        const timeoutController = new AbortController();
-        const { signal } = timeoutController;
-        
-        const timeout = setTimeout(() => {
-          timeoutController.abort();
-          console.warn('Supabase request timed out, retrying...');
-        }, 20000); // Timeout plus long (20 secondes)
-        
-        const fetchOptions: RequestInit = {
-          ...init,
-          signal,
-          // Augmenter le nombre de retries et le timeout
-          keepalive: true,
-          credentials: 'include',
-        };
-        
-        return new Promise((resolve, reject) => {
-          fetch(input, fetchOptions)
-            .then(response => {
-              clearTimeout(timeout);
-              resolve(response);
-            })
-            .catch(error => {
-              clearTimeout(timeout);
-              console.error('Fetch error:', error);
-              // Si erreur de réseau, tenter une fois de plus
-              if (error.name === 'AbortError' || error.message === 'Failed to fetch') {
-                console.warn('Network error, retrying once...');
-                // Second essai avec options de base
-                fetch(input, init)
-                  .then(resolve)
-                  .catch(reject);
-              } else {
-                reject(error);
-              }
-            });
-        });
-      },
       headers: {
         'X-Client-Info': 'supabase-js-web/2.33.1',
       },
@@ -75,7 +35,7 @@ supabase.auth.onAuthStateChange((event, session) => {
 // Fonction utilitaire pour tester la connexion
 export const testSupabaseConnection = async () => {
   try {
-    const { data, error } = await supabase.from('clients').select('count').limit(1);
+    const { data, error } = await supabase.from('clients').select('count').limit(1).single();
     if (error) throw error;
     console.log('Supabase connection test successful');
     return true;
@@ -84,4 +44,3 @@ export const testSupabaseConnection = async () => {
     return false;
   }
 };
-
