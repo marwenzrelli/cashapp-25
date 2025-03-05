@@ -70,7 +70,7 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
     try {
       setIsLoading(true);
 
-      // Vérifier d'abord si un token existe déjà pour ce client
+      // First check if a token already exists for this client
       const { data: existingToken, error: fetchError } = await supabase
         .from('qr_access')
         .select('access_token')
@@ -83,17 +83,17 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
 
       let token;
 
-      // Si un token existe déjà, l'utiliser
+      // If a token already exists, use it
       if (existingToken && existingToken.access_token) {
         token = existingToken.access_token;
-        console.log("Token existant trouvé:", token);
+        console.log("Existing token found:", token);
       } else {
         // Sinon, créer un nouveau token permanent
         const { data: newToken, error } = await supabase
           .from('qr_access')
           .insert([{ 
             client_id: clientId,
-            // Ne pas définir expires_at pour que le token soit permanent
+            // Don't set expires_at so the token is permanent
             expires_at: null
           }])
           .select('access_token')
@@ -104,7 +104,7 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
         }
 
         token = newToken.access_token;
-        console.log("Nouveau token créé:", token);
+        console.log("New token created:", token);
       }
 
       setAccessToken(token);
@@ -126,10 +126,10 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
         );
       }
     } catch (error: any) {
-      console.error("Erreur lors de la génération du QR code:", error);
+      console.error("Error generating QR code:", error);
       toast({
-        title: "Erreur",
-        description: error.message || "Impossible de générer le QR code",
+        title: "Error",
+        description: error.message || "Could not generate QR code",
         variant: "destructive",
       });
     } finally {
@@ -147,14 +147,14 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
     try {
       await navigator.clipboard.writeText(qrUrl);
       toast({
-        title: "Lien copié !",
-        description: "Le lien du QR code a été copié dans le presse-papier.",
+        title: "Link copied!",
+        description: "QR code link has been copied to clipboard.",
         duration: 3000,
       });
     } catch (error) {
       toast({
-        title: "Erreur",
-        description: "Impossible de copier le lien.",
+        title: "Error",
+        description: "Could not copy link.",
         variant: "destructive",
       });
     }
@@ -165,8 +165,8 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
       window.open(qrUrl, '_blank');
     } else {
       toast({
-        title: "Erreur",
-        description: "Le lien n'est pas encore disponible.",
+        title: "Error",
+        description: "Link is not yet available.",
         variant: "destructive",
       });
     }
@@ -196,7 +196,7 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/80 gap-2">
               <Shield className="h-8 w-8 text-muted-foreground" />
               <p className="text-sm text-muted-foreground text-center">
-                Chargement du QR code...
+                Loading QR code...
               </p>
             </div>
           ) : null}
@@ -204,7 +204,7 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
         </div>
         <div className="flex flex-col items-center gap-2">
           <p className="text-sm text-center text-muted-foreground">
-            Code QR unique permanent du client
+            Client's unique permanent QR code
           </p>
           <div className="flex gap-2 flex-wrap justify-center">
             <Button 
@@ -215,7 +215,7 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
               disabled={!accessToken || isLoading}
             >
               <Copy className="h-3 w-3" />
-              Copier le lien
+              Copy link
             </Button>
             <Button 
               variant="outline" 
@@ -225,7 +225,7 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
               disabled={!accessToken || isLoading}
             >
               <ExternalLink className="h-3 w-3" />
-              Ouvrir le lien
+              Open link
             </Button>
             <Button
               variant="outline"
@@ -235,7 +235,7 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
               disabled={isLoading}
             >
               <RefreshCw className={`h-3 w-3 ${isLoading ? 'animate-spin' : ''}`} />
-              Rafraîchir
+              Refresh
             </Button>
           </div>
         </div>
