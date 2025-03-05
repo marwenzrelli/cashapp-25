@@ -5,19 +5,32 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { DollarSign } from "lucide-react";
+import { supabase, testSupabaseConnection } from "@/integrations/supabase/client";
+import { DollarSign, AlertCircle, Wifi, WifiOff } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  // Vérifier la connexion à Supabase
+  const checkConnection = async () => {
+    setConnectionStatus('checking');
+    const isConnected = await testSupabaseConnection();
+    setConnectionStatus(isConnected ? 'connected' : 'disconnected');
+  };
+
   useEffect(() => {
-    // Vérifier la session active
+    // Vérifier la session active et la connexion
     const getSession = async () => {
       try {
+        setConnectionStatus('checking');
+        await checkConnection();
+
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         console.log("Session check:", { session, error: sessionError });
         if (session?.user?.id) {
@@ -25,16 +38,33 @@ const Login = () => {
         }
       } catch (error) {
         console.error("Erreur lors de la vérification de la session:", error);
+        setConnectionStatus('disconnected');
       }
     };
     getSession();
   }, [navigate]);
 
+  const handleRetryConnection = () => {
+    checkConnection();
+    setErrorMessage(null);
+  };
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(null);
+    
     if (!email || !password) {
       toast.error("Veuillez remplir tous les champs");
       return;
+    }
+
+    // Vérifier la connexion avant de tenter l'authentification
+    if (connectionStatus !== 'connected') {
+      const isConnected = await testSupabaseConnection();
+      if (!isConnected) {
+        setErrorMessage("Impossible de se connecter au serveur. Veuillez vérifier votre connexion internet.");
+        return;
+      }
     }
 
     setIsLoading(true);
@@ -52,11 +82,17 @@ const Login = () => {
       if (error) {
         console.error("Erreur détaillée de connexion:", error);
         let errorMessage = "Erreur de connexion";
+        
         if (error.message.includes("Invalid login credentials")) {
           errorMessage = "Email ou mot de passe incorrect";
         } else if (error.message.includes("Email not confirmed")) {
           errorMessage = "Veuillez confirmer votre email avant de vous connecter";
+        } else if (error.message.includes("Failed to fetch") || error.status === 0) {
+          errorMessage = "Problème de connexion réseau. Veuillez vérifier votre connexion internet.";
+          setConnectionStatus('disconnected');
         }
+        
+        setErrorMessage(errorMessage);
         toast.error(errorMessage);
         return;
       }
@@ -68,7 +104,13 @@ const Login = () => {
       }
     } catch (error: any) {
       console.error("Erreur détaillée d'authentification:", error);
-      toast.error("Une erreur inattendue est survenue");
+      const errorMsg = error.message || "Une erreur inattendue est survenue";
+      setErrorMessage(errorMsg);
+      toast.error(errorMsg);
+      
+      if (error.message?.includes("Failed to fetch") || error.toString().includes("network")) {
+        setConnectionStatus('disconnected');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -88,7 +130,45 @@ const Login = () => {
           </div>
           <h1 className="text-2xl font-bold">FinanceFlow Pro</h1>
           <p className="text-gray-500">Connectez-vous à votre compte</p>
+          
+          {connectionStatus === 'connected' && (
+            <div className="flex items-center justify-center gap-1 text-green-600">
+              <Wifi className="h-4 w-4" />
+              <span className="text-xs">Connecté au serveur</span>
+            </div>
+          )}
+          
+          {connectionStatus === 'disconnected' && (
+            <div className="flex items-center justify-center gap-1 text-red-600">
+              <WifiOff className="h-4 w-4" />
+              <span className="text-xs">Déconnecté du serveur</span>
+            </div>
+          )}
+          
+          {connectionStatus === 'checking' && (
+            <div className="flex items-center justify-center gap-1 text-amber-600">
+              <span className="text-xs animate-pulse">Vérification de la connexion...</span>
+            </div>
+          )}
         </div>
+
+        {errorMessage && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Erreur</AlertTitle>
+            <AlertDescription>{errorMessage}</AlertDescription>
+            {connectionStatus === 'disconnected' && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="mt-2 w-full" 
+                onClick={handleRetryConnection}
+              >
+                Réessayer la connexion
+              </Button>
+            )}
+          </Alert>
+        )}
 
         <form onSubmit={handleAuth} className="space-y-4">
           <div className="space-y-2">
@@ -98,6 +178,7 @@ const Login = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              disabled={connectionStatus === 'checking' || isLoading}
             />
           </div>
           <div className="space-y-2">
@@ -108,15 +189,27 @@ const Login = () => {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
+              disabled={connectionStatus === 'checking' || isLoading}
             />
           </div>
           <Button
             type="submit"
             className="w-full"
-            disabled={isLoading}
+            disabled={isLoading || connectionStatus === 'checking' || connectionStatus === 'disconnected'}
           >
             {isLoading ? "Chargement..." : "Se connecter"}
           </Button>
+          
+          {connectionStatus === 'disconnected' && (
+            <Button 
+              type="button" 
+              variant="outline" 
+              className="w-full mt-2"
+              onClick={handleRetryConnection}
+            >
+              Vérifier la connexion
+            </Button>
+          )}
         </form>
       </Card>
     </div>

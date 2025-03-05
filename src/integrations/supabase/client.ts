@@ -16,15 +16,49 @@ export const supabase = createClient<Database>(
     auth: {
       persistSession: true,
       autoRefreshToken: true,
+      detectSessionInUrl: true,
+      flowType: 'implicit',
     },
     global: {
       fetch: (input: RequestInfo | URL, init?: RequestInit) => {
-        // Ajout d'un timeout plus long pour éviter les erreurs de connexion
+        // Augmenter le timeout pour éviter les problèmes de connexion
+        const timeoutController = new AbortController();
+        const { signal } = timeoutController;
+        
+        const timeout = setTimeout(() => {
+          timeoutController.abort();
+          console.warn('Supabase request timed out, retrying...');
+        }, 20000); // Timeout plus long (20 secondes)
+        
         const fetchOptions: RequestInit = {
           ...init,
-          // Si nécessaire, on peut ajouter des options supplémentaires ici
+          signal,
+          // Augmenter le nombre de retries et le timeout
+          keepalive: true,
+          credentials: 'include',
         };
-        return fetch(input, fetchOptions);
+        
+        return new Promise((resolve, reject) => {
+          fetch(input, fetchOptions)
+            .then(response => {
+              clearTimeout(timeout);
+              resolve(response);
+            })
+            .catch(error => {
+              clearTimeout(timeout);
+              console.error('Fetch error:', error);
+              // Si erreur de réseau, tenter une fois de plus
+              if (error.name === 'AbortError' || error.message === 'Failed to fetch') {
+                console.warn('Network error, retrying once...');
+                // Second essai avec options de base
+                fetch(input, init)
+                  .then(resolve)
+                  .catch(reject);
+              } else {
+                reject(error);
+              }
+            });
+        });
       },
       headers: {
         'X-Client-Info': 'supabase-js-web/2.33.1',
@@ -32,3 +66,22 @@ export const supabase = createClient<Database>(
     },
   }
 );
+
+// Vérifier que la connexion est établie
+supabase.auth.onAuthStateChange((event, session) => {
+  console.log('Supabase auth event:', event, session ? 'User authenticated' : 'No active session');
+});
+
+// Fonction utilitaire pour tester la connexion
+export const testSupabaseConnection = async () => {
+  try {
+    const { data, error } = await supabase.from('clients').select('count').limit(1);
+    if (error) throw error;
+    console.log('Supabase connection test successful');
+    return true;
+  } catch (error) {
+    console.error('Supabase connection test failed:', error);
+    return false;
+  }
+};
+
