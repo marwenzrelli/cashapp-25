@@ -18,6 +18,21 @@ export const useClientData = (clientId: number | null) => {
     try {
       console.log("Fetching client data for ID:", id);
       
+      // First, debug by checking available clients to confirm if clients exist
+      const { data: availableClients, error: listError } = await supabase
+        .from('clients')
+        .select('id, nom, prenom')
+        .limit(20);
+        
+      if (listError) {
+        console.error("Error listing available clients:", listError);
+      } else {
+        console.log("Available clients in database:", availableClients);
+        const clientExists = availableClients?.some(c => c.id === id);
+        console.log(`Client with ID ${id} exists in database: ${clientExists}`);
+      }
+      
+      // Try to get the actual client data
       const { data, error } = await supabase
         .from('clients')
         .select('*')

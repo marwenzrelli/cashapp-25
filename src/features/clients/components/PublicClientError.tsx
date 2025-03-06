@@ -2,6 +2,8 @@
 import { Button } from "@/components/ui/button";
 import { AlertCircle, RefreshCcw, Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { toast } from "sonner";
 
 interface PublicClientErrorProps {
   error: string | null;
@@ -11,14 +13,27 @@ interface PublicClientErrorProps {
 export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) => {
   const navigate = useNavigate();
   
+  // Show a toast when an error occurs
+  useEffect(() => {
+    if (error) {
+      toast.error("Erreur de chargement", {
+        description: error
+      });
+    }
+  }, [error]);
+  
   const handleRetry = () => {
     if (onRetry) {
+      console.log("Retrying client fetch...");
       onRetry();
     }
   };
 
   // Determine if this is a client not found error
-  const isClientNotFoundError = error && error.includes("Client introuvable");
+  const isClientNotFoundError = error && (
+    error.includes("Client introuvable") || 
+    error.includes("n'existe pas")
+  );
   
   return (
     <div className="min-h-screen bg-gradient-to-b from-red-100/30 to-background flex items-center justify-center p-4">
@@ -30,7 +45,7 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
         </div>
         
         <h2 className="mt-6 text-2xl font-semibold text-gray-900 dark:text-white">
-          {isClientNotFoundError ? "Client introuvable" : "Accès refusé"}
+          {isClientNotFoundError ? "Client introuvable" : "Erreur d'accès"}
         </h2>
         
         <p className="mt-3 text-gray-600 dark:text-gray-400">
@@ -44,7 +59,7 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
         )}
         
         <div className="mt-8 space-y-3">
-          {onRetry && !isClientNotFoundError && (
+          {onRetry && (
             <Button 
               onClick={handleRetry}
               className="w-full gap-2"
@@ -56,11 +71,11 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
           )}
           
           <Button 
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/clients')}
             className="w-full gap-2"
           >
             <Home className="h-4 w-4" />
-            Retourner à l'accueil
+            Retourner à la liste des clients
           </Button>
         </div>
       </div>
