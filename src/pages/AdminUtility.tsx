@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { makeUserSupervisor } from "@/features/admin/api"; // Updated import path
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { showErrorToast } from "@/features/clients/hooks/utils/errorUtils";
 
 const AdminUtility = () => {
   const navigate = useNavigate();
@@ -13,7 +14,9 @@ const AdminUtility = () => {
   const promoteMasterAdmin = async () => {
     setIsLoading(true);
     try {
+      console.log("Début de la promotion en superviseur...");
       await makeUserSupervisor("marwen.zrelli.pro@icloud.com");
+      console.log("Promotion réussie!");
       toast.success("L'utilisateur a été promu en tant que superviseur", {
         description: "L'utilisateur a maintenant accès à toutes les fonctionnalités d'administration"
       });
@@ -21,10 +24,10 @@ const AdminUtility = () => {
         navigate("/dashboard");
       }, 2000);
     } catch (error) {
-      console.error("Erreur:", error);
-      toast.error("Échec de la promotion de l'utilisateur", {
-        description: error instanceof Error ? error.message : "Une erreur s'est produite"
-      });
+      console.error("Erreur complète:", error);
+      
+      // Utiliser showErrorToast pour un affichage cohérent des erreurs
+      showErrorToast("Échec de la promotion de l'utilisateur", error);
     } finally {
       setIsLoading(false);
     }

@@ -97,24 +97,24 @@ export const makeUserSupervisor = async (email: string) => {
   try {
     console.log(`Attempting to promote user with email: ${email} to supervisor role`);
     
-    // Get user by email
-    const { data, error: userError } = await supabase.auth.admin.listUsers();
+    // Find the user by email directly in the profiles table
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', email)
+      .maybeSingle();
     
-    if (userError) {
-      console.error("Error fetching users:", userError);
-      throw userError;
+    if (profileError) {
+      console.error("Error fetching user profile:", profileError);
+      throw profileError;
     }
     
-    // Properly access users array from the data object with explicit typing
-    const users = data?.users || [];
-    const user = users.find(u => u.email === email);
-    
-    if (!user) {
+    if (!profileData) {
       console.error(`No user found with email: ${email}`);
       throw new Error(`Aucun utilisateur trouvé avec l'email: ${email}`);
     }
     
-    console.log(`Found user with ID: ${user.id}`);
+    console.log(`Found user with ID: ${profileData.id}`);
     
     // Update user's profile
     const { error: updateError } = await supabase
@@ -123,7 +123,7 @@ export const makeUserSupervisor = async (email: string) => {
         role: 'supervisor',
         department: 'finance'
       })
-      .eq('id', user.id);
+      .eq('id', profileData.id);
     
     if (updateError) {
       console.error("Error updating user profile:", updateError);
