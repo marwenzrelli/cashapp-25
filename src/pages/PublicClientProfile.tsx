@@ -1,14 +1,27 @@
 
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { PublicClientLoading } from "@/features/clients/components/PublicClientLoading";
 import { PublicClientError } from "@/features/clients/components/PublicClientError";
 import { PublicClientPersonalInfo } from "@/features/clients/components/PublicClientPersonalInfo";
 import { PublicClientOperationsHistory } from "@/features/clients/components/PublicClientOperationsHistory";
 import { usePublicClientProfile } from "@/features/clients/hooks/usePublicClientProfile";
+import { useEffect } from "react";
 
 const PublicClientProfile = () => {
   const { token } = useParams<{ token: string }>();
+  const navigate = useNavigate();
   const { client, operations, isLoading, error } = usePublicClientProfile(token);
+
+  // Add security: Validate token format on component mount
+  useEffect(() => {
+    // Basic UUID format validation
+    const isValidUUID = token?.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+    
+    if (token && !isValidUUID) {
+      console.error("Invalid token format:", token);
+      navigate("/"); // Redirect to home on invalid token format
+    }
+  }, [token, navigate]);
 
   console.log("PublicClientProfile rendering with:", { token, isLoading, hasClient: !!client, error });
 
