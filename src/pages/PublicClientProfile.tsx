@@ -6,6 +6,7 @@ import { PublicClientPersonalInfo } from "@/features/clients/components/PublicCl
 import { PublicClientOperationsHistory } from "@/features/clients/components/PublicClientOperationsHistory";
 import { usePublicClientProfile } from "@/features/clients/hooks/usePublicClientProfile";
 import { useEffect } from "react";
+import { toast } from "sonner";
 
 const PublicClientProfile = () => {
   const { token } = useParams<{ token: string }>();
@@ -19,6 +20,7 @@ const PublicClientProfile = () => {
     
     if (token && !isValidUUID) {
       console.error("Invalid token format:", token);
+      toast.error("Format de token invalide");
       navigate("/"); // Redirect to home on invalid token format
     }
   }, [token, navigate]);
