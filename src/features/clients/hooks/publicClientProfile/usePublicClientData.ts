@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Client } from "@/features/clients/types";
 import { Operation } from "@/features/operations/types";
@@ -122,9 +123,9 @@ export const usePublicClientData = (token: string | undefined) => {
         id: d.id.toString().slice(-6),
         type: "deposit",
         amount: d.amount,
-        date: d.created_at, // Utiliser created_at au lieu de operation_date
+        date: d.created_at,
         createdAt: d.created_at,
-        description: `Versement de ${d.client_name}`,
+        description: d.notes || `Versement de ${d.client_name}`,
         fromClient: d.client_name,
         formattedDate: formatDateTime(d.created_at)
       })),
@@ -132,9 +133,9 @@ export const usePublicClientData = (token: string | undefined) => {
         id: w.id.toString().slice(-6),
         type: "withdrawal",
         amount: w.amount,
-        date: w.created_at, // Utiliser created_at au lieu de operation_date
+        date: w.created_at,
         createdAt: w.created_at,
-        description: `Retrait par ${w.client_name}`,
+        description: w.notes || `Retrait par ${w.client_name}`,
         fromClient: w.client_name,
         formattedDate: formatDateTime(w.created_at)
       })),
@@ -142,7 +143,7 @@ export const usePublicClientData = (token: string | undefined) => {
         id: t.id.toString().slice(-6),
         type: "transfer",
         amount: t.amount,
-        date: t.created_at, // Utiliser created_at au lieu de operation_date
+        date: t.created_at,
         createdAt: t.created_at,
         description: t.reason || "Virement",
         fromClient: t.from_client,
