@@ -27,5 +27,5 @@ export const usePublicClientProfile = (token: string | undefined) => {
   // Set up realtime subscriptions
   useRealtimeSubscriptions(client?.id, memoizedFetchClientData);
 
-  return { client, operations, isLoading, error };
+  return { client, operations, isLoading, error, fetchClientData: memoizedFetchClientData };
 };
