@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { SystemUser, mapProfileToSystemUser } from '@/types/admin';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,7 +11,7 @@ import {
   updateUserProfile,
   updateUserPermissions,
   deleteUserById
-} from '../api/userApi';
+} from '../api';
 
 export function useUsers() {
   const [users, setUsers] = useState<SystemUser[]>([]);
