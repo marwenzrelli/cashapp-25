@@ -16,8 +16,8 @@ export const fetchAccessData = async (token: string): Promise<TokenData> => {
       .maybeSingle();  // Using maybeSingle instead of single to handle not found case better
 
     if (error) {
-      console.error("Error fetching access data:", error);
-      throw new Error("Token d'accès invalide ou expiré");
+      console.error("Supabase error fetching access data:", error);
+      throw new Error(`Token d'accès invalide ou expiré: ${error.message}`);
     }
 
     if (!data) {
@@ -30,6 +30,8 @@ export const fetchAccessData = async (token: string): Promise<TokenData> => {
       throw new Error("Aucun client associé à ce token d'accès");
     }
 
+    console.log("Access data found:", data);
+
     // Validate token expiration
     const expirationValidation = validateTokenExpiration(data.expires_at, data.created_at);
     if (!expirationValidation.isValid) {
@@ -37,9 +39,9 @@ export const fetchAccessData = async (token: string): Promise<TokenData> => {
       throw new Error(expirationValidation.error || "Token expiré");
     }
 
-    console.log("Successfully fetched access data with client ID:", data.client_id);
+    console.log("Successfully fetched and validated access data with client ID:", data.client_id);
     return data as TokenData;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in fetchAccessData:", error);
     throw error;
   }
@@ -62,7 +64,7 @@ export const fetchClientDetails = async (clientId: number): Promise<Client> => {
       
     if (countError) {
       console.error("Error checking if client exists:", countError);
-      throw new Error("Erreur lors de la vérification de l'existence du client");
+      throw new Error(`Erreur lors de la vérification du client: ${countError.message}`);
     }
     
     if (count === 0) {
@@ -70,6 +72,7 @@ export const fetchClientDetails = async (clientId: number): Promise<Client> => {
       throw new Error(`Client introuvable dans notre système (ID: ${clientId})`);
     }
     
+    // Now fetch the full client data
     const { data, error } = await supabase
       .from('clients')
       .select('*')
@@ -78,7 +81,7 @@ export const fetchClientDetails = async (clientId: number): Promise<Client> => {
 
     if (error) {
       console.error("Error fetching client:", error);
-      throw new Error("Impossible de récupérer les données du client");
+      throw new Error(`Impossible de récupérer les données du client: ${error.message}`);
     }
 
     if (!data) {
@@ -95,7 +98,7 @@ export const fetchClientDetails = async (clientId: number): Promise<Client> => {
 
     console.log("Successfully fetched client data:", data);
     return data as Client;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in fetchClientDetails:", error);
     throw error;
   }
@@ -104,6 +107,12 @@ export const fetchClientDetails = async (clientId: number): Promise<Client> => {
 export const fetchClientOperations = async (clientFullName: string): Promise<ClientOperation[]> => {
   try {
     console.log("Fetching operations for client:", clientFullName);
+    
+    // Validate client name
+    if (!clientFullName || clientFullName.trim() === '') {
+      console.error("Invalid client full name:", clientFullName);
+      return [];
+    }
     
     // Fetch deposits
     const { data: deposits, error: depositsError } = await supabase

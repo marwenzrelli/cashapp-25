@@ -23,8 +23,10 @@ export const usePublicClientProfile = (token: string | undefined) => {
   // Set up realtime subscriptions
   const refreshData = useCallback(() => {
     console.log("Refreshing client data due to realtime update");
-    fetchClientData();
-  }, [fetchClientData]);
+    if (token) {
+      fetchClientData();
+    }
+  }, [fetchClientData, token]);
 
   // Pass clientId and refreshData to useRealtimeSubscriptions
   useRealtimeSubscriptions(clientId, refreshData);
@@ -37,7 +39,7 @@ export const usePublicClientProfile = (token: string | undefined) => {
       tokenError: tokenValidation.error,
       clientId,
       hasClient: !!client,
-      hasOperations: operations.length > 0,
+      hasOperations: operations?.length > 0,
       isLoading,
       error
     });
@@ -45,7 +47,7 @@ export const usePublicClientProfile = (token: string | undefined) => {
 
   return {
     client,
-    operations,
+    operations: operations || [],
     isLoading,
     error: tokenValidation.isValid ? error : tokenValidation.error,
     fetchClientData,

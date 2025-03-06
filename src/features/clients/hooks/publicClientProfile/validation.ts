@@ -14,6 +14,7 @@ export const validateToken = (token: string | undefined): { isValid: boolean; er
     return { isValid: false, error: "Format de token invalide ou token corrompu" };
   }
 
+  console.log("Token format validation passed:", token);
   return { isValid: true, error: null };
 };
 

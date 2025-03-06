@@ -26,14 +26,14 @@ const PublicClientProfile = () => {
       token, 
       hasClient: !!client, 
       clientData: client,
-      operationsCount: operations.length,
+      operationsCount: operations?.length || 0,
       isLoading, 
       error,
       currentURL: window.location.href
     });
-  }, [token, client, operations.length, isLoading, error]);
+  }, [token, client, operations, isLoading, error]);
 
-  // Basic token format validation on component mount and refetch data
+  // Basic token format validation on component mount and trigger data fetch
   useEffect(() => {
     // Check if token exists
     if (!token) {
@@ -53,8 +53,10 @@ const PublicClientProfile = () => {
       return;
     }
     
-    console.log("PublicClientProfile - URL token verified:", token);
-  }, [token, navigate]);
+    console.log("PublicClientProfile - URL token verified, fetching data with token:", token);
+    // Explicitly trigger data fetch when component mounts with valid token
+    fetchClientData();
+  }, [token, navigate, fetchClientData]);
 
   // Show loading state
   if (isLoading) {
