@@ -37,6 +37,7 @@ export const fetchAccessData = async (token: string): Promise<TokenData> => {
       throw new Error(expirationValidation.error || "Token expiré");
     }
 
+    console.log("Successfully fetched access data with client ID:", data.client_id);
     return data as TokenData;
   } catch (error) {
     console.error("Error in fetchAccessData:", error);
@@ -76,6 +77,7 @@ export const fetchClientDetails = async (clientId: number): Promise<Client> => {
       throw new Error(statusValidation.error || "Statut client invalide");
     }
 
+    console.log("Successfully fetched client data:", data);
     return data as Client;
   } catch (error) {
     console.error("Error in fetchClientDetails:", error);
@@ -173,6 +175,7 @@ export const fetchClientOperations = async (clientFullName: string): Promise<Cli
       }))
     ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
+    console.log(`Retrieved ${allOperations.length} operations for client ${clientFullName}`);
     return allOperations;
   } catch (error) {
     console.error("Error in fetchClientOperations:", error);

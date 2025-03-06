@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Client } from "@/features/clients/types";
 import { ClientOperation, PublicClientData, TokenData } from "./types";
 import { fetchAccessData, fetchClientDetails, fetchClientOperations } from "./fetchClientData";
@@ -62,10 +62,13 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
     fetchClientData();
   }, [fetchClientData]);
 
-  // Initial data fetch
-  useCallback(() => {
-    fetchClientData();
-  }, [fetchClientData]);
+  // Initial data fetch when the token changes
+  useEffect(() => {
+    console.log("Token changed, fetching new client data:", token);
+    if (token) {
+      fetchClientData();
+    }
+  }, [token, fetchClientData]);
 
   return {
     client,
