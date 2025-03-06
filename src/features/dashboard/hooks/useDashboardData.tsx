@@ -17,6 +17,7 @@ export const useDashboardData = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+  const [retryCount, setRetryCount] = useState(0);
 
   const fetchStats = async () => {
     try {
@@ -25,21 +26,30 @@ export const useDashboardData = () => {
         .select('amount')
         .eq('status', 'completed');
 
-      if (depositsError) throw depositsError;
+      if (depositsError) {
+        console.error("Error fetching deposits:", depositsError);
+        return;
+      }
 
       const { data: withdrawals, error: withdrawalsError } = await supabase
         .from('withdrawals')
         .select('amount')
         .eq('status', 'completed');
 
-      if (withdrawalsError) throw withdrawalsError;
+      if (withdrawalsError) {
+        console.error("Error fetching withdrawals:", withdrawalsError);
+        return;
+      }
 
       const { count: clientCount, error: clientsError } = await supabase
         .from('clients')
         .select('*', { count: 'exact' })
         .eq('status', 'active');
 
-      if (clientsError) throw clientsError;
+      if (clientsError) {
+        console.error("Error fetching clients count:", clientsError);
+        return;
+      }
 
       const { data: monthlyStats, error: statsError } = await supabase
         .from('operation_statistics')
@@ -47,21 +57,30 @@ export const useDashboardData = () => {
         .order('day', { ascending: true })
         .limit(12);
 
-      if (statsError) throw statsError;
+      if (statsError) {
+        console.error("Error fetching monthly stats:", statsError);
+        return;
+      }
 
       const { data: balanceData, error: balanceError } = await supabase
         .from('clients')
         .select('solde')
         .eq('status', 'active');
 
-      if (balanceError) throw balanceError;
+      if (balanceError) {
+        console.error("Error fetching balances:", balanceError);
+        return;
+      }
 
       const { data: transfers, error: transfersError } = await supabase
         .from('transfers')
         .select('amount, from_client, to_client')
         .eq('status', 'completed');
 
-      if (transfersError) throw transfersError;
+      if (transfersError) {
+        console.error("Error fetching transfers:", transfersError);
+        return;
+      }
 
       const total_deposits = deposits?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
       const total_withdrawals = withdrawals?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
@@ -96,7 +115,10 @@ export const useDashboardData = () => {
         .order('created_at', { ascending: false })
         .limit(5);
 
-      if (depositsError) throw depositsError;
+      if (depositsError) {
+        console.error("Error fetching recent deposits:", depositsError);
+        return;
+      }
 
       // Récupérer les retraits récents
       const { data: recentWithdrawals, error: withdrawalsError } = await supabase
@@ -105,7 +127,10 @@ export const useDashboardData = () => {
         .order('created_at', { ascending: false })
         .limit(5);
 
-      if (withdrawalsError) throw withdrawalsError;
+      if (withdrawalsError) {
+        console.error("Error fetching recent withdrawals:", withdrawalsError);
+        return;
+      }
 
       // Récupérer les transferts récents
       const { data: recentTransfers, error: transfersError } = await supabase
@@ -114,7 +139,10 @@ export const useDashboardData = () => {
         .order('created_at', { ascending: false })
         .limit(5);
 
-      if (transfersError) throw transfersError;
+      if (transfersError) {
+        console.error("Error fetching recent transfers:", transfersError);
+        return;
+      }
 
       // Combiner et formater les résultats
       const allActivity = [
@@ -155,12 +183,19 @@ export const useDashboardData = () => {
       setRecentActivity(allActivity);
     } catch (error) {
       console.error('Error fetching recent activity:', error);
-      toast.error("Erreur lors du chargement de l'activité récente");
+      // Increment retry count and try again if we haven't exceeded retry limit
+      if (retryCount < 3) {
+        setRetryCount(prev => prev + 1);
+        toast.error("Tentative de reconnexion en cours...");
+      } else {
+        toast.error("Erreur lors du chargement de l'activité récente");
+      }
     }
   };
 
   const handleRefresh = () => {
     setIsLoading(true);
+    setRetryCount(0); // Reset retry count on manual refresh
     fetchStats();
     fetchRecentActivity();
     toast.success("Statistiques actualisées");
@@ -169,12 +204,24 @@ export const useDashboardData = () => {
   useEffect(() => {
     fetchStats();
     fetchRecentActivity();
+    
+    // If we had a failed attempt but haven't exceeded retry limit, try again
+    if (retryCount > 0 && retryCount < 3) {
+      const retryTimeout = setTimeout(() => {
+        console.log(`Retrying fetch attempt ${retryCount}...`);
+        fetchRecentActivity();
+      }, 2000 * retryCount); // Exponential backoff
+      
+      return () => clearTimeout(retryTimeout);
+    }
+    
     const interval = setInterval(() => {
       fetchStats();
       fetchRecentActivity();
     }, 30000);
+    
     return () => clearInterval(interval);
-  }, []);
+  }, [retryCount]);
 
   return {
     stats,
