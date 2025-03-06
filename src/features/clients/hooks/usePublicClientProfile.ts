@@ -20,13 +20,11 @@ export const usePublicClientProfile = (token: string | undefined) => {
 
   // Set up initial data fetching
   useEffect(() => {
-    if (token) {
-      console.log("Initial data fetch for token:", token);
-      memoizedFetchClientData();
-    }
-  }, [memoizedFetchClientData, token]);
+    console.log("Initial data fetch for token:", token);
+    memoizedFetchClientData();
+  }, [memoizedFetchClientData]);
 
-  // Set up realtime subscriptions only if we have a valid client
+  // Set up realtime subscriptions
   useRealtimeSubscriptions(client?.id, memoizedFetchClientData);
 
   return { client, operations, isLoading, error };
