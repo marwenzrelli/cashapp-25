@@ -36,13 +36,17 @@ export const OperationsDetailCards = ({
               <tbody>
                 {clientOperations
                   .filter(op => op.type === "deposit")
-                  .map((operation) => (
-                    <tr key={operation.id} className="border-b last:border-0">
-                      <td className="p-4">{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</td>
-                      <td className="p-4">{operation.description}</td>
-                      <td className="p-4 text-center font-medium text-green-600">{formatAmount(operation.amount)}</td>
-                    </tr>
-                ))}
+                  .map((operation) => {
+                    // Use operation_date if available, otherwise fall back to date
+                    const displayDate = operation.operation_date || operation.date;
+                    return (
+                      <tr key={operation.id} className="border-b last:border-0">
+                        <td className="p-4">{format(new Date(displayDate), "dd/MM/yyyy HH:mm")}</td>
+                        <td className="p-4">{operation.description}</td>
+                        <td className="p-4 text-center font-medium text-green-600">{formatAmount(operation.amount)}</td>
+                      </tr>
+                    );
+                  })}
                 {clientOperations.filter(op => op.type === "deposit").length === 0 && (
                   <tr>
                     <td colSpan={3} className="text-center p-4 text-muted-foreground">Aucun versement</td>
@@ -75,13 +79,17 @@ export const OperationsDetailCards = ({
               <tbody>
                 {clientOperations
                   .filter(op => op.type === "withdrawal")
-                  .map((operation) => (
-                    <tr key={operation.id} className="border-b last:border-0">
-                      <td className="p-4">{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</td>
-                      <td className="p-4">{operation.description}</td>
-                      <td className="p-4 text-center font-medium text-red-600">{formatAmount(operation.amount)}</td>
-                    </tr>
-                ))}
+                  .map((operation) => {
+                    // Use operation_date if available, otherwise fall back to date
+                    const displayDate = operation.operation_date || operation.date;
+                    return (
+                      <tr key={operation.id} className="border-b last:border-0">
+                        <td className="p-4">{format(new Date(displayDate), "dd/MM/yyyy HH:mm")}</td>
+                        <td className="p-4">{operation.description}</td>
+                        <td className="p-4 text-center font-medium text-red-600">{formatAmount(operation.amount)}</td>
+                      </tr>
+                    );
+                  })}
                 {clientOperations.filter(op => op.type === "withdrawal").length === 0 && (
                   <tr>
                     <td colSpan={3} className="text-center p-4 text-muted-foreground">Aucun retrait</td>
@@ -116,15 +124,19 @@ export const OperationsDetailCards = ({
               <tbody>
                 {clientOperations
                   .filter(op => op.type === "transfer")
-                  .map((operation) => (
-                    <tr key={operation.id} className="border-b last:border-0">
-                      <td className="p-4">{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</td>
-                      <td className="p-4">{operation.description}</td>
-                      <td className="p-4 text-center font-medium text-purple-600">{formatAmount(operation.amount)}</td>
-                      <td className="p-4">{operation.fromClient}</td>
-                      <td className="p-4">{operation.toClient}</td>
-                    </tr>
-                ))}
+                  .map((operation) => {
+                    // Use operation_date if available, otherwise fall back to date
+                    const displayDate = operation.operation_date || operation.date;
+                    return (
+                      <tr key={operation.id} className="border-b last:border-0">
+                        <td className="p-4">{format(new Date(displayDate), "dd/MM/yyyy HH:mm")}</td>
+                        <td className="p-4">{operation.description}</td>
+                        <td className="p-4 text-center font-medium text-purple-600">{formatAmount(operation.amount)}</td>
+                        <td className="p-4">{operation.fromClient}</td>
+                        <td className="p-4">{operation.toClient}</td>
+                      </tr>
+                    );
+                  })}
                 {clientOperations.filter(op => op.type === "transfer").length === 0 && (
                   <tr>
                     <td colSpan={5} className="text-center p-4 text-muted-foreground">Aucun virement</td>

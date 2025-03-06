@@ -17,6 +17,9 @@ export const OperationsMobileCard = ({
   showType = true,
   colorClass 
 }: OperationsMobileCardProps) => {
+  // Use operation_date if available, otherwise fall back to date
+  const displayDate = operation.operation_date || operation.date;
+  
   return (
     <div key={operation.id} className="p-3 border rounded-lg">
       <div className="flex items-center justify-between mb-2">
@@ -37,7 +40,7 @@ export const OperationsMobileCard = ({
       <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-sm">
         <div className="flex items-center gap-1 text-muted-foreground">
           <Calendar className="h-3.5 w-3.5" />
-          <span>{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</span>
+          <span>{format(new Date(displayDate), "dd/MM/yyyy HH:mm")}</span>
         </div>
         <div className="flex items-center gap-1 text-muted-foreground">
           <User className="h-3.5 w-3.5" />

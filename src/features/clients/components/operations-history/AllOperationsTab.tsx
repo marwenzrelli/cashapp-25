@@ -33,30 +33,34 @@ export const AllOperationsTab = ({ operations, currency = "TND" }: AllOperations
             </TableRow>
           </TableHeader>
           <TableBody>
-            {operations.map((operation) => (
-              <TableRow key={operation.id}>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${getTypeStyle(operation.type)}`}>
-                      {getTypeIcon(operation.type)}
+            {operations.map((operation) => {
+              // Use operation_date if available, otherwise fall back to date
+              const displayDate = operation.operation_date || operation.date;
+              return (
+                <TableRow key={operation.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${getTypeStyle(operation.type)}`}>
+                        {getTypeIcon(operation.type)}
+                      </div>
+                      <span>{getTypeLabel(operation.type)}</span>
                     </div>
-                    <span>{getTypeLabel(operation.type)}</span>
-                  </div>
-                </TableCell>
-                <TableCell>{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</TableCell>
-                <TableCell className="max-w-[200px] truncate">{operation.description}</TableCell>
-                <TableCell className={`text-center font-medium ${getAmountColor(operation.type)}`}>
-                  {operation.type === "withdrawal" ? "-" : ""}{Math.round(operation.amount)} {currency}
-                </TableCell>
-                <TableCell className="max-w-[200px] truncate">
-                  {operation.type === "transfer" ? (
-                    <>{operation.fromClient} → {operation.toClient}</>
-                  ) : (
-                    operation.fromClient
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
+                  </TableCell>
+                  <TableCell>{format(new Date(displayDate), "dd/MM/yyyy HH:mm")}</TableCell>
+                  <TableCell className="max-w-[200px] truncate">{operation.description}</TableCell>
+                  <TableCell className={`text-center font-medium ${getAmountColor(operation.type)}`}>
+                    {operation.type === "withdrawal" ? "-" : ""}{Math.round(operation.amount)} {currency}
+                  </TableCell>
+                  <TableCell className="max-w-[200px] truncate">
+                    {operation.type === "transfer" ? (
+                      <>{operation.fromClient} → {operation.toClient}</>
+                    ) : (
+                      operation.fromClient
+                    )}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>

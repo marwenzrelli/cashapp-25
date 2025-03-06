@@ -34,17 +34,21 @@ export const TransferOperationsTab = ({ operations, currency = "TND" }: Transfer
             </TableRow>
           </TableHeader>
           <TableBody>
-            {transfers.map((operation) => (
-              <TableRow key={operation.id}>
-                <TableCell>{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</TableCell>
-                <TableCell className="max-w-[200px] truncate">{operation.description}</TableCell>
-                <TableCell className="text-center font-medium text-green-600 dark:text-green-400">
-                  {Math.round(operation.amount)} {currency}
-                </TableCell>
-                <TableCell className="max-w-[200px] truncate">{operation.fromClient}</TableCell>
-                <TableCell className="max-w-[200px] truncate">{operation.toClient}</TableCell>
-              </TableRow>
-            ))}
+            {transfers.map((operation) => {
+              // Use operation_date if available, otherwise fall back to date
+              const displayDate = operation.operation_date || operation.date;
+              return (
+                <TableRow key={operation.id}>
+                  <TableCell>{format(new Date(displayDate), "dd/MM/yyyy HH:mm")}</TableCell>
+                  <TableCell className="max-w-[200px] truncate">{operation.description}</TableCell>
+                  <TableCell className="text-center font-medium text-green-600 dark:text-green-400">
+                    {Math.round(operation.amount)} {currency}
+                  </TableCell>
+                  <TableCell className="max-w-[200px] truncate">{operation.fromClient}</TableCell>
+                  <TableCell className="max-w-[200px] truncate">{operation.toClient}</TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>
