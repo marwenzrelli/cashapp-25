@@ -4,7 +4,7 @@ import QRCode from 'qrcode';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Copy, ExternalLink, RefreshCw, Shield, QrCode, ArrowRight } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -80,6 +80,7 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
     
     try {
       setIsLoading(true);
+      console.log("Starting QR code generation for client ID:", clientId);
 
       // Check if there's an existing token for this client
       const { data: existingTokens, error: fetchError } = await supabase
@@ -92,14 +93,25 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
       
       if (fetchError) {
         console.error("Error checking existing tokens:", fetchError);
+        toast({
+          title: "Erreur",
+          description: "Impossible de vérifier les tokens existants.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
       }
+      
+      console.log("Existing tokens found:", existingTokens?.length || 0);
       
       // If token exists, use it; otherwise create a new one
       if (existingTokens && existingTokens.length > 0) {
         tokenToUse = existingTokens[0].access_token;
+        console.log("Using existing token:", tokenToUse);
         setAccessToken(tokenToUse);
       } else {
         // Create a new token
+        console.log("Creating new access token for client:", clientId);
         const newToken = crypto.randomUUID();
         
         const { data, error } = await supabase
@@ -114,31 +126,48 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
 
         if (error) {
           console.error("Error creating QR access:", error);
-          throw error;
+          toast({
+            title: "Erreur",
+            description: "Impossible de créer un accès QR.",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
         }
 
         tokenToUse = data.access_token;
+        console.log("New token created:", tokenToUse);
         setAccessToken(tokenToUse);
       }
 
       if (canvasRef.current && tokenToUse) {
         const url = `${window.location.origin}/public/client/${tokenToUse}`;
         setQrUrl(url);
+        console.log("Generated QR code URL:", url);
         
-        await QRCode.toCanvas(
-          canvasRef.current,
-          url,
-          {
-            width: size,
-            margin: 1,
-            color: {
-              dark: '#8B5CF6', // Vivid purple for the QR code
-              light: '#FFFFFF'
+        try {
+          await QRCode.toCanvas(
+            canvasRef.current,
+            url,
+            {
+              width: size,
+              margin: 1,
+              color: {
+                dark: '#8B5CF6', // Vivid purple for the QR code
+                light: '#FFFFFF'
+              }
             }
-          }
-        );
-        
-        console.log("QR Code generated successfully for URL:", url);
+          );
+          
+          console.log("QR Code generated successfully");
+        } catch (qrError) {
+          console.error("Error generating QR canvas:", qrError);
+          toast({
+            title: "Erreur QR",
+            description: "Erreur lors de la génération de l'image QR.",
+            variant: "destructive",
+          });
+        }
       }
     } catch (error: any) {
       console.error("Erreur lors de la génération du QR code:", error);

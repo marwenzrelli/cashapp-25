@@ -1,8 +1,7 @@
 
-import React from 'react';
-import { AlertCircle, ShieldAlert, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { Button } from "@/components/ui/button";
+import { AlertCircle, RefreshCcw } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface PublicClientErrorProps {
   error: string | null;
@@ -12,87 +11,47 @@ interface PublicClientErrorProps {
 export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) => {
   const navigate = useNavigate();
   
-  console.log("PublicClientError - Displaying error:", error);
-  
-  // Determine if the error is related to security, client missing, or other issue
-  const isSecurityError = error?.toLowerCase().includes('invalide') || 
-                          error?.toLowerCase().includes('expiré') ||
-                          error?.toLowerCase().includes('désactivé') ||
-                          error?.toLowerCase().includes('suspendu') ||
-                          error?.toLowerCase().includes('token');
-
-  const isClientMissing = error?.toLowerCase().includes('introuvable') ||
-                          error?.toLowerCase().includes('not found') ||
-                          error?.toLowerCase().includes('manquant') ||
-                          error?.toLowerCase().includes('n\'existe pas') ||
-                          error?.toLowerCase().includes('supprimé');
-                          
-  // Handle retry button click
   const handleRetry = () => {
-    console.log("Attempting to reload data...");
     if (onRetry) {
       onRetry();
-    } else {
-      window.location.reload();
     }
-  };
-  
-  // Handle go to home button click
-  const handleGoToHome = () => {
-    console.log("Redirecting to clients list...");
-    navigate('/clients');
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-8rem)] p-4">
-      <div className="bg-background p-6 rounded-lg shadow-sm max-w-md w-full border">
-        <div className="flex flex-col items-center text-center">
-          <div className={`${isSecurityError ? 'bg-amber-100' : isClientMissing ? 'bg-blue-100' : 'bg-red-100'} p-3 rounded-full mb-4`}>
-            {isSecurityError ? (
-              <ShieldAlert className="h-8 w-8 text-amber-600" />
-            ) : isClientMissing ? (
-              <AlertCircle className="h-8 w-8 text-blue-600" />
-            ) : (
-              <AlertCircle className="h-8 w-8 text-red-600" />
-            )}
+    <div className="min-h-screen bg-gradient-to-b from-red-100/30 to-background flex items-center justify-center p-4">
+      <div className="max-w-md w-full bg-white dark:bg-gray-950 shadow-xl rounded-xl p-8 text-center">
+        <div className="flex justify-center">
+          <div className="h-16 w-16 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center">
+            <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-500" />
           </div>
-          
-          <h2 className="text-xl font-semibold mb-2">
-            {isSecurityError ? "Accès refusé" : isClientMissing ? "Client introuvable" : "Erreur d'accès"}
-          </h2>
-          
-          <p className="text-muted-foreground mb-4">
-            {error || "Impossible d'accéder au profil client demandé"}
-          </p>
-          
-          <p className="text-sm text-muted-foreground mb-6">
-            {isSecurityError 
-              ? "Le lien utilisé pourrait être expiré, invalide ou l'accès a été révoqué."
-              : isClientMissing
-              ? "Le client demandé n'existe pas ou a été supprimé."
-              : "Une erreur est survenue lors du chargement des données. Veuillez réessayer plus tard."}
-          </p>
-
-          <div className="flex flex-col w-full gap-2">
+        </div>
+        
+        <h2 className="mt-6 text-2xl font-semibold text-gray-900 dark:text-white">
+          Accès refusé
+        </h2>
+        
+        <p className="mt-3 text-gray-600 dark:text-gray-400">
+          {error || "Impossible d'accéder au profil client. Le lien pourrait être invalide ou expiré."}
+        </p>
+        
+        <div className="mt-8 space-y-3">
+          {onRetry && (
             <Button 
-              variant="outline" 
-              size="sm"
               onClick={handleRetry}
-              className="w-full flex items-center justify-center gap-2"
+              className="w-full gap-2"
+              variant="outline"
             >
-              <RefreshCw className="h-4 w-4" />
+              <RefreshCcw className="h-4 w-4" />
               Réessayer
             </Button>
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleGoToHome}
-              className="w-full"
-            >
-              Retour à la liste des clients
-            </Button>
-          </div>
+          )}
+          
+          <Button 
+            onClick={() => navigate('/')}
+            className="w-full"
+          >
+            Retourner à l'accueil
+          </Button>
         </div>
       </div>
     </div>

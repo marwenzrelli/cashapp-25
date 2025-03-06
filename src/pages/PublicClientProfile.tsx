@@ -11,7 +11,14 @@ import { showErrorToast } from "@/features/clients/hooks/utils/errorUtils";
 const PublicClientProfile = () => {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
-  const { client, operations, isLoading, error, fetchClientData } = usePublicClientProfile(token);
+  const { 
+    client, 
+    operations, 
+    isLoading, 
+    error, 
+    fetchClientData, 
+    retryFetch 
+  } = usePublicClientProfile(token);
 
   // Basic token format validation on component mount and refetch data
   useEffect(() => {
@@ -54,7 +61,7 @@ const PublicClientProfile = () => {
   // Show error state
   if (error || !client) {
     console.error("Error rendering client profile:", error);
-    return <PublicClientError error={error} />;
+    return <PublicClientError error={error} onRetry={retryFetch} />;
   }
 
   // Show client profile when data is available

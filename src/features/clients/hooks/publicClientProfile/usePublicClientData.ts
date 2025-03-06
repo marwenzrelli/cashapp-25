@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Client } from "@/features/clients/types";
 import { PublicClientData, ClientOperation } from "./types";
 import { validateToken } from "./validation";
@@ -12,6 +12,7 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
   const [operations, setOperations] = useState<ClientOperation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retry, setRetry] = useState(0);
 
   const fetchClientData = useCallback(async () => {
     try {
@@ -79,5 +80,22 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
     }
   }, [token]);
 
-  return { client, operations, isLoading, error, fetchClientData };
+  useEffect(() => {
+    if (token) {
+      fetchClientData();
+    }
+  }, [token, retry, fetchClientData]);
+
+  const retryFetch = useCallback(() => {
+    setRetry(prev => prev + 1);
+  }, []);
+
+  return { 
+    client, 
+    operations, 
+    isLoading, 
+    error, 
+    fetchClientData,
+    retryFetch 
+  };
 };

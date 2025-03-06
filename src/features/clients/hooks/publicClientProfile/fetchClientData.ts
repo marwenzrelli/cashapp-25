@@ -55,7 +55,7 @@ export const fetchClientDetails = async (clientId: number): Promise<Client> => {
 
     if (!data) {
       console.error("No client found with ID:", clientId);
-      throw new Error("Client introuvable dans notre système");
+      throw new Error(`Client introuvable dans notre système (ID: ${clientId})`);
     }
 
     // Validate client status
@@ -74,6 +74,8 @@ export const fetchClientDetails = async (clientId: number): Promise<Client> => {
 
 export const fetchClientOperations = async (clientFullName: string): Promise<ClientOperation[]> => {
   try {
+    console.log("Fetching operations for client:", clientFullName);
+    
     // Fetch deposits
     const { data: deposits, error: depositsError } = await supabase
       .from('deposits')

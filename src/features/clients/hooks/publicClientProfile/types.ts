@@ -17,6 +17,7 @@ export interface PublicClientData {
   isLoading: boolean;
   error: string | null;
   fetchClientData: () => Promise<void>;
+  retryFetch: () => void;
 }
 
 export interface TokenData {
