@@ -9,6 +9,7 @@ import { useUpdateClient } from "./operations/updateClient";
 import { useDeleteClient } from "./operations/deleteClient";
 import { useRefreshClientBalance } from "./operations/refreshBalance";
 import { useRealtimeSubscription } from "./operations/realtimeSubscription";
+import { toast } from "sonner";
 
 export const useClients = () => {
   const [clients, setClients] = useState<Client[]>([]);
@@ -24,7 +25,21 @@ export const useClients = () => {
   
   // Memoize the fetch function to avoid infinite loops
   const fetchClients = useCallback(
-    (retry = 0, showToast = true) => fetchClientsImpl(retry, showToast),
+    (retry = 0, showToast = true) => {
+      try {
+        return fetchClientsImpl(retry, showToast);
+      } catch (err) {
+        console.error("Critical error in fetchClients:", err);
+        if (showToast) {
+          toast.error("Erreur de chargement", {
+            description: "Impossible de charger les clients. Veuillez réessayer."
+          });
+        }
+        setError("Erreur de connexion au serveur");
+        setLoading(false);
+        return Promise.resolve();
+      }
+    },
     [fetchClientsImpl]
   );
 
