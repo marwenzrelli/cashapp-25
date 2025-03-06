@@ -32,14 +32,20 @@ export const useFetchClients = (
         
         for (const client of batch) {
           try {
-            // Calculer le solde du client
-            const { data: balance, error: balanceError } = await supabase
-              .rpc('calculate_client_balance', { client_id: client.id });
-
-            if (balanceError) {
-              console.warn(`Impossible de calculer le solde pour ${client.prenom} ${client.nom}:`, balanceError);
-              continue;
-            }
+            // Attempt to calculate balance directly since RPC may not exist yet
+            const { data: deposits } = await supabase
+              .from('deposits')
+              .select('amount')
+              .eq('client_name', `${client.prenom} ${client.nom}`);
+              
+            const { data: withdrawals } = await supabase
+              .from('withdrawals')
+              .select('amount')
+              .eq('client_name', `${client.prenom} ${client.nom}`);
+            
+            const depositsTotal = deposits?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
+            const withdrawalsTotal = withdrawals?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
+            const balance = depositsTotal - withdrawalsTotal;
 
             // Mettre à jour le solde dans la base de données
             const { error: updateError } = await supabase

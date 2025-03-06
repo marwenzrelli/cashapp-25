@@ -42,7 +42,7 @@ export const useFetchOperations = (
           formattedDate: formatDateTime(d.created_at)
         })),
         ...withdrawals.map((w): Operation => ({
-          id: w.id,
+          id: w.id.toString(),
           type: "withdrawal",
           amount: w.amount,
           date: w.created_at,
@@ -52,7 +52,7 @@ export const useFetchOperations = (
           formattedDate: formatDateTime(w.created_at)
         })),
         ...transfers.map((t): Operation => ({
-          id: t.id,
+          id: t.id.toString(),
           type: "transfer",
           amount: t.amount,
           date: t.created_at,

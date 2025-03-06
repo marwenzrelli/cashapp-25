@@ -13,7 +13,7 @@ export const useRefreshClientBalance = (
         throw new Error("La connexion à la base de données n'est pas disponible");
       }
       
-      // Calculer le solde du client
+      // We'll need to create a function in Supabase for this
       const { data: balance, error: balanceError } = await supabase
         .rpc('calculate_client_balance', { client_id: id });
 

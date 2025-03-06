@@ -112,7 +112,7 @@ export const useTransferActions = (onSuccess: () => void) => {
           amount: parseFloat(editForm.amount),
           reason: editForm.reason
         })
-        .eq('id', selectedTransfer.id);
+        .eq('id', parseInt(selectedTransfer.id));
 
       if (error) {
         console.error("Erreur lors de la modification du virement:", error);
@@ -146,7 +146,7 @@ export const useTransferActions = (onSuccess: () => void) => {
       const { data: transferData, error: fetchError } = await supabase
         .from('transfers')
         .select('*')
-        .eq('id', selectedTransfer.id)
+        .eq('id', parseInt(selectedTransfer.id))
         .single();
         
       if (fetchError) {
@@ -203,7 +203,7 @@ export const useTransferActions = (onSuccess: () => void) => {
       const { error: deleteError } = await supabase
         .from('transfers')
         .delete()
-        .eq('id', selectedTransfer.id);
+        .eq('id', parseInt(selectedTransfer.id));
 
       if (deleteError) {
         console.error("Erreur lors de la suppression du virement:", deleteError);

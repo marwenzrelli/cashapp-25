@@ -20,7 +20,7 @@ const fetchTransfersData = async (): Promise<Transfer[]> => {
 
     if (data) {
       const formattedTransfers: Transfer[] = data.map(transfer => ({
-        id: transfer.id,
+        id: transfer.id.toString(),
         fromClient: transfer.from_client,
         toClient: transfer.to_client,
         amount: transfer.amount,

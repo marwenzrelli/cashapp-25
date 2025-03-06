@@ -1,6 +1,6 @@
 
 export interface Withdrawal {
-  id: number;
+  id: string;
   client_name: string;
   amount: number;
   date: string;
