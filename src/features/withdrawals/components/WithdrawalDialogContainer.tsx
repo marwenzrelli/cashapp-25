@@ -3,6 +3,7 @@ import React from "react";
 import { WithdrawalFormDialog } from "./dialog/WithdrawalFormDialog";
 import { Client } from "@/features/clients/types";
 import { Withdrawal } from "@/features/withdrawals/types";
+import { Dialog } from "@/components/ui/dialog";
 
 interface WithdrawalDialogContainerProps {
   showDialog: boolean;
@@ -71,15 +72,17 @@ export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps>
   }));
 
   return (
-    <WithdrawalFormDialog
-      isOpen={showDialog}
-      onClose={handleCloseDialog}
-      clients={extendedClients}
-      selectedClient={selectedClient}
-      setSelectedClient={setSelectedClient}
-      isEditing={isEditing}
-      selectedWithdrawal={selectedWithdrawal}
-      onCreateWithdrawal={handleCreateWithdrawal}
-    />
+    <Dialog open={showDialog} onOpenChange={setShowDialog}>
+      <WithdrawalFormDialog
+        isOpen={showDialog}
+        onClose={handleCloseDialog}
+        clients={extendedClients}
+        selectedClient={selectedClient}
+        setSelectedClient={setSelectedClient}
+        isEditing={isEditing}
+        selectedWithdrawal={selectedWithdrawal}
+        onCreateWithdrawal={handleCreateWithdrawal}
+      />
+    </Dialog>
   );
 };
