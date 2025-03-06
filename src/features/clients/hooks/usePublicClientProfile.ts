@@ -14,11 +14,13 @@ export const usePublicClientProfile = (token: string | undefined) => {
 
   // Wrap fetchClientData in useCallback to prevent infinite re-renders
   const memoizedFetchClientData = useCallback(() => {
+    console.log("Fetching client data for token:", token);
     fetchClientData();
   }, [token, fetchClientData]);
 
   // Set up initial data fetching
   useEffect(() => {
+    console.log("Initial data fetch for token:", token);
     memoizedFetchClientData();
   }, [memoizedFetchClientData]);
 

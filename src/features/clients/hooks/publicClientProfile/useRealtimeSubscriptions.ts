@@ -9,6 +9,8 @@ export const useRealtimeSubscriptions = (
   useEffect(() => {
     if (!clientId) return;
     
+    console.log("Setting up realtime subscriptions for client ID:", clientId);
+    
     // Mettre en place la souscription en temps réel
     const clientSubscription = supabase
       .channel('public_client_changes')
@@ -17,7 +19,8 @@ export const useRealtimeSubscriptions = (
         schema: 'public',
         table: 'clients',
         filter: `id=eq.${clientId}`,
-      }, () => {
+      }, (payload) => {
+        console.log("Received client change:", payload);
         fetchClientData();
       })
       .subscribe();
@@ -29,7 +32,8 @@ export const useRealtimeSubscriptions = (
         event: '*',
         schema: 'public',
         table: 'deposits',
-      }, () => {
+      }, (payload) => {
+        console.log("Received deposit change:", payload);
         fetchClientData();
       })
       .subscribe();
@@ -40,7 +44,8 @@ export const useRealtimeSubscriptions = (
         event: '*',
         schema: 'public',
         table: 'withdrawals',
-      }, () => {
+      }, (payload) => {
+        console.log("Received withdrawal change:", payload);
         fetchClientData();
       })
       .subscribe();
@@ -51,12 +56,14 @@ export const useRealtimeSubscriptions = (
         event: '*',
         schema: 'public',
         table: 'transfers',
-      }, () => {
+      }, (payload) => {
+        console.log("Received transfer change:", payload);
         fetchClientData();
       })
       .subscribe();
 
     return () => {
+      console.log("Cleaning up realtime subscriptions");
       clientSubscription.unsubscribe();
       depositsSubscription.unsubscribe();
       withdrawalsSubscription.unsubscribe();

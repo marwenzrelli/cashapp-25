@@ -10,6 +10,8 @@ const PublicClientProfile = () => {
   const { token } = useParams<{ token: string }>();
   const { client, operations, isLoading, error } = usePublicClientProfile(token);
 
+  console.log("PublicClientProfile rendering with:", { token, isLoading, hasClient: !!client, error });
+
   // Show loading state
   if (isLoading) {
     return <PublicClientLoading />;
