@@ -92,11 +92,7 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
       
       if (fetchError) {
         console.error("Error checking existing tokens:", fetchError);
-        toast({
-          title: "Erreur",
-          description: "Impossible de vérifier les tokens existants.",
-          variant: "destructive",
-        });
+        toast.error("Impossible de vérifier les tokens existants.");
         setIsLoading(false);
         return;
       }
@@ -125,11 +121,7 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
 
         if (error) {
           console.error("Error creating QR access:", error);
-          toast({
-            title: "Erreur",
-            description: "Impossible de créer un accès QR.",
-            variant: "destructive",
-          });
+          toast.error("Impossible de créer un accès QR.");
           setIsLoading(false);
           return;
         }
@@ -161,20 +153,12 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
           console.log("QR Code generated successfully");
         } catch (qrError) {
           console.error("Error generating QR canvas:", qrError);
-          toast({
-            title: "Erreur QR",
-            description: "Erreur lors de la génération de l'image QR.",
-            variant: "destructive",
-          });
+          toast.error("Erreur lors de la génération de l'image QR.");
         }
       }
     } catch (error: any) {
       console.error("Erreur lors de la génération du QR code:", error);
-      toast({
-        title: "Erreur",
-        description: error.message || "Impossible de générer le QR code",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Impossible de générer le QR code");
     } finally {
       setIsLoading(false);
     }
@@ -189,17 +173,11 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(qrUrl);
-      toast({
-        title: "Lien copié !",
-        description: "Le lien du QR code a été copié dans le presse-papier.",
+      toast.success("Le lien du QR code a été copié dans le presse-papier.", {
         duration: 3000,
       });
     } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Impossible de copier le lien.",
-        variant: "destructive",
-      });
+      toast.error("Impossible de copier le lien.");
     }
   };
 
@@ -207,11 +185,7 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
     if (qrUrl) {
       window.open(qrUrl, '_blank');
     } else {
-      toast({
-        title: "Erreur",
-        description: "Le lien n'est pas encore disponible.",
-        variant: "destructive",
-      });
+      toast.error("Le lien n'est pas encore disponible.");
     }
   };
 
