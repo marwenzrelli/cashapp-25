@@ -14,8 +14,9 @@ export const StatsCard = ({ deposits }: StatsCardProps) => {
   };
 
   return (
-    <Card className="border-primary/20">
-      <CardHeader>
+    <Card className="border-primary/20 shadow-sm overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-transparent dark:from-blue-950/20 opacity-70"></div>
+      <CardHeader className="relative z-10">
         <CardTitle className="flex items-center gap-2">
           <Store className="h-5 w-5 text-primary" />
           Statistiques
@@ -24,10 +25,10 @@ export const StatsCard = ({ deposits }: StatsCardProps) => {
           Suivez l'évolution des versements
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="relative z-10">
         <div className="space-y-4">
           <p className={cn(
-            "font-medium",
+            "font-medium text-lg",
             getAmountColor(totalAmount)
           )}>
             Total des versements: {totalAmount.toLocaleString()} TND

@@ -19,14 +19,15 @@ export const StatCard = ({ title, value, icon: Icon, iconColor, gradientFrom }: 
   };
 
   return (
-    <Card className={`bg-gradient-to-br from-${gradientFrom} to-transparent dark:from-${gradientFrom}/20`}>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
+    <Card className="shadow-md overflow-hidden">
+      <div className={`absolute inset-0 bg-gradient-to-br from-${gradientFrom} to-transparent dark:from-${gradientFrom}/20 opacity-70`}></div>
+      <CardHeader className="flex flex-row items-center justify-between pb-2 relative z-10">
         <CardTitle className="text-sm font-medium">
           {title}
         </CardTitle>
         <Icon className={`h-4 w-4 ${iconColor}`} />
       </CardHeader>
-      <CardContent>
+      <CardContent className="relative z-10">
         <div className={cn(
           "text-2xl font-bold",
           getAmountColor(value)
