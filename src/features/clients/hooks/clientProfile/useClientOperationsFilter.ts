@@ -3,18 +3,19 @@ import { useState, useEffect, useMemo } from 'react';
 import { Client } from '@/features/clients/types';
 import { Operation } from '@/features/operations/types';
 import { addDays, subDays, startOfDay, endOfDay } from 'date-fns';
+import { DateRange } from 'react-day-picker';
 
 export const useClientOperationsFilter = (
   operations: Operation[],
   client: Client | null
 ) => {
   // State for filters
-  const [selectedType, setSelectedType] = useState<string>('all');
+  const [selectedType, setSelectedType] = useState<"all" | "deposit" | "withdrawal" | "transfer">('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
-  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([
-    subDays(new Date(), 30),
-    new Date()
-  ]);
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: subDays(new Date(), 30),
+    to: new Date()
+  });
   const [isCustomRange, setIsCustomRange] = useState<boolean>(false);
 
   // Get operations for this client
@@ -57,10 +58,10 @@ export const useClientOperationsFilter = (
       }
       
       // Filter by date range
-      if (dateRange[0] && dateRange[1]) {
+      if (dateRange.from && dateRange.to) {
         const opDate = new Date(op.date);
-        const startDate = startOfDay(dateRange[0]);
-        const endDate = endOfDay(dateRange[1]);
+        const startDate = startOfDay(dateRange.from);
+        const endDate = endOfDay(dateRange.to);
         
         if (opDate < startDate || opDate > endDate) {
           return false;
