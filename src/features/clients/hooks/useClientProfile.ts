@@ -1,7 +1,6 @@
 
 import { useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { startOfDay, endOfDay } from "date-fns";
 import { useOperations } from "@/features/operations/hooks/useOperations";
 import { useClientData } from "./clientProfile/useClientData";
 import { useClientOperationsFilter } from "./clientProfile/useClientOperationsFilter";

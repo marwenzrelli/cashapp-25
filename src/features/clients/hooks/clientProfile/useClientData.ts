@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Client } from "@/features/clients/types";
@@ -25,15 +24,15 @@ export const useClientData = (clientId: number | null) => {
         
         console.log("Tentative de récupération du client avec ID:", clientId);
         
-        const { data, error } = await supabase
+        const { data, error: supabaseError } = await supabase
           .from('clients')
           .select('*')
           .eq('id', clientId)
           .maybeSingle();
 
-        if (error) {
-          console.error("Erreur lors du chargement du client:", error);
-          const errorMessage = handleSupabaseError(error);
+        if (supabaseError) {
+          console.error("Erreur lors du chargement du client:", supabaseError);
+          const errorMessage = handleSupabaseError(supabaseError);
           setError(errorMessage);
           toast.error("Impossible de charger les informations du client", {
             description: errorMessage
@@ -130,6 +129,12 @@ export const useClientData = (clientId: number | null) => {
       depositsSubscription.unsubscribe();
       withdrawalsSubscription.unsubscribe();
       transfersSubscription.unsubscribe();
+      // Make sure to unsubscribe from all channels to prevent memory leaks
+      if (window.supabaseChannels) {
+        window.supabaseChannels.forEach(channel => {
+          supabase.removeChannel(channel);
+        });
+      }
     };
   }, [clientId]);
 

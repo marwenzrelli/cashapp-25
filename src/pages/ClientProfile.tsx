@@ -22,6 +22,8 @@ const ClientProfile = () => {
     setSearchTerm,
     dateRange,
     setDateRange,
+    isCustomRange,
+    setIsCustomRange,
     formatAmount,
     exportToExcel,
     exportToPDF
@@ -35,7 +37,7 @@ const ClientProfile = () => {
     );
   }
 
-  if (!client || !clientId || error) {
+  if (error || !client) {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)] p-4">
         <div className="bg-background p-6 rounded-lg shadow-sm max-w-md w-full border">
@@ -89,6 +91,8 @@ const ClientProfile = () => {
           setSearchTerm={setSearchTerm}
           dateRange={dateRange}
           setDateRange={setDateRange}
+          isCustomRange={isCustomRange}
+          setIsCustomRange={setIsCustomRange}
           filteredOperations={filteredOperations}
         />
 
