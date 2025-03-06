@@ -23,7 +23,7 @@ export const fetchRecentOperations = async () => {
     const { data: deposits, error: depositsError } = await supabase
       .from('deposits')
       .select('*')
-      .order('created_at', { ascending: false })
+      .order('operation_date', { ascending: false })
       .limit(20);
 
     if (depositsError) throw depositsError;
@@ -51,8 +51,8 @@ export const fetchRecentOperations = async () => {
       id: `deposit-${d.id}`,
       type: 'deposit',
       amount: d.amount,
-      date: formatDateTime(d.created_at),
-      raw_date: d.created_at, // Keep the raw date for exact formatting
+      date: formatDateTime(d.operation_date || d.created_at),
+      raw_date: d.operation_date || d.created_at, // Keep the raw date for exact formatting
       client_name: d.client_name,
       created_by: d.created_by,
       created_by_name: d.created_by ? usersMap[d.created_by] || 'Utilisateur inconnu' : 'Système',
@@ -63,8 +63,8 @@ export const fetchRecentOperations = async () => {
       id: `withdrawal-${w.id}`,
       type: 'withdrawal',
       amount: w.amount,
-      date: w.operation_date,
-      raw_date: w.operation_date, // Keep the raw date for exact formatting
+      date: formatDateTime(w.operation_date || w.created_at),
+      raw_date: w.operation_date || w.created_at, // Keep the raw date for exact formatting
       client_name: w.client_name,
       created_by: w.created_by,
       created_by_name: w.created_by ? usersMap[w.created_by] || 'Utilisateur inconnu' : 'Système',
@@ -75,8 +75,8 @@ export const fetchRecentOperations = async () => {
       id: `transfer-${t.id}`,
       type: 'transfer',
       amount: t.amount,
-      date: t.operation_date,
-      raw_date: t.operation_date, // Keep the raw date for exact formatting
+      date: formatDateTime(t.operation_date || t.created_at),
+      raw_date: t.operation_date || t.created_at, // Keep the raw date for exact formatting
       from_client: t.from_client,
       to_client: t.to_client,
       created_by: t.created_by,
