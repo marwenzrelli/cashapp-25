@@ -25,6 +25,11 @@ export const fetchAccessData = async (token: string): Promise<TokenData> => {
       throw new Error("Token d'accès non reconnu dans notre système");
     }
 
+    if (!data.client_id) {
+      console.error("No client ID associated with token:", token);
+      throw new Error("Aucun client associé à ce token d'accès");
+    }
+
     // Validate token expiration
     const expirationValidation = validateTokenExpiration(data.expires_at, data.created_at);
     if (!expirationValidation.isValid) {
@@ -42,6 +47,12 @@ export const fetchAccessData = async (token: string): Promise<TokenData> => {
 export const fetchClientDetails = async (clientId: number): Promise<Client> => {
   try {
     console.log("Fetching client details for ID:", clientId);
+    
+    if (!clientId || isNaN(Number(clientId))) {
+      console.error("Invalid client ID:", clientId);
+      throw new Error("Identifiant client invalide");
+    }
+    
     const { data, error } = await supabase
       .from('clients')
       .select('*')

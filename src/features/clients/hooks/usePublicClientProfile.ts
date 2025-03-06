@@ -24,6 +24,12 @@ export const usePublicClientProfile = (token: string | undefined) => {
 
   // Pass clientId and refreshData to useRealtimeSubscriptions
   useRealtimeSubscriptions(clientId, refreshData);
+  
+  // Initial data fetch on component mount or token change
+  useEffect(() => {
+    console.log("Initial data fetch triggered with token:", token);
+    fetchClientData();
+  }, [token, fetchClientData]);
 
   return {
     client,

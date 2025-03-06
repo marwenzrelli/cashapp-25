@@ -1,10 +1,8 @@
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { Client } from "@/features/clients/types";
-import { PublicClientData, ClientOperation } from "./types";
-import { validateToken } from "./validation";
+import { ClientOperation, PublicClientData, TokenData } from "./types";
 import { fetchAccessData, fetchClientDetails, fetchClientOperations } from "./fetchClientData";
-import { toast } from "sonner";
 import { showErrorToast } from "../utils/errorUtils";
 
 export const usePublicClientData = (token: string | undefined): PublicClientData => {
@@ -12,90 +10,69 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
   const [operations, setOperations] = useState<ClientOperation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [retry, setRetry] = useState(0);
 
   const fetchClientData = useCallback(async () => {
+    if (!token) {
+      setError("Token d'accès manquant");
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
     try {
-      console.log("Fetching client data with token:", token);
-      setIsLoading(true);
-      setError(null); // Reset error state before new fetch
-
-      // Validate token format
-      const tokenValidation = validateToken(token);
-      if (!tokenValidation.isValid) {
-        console.error("Token validation failed:", tokenValidation.error);
-        setError(tokenValidation.error);
-        setIsLoading(false);
-        
-        showErrorToast("Erreur d'accès", { message: tokenValidation.error || "Token invalide" });
-        return;
-      }
-
-      // Get client ID from token with additional validation
-      const accessData = await fetchAccessData(token!);
-      console.log("Access data retrieved:", accessData);
+      console.log("Fetching data with token:", token);
+      
+      // Step 1: Get client ID from token
+      const accessData: TokenData = await fetchAccessData(token);
       
       if (!accessData || !accessData.client_id) {
-        const errorMsg = "ID client manquant dans les données d'accès";
-        console.error(errorMsg);
-        setError(errorMsg);
-        setIsLoading(false);
-        
-        showErrorToast("Erreur d'accès", { message: errorMsg });
-        return;
+        throw new Error("Données d'accès invalides ou client non associé");
       }
       
-      // Fetch client data
-      try {
-        const clientData = await fetchClientDetails(accessData.client_id);
-        console.log("Client data retrieved:", clientData);
-        setClient(clientData);
-
-        // Get client operations
-        const clientFullName = `${clientData.prenom} ${clientData.nom}`;
-        const clientOperations = await fetchClientOperations(clientFullName);
-        setOperations(clientOperations);
-      } catch (clientErr: any) {
-        console.error("Error fetching client data:", clientErr);
-        setError(clientErr.message || "Client introuvable dans notre système");
-        showErrorToast("Client introuvable", { message: clientErr.message || "Client introuvable dans notre système" });
-      }
+      console.log("Retrieved client ID from token:", accessData.client_id);
+      
+      // Step 2: Get client details
+      const clientData = await fetchClientDetails(accessData.client_id);
+      setClient(clientData);
+      
+      console.log("Retrieved client data:", clientData);
+      
+      // Step 3: Get client operations
+      const fullName = `${clientData.prenom} ${clientData.nom}`;
+      const operationsData = await fetchClientOperations(fullName);
+      setOperations(operationsData);
+      
+      console.log("Retrieved client operations:", operationsData.length);
       
       setIsLoading(false);
     } catch (err: any) {
       console.error("Error in fetchClientData:", err);
-      
-      // Format user-friendly error message
-      let errorMessage = "Une erreur est survenue lors de la récupération des données";
-      
-      if (err instanceof Error) {
-        errorMessage = err.message;
-      }
-      
-      // Show toast for the error
-      showErrorToast("Erreur d'accès", { message: errorMessage });
-      
-      setError(errorMessage);
+      setClient(null);
+      setOperations([]);
+      setError(err.message || "Erreur lors de la récupération des données client");
+      showErrorToast("Erreur d'accès", { message: err.message });
       setIsLoading(false);
     }
   }, [token]);
 
-  useEffect(() => {
-    if (token) {
-      fetchClientData();
-    }
-  }, [token, retry, fetchClientData]);
-
   const retryFetch = useCallback(() => {
-    setRetry(prev => prev + 1);
-  }, []);
+    console.log("Retrying client data fetch with token:", token);
+    fetchClientData();
+  }, [fetchClientData]);
 
-  return { 
-    client, 
-    operations, 
-    isLoading, 
-    error, 
+  // Initial data fetch
+  useCallback(() => {
+    fetchClientData();
+  }, [fetchClientData]);
+
+  return {
+    client,
+    operations,
+    isLoading,
+    error,
     fetchClientData,
-    retryFetch 
+    retryFetch
   };
 };

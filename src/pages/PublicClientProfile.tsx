@@ -40,10 +40,8 @@ const PublicClientProfile = () => {
       return;
     }
     
-    console.log("Fetching client data for token:", token);
-    // Fetch client data
-    fetchClientData();
-  }, [token, navigate, fetchClientData]);
+    console.log("PublicClientProfile - URL token verified:", token);
+  }, [token, navigate]);
 
   console.log("PublicClientProfile rendering with:", { 
     token, 
