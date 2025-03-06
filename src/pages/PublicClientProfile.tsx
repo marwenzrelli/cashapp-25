@@ -11,19 +11,23 @@ import { showErrorToast } from "@/features/clients/hooks/utils/errorUtils";
 const PublicClientProfile = () => {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
-  const { client, operations, isLoading, error } = usePublicClientProfile(token);
+  const { client, operations, isLoading, error, fetchClientData } = usePublicClientProfile(token);
 
-  // Basic token format validation on component mount
+  // Basic token format validation on component mount and refetch data
   useEffect(() => {
     // Basic UUID format validation
-    const isValidUUID = token?.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+    const isValidUUID = token?.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
     
-    if (token && !isValidUUID) {
+    if (!token || !isValidUUID) {
       console.error("Invalid token format:", token);
       showErrorToast("Format de token invalide", { message: "Le format du token ne correspond pas à un UUID valide" });
       navigate("/"); // Redirect to home on invalid token format
+      return;
     }
-  }, [token, navigate]);
+    
+    // Fetch client data
+    fetchClientData();
+  }, [token, navigate, fetchClientData]);
 
   console.log("PublicClientProfile rendering with:", { token, isLoading, hasClient: !!client, error });
 

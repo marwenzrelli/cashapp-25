@@ -3,9 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Client } from "@/features/clients/types";
 import { toast } from "sonner";
 import { ClientOperation, TokenData } from "./types";
-import { validateToken, validateTokenExpiration, validateClientStatus } from "./validation";
+import { validateTokenExpiration, validateClientStatus } from "./validation";
 
-export const fetchAccessData = async (token: string): Promise<TokenData | null> => {
+export const fetchAccessData = async (token: string): Promise<TokenData> => {
   try {
     const { data, error } = await supabase
       .from('qr_access')
@@ -22,6 +22,12 @@ export const fetchAccessData = async (token: string): Promise<TokenData | null> 
       throw new Error("Token d'accès non reconnu");
     }
 
+    // Validate token expiration
+    const expirationValidation = validateTokenExpiration(data.expires_at, data.created_at);
+    if (!expirationValidation.isValid) {
+      throw new Error(expirationValidation.error || "Token expiré");
+    }
+
     return data as TokenData;
   } catch (error) {
     console.error("Error in fetchAccessData:", error);
@@ -31,6 +37,7 @@ export const fetchAccessData = async (token: string): Promise<TokenData | null> 
 
 export const fetchClientDetails = async (clientId: number): Promise<Client> => {
   try {
+    console.log("Fetching client details for ID:", clientId);
     const { data, error } = await supabase
       .from('clients')
       .select('*')
@@ -49,7 +56,7 @@ export const fetchClientDetails = async (clientId: number): Promise<Client> => {
     // Validate client status
     const statusValidation = validateClientStatus(data.status);
     if (!statusValidation.isValid) {
-      throw new Error(statusValidation.error);
+      throw new Error(statusValidation.error || "Statut client invalide");
     }
 
     return data as Client;
