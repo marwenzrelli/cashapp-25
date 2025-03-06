@@ -21,7 +21,7 @@ export const fetchUserProfile = async (userId: string) => {
     if (!profile) {
       console.log(`No profile found for user ${userId}`);
       
-      // Get user email from auth.user() instead of admin API
+      // Get authenticated user
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       
       if (userError) {
@@ -33,30 +33,47 @@ export const fetchUserProfile = async (userId: string) => {
         throw new Error("No authenticated user found");
       }
       
-      // Create a default profile based on authenticated user
-      const defaultProfile = {
-        id: userId,
-        email: user.email || '',
-        full_name: 'Default User',
-        role: 'supervisor', // Assuming supervisor role for missing profiles
-        status: 'active',
-        department: 'administrative'
-      };
-      
-      // Insert the default profile
-      const { data: newProfile, error: insertError } = await supabase
-        .from('profiles')
-        .insert(defaultProfile)
-        .select('*')
-        .single();
+      // Create a default profile for the current user only
+      // This ensures we're only creating profiles for the authenticated user
+      if (user.id === userId) {
+        const defaultProfile = {
+          id: userId,
+          email: user.email || '',
+          full_name: user.user_metadata?.full_name || 'Default User',
+          role: 'cashier', // Default to cashier role
+          status: 'active',
+          department: 'accounting'
+        };
         
-      if (insertError) {
-        console.error("Error creating default profile:", insertError);
-        throw insertError;
+        console.log("Creating default profile for current user:", defaultProfile);
+        
+        // Insert the default profile
+        const { data: newProfile, error: insertError } = await supabase
+          .from('profiles')
+          .insert(defaultProfile)
+          .select('*')
+          .single();
+          
+        if (insertError) {
+          console.error("Error creating default profile:", insertError);
+          throw insertError;
+        }
+        
+        console.log("Default profile created successfully:", newProfile);
+        return newProfile;
+      } else {
+        // For other users, return basic info without creating a profile
+        // This prevents RLS violations when trying to create profiles for other users
+        console.log("Returning basic profile info for non-current user");
+        return {
+          id: userId,
+          email: user.email || '',
+          full_name: 'Unknown User',
+          role: 'cashier',
+          status: 'inactive',
+          department: 'unknown'
+        };
       }
-      
-      console.log("Default profile created successfully:", newProfile);
-      return newProfile;
     }
     
     return profile;

@@ -45,6 +45,29 @@ const Administration = () => {
     return <LoadingState />;
   }
 
+  // Check for RLS policy violation errors
+  if (usersError && usersError.message?.includes("violates row-level security policy")) {
+    return (
+      <ErrorState errorMessage={usersError.message}>
+        <div className="mt-4 space-y-4">
+          <p className="text-muted-foreground">
+            Vous n'avez pas les permissions nécessaires pour accéder ou modifier les profils utilisateurs.
+            Cette fonctionnalité est réservée aux administrateurs de la plateforme.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2 justify-center mt-4">
+            <Button 
+              onClick={() => navigate("/dashboard")} 
+              variant="default"
+              className="flex items-center gap-2"
+            >
+              Retourner au tableau de bord
+            </Button>
+          </div>
+        </div>
+      </ErrorState>
+    );
+  }
+
   // Check for errors that mention "not_admin" or "User not allowed"
   if (usersError && 
       (usersError.message?.includes("not_admin") || 
