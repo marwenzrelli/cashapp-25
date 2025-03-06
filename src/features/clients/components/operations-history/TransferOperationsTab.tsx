@@ -59,9 +59,10 @@ export const TransferOperationsTab = ({ operations, currency = "TND" }: Transfer
           <OperationsMobileCard 
             key={operation.id} 
             operation={operation}
+            formatAmount={(amount) => `${Math.round(amount)}`}
             currency={currency}
             showType={false}
-            colorClass="text-green-600"
+            colorClass="text-blue-600 dark:text-blue-400"
           />
         ))}
       </div>

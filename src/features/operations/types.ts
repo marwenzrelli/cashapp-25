@@ -7,6 +7,7 @@ export interface Operation {
   createdAt?: string; // Add createdAt field
   operation_date?: string; // Add operation_date field
   description: string;
+  notes?: string; // Add notes field as optional
   fromClient?: string;
   toClient?: string;
   formattedDate?: string; // Ajout du champ pour date formatée

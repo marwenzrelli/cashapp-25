@@ -57,9 +57,10 @@ export const WithdrawalOperationsTab = ({ operations, currency = "TND" }: Withdr
           <OperationsMobileCard 
             key={operation.id} 
             operation={operation}
+            formatAmount={(amount) => `${Math.round(amount)}`}
             currency={currency}
             showType={false}
-            colorClass="text-red-600"
+            colorClass="text-red-600 dark:text-red-400"
           />
         ))}
       </div>

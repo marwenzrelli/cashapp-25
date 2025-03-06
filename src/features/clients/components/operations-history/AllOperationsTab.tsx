@@ -71,6 +71,7 @@ export const AllOperationsTab = ({ operations, currency = "TND" }: AllOperations
           <OperationsMobileCard 
             key={operation.id} 
             operation={operation}
+            formatAmount={(amount) => `${Math.round(amount)}`}
             currency={currency}
             colorClass={getAmountColor(operation.type)}
           />
