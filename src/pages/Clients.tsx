@@ -2,6 +2,7 @@
 import { ClientsPageContent } from "@/features/clients/components/ClientsPageContent";
 import { ClientDialogs } from "@/features/clients/components/ClientDialogs";
 import { useClientsPage } from "@/features/clients/hooks/useClientsPage";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const Clients = () => {
   const {
@@ -38,37 +39,39 @@ const Clients = () => {
   } = useClientsPage();
 
   return (
-    <div className="container mx-auto max-w-7xl pb-8">
-      <ClientsPageContent
-        clients={clients}
-        filteredClients={filteredClients}
-        loading={loading}
-        error={error}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        handleEdit={handleEdit}
-        handleDelete={handleDelete}
-        handleRetry={handleRetry}
-        openNewClientDialog={() => setIsDialogOpen(true)}
-      />
+    <TooltipProvider>
+      <div className="container mx-auto max-w-7xl pb-8">
+        <ClientsPageContent
+          clients={clients}
+          filteredClients={filteredClients}
+          loading={loading}
+          error={error}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          handleEdit={handleEdit}
+          handleDelete={handleDelete}
+          handleRetry={handleRetry}
+          openNewClientDialog={() => setIsDialogOpen(true)}
+        />
 
-      <ClientDialogs
-        isCreateOpen={isDialogOpen}
-        isEditOpen={isEditDialogOpen}
-        isDeleteOpen={isDeleteDialogOpen}
-        selectedClient={selectedClient}
-        newClient={newClient}
-        editForm={editForm}
-        onCreateClose={() => setIsDialogOpen(false)}
-        onEditClose={() => setIsEditDialogOpen(false)}
-        onDeleteClose={() => setIsDeleteDialogOpen(false)}
-        onCreateSubmit={handleCreateClient}
-        onEditSubmit={confirmEdit}
-        onDeleteSubmit={confirmDelete}
-        onNewClientChange={setNewClient}
-        onEditFormChange={setEditForm}
-      />
-    </div>
+        <ClientDialogs
+          isCreateOpen={isDialogOpen}
+          isEditOpen={isEditDialogOpen}
+          isDeleteOpen={isDeleteDialogOpen}
+          selectedClient={selectedClient}
+          newClient={newClient}
+          editForm={editForm}
+          onCreateClose={() => setIsDialogOpen(false)}
+          onEditClose={() => setIsEditDialogOpen(false)}
+          onDeleteClose={() => setIsDeleteDialogOpen(false)}
+          onCreateSubmit={handleCreateClient}
+          onEditSubmit={confirmEdit}
+          onDeleteSubmit={confirmDelete}
+          onNewClientChange={setNewClient}
+          onEditFormChange={setEditForm}
+        />
+      </div>
+    </TooltipProvider>
   );
 };
 

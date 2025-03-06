@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Hash, MoreHorizontal } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { formatId } from "@/utils/formatId";
 import { Client } from "../../types";
 import { ClientStatusBadge } from "./ClientStatusBadge";
@@ -83,21 +83,23 @@ export const ClientListItem = ({
             <ClientBalanceDisplay solde={client.solde} />
             
             <div className="hidden md:flex items-center">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                    onClick={() => onToggleExpand(client.id)}
-                  >
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Plus d'informations</p>
-                </TooltipContent>
-              </Tooltip>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      onClick={() => onToggleExpand(client.id)}
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Plus d'informations</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               
               {/* Desktop actions */}
               <ClientListActions 
