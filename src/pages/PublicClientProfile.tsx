@@ -1,26 +1,29 @@
 
 import { useParams } from "react-router-dom";
-import { usePublicClientProfile } from "@/features/clients/hooks/usePublicClientProfile";
-import { PublicClientPersonalInfo } from "@/features/clients/components/PublicClientPersonalInfo";
-import { PublicClientOperationsHistory } from "@/features/clients/components/PublicClientOperationsHistory";
 import { PublicClientLoading } from "@/features/clients/components/PublicClientLoading";
 import { PublicClientError } from "@/features/clients/components/PublicClientError";
+import { PublicClientPersonalInfo } from "@/features/clients/components/PublicClientPersonalInfo";
+import { PublicClientOperationsHistory } from "@/features/clients/components/PublicClientOperationsHistory";
+import { usePublicClientProfile } from "@/features/clients/hooks/usePublicClientProfile";
 
 const PublicClientProfile = () => {
-  const { token } = useParams();
+  const { token } = useParams<{ token: string }>();
   const { client, operations, isLoading, error } = usePublicClientProfile(token);
 
+  // Show loading state
   if (isLoading) {
     return <PublicClientLoading />;
   }
 
+  // Show error state
   if (error || !client) {
     return <PublicClientError error={error} />;
   }
 
+  // Show client profile when data is available
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950/50 dark:to-blue-950/50 p-2 sm:p-8">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background p-4">
+      <div className="container mx-auto max-w-6xl space-y-6">
         <PublicClientPersonalInfo client={client} />
         <PublicClientOperationsHistory operations={operations} />
       </div>
