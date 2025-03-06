@@ -27,12 +27,20 @@ const PublicClientProfile = () => {
 
   // Show loading state
   if (isLoading) {
-    return <PublicClientLoading />;
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background">
+        <PublicClientLoading />
+      </div>
+    );
   }
 
   // Show error state
   if (error || !client) {
-    return <PublicClientError error={error} />;
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background">
+        <PublicClientError error={error} />
+      </div>
+    );
   }
 
   // Show client profile when data is available

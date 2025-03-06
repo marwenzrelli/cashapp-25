@@ -30,11 +30,15 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/create-supervisor" element={<SupervisorCreation />} />
           <Route path="/admin-utility" element={<AdminUtility />} />
+          
+          {/* Public route - accessible without authentication */}
+          <Route path="/public/client/:token" element={<PublicClientProfile />} />
+          
+          {/* Protected routes - require authentication */}
           <Route element={<Layout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/clients" element={<Clients />} />
             <Route path="/clients/:id" element={<ClientProfile />} />
-            <Route path="/public/client/:token" element={<PublicClientProfile />} />
             <Route path="/deposits" element={<Deposits />} />
             <Route path="/withdrawals" element={<Withdrawals />} />
             <Route path="/transfers" element={<Transfers />} />
