@@ -26,12 +26,14 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <Router>
         <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          {/* Public routes - accessible without login */}
+          <Route path="/public/client/:token" element={<PublicClientProfile />} />
           <Route path="/login" element={<Login />} />
           <Route path="/create-supervisor" element={<SupervisorCreation />} />
           <Route path="/admin-utility" element={<AdminUtility />} />
-          {/* Public route - accessible without login */}
-          <Route path="/public/client/:token" element={<PublicClientProfile />} />
+          
+          {/* Protected routes - require login */}
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route element={<Layout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/clients" element={<Clients />} />
