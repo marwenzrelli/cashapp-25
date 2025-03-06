@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
 import { AlertCircle } from 'lucide-react';
 
 interface PublicClientErrorProps {
@@ -8,37 +7,20 @@ interface PublicClientErrorProps {
 }
 
 export const PublicClientError = ({ error }: PublicClientErrorProps) => {
-  // Determine if the error is related to network connectivity
-  const isNetworkError = error?.toLowerCase().includes('network') || 
-                         error?.toLowerCase().includes('connexion') ||
-                         error?.toLowerCase().includes('internet');
-
-  const errorTitle = isNetworkError 
-    ? "Problème de connexion" 
-    : (error || "Client non trouvé");
-
-  const errorMessage = isNetworkError
-    ? "Impossible de se connecter au serveur. Veuillez vérifier votre connexion internet et réessayer."
-    : "Impossible d'accéder aux informations du client. Veuillez vérifier le lien ou contacter l'administrateur.";
-
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
-      <div className="bg-red-50 dark:bg-red-900/20 p-6 rounded-lg shadow-sm max-w-md w-full border border-red-200 dark:border-red-800">
+      <div className="bg-background p-6 rounded-lg shadow-sm max-w-md w-full border">
         <div className="flex flex-col items-center text-center">
-          <AlertCircle className="h-12 w-12 text-destructive mb-4" />
-          <h2 className="text-2xl font-bold mb-2 text-destructive">
-            {errorTitle}
-          </h2>
+          <div className="bg-red-100 p-3 rounded-full mb-4">
+            <AlertCircle className="h-8 w-8 text-red-600" />
+          </div>
+          <h2 className="text-xl font-semibold mb-2">Erreur d'accès</h2>
           <p className="text-muted-foreground mb-4">
-            {errorMessage}
+            {error || "Impossible d'accéder au profil client demandé"}
           </p>
-          <Button 
-            variant="outline" 
-            onClick={() => window.location.href = '/'}
-            className="mt-2"
-          >
-            Retour à l'accueil
-          </Button>
+          <p className="text-sm text-muted-foreground">
+            Le lien utilisé pourrait être expiré, invalide ou le profil n'existe plus.
+          </p>
         </div>
       </div>
     </div>
