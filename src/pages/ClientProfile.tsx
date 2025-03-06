@@ -5,6 +5,7 @@ import { useClientProfile } from "@/features/clients/hooks/useClientProfile";
 import { ClientPersonalInfo } from "@/features/clients/components/ClientPersonalInfo";
 import { ClientOperationsHistory } from "@/features/clients/components/ClientOperationsHistory";
 import { OperationsDetailCards } from "@/features/clients/components/OperationsDetailCards";
+import { PublicClientError } from "@/features/clients/components/PublicClientError";
 
 const ClientProfile = () => {
   const {
@@ -37,7 +38,8 @@ const ClientProfile = () => {
     );
   }
 
-  if (error || !client) {
+  // Check if client exists and error is null before rendering
+  if ((error || !client) && !isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)] p-4">
         <div className="bg-background p-6 rounded-lg shadow-sm max-w-md w-full border">
@@ -77,7 +79,7 @@ const ClientProfile = () => {
         </div>
 
         <ClientPersonalInfo 
-          client={client} 
+          client={client!} 
           clientId={clientId}
           qrCodeRef={qrCodeRef}
           formatAmount={formatAmount}

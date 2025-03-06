@@ -90,6 +90,8 @@ export const useClientData = (clientId: number | null) => {
             description: "Ce client a été supprimé de la base de données"
           });
         } else {
+          // Make sure to clear any error when receiving updates
+          setError(null);
           setClient(payload.new as Client);
         }
       })
