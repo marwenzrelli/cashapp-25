@@ -7,6 +7,7 @@ import { validateTokenExpiration, validateClientStatus } from "./validation";
 
 export const fetchAccessData = async (token: string): Promise<TokenData> => {
   try {
+    console.log("Fetching access data for token:", token);
     const { data, error } = await supabase
       .from('qr_access')
       .select('client_id, expires_at, created_at')
@@ -19,12 +20,14 @@ export const fetchAccessData = async (token: string): Promise<TokenData> => {
     }
 
     if (!data) {
+      console.error("No access data found for token:", token);
       throw new Error("Token d'accès non reconnu");
     }
 
     // Validate token expiration
     const expirationValidation = validateTokenExpiration(data.expires_at, data.created_at);
     if (!expirationValidation.isValid) {
+      console.error("Token validation failed (expiration):", expirationValidation.error);
       throw new Error(expirationValidation.error || "Token expiré");
     }
 
@@ -50,12 +53,14 @@ export const fetchClientDetails = async (clientId: number): Promise<Client> => {
     }
 
     if (!data) {
+      console.error("No client found with ID:", clientId);
       throw new Error("Client introuvable");
     }
 
     // Validate client status
     const statusValidation = validateClientStatus(data.status);
     if (!statusValidation.isValid) {
+      console.error("Client status validation failed:", statusValidation.error);
       throw new Error(statusValidation.error || "Statut client invalide");
     }
 

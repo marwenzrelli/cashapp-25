@@ -24,6 +24,10 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
         console.error("Token validation failed:", tokenValidation.error);
         setError(tokenValidation.error);
         setIsLoading(false);
+        
+        toast.error("Erreur d'accès", {
+          description: tokenValidation.error || "Token invalide"
+        });
         return;
       }
 
@@ -32,7 +36,15 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
       console.log("Access data retrieved:", accessData);
       
       if (!accessData.client_id) {
-        throw new Error("ID client manquant dans les données d'accès");
+        const errorMsg = "ID client manquant dans les données d'accès";
+        console.error(errorMsg);
+        setError(errorMsg);
+        setIsLoading(false);
+        
+        toast.error("Erreur d'accès", {
+          description: errorMsg
+        });
+        return;
       }
       
       // Fetch client data

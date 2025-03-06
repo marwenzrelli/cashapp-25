@@ -3,6 +3,7 @@ import { toast } from "sonner";
 
 export const validateToken = (token: string | undefined): { isValid: boolean; error: string | null } => {
   if (!token) {
+    console.error("Missing access token");
     return { isValid: false, error: "Token d'accès manquant" };
   }
 
