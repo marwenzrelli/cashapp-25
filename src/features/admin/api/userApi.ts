@@ -79,19 +79,51 @@ export const createSupervisorAccount = async (userData: {
     // Attendre un court instant pour que le trigger handle_new_user s'exécute
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // Mettre à jour explicitement le profil avec le rôle et le département
-    const { error: updateError } = await supabase
+    // Vérifier si le profil a été créé
+    const { data: existingProfile, error: profileCheckError } = await supabase
       .from('profiles')
-      .update({
-        role: 'supervisor',
-        department: 'finance',
-        status: 'active',
-        full_name: userData.fullName,
-        username: userData.username
-      })
-      .eq('id', authData.user.id);
+      .select('*')
+      .eq('id', authData.user.id)
+      .maybeSingle();
 
-    if (updateError) throw updateError;
+    if (profileCheckError) {
+      console.error("Erreur lors de la vérification du profil:", profileCheckError);
+    }
+
+    // Si le profil n'existe pas, le créer manuellement
+    if (!existingProfile) {
+      console.log("Aucun profil trouvé, création manuelle du profil...");
+      const { error: insertError } = await supabase
+        .from('profiles')
+        .insert({
+          id: authData.user.id,
+          email: userData.email,
+          role: 'supervisor',
+          department: 'finance',
+          status: 'active',
+          full_name: userData.fullName,
+          username: userData.username
+        });
+
+      if (insertError) {
+        console.error("Erreur lors de la création manuelle du profil:", insertError);
+        throw new Error("Erreur lors de la création du profil utilisateur");
+      }
+    } else {
+      // Mettre à jour explicitement le profil avec le rôle et le département
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          role: 'supervisor',
+          department: 'finance',
+          status: 'active',
+          full_name: userData.fullName,
+          username: userData.username
+        })
+        .eq('id', authData.user.id);
+
+      if (updateError) throw updateError;
+    }
 
     console.log("Compte superviseur créé avec succès:", authData.user);
     return authData.user;
