@@ -69,8 +69,13 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
     fetchClientData();
   }, [fetchClientData]);
 
-  // We'll remove the automatic fetch on token change to avoid race conditions
-  // The parent component will explicitly call fetchClientData after validation
+  // Initial fetch on mount or token change
+  useEffect(() => {
+    if (token) {
+      console.log("Token changed or component mounted, fetching client data");
+      fetchClientData();
+    }
+  }, [token]);
 
   return {
     client,
