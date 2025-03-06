@@ -270,14 +270,16 @@ export const makeUserSupervisor = async (email: string) => {
     console.log(`Attempting to promote user with email: ${email} to supervisor role`);
     
     // Get user by email
-    const { data: users, error: userError } = await supabase.auth.admin.listUsers();
+    const { data, error: userError } = await supabase.auth.admin.listUsers();
     
     if (userError) {
       console.error("Error fetching users:", userError);
       throw userError;
     }
     
-    const user = users.users.find(u => u.email === email);
+    // Properly access users array from the data object with explicit typing
+    const users = data?.users || [];
+    const user = users.find(u => u.email === email);
     
     if (!user) {
       console.error(`No user found with email: ${email}`);
