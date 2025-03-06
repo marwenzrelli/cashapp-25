@@ -23,12 +23,24 @@ export const useClientData = (clientId: number | null) => {
           .from('clients')
           .select('*')
           .eq('id', clientId)
-          .single();
+          .maybeSingle();
 
         if (error) {
           console.error("Erreur lors du chargement du client:", error);
-          toast.error("Impossible de charger les informations du client");
+          toast.error("Impossible de charger les informations du client", {
+            description: error.message
+          });
           throw error;
+        }
+
+        if (!data) {
+          console.error(`Client avec ID ${clientId} introuvable`);
+          toast.error("Client introuvable", {
+            description: `Aucun client trouvé avec l'identifiant ${clientId}`
+          });
+          setClient(null);
+          setIsLoading(false);
+          return;
         }
 
         console.log("Client récupéré avec succès:", data);
@@ -36,6 +48,7 @@ export const useClientData = (clientId: number | null) => {
       } catch (error) {
         console.error("Erreur lors du chargement du client:", error);
         toast.error("Impossible de charger les informations du client");
+        setClient(null);
       } finally {
         setIsLoading(false);
       }

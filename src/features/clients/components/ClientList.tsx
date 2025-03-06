@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Client } from "../types";
 import { useNavigate } from "react-router-dom";
 import { ClientListItem } from "./client-list/ClientListItem";
+import { toast } from "sonner";
 
 interface ClientListProps {
   clients: Client[];
@@ -24,6 +25,13 @@ export const ClientList = ({ clients, onEdit, onDelete }: ClientListProps) => {
   };
 
   const handleView = (clientId: number) => {
+    const client = clients.find(c => c.id === clientId);
+    if (!client) {
+      toast.error("Client introuvable", {
+        description: "Impossible d'accéder au profil de ce client"
+      });
+      return;
+    }
     navigate(`/clients/${clientId}`);
   };
 
