@@ -33,6 +33,13 @@ const PublicClientProfile = () => {
       loadingTime,
       currentURL: window.location.href
     });
+    
+    // Show a toast for client not found errors if we have an error and we're not loading
+    if (error && !isLoading && error.includes("Client introuvable")) {
+      showErrorToast("Client introuvable", { 
+        message: "Le client demandé n'existe pas dans notre système. Veuillez vérifier l'URL ou contacter le support." 
+      });
+    }
   }, [token, client, operations, isLoading, error, loadingTime]);
 
   // Basic token format validation on component mount and trigger data fetch
@@ -63,9 +70,10 @@ const PublicClientProfile = () => {
     return <PublicClientLoading onRetry={retryFetch} loadingTime={loadingTime} />;
   }
 
-  // Show error state
+  // Show error state with more specific error handling
   if (error || !client) {
     console.error("Error rendering client profile:", error);
+    // Pass the retry function to the error component
     return <PublicClientError error={error} onRetry={retryFetch} />;
   }
 

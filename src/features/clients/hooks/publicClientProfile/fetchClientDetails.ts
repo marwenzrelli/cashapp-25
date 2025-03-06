@@ -12,6 +12,9 @@ export const fetchClientDetails = async (clientId: number): Promise<Client> => {
       throw new Error("Identifiant client invalide");
     }
     
+    // Log the query we're about to execute for debugging
+    console.log(`Executing query: SELECT * FROM clients WHERE id = ${clientId}`);
+    
     // First, check if client exists directly to provide better error messages
     const { count, error: countError } = await supabase
       .from('clients')
@@ -22,6 +25,8 @@ export const fetchClientDetails = async (clientId: number): Promise<Client> => {
       console.error("Error checking if client exists:", countError);
       throw new Error(`Erreur lors de la vérification du client: ${countError.message}`);
     }
+    
+    console.log(`Count result for client ID ${clientId}: ${count}`);
     
     if (count === 0) {
       console.error(`No client exists with ID ${clientId}`);
