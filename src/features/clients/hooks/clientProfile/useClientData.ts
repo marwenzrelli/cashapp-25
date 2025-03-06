@@ -1,18 +1,23 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Client } from "@/features/clients/types";
 import { toast } from "sonner";
+import { handleSupabaseError } from "../utils/errorUtils";
 
 export const useClientData = (clientId: number | null) => {
   const [client, setClient] = useState<Client | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchClient = async () => {
       try {
+        setIsLoading(true);
+        setError(null);
+        
         if (!clientId) {
           console.error("Client ID manquant dans l'URL");
+          setError("Identifiant client manquant");
           setIsLoading(false);
           return;
         }
@@ -27,27 +32,36 @@ export const useClientData = (clientId: number | null) => {
 
         if (error) {
           console.error("Erreur lors du chargement du client:", error);
+          const errorMessage = handleSupabaseError(error);
+          setError(errorMessage);
           toast.error("Impossible de charger les informations du client", {
-            description: error.message
+            description: errorMessage
           });
-          throw error;
+          setClient(null);
+          return;
         }
 
         if (!data) {
-          console.error(`Client avec ID ${clientId} introuvable`);
+          const errorMessage = `Aucun client trouvé avec l'identifiant ${clientId}`;
+          console.error(errorMessage);
+          setError(errorMessage);
           toast.error("Client introuvable", {
-            description: `Aucun client trouvé avec l'identifiant ${clientId}`
+            description: errorMessage
           });
           setClient(null);
-          setIsLoading(false);
           return;
         }
 
         console.log("Client récupéré avec succès:", data);
         setClient(data);
+        setError(null);
       } catch (error) {
         console.error("Erreur lors du chargement du client:", error);
-        toast.error("Impossible de charger les informations du client");
+        const errorMessage = error instanceof Error ? error.message : "Erreur inconnue";
+        setError(errorMessage);
+        toast.error("Impossible de charger les informations du client", {
+          description: errorMessage
+        });
         setClient(null);
       } finally {
         setIsLoading(false);
@@ -65,7 +79,15 @@ export const useClientData = (clientId: number | null) => {
         filter: `id=eq.${clientId}`,
       }, (payload) => {
         console.log("Mise à jour client reçue:", payload);
-        setClient(payload.new as Client);
+        if (payload.eventType === 'DELETE') {
+          setClient(null);
+          setError("Ce client a été supprimé");
+          toast.error("Client supprimé", {
+            description: "Ce client a été supprimé de la base de données"
+          });
+        } else {
+          setClient(payload.new as Client);
+        }
       })
       .subscribe();
 
@@ -110,5 +132,5 @@ export const useClientData = (clientId: number | null) => {
     };
   }, [clientId]);
 
-  return { client, isLoading };
+  return { client, isLoading, error };
 };

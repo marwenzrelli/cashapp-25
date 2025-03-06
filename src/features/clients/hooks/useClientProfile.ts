@@ -15,7 +15,7 @@ export const useClientProfile = () => {
   const clientId = id ? Number(id) : null;
   
   // Get client data
-  const { client, isLoading } = useClientData(clientId);
+  const { client, isLoading, error } = useClientData(clientId);
   
   // Filter operations
   const {
@@ -44,6 +44,7 @@ export const useClientProfile = () => {
     clientOperations,
     filteredOperations,
     isLoading,
+    error,
     navigate,
     qrCodeRef,
     selectedType,

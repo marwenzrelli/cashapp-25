@@ -13,6 +13,7 @@ const ClientProfile = () => {
     clientOperations,
     filteredOperations,
     isLoading,
+    error,
     navigate,
     qrCodeRef,
     selectedType,
@@ -34,7 +35,7 @@ const ClientProfile = () => {
     );
   }
 
-  if (!client || !clientId) {
+  if (!client || !clientId || error) {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)] p-4">
         <div className="bg-background p-6 rounded-lg shadow-sm max-w-md w-full border">
@@ -46,7 +47,7 @@ const ClientProfile = () => {
             <h2 className="text-xl font-semibold mb-2">Client introuvable</h2>
             
             <p className="text-muted-foreground mb-6">
-              Le client avec l'identifiant {clientId} n'existe pas ou a été supprimé.
+              {error || `Le client avec l'identifiant ${clientId} n'existe pas ou a été supprimé.`}
             </p>
 
             <Button variant="outline" onClick={() => navigate('/clients')} className="w-full">
