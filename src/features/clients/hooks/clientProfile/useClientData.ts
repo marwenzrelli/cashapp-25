@@ -55,7 +55,7 @@ export const useClientData = (clientId: number | null) => {
 
         console.log("Client récupéré avec succès:", data);
         setClient(data);
-        setError(null);
+        setError(null); // Explicitly clear any error when data is found
       } catch (error) {
         console.error("Erreur lors du chargement du client:", error);
         const errorMessage = error instanceof Error ? error.message : "Erreur inconnue";
@@ -99,44 +99,27 @@ export const useClientData = (clientId: number | null) => {
     
     supabaseChannels.push(clientSubscription);
 
-    const depositsSubscription = supabase
-      .channel('deposits_changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'deposits',
-      }, () => {
-        fetchClient();
-      })
-      .subscribe();
-    
-    supabaseChannels.push(depositsSubscription);
-
-    const withdrawalsSubscription = supabase
-      .channel('withdrawals_changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'withdrawals',
-      }, () => {
-        fetchClient();
-      })
-      .subscribe();
-    
-    supabaseChannels.push(withdrawalsSubscription);
-
-    const transfersSubscription = supabase
-      .channel('transfers_changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'transfers',
-      }, () => {
-        fetchClient();
-      })
-      .subscribe();
-    
-    supabaseChannels.push(transfersSubscription);
+    // Track real-time updates for operations that might affect the client balance
+    const operationsSubscriptions = [
+      'deposits',
+      'withdrawals',
+      'transfers'
+    ].map(table => {
+      const subscription = supabase
+        .channel(`${table}_changes`)
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table,
+        }, () => {
+          // Refresh client data when operations change
+          fetchClient();
+        })
+        .subscribe();
+        
+      supabaseChannels.push(subscription);
+      return subscription;
+    });
 
     return () => {
       // Clean up all channels

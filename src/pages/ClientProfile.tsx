@@ -38,9 +38,13 @@ const ClientProfile = () => {
     );
   }
 
-  // Check if client exists and error is null before rendering
-  if ((error || !client) && !isLoading) {
-    return <PublicClientError error={error || `Le client avec l'identifiant ${clientId} n'existe pas ou a été supprimé.`} />;
+  // Check if client is null or there's an error
+  if (!client || error) {
+    return (
+      <PublicClientError 
+        error={error || `Le client avec l'identifiant ${clientId} n'existe pas ou a été supprimé.`} 
+      />
+    );
   }
 
   return (
@@ -58,7 +62,7 @@ const ClientProfile = () => {
         </div>
 
         <ClientPersonalInfo 
-          client={client!} 
+          client={client} 
           clientId={clientId}
           qrCodeRef={qrCodeRef}
           formatAmount={formatAmount}
