@@ -9,6 +9,8 @@ interface ClientOperation {
   date: string;
   amount: number;
   description: string;
+  fromClient?: string;
+  toClient?: string;
 }
 
 interface PublicClientData {
@@ -43,7 +45,7 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
         return;
       }
 
-      // 2. Get client ID from token with additional validation
+      // 2. Get client ID from token with additional validation - no auth required
       const { data: accessData, error: accessError } = await supabase
         .from('qr_access')
         .select('client_id, expires_at, created_at')
@@ -83,7 +85,7 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
         // Consider showing a warning in the UI or forcing expiration
       }
 
-      // 5. Get client data
+      // 5. Get client data - no auth required
       const { data: clientData, error: clientError } = await supabase
         .from('clients')
         .select('*')
@@ -115,7 +117,7 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
       // 7. Get client operations with proper client identification
       const clientFullName = `${clientData.prenom} ${clientData.nom}`;
 
-      // Fetch deposits
+      // Fetch deposits - no auth required
       const { data: deposits, error: depositsError } = await supabase
         .from('deposits')
         .select('*')
@@ -126,7 +128,7 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
         console.error("Error fetching deposits:", depositsError);
       }
 
-      // Fetch withdrawals
+      // Fetch withdrawals - no auth required
       const { data: withdrawals, error: withdrawalsError } = await supabase
         .from('withdrawals')
         .select('*')
@@ -137,7 +139,7 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
         console.error("Error fetching withdrawals:", withdrawalsError);
       }
 
-      // Fetch transfers (as sender)
+      // Fetch transfers (as sender) - no auth required
       const { data: transfersAsSender, error: senderError } = await supabase
         .from('transfers')
         .select('*')
@@ -148,7 +150,7 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
         console.error("Error fetching transfers as sender:", senderError);
       }
 
-      // Fetch transfers (as receiver)
+      // Fetch transfers (as receiver) - no auth required
       const { data: transfersAsReceiver, error: receiverError } = await supabase
         .from('transfers')
         .select('*')
@@ -166,28 +168,34 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
           type: "deposit" as const,
           date: new Date(d.created_at).toLocaleDateString(),
           amount: Number(d.amount),
-          description: d.notes || "Versement"
+          description: d.notes || "Versement",
+          fromClient: clientFullName
         })),
         ...(withdrawals || []).map(w => ({
           id: `withdrawal-${w.id}`,
           type: "withdrawal" as const,
           date: new Date(w.created_at).toLocaleDateString(),
           amount: Number(w.amount),
-          description: w.notes || "Retrait"
+          description: w.notes || "Retrait",
+          fromClient: clientFullName
         })),
         ...(transfersAsSender || []).map(t => ({
           id: `transfer-out-${t.id}`,
           type: "transfer" as const,
           date: new Date(t.created_at).toLocaleDateString(),
           amount: -Number(t.amount), // Negative amount for outgoing transfers
-          description: t.reason || `Virement vers ${t.to_client}`
+          description: t.reason || `Virement vers ${t.to_client}`,
+          fromClient: t.from_client,
+          toClient: t.to_client
         })),
         ...(transfersAsReceiver || []).map(t => ({
           id: `transfer-in-${t.id}`,
           type: "transfer" as const,
           date: new Date(t.created_at).toLocaleDateString(),
           amount: Number(t.amount), // Positive amount for incoming transfers
-          description: t.reason || `Virement reçu de ${t.from_client}`
+          description: t.reason || `Virement reçu de ${t.from_client}`,
+          fromClient: t.from_client,
+          toClient: t.to_client
         }))
       ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 

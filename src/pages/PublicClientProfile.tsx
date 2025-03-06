@@ -12,7 +12,7 @@ const PublicClientProfile = () => {
   const navigate = useNavigate();
   const { client, operations, isLoading, error } = usePublicClientProfile(token);
 
-  // Add security: Validate token format on component mount
+  // Basic token format validation on component mount
   useEffect(() => {
     // Basic UUID format validation
     const isValidUUID = token?.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
