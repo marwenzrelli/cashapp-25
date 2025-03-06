@@ -30,7 +30,8 @@ export const useAuthCheck = () => {
         return;
       }
 
-      setUserRole(profile.role);
+      // Correctly type the role value by casting it to UserRole
+      setUserRole(profile.role as UserRole);
       
       const restrictedRoutes = {
         '/administration': ['supervisor'],

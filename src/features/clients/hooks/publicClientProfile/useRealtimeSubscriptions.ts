@@ -50,13 +50,18 @@ export const useRealtimeSubscriptions = (
       const transfersOutChannel = supabase.channel(`transfers-out-${clientId}`);
       const transfersInChannel = supabase.channel(`transfers-in-${clientId}`);
 
+      // Define the filter for client name in string format for Postgres
+      const clientNameFilter = `client_name=eq."${clientFullName}"`;
+      const fromClientFilter = `from_client=eq."${clientFullName}"`;
+      const toClientFilter = `to_client=eq."${clientFullName}"`;
+
       // Subscribe to deposits for this client
       depositsChannel
         .on('postgres_changes', {
           event: '*',
           schema: 'public',
           table: 'deposits',
-          filter: `client_name=eq.${clientFullName}`
+          filter: clientNameFilter
         }, () => {
           console.log("Deposits changed, refreshing...");
           refreshData();
@@ -71,7 +76,7 @@ export const useRealtimeSubscriptions = (
           event: '*',
           schema: 'public',
           table: 'withdrawals',
-          filter: `client_name=eq.${clientFullName}`
+          filter: clientNameFilter
         }, () => {
           console.log("Withdrawals changed, refreshing...");
           refreshData();
@@ -86,7 +91,7 @@ export const useRealtimeSubscriptions = (
           event: '*',
           schema: 'public',
           table: 'transfers',
-          filter: `from_client=eq.${clientFullName}`
+          filter: fromClientFilter
         }, () => {
           console.log("Outgoing transfers changed, refreshing...");
           refreshData();
@@ -101,7 +106,7 @@ export const useRealtimeSubscriptions = (
           event: '*',
           schema: 'public',
           table: 'transfers',
-          filter: `to_client=eq.${clientFullName}`
+          filter: toClientFilter
         }, () => {
           console.log("Incoming transfers changed, refreshing...");
           refreshData();

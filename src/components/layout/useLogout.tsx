@@ -8,12 +8,19 @@ export const useLogout = () => {
 
   const handleLogout = async () => {
     try {
+      console.log("Démarrage de la procédure de déconnexion");
+      
       // Déconnexion de Supabase
-      const { error } = await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut({
+        scope: 'local' // Ensure we're only signing out from this device
+      });
       
       if (error) {
+        console.error("Erreur lors de la déconnexion:", error);
         throw error;
       }
+      
+      console.log("Déconnexion Supabase réussie");
       
       // Supprimer tous les tokens stockés localement
       localStorage.removeItem('sb-jyqtmpbdicwofkhtvjyy-auth-token');
@@ -28,6 +35,7 @@ export const useLogout = () => {
       }
       
       keysToRemove.forEach(key => localStorage.removeItem(key));
+      console.log(`${keysToRemove.length} clés supprimées du localStorage`);
       
       // Redirection et notification
       navigate("/login", { replace: true });

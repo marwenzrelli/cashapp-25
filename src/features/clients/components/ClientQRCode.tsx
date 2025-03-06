@@ -70,13 +70,17 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
     try {
       setIsLoading(true);
 
-      // Insertion avec expires_at défini comme NULL pour que le QR code n'expire jamais
+      // Create the access token first, then insert it with the client_id
+      const newToken = crypto.randomUUID();
+      
+      // Insert with the correct structure - providing access_token
       const { data, error } = await supabase
         .from('qr_access')
-        .insert([{ 
+        .insert({
           client_id: clientId,
-          expires_at: null // Définir comme null pour qu'il n'expire jamais
-        }])
+          expires_at: null, // Set to null for permanent access
+          access_token: newToken // Provide the access_token
+        })
         .select('access_token')
         .single();
 
