@@ -14,7 +14,7 @@ interface DepositDateInfoProps {
 }
 
 export const DepositDateInfo = ({ deposit }: DepositDateInfoProps) => {
-  // Prioritize using operation_date for display
+  // Always prioritize operation_date for display
   const displayDate = deposit.operation_date 
     ? formatDateTime(deposit.operation_date)
     : deposit.date;

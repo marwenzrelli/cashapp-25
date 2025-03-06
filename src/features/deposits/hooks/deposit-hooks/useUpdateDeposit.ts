@@ -20,7 +20,9 @@ export const useUpdateDeposit = (
       let operation_date;
       
       if (updates.date) {
+        // Use the provided date and time, ensuring time has a default value if not provided
         operation_date = createISOString(updates.date, updates.time || '00:00:00');
+        console.log("Using provided date for operation_date:", operation_date);
       } else {
         // Fallback to current date-time if no date is provided
         operation_date = new Date().toISOString();
@@ -57,6 +59,7 @@ export const useUpdateDeposit = (
         return false;
       }
 
+      // Refresh the deposits list after a successful update
       await fetchDeposits();
       return true;
     } catch (error) {

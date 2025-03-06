@@ -24,7 +24,7 @@ export const useFetchDeposits = (
       }
 
       const formattedDeposits: Deposit[] = data.map(d => {
-        // Utiliser operation_date pour la date d'affichage principale
+        // Always use operation_date for the main display date if available
         const displayDate = d.operation_date ? formatDateTime(d.operation_date) : formatDateTime(d.created_at);
         
         return {
