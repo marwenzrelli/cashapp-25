@@ -16,6 +16,7 @@ const PublicClientProfile = () => {
     operations, 
     isLoading, 
     error, 
+    loadingTime,
     fetchClientData, 
     retryFetch 
   } = usePublicClientProfile(token);
@@ -29,9 +30,10 @@ const PublicClientProfile = () => {
       operationsCount: operations?.length || 0,
       isLoading, 
       error,
+      loadingTime,
       currentURL: window.location.href
     });
-  }, [token, client, operations, isLoading, error]);
+  }, [token, client, operations, isLoading, error, loadingTime]);
 
   // Basic token format validation on component mount and trigger data fetch
   useEffect(() => {
@@ -54,13 +56,11 @@ const PublicClientProfile = () => {
     }
     
     console.log("PublicClientProfile - URL token verified, fetching data with token:", token);
-    // Explicitly trigger data fetch when component mounts with valid token
-    fetchClientData();
   }, [token, navigate, fetchClientData]);
 
   // Show loading state
   if (isLoading) {
-    return <PublicClientLoading />;
+    return <PublicClientLoading onRetry={retryFetch} loadingTime={loadingTime} />;
   }
 
   // Show error state

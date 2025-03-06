@@ -16,6 +16,7 @@ export interface PublicClientData {
   operations: ClientOperation[];
   isLoading: boolean;
   error: string | null;
+  loadingTime: number;
   fetchClientData: () => Promise<void>;
   retryFetch: () => void;
 }

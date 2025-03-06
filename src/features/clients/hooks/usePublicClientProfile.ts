@@ -13,6 +13,7 @@ export const usePublicClientProfile = (token: string | undefined) => {
     operations, 
     isLoading, 
     error, 
+    loadingTime,
     fetchClientData,
     retryFetch 
   } = usePublicClientData(tokenValidation.isValid ? token : undefined);
@@ -41,15 +42,17 @@ export const usePublicClientProfile = (token: string | undefined) => {
       hasClient: !!client,
       hasOperations: operations?.length > 0,
       isLoading,
+      loadingTime,
       error
     });
-  }, [token, tokenValidation, client, clientId, operations, isLoading, error]);
+  }, [token, tokenValidation, client, clientId, operations, isLoading, loadingTime, error]);
 
   return {
     client,
     operations: operations || [],
     isLoading,
     error: tokenValidation.isValid ? error : tokenValidation.error,
+    loadingTime,
     fetchClientData,
     retryFetch
   };
