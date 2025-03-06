@@ -20,6 +20,19 @@ const PublicClientProfile = () => {
     retryFetch 
   } = usePublicClientProfile(token);
 
+  // Debug information for troubleshooting
+  useEffect(() => {
+    console.log("PublicClientProfile - Current state:", { 
+      token, 
+      hasClient: !!client, 
+      clientData: client,
+      operationsCount: operations.length,
+      isLoading, 
+      error,
+      currentURL: window.location.href
+    });
+  }, [token, client, operations.length, isLoading, error]);
+
   // Basic token format validation on component mount and refetch data
   useEffect(() => {
     // Check if token exists
@@ -42,14 +55,6 @@ const PublicClientProfile = () => {
     
     console.log("PublicClientProfile - URL token verified:", token);
   }, [token, navigate]);
-
-  console.log("PublicClientProfile rendering with:", { 
-    token, 
-    isLoading, 
-    hasClient: !!client, 
-    error,
-    currentURL: window.location.href
-  });
 
   // Show loading state
   if (isLoading) {
