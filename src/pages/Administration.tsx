@@ -14,7 +14,7 @@ import { LoadingState } from "@/features/admin/components/administration/Loading
 import { ErrorState } from "@/features/admin/components/administration/ErrorState";
 import { useAuthenticationCheck } from "@/features/admin/hooks/useAuthenticationCheck";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, ShieldAlert, KeyRound } from "lucide-react";
+import { RefreshCw, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -63,11 +63,12 @@ const Administration = () => {
       <ErrorState 
         permissionError={true} 
         errorMessage={usersError?.message}
+        onRetry={retryInitialization}
       >
         <div className="mt-4 space-y-4">
           <p className="text-sm text-muted-foreground">
             Vous n'avez pas les permissions nécessaires pour accéder ou modifier les profils utilisateurs.
-            Cette fonctionnalité est réservée aux administrateurs de la plateforme.
+            Cette fonctionnalité est réservée aux superviseurs de la plateforme.
           </p>
           
           {!showPromotionForm ? (
@@ -93,7 +94,7 @@ const Administration = () => {
                 variant="secondary"
                 className="flex items-center gap-2"
               >
-                <KeyRound className="h-4 w-4" />
+                <Shield className="h-4 w-4" />
                 Obtenir les droits d'accès
               </Button>
             </div>
@@ -102,7 +103,7 @@ const Administration = () => {
               <CardContent className="pt-6">
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 text-amber-500 mb-2">
-                    <ShieldAlert className="h-5 w-5" />
+                    <Shield className="h-5 w-5" />
                     <h3 className="font-medium">Demande d'accès superviseur</h3>
                   </div>
                   
@@ -133,7 +134,7 @@ const Administration = () => {
                         </>
                       ) : (
                         <>
-                          <KeyRound className="h-4 w-4" />
+                          <Shield className="h-4 w-4" />
                           Obtenir le rôle superviseur
                         </>
                       )}

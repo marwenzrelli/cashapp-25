@@ -88,9 +88,35 @@ export const createSupervisorAccount = async (userData: {
 
 export const makeUserSupervisor = async (email: string) => {
   try {
-    console.log(`Attempting to promote user with email: ${email} to supervisor role`);
+    console.log(`Tentative de promotion de l'utilisateur avec email: ${email} au rôle de superviseur`);
     
-    // Find the user by email directly in the profiles table
+    // Vérifier si l'utilisateur est déjà connecté
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    
+    if (currentUser && currentUser.email === email) {
+      console.log("L'utilisateur correspond à l'utilisateur actuellement connecté");
+      
+      // Mettre à jour le profil de l'utilisateur actuel directement
+      const { error: updateCurrentError } = await supabase
+        .from('profiles')
+        .update({
+          role: 'supervisor',
+          department: 'finance',
+          profile_role: 'supervisor'
+        })
+        .eq('id', currentUser.id);
+      
+      if (updateCurrentError) {
+        console.error("Erreur lors de la mise à jour du profil utilisateur actuel:", updateCurrentError);
+        throw updateCurrentError;
+      }
+      
+      console.log(`Utilisateur ${email} promu avec succès au rôle de superviseur`);
+      return true;
+    }
+    
+    // Si ce n'est pas l'utilisateur actuel ou pas d'utilisateur connecté,
+    // rechercher l'utilisateur par email
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
       .select('id')
@@ -98,36 +124,63 @@ export const makeUserSupervisor = async (email: string) => {
       .maybeSingle();
     
     if (profileError) {
-      console.error("Error fetching user profile:", profileError);
+      console.error("Erreur lors de la recherche du profil utilisateur:", profileError);
       throw profileError;
     }
     
     if (!profileData) {
-      console.error(`No user found with email: ${email}`);
-      throw new Error(`Aucun utilisateur trouvé avec l'email: ${email}`);
+      console.error(`Aucun utilisateur trouvé avec l'email: ${email}`);
+      
+      // Si aucun profil n'existe, créer un profil temporaire avec l'email
+      // Cela peut être utile pour des cas où l'utilisateur n'a pas encore de profil
+      const { data: authUser, error: authError } = await supabase.auth.admin.getUserByEmail(email);
+      
+      if (authError || !authUser) {
+        console.error(`Aucun utilisateur auth trouvé avec l'email: ${email}`);
+        throw new Error(`Aucun utilisateur trouvé avec l'email: ${email}`);
+      }
+      
+      // Créer un profil pour cet utilisateur
+      const { error: insertError } = await supabase
+        .from('profiles')
+        .insert({
+          id: authUser.id,
+          email: email,
+          full_name: "Superviseur",
+          role: 'supervisor',
+          department: 'finance',
+          profile_role: 'supervisor',
+          status: 'active'
+        });
+      
+      if (insertError) {
+        console.error("Erreur lors de la création d'un profil pour l'utilisateur:", insertError);
+        throw insertError;
+      }
+      
+      console.log(`Profil créé et promu pour l'utilisateur ${email}`);
+      return true;
     }
     
-    console.log(`Found user with ID: ${profileData.id}`);
-    
-    // Update user's profile with both role and profile_role fields
+    // Mettre à jour le profil existant
     const { error: updateError } = await supabase
       .from('profiles')
       .update({
         role: 'supervisor',
         department: 'finance',
-        profile_role: 'supervisor' // Utiliser le nouveau champ profile_role
+        profile_role: 'supervisor'
       })
       .eq('id', profileData.id);
     
     if (updateError) {
-      console.error("Error updating user profile:", updateError);
+      console.error("Erreur lors de la mise à jour du profil:", updateError);
       throw updateError;
     }
     
-    console.log(`Successfully promoted user ${email} to supervisor role`);
+    console.log(`Utilisateur ${email} promu avec succès au rôle de superviseur`);
     return true;
   } catch (error) {
-    console.error("Error making user supervisor:", error);
+    console.error("Erreur lors de la promotion de l'utilisateur en superviseur:", error);
     throw error;
   }
 };
