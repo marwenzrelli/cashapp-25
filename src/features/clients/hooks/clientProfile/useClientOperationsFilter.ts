@@ -1,67 +1,68 @@
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Operation } from "@/features/operations/types";
-import { DateRange } from "react-day-picker";
-import { isWithinInterval, parseISO } from "date-fns";
 import { Client } from "@/features/clients/types";
-import { containsPartialText } from "@/features/operations/utils/display-helpers";
+import { DateRange } from "react-day-picker";
+import { startOfDay, endOfDay, isWithinInterval, isSameDay, parseISO } from "date-fns";
 
 export const useClientOperationsFilter = (operations: Operation[], client: Client | null) => {
   const [selectedType, setSelectedType] = useState<Operation["type"] | "all">("all");
   const [searchTerm, setSearchTerm] = useState("");
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: new Date(new Date().setDate(new Date().getDate() - 30)),
-    to: new Date()
-  });
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [isCustomRange, setIsCustomRange] = useState(false);
-  
-  // Filter client operations
-  const clientOperations = operations.filter(op => {
-    if (client) {
-      const clientFullName = `${client.prenom} ${client.nom}`;
-      return op.fromClient === clientFullName || op.toClient === clientFullName;
-    }
-    return false;
-  });
 
-  // Apply filters
-  const filteredOperations = clientOperations
-    .filter(op => {
-      if (!dateRange?.from || !dateRange?.to) return true;
-      const operationDate = parseISO(op.date);
-      return isWithinInterval(operationDate, {
-        start: dateRange.from,
-        end: dateRange.to
-      });
-    })
-    .filter(op => {
-      if (selectedType === "all") return true;
-      return op.type === selectedType;
-    })
-    .filter(op => {
-      if (!searchTerm.trim()) return true;
-      
-      const searchTerms = searchTerm.toLowerCase().split(',').map(term => term.trim());
-      
-      return searchTerms.some(term => {
-        // Chercher dans la description
-        if (op.description && containsPartialText(op.description, term)) return true;
-        
-        // Chercher dans le fromClient (expéditeur)
-        if (op.fromClient && containsPartialText(op.fromClient, term)) return true;
-        
-        // Chercher dans le toClient (destinataire)
-        if (op.toClient && containsPartialText(op.toClient, term)) return true;
-        
-        // Chercher dans le montant
-        if (op.amount.toString().includes(term)) return true;
-        
-        // Chercher dans l'ID
-        if (op.id.toString().includes(term)) return true;
-        
-        return false;
-      });
+  // Réinitialiser les filtres si le client change
+  useEffect(() => {
+    setSelectedType("all");
+    setSearchTerm("");
+    setDateRange(undefined);
+    setIsCustomRange(false);
+  }, [client?.id]);
+
+  // Filtrer les opérations en fonction du client actuel
+  const clientOperations = useMemo(() => {
+    if (!client) return [];
+    
+    const clientFullName = `${client.prenom} ${client.nom}`.trim();
+    
+    return operations.filter(op => {
+      if (op.type === "deposit" || op.type === "withdrawal") {
+        return op.client_name === clientFullName;
+      } else if (op.type === "transfer") {
+        return op.from_client === clientFullName || op.to_client === clientFullName;
+      }
+      return false;
     });
+  }, [operations, client]);
+
+  // Appliquer les filtres de type, recherche et date
+  const filteredOperations = useMemo(() => {
+    if (!clientOperations.length) return [];
+    
+    return clientOperations.filter(op => {
+      // Filtre par type
+      const typeMatches = selectedType === "all" || op.type === selectedType;
+      
+      // Filtre par terme de recherche
+      const searchMatches = !searchTerm || 
+        (op.description?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+         String(op.amount).includes(searchTerm));
+      
+      // Filtre par date
+      let dateMatches = true;
+      if (dateRange && dateRange.from) {
+        const start = startOfDay(dateRange.from);
+        const end = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from);
+        const opDate = parseISO(op.date);
+        
+        dateMatches = isWithinInterval(opDate, { start, end }) || 
+                     isSameDay(opDate, dateRange.from) || 
+                     (dateRange.to && isSameDay(opDate, dateRange.to));
+      }
+      
+      return typeMatches && searchMatches && dateMatches;
+    });
+  }, [clientOperations, selectedType, searchTerm, dateRange]);
 
   return {
     clientOperations,

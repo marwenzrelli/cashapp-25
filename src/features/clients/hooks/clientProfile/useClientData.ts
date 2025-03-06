@@ -14,7 +14,6 @@ export const useClientData = (clientId: number | null) => {
     const fetchClient = async () => {
       try {
         setIsLoading(true);
-        setError(null);
         
         if (!clientId) {
           console.error("Client ID manquant dans l'URL");
@@ -55,7 +54,7 @@ export const useClientData = (clientId: number | null) => {
 
         console.log("Client récupéré avec succès:", data);
         setClient(data);
-        setError(null); // Explicitly clear any error when data is found
+        setError(null); // Réinitialisons explicitement l'erreur quand nous trouvons des données
       } catch (error) {
         console.error("Erreur lors du chargement du client:", error);
         const errorMessage = error instanceof Error ? error.message : "Erreur inconnue";
@@ -69,6 +68,11 @@ export const useClientData = (clientId: number | null) => {
       }
     };
 
+    // Réinitialisons l'état entre chaque changement de clientId
+    setClient(null);
+    setError(null);
+    setIsLoading(true);
+    
     fetchClient();
 
     // Track all subscriptions to clean them up on unmount
@@ -90,7 +94,7 @@ export const useClientData = (clientId: number | null) => {
             description: "Ce client a été supprimé de la base de données"
           });
         } else {
-          // Make sure to clear any error when receiving updates
+          // Assurons-nous de réinitialiser l'erreur lors de la réception de mises à jour
           setError(null);
           setClient(payload.new as Client);
         }

@@ -11,6 +11,8 @@ interface PublicClientErrorProps {
 export const PublicClientError = ({ error }: PublicClientErrorProps) => {
   const navigate = useNavigate();
   
+  console.log("PublicClientError - error:", error);
+  
   // Determine if the error is related to security or invalid access
   const isSecurityError = error?.toLowerCase().includes('invalide') || 
                           error?.toLowerCase().includes('expiré') ||
@@ -20,7 +22,9 @@ export const PublicClientError = ({ error }: PublicClientErrorProps) => {
 
   const isClientMissing = error?.toLowerCase().includes('introuvable') ||
                           error?.toLowerCase().includes('not found') ||
-                          error?.toLowerCase().includes('manquant');
+                          error?.toLowerCase().includes('manquant') ||
+                          error?.toLowerCase().includes('n\'existe pas') ||
+                          error?.toLowerCase().includes('supprimé');
                           
   // Handle retry button click
   const handleRetry = () => {
@@ -29,7 +33,7 @@ export const PublicClientError = ({ error }: PublicClientErrorProps) => {
   
   // Handle go to home button click
   const handleGoToHome = () => {
-    navigate('/');
+    navigate('/clients');
   };
 
   return (
@@ -79,7 +83,7 @@ export const PublicClientError = ({ error }: PublicClientErrorProps) => {
               onClick={handleGoToHome}
               className="w-full"
             >
-              Retour à l'accueil
+              Retour à la liste des clients
             </Button>
           </div>
         </div>

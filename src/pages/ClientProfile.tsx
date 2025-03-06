@@ -30,6 +30,8 @@ const ClientProfile = () => {
     exportToPDF
   } = useClientProfile();
 
+  console.log("ClientProfile - État :", { client, isLoading, error, clientId });
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
@@ -38,13 +40,12 @@ const ClientProfile = () => {
     );
   }
 
-  // Check if client is null or there's an error
-  if (!client || error) {
-    return (
-      <PublicClientError 
-        error={error || `Le client avec l'identifiant ${clientId} n'existe pas ou a été supprimé.`} 
-      />
-    );
+  // Vérifions s'il y a une erreur OU si le client est null (après chargement)
+  if (error || !client) {
+    const errorMessage = error || `Le client avec l'identifiant ${clientId} n'existe pas ou a été supprimé.`;
+    console.log("Affichage de l'erreur :", errorMessage);
+    
+    return <PublicClientError error={errorMessage} />;
   }
 
   return (
