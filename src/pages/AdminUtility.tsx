@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { makeUserSupervisor } from "@/features/admin/api"; // Updated import path
+import { makeUserSupervisor } from "@/features/admin/api"; 
 import { createSupervisorAccount } from "@/features/admin/api";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,21 +32,28 @@ const AdminUtility = () => {
   const createUser = async () => {
     try {
       console.log("Création d'un nouvel utilisateur avant promotion...");
-      const temporaryPassword = "Temp" + Math.random().toString(36).substring(2, 10);
       
-      await createSupervisorAccount({
+      // Génération d'un mot de passe fort et aléatoire
+      const temporaryPassword = "Temp" + Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10) + "!";
+      
+      const result = await createSupervisorAccount({
         email: email,
         password: temporaryPassword,
         fullName: "Superviseur Principal",
         username: "supervisor_" + Math.random().toString(36).substring(2, 7)
       });
       
-      console.log("Utilisateur créé avec succès avant promotion");
-      toast.success("Nouvel utilisateur créé", {
-        description: "Un utilisateur temporaire a été créé et sera promu en superviseur"
-      });
+      console.log("Résultat de la création:", result);
       
-      return true;
+      if (result) {
+        console.log("Utilisateur créé avec succès avant promotion");
+        toast.success("Nouvel utilisateur créé", {
+          description: "Un utilisateur temporaire a été créé et sera promu en superviseur"
+        });
+        return true;
+      } else {
+        throw new Error("Échec de la création de l'utilisateur");
+      }
     } catch (error) {
       console.error("Erreur lors de la création de l'utilisateur:", error);
       throw error;
@@ -64,11 +71,23 @@ const AdminUtility = () => {
       if (!userExists) {
         console.log(`L'utilisateur ${email} n'existe pas. Création en cours...`);
         await createUser();
+        
         // Petit délai pour s'assurer que l'utilisateur est bien créé dans la base de données
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        console.log("Attente pour s'assurer que l'utilisateur est bien créé...");
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        
+        // Vérifier à nouveau si l'utilisateur a bien été créé
+        const userCreated = await checkUserExists(email);
+        if (!userCreated) {
+          throw new Error("L'utilisateur n'a pas pu être créé correctement");
+        }
+        console.log("Utilisateur vérifié comme créé avec succès");
+      } else {
+        console.log(`L'utilisateur ${email} existe déjà`);
       }
       
       // Promouvoir l'utilisateur en superviseur
+      console.log("Promotion de l'utilisateur en superviseur...");
       await makeUserSupervisor(email);
       console.log("Promotion réussie!");
       

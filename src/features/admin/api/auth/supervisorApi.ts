@@ -19,6 +19,22 @@ export const createSupervisorAccount = async (userData: {
   }
   
   try {
+    // Vérifier si l'utilisateur existe déjà
+    const { data: existingUser, error: checkError } = await supabase
+      .from('profiles')
+      .select('id, email')
+      .eq('email', userData.email)
+      .maybeSingle();
+      
+    if (checkError) {
+      console.error("Erreur lors de la vérification de l'utilisateur:", checkError);
+    }
+    
+    if (existingUser) {
+      console.log("L'utilisateur existe déjà, mise à jour du profil uniquement");
+      return { id: existingUser.id, email: userData.email };
+    }
+
     // Créer l'utilisateur avec le rôle de superviseur
     const { data: authData, error: signUpError } = await supabase.auth.signUp({
       email: userData.email,
@@ -33,59 +49,21 @@ export const createSupervisorAccount = async (userData: {
       }
     });
 
-    if (signUpError) throw signUpError;
-    if (!authData.user) throw new Error("Erreur: Aucun utilisateur créé");
-
-    // Attendre un court instant pour que le trigger handle_new_user s'exécute
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // Vérifier si le profil a été créé
-    const { data: existingProfile, error: profileCheckError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', authData.user.id)
-      .maybeSingle();
-
-    if (profileCheckError) {
-      console.error("Erreur lors de la vérification du profil:", profileCheckError);
+    if (signUpError) {
+      console.error("Erreur lors de la création de l'utilisateur:", signUpError);
+      throw signUpError;
+    }
+    
+    if (!authData.user) {
+      console.error("Aucun utilisateur n'a été créé");
+      throw new Error("Erreur: Aucun utilisateur créé");
     }
 
-    // Si le profil n'existe pas, le créer manuellement
-    if (!existingProfile) {
-      console.log("Aucun profil trouvé, création manuelle du profil...");
-      const { error: insertError } = await supabase
-        .from('profiles')
-        .insert({
-          id: authData.user.id,
-          email: userData.email,
-          role: 'supervisor',
-          department: 'finance',
-          status: 'active',
-          full_name: userData.fullName,
-          username: userData.username
-        });
+    console.log("Utilisateur créé avec succès, ID:", authData.user.id);
+    
+    // IMPORTANT: Attendre plus longtemps pour que le trigger handle_new_user s'exécute complètement
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
-      if (insertError) {
-        console.error("Erreur lors de la création manuelle du profil:", insertError);
-        throw new Error("Erreur lors de la création du profil utilisateur");
-      }
-    } else {
-      // Mettre à jour explicitement le profil avec le rôle et le département
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          role: 'supervisor',
-          department: 'finance',
-          status: 'active',
-          full_name: userData.fullName,
-          username: userData.username
-        })
-        .eq('id', authData.user.id);
-
-      if (updateError) throw updateError;
-    }
-
-    console.log("Compte superviseur créé avec succès:", authData.user);
     return authData.user;
   } catch (error) {
     console.error("Erreur lors de la création du compte superviseur:", error);
