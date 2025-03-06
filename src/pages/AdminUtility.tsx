@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { makeUserSupervisor } from "@/features/admin/api/userApi";
+import { makeUserSupervisor } from "@/features/admin/api"; // Updated import path
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
