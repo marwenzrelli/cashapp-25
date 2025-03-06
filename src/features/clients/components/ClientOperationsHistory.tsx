@@ -13,6 +13,8 @@ interface ClientOperationsHistoryProps {
   setSearchTerm: (term: string) => void;
   dateRange: DateRange | undefined;
   setDateRange: (range: DateRange | undefined) => void;
+  isCustomRange: boolean;
+  setIsCustomRange: (isCustom: boolean) => void;
   filteredOperations: Operation[];
 }
 
@@ -24,6 +26,8 @@ export const ClientOperationsHistory = ({
   setSearchTerm,
   dateRange,
   setDateRange,
+  isCustomRange,
+  setIsCustomRange,
   filteredOperations,
 }: ClientOperationsHistoryProps) => {
   return (

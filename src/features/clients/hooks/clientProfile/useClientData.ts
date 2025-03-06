@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Client } from "@/features/clients/types";
@@ -70,6 +71,9 @@ export const useClientData = (clientId: number | null) => {
 
     fetchClient();
 
+    // Track all subscriptions to clean them up on unmount
+    const supabaseChannels = [];
+
     const clientSubscription = supabase
       .channel('public_client_changes')
       .on('postgres_changes', {
@@ -90,6 +94,8 @@ export const useClientData = (clientId: number | null) => {
         }
       })
       .subscribe();
+    
+    supabaseChannels.push(clientSubscription);
 
     const depositsSubscription = supabase
       .channel('deposits_changes')
@@ -101,6 +107,8 @@ export const useClientData = (clientId: number | null) => {
         fetchClient();
       })
       .subscribe();
+    
+    supabaseChannels.push(depositsSubscription);
 
     const withdrawalsSubscription = supabase
       .channel('withdrawals_changes')
@@ -112,6 +120,8 @@ export const useClientData = (clientId: number | null) => {
         fetchClient();
       })
       .subscribe();
+    
+    supabaseChannels.push(withdrawalsSubscription);
 
     const transfersSubscription = supabase
       .channel('transfers_changes')
@@ -123,18 +133,14 @@ export const useClientData = (clientId: number | null) => {
         fetchClient();
       })
       .subscribe();
+    
+    supabaseChannels.push(transfersSubscription);
 
     return () => {
-      clientSubscription.unsubscribe();
-      depositsSubscription.unsubscribe();
-      withdrawalsSubscription.unsubscribe();
-      transfersSubscription.unsubscribe();
-      // Make sure to unsubscribe from all channels to prevent memory leaks
-      if (window.supabaseChannels) {
-        window.supabaseChannels.forEach(channel => {
-          supabase.removeChannel(channel);
-        });
-      }
+      // Clean up all channels
+      supabaseChannels.forEach(channel => {
+        supabase.removeChannel(channel);
+      });
     };
   }, [clientId]);
 
