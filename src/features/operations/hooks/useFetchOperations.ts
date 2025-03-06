@@ -37,7 +37,7 @@ export const useFetchOperations = (
           amount: d.amount,
           date: d.created_at,
           createdAt: d.created_at,
-          description: `Versement de ${d.client_name}`,
+          description: d.notes || `Versement de ${d.client_name}`,
           fromClient: d.client_name,
           formattedDate: formatDateTime(d.created_at)
         })),
@@ -47,7 +47,7 @@ export const useFetchOperations = (
           amount: w.amount,
           date: w.created_at,
           createdAt: w.created_at,
-          description: `Retrait par ${w.client_name}`,
+          description: w.notes || `Retrait par ${w.client_name}`,
           fromClient: w.client_name,
           formattedDate: formatDateTime(w.created_at)
         })),
@@ -57,7 +57,7 @@ export const useFetchOperations = (
           amount: t.amount,
           date: t.created_at,
           createdAt: t.created_at,
-          description: t.reason,
+          description: t.reason || `Virement de ${t.from_client} vers ${t.to_client}`,
           fromClient: t.from_client,
           toClient: t.to_client,
           formattedDate: formatDateTime(t.created_at)
