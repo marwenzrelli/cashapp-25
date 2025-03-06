@@ -51,15 +51,24 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
     const checkUserRole = async () => {
       if (!session) return;
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', session.user.id)
-        .single();
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
 
-      if (profile) {
-        setUserRole(profile.role);
-        setHasAccess(['supervisor', 'manager', 'cashier'].includes(profile.role));
+        if (error) {
+          console.error("Error fetching user profile:", error);
+          return;
+        }
+
+        if (profile) {
+          setUserRole(profile.role);
+          setHasAccess(['supervisor', 'manager', 'cashier'].includes(profile.role));
+        }
+      } catch (err) {
+        console.error("Error checking role:", err);
       }
     };
 
@@ -72,29 +81,50 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
     try {
       setIsLoading(true);
 
-      // Create the access token first, then insert it with the client_id
-      const newToken = crypto.randomUUID();
-      
-      // Insert with the correct structure - providing access_token
-      const { data, error } = await supabase
+      // Check if there's an existing token for this client
+      const { data: existingTokens, error: fetchError } = await supabase
         .from('qr_access')
-        .insert({
-          client_id: clientId,
-          expires_at: null, // Set to null for permanent access
-          access_token: newToken // Provide the access_token
-        })
         .select('access_token')
-        .single();
+        .eq('client_id', clientId)
+        .limit(1);
+      
+      let tokenToUse;
+      
+      if (fetchError) {
+        console.error("Error checking existing tokens:", fetchError);
+      }
+      
+      // If token exists, use it; otherwise create a new one
+      if (existingTokens && existingTokens.length > 0) {
+        tokenToUse = existingTokens[0].access_token;
+        setAccessToken(tokenToUse);
+      } else {
+        // Create a new token
+        const newToken = crypto.randomUUID();
+        
+        const { data, error } = await supabase
+          .from('qr_access')
+          .insert({
+            client_id: clientId,
+            expires_at: null, // Set to null for permanent access
+            access_token: newToken
+          })
+          .select('access_token')
+          .single();
 
-      if (error) {
-        throw error;
+        if (error) {
+          console.error("Error creating QR access:", error);
+          throw error;
+        }
+
+        tokenToUse = data.access_token;
+        setAccessToken(tokenToUse);
       }
 
-      setAccessToken(data.access_token);
-
-      if (canvasRef.current && data.access_token) {
-        const url = `${window.location.origin}/public/client/${data.access_token}`;
+      if (canvasRef.current && tokenToUse) {
+        const url = `${window.location.origin}/public/client/${tokenToUse}`;
         setQrUrl(url);
+        
         await QRCode.toCanvas(
           canvasRef.current,
           url,
@@ -107,6 +137,8 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
             }
           }
         );
+        
+        console.log("QR Code generated successfully for URL:", url);
       }
     } catch (error: any) {
       console.error("Erreur lors de la génération du QR code:", error);
@@ -124,7 +156,7 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
     if (session && hasAccess && showQrCode) {
       generateQRAccess();
     }
-  }, [clientId, clientName, session, hasAccess, showQrCode]);
+  }, [clientId, session, hasAccess, showQrCode]);
 
   const handleCopyLink = async () => {
     try {

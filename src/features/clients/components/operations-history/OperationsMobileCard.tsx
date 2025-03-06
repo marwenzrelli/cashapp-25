@@ -1,61 +1,49 @@
 
-import { Calendar, FileText, User } from "lucide-react";
 import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 import { Operation } from "@/features/operations/types";
-import { getTypeStyle, getTypeIcon, getTypeLabel } from "@/features/operations/utils/operation-helpers";
+import { Badge } from "@/components/ui/badge";
+import { CalendarClock, Clock } from "lucide-react";
 
 interface OperationsMobileCardProps {
   operation: Operation;
-  currency?: string;
-  showType?: boolean;
-  colorClass?: string;
+  formatAmount: (amount: number) => string;
 }
 
-export const OperationsMobileCard = ({ 
-  operation, 
-  currency = "TND", 
-  showType = true,
-  colorClass 
-}: OperationsMobileCardProps) => {
+export const OperationsMobileCard = ({ operation, formatAmount }: OperationsMobileCardProps) => {
   // Use operation_date if available, otherwise fall back to date
-  const displayDate = operation.operation_date || operation.date;
+  const operationDate = operation.operation_date ? new Date(operation.operation_date) : new Date(operation.date);
   
   return (
-    <div key={operation.id} className="p-3 border rounded-lg">
-      <div className="flex items-center justify-between mb-2">
+    <div className="flex items-start justify-between p-4 bg-white rounded-lg border shadow-sm">
+      <div className="space-y-2">
         <div className="flex items-center gap-2">
-          {showType && (
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center ${getTypeStyle(operation.type)}`}>
-              {getTypeIcon(operation.type)}
-            </div>
-          )}
-          <span className="font-medium">{getTypeLabel(operation.type)}</span>
+          <Badge variant={operation.type === "deposit" ? "success" : operation.type === "withdrawal" ? "destructive" : "outline"}>
+            {operation.type === "deposit" ? "Dépôt" : operation.type === "withdrawal" ? "Retrait" : "Transfert"}
+          </Badge>
+          <span className="text-xs text-muted-foreground">#{operation.id}</span>
         </div>
-        <span className={`font-semibold text-center pl-4 ${colorClass}`}>
-          {operation.type === "withdrawal" ? "-" : ""}
-          {Math.round(operation.amount)} {currency}
-        </span>
+        
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <CalendarClock className="h-3 w-3" />
+          <span>{format(operationDate, "dd MMMM yyyy", { locale: fr })}</span>
+        </div>
+        
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <Clock className="h-3 w-3" />
+          <span>{format(operationDate, "HH:mm", { locale: fr })}</span>
+        </div>
+        
+        {operation.notes && (
+          <p className="text-xs text-gray-500 mt-1 line-clamp-2">{operation.notes}</p>
+        )}
       </div>
       
-      <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-sm">
-        <div className="flex items-center gap-1 text-muted-foreground">
-          <Calendar className="h-3.5 w-3.5" />
-          <span>{format(new Date(displayDate), "dd/MM/yyyy HH:mm")}</span>
-        </div>
-        <div className="flex items-center gap-1 text-muted-foreground">
-          <User className="h-3.5 w-3.5" />
-          {operation.type === "transfer" ? (
-            <span className="truncate">
-              {operation.fromClient} → {operation.toClient}
-            </span>
-          ) : (
-            <span className="truncate">{operation.fromClient}</span>
-          )}
-        </div>
-        <div className="flex items-center gap-1 text-muted-foreground col-span-2">
-          <FileText className="h-3.5 w-3.5 shrink-0" />
-          <span className="truncate">{operation.description}</span>
-        </div>
+      <div className="text-right">
+        <p className={`text-lg font-semibold ${operation.type === "withdrawal" ? "text-red-500" : operation.type === "deposit" ? "text-green-500" : "text-blue-500"}`}>
+          {operation.type === "withdrawal" ? "-" : operation.type === "deposit" ? "+" : ""}
+          {formatAmount(operation.amount)}
+        </p>
       </div>
     </div>
   );
