@@ -37,7 +37,7 @@ export const ClientPersonalInfo = ({
             />
           </div>
           {clientId && qrCodeRef && (
-            <div className="space-y-4 flex justify-center md:justify-end" ref={qrCodeRef}>
+            <div className="space-y-4" ref={qrCodeRef}>
               <ClientQRCode
                 clientId={clientId}
                 clientName={`${client.prenom} ${client.nom}`}
