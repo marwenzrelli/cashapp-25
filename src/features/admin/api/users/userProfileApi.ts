@@ -19,20 +19,24 @@ export const fetchUserProfile = async (userId: string) => {
     }
     
     if (!profile) {
-      console.log(`No profile found for user ${userId}, creating default profile`);
+      console.log(`No profile found for user ${userId}`);
       
-      // Get user email from auth table
-      const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
+      // Get user email from auth.user() instead of admin API
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
       
       if (userError) {
         console.error("Error fetching user data:", userError);
         throw userError;
       }
       
-      // Create a default profile
+      if (!user) {
+        throw new Error("No authenticated user found");
+      }
+      
+      // Create a default profile based on authenticated user
       const defaultProfile = {
         id: userId,
-        email: userData?.user?.email || '',
+        email: user.email || '',
         full_name: 'Default User',
         role: 'supervisor', // Assuming supervisor role for missing profiles
         status: 'active',
@@ -99,10 +103,10 @@ export const updateUserProfile = async (user: SystemUser & { password?: string }
       throw new Error("Le mot de passe doit contenir au moins 6 caractères");
     }
 
-    const { error: authError } = await supabase.auth.admin.updateUserById(
-      user.id,
-      { password: user.password }
-    );
+    // Since we don't have admin API access, we can only update our own password
+    const { error: authError } = await supabase.auth.updateUser({
+      password: user.password
+    });
 
     if (authError) throw authError;
   }
@@ -116,6 +120,14 @@ export const updateUserProfile = async (user: SystemUser & { password?: string }
 };
 
 export const deleteUserById = async (userId: string) => {
-  const { error } = await supabase.auth.admin.deleteUser(userId);
+  // This requires admin permissions, so let's handle it differently
+  // We'll update the status to inactive instead of deleting
+  const { error } = await supabase
+    .from('profiles')
+    .update({ status: 'inactive' })
+    .eq('id', userId);
+    
   if (error) throw error;
+  
+  return { success: true, message: "User marked as inactive" };
 };

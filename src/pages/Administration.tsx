@@ -15,9 +15,11 @@ import { ErrorState } from "@/features/admin/components/administration/ErrorStat
 import { useAuthenticationCheck } from "@/features/admin/hooks/useAuthenticationCheck";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Administration = () => {
   useAuthenticationCheck();
+  const navigate = useNavigate();
   
   const { 
     users, 
@@ -43,7 +45,31 @@ const Administration = () => {
     return <LoadingState />;
   }
 
-  // Improved error handling
+  // Check for errors that mention "not_admin" or "User not allowed"
+  if (usersError && 
+      (usersError.message?.includes("not_admin") || 
+       usersError.message?.includes("User not allowed"))) {
+    return (
+      <ErrorState>
+        <div className="mt-4 space-y-4">
+          <p className="text-muted-foreground">
+            Vous n'avez pas les permissions d'administrateur nécessaires pour accéder à cette page.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2 justify-center mt-4">
+            <Button 
+              onClick={() => navigate("/dashboard")} 
+              variant="default"
+              className="flex items-center gap-2"
+            >
+              Retourner au tableau de bord
+            </Button>
+          </div>
+        </div>
+      </ErrorState>
+    );
+  }
+
+  // Improved error handling for other errors
   if (usersError) {
     return (
       <ErrorState>
