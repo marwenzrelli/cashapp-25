@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ArrowDownCircle } from "lucide-react";
@@ -8,40 +8,104 @@ import { ClientSelectField } from "../form-fields/ClientSelectField";
 import { AmountField } from "../form-fields/AmountField";
 import { NotesField } from "../form-fields/NotesField";
 import { Client } from "@/features/clients/types";
+import { Withdrawal } from "@/features/withdrawals/types";
 
 interface ExtendedClient extends Client {
   dateCreation: string;
 }
 
 export interface WithdrawalFormDialogProps {
-  clients: ExtendedClient[];
-  newWithdrawal: {
-    clientId: string;
-    amount: string;
-    notes: string;
-    date: string;
-  };
-  setNewWithdrawal: (withdrawal: {
-    clientId: string;
-    amount: string;
-    notes: string;
-    date: string;
-  }) => void;
+  isOpen: boolean;
   onClose: () => void;
-  onSubmit: () => void;
+  clients: ExtendedClient[];
+  selectedClient: string;
+  setSelectedClient: (clientId: string) => void;
   isEditing: boolean;
-  isLoading?: boolean;
+  selectedWithdrawal: Withdrawal | null;
+  onCreateWithdrawal: (data: {
+    client_name: string;
+    amount: string;
+    notes?: string;
+    operation_date?: string;
+  }) => Promise<boolean>;
 }
 
 export const WithdrawalFormDialog: React.FC<WithdrawalFormDialogProps> = ({
-  clients,
-  newWithdrawal,
-  setNewWithdrawal,
+  isOpen,
   onClose,
-  onSubmit,
+  clients,
+  selectedClient,
+  setSelectedClient,
   isEditing,
-  isLoading = false,
+  selectedWithdrawal,
+  onCreateWithdrawal,
 }) => {
+  const [newWithdrawal, setNewWithdrawal] = useState({
+    clientId: "",
+    amount: "",
+    notes: "",
+    date: new Date().toISOString(),
+  });
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Initialize form when editing or when selectedClient changes
+  useEffect(() => {
+    if (isEditing && selectedWithdrawal) {
+      // Find the client by name
+      const client = clients.find(c => `${c.prenom} ${c.nom}` === selectedWithdrawal.client_name);
+      
+      setNewWithdrawal({
+        clientId: client ? client.id.toString() : "",
+        amount: selectedWithdrawal.amount.toString(),
+        notes: selectedWithdrawal.notes || "",
+        date: selectedWithdrawal.date || new Date().toISOString(),
+      });
+    } else if (selectedClient) {
+      // Just update the client ID when selectedClient changes
+      setNewWithdrawal(prev => ({
+        ...prev,
+        clientId: selectedClient
+      }));
+    }
+  }, [isEditing, selectedWithdrawal, selectedClient, clients]);
+
+  const handleSubmit = async () => {
+    setIsLoading(true);
+    try {
+      // Find the client name based on the selected client ID
+      const client = clients.find(c => c.id.toString() === newWithdrawal.clientId);
+      if (!client) {
+        console.error("Client not found");
+        setIsLoading(false);
+        return;
+      }
+
+      const clientName = `${client.prenom} ${client.nom}`;
+      
+      const success = await onCreateWithdrawal({
+        client_name: clientName,
+        amount: newWithdrawal.amount,
+        notes: newWithdrawal.notes,
+        operation_date: newWithdrawal.date,
+      });
+
+      if (success) {
+        // Reset the form
+        setNewWithdrawal({
+          clientId: "",
+          amount: "",
+          notes: "",
+          date: new Date().toISOString(),
+        });
+        onClose();
+      }
+    } catch (error) {
+      console.error("Error submitting withdrawal:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <DialogContent className="sm:max-w-md">
       <DialogHeader>
@@ -69,7 +133,10 @@ export const WithdrawalFormDialog: React.FC<WithdrawalFormDialogProps> = ({
 
             <ClientSelectField
               value={newWithdrawal.clientId}
-              onChange={(value) => setNewWithdrawal({ ...newWithdrawal, clientId: value })}
+              onChange={(value) => {
+                setNewWithdrawal({ ...newWithdrawal, clientId: value });
+                setSelectedClient(value);
+              }}
               clients={clients}
             />
 
@@ -91,7 +158,7 @@ export const WithdrawalFormDialog: React.FC<WithdrawalFormDialogProps> = ({
           Annuler
         </Button>
         <Button
-          onClick={onSubmit}
+          onClick={handleSubmit}
           className="bg-red-600 hover:bg-red-700 text-white gap-2 min-w-[200px]"
           disabled={isLoading}
         >
