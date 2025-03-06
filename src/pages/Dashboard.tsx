@@ -54,12 +54,7 @@ const Dashboard = () => {
         <AISuggestions stats={stats} />
       </div>
 
-      <RecentActivityCard 
-        activities={recentActivity} 
-        currency={currency} 
-        isLoading={isLoading}
-        onRefresh={handleRefresh}
-      />
+      <RecentActivityCard activities={recentActivity} currency={currency} />
 
       <EditProfileDialog
         isOpen={isEditProfileOpen}

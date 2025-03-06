@@ -37,25 +37,14 @@ const queryClient = new QueryClient({
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        console.log("Checking authentication...");
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error("Authentication check error:", error);
-          setAuthError(error.message);
-          setIsAuthenticated(false);
-        } else {
-          console.log("Session status:", !!session);
-          setIsAuthenticated(!!session);
-        }
+        const { data: { session } } = await supabase.auth.getSession();
+        setIsAuthenticated(!!session);
       } catch (error) {
-        console.error("Unexpected error during authentication check:", error);
-        setAuthError("Une erreur s'est produite lors de la vérification de l'authentification");
+        console.error("Erreur lors de la vérification de l'authentification:", error);
         setIsAuthenticated(false);
       } finally {
         setIsLoading(false);
@@ -64,37 +53,24 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
     checkAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed:", event);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsAuthenticated(!!session);
-      if (event === 'SIGNED_OUT') {
-        setIsLoading(false);
-      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
   if (isLoading) {
-    return (
-      <div className="flex flex-col justify-center items-center h-screen bg-background">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mb-4"></div>
-        <span className="text-foreground">Chargement de votre session...</span>
-        {authError && (
-          <p className="text-red-500 mt-2 text-sm max-w-md text-center">
-            {authError}
-          </p>
-        )}
-      </div>
-    );
+    return <div className="flex justify-center items-center h-screen">
+      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mr-2"></div>
+      <span>Chargement...</span>
+    </div>;
   }
 
   if (!isAuthenticated) {
-    console.log("User not authenticated, redirecting to login");
     return <Navigate to="/login" replace />;
   }
 
-  console.log("User authenticated, rendering protected content");
   return <>{children}</>;
 };
 
