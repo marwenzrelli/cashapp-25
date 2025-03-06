@@ -11,9 +11,9 @@ interface PublicClientErrorProps {
 export const PublicClientError = ({ error }: PublicClientErrorProps) => {
   const navigate = useNavigate();
   
-  console.log("PublicClientError - error:", error);
+  console.log("PublicClientError - Affichage de l'erreur:", error);
   
-  // Determine if the error is related to security or invalid access
+  // Determine if the error is related to security, client missing, or other issue
   const isSecurityError = error?.toLowerCase().includes('invalide') || 
                           error?.toLowerCase().includes('expiré') ||
                           error?.toLowerCase().includes('désactivé') ||
@@ -28,16 +28,18 @@ export const PublicClientError = ({ error }: PublicClientErrorProps) => {
                           
   // Handle retry button click
   const handleRetry = () => {
+    console.log("Tentative de rechargement de la page...");
     window.location.reload();
   };
   
   // Handle go to home button click
   const handleGoToHome = () => {
+    console.log("Redirection vers la liste des clients...");
     navigate('/clients');
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4">
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-8rem)] p-4">
       <div className="bg-background p-6 rounded-lg shadow-sm max-w-md w-full border">
         <div className="flex flex-col items-center text-center">
           <div className={`${isSecurityError ? 'bg-amber-100' : isClientMissing ? 'bg-blue-100' : 'bg-red-100'} p-3 rounded-full mb-4`}>

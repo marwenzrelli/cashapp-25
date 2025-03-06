@@ -11,7 +11,7 @@ export const useClientOperationsFilter = (operations: Operation[], client: Clien
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [isCustomRange, setIsCustomRange] = useState(false);
 
-  // Réinitialiser les filtres si le client change
+  // Reset filters when client changes
   useEffect(() => {
     setSelectedType("all");
     setSearchTerm("");
@@ -19,11 +19,12 @@ export const useClientOperationsFilter = (operations: Operation[], client: Clien
     setIsCustomRange(false);
   }, [client?.id]);
 
-  // Filtrer les opérations en fonction du client actuel
+  // Filter operations for the current client
   const clientOperations = useMemo(() => {
-    if (!client) return [];
+    if (!client || !operations.length) return [];
     
     const clientFullName = `${client.prenom} ${client.nom}`.trim();
+    console.log("Filtering operations for client:", clientFullName, "Total operations:", operations.length);
     
     return operations.filter(op => {
       if (op.type === "deposit" || op.type === "withdrawal") {
@@ -35,20 +36,27 @@ export const useClientOperationsFilter = (operations: Operation[], client: Clien
     });
   }, [operations, client]);
 
-  // Appliquer les filtres de type, recherche et date
+  // Apply type, search and date filters
   const filteredOperations = useMemo(() => {
     if (!clientOperations.length) return [];
     
+    console.log("Applying filters to operations:", {
+      totalOps: clientOperations.length,
+      selectedType,
+      searchTerm,
+      hasDateRange: !!dateRange
+    });
+
     return clientOperations.filter(op => {
-      // Filtre par type
+      // Type filter
       const typeMatches = selectedType === "all" || op.type === selectedType;
       
-      // Filtre par terme de recherche
+      // Search term filter
       const searchMatches = !searchTerm || 
         (op.description?.toLowerCase().includes(searchTerm.toLowerCase()) || 
          String(op.amount).includes(searchTerm));
       
-      // Filtre par date
+      // Date filter
       let dateMatches = true;
       if (dateRange && dateRange.from) {
         const start = startOfDay(dateRange.from);

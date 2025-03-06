@@ -11,10 +11,13 @@ export const useClientData = (clientId: number | null) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Reset state at the start of any fetch operation
+    setClient(null);
+    setError(null);
+    setIsLoading(true);
+    
     const fetchClient = async () => {
       try {
-        setIsLoading(true);
-        
         if (!clientId) {
           console.error("Client ID manquant dans l'URL");
           setError("Identifiant client manquant");
@@ -37,7 +40,6 @@ export const useClientData = (clientId: number | null) => {
           toast.error("Impossible de charger les informations du client", {
             description: errorMessage
           });
-          setClient(null);
           return;
         }
 
@@ -48,13 +50,13 @@ export const useClientData = (clientId: number | null) => {
           toast.error("Client introuvable", {
             description: errorMessage
           });
-          setClient(null);
           return;
         }
 
         console.log("Client récupéré avec succès:", data);
         setClient(data);
-        setError(null); // Réinitialisons explicitement l'erreur quand nous trouvons des données
+        // Explicitly clear the error state when we successfully fetch data
+        setError(null);
       } catch (error) {
         console.error("Erreur lors du chargement du client:", error);
         const errorMessage = error instanceof Error ? error.message : "Erreur inconnue";
@@ -62,17 +64,11 @@ export const useClientData = (clientId: number | null) => {
         toast.error("Impossible de charger les informations du client", {
           description: errorMessage
         });
-        setClient(null);
       } finally {
         setIsLoading(false);
       }
     };
 
-    // Réinitialisons l'état entre chaque changement de clientId
-    setClient(null);
-    setError(null);
-    setIsLoading(true);
-    
     fetchClient();
 
     // Track all subscriptions to clean them up on unmount
@@ -94,7 +90,7 @@ export const useClientData = (clientId: number | null) => {
             description: "Ce client a été supprimé de la base de données"
           });
         } else {
-          // Assurons-nous de réinitialiser l'erreur lors de la réception de mises à jour
+          // Clear any existing error when we receive updates
           setError(null);
           setClient(payload.new as Client);
         }
