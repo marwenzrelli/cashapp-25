@@ -15,6 +15,7 @@ import Operations from "./pages/Operations";
 import Administration from "./pages/Administration";
 import NotFound from "./pages/NotFound";
 import SupervisorCreation from "./pages/SupervisorCreation";
+import AdminUtility from "./pages/AdminUtility";
 import "./App.css";
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
         <Route path="/" element={<Index />} />
         <Route path="/login" element={<Login />} />
         <Route path="/create-supervisor" element={<SupervisorCreation />} />
+        <Route path="/admin-utility" element={<AdminUtility />} />
         <Route element={<Layout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/clients" element={<Clients />} />

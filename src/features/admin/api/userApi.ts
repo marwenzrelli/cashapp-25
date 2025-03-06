@@ -264,3 +264,46 @@ export const deleteUserById = async (userId: string) => {
   const { error } = await supabase.auth.admin.deleteUser(userId);
   if (error) throw error;
 };
+
+export const makeUserSupervisor = async (email: string) => {
+  try {
+    console.log(`Attempting to promote user with email: ${email} to supervisor role`);
+    
+    // Get user by email
+    const { data: users, error: userError } = await supabase.auth.admin.listUsers();
+    
+    if (userError) {
+      console.error("Error fetching users:", userError);
+      throw userError;
+    }
+    
+    const user = users.users.find(u => u.email === email);
+    
+    if (!user) {
+      console.error(`No user found with email: ${email}`);
+      throw new Error(`Aucun utilisateur trouvé avec l'email: ${email}`);
+    }
+    
+    console.log(`Found user with ID: ${user.id}`);
+    
+    // Update user's profile
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({
+        role: 'supervisor',
+        department: 'finance'
+      })
+      .eq('id', user.id);
+    
+    if (updateError) {
+      console.error("Error updating user profile:", updateError);
+      throw updateError;
+    }
+    
+    console.log(`Successfully promoted user ${email} to supervisor role`);
+    return true;
+  } catch (error) {
+    console.error("Error making user supervisor:", error);
+    throw error;
+  }
+};
