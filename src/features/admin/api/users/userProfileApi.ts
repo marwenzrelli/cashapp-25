@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { SystemUser } from '@/types/admin';
 
@@ -11,7 +10,7 @@ export const fetchUserProfile = async (userId: string) => {
       
     if (authError) {
       console.error("Error fetching authenticated user:", authError);
-      throw authError;
+      throw new Error("Authentication error: " + authError.message);
     }
     
     if (!authUser) {
@@ -30,6 +29,12 @@ export const fetchUserProfile = async (userId: string) => {
       
     if (error) {
       console.error("Error fetching user profile:", error);
+      
+      // Check if this is an RLS error
+      if (error.message.includes("violates row-level security policy")) {
+        throw new Error("not_admin: " + error.message);
+      }
+      
       throw error;
     }
     
@@ -58,6 +63,12 @@ export const fetchUserProfile = async (userId: string) => {
           
         if (insertError) {
           console.error("Error creating default profile:", insertError);
+          
+          // Check if this is an RLS error
+          if (insertError.message.includes("violates row-level security policy")) {
+            throw new Error("not_admin: " + insertError.message);
+          }
+          
           throw insertError;
         }
         
@@ -79,9 +90,15 @@ export const fetchUserProfile = async (userId: string) => {
     }
     
     return profile;
-  } catch (error) {
+  } catch (error: any) {
     console.error(`Failed to fetch profile for user ${userId}:`, error);
-    throw error;
+    
+    // Pass through our custom error messages
+    if (error.message?.includes("not_admin:")) {
+      throw error;
+    }
+    
+    throw new Error(error.message || "Failed to fetch user profile");
   }
 };
 

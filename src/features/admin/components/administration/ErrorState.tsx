@@ -30,20 +30,25 @@ export const ErrorState = ({
         <h2 className="text-2xl font-semibold mb-2">{isRLSError ? "Accès refusé" : "Erreur"}</h2>
         <p className="text-muted-foreground mb-4">
           {isRLSError 
-            ? "Vous n'avez pas les permissions nécessaires pour cette action" 
+            ? "Vous n'avez pas les permissions nécessaires pour cette action." 
             : (errorMessage || "Erreur lors du chargement des données")}
         </p>
         
-        {children}
-        
-        {!children && (
-          <Button 
-            variant="outline" 
-            onClick={() => navigate("/dashboard")}
-            className="mt-4"
-          >
-            Retourner au tableau de bord
-          </Button>
+        {children || (
+          <div className="space-y-4">
+            {isRLSError && (
+              <p className="text-sm text-muted-foreground">
+                Cette fonctionnalité est réservée aux administrateurs de la plateforme.
+              </p>
+            )}
+            <Button 
+              variant="outline" 
+              onClick={() => navigate("/dashboard")}
+              className="mt-2"
+            >
+              Retourner au tableau de bord
+            </Button>
+          </div>
         )}
       </div>
     </div>

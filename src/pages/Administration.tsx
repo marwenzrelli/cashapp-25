@@ -45,12 +45,21 @@ const Administration = () => {
     return <LoadingState />;
   }
 
-  // Check for RLS policy violation errors
-  if (usersError && usersError.message?.includes("violates row-level security policy")) {
+  // Check for any error that suggests permission issues
+  const hasPermissionError = usersError && (
+    usersError.message?.includes("violates row-level security policy") ||
+    usersError.message?.includes("not_admin") ||
+    usersError.message?.includes("User not allowed")
+  );
+
+  if (hasPermissionError) {
     return (
-      <ErrorState permissionError={true}>
+      <ErrorState 
+        permissionError={true} 
+        errorMessage={usersError?.message}
+      >
         <div className="mt-4 space-y-4">
-          <p className="text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Vous n'avez pas les permissions nécessaires pour accéder ou modifier les profils utilisateurs.
             Cette fonctionnalité est réservée aux administrateurs de la plateforme.
           </p>
@@ -62,30 +71,14 @@ const Administration = () => {
             >
               Retourner au tableau de bord
             </Button>
-          </div>
-        </div>
-      </ErrorState>
-    );
-  }
-
-  // Check for errors that mention "not_admin" or "User not allowed"
-  if (usersError && 
-      (usersError.message?.includes("not_admin") || 
-       usersError.message?.includes("User not allowed"))) {
-    return (
-      <ErrorState permissionError={true}>
-        <div className="mt-4 space-y-4">
-          <p className="text-muted-foreground">
-            Vous n'avez pas les permissions d'administrateur nécessaires pour accéder à cette page.
-            Cette section est réservée aux superviseurs du système.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-2 justify-center mt-4">
-            <Button 
-              onClick={() => navigate("/dashboard")} 
-              variant="default"
+            <Button
+              onClick={retryInitialization}
+              variant="outline"
               className="flex items-center gap-2"
+              disabled={isRetrying}
             >
-              Retourner au tableau de bord
+              <RefreshCw className={`h-4 w-4 ${isRetrying ? 'animate-spin' : ''}`} />
+              {isRetrying ? 'Vérification...' : 'Vérifier les permissions'}
             </Button>
           </div>
         </div>
@@ -118,7 +111,7 @@ const Administration = () => {
   // Check for missing current user info
   if (!currentUser) {
     return (
-      <ErrorState>
+      <ErrorState errorMessage="Profil utilisateur non disponible">
         <div className="mt-4 space-y-4">
           <p className="text-muted-foreground">
             Impossible de charger les informations de votre profil.
