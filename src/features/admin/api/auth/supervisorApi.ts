@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { SystemUser } from '@/types/admin';
 
@@ -131,20 +130,71 @@ export const makeUserSupervisor = async (email: string) => {
     if (!profileData) {
       console.error(`Aucun utilisateur trouvé avec l'email: ${email}`);
       
-      // Si aucun profil n'existe, créer un profil temporaire avec l'email
-      // Cela peut être utile pour des cas où l'utilisateur n'a pas encore de profil
-      const { data: authUser, error: authError } = await supabase.auth.admin.getUserByEmail(email);
+      // Si aucun profil n'existe, nous allons rechercher l'utilisateur dans la table auth.users
+      // Avec la version actuelle de Supabase, nous devons faire une requête à la table profiles
+      // car nous n'avons pas accès à getUserByEmail dans l'API admin
+      const { data: authUsers, error: authError } = await supabase
+        .from('profiles')
+        .select('id, email')
+        .eq('email', email)
+        .limit(1);
       
-      if (authError || !authUser) {
+      if (authError || !authUsers || authUsers.length === 0) {
         console.error(`Aucun utilisateur auth trouvé avec l'email: ${email}`);
-        throw new Error(`Aucun utilisateur trouvé avec l'email: ${email}`);
+        
+        // Créer un nouvel utilisateur avec ce mail
+        console.log(`Création d'un nouvel utilisateur avec l'email: ${email}`);
+        
+        const tempPassword = "Temp" + Math.random().toString(36).substring(2, 10) + "!";
+        
+        const { data: newUser, error: signUpError } = await supabase.auth.signUp({
+          email: email,
+          password: tempPassword,
+          options: {
+            data: {
+              full_name: "Superviseur",
+              role: 'supervisor'
+            }
+          }
+        });
+        
+        if (signUpError || !newUser.user) {
+          console.error("Erreur lors de la création de l'utilisateur:", signUpError);
+          throw signUpError || new Error("Échec de la création de l'utilisateur");
+        }
+        
+        // Attendre que le trigger handle_new_user s'exécute complètement
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Créer un profil pour cet utilisateur
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert({
+            id: newUser.user.id,
+            email: email,
+            full_name: "Superviseur",
+            role: 'supervisor',
+            department: 'finance',
+            profile_role: 'supervisor',
+            status: 'active'
+          });
+        
+        if (insertError) {
+          console.error("Erreur lors de la création d'un profil pour l'utilisateur:", insertError);
+          throw insertError;
+        }
+        
+        console.log(`Profil créé et promu pour l'utilisateur ${email}`);
+        return true;
       }
+      
+      const userId = authUsers[0].id;
       
       // Créer un profil pour cet utilisateur
       const { error: insertError } = await supabase
         .from('profiles')
         .insert({
-          id: authUser.id,
+          id: userId,
           email: email,
           full_name: "Superviseur",
           role: 'supervisor',
