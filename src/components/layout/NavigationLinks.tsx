@@ -30,8 +30,7 @@ export const NavigationLinks = ({ className = "", onClick = () => {}, currentPat
     { path: "/statistics", label: "Statistiques", icon: LineChart, roles: ['supervisor', 'manager'] },
     { path: "/operations", label: "Recherche", icon: Search },
     { path: "/administration", label: "Administration", icon: Shield, roles: ['supervisor'] },
-    // Ajout d'un lien temporaire vers l'utilitaire d'administration pour résoudre le problème
-    { path: "/admin-utility", label: "Utilitaire Admin", icon: Shield, roles: ['supervisor'] },
+    // The temporary link to admin-utility has been removed
   ];
 
   const filteredNavItems = navItems.filter(item => {
