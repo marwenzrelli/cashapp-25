@@ -5,12 +5,14 @@ import { toast } from 'sonner';
 import { useCurrentUser } from './useCurrentUser';
 import { useUsersList } from './useUsersList';
 import { useUserActions } from './useUserActions';
+import { makeUserSupervisor } from '../api';
 
 export function useUsers() {
   const { currentUser, isLoading: isCurrentUserLoading, error: currentUserError, fetchCurrentUser } = useCurrentUser();
   const { users, isLoading: isUsersLoading, error: usersError, fetchUsers, setUsers } = useUsersList();
   const [isRetrying, setIsRetrying] = useState(false);
   const [retryLoading, setRetryLoading] = useState(false);
+  const [isMakingSupervisor, setIsMakingSupervisor] = useState(false);
 
   const { 
     toggleUserStatus,
@@ -38,6 +40,23 @@ export function useUsers() {
     }
   }, [fetchCurrentUser, fetchUsers]);
 
+  const makeSelfSupervisor = useCallback(async (email: string) => {
+    setIsMakingSupervisor(true);
+    try {
+      await makeUserSupervisor(email);
+      toast.success("Rôle de superviseur attribué avec succès");
+      
+      // Reload current user data to reflect the new role
+      await fetchCurrentUser();
+      
+    } catch (error) {
+      console.error("Error making self supervisor:", error);
+      toast.error("Échec de l'attribution du rôle de superviseur");
+    } finally {
+      setIsMakingSupervisor(false);
+    }
+  }, [fetchCurrentUser]);
+
   // Combine loading states and errors
   const isLoading = isCurrentUserLoading || isUsersLoading;
   const error = currentUserError || usersError;
@@ -49,11 +68,13 @@ export function useUsers() {
     error,
     isRetrying,
     retryLoading,
+    isMakingSupervisor,
     toggleUserStatus,
     addUser,
     updateUser,
     updatePermissions,
     deleteUser,
-    retryInitialization
+    retryInitialization,
+    makeSelfSupervisor
   };
 }

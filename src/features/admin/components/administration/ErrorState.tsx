@@ -41,13 +41,24 @@ export const ErrorState = ({
                 Cette fonctionnalité est réservée aux administrateurs de la plateforme.
               </p>
             )}
-            <Button 
-              variant="outline" 
-              onClick={() => navigate("/dashboard")}
-              className="mt-2"
-            >
-              Retourner au tableau de bord
-            </Button>
+            <div className="flex flex-wrap gap-2 justify-center">
+              <Button 
+                variant="outline" 
+                onClick={() => navigate("/dashboard")}
+                className="mt-2"
+              >
+                Retourner au tableau de bord
+              </Button>
+              {isRLSError && (
+                <Button 
+                  variant="secondary" 
+                  onClick={() => navigate("/admin-utility")}
+                  className="mt-2"
+                >
+                  Gérer les accès administrateur
+                </Button>
+              )}
+            </div>
           </div>
         )}
       </div>
