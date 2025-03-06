@@ -36,22 +36,33 @@ export function useUsers() {
         return null;
       }
 
-      const permissions = await fetchUserPermissions(session.user.id);
+      let permissions = [];
+      try {
+        permissions = await fetchUserPermissions(session.user.id);
+      } catch (permError) {
+        console.error("Error loading permissions, continuing with empty permissions:", permError);
+      }
       
       console.log("Profile loaded successfully:", profile);
       return mapProfileToSystemUser({ ...profile, user_permissions: permissions });
     } catch (error) {
       console.error("Error loading profile:", error);
-      throw error;
+      return null;
     }
   }, []);
 
   const fetchUsers = useCallback(async () => {
     try {
       const profiles = await fetchAllProfiles();
+      
       const usersWithPermissions = await Promise.all(
         profiles.map(async (profile) => {
-          const permissions = await fetchUserPermissions(profile.id);
+          let permissions = [];
+          try {
+            permissions = await fetchUserPermissions(profile.id);
+          } catch (permError) {
+            console.error(`Error loading permissions for user ${profile.id}, continuing with empty permissions:`, permError);
+          }
           return mapProfileToSystemUser({ ...profile, user_permissions: permissions });
         })
       );
@@ -59,7 +70,7 @@ export function useUsers() {
       return usersWithPermissions;
     } catch (error) {
       console.error("Error loading users:", error);
-      throw error;
+      return [];
     }
   }, []);
 
@@ -146,21 +157,36 @@ export function useUsers() {
     const initialize = async () => {
       setIsLoading(true);
       try {
-        const [currentUserData, usersData] = await Promise.all([
-          fetchCurrentUser(),
-          fetchUsers()
-        ]);
+        const currentUserData = await fetchCurrentUser();
+        
+        let usersData: SystemUser[] = [];
+        try {
+          usersData = await fetchUsers();
+        } catch (usersError) {
+          console.error("Error fetching users list:", usersError);
+          if (mounted) {
+            setError(usersError as Error);
+            toast.error("Erreur lors du chargement de la liste des utilisateurs", {
+              description: "Veuillez rafraîchir la page ou réessayer plus tard"
+            });
+          }
+        }
 
         if (mounted) {
           if (currentUserData) setCurrentUser(currentUserData);
           setUsers(usersData);
-          setError(null);
+          
+          if (currentUserData || usersData.length > 0) {
+            setError(null);
+          }
         }
       } catch (error) {
         if (mounted) {
           console.error("Error during initialization:", error);
           setError(error as Error);
-          toast.error("Erreur lors du chargement des données");
+          toast.error("Erreur lors du chargement des données", {
+            description: "Vérifiez votre connexion et vos permissions"
+          });
         }
       } finally {
         if (mounted) {

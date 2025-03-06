@@ -13,6 +13,8 @@ import { AccessDenied } from "@/features/admin/components/administration/AccessD
 import { LoadingState } from "@/features/admin/components/administration/LoadingState";
 import { ErrorState } from "@/features/admin/components/administration/ErrorState";
 import { useAuthenticationCheck } from "@/features/admin/hooks/useAuthenticationCheck";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 
 const Administration = () => {
   useAuthenticationCheck();
@@ -38,8 +40,41 @@ const Administration = () => {
     return <LoadingState />;
   }
 
-  if (usersError || !currentUser) {
-    return <ErrorState />;
+  // Improved error handling
+  if (usersError) {
+    return (
+      <ErrorState>
+        <div className="mt-4">
+          <Button 
+            onClick={() => window.location.reload()} 
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Rafraîchir la page
+          </Button>
+        </div>
+      </ErrorState>
+    );
+  }
+
+  // Check for missing current user info
+  if (!currentUser) {
+    return (
+      <ErrorState>
+        <div className="mt-4 space-y-2">
+          <p>Impossible de charger les informations de votre profil.</p>
+          <Button 
+            onClick={() => window.location.reload()} 
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Réessayer
+          </Button>
+        </div>
+      </ErrorState>
+    );
   }
 
   if (currentUser.role !== 'supervisor') {
