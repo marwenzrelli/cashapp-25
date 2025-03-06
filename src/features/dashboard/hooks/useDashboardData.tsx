@@ -41,7 +41,7 @@ export const useDashboardData = () => {
 
       if (clientsError) throw clientsError;
 
-      // Since operation_statistics doesn't exist in the database schema we provided, we'll create mock data
+      // Generate mock monthly stats since the operation_statistics table doesn't exist
       const monthlyStats = generateMockMonthlyStats();
 
       const { data: balanceData, error: balanceError } = await supabase

@@ -19,7 +19,7 @@ export const useDeleteWithdrawal = (fetchWithdrawals: () => Promise<void>) => {
   const confirmDeleteWithdrawal = async () => {
     if (!withdrawalToDelete) {
       console.error("Aucun retrait sélectionné pour la suppression");
-      return;
+      return false;
     }
     
     setLoading(true);
@@ -35,10 +35,14 @@ export const useDeleteWithdrawal = (fetchWithdrawals: () => Promise<void>) => {
       console.log("User ID pour la suppression:", userId);
       
       // Récupérer les détails complets du retrait avant suppression
+      const withdrawalId = typeof withdrawalToDelete.id === 'string' 
+        ? parseInt(withdrawalToDelete.id, 10)
+        : withdrawalToDelete.id;
+        
       const { data: withdrawalData, error: fetchError } = await supabase
         .from('withdrawals')
         .select('*')
-        .eq('id', withdrawalToDelete.id)
+        .eq('id', withdrawalId)
         .single();
         
       if (fetchError) {
@@ -50,7 +54,7 @@ export const useDeleteWithdrawal = (fetchWithdrawals: () => Promise<void>) => {
       }
       
       if (!withdrawalData) {
-        console.error("Aucune donnée de retrait trouvée pour l'ID:", withdrawalToDelete.id);
+        console.error("Aucune donnée de retrait trouvée pour l'ID:", withdrawalId);
         toast.error("Retrait introuvable", {
           description: "Impossible de trouver les détails du retrait à supprimer."
         });
@@ -90,7 +94,7 @@ export const useDeleteWithdrawal = (fetchWithdrawals: () => Promise<void>) => {
       const { error: deleteError } = await supabase
         .from('withdrawals')
         .delete()
-        .eq('id', withdrawalToDelete.id);
+        .eq('id', withdrawalId);
         
       if (deleteError) {
         console.error("Erreur lors de la suppression du retrait:", deleteError);
