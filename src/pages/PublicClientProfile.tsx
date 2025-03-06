@@ -31,7 +31,8 @@ const PublicClientProfile = () => {
       isLoading, 
       error,
       loadingTime,
-      currentURL: window.location.href
+      currentURL: window.location.href,
+      currentRoute: window.location.pathname
     });
     
     // Show a toast for client not found errors if we have an error and we're not loading
@@ -41,6 +42,18 @@ const PublicClientProfile = () => {
       });
     }
   }, [token, client, operations, isLoading, error, loadingTime]);
+
+  // Additional debug logging for current path
+  useEffect(() => {
+    console.log("Current path:", window.location.pathname);
+    console.log("Current params:", { token });
+    
+    // Check if we're at /clients/1 (direct client ID path)
+    if (window.location.pathname === '/clients/1' || window.location.pathname.match(/\/clients\/\d+$/)) {
+      const directClientId = window.location.pathname.split('/').pop();
+      console.log("Direct client ID access detected:", directClientId);
+    }
+  }, [token]);
 
   // Basic token format validation on component mount and trigger data fetch
   useEffect(() => {

@@ -39,11 +39,12 @@ const ClientProfile = () => {
     clientId,
     hasOperations: clientOperations?.length > 0,
     filteredOpsCount: filteredOperations?.length,
-    clientName: client ? `${client.prenom} ${client.nom}` : null
+    clientName: client ? `${client.prenom} ${client.nom}` : null,
+    currentPath: window.location.pathname
   });
 
   if (isLoading) {
-    return <PublicClientLoading />;
+    return <PublicClientLoading onRetry={refetchClient} />;
   }
 
   // Check if there's an explicit error first
