@@ -12,38 +12,67 @@ export const useAuthCheck = () => {
 
   useEffect(() => {
     const checkSessionAndRole = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/login", { replace: true });
-        return;
-      }
+      try {
+        // First check if we have a session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error("Erreur de session:", sessionError);
+          toast.error("Erreur lors de la vérification de la session");
+          navigate("/login", { replace: true });
+          return;
+        }
 
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', session.user.id)
-        .single();
+        if (!session) {
+          console.log("Pas de session active");
+          navigate("/login", { replace: true });
+          return;
+        }
 
-      if (error) {
-        console.error("Erreur lors de la récupération du profil:", error);
+        // Then get the profile with role
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .maybeSingle();
+
+        if (profileError) {
+          console.error("Erreur lors de la récupération du profil:", profileError);
+          toast.error("Erreur lors de la vérification des permissions", {
+            description: "Impossible de récupérer votre profil"
+          });
+          return;
+        }
+
+        if (!profile) {
+          console.error("Aucun profil trouvé pour l'utilisateur");
+          toast.error("Erreur lors de la vérification des permissions", {
+            description: "Profil utilisateur introuvable"
+          });
+          return;
+        }
+
+        // Set the role in state
+        setUserRole(profile.role as UserRole);
+        
+        // Check route permissions
+        const restrictedRoutes = {
+          '/administration': ['supervisor'],
+          '/statistics': ['supervisor', 'manager']
+        };
+
+        const currentPath = location.pathname;
+        const allowedRoles = restrictedRoutes[currentPath as keyof typeof restrictedRoutes];
+
+        if (allowedRoles && !allowedRoles.includes(profile.role)) {
+          toast.error("Accès non autorisé", {
+            description: "Vous n'avez pas les permissions nécessaires"
+          });
+          navigate("/dashboard", { replace: true });
+        }
+      } catch (error) {
+        console.error("Erreur générale lors de la vérification:", error);
         toast.error("Erreur lors de la vérification des permissions");
-        return;
-      }
-
-      // Correctly type the role value by casting it to UserRole
-      setUserRole(profile.role as UserRole);
-      
-      const restrictedRoutes = {
-        '/administration': ['supervisor'],
-        '/statistics': ['supervisor', 'manager']
-      };
-
-      const currentPath = location.pathname;
-      const allowedRoles = restrictedRoutes[currentPath as keyof typeof restrictedRoutes];
-
-      if (allowedRoles && !allowedRoles.includes(profile.role)) {
-        toast.error("Accès non autorisé");
-        navigate("/dashboard", { replace: true });
       }
     };
 
