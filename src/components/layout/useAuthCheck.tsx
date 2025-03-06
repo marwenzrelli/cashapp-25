@@ -64,7 +64,8 @@ export const useAuthCheck = () => {
         // Check route permissions
         const restrictedRoutes = {
           '/administration': ['supervisor'],
-          '/statistics': ['supervisor', 'manager']
+          '/statistics': ['supervisor', 'manager'],
+          '/admin-utility': ['supervisor'] // Ajout pour l'utilitaire d'administration
         };
 
         const currentPath = location.pathname;
