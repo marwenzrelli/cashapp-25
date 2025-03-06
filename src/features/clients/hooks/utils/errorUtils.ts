@@ -5,6 +5,10 @@ import { toast } from "sonner";
 export const handleSupabaseError = (error: any) => {
   console.error("Erreur Supabase:", error);
   
+  if (!error) {
+    return "Une erreur inattendue s'est produite";
+  }
+  
   if (error.message?.includes("Failed to fetch")) {
     return "Problème de connexion réseau. Veuillez vérifier votre connexion internet.";
   }
@@ -20,14 +24,22 @@ export const handleSupabaseError = (error: any) => {
   if (error.message?.includes("client")) {
     return error.message;
   }
+
+  if (error.message?.includes("introuvable")) {
+    return error.message;
+  }
   
   return error.message || "Une erreur inattendue s'est produite";
 };
 
 // Helper to show error toast
 export const showErrorToast = (title: string, error: any) => {
+  const errorMessage = typeof error === 'string' 
+    ? error 
+    : error.message || handleSupabaseError(error);
+    
   toast.error(title, {
-    description: handleSupabaseError(error)
+    description: errorMessage
   });
 };
 

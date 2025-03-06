@@ -4,6 +4,7 @@ import { Client } from "@/features/clients/types";
 import { toast } from "sonner";
 import { ClientOperation, TokenData } from "./types";
 import { validateTokenExpiration, validateClientStatus } from "./validation";
+import { showErrorToast } from "../utils/errorUtils";
 
 export const fetchAccessData = async (token: string): Promise<TokenData> => {
   try {
@@ -82,7 +83,7 @@ export const fetchClientOperations = async (clientFullName: string): Promise<Cli
 
     if (depositsError) {
       console.error("Error fetching deposits:", depositsError);
-      toast.error("Erreur lors de la récupération des dépôts");
+      showErrorToast("Erreur de données", { message: "Erreur lors de la récupération des dépôts" });
     }
 
     // Fetch withdrawals
@@ -94,7 +95,7 @@ export const fetchClientOperations = async (clientFullName: string): Promise<Cli
 
     if (withdrawalsError) {
       console.error("Error fetching withdrawals:", withdrawalsError);
-      toast.error("Erreur lors de la récupération des retraits");
+      showErrorToast("Erreur de données", { message: "Erreur lors de la récupération des retraits" });
     }
 
     // Fetch transfers (as sender)
@@ -106,7 +107,7 @@ export const fetchClientOperations = async (clientFullName: string): Promise<Cli
 
     if (senderError) {
       console.error("Error fetching transfers as sender:", senderError);
-      toast.error("Erreur lors de la récupération des virements envoyés");
+      showErrorToast("Erreur de données", { message: "Erreur lors de la récupération des virements envoyés" });
     }
 
     // Fetch transfers (as receiver)
@@ -118,7 +119,7 @@ export const fetchClientOperations = async (clientFullName: string): Promise<Cli
 
     if (receiverError) {
       console.error("Error fetching transfers as receiver:", receiverError);
-      toast.error("Erreur lors de la récupération des virements reçus");
+      showErrorToast("Erreur de données", { message: "Erreur lors de la récupération des virements reçus" });
     }
 
     // Format and combine all operations

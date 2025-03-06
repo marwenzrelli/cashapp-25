@@ -7,7 +7,6 @@ import { PublicClientOperationsHistory } from "@/features/clients/components/Pub
 import { usePublicClientProfile } from "@/features/clients/hooks/usePublicClientProfile";
 import { useEffect } from "react";
 import { showErrorToast } from "@/features/clients/hooks/utils/errorUtils";
-import { toast } from "sonner";
 
 const PublicClientProfile = () => {
   const { token } = useParams<{ token: string }>();
@@ -39,7 +38,13 @@ const PublicClientProfile = () => {
     fetchClientData();
   }, [token, navigate, fetchClientData]);
 
-  console.log("PublicClientProfile rendering with:", { token, isLoading, hasClient: !!client, error });
+  console.log("PublicClientProfile rendering with:", { 
+    token, 
+    isLoading, 
+    hasClient: !!client, 
+    error,
+    currentURL: window.location.href
+  });
 
   // Show loading state
   if (isLoading) {

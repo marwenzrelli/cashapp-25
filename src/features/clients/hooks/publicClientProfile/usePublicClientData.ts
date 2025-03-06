@@ -5,6 +5,7 @@ import { PublicClientData, ClientOperation } from "./types";
 import { validateToken } from "./validation";
 import { fetchAccessData, fetchClientDetails, fetchClientOperations } from "./fetchClientData";
 import { toast } from "sonner";
+import { showErrorToast } from "../utils/errorUtils";
 
 export const usePublicClientData = (token: string | undefined): PublicClientData => {
   const [client, setClient] = useState<Client | null>(null);
@@ -25,9 +26,7 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
         setError(tokenValidation.error);
         setIsLoading(false);
         
-        toast.error("Erreur d'accès", {
-          description: tokenValidation.error || "Token invalide"
-        });
+        showErrorToast("Erreur d'accès", { message: tokenValidation.error || "Token invalide" });
         return;
       }
 
@@ -41,21 +40,25 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
         setError(errorMsg);
         setIsLoading(false);
         
-        toast.error("Erreur d'accès", {
-          description: errorMsg
-        });
+        showErrorToast("Erreur d'accès", { message: errorMsg });
         return;
       }
       
       // Fetch client data
-      const clientData = await fetchClientDetails(accessData.client_id);
-      console.log("Client data retrieved:", clientData);
-      setClient(clientData);
+      try {
+        const clientData = await fetchClientDetails(accessData.client_id);
+        console.log("Client data retrieved:", clientData);
+        setClient(clientData);
 
-      // Get client operations
-      const clientFullName = `${clientData.prenom} ${clientData.nom}`;
-      const clientOperations = await fetchClientOperations(clientFullName);
-      setOperations(clientOperations);
+        // Get client operations
+        const clientFullName = `${clientData.prenom} ${clientData.nom}`;
+        const clientOperations = await fetchClientOperations(clientFullName);
+        setOperations(clientOperations);
+      } catch (clientErr: any) {
+        console.error("Error fetching client data:", clientErr);
+        setError(clientErr.message || "Client introuvable dans notre système");
+        showErrorToast("Client introuvable", { message: clientErr.message || "Client introuvable dans notre système" });
+      }
       
       setIsLoading(false);
     } catch (err: any) {
@@ -69,9 +72,7 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
       }
       
       // Show toast for the error
-      toast.error("Erreur d'accès", {
-        description: errorMessage
-      });
+      showErrorToast("Erreur d'accès", { message: errorMessage });
       
       setError(errorMessage);
       setIsLoading(false);
