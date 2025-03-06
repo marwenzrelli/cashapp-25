@@ -1,29 +1,58 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { SystemUser } from '@/types/admin';
 
 export const fetchUserProfile = async (userId: string) => {
   try {
+    console.log(`Attempting to fetch profile for user: ${userId}`);
+    
+    // First try with maybeSingle to avoid the error from single when no row is found
     const { data: profile, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
-      .single();
-
+      .maybeSingle();
+      
     if (error) {
       console.error("Error fetching user profile:", error);
-      // Try with maybeSingle instead of single to handle case where profile might not exist
-      const { data: maybeProfile, error: secondError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
-        
-      if (secondError) throw secondError;
-      if (!maybeProfile) {
-        console.log(`No profile found for user ${userId}`);
-        return null;
+      throw error;
+    }
+    
+    if (!profile) {
+      console.log(`No profile found for user ${userId}, creating default profile`);
+      
+      // Get user email from auth table
+      const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
+      
+      if (userError) {
+        console.error("Error fetching user data:", userError);
+        throw userError;
       }
-      return maybeProfile;
+      
+      // Create a default profile
+      const defaultProfile = {
+        id: userId,
+        email: userData?.user?.email || '',
+        full_name: 'Default User',
+        role: 'supervisor', // Assuming supervisor role for missing profiles
+        status: 'active',
+        department: 'administrative'
+      };
+      
+      // Insert the default profile
+      const { data: newProfile, error: insertError } = await supabase
+        .from('profiles')
+        .insert(defaultProfile)
+        .select('*')
+        .single();
+        
+      if (insertError) {
+        console.error("Error creating default profile:", insertError);
+        throw insertError;
+      }
+      
+      console.log("Default profile created successfully:", newProfile);
+      return newProfile;
     }
     
     return profile;

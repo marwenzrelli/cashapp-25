@@ -24,11 +24,14 @@ const Administration = () => {
     currentUser, 
     isLoading, 
     error: usersError,
+    isRetrying,
+    retryLoading,
     toggleUserStatus,
     addUser,
     updateUser,
     updatePermissions,
-    deleteUser
+    deleteUser,
+    retryInitialization
   } = useUsers();
   
   const [searchTerm, setSearchTerm] = useState("");
@@ -44,14 +47,18 @@ const Administration = () => {
   if (usersError) {
     return (
       <ErrorState>
-        <div className="mt-4">
+        <div className="mt-4 space-y-4">
+          <p className="text-muted-foreground">
+            {usersError.message || "Une erreur s'est produite lors du chargement des données"}
+          </p>
           <Button 
-            onClick={() => window.location.reload()} 
+            onClick={retryInitialization} 
             variant="outline"
             className="flex items-center gap-2"
+            disabled={isRetrying}
           >
-            <RefreshCw className="h-4 w-4" />
-            Rafraîchir la page
+            <RefreshCw className={`h-4 w-4 ${isRetrying ? 'animate-spin' : ''}`} />
+            {isRetrying ? 'Chargement en cours...' : 'Réessayer'}
           </Button>
         </div>
       </ErrorState>
@@ -62,15 +69,19 @@ const Administration = () => {
   if (!currentUser) {
     return (
       <ErrorState>
-        <div className="mt-4 space-y-2">
-          <p>Impossible de charger les informations de votre profil.</p>
+        <div className="mt-4 space-y-4">
+          <p className="text-muted-foreground">
+            Impossible de charger les informations de votre profil.
+            Veuillez vous reconnecter ou contactez l'administrateur.
+          </p>
           <Button 
-            onClick={() => window.location.reload()} 
+            onClick={retryInitialization} 
             variant="outline"
             className="flex items-center gap-2"
+            disabled={isRetrying}
           >
-            <RefreshCw className="h-4 w-4" />
-            Réessayer
+            <RefreshCw className={`h-4 w-4 ${isRetrying ? 'animate-spin' : ''}`} />
+            {isRetrying ? 'Chargement en cours...' : 'Réessayer'}
           </Button>
         </div>
       </ErrorState>

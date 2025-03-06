@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { SystemUser, mapProfileToSystemUser } from '@/types/admin';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,6 +19,8 @@ export function useUsers() {
   const [currentUser, setCurrentUser] = useState<SystemUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const [retryLoading, setRetryLoading] = useState(false);
 
   const fetchCurrentUser = useCallback(async () => {
     try {
@@ -47,7 +50,7 @@ export function useUsers() {
       return mapProfileToSystemUser({ ...profile, user_permissions: permissions });
     } catch (error) {
       console.error("Error loading profile:", error);
-      return null;
+      throw error;
     }
   }, []);
 
@@ -70,7 +73,7 @@ export function useUsers() {
       return usersWithPermissions;
     } catch (error) {
       console.error("Error loading users:", error);
-      return [];
+      throw error;
     }
   }, []);
 
@@ -151,6 +154,28 @@ export function useUsers() {
     }
   }, []);
 
+  const retryInitialization = useCallback(async () => {
+    setIsRetrying(true);
+    setRetryLoading(true);
+    try {
+      const currentUserData = await fetchCurrentUser();
+      if (currentUserData) setCurrentUser(currentUserData);
+      
+      const usersData = await fetchUsers();
+      setUsers(usersData);
+      
+      setError(null);
+      toast.success("Données chargées avec succès");
+    } catch (error) {
+      console.error("Error during retry:", error);
+      setError(error as Error);
+      toast.error("Échec du chargement des données");
+    } finally {
+      setIsRetrying(false);
+      setRetryLoading(false);
+    }
+  }, [fetchCurrentUser, fetchUsers]);
+
   useEffect(() => {
     let mounted = true;
 
@@ -215,10 +240,13 @@ export function useUsers() {
     currentUser,
     isLoading,
     error,
+    isRetrying,
+    retryLoading,
     toggleUserStatus,
     addUser,
     updateUser,
     updatePermissions: handleUpdatePermissions,
-    deleteUser
+    deleteUser,
+    retryInitialization
   };
 }
