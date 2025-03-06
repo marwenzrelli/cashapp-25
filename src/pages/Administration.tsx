@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { AddUserDialog } from "@/features/admin/components/AddUserDialog";
 import { UserProfile } from "@/features/admin/components/UserProfile";
@@ -45,7 +44,6 @@ const Administration = () => {
     return <LoadingState />;
   }
 
-  // Check for any error that suggests permission issues
   const hasPermissionError = usersError && (
     usersError.message?.includes("violates row-level security policy") ||
     usersError.message?.includes("not_admin") ||
@@ -86,7 +84,6 @@ const Administration = () => {
     );
   }
 
-  // Improved error handling for other errors
   if (usersError) {
     return (
       <ErrorState errorMessage={usersError.message}>
@@ -108,7 +105,6 @@ const Administration = () => {
     );
   }
 
-  // Check for missing current user info
   if (!currentUser) {
     return (
       <ErrorState errorMessage="Profil utilisateur non disponible">
