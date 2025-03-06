@@ -7,11 +7,11 @@ export const validateToken = (token: string | undefined): { isValid: boolean; er
     return { isValid: false, error: "Token d'accès manquant" };
   }
 
-  // Basic UUID format validation (more lenient regex to handle different formats)
+  // More thorough UUID format validation with more detailed error
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (!uuidRegex.test(token)) {
     console.error("Invalid token format:", token);
-    return { isValid: false, error: "Format de token invalide" };
+    return { isValid: false, error: "Format de token invalide ou token corrompu" };
   }
 
   return { isValid: true, error: null };
@@ -47,16 +47,18 @@ export const validateTokenExpiration = (expires_at: string | null, created_at: s
     return { isValid: true, error: null };
   } catch (error) {
     console.error("Error validating token expiration:", error);
-    return { isValid: false, error: "Erreur lors de la validation du token" };
+    return { isValid: false, error: "Erreur lors de la validation de l'expiration du token" };
   }
 };
 
 export const validateClientStatus = (status: string): { isValid: boolean; error: string | null } => {
   if (!status) {
+    console.error("Missing client status");
     return { isValid: false, error: "Statut client manquant" };
   }
   
   if (status === 'inactive' || status === 'suspended') {
+    console.error("Client account is inactive or suspended:", status);
     return { isValid: false, error: "Ce compte client est désactivé ou suspendu" };
   }
   

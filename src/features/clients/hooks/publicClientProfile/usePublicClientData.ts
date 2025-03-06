@@ -35,7 +35,7 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
       const accessData = await fetchAccessData(token!);
       console.log("Access data retrieved:", accessData);
       
-      if (!accessData.client_id) {
+      if (!accessData || !accessData.client_id) {
         const errorMsg = "ID client manquant dans les données d'accès";
         console.error(errorMsg);
         setError(errorMsg);

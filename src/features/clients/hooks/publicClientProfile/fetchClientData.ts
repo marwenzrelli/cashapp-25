@@ -12,7 +12,7 @@ export const fetchAccessData = async (token: string): Promise<TokenData> => {
       .from('qr_access')
       .select('client_id, expires_at, created_at')
       .eq('access_token', token)
-      .single();
+      .maybeSingle();  // Using maybeSingle instead of single to handle not found case better
 
     if (error) {
       console.error("Error fetching access data:", error);
@@ -21,7 +21,7 @@ export const fetchAccessData = async (token: string): Promise<TokenData> => {
 
     if (!data) {
       console.error("No access data found for token:", token);
-      throw new Error("Token d'accès non reconnu");
+      throw new Error("Token d'accès non reconnu dans notre système");
     }
 
     // Validate token expiration
@@ -45,7 +45,7 @@ export const fetchClientDetails = async (clientId: number): Promise<Client> => {
       .from('clients')
       .select('*')
       .eq('id', clientId)
-      .single();
+      .maybeSingle();  // Using maybeSingle instead of single
 
     if (error) {
       console.error("Error fetching client:", error);
@@ -54,7 +54,7 @@ export const fetchClientDetails = async (clientId: number): Promise<Client> => {
 
     if (!data) {
       console.error("No client found with ID:", clientId);
-      throw new Error("Client introuvable");
+      throw new Error("Client introuvable dans notre système");
     }
 
     // Validate client status

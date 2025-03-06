@@ -7,6 +7,7 @@ import { PublicClientOperationsHistory } from "@/features/clients/components/Pub
 import { usePublicClientProfile } from "@/features/clients/hooks/usePublicClientProfile";
 import { useEffect } from "react";
 import { showErrorToast } from "@/features/clients/hooks/utils/errorUtils";
+import { toast } from "sonner";
 
 const PublicClientProfile = () => {
   const { token } = useParams<{ token: string }>();
@@ -15,16 +16,25 @@ const PublicClientProfile = () => {
 
   // Basic token format validation on component mount and refetch data
   useEffect(() => {
+    // Check if token exists
+    if (!token) {
+      console.error("Token is missing in URL params");
+      showErrorToast("Accès refusé", { message: "Token d'accès manquant" });
+      navigate("/"); // Redirect to home on missing token
+      return;
+    }
+    
     // Basic UUID format validation
     const isValidUUID = token?.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
     
-    if (!token || !isValidUUID) {
+    if (!isValidUUID) {
       console.error("Invalid token format:", token);
       showErrorToast("Format de token invalide", { message: "Le format du token ne correspond pas à un UUID valide" });
       navigate("/"); // Redirect to home on invalid token format
       return;
     }
     
+    console.log("Fetching client data for token:", token);
     // Fetch client data
     fetchClientData();
   }, [token, navigate, fetchClientData]);
@@ -38,6 +48,7 @@ const PublicClientProfile = () => {
 
   // Show error state
   if (error || !client) {
+    console.error("Error rendering client profile:", error);
     return <PublicClientError error={error} />;
   }
 

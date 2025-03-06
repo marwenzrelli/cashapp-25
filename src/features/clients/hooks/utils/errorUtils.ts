@@ -13,6 +13,14 @@ export const handleSupabaseError = (error: any) => {
     return "Session expirée. Veuillez vous reconnecter.";
   }
   
+  if (error.message?.includes("Token")) {
+    return error.message;
+  }
+  
+  if (error.message?.includes("client")) {
+    return error.message;
+  }
+  
   return error.message || "Une erreur inattendue s'est produite";
 };
 
