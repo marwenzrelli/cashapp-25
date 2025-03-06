@@ -1,11 +1,10 @@
-
 import { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Copy, ExternalLink, RefreshCw, Shield, QrCode, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
@@ -18,7 +17,6 @@ interface ClientQRCodeProps {
 export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
-  const { toast } = useToast();
   const [qrUrl, setQrUrl] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();

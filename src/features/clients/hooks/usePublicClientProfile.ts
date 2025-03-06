@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { usePublicClientData } from "./publicClientProfile/usePublicClientData";
 import { useRealtimeSubscriptions } from "./publicClientProfile/useRealtimeSubscriptions";
 
@@ -13,20 +13,17 @@ export const usePublicClientProfile = (token: string | undefined) => {
     retryFetch 
   } = usePublicClientData(token);
 
+  // Extract the client ID from the client object for subscriptions
+  const clientId = client?.id;
+
   // Set up realtime subscriptions
-  const { setupSubscriptions, cleanupSubscriptions } = useRealtimeSubscriptions(fetchClientData);
+  const refreshData = useCallback(() => {
+    console.log("Refreshing client data due to realtime update");
+    fetchClientData();
+  }, [fetchClientData]);
 
-  useEffect(() => {
-    if (client) {
-      // Set up real-time subscriptions when client data is available
-      setupSubscriptions();
-    }
-
-    // Cleanup subscriptions when component unmounts
-    return () => {
-      cleanupSubscriptions();
-    };
-  }, [client, setupSubscriptions, cleanupSubscriptions]);
+  // Pass clientId and refreshData to useRealtimeSubscriptions
+  useRealtimeSubscriptions(clientId, refreshData);
 
   return {
     client,
