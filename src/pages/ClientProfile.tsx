@@ -28,7 +28,8 @@ const ClientProfile = () => {
     setIsCustomRange,
     formatAmount,
     exportToExcel,
-    exportToPDF
+    exportToPDF,
+    refetchClient
   } = useClientProfile();
 
   console.log("ClientProfile - Full state:", { 
@@ -48,14 +49,14 @@ const ClientProfile = () => {
   // Check if there's an explicit error first
   if (error) {
     console.log("Displaying error:", error);
-    return <PublicClientError error={error} />;
+    return <PublicClientError error={error} onRetry={refetchClient} />;
   }
 
   // Then check if client exists
   if (!client) {
     console.log("Client not found for ID:", clientId);
     const errorMessage = `Le client avec l'identifiant ${clientId} n'existe pas ou a été supprimé.`;
-    return <PublicClientError error={errorMessage} />;
+    return <PublicClientError error={errorMessage} onRetry={refetchClient} />;
   }
 
   return (

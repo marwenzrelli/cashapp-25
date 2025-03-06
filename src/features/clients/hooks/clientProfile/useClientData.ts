@@ -1,139 +1,65 @@
 
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect, useCallback } from "react";
 import { Client } from "@/features/clients/types";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { handleSupabaseError } from "../utils/errorUtils";
 
 export const useClientData = (clientId: number | null) => {
   const [client, setClient] = useState<Client | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Reset state at the start of any fetch operation
-    setClient(null);
-    setError(null);
-    setIsLoading(true);
+  
+  const fetchClient = useCallback(async (id: number) => {
+    if (!id) return;
     
-    const fetchClient = async () => {
-      try {
-        if (!clientId) {
-          console.error("Missing client ID in URL");
-          setError("Identifiant client manquant");
-          setIsLoading(false);
-          return;
-        }
-        
-        console.log("Attempting to fetch client with ID:", clientId);
-        
-        const { data, error: supabaseError } = await supabase
-          .from('clients')
-          .select('*')
-          .eq('id', clientId)
-          .maybeSingle();
-
-        if (supabaseError) {
-          console.error("Error loading client data:", supabaseError);
-          const errorMessage = handleSupabaseError(supabaseError);
-          setError(errorMessage);
-          setClient(null); // Ensure client is null when there's an error
-          toast.error("Impossible de charger les informations du client", {
-            description: errorMessage
-          });
-          setIsLoading(false);
-          return;
-        }
-
-        if (!data) {
-          const errorMessage = `Aucun client trouvé avec l'identifiant ${clientId}`;
-          console.error(errorMessage);
-          setError(errorMessage);
-          setClient(null); // Ensure client is null when not found
-          toast.error("Client introuvable", {
-            description: errorMessage
-          });
-          setIsLoading(false);
-          return;
-        }
-
-        console.log("Client successfully retrieved:", data);
-        setClient(data);
-        // Explicitly clear the error state when we successfully fetch data
-        setError(null);
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error loading client:", error);
-        const errorMessage = error instanceof Error ? error.message : "Erreur inconnue";
-        setError(errorMessage);
-        setClient(null); // Ensure client is null when there's an error
-        toast.error("Impossible de charger les informations du client", {
-          description: errorMessage
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      console.log("Fetching client data for ID:", id);
+      
+      const { data, error } = await supabase
+        .from('clients')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+      
+      if (error) {
+        console.error("Error fetching client:", error);
+        setError(`Erreur de récupération des données: ${error.message}`);
+        toast.error("Erreur", {
+          description: "Impossible de récupérer les données du client."
         });
-        setIsLoading(false);
+        setClient(null);
+      } else if (!data) {
+        console.warn("No client found with ID:", id);
+        setError(`Le client avec l'identifiant ${id} n'existe pas ou a été supprimé.`);
+        setClient(null);
+      } else {
+        console.log("Client data retrieved:", data);
+        setClient(data as Client);
+        setError(null);
       }
-    };
-
-    if (clientId) {
-      fetchClient();
-    }
-
-    // Track all subscriptions to clean them up on unmount
-    const supabaseChannels = [];
-
-    if (clientId) {
-      const clientSubscription = supabase
-        .channel('public_client_changes')
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'clients',
-          filter: `id=eq.${clientId}`,
-        }, (payload) => {
-          console.log("Client update received:", payload);
-          if (payload.eventType === 'DELETE') {
-            setClient(null);
-            setError("Ce client a été supprimé");
-            toast.error("Client supprimé", {
-              description: "Ce client a été supprimé de la base de données"
-            });
-          } else {
-            // Clear any existing error when we receive updates
-            setError(null);
-            setClient(payload.new as Client);
-          }
-        })
-        .subscribe();
-      
-      supabaseChannels.push(clientSubscription);
-
-      // Track real-time updates for operations that might affect the client balance
-      const operationsTables = ['deposits', 'withdrawals', 'transfers'];
-      
-      operationsTables.forEach(table => {
-        const subscription = supabase
-          .channel(`${table}_changes`)
-          .on('postgres_changes', {
-            event: '*',
-            schema: 'public',
-            table,
-          }, () => {
-            // Refresh client data when operations change
-            fetchClient();
-          })
-          .subscribe();
-          
-        supabaseChannels.push(subscription);
+    } catch (err: any) {
+      console.error("Exception during client fetch:", err);
+      setError(err.message || "Une erreur inattendue s'est produite");
+      setClient(null);
+      toast.error("Erreur de connexion", {
+        description: "Impossible de se connecter à la base de données."
       });
+    } finally {
+      setIsLoading(false);
     }
-
-    return () => {
-      // Clean up all channels
-      supabaseChannels.forEach(channel => {
-        supabase.removeChannel(channel);
-      });
-    };
-  }, [clientId]);
-
-  return { client, isLoading, error };
+  }, []);
+  
+  useEffect(() => {
+    if (clientId) {
+      fetchClient(clientId);
+    } else {
+      setIsLoading(false);
+      setError("ID client manquant");
+    }
+  }, [clientId, fetchClient]);
+  
+  return { client, isLoading, error, fetchClient };
 };

@@ -6,9 +6,10 @@ import { useNavigate } from 'react-router-dom';
 
 interface PublicClientErrorProps {
   error: string | null;
+  onRetry?: () => void;
 }
 
-export const PublicClientError = ({ error }: PublicClientErrorProps) => {
+export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) => {
   const navigate = useNavigate();
   
   console.log("PublicClientError - Displaying error:", error);
@@ -28,8 +29,12 @@ export const PublicClientError = ({ error }: PublicClientErrorProps) => {
                           
   // Handle retry button click
   const handleRetry = () => {
-    console.log("Attempting to reload the page...");
-    window.location.reload();
+    console.log("Attempting to reload data...");
+    if (onRetry) {
+      onRetry();
+    } else {
+      window.location.reload();
+    }
   };
   
   // Handle go to home button click

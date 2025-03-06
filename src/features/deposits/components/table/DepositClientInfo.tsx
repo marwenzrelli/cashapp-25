@@ -22,13 +22,18 @@ export const DepositClientInfo = ({ clientName, depositId }: DepositClientInfoPr
         return;
       }
       
-      const [firstName, lastName] = clientName.split(' ');
+      // Split the full name into first name and last name
+      const nameParts = clientName.split(' ');
       
-      if (!firstName || !lastName) {
+      if (nameParts.length < 2) {
         console.warn("Client name format invalid:", clientName);
         navigate(`/clients?search=${encodeURIComponent(clientName)}`);
         return;
       }
+      
+      // The first part is the first name, the rest combined is the last name
+      const firstName = nameParts[0];
+      const lastName = nameParts.slice(1).join(' ');
       
       console.log(`Searching for client with first name "${firstName}" and last name "${lastName}"`);
       

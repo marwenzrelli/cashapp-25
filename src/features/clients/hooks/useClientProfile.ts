@@ -1,5 +1,5 @@
 
-import { useRef } from "react";
+import { useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useOperations } from "@/features/operations/hooks/useOperations";
 import { useClientData } from "./clientProfile/useClientData";
@@ -14,7 +14,17 @@ export const useClientProfile = () => {
   const clientId = id ? Number(id) : null;
   
   // Get client data
-  const { client, isLoading, error } = useClientData(clientId);
+  const { client, isLoading, error, fetchClient } = useClientData(clientId);
+  
+  // Function to manually refetch client data
+  const refetchClient = useCallback(() => {
+    if (clientId) {
+      console.log("Manually refetching client data for ID:", clientId);
+      fetchClient(clientId);
+    } else {
+      console.error("Cannot refetch: No client ID available");
+    }
+  }, [clientId, fetchClient]);
   
   // Filter operations
   const {
@@ -56,6 +66,7 @@ export const useClientProfile = () => {
     setIsCustomRange,
     formatAmount,
     exportToExcel,
-    exportToPDF
+    exportToPDF,
+    refetchClient
   };
 };
