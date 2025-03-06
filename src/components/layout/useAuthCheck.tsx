@@ -32,6 +32,14 @@ export const useAuthCheck = () => {
         console.log("Session active pour l'utilisateur:", session.user.id);
         console.log("Email de l'utilisateur:", session.user.email);
 
+        // Check if email matches the supervisor's email directly
+        const supervisorEmail = "marwen.zrelli.pro@icloud.com";
+        if (session.user.email === supervisorEmail) {
+          console.log("Email de superviseur reconnu directement:", supervisorEmail);
+          setUserRole("supervisor");
+          return;
+        }
+
         // Then get the profile with role
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
@@ -49,6 +57,30 @@ export const useAuthCheck = () => {
 
         if (!profile) {
           console.error("Aucun profil trouvé pour l'utilisateur:", session.user.id);
+          
+          // If no profile, but email matches supervisor, create one automatically
+          if (session.user.email === supervisorEmail) {
+            console.log("Création automatique d'un profil pour le superviseur");
+            const { error: insertError } = await supabase
+              .from('profiles')
+              .insert({
+                id: session.user.id,
+                email: session.user.email,
+                full_name: "Superviseur Principal",
+                role: "supervisor",
+                profile_role: "supervisor"
+              });
+              
+            if (insertError) {
+              console.error("Erreur lors de la création du profil:", insertError);
+              toast.error("Erreur lors de la création du profil");
+            } else {
+              console.log("Profil de superviseur créé avec succès");
+              setUserRole("supervisor");
+            }
+            return;
+          }
+          
           toast.error("Erreur lors de la vérification des permissions", {
             description: "Profil utilisateur introuvable"
           });
