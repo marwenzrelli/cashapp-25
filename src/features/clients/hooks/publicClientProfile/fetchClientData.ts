@@ -1,0 +1,155 @@
+
+import { supabase } from "@/integrations/supabase/client";
+import { Client } from "@/features/clients/types";
+import { toast } from "sonner";
+import { ClientOperation, TokenData } from "./types";
+import { validateToken, validateTokenExpiration, validateClientStatus } from "./validation";
+
+export const fetchAccessData = async (token: string): Promise<TokenData | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('qr_access')
+      .select('client_id, expires_at, created_at')
+      .eq('access_token', token)
+      .single();
+
+    if (error) {
+      console.error("Error fetching access data:", error);
+      throw new Error("Token d'accès invalide ou expiré");
+    }
+
+    if (!data) {
+      throw new Error("Token d'accès non reconnu");
+    }
+
+    return data as TokenData;
+  } catch (error) {
+    console.error("Error in fetchAccessData:", error);
+    throw error;
+  }
+};
+
+export const fetchClientDetails = async (clientId: number): Promise<Client> => {
+  try {
+    const { data, error } = await supabase
+      .from('clients')
+      .select('*')
+      .eq('id', clientId)
+      .single();
+
+    if (error) {
+      console.error("Error fetching client:", error);
+      throw new Error("Impossible de récupérer les données du client");
+    }
+
+    if (!data) {
+      throw new Error("Client introuvable");
+    }
+
+    // Validate client status
+    const statusValidation = validateClientStatus(data.status);
+    if (!statusValidation.isValid) {
+      throw new Error(statusValidation.error);
+    }
+
+    return data as Client;
+  } catch (error) {
+    console.error("Error in fetchClientDetails:", error);
+    throw error;
+  }
+};
+
+export const fetchClientOperations = async (clientFullName: string): Promise<ClientOperation[]> => {
+  try {
+    // Fetch deposits
+    const { data: deposits, error: depositsError } = await supabase
+      .from('deposits')
+      .select('*')
+      .eq('client_name', clientFullName)
+      .order('created_at', { ascending: false });
+
+    if (depositsError) {
+      console.error("Error fetching deposits:", depositsError);
+      toast.error("Erreur lors de la récupération des dépôts");
+    }
+
+    // Fetch withdrawals
+    const { data: withdrawals, error: withdrawalsError } = await supabase
+      .from('withdrawals')
+      .select('*')
+      .eq('client_name', clientFullName)
+      .order('created_at', { ascending: false });
+
+    if (withdrawalsError) {
+      console.error("Error fetching withdrawals:", withdrawalsError);
+      toast.error("Erreur lors de la récupération des retraits");
+    }
+
+    // Fetch transfers (as sender)
+    const { data: transfersAsSender, error: senderError } = await supabase
+      .from('transfers')
+      .select('*')
+      .eq('from_client', clientFullName)
+      .order('created_at', { ascending: false });
+
+    if (senderError) {
+      console.error("Error fetching transfers as sender:", senderError);
+      toast.error("Erreur lors de la récupération des virements envoyés");
+    }
+
+    // Fetch transfers (as receiver)
+    const { data: transfersAsReceiver, error: receiverError } = await supabase
+      .from('transfers')
+      .select('*')
+      .eq('to_client', clientFullName)
+      .order('created_at', { ascending: false });
+
+    if (receiverError) {
+      console.error("Error fetching transfers as receiver:", receiverError);
+      toast.error("Erreur lors de la récupération des virements reçus");
+    }
+
+    // Format and combine all operations
+    const allOperations: ClientOperation[] = [
+      ...(deposits || []).map(d => ({
+        id: `deposit-${d.id}`,
+        type: "deposit" as const,
+        date: new Date(d.created_at).toLocaleDateString(),
+        amount: Number(d.amount),
+        description: d.notes || "Versement",
+        fromClient: clientFullName
+      })),
+      ...(withdrawals || []).map(w => ({
+        id: `withdrawal-${w.id}`,
+        type: "withdrawal" as const,
+        date: new Date(w.created_at).toLocaleDateString(),
+        amount: Number(w.amount),
+        description: w.notes || "Retrait",
+        fromClient: clientFullName
+      })),
+      ...(transfersAsSender || []).map(t => ({
+        id: `transfer-out-${t.id}`,
+        type: "transfer" as const,
+        date: new Date(t.created_at).toLocaleDateString(),
+        amount: -Number(t.amount), // Negative amount for outgoing transfers
+        description: t.reason || `Virement vers ${t.to_client}`,
+        fromClient: t.from_client,
+        toClient: t.to_client
+      })),
+      ...(transfersAsReceiver || []).map(t => ({
+        id: `transfer-in-${t.id}`,
+        type: "transfer" as const,
+        date: new Date(t.created_at).toLocaleDateString(),
+        amount: Number(t.amount), // Positive amount for incoming transfers
+        description: t.reason || `Virement reçu de ${t.from_client}`,
+        fromClient: t.from_client,
+        toClient: t.to_client
+      }))
+    ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    return allOperations;
+  } catch (error) {
+    console.error("Error in fetchClientOperations:", error);
+    return [];
+  }
+};
