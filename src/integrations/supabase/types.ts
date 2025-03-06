@@ -9,7 +9,335 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      clients: {
+        Row: {
+          created_by: string | null
+          date_creation: string | null
+          email: string | null
+          id: number
+          nom: string
+          prenom: string
+          solde: number | null
+          status: string | null
+          telephone: string | null
+        }
+        Insert: {
+          created_by?: string | null
+          date_creation?: string | null
+          email?: string | null
+          id?: number
+          nom: string
+          prenom: string
+          solde?: number | null
+          status?: string | null
+          telephone?: string | null
+        }
+        Update: {
+          created_by?: string | null
+          date_creation?: string | null
+          email?: string | null
+          id?: number
+          nom?: string
+          prenom?: string
+          solde?: number | null
+          status?: string | null
+          telephone?: string | null
+        }
+        Relationships: []
+      }
+      deleted_deposits: {
+        Row: {
+          amount: number
+          client_name: string
+          deleted_at: string | null
+          deleted_by: string | null
+          id: number
+          notes: string | null
+          operation_date: string | null
+          original_id: number
+          status: string | null
+        }
+        Insert: {
+          amount: number
+          client_name: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: number
+          notes?: string | null
+          operation_date?: string | null
+          original_id: number
+          status?: string | null
+        }
+        Update: {
+          amount?: number
+          client_name?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: number
+          notes?: string | null
+          operation_date?: string | null
+          original_id?: number
+          status?: string | null
+        }
+        Relationships: []
+      }
+      deleted_transfers: {
+        Row: {
+          amount: number
+          deleted_at: string | null
+          deleted_by: string | null
+          from_client: string
+          id: number
+          operation_date: string | null
+          original_id: number
+          reason: string | null
+          status: string | null
+          to_client: string
+        }
+        Insert: {
+          amount: number
+          deleted_at?: string | null
+          deleted_by?: string | null
+          from_client: string
+          id?: number
+          operation_date?: string | null
+          original_id: number
+          reason?: string | null
+          status?: string | null
+          to_client: string
+        }
+        Update: {
+          amount?: number
+          deleted_at?: string | null
+          deleted_by?: string | null
+          from_client?: string
+          id?: number
+          operation_date?: string | null
+          original_id?: number
+          reason?: string | null
+          status?: string | null
+          to_client?: string
+        }
+        Relationships: []
+      }
+      deleted_withdrawals: {
+        Row: {
+          amount: number
+          client_name: string
+          deleted_at: string | null
+          deleted_by: string | null
+          id: number
+          notes: string | null
+          operation_date: string | null
+          original_id: number
+          status: string | null
+        }
+        Insert: {
+          amount: number
+          client_name: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: number
+          notes?: string | null
+          operation_date?: string | null
+          original_id: number
+          status?: string | null
+        }
+        Update: {
+          amount?: number
+          client_name?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: number
+          notes?: string | null
+          operation_date?: string | null
+          original_id?: number
+          status?: string | null
+        }
+        Relationships: []
+      }
+      deposits: {
+        Row: {
+          amount: number
+          client_name: string
+          created_at: string | null
+          created_by: string | null
+          id: number
+          last_modified_at: string | null
+          notes: string | null
+          operation_date: string | null
+          status: string | null
+        }
+        Insert: {
+          amount: number
+          client_name: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: number
+          last_modified_at?: string | null
+          notes?: string | null
+          operation_date?: string | null
+          status?: string | null
+        }
+        Update: {
+          amount?: number
+          client_name?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: number
+          last_modified_at?: string | null
+          notes?: string | null
+          operation_date?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          department: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          last_login: string | null
+          phone: string | null
+          role: string | null
+          status: string | null
+          username: string | null
+        }
+        Insert: {
+          department?: string | null
+          email?: string | null
+          full_name?: string | null
+          id: string
+          last_login?: string | null
+          phone?: string | null
+          role?: string | null
+          status?: string | null
+          username?: string | null
+        }
+        Update: {
+          department?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          last_login?: string | null
+          phone?: string | null
+          role?: string | null
+          status?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
+      qr_access: {
+        Row: {
+          access_token: string
+          client_id: number | null
+          created_at: string | null
+          created_by: string | null
+          expires_at: string | null
+          id: number
+        }
+        Insert: {
+          access_token: string
+          client_id?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string | null
+          id?: number
+        }
+        Update: {
+          access_token?: string
+          client_id?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string | null
+          id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qr_access_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transfers: {
+        Row: {
+          amount: number
+          created_at: string | null
+          created_by: string | null
+          from_client: string
+          id: number
+          last_modified_at: string | null
+          operation_date: string | null
+          reason: string | null
+          status: string | null
+          to_client: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          created_by?: string | null
+          from_client: string
+          id?: number
+          last_modified_at?: string | null
+          operation_date?: string | null
+          reason?: string | null
+          status?: string | null
+          to_client: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          created_by?: string | null
+          from_client?: string
+          id?: number
+          last_modified_at?: string | null
+          operation_date?: string | null
+          reason?: string | null
+          status?: string | null
+          to_client?: string
+        }
+        Relationships: []
+      }
+      withdrawals: {
+        Row: {
+          amount: number
+          client_name: string
+          created_at: string | null
+          created_by: string | null
+          id: number
+          last_modified_at: string | null
+          notes: string | null
+          operation_date: string | null
+          status: string | null
+        }
+        Insert: {
+          amount: number
+          client_name: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: number
+          last_modified_at?: string | null
+          notes?: string | null
+          operation_date?: string | null
+          status?: string | null
+        }
+        Update: {
+          amount?: number
+          client_name?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: number
+          last_modified_at?: string | null
+          notes?: string | null
+          operation_date?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
