@@ -19,19 +19,35 @@ const Login = () => {
 
   // Vérifier la connexion à Supabase
   const checkConnection = async () => {
-    setConnectionStatus('checking');
-    const isConnected = await testSupabaseConnection();
-    setConnectionStatus(isConnected ? 'connected' : 'disconnected');
+    try {
+      setConnectionStatus('checking');
+      const isConnected = await testSupabaseConnection();
+      setConnectionStatus(isConnected ? 'connected' : 'disconnected');
+      return isConnected;
+    } catch (error) {
+      console.error("Error checking connection:", error);
+      setConnectionStatus('disconnected');
+      return false;
+    }
   };
 
   useEffect(() => {
     // Vérifier la session active et la connexion
     const getSession = async () => {
       try {
-        setConnectionStatus('checking');
-        await checkConnection();
+        const isConnected = await checkConnection();
+        if (!isConnected) {
+          console.log("No connection to Supabase");
+          return;
+        }
 
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error("Session error:", sessionError);
+          return;
+        }
+        
         console.log("Session check:", { session });
         if (session?.user?.id) {
           navigate("/dashboard");
@@ -41,10 +57,14 @@ const Login = () => {
         setConnectionStatus('disconnected');
       }
     };
+    
     getSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_OUT" || !session) {
+      console.log("Auth state change:", event, session);
+      if (event === "SIGNED_IN" && session) {
+        navigate("/dashboard");
+      } else if (event === "SIGNED_OUT" || !session) {
         navigate("/login", { replace: true });
       }
     });
@@ -54,8 +74,8 @@ const Login = () => {
     };
   }, [navigate]);
 
-  const handleRetryConnection = () => {
-    checkConnection();
+  const handleRetryConnection = async () => {
+    await checkConnection();
     setErrorMessage(null);
   };
 
@@ -69,12 +89,10 @@ const Login = () => {
     }
 
     // Vérifier la connexion avant de tenter l'authentification
-    if (connectionStatus !== 'connected') {
-      const isConnected = await testSupabaseConnection();
-      if (!isConnected) {
-        setErrorMessage("Impossible de se connecter au serveur. Veuillez vérifier votre connexion internet.");
-        return;
-      }
+    const isConnected = await checkConnection();
+    if (!isConnected) {
+      setErrorMessage("Impossible de se connecter au serveur. Veuillez vérifier votre connexion internet.");
+      return;
     }
 
     setIsLoading(true);
@@ -109,8 +127,8 @@ const Login = () => {
 
       if (data?.user) {
         console.log("Connexion réussie, redirection...");
-        navigate("/dashboard");
         toast.success("Connexion réussie !");
+        navigate("/dashboard");
       }
     } catch (error: any) {
       console.error("Erreur détaillée d'authentification:", error);
