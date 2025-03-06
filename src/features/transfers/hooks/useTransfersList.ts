@@ -10,7 +10,7 @@ const fetchTransfersData = async (): Promise<Transfer[]> => {
     const { data, error } = await supabase
       .from('transfers')
       .select('*')
-      .order('operation_date', { ascending: false });
+      .order('created_at', { ascending: false });
 
     if (error) {
       console.error("Error fetching transfers:", error);
@@ -24,7 +24,7 @@ const fetchTransfersData = async (): Promise<Transfer[]> => {
         fromClient: transfer.from_client,
         toClient: transfer.to_client,
         amount: transfer.amount,
-        date: formatDateTime(transfer.operation_date || transfer.created_at),
+        date: formatDateTime(transfer.created_at),
         reason: transfer.reason
       }));
       console.log("Virements récupérés:", formattedTransfers);

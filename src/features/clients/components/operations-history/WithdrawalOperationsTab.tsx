@@ -3,9 +3,9 @@ import React from "react";
 import { Operation } from "@/features/operations/types";
 import { format } from "date-fns";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { getTypeStyle, getTypeIcon } from "@/features/operations/utils/operation-helpers";
 import { OperationsMobileCard } from "./OperationsMobileCard";
 import { EmptyOperations } from "./EmptyOperations";
-import { formatDateTime } from "@/features/deposits/hooks/utils/dateUtils";
 
 interface WithdrawalOperationsTabProps {
   operations: Operation[];
@@ -35,11 +35,7 @@ export const WithdrawalOperationsTab = ({ operations, currency = "TND" }: Withdr
           <TableBody>
             {withdrawals.map((operation) => (
               <TableRow key={operation.id}>
-                <TableCell>
-                  {operation.operation_date 
-                    ? formatDateTime(operation.operation_date) 
-                    : formatDateTime(operation.date)}
-                </TableCell>
+                <TableCell>{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</TableCell>
                 <TableCell className="max-w-[200px] truncate">{operation.description}</TableCell>
                 <TableCell className="text-center font-medium text-red-600 dark:text-red-400">
                   -{Math.round(operation.amount)} {currency}

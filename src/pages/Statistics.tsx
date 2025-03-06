@@ -276,15 +276,15 @@ const Statistics = () => {
     <div className="space-y-8 animate-in">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Statistiques</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-3xl font-bold">Statistiques</h1>
+          <p className="text-muted-foreground">
             Vue d'ensemble et analyses détaillées
           </p>
         </div>
         <Button 
           onClick={refreshData} 
           variant="outline" 
-          className="flex items-center gap-2 transition-all hover:bg-primary/10"
+          className="flex items-center gap-2"
           disabled={isSyncing}
         >
           <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
@@ -292,9 +292,9 @@ const Statistics = () => {
         </Button>
       </div>
 
-      <Card className="shadow-md border-primary/5">
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-xl font-medium">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
             <Activity className="h-5 w-5 text-primary" />
             Filtres
           </CardTitle>
@@ -311,7 +311,6 @@ const Statistics = () => {
                 placeholder="Rechercher un client..."
                 value={clientFilter}
                 onChange={(e) => setClientFilter(e.target.value)}
-                className="focus-visible:ring-primary/20"
               />
             </div>
             <div className="space-y-2">
@@ -322,7 +321,7 @@ const Statistics = () => {
                   setTransactionType(value)
                 }
               >
-                <SelectTrigger className="focus-visible:ring-primary/20">
+                <SelectTrigger>
                   <SelectValue placeholder="Sélectionner le type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -338,20 +337,19 @@ const Statistics = () => {
       </Card>
 
       <div className="grid gap-6 md:grid-cols-4">
-        <Card className="shadow-md overflow-hidden border-green-100 dark:border-green-900/20">
-          <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-transparent dark:from-green-950/20 opacity-70"></div>
-          <CardHeader className="flex flex-row items-center justify-between pb-2 relative z-10">
+        <Card className="bg-gradient-to-br from-green-50 to-transparent dark:from-green-950/20">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Entrées Totales</CardTitle>
             <ArrowUpCircle className="h-4 w-4 text-success" />
           </CardHeader>
-          <CardContent className="relative z-10">
+          <CardContent>
             <div className={cn(
               "text-2xl font-bold",
               getAmountColor(stats.total_deposits)
             )}>
               {stats.total_deposits.toLocaleString()} {currency}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground">
               <span className={getPercentageColor(percentageChange)}>
                 {percentageChange > 0 ? '+' : ''}{percentageChange.toFixed(1)}%
               </span>
@@ -360,20 +358,19 @@ const Statistics = () => {
           </CardContent>
         </Card>
         
-        <Card className="shadow-md overflow-hidden border-red-100 dark:border-red-900/20">
-          <div className="absolute inset-0 bg-gradient-to-br from-red-50 to-transparent dark:from-red-950/20 opacity-70"></div>
-          <CardHeader className="flex flex-row items-center justify-between pb-2 relative z-10">
+        <Card className="bg-gradient-to-br from-red-50 to-transparent dark:from-red-950/20">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Sorties Totales</CardTitle>
             <ArrowDownCircle className="h-4 w-4 text-danger" />
           </CardHeader>
-          <CardContent className="relative z-10">
+          <CardContent>
             <div className={cn(
               "text-2xl font-bold",
               getAmountColor(-stats.total_withdrawals)
             )}>
               {stats.total_withdrawals.toLocaleString()} {currency}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground">
               <span className={getPercentageColor(-percentageChange)}>
                 {percentageChange > 0 ? '+' : ''}{percentageChange.toFixed(1)}%
               </span>
@@ -382,28 +379,26 @@ const Statistics = () => {
           </CardContent>
         </Card>
 
-        <Card className="shadow-md overflow-hidden border-indigo-100 dark:border-indigo-900/20">
-          <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 to-transparent dark:from-indigo-950/20 opacity-70"></div>
-          <CardHeader className="flex flex-row items-center justify-between pb-2 relative z-10">
+        <Card className="bg-gradient-to-br from-indigo-50 to-transparent dark:from-indigo-950/20">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Total Virements</CardTitle>
             <ArrowLeftRight className="h-4 w-4 text-indigo-500" />
           </CardHeader>
-          <CardContent className="relative z-10">
+          <CardContent>
             <div className={cn(
               "text-2xl font-bold",
               getAmountColor(stats.sent_transfers)
             )}>
               {stats.sent_transfers.toLocaleString()} {currency}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground">
               {stats.transfer_count} virements effectués
             </p>
           </CardContent>
         </Card>
 
-        <Card className="shadow-md overflow-hidden border-blue-100 dark:border-blue-900/20">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-transparent dark:from-blue-950/20 opacity-70"></div>
-          <CardHeader className="flex flex-row items-center justify-between pb-2 relative z-10">
+        <Card className="bg-gradient-to-br from-blue-50 to-transparent dark:from-blue-950/20">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Flux Net</CardTitle>
             {netFlow >= 0 ? (
               <TrendingUp className="h-4 w-4 text-success" />
@@ -411,28 +406,27 @@ const Statistics = () => {
               <TrendingDown className="h-4 w-4 text-danger" />
             )}
           </CardHeader>
-          <CardContent className="relative z-10">
+          <CardContent>
             <div className={cn(
               "text-2xl font-bold",
               getAmountColor(netFlow)
             )}>
               {netFlow.toLocaleString()} {currency}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground">
               Entrées Totales - Sorties Totales
             </p>
           </CardContent>
         </Card>
         
-        <Card className="shadow-md overflow-hidden border-purple-100 dark:border-purple-900/20">
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-50 to-transparent dark:from-purple-950/20 opacity-70"></div>
-          <CardHeader className="flex flex-row items-center justify-between pb-2 relative z-10">
+        <Card className="bg-gradient-to-br from-purple-50 to-transparent dark:from-purple-950/20">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Clients Actifs</CardTitle>
             <UserCheck className="h-4 w-4 text-primary" />
           </CardHeader>
-          <CardContent className="relative z-10">
+          <CardContent>
             <div className="text-2xl font-bold">{stats.client_count}</div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground">
               {averageTransactionsPerDay.toFixed(1)} transactions/jour
             </p>
           </CardContent>
@@ -440,9 +434,9 @@ const Statistics = () => {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <Card className="shadow-md">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-lg font-medium">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
               <Activity className="h-5 w-5 text-primary" />
               Évolution sur 30 jours
             </CardTitle>
@@ -450,7 +444,7 @@ const Statistics = () => {
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={last30DaysData} margin={{ top: 10, right: 30, left: 0, bottom: 5 }}>
+                <AreaChart data={last30DaysData}>
                   <defs>
                     <linearGradient id="colorVersements" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
@@ -465,18 +459,10 @@ const Statistics = () => {
                       <stop offset="95%" stopColor="#6366F1" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 12 }} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'rgba(255, 255, 255, 0.95)', 
-                      borderRadius: '8px',
-                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                      border: 'none'
-                    }}
-                    itemStyle={{ padding: '2px 0' }}
-                  />
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
                   <Legend />
                   <Area
                     type="monotone"
@@ -485,7 +471,6 @@ const Statistics = () => {
                     stroke="#10B981"
                     fill="url(#colorVersements)"
                     stackId="1"
-                    strokeWidth={2}
                   />
                   <Area
                     type="monotone"
@@ -494,7 +479,6 @@ const Statistics = () => {
                     stroke="#EF4444"
                     fill="url(#colorRetraits)"
                     stackId="2"
-                    strokeWidth={2}
                   />
                   <Area
                     type="monotone"
@@ -503,7 +487,6 @@ const Statistics = () => {
                     stroke="#6366F1"
                     fill="url(#colorVirements)"
                     stackId="3"
-                    strokeWidth={2}
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -511,9 +494,9 @@ const Statistics = () => {
           </CardContent>
         </Card>
 
-        <Card className="shadow-md">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-lg font-medium">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5 text-primary" />
               Top 5 Clients
             </CardTitle>
@@ -527,37 +510,14 @@ const Statistics = () => {
                     montant: stats.totalAmount,
                     transactions: stats.transactionCount
                   }))}
-                  margin={{ top: 10, right: 30, left: 0, bottom: 5 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 12 }} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'rgba(255, 255, 255, 0.95)', 
-                      borderRadius: '8px',
-                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                      border: 'none'
-                    }}
-                    itemStyle={{ padding: '2px 0' }}
-                    formatter={(value, name) => {
-                      if (name === 'montant') return [`${value.toLocaleString()} ${currency}`, 'Montant'];
-                      return [value, 'Transactions'];
-                    }}
-                  />
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
                   <Legend />
-                  <Bar 
-                    dataKey="montant" 
-                    name="Montant" 
-                    fill="#8884d8" 
-                    radius={[4, 4, 0, 0]}
-                  />
-                  <Bar 
-                    dataKey="transactions" 
-                    name="Transactions" 
-                    fill="#82ca9d" 
-                    radius={[4, 4, 0, 0]}
-                  />
+                  <Bar dataKey="montant" fill="#8884d8" />
+                  <Bar dataKey="transactions" fill="#82ca9d" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -565,9 +525,9 @@ const Statistics = () => {
         </Card>
       </div>
 
-      <Card className="shadow-md">
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-lg font-medium">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
             Insights
           </CardTitle>
@@ -575,22 +535,22 @@ const Statistics = () => {
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
             <div className={cn(
-              "p-4 rounded-lg border shadow-sm",
+              "p-4 rounded-lg border",
               percentageChange >= 0 
                 ? "border-green-200 bg-green-50 dark:bg-green-950/20"
                 : "border-red-200 bg-red-50 dark:bg-red-955/20"
             )}>
               <div className="flex items-start gap-3">
                 {percentageChange >= 0 ? (
-                  <TrendingUp className="h-5 w-5 text-green-500 mt-0.5" />
+                  <TrendingUp className="h-5 w-5 text-green-500" />
                 ) : (
-                  <TrendingDown className="h-5 w-5 text-red-500 mt-0.5" />
+                  <TrendingDown className="h-5 w-5 text-red-500" />
                 )}
                 <div>
                   <p className="font-medium">
                     {percentageChange >= 0 ? "Croissance" : "Décroissance"} mensuelle
                   </p>
-                  <p className="text-sm mt-1 text-muted-foreground">
+                  <p className="text-sm mt-1">
                     {Math.abs(percentageChange).toFixed(1)}% de {percentageChange >= 0 ? "hausse" : "baisse"} 
                     par rapport au mois précédent
                   </p>
@@ -598,24 +558,24 @@ const Statistics = () => {
               </div>
             </div>
 
-            <div className="p-4 rounded-lg border shadow-sm border-blue-200 bg-blue-50 dark:bg-blue-950/20">
+            <div className="p-4 rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-950/20">
               <div className="flex items-start gap-3">
-                <Activity className="h-5 w-5 text-blue-500 mt-0.5" />
+                <Activity className="h-5 w-5 text-blue-500" />
                 <div>
                   <p className="font-medium">Activité journalière</p>
-                  <p className="text-sm mt-1 text-muted-foreground">
+                  <p className="text-sm mt-1">
                     En moyenne {averageTransactionsPerDay.toFixed(1)} transactions par jour
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="p-4 rounded-lg border shadow-sm border-purple-200 bg-purple-50 dark:bg-purple-950/20">
+            <div className="p-4 rounded-lg border border-purple-200 bg-purple-50 dark:bg-purple-950/20">
               <div className="flex items-start gap-3">
-                <BanknoteIcon className="h-5 w-5 text-purple-500 mt-0.5" />
+                <BanknoteIcon className="h-5 w-5 text-purple-500" />
                 <div>
                   <p className="font-medium">Transaction moyenne</p>
-                  <p className="text-sm mt-1 text-muted-foreground">
+                  <p className="text-sm mt-1">
                     {deposits.length > 0 ? (stats.total_deposits / deposits.length).toFixed(0) : 0} {currency} par opération
                   </p>
                 </div>

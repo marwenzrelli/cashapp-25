@@ -7,7 +7,6 @@ import { getTypeStyle, getTypeIcon, getTypeLabel } from "@/features/operations/u
 import { OperationsMobileCard } from "./OperationsMobileCard";
 import { EmptyOperations } from "./EmptyOperations";
 import { getAmountColor } from "./utils";
-import { formatDateTime } from "@/features/deposits/hooks/utils/dateUtils";
 
 interface AllOperationsTabProps {
   operations: Operation[];
@@ -44,11 +43,7 @@ export const AllOperationsTab = ({ operations, currency = "TND" }: AllOperations
                     <span>{getTypeLabel(operation.type)}</span>
                   </div>
                 </TableCell>
-                <TableCell>
-                  {operation.operation_date 
-                    ? formatDateTime(operation.operation_date) 
-                    : formatDateTime(operation.date)}
-                </TableCell>
+                <TableCell>{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</TableCell>
                 <TableCell className="max-w-[200px] truncate">{operation.description}</TableCell>
                 <TableCell className={`text-center font-medium ${getAmountColor(operation.type)}`}>
                   {operation.type === "withdrawal" ? "-" : ""}{Math.round(operation.amount)} {currency}

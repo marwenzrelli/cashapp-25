@@ -1,15 +1,13 @@
-
 export interface Operation {
   id: string;
   type: "deposit" | "withdrawal" | "transfer";
   amount: number;
   date: string;
-  createdAt?: string; 
-  operation_date?: string; // Add operation_date field
+  createdAt?: string; // Add createdAt field
   description: string;
   fromClient?: string;
   toClient?: string;
-  formattedDate?: string;
+  formattedDate?: string; // Ajout du champ pour date formatée
 }
 
 export interface ClientStats {

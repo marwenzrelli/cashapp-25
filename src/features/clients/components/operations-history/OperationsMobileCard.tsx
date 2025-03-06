@@ -3,7 +3,6 @@ import { Calendar, FileText, User } from "lucide-react";
 import { format } from "date-fns";
 import { Operation } from "@/features/operations/types";
 import { getTypeStyle, getTypeIcon, getTypeLabel } from "@/features/operations/utils/operation-helpers";
-import { formatDateTime } from "@/features/deposits/hooks/utils/dateUtils";
 
 interface OperationsMobileCardProps {
   operation: Operation;
@@ -18,10 +17,6 @@ export const OperationsMobileCard = ({
   showType = true,
   colorClass 
 }: OperationsMobileCardProps) => {
-  const displayDate = operation.operation_date 
-    ? formatDateTime(operation.operation_date)
-    : formatDateTime(operation.date);
-
   return (
     <div key={operation.id} className="p-3 border rounded-lg">
       <div className="flex items-center justify-between mb-2">
@@ -42,7 +37,7 @@ export const OperationsMobileCard = ({
       <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-sm">
         <div className="flex items-center gap-1 text-muted-foreground">
           <Calendar className="h-3.5 w-3.5" />
-          <span>{displayDate}</span>
+          <span>{format(new Date(operation.date), "dd/MM/yyyy HH:mm")}</span>
         </div>
         <div className="flex items-center gap-1 text-muted-foreground">
           <User className="h-3.5 w-3.5" />

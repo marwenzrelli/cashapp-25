@@ -12,21 +12,21 @@ export const useFetchOperations = (
       const { data: deposits, error: depositsError } = await supabase
         .from('deposits')
         .select('*')
-        .order('operation_date', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (depositsError) throw depositsError;
 
       const { data: withdrawals, error: withdrawalsError } = await supabase
         .from('withdrawals')
         .select('*')
-        .order('operation_date', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (withdrawalsError) throw withdrawalsError;
 
       const { data: transfers, error: transfersError } = await supabase
         .from('transfers')
         .select('*')
-        .order('operation_date', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (transfersError) throw transfersError;
 
@@ -37,10 +37,9 @@ export const useFetchOperations = (
           amount: d.amount,
           date: d.created_at,
           createdAt: d.created_at,
-          operation_date: d.operation_date,
           description: d.notes || `Versement de ${d.client_name}`,
           fromClient: d.client_name,
-          formattedDate: formatDateTime(d.operation_date || d.created_at)
+          formattedDate: formatDateTime(d.created_at)
         })),
         ...withdrawals.map((w): Operation => ({
           id: w.id.toString(),
@@ -48,10 +47,9 @@ export const useFetchOperations = (
           amount: w.amount,
           date: w.created_at,
           createdAt: w.created_at,
-          operation_date: w.operation_date,
           description: w.notes || `Retrait par ${w.client_name}`,
           fromClient: w.client_name,
-          formattedDate: formatDateTime(w.operation_date || w.created_at)
+          formattedDate: formatDateTime(w.created_at)
         })),
         ...transfers.map((t): Operation => ({
           id: t.id.toString(),
@@ -59,17 +57,12 @@ export const useFetchOperations = (
           amount: t.amount,
           date: t.created_at,
           createdAt: t.created_at,
-          operation_date: t.operation_date,
           description: t.reason || `Virement de ${t.from_client} vers ${t.to_client}`,
           fromClient: t.from_client,
           toClient: t.to_client,
-          formattedDate: formatDateTime(t.operation_date || t.created_at)
+          formattedDate: formatDateTime(t.created_at)
         }))
-      ].sort((a, b) => {
-        const dateA = new Date(a.operation_date || a.date).getTime();
-        const dateB = new Date(b.operation_date || b.date).getTime();
-        return dateB - dateA;
-      });
+      ].sort((a, b) => new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime());
 
       setOperations(formattedOperations);
     } catch (error) {
