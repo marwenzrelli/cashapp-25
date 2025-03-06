@@ -1,9 +1,11 @@
+
 export interface Operation {
   id: string;
   type: "deposit" | "withdrawal" | "transfer";
   amount: number;
   date: string;
   createdAt?: string; // Add createdAt field
+  operation_date?: string; // Add operation_date field
   description: string;
   fromClient?: string;
   toClient?: string;
