@@ -15,31 +15,37 @@ import Administration from "./pages/Administration";
 import NotFound from "./pages/NotFound";
 import SupervisorCreation from "./pages/SupervisorCreation";
 import AdminUtility from "./pages/AdminUtility";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "./App.css";
+
+// Create a client
+const queryClient = new QueryClient();
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/create-supervisor" element={<SupervisorCreation />} />
-        <Route path="/admin-utility" element={<AdminUtility />} />
-        <Route element={<Layout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/clients" element={<Clients />} />
-          <Route path="/clients/:id" element={<ClientProfile />} />
-          <Route path="/public/client/:token" element={<PublicClientProfile />} />
-          <Route path="/deposits" element={<Deposits />} />
-          <Route path="/withdrawals" element={<Withdrawals />} />
-          <Route path="/transfers" element={<Transfers />} />
-          <Route path="/statistics" element={<Statistics />} />
-          <Route path="/operations" element={<Operations />} />
-          <Route path="/administration" element={<Administration />} />
-          <Route path="*" element={<NotFound />} />
-        </Route>
-      </Routes>
-    </Router>
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/create-supervisor" element={<SupervisorCreation />} />
+          <Route path="/admin-utility" element={<AdminUtility />} />
+          <Route element={<Layout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/clients" element={<Clients />} />
+            <Route path="/clients/:id" element={<ClientProfile />} />
+            <Route path="/public/client/:token" element={<PublicClientProfile />} />
+            <Route path="/deposits" element={<Deposits />} />
+            <Route path="/withdrawals" element={<Withdrawals />} />
+            <Route path="/transfers" element={<Transfers />} />
+            <Route path="/statistics" element={<Statistics />} />
+            <Route path="/operations" element={<Operations />} />
+            <Route path="/administration" element={<Administration />} />
+            <Route path="*" element={<NotFound />} />
+          </Route>
+        </Routes>
+      </Router>
+    </QueryClientProvider>
   );
 }
 
