@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { SystemUser } from '@/types/admin';
 
@@ -41,6 +40,65 @@ export const updateUserStatus = async (userId: string, status: "active" | "inact
     .eq('id', userId);
 
   if (error) throw error;
+};
+
+export const createSupervisorAccount = async (userData: {
+  email: string;
+  password: string;
+  fullName: string;
+  username: string;
+}) => {
+  console.log("Création d'un compte superviseur");
+  
+  if (!userData.email || !userData.fullName || !userData.password || !userData.username) {
+    throw new Error("Tous les champs requis doivent être remplis");
+  }
+  
+  if (userData.password.length < 6) {
+    throw new Error("Le mot de passe doit contenir au moins 6 caractères");
+  }
+  
+  try {
+    // Créer l'utilisateur avec le rôle de superviseur
+    const { data: authData, error: signUpError } = await supabase.auth.signUp({
+      email: userData.email,
+      password: userData.password,
+      options: {
+        data: {
+          full_name: userData.fullName,
+          role: 'supervisor',
+          department: 'finance',
+          username: userData.username
+        }
+      }
+    });
+
+    if (signUpError) throw signUpError;
+    if (!authData.user) throw new Error("Erreur: Aucun utilisateur créé");
+
+    // Attendre un court instant pour que le trigger handle_new_user s'exécute
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Mettre à jour explicitement le profil avec le rôle et le département
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({
+        role: 'supervisor',
+        department: 'finance',
+        status: 'active',
+        full_name: userData.fullName,
+        username: userData.username
+      })
+      .eq('id', authData.user.id);
+
+    if (updateError) throw updateError;
+
+    console.log("Compte superviseur créé avec succès:", authData.user);
+    return authData.user;
+  } catch (error) {
+    console.error("Erreur lors de la création du compte superviseur:", error);
+    throw error;
+  }
 };
 
 export const createUser = async (user: SystemUser & { password: string }) => {

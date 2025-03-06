@@ -1,9 +1,7 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Layout from "./components/Layout";
+import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Clients from "./pages/Clients";
@@ -16,99 +14,31 @@ import Statistics from "./pages/Statistics";
 import Operations from "./pages/Operations";
 import Administration from "./pages/Administration";
 import NotFound from "./pages/NotFound";
-import Layout from "./components/Layout";
-import { CurrencyProvider } from "./contexts/CurrencyContext";
-import { useEffect, useState } from "react";
-import { supabase } from "./integrations/supabase/client";
-
-// Create a client with explicit configuration
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      retryDelay: 1000,
-      staleTime: 30000,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
-
-// Composant de protection des routes authentifiées
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setIsAuthenticated(!!session);
-      } catch (error) {
-        console.error("Erreur lors de la vérification de l'authentification:", error);
-        setIsAuthenticated(false);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsAuthenticated(!!session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  if (isLoading) {
-    return <div className="flex justify-center items-center h-screen">
-      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mr-2"></div>
-      <span>Chargement...</span>
-    </div>;
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return <>{children}</>;
-};
+import SupervisorCreation from "./pages/SupervisorCreation";
+import "./App.css";
 
 function App() {
   return (
-    <CurrencyProvider>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/public/client/:token" element={<PublicClientProfile />} />
-              
-              {/* Routes protégées */}
-              <Route element={
-                <ProtectedRoute>
-                  <Layout />
-                </ProtectedRoute>
-              }>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/clients" element={<Clients />} />
-                <Route path="/clients/:id" element={<ClientProfile />} />
-                <Route path="/deposits" element={<Deposits />} />
-                <Route path="/withdrawals" element={<Withdrawals />} />
-                <Route path="/transfers" element={<Transfers />} />
-                <Route path="/statistics" element={<Statistics />} />
-                <Route path="/operations" element={<Operations />} />
-                <Route path="/administration" element={<Administration />} />
-              </Route>
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </QueryClientProvider>
-    </CurrencyProvider>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/create-supervisor" element={<SupervisorCreation />} />
+        <Route element={<Layout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/clients" element={<Clients />} />
+          <Route path="/clients/:id" element={<ClientProfile />} />
+          <Route path="/public/client/:token" element={<PublicClientProfile />} />
+          <Route path="/deposits" element={<Deposits />} />
+          <Route path="/withdrawals" element={<Withdrawals />} />
+          <Route path="/transfers" element={<Transfers />} />
+          <Route path="/statistics" element={<Statistics />} />
+          <Route path="/operations" element={<Operations />} />
+          <Route path="/administration" element={<Administration />} />
+          <Route path="*" element={<NotFound />} />
+        </Route>
+      </Routes>
+    </Router>
   );
 }
 
