@@ -28,20 +28,20 @@ export const ClientPersonalInfo = ({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid gap-6 md:grid-cols-3">
-          <div className="md:col-span-2">
+        <div className="grid gap-6 md:grid-cols-2">
+          <div>
             <PersonalInfoFields 
               client={client} 
               formatAmount={formatAmount} 
               showBalance={true}
             />
           </div>
-          {clientId && qrCodeRef && (
-            <div className="space-y-4" ref={qrCodeRef}>
+          {clientId && (
+            <div className="flex justify-center md:justify-end">
               <ClientQRCode
                 clientId={clientId}
                 clientName={`${client.prenom} ${client.nom}`}
-                size={180} 
+                size={256}
               />
             </div>
           )}
