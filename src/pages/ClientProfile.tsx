@@ -30,13 +30,14 @@ const ClientProfile = () => {
     exportToPDF
   } = useClientProfile();
 
-  console.log("ClientProfile - État complet:", { 
+  console.log("ClientProfile - Full state:", { 
     client, 
     isLoading, 
     error, 
     clientId,
     hasOperations: clientOperations?.length > 0,
-    filteredOpsCount: filteredOperations?.length 
+    filteredOpsCount: filteredOperations?.length,
+    clientName: client ? `${client.prenom} ${client.nom}` : null
   });
 
   if (isLoading) {
@@ -47,16 +48,16 @@ const ClientProfile = () => {
     );
   }
 
-  // Check for error first
+  // Check if there's an explicit error first
   if (error) {
-    console.log("Affichage de l'erreur:", error);
+    console.log("Displaying error:", error);
     return <PublicClientError error={error} />;
   }
 
   // Then check if client exists
   if (!client) {
+    console.log("Client not found for ID:", clientId);
     const errorMessage = `Le client avec l'identifiant ${clientId} n'existe pas ou a été supprimé.`;
-    console.log("Client non trouvé:", errorMessage);
     return <PublicClientError error={errorMessage} />;
   }
 

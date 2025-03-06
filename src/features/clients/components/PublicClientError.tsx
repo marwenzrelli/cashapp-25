@@ -11,7 +11,7 @@ interface PublicClientErrorProps {
 export const PublicClientError = ({ error }: PublicClientErrorProps) => {
   const navigate = useNavigate();
   
-  console.log("PublicClientError - Affichage de l'erreur:", error);
+  console.log("PublicClientError - Displaying error:", error);
   
   // Determine if the error is related to security, client missing, or other issue
   const isSecurityError = error?.toLowerCase().includes('invalide') || 
@@ -28,13 +28,13 @@ export const PublicClientError = ({ error }: PublicClientErrorProps) => {
                           
   // Handle retry button click
   const handleRetry = () => {
-    console.log("Tentative de rechargement de la page...");
+    console.log("Attempting to reload the page...");
     window.location.reload();
   };
   
   // Handle go to home button click
   const handleGoToHome = () => {
-    console.log("Redirection vers la liste des clients...");
+    console.log("Redirecting to clients list...");
     navigate('/clients');
   };
 

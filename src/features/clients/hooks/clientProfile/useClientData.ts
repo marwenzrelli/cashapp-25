@@ -19,13 +19,13 @@ export const useClientData = (clientId: number | null) => {
     const fetchClient = async () => {
       try {
         if (!clientId) {
-          console.error("Client ID manquant dans l'URL");
+          console.error("Missing client ID in URL");
           setError("Identifiant client manquant");
           setIsLoading(false);
           return;
         }
         
-        console.log("Tentative de récupération du client avec ID:", clientId);
+        console.log("Attempting to fetch client with ID:", clientId);
         
         const { data, error: supabaseError } = await supabase
           .from('clients')
@@ -34,12 +34,14 @@ export const useClientData = (clientId: number | null) => {
           .maybeSingle();
 
         if (supabaseError) {
-          console.error("Erreur lors du chargement du client:", supabaseError);
+          console.error("Error loading client data:", supabaseError);
           const errorMessage = handleSupabaseError(supabaseError);
           setError(errorMessage);
+          setClient(null); // Ensure client is null when there's an error
           toast.error("Impossible de charger les informations du client", {
             description: errorMessage
           });
+          setIsLoading(false);
           return;
         }
 
@@ -47,79 +49,83 @@ export const useClientData = (clientId: number | null) => {
           const errorMessage = `Aucun client trouvé avec l'identifiant ${clientId}`;
           console.error(errorMessage);
           setError(errorMessage);
+          setClient(null); // Ensure client is null when not found
           toast.error("Client introuvable", {
             description: errorMessage
           });
+          setIsLoading(false);
           return;
         }
 
-        console.log("Client récupéré avec succès:", data);
+        console.log("Client successfully retrieved:", data);
         setClient(data);
         // Explicitly clear the error state when we successfully fetch data
         setError(null);
+        setIsLoading(false);
       } catch (error) {
-        console.error("Erreur lors du chargement du client:", error);
+        console.error("Error loading client:", error);
         const errorMessage = error instanceof Error ? error.message : "Erreur inconnue";
         setError(errorMessage);
+        setClient(null); // Ensure client is null when there's an error
         toast.error("Impossible de charger les informations du client", {
           description: errorMessage
         });
-      } finally {
         setIsLoading(false);
       }
     };
 
-    fetchClient();
+    if (clientId) {
+      fetchClient();
+    }
 
     // Track all subscriptions to clean them up on unmount
     const supabaseChannels = [];
 
-    const clientSubscription = supabase
-      .channel('public_client_changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'clients',
-        filter: `id=eq.${clientId}`,
-      }, (payload) => {
-        console.log("Mise à jour client reçue:", payload);
-        if (payload.eventType === 'DELETE') {
-          setClient(null);
-          setError("Ce client a été supprimé");
-          toast.error("Client supprimé", {
-            description: "Ce client a été supprimé de la base de données"
-          });
-        } else {
-          // Clear any existing error when we receive updates
-          setError(null);
-          setClient(payload.new as Client);
-        }
-      })
-      .subscribe();
-    
-    supabaseChannels.push(clientSubscription);
-
-    // Track real-time updates for operations that might affect the client balance
-    const operationsSubscriptions = [
-      'deposits',
-      'withdrawals',
-      'transfers'
-    ].map(table => {
-      const subscription = supabase
-        .channel(`${table}_changes`)
+    if (clientId) {
+      const clientSubscription = supabase
+        .channel('public_client_changes')
         .on('postgres_changes', {
           event: '*',
           schema: 'public',
-          table,
-        }, () => {
-          // Refresh client data when operations change
-          fetchClient();
+          table: 'clients',
+          filter: `id=eq.${clientId}`,
+        }, (payload) => {
+          console.log("Client update received:", payload);
+          if (payload.eventType === 'DELETE') {
+            setClient(null);
+            setError("Ce client a été supprimé");
+            toast.error("Client supprimé", {
+              description: "Ce client a été supprimé de la base de données"
+            });
+          } else {
+            // Clear any existing error when we receive updates
+            setError(null);
+            setClient(payload.new as Client);
+          }
         })
         .subscribe();
-        
-      supabaseChannels.push(subscription);
-      return subscription;
-    });
+      
+      supabaseChannels.push(clientSubscription);
+
+      // Track real-time updates for operations that might affect the client balance
+      const operationsTables = ['deposits', 'withdrawals', 'transfers'];
+      
+      operationsTables.forEach(table => {
+        const subscription = supabase
+          .channel(`${table}_changes`)
+          .on('postgres_changes', {
+            event: '*',
+            schema: 'public',
+            table,
+          }, () => {
+            // Refresh client data when operations change
+            fetchClient();
+          })
+          .subscribe();
+          
+        supabaseChannels.push(subscription);
+      });
+    }
 
     return () => {
       // Clean up all channels
