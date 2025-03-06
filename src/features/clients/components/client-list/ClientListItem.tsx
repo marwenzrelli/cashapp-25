@@ -67,13 +67,16 @@ export const ClientListItem = ({
               {getStatusLabel(client.status)}
             </ClientStatusBadge>
             
-            <ClientListActions 
-              client={client} 
-              onView={onView} 
-              onEdit={onEdit} 
-              onDelete={onDelete} 
-              isMobile={true} 
-            />
+            {/* Mobile actions */}
+            <div className="md:hidden">
+              <ClientListActions 
+                client={client} 
+                onView={onView} 
+                onEdit={onEdit} 
+                onDelete={onDelete} 
+                isMobile={true} 
+              />
+            </div>
           </div>
           
           <div className="flex items-center justify-between md:gap-8">
@@ -96,11 +99,12 @@ export const ClientListItem = ({
                 </TooltipContent>
               </Tooltip>
               
+              {/* Desktop actions */}
               <ClientListActions 
                 client={client} 
                 onView={onView} 
                 onEdit={onEdit} 
-                onDelete={onDelete} 
+                onDelete={onDelete}
               />
             </div>
           </div>
