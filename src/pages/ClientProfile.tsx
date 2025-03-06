@@ -6,6 +6,7 @@ import { ClientPersonalInfo } from "@/features/clients/components/ClientPersonal
 import { ClientOperationsHistory } from "@/features/clients/components/ClientOperationsHistory";
 import { OperationsDetailCards } from "@/features/clients/components/OperationsDetailCards";
 import { PublicClientError } from "@/features/clients/components/PublicClientError";
+import { PublicClientLoading } from "@/features/clients/components/PublicClientLoading";
 
 const ClientProfile = () => {
   const {
@@ -41,11 +42,7 @@ const ClientProfile = () => {
   });
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <PublicClientLoading />;
   }
 
   // Check if there's an explicit error first

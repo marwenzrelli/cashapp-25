@@ -1,74 +1,73 @@
 
-import { useState, useEffect, useMemo } from "react";
-import { Operation } from "@/features/operations/types";
-import { Client } from "@/features/clients/types";
-import { DateRange } from "react-day-picker";
-import { startOfDay, endOfDay, isWithinInterval, isSameDay, parseISO } from "date-fns";
+import { useState, useEffect, useMemo } from 'react';
+import { Client } from '@/features/clients/types';
+import { Operation } from '@/features/operations/types';
+import { addDays, subDays, startOfDay, endOfDay } from 'date-fns';
 
-export const useClientOperationsFilter = (operations: Operation[], client: Client | null) => {
-  const [selectedType, setSelectedType] = useState<Operation["type"] | "all">("all");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-  const [isCustomRange, setIsCustomRange] = useState(false);
+export const useClientOperationsFilter = (
+  operations: Operation[],
+  client: Client | null
+) => {
+  // State for filters
+  const [selectedType, setSelectedType] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([
+    subDays(new Date(), 30),
+    new Date()
+  ]);
+  const [isCustomRange, setIsCustomRange] = useState<boolean>(false);
 
-  // Reset filters when client changes
-  useEffect(() => {
-    setSelectedType("all");
-    setSearchTerm("");
-    setDateRange(undefined);
-    setIsCustomRange(false);
-  }, [client?.id]);
-
-  // Filter operations for the current client
+  // Get operations for this client
   const clientOperations = useMemo(() => {
     if (!client || !operations.length) return [];
     
-    const clientFullName = `${client.prenom} ${client.nom}`.trim();
-    console.log("Filtering operations for client:", clientFullName, "Total operations:", operations.length);
+    const clientFullName = `${client.prenom} ${client.nom}`;
     
-    return operations.filter(op => {
-      if (op.type === "deposit" || op.type === "withdrawal") {
-        return op.fromClient === clientFullName;
-      } else if (op.type === "transfer") {
-        return op.fromClient === clientFullName || op.toClient === clientFullName;
+    return operations.filter(operation => {
+      // Check if this operation is related to the current client
+      if (operation.fromClient === clientFullName) {
+        return true;
+      } else if (operation.type === 'transfer' && operation.toClient === clientFullName) {
+        return true;
       }
       return false;
     });
-  }, [operations, client]);
+  }, [client, operations]);
 
-  // Apply type, search and date filters
+  // Filter operations based on user selections
   const filteredOperations = useMemo(() => {
     if (!clientOperations.length) return [];
     
-    console.log("Applying filters to operations:", {
-      totalOps: clientOperations.length,
-      selectedType,
-      searchTerm,
-      hasDateRange: !!dateRange
-    });
-
     return clientOperations.filter(op => {
-      // Type filter
-      const typeMatches = selectedType === "all" || op.type === selectedType;
-      
-      // Search term filter
-      const searchMatches = !searchTerm || 
-        (op.description?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-         String(op.amount).includes(searchTerm));
-      
-      // Date filter
-      let dateMatches = true;
-      if (dateRange && dateRange.from) {
-        const start = startOfDay(dateRange.from);
-        const end = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from);
-        const opDate = parseISO(op.date);
-        
-        dateMatches = isWithinInterval(opDate, { start, end }) || 
-                     isSameDay(opDate, dateRange.from) || 
-                     (dateRange.to && isSameDay(opDate, dateRange.to));
+      // Filter by type
+      if (selectedType !== 'all' && op.type !== selectedType) {
+        return false;
       }
       
-      return typeMatches && searchMatches && dateMatches;
+      // Filter by search term
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        const descriptionMatch = op.description?.toLowerCase().includes(searchLower);
+        const typeMatch = op.type.toLowerCase().includes(searchLower);
+        const amountMatch = op.amount.toString().includes(searchLower);
+        
+        if (!(descriptionMatch || typeMatch || amountMatch)) {
+          return false;
+        }
+      }
+      
+      // Filter by date range
+      if (dateRange[0] && dateRange[1]) {
+        const opDate = new Date(op.date);
+        const startDate = startOfDay(dateRange[0]);
+        const endDate = endOfDay(dateRange[1]);
+        
+        if (opDate < startDate || opDate > endDate) {
+          return false;
+        }
+      }
+      
+      return true;
     });
   }, [clientOperations, selectedType, searchTerm, dateRange]);
 

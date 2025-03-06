@@ -15,25 +15,53 @@ export const DepositClientInfo = ({ clientName, depositId }: DepositClientInfoPr
   
   const handleClientClick = async (clientName: string) => {
     try {
+      console.log("Looking up client:", clientName);
+      
+      if (!clientName || clientName.trim() === "") {
+        toast.error("Nom du client manquant");
+        return;
+      }
+      
       const [firstName, lastName] = clientName.split(' ');
       
-      const { data, error } = await supabase
-        .from('clients')
-        .select('id')
-        .or(`prenom.ilike.${firstName},nom.ilike.${lastName}`)
-        .limit(1)
-        .single();
-      
-      if (error || !data) {
+      if (!firstName || !lastName) {
+        console.warn("Client name format invalid:", clientName);
         navigate(`/clients?search=${encodeURIComponent(clientName)}`);
         return;
       }
       
+      console.log(`Searching for client with first name "${firstName}" and last name "${lastName}"`);
+      
+      const { data, error } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('prenom', firstName)
+        .eq('nom', lastName)
+        .maybeSingle();
+      
+      if (error) {
+        console.error("Database error while looking up client:", error);
+        toast.error("Erreur de recherche", {
+          description: "Impossible de trouver le client dans la base de données."
+        });
+        navigate(`/clients?search=${encodeURIComponent(clientName)}`);
+        return;
+      }
+      
+      if (!data) {
+        console.warn("No client found with name:", clientName);
+        toast.info("Client non trouvé", {
+          description: "Redirection vers la recherche de clients."
+        });
+        navigate(`/clients?search=${encodeURIComponent(clientName)}`);
+        return;
+      }
+      
+      console.log("Found client ID:", data.id);
       navigate(`/clients/${data.id}`);
     } catch (error) {
-      console.error("Erreur lors de la recherche du client:", error);
+      console.error("Error during client lookup:", error);
       toast.error("Impossible de trouver le profil du client");
-      
       navigate(`/clients?search=${encodeURIComponent(clientName)}`);
     }
   };
