@@ -1,10 +1,11 @@
+
 import { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Copy, ExternalLink, RefreshCw, Shield, QrCode, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
