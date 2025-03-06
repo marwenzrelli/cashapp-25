@@ -16,23 +16,33 @@ export const useClientData = (clientId: number | null) => {
     setError(null);
     
     try {
-      console.log("Fetching client data for ID:", id);
+      console.log(`Fetching client data for ID: ${id} (${typeof id})`);
       
-      // First, debug by checking available clients to confirm if clients exist
-      const { data: availableClients, error: listError } = await supabase
-        .from('clients')
-        .select('id, nom, prenom')
-        .limit(20);
-        
-      if (listError) {
-        console.error("Error listing available clients:", listError);
-      } else {
-        console.log("Available clients in database:", availableClients);
-        const clientExists = availableClients?.some(c => c.id === id);
-        console.log(`Client with ID ${id} exists in database: ${clientExists}`);
+      // First, check if ID is valid
+      if (isNaN(id) || id <= 0) {
+        throw new Error(`ID client invalide: ${id}`);
       }
       
-      // Try to get the actual client data
+      // Check if the client exists before trying to fetch it
+      console.log("Checking if client exists...");
+      const { count, error: countError } = await supabase
+        .from('clients')
+        .select('*', { count: 'exact', head: true })
+        .eq('id', id);
+        
+      if (countError) {
+        console.error("Error checking if client exists:", countError);
+        throw new Error(`Erreur lors de la vérification du client: ${countError.message}`);
+      }
+      
+      if (count === 0) {
+        console.error(`No client exists with ID ${id}`);
+        throw new Error(`Le client avec l'identifiant ${id} n'existe pas dans notre système.`);
+      }
+      
+      console.log(`Client with ID ${id} exists, count: ${count}`);
+      
+      // Now fetch the client data
       const { data, error } = await supabase
         .from('clients')
         .select('*')
@@ -59,8 +69,8 @@ export const useClientData = (clientId: number | null) => {
       console.error("Exception during client fetch:", err);
       setError(err.message || "Une erreur inattendue s'est produite");
       setClient(null);
-      toast.error("Erreur de connexion", {
-        description: "Impossible de se connecter à la base de données."
+      toast.error("Erreur de chargement", {
+        description: err.message || "Une erreur inattendue s'est produite"
       });
     } finally {
       setIsLoading(false);

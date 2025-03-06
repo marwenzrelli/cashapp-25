@@ -7,6 +7,8 @@ import { ClientOperationsHistory } from "@/features/clients/components/ClientOpe
 import { OperationsDetailCards } from "@/features/clients/components/OperationsDetailCards";
 import { PublicClientError } from "@/features/clients/components/PublicClientError";
 import { PublicClientLoading } from "@/features/clients/components/PublicClientLoading";
+import { useEffect } from "react";
+import { toast } from "sonner";
 
 const ClientProfile = () => {
   const {
@@ -31,6 +33,18 @@ const ClientProfile = () => {
     exportToPDF,
     refetchClient
   } = useClientProfile();
+
+  // Add additional debug logging
+  useEffect(() => {
+    console.log(`ClientProfile - Route parameters: clientId=${clientId}, path=${window.location.pathname}`);
+    
+    if (error) {
+      console.error("ClientProfile - Error detected:", error);
+      toast.error("Erreur de chargement", {
+        description: error
+      });
+    }
+  }, [clientId, error]);
 
   console.log("ClientProfile - Full state:", { 
     client, 
