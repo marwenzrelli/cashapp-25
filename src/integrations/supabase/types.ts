@@ -200,6 +200,7 @@ export type Database = {
           id: string
           last_login: string | null
           phone: string | null
+          profile_role: string | null
           role: string | null
           status: string | null
           username: string | null
@@ -211,6 +212,7 @@ export type Database = {
           id: string
           last_login?: string | null
           phone?: string | null
+          profile_role?: string | null
           role?: string | null
           status?: string | null
           username?: string | null
@@ -222,6 +224,7 @@ export type Database = {
           id?: string
           last_login?: string | null
           phone?: string | null
+          profile_role?: string | null
           role?: string | null
           status?: string | null
           username?: string | null

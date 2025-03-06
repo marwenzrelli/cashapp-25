@@ -35,7 +35,7 @@ export const useAuthCheck = () => {
         // Then get the profile with role
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('role, email, full_name')
+          .select('role, profile_role, email, full_name')
           .eq('id', session.user.id)
           .maybeSingle();
 
@@ -57,9 +57,13 @@ export const useAuthCheck = () => {
 
         console.log("Profil récupéré:", profile);
         console.log("Rôle de l'utilisateur:", profile.role);
+        console.log("Profile Role de l'utilisateur:", profile.profile_role);
 
+        // Utiliser profile_role s'il est défini, sinon utiliser role
+        const effectiveRole = profile.profile_role || profile.role;
+        
         // Set the role in state
-        setUserRole(profile.role as UserRole);
+        setUserRole(effectiveRole as UserRole);
         
         // Check route permissions
         const restrictedRoutes = {
@@ -71,8 +75,8 @@ export const useAuthCheck = () => {
         const currentPath = location.pathname;
         const allowedRoles = restrictedRoutes[currentPath as keyof typeof restrictedRoutes];
 
-        if (allowedRoles && !allowedRoles.includes(profile.role)) {
-          console.error(`Accès non autorisé à ${currentPath} pour le rôle ${profile.role}`);
+        if (allowedRoles && !allowedRoles.includes(effectiveRole)) {
+          console.error(`Accès non autorisé à ${currentPath} pour le rôle ${effectiveRole}`);
           toast.error("Accès non autorisé", {
             description: "Vous n'avez pas les permissions nécessaires"
           });

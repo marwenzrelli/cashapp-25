@@ -17,7 +17,7 @@ const AdminUtility = () => {
   const checkUserExists = async (email: string) => {
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, email')
+      .select('id, email, profile_role, role')
       .eq('email', email)
       .maybeSingle();
     
@@ -26,7 +26,14 @@ const AdminUtility = () => {
       throw error;
     }
     
-    return !!data;
+    // Vérifier également si l'utilisateur est déjà un superviseur
+    if (data && (data.profile_role === 'supervisor' || data.role === 'supervisor')) {
+      console.log("L'utilisateur est déjà un superviseur");
+      toast.info("Cet utilisateur est déjà un superviseur");
+      return { exists: true, isSupervisor: true };
+    }
+    
+    return { exists: !!data, isSupervisor: false, profile: data };
   };
   
   const createUser = async () => {
@@ -65,10 +72,21 @@ const AdminUtility = () => {
     try {
       console.log("Début de la promotion en superviseur...");
       
-      // Vérifier si l'utilisateur existe
-      const userExists = await checkUserExists(email);
+      // Vérifier si l'utilisateur existe et s'il est déjà superviseur
+      const { exists, isSupervisor, profile } = await checkUserExists(email);
       
-      if (!userExists) {
+      if (isSupervisor) {
+        setIsLoading(false);
+        toast.success("L'utilisateur est déjà un superviseur", {
+          description: "Aucune action supplémentaire n'est nécessaire"
+        });
+        setTimeout(() => {
+          navigate("/dashboard");
+        }, 2000);
+        return;
+      }
+      
+      if (!exists) {
         console.log(`L'utilisateur ${email} n'existe pas. Création en cours...`);
         await createUser();
         
@@ -77,7 +95,7 @@ const AdminUtility = () => {
         await new Promise(resolve => setTimeout(resolve, 3000));
         
         // Vérifier à nouveau si l'utilisateur a bien été créé
-        const userCreated = await checkUserExists(email);
+        const { exists: userCreated } = await checkUserExists(email);
         if (!userCreated) {
           throw new Error("L'utilisateur n'a pas pu être créé correctement");
         }

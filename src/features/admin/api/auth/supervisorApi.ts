@@ -63,6 +63,21 @@ export const createSupervisorAccount = async (userData: {
     
     // IMPORTANT: Attendre plus longtemps pour que le trigger handle_new_user s'exécute complètement
     await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Mettre à jour explicitement le profil avec le rôle
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({
+        role: 'supervisor',
+        department: 'finance',
+        profile_role: 'supervisor' // Utiliser le nouveau champ profile_role
+      })
+      .eq('id', authData.user.id);
+    
+    if (updateError) {
+      console.error("Erreur lors de la mise à jour du profil:", updateError);
+      throw updateError;
+    }
 
     return authData.user;
   } catch (error) {
@@ -94,12 +109,13 @@ export const makeUserSupervisor = async (email: string) => {
     
     console.log(`Found user with ID: ${profileData.id}`);
     
-    // Update user's profile
+    // Update user's profile with both role and profile_role fields
     const { error: updateError } = await supabase
       .from('profiles')
       .update({
         role: 'supervisor',
-        department: 'finance'
+        department: 'finance',
+        profile_role: 'supervisor' // Utiliser le nouveau champ profile_role
       })
       .eq('id', profileData.id);
     
