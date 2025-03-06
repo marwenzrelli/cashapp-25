@@ -67,6 +67,11 @@ const ClientProfile = () => {
           formatAmount={formatAmount}
         />
 
+        <OperationsDetailCards
+          clientOperations={clientOperations}
+          formatAmount={formatAmount}
+        />
+
         <ClientOperationsHistory
           operations={clientOperations}
           selectedType={selectedType}
@@ -76,11 +81,6 @@ const ClientProfile = () => {
           dateRange={dateRange}
           setDateRange={setDateRange}
           filteredOperations={filteredOperations}
-        />
-
-        <OperationsDetailCards
-          clientOperations={clientOperations}
-          formatAmount={formatAmount}
         />
       </div>
     </div>
