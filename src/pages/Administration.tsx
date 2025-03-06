@@ -48,7 +48,7 @@ const Administration = () => {
   // Check for RLS policy violation errors
   if (usersError && usersError.message?.includes("violates row-level security policy")) {
     return (
-      <ErrorState errorMessage={usersError.message}>
+      <ErrorState permissionError={true}>
         <div className="mt-4 space-y-4">
           <p className="text-muted-foreground">
             Vous n'avez pas les permissions nécessaires pour accéder ou modifier les profils utilisateurs.
@@ -73,10 +73,11 @@ const Administration = () => {
       (usersError.message?.includes("not_admin") || 
        usersError.message?.includes("User not allowed"))) {
     return (
-      <ErrorState>
+      <ErrorState permissionError={true}>
         <div className="mt-4 space-y-4">
           <p className="text-muted-foreground">
             Vous n'avez pas les permissions d'administrateur nécessaires pour accéder à cette page.
+            Cette section est réservée aux superviseurs du système.
           </p>
           <div className="flex flex-col sm:flex-row gap-2 justify-center mt-4">
             <Button 
@@ -95,7 +96,7 @@ const Administration = () => {
   // Improved error handling for other errors
   if (usersError) {
     return (
-      <ErrorState>
+      <ErrorState errorMessage={usersError.message}>
         <div className="mt-4 space-y-4">
           <p className="text-muted-foreground">
             {usersError.message || "Une erreur s'est produite lors du chargement des données"}

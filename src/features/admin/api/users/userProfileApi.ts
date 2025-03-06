@@ -6,7 +6,22 @@ export const fetchUserProfile = async (userId: string) => {
   try {
     console.log(`Attempting to fetch profile for user: ${userId}`);
     
-    // First try with maybeSingle to avoid the error from single when no row is found
+    // Get authenticated user first to compare with requested userId
+    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+      
+    if (authError) {
+      console.error("Error fetching authenticated user:", authError);
+      throw authError;
+    }
+    
+    if (!authUser) {
+      throw new Error("No authenticated user found");
+    }
+
+    // Check if requesting own profile or someone else's
+    const isOwnProfile = authUser.id === userId;
+    
+    // Try to get the profile
     const { data: profile, error } = await supabase
       .from('profiles')
       .select('*')
@@ -21,25 +36,12 @@ export const fetchUserProfile = async (userId: string) => {
     if (!profile) {
       console.log(`No profile found for user ${userId}`);
       
-      // Get authenticated user
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
-      if (userError) {
-        console.error("Error fetching user data:", userError);
-        throw userError;
-      }
-      
-      if (!user) {
-        throw new Error("No authenticated user found");
-      }
-      
-      // Create a default profile for the current user only
-      // This ensures we're only creating profiles for the authenticated user
-      if (user.id === userId) {
+      // Only create a default profile for the current user
+      if (isOwnProfile) {
         const defaultProfile = {
           id: userId,
-          email: user.email || '',
-          full_name: user.user_metadata?.full_name || 'Default User',
+          email: authUser.email || '',
+          full_name: authUser.user_metadata?.full_name || 'Default User',
           role: 'cashier', // Default to cashier role
           status: 'active',
           department: 'accounting'
@@ -67,10 +69,10 @@ export const fetchUserProfile = async (userId: string) => {
         console.log("Returning basic profile info for non-current user");
         return {
           id: userId,
-          email: user.email || '',
-          full_name: 'Unknown User',
-          role: 'cashier',
-          status: 'inactive',
+          email: 'unavailable@example.com',
+          full_name: 'Utilisateur (accès restreint)',
+          role: 'unknown',
+          status: 'unknown',
           department: 'unknown'
         };
       }
