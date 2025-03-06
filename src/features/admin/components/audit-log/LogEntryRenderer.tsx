@@ -30,7 +30,7 @@ export interface OperationLogEntry {
   description: string;
 }
 
-interface LogEntryRendererProps {
+export interface LogEntryRendererProps {
   entry: AuditLogEntry | OperationLogEntry;
   index: number;
   type: 'audit' | 'transaction' | 'operation';

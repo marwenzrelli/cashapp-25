@@ -2,13 +2,14 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { LogEntryRenderer } from "./LogEntryRenderer";
-import { AuditLogEntry, OperationLogEntry } from "@/types/admin";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatDateTime } from "@/features/operations/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+// Import the types directly from LogEntryRenderer instead of from @/types/admin
+import { AuditLogEntry, OperationLogEntry } from "./LogEntryRenderer";
 
 export const DeletedOperationsTab = () => {
   const [data, setData] = useState<(AuditLogEntry | OperationLogEntry)[]>([]);
@@ -198,8 +199,13 @@ export const DeletedOperationsTab = () => {
               Aucune opération supprimée trouvée.
             </div>
           ) : (
-            filteredData.map((entry) => (
-              <LogEntryRenderer key={`${entry.type}-${entry.id}`} entry={entry} />
+            filteredData.map((entry, index) => (
+              <LogEntryRenderer 
+                key={`${entry.type}-${entry.id}`} 
+                entry={entry} 
+                index={index} 
+                type="operation" 
+              />
             ))
           )}
         </TabsContent>

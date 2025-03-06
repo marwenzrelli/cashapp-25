@@ -16,6 +16,10 @@ interface WithdrawalDialogContainerProps {
   refreshClientBalance: (clientId: string) => Promise<boolean>;
 }
 
+interface ExtendedClient extends Client {
+  dateCreation: string;
+}
+
 export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps> = ({
   showDialog,
   setShowDialog,
@@ -60,11 +64,17 @@ export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps>
     }
   };
 
+  // Convert clients to ExtendedClients by adding the dateCreation property
+  const extendedClients: ExtendedClient[] = clients.map(client => ({
+    ...client,
+    dateCreation: client.date_creation || new Date().toISOString()
+  }));
+
   return (
     <WithdrawalFormDialog
       isOpen={showDialog}
       onClose={handleCloseDialog}
-      clients={clients}
+      clients={extendedClients}
       selectedClient={selectedClient}
       setSelectedClient={setSelectedClient}
       isEditing={isEditing}
