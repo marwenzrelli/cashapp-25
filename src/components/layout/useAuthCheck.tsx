@@ -5,6 +5,9 @@ import { UserRole } from "@/types/admin";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+// Email spécifique pour le superviseur qui doit toujours avoir accès
+const SUPERVISOR_EMAIL = "marwen.zrelli.pro@icloud.com";
+
 export const useAuthCheck = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -33,10 +36,38 @@ export const useAuthCheck = () => {
         console.log("Email de l'utilisateur:", session.user.email);
 
         // Check if email matches the supervisor's email directly
-        const supervisorEmail = "marwen.zrelli.pro@icloud.com";
-        if (session.user.email === supervisorEmail) {
-          console.log("Email de superviseur reconnu directement:", supervisorEmail);
+        if (session.user.email === SUPERVISOR_EMAIL) {
+          console.log("Email de superviseur reconnu directement:", SUPERVISOR_EMAIL);
           setUserRole("supervisor");
+          
+          // Ensure the profile in database is updated with supervisor role
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .maybeSingle();
+            
+          if (!profile || (profile && profile.role !== 'supervisor')) {
+            console.log("Mise à jour ou création du profil avec le rôle de superviseur");
+            const { error: upsertError } = await supabase
+              .from('profiles')
+              .upsert({
+                id: session.user.id,
+                email: session.user.email,
+                full_name: profile?.full_name || "Superviseur Principal",
+                role: "supervisor",
+                profile_role: "supervisor",
+                department: "finance",
+                status: "active"
+              });
+              
+            if (upsertError) {
+              console.error("Erreur lors de la mise à jour du profil:", upsertError);
+            } else {
+              console.log("Profil de superviseur mis à jour avec succès");
+            }
+          }
+          
           return;
         }
 
@@ -59,7 +90,7 @@ export const useAuthCheck = () => {
           console.error("Aucun profil trouvé pour l'utilisateur:", session.user.id);
           
           // If no profile, but email matches supervisor, create one automatically
-          if (session.user.email === supervisorEmail) {
+          if (session.user.email === SUPERVISOR_EMAIL) {
             console.log("Création automatique d'un profil pour le superviseur");
             const { error: insertError } = await supabase
               .from('profiles')
@@ -68,7 +99,9 @@ export const useAuthCheck = () => {
                 email: session.user.email,
                 full_name: "Superviseur Principal",
                 role: "supervisor",
-                profile_role: "supervisor"
+                profile_role: "supervisor",
+                department: "finance",
+                status: "active"
               });
               
             if (insertError) {

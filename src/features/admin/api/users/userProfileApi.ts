@@ -1,5 +1,9 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { SystemUser } from '@/types/admin';
+
+// Email spécifique pour le superviseur qui doit toujours avoir accès
+const SUPERVISOR_EMAIL = "marwen.zrelli.pro@icloud.com";
 
 export const fetchUserProfile = async (userId: string) => {
   try {
@@ -17,6 +21,10 @@ export const fetchUserProfile = async (userId: string) => {
       throw new Error("No authenticated user found");
     }
 
+    // Check if user has supervisor email - give special privileges
+    const isSupervisor = authUser.email === SUPERVISOR_EMAIL;
+    console.log(`User email: ${authUser.email}, Is supervisor: ${isSupervisor}`);
+    
     // Check if requesting own profile or someone else's
     const isOwnProfile = authUser.id === userId;
     
@@ -47,9 +55,10 @@ export const fetchUserProfile = async (userId: string) => {
           id: userId,
           email: authUser.email || '',
           full_name: authUser.user_metadata?.full_name || 'Default User',
-          role: 'cashier', // Default to cashier role
+          // If the user has the supervisor email, make them a supervisor
+          role: isSupervisor ? 'supervisor' : 'cashier',
           status: 'active',
-          department: 'accounting'
+          department: isSupervisor ? 'finance' : 'accounting'
         };
         
         console.log("Creating default profile for current user:", defaultProfile);
@@ -86,6 +95,27 @@ export const fetchUserProfile = async (userId: string) => {
           status: 'unknown',
           department: 'unknown'
         };
+      }
+    }
+    
+    // If user has supervisor email but profile doesn't have supervisor role, update it
+    if (isSupervisor && profile.role !== 'supervisor') {
+      console.log("Updating user to supervisor role because of matching email");
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ 
+          role: 'supervisor',
+          profile_role: 'supervisor',
+          department: 'finance'
+        })
+        .eq('id', userId);
+        
+      if (!updateError) {
+        profile.role = 'supervisor';
+        profile.profile_role = 'supervisor';
+        profile.department = 'finance';
+      } else {
+        console.error("Error updating to supervisor role:", updateError);
       }
     }
     
