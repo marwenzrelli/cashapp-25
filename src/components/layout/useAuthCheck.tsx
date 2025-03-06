@@ -29,10 +29,13 @@ export const useAuthCheck = () => {
           return;
         }
 
+        console.log("Session active pour l'utilisateur:", session.user.id);
+        console.log("Email de l'utilisateur:", session.user.email);
+
         // Then get the profile with role
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('role')
+          .select('role, email, full_name')
           .eq('id', session.user.id)
           .maybeSingle();
 
@@ -45,12 +48,15 @@ export const useAuthCheck = () => {
         }
 
         if (!profile) {
-          console.error("Aucun profil trouvé pour l'utilisateur");
+          console.error("Aucun profil trouvé pour l'utilisateur:", session.user.id);
           toast.error("Erreur lors de la vérification des permissions", {
             description: "Profil utilisateur introuvable"
           });
           return;
         }
+
+        console.log("Profil récupéré:", profile);
+        console.log("Rôle de l'utilisateur:", profile.role);
 
         // Set the role in state
         setUserRole(profile.role as UserRole);
@@ -65,6 +71,7 @@ export const useAuthCheck = () => {
         const allowedRoles = restrictedRoutes[currentPath as keyof typeof restrictedRoutes];
 
         if (allowedRoles && !allowedRoles.includes(profile.role)) {
+          console.error(`Accès non autorisé à ${currentPath} pour le rôle ${profile.role}`);
           toast.error("Accès non autorisé", {
             description: "Vous n'avez pas les permissions nécessaires"
           });
@@ -81,6 +88,8 @@ export const useAuthCheck = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_OUT" || !session) {
         navigate("/login", { replace: true });
+      } else if (event === "SIGNED_IN") {
+        checkSessionAndRole();
       }
     });
 

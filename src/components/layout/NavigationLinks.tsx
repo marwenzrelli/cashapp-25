@@ -19,6 +19,8 @@ interface NavItemType {
 }
 
 export const NavigationLinks = ({ className = "", onClick = () => {}, currentPath, userRole }: NavigationLinksProps) => {
+  console.log("NavigationLinks - userRole:", userRole);
+  
   const navItems: NavItemType[] = [
     { path: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
     { path: "/clients", label: "Clients", icon: Users },
@@ -32,7 +34,8 @@ export const NavigationLinks = ({ className = "", onClick = () => {}, currentPat
 
   const filteredNavItems = navItems.filter(item => {
     if (!item.roles) return true;
-    return userRole && item.roles.includes(userRole);
+    if (!userRole) return false;
+    return item.roles.includes(userRole);
   });
 
   return (
