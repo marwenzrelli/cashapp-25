@@ -27,9 +27,9 @@ export const useClientOperationsFilter = (operations: Operation[], client: Clien
     
     return operations.filter(op => {
       if (op.type === "deposit" || op.type === "withdrawal") {
-        return op.client_name === clientFullName;
+        return op.fromClient === clientFullName;
       } else if (op.type === "transfer") {
-        return op.from_client === clientFullName || op.to_client === clientFullName;
+        return op.fromClient === clientFullName || op.toClient === clientFullName;
       }
       return false;
     });
