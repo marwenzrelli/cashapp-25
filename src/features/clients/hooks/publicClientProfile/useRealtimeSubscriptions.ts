@@ -11,9 +11,13 @@ export const useRealtimeSubscriptions = (
 
     console.log("Setting up realtime subscriptions for client ID:", clientId);
 
+    // Collection of all active subscriptions to clean up later
+    const activeSubscriptions: { unsubscribe: () => void }[] = [];
+
     // Subscribe to changes in the client's record
-    const clientSubscription = supabase
-      .channel('public:clients')
+    const clientChannel = supabase.channel(`client-${clientId}`);
+    
+    clientChannel
       .on('postgres_changes', {
         event: 'UPDATE',
         schema: 'public',
@@ -24,6 +28,8 @@ export const useRealtimeSubscriptions = (
         refreshData();
       })
       .subscribe();
+    
+    activeSubscriptions.push(clientChannel);
 
     // Get the client's full name to use in other subscriptions
     const getClientName = async () => {
@@ -38,9 +44,14 @@ export const useRealtimeSubscriptions = (
       const clientFullName = `${data.prenom} ${data.nom}`;
       console.log("Setting up subscription for client name:", clientFullName);
 
+      // Create separate channels for each type of operation
+      const depositsChannel = supabase.channel(`deposits-${clientId}`);
+      const withdrawalsChannel = supabase.channel(`withdrawals-${clientId}`);
+      const transfersOutChannel = supabase.channel(`transfers-out-${clientId}`);
+      const transfersInChannel = supabase.channel(`transfers-in-${clientId}`);
+
       // Subscribe to deposits for this client
-      const depositsSubscription = supabase
-        .channel('public:deposits')
+      depositsChannel
         .on('postgres_changes', {
           event: '*',
           schema: 'public',
@@ -51,10 +62,11 @@ export const useRealtimeSubscriptions = (
           refreshData();
         })
         .subscribe();
+      
+      activeSubscriptions.push(depositsChannel);
 
       // Subscribe to withdrawals for this client
-      const withdrawalsSubscription = supabase
-        .channel('public:withdrawals')
+      withdrawalsChannel
         .on('postgres_changes', {
           event: '*',
           schema: 'public',
@@ -65,10 +77,11 @@ export const useRealtimeSubscriptions = (
           refreshData();
         })
         .subscribe();
+      
+      activeSubscriptions.push(withdrawalsChannel);
 
       // Subscribe to transfers (as sender)
-      const transfersOutSubscription = supabase
-        .channel('public:transfers-out')
+      transfersOutChannel
         .on('postgres_changes', {
           event: '*',
           schema: 'public',
@@ -79,10 +92,11 @@ export const useRealtimeSubscriptions = (
           refreshData();
         })
         .subscribe();
+      
+      activeSubscriptions.push(transfersOutChannel);
 
       // Subscribe to transfers (as receiver)
-      const transfersInSubscription = supabase
-        .channel('public:transfers-in')
+      transfersInChannel
         .on('postgres_changes', {
           event: '*',
           schema: 'public',
@@ -93,20 +107,18 @@ export const useRealtimeSubscriptions = (
           refreshData();
         })
         .subscribe();
-
-      return () => {
-        depositsSubscription.unsubscribe();
-        withdrawalsSubscription.unsubscribe();
-        transfersOutSubscription.unsubscribe();
-        transfersInSubscription.unsubscribe();
-      };
+      
+      activeSubscriptions.push(transfersInChannel);
     };
 
-    const nameSubscription = getClientName();
+    getClientName();
 
+    // Cleanup function for all channels
     return () => {
-      clientSubscription.unsubscribe();
-      nameSubscription.then(cleanup => cleanup && cleanup());
+      console.log("Cleaning up realtime subscriptions");
+      activeSubscriptions.forEach(subscription => {
+        subscription.unsubscribe();
+      });
     };
   }, [clientId, refreshData]);
 };
