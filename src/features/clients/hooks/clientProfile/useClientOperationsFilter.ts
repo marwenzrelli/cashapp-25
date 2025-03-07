@@ -31,18 +31,41 @@ export const useClientOperationsFilter = (
       clientId: client.id
     });
     
+    // Normalize function to handle case sensitivity and whitespace
+    const normalizeString = (str: string) => {
+      if (!str) return '';
+      return str.toLowerCase().trim();
+    };
+    
     // More flexible matching to handle variations in name format
     const matchesClient = (name: string | undefined) => {
       if (!name) return false;
       
+      const normalizedClientName = normalizeString(clientFullName);
+      const normalizedName = normalizeString(name);
+      
       // Check for exact match
-      if (name.toLowerCase() === clientFullName.toLowerCase()) return true;
+      if (normalizedName === normalizedClientName) return true;
       
       // Check if client name is part of the operation name (for partial matches)
-      if (name.toLowerCase().includes(clientFullName.toLowerCase())) return true;
+      if (normalizedName.includes(normalizedClientName)) return true;
       
       // Check if operation name is part of client name (for partial matches)
-      if (clientFullName.toLowerCase().includes(name.toLowerCase())) return true;
+      if (normalizedClientName.includes(normalizedName)) return true;
+      
+      // Check if the first or last name matches
+      const clientFirstName = normalizeString(client.prenom);
+      const clientLastName = normalizeString(client.nom);
+      
+      if (normalizedName.includes(clientFirstName) || normalizedName.includes(clientLastName)) return true;
+      
+      // Handle reversed name order (last name, first name)
+      const reversedClientName = `${normalizeString(client.nom)} ${normalizeString(client.prenom)}`;
+      if (normalizedName === reversedClientName || 
+          normalizedName.includes(reversedClientName) ||
+          reversedClientName.includes(normalizedName)) {
+        return true;
+      }
       
       return false;
     };
@@ -58,6 +81,17 @@ export const useClientOperationsFilter = (
     });
     
     console.log(`Found ${clientOps.length} operations for client "${clientFullName}"`);
+    
+    // If no operations found but we know they should exist, log details for debugging
+    if (clientOps.length === 0 && operations.length > 0) {
+      console.log("No operations matched. Logging available operations for debugging:");
+      operations.forEach((op, index) => {
+        if (index < 5) { // Limit to first 5 to avoid console spam
+          console.log(`Operation ${index}: type=${op.type}, fromClient="${op.fromClient}", toClient="${op.toClient}"`);
+        }
+      });
+    }
+    
     return clientOps;
   }, [client, operations]);
 

@@ -70,7 +70,23 @@ export const WithdrawalFormDialog: React.FC<WithdrawalFormDialogProps> = ({
         
         // Find client by name when editing
         const clientFullName = selectedWithdrawal.client_name;
-        const client = clients.find(c => `${c.prenom} ${c.nom}` === clientFullName);
+        
+        // More flexible client matching
+        const normalizeString = (str: string) => str ? str.toLowerCase().trim() : '';
+        
+        const client = clients.find(c => {
+          const fullName = `${c.prenom} ${c.nom}`;
+          const reversedName = `${c.nom} ${c.prenom}`;
+          
+          const normalizedFullName = normalizeString(fullName);
+          const normalizedReversedName = normalizeString(reversedName);
+          const normalizedClientName = normalizeString(clientFullName);
+          
+          return normalizedFullName === normalizedClientName || 
+                 normalizedReversedName === normalizedClientName ||
+                 normalizedFullName.includes(normalizedClientName) ||
+                 normalizedClientName.includes(normalizedFullName);
+        });
         
         if (client) {
           const clientId = client.id.toString();
