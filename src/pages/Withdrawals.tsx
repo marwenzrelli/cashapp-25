@@ -1,7 +1,7 @@
 
 import { useAuthenticationCheck } from "@/features/admin/hooks/useAuthenticationCheck";
 import { WithdrawalsPage } from "@/features/withdrawals/components/WithdrawalsPage";
-import { OperationActionsDialog } from "@/features/clients/components/operations-history/OperationActionsDialog";
+import { OperationActionsDialog } from "@/features/clients/components/operations-history/operation-dialog";
 import { useState } from "react";
 import { Operation } from "@/features/operations/types";
 

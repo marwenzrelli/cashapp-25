@@ -3,7 +3,7 @@ import { DepositsContent } from "@/features/deposits/components/DepositsContent"
 import { useDepositsPage } from "@/features/deposits/hooks/useDepositsPage";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { OperationActionsDialog } from "@/features/clients/components/operations-history/OperationActionsDialog";
+import { OperationActionsDialog } from "@/features/clients/components/operations-history/operation-dialog";
 import { Operation } from "@/features/operations/types";
 
 const Deposits = () => {
