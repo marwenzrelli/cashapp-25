@@ -48,7 +48,7 @@ export const ClientOperationsHistoryTabs = ({
   const renderActionButtons = (operation: Operation) => {
     // Only allow editing withdrawals and deposits for now
     const canEdit = ['withdrawal', 'deposit'].includes(operation.type);
-    const canDelete = operation.type === 'withdrawal'; // Only allow deleting withdrawals for now
+    const canDelete = ['withdrawal', 'deposit'].includes(operation.type); // Allow deleting both withdrawals and deposits
     
     return (
       <div className="flex space-x-2 justify-end">
