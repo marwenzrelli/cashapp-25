@@ -24,6 +24,14 @@ interface ClientSelectFieldProps {
   id?: string;
 }
 
+// Type for the Supabase real-time payload
+interface RealtimePayload {
+  new: Record<string, any> | null;
+  old: Record<string, any> | null;
+  eventType: string;
+  [key: string]: any;
+}
+
 export const ClientSelectField: React.FC<ClientSelectFieldProps> = ({
   value,
   onChange,
@@ -47,8 +55,15 @@ export const ClientSelectField: React.FC<ClientSelectFieldProps> = ({
       .channel('client-balance-updates')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'clients' },
-        (payload) => {
-          if (payload.new && 'id' in payload.new && 'solde' in payload.new) {
+        (payload: RealtimePayload) => {
+          if (
+            payload.new && 
+            typeof payload.new === 'object' &&
+            'id' in payload.new && 
+            'solde' in payload.new &&
+            payload.new.id !== null &&
+            payload.new.solde !== null
+          ) {
             setRealTimeBalances(prev => ({
               ...prev,
               [payload.new.id]: payload.new.solde
