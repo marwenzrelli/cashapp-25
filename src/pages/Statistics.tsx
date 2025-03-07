@@ -1,4 +1,3 @@
-
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, Area, AreaChart } from "recharts";
 import { 
@@ -25,6 +24,7 @@ import { useDashboardData } from "@/features/dashboard/hooks/useDashboardData";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { LoadingState } from "@/features/admin/components/administration/LoadingState";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface FilteredData {
   client_name?: string;
@@ -54,6 +54,7 @@ const Statistics = () => {
   
   // Add a timeout to handle cases where the loading state gets stuck
   const [timeoutExceeded, setTimeoutExceeded] = useState(false);
+  const [manualRefreshAttempt, setManualRefreshAttempt] = useState(0);
   
   useEffect(() => {
     // Reset timeout state when loading starts
@@ -69,10 +70,11 @@ const Statistics = () => {
       
       return () => clearTimeout(timeout);
     }
-  }, [isLoadingStats, isLoadingDeposits, isLoadingWithdrawals, isLoadingTransfers]);
+  }, [isLoadingStats, isLoadingDeposits, isLoadingWithdrawals, isLoadingTransfers, manualRefreshAttempt]);
 
   const refreshData = async () => {
     setIsSyncing(true);
+    setManualRefreshAttempt(prev => prev + 1);
     try {
       await handleRefresh();
       toast.success("Données synchronisées avec succès");
@@ -83,6 +85,16 @@ const Statistics = () => {
       setIsSyncing(false);
     }
   };
+
+  // Force data validation to ensure we are showing actual data rather than defaults
+  const dataIsValid = 
+    stats.total_deposits !== undefined &&
+    stats.total_withdrawals !== undefined &&
+    stats.client_count !== undefined &&
+    !isLoadingStats &&
+    !isLoadingDeposits &&
+    !isLoadingWithdrawals &&
+    !isLoadingTransfers;
 
   const filterData = (data: FilteredData[], type: string) => {
     if (!data || !Array.isArray(data)) {
@@ -329,33 +341,74 @@ const Statistics = () => {
     return "text-gray-600 dark:text-gray-400";
   };
 
+  // Check if data is still loading or if there was a loading timeout
   if (isLoadingDeposits || isLoadingWithdrawals || isLoadingTransfers || isLoadingStats) {
     return (
-      <LoadingState 
-        message={timeoutExceeded ? "Le chargement prend plus de temps que prévu..." : "Chargement des statistiques en cours..."} 
-        retrying={timeoutExceeded}
-      />
+      <div className="space-y-8">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold">Statistiques</h1>
+            <p className="text-muted-foreground">
+              Vue d'ensemble et analyses détaillées
+            </p>
+          </div>
+          <Button 
+            onClick={refreshData} 
+            variant="outline" 
+            className="flex items-center gap-2"
+            disabled={isSyncing || isLoadingStats}
+          >
+            <RefreshCw className={`h-4 w-4 ${isSyncing || isLoadingStats ? 'animate-spin' : ''}`} />
+            {isSyncing ? 'Synchronisation...' : 'Synchroniser'}
+          </Button>
+        </div>
+        
+        <LoadingState 
+          message={timeoutExceeded ? "Le chargement prend plus de temps que prévu... Veuillez patienter ou actualiser la page." : "Chargement des statistiques en cours..."} 
+          retrying={timeoutExceeded}
+        />
+      </div>
     );
   }
 
   // If we have any error, show it to the user
   if (error) {
     return (
-      <div className="p-6 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 space-y-4">
-        <div className="flex items-start gap-3">
-          <AlertTriangle className="h-6 w-6 text-red-500 mt-0.5" />
+      <div className="space-y-8">
+        <div className="flex justify-between items-center">
           <div>
-            <h2 className="text-lg font-semibold">Erreur de chargement</h2>
-            <p className="text-muted-foreground">{error}</p>
-            <Button 
-              onClick={refreshData} 
-              variant="outline" 
-              className="mt-4 flex items-center gap-2"
-              disabled={isSyncing}
-            >
-              <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
-              Réessayer
-            </Button>
+            <h1 className="text-3xl font-bold">Statistiques</h1>
+            <p className="text-muted-foreground">
+              Vue d'ensemble et analyses détaillées
+            </p>
+          </div>
+          <Button 
+            onClick={refreshData} 
+            variant="outline" 
+            className="flex items-center gap-2"
+            disabled={isSyncing}
+          >
+            <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
+            {isSyncing ? 'Synchronisation...' : 'Synchroniser'}
+          </Button>
+        </div>
+        
+        <div className="p-6 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 space-y-4">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-6 w-6 text-red-500 mt-0.5" />
+            <div>
+              <h2 className="text-lg font-semibold">Erreur de chargement</h2>
+              <p className="text-muted-foreground">{error}</p>
+              <Button 
+                onClick={refreshData} 
+                variant="outline" 
+                className="mt-4 flex items-center gap-2"
+                disabled={isSyncing}
+              >
+                <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                Réessayer
+              </Button>
+            </div>
           </div>
         </div>
       </div>

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { DashboardStats, RecentActivity } from "../types";
@@ -19,10 +19,15 @@ export const useDashboardData = () => {
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [dataFetched, setDataFetched] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async (isRetry = false) => {
+    if (isRetry) {
+      setRetryCount(prev => prev + 1);
+    }
+    
     try {
-      setIsLoading(true);
+      if (!isRetry) setIsLoading(true);
       setError(null);
       
       // Fetch deposits
@@ -88,25 +93,34 @@ export const useDashboardData = () => {
       });
       
       setDataFetched(true);
+      setRetryCount(0); // Reset retry count on success
     } catch (error: any) {
       console.error('Error fetching stats:', error);
       setError(error.message || "Erreur lors du chargement des statistiques");
-      toast.error("Erreur lors du chargement des statistiques");
-      // Set default values to ensure the UI can render properly
-      setStats({
-        total_deposits: 0,
-        total_withdrawals: 0,
-        client_count: 0,
-        transfer_count: 0,
-        total_balance: 0,
-        sent_transfers: 0,
-        received_transfers: 0,
-        monthly_stats: generateMockMonthlyStats()
-      });
+      
+      if (retryCount < 3 && !isRetry) {
+        // Attempt auto-retry if this is not already a retry attempt
+        console.log(`Auto-retrying fetch attempt ${retryCount + 1}/3`);
+        setTimeout(() => fetchStats(true), 3000);
+      } else {
+        toast.error("Erreur lors du chargement des statistiques");
+        // Set default values to ensure the UI can render properly
+        setStats({
+          total_deposits: 0,
+          total_withdrawals: 0,
+          client_count: 0,
+          transfer_count: 0,
+          total_balance: 0,
+          sent_transfers: 0,
+          received_transfers: 0,
+          monthly_stats: generateMockMonthlyStats()
+        });
+        setDataFetched(true); // Mark as fetched even on error to prevent infinite retries
+      }
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [retryCount]);
 
   // Helper function to create mock monthly stats
   const generateMockMonthlyStats = () => {
@@ -120,7 +134,7 @@ export const useDashboardData = () => {
     }));
   };
 
-  const fetchRecentActivity = async () => {
+  const fetchRecentActivity = useCallback(async () => {
     try {
       // Récupérer les versements récents
       const { data: recentDeposits, error: depositsError } = await supabase
@@ -192,10 +206,11 @@ export const useDashboardData = () => {
       // Set an empty array to ensure UI can render
       setRecentActivity([]);
     }
-  };
+  }, []);
 
   const handleRefresh = () => {
     setIsLoading(true);
+    setError(null);
     fetchStats();
     fetchRecentActivity();
     toast.success("Statistiques actualisées");
@@ -213,10 +228,10 @@ export const useDashboardData = () => {
       console.log("Auto-refreshing dashboard data");
       fetchStats();
       fetchRecentActivity();
-    }, 5 * 60 * 1000); // Changed from 60s to 5 minutes
+    }, 10 * 60 * 1000); // Changed to 10 minutes to reduce server load
     
     return () => clearInterval(interval);
-  }, [dataFetched]);
+  }, [dataFetched, fetchStats, fetchRecentActivity]);
 
   return {
     stats,
