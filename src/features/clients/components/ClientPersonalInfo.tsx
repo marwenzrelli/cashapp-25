@@ -186,7 +186,7 @@ export const ClientPersonalInfo = ({
           
           {client && (
             <StandaloneDepositForm 
-              clients={[{ ...client, dateCreation: client.date_creation || '' }]} 
+              clients={[{ ...client, date_creation: client.date_creation || '' }]} 
               onConfirm={handleDeposit}
               refreshClientBalance={refreshClientBalance}
             />
@@ -203,7 +203,7 @@ export const ClientPersonalInfo = ({
           
           {client && (
             <StandaloneWithdrawalForm 
-              clients={[{ ...client, dateCreation: client.date_creation || '' }]} 
+              clients={[{ ...client, date_creation: client.date_creation || '' }]} 
               onConfirm={handleWithdrawal}
               refreshClientBalance={refreshClientBalance}
             />
