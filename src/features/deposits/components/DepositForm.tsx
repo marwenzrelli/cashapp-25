@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ClientBalanceDisplay } from "@/features/clients/components/client-list/ClientBalanceDisplay";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { toast } from "sonner";
 
 // Define the ExtendedClient interface that includes dateCreation property
 interface ExtendedClient extends Client {
@@ -42,12 +43,18 @@ export const StandaloneDepositForm = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedClient || !amount) return;
+    if (!selectedClient || !amount) {
+      toast.error("Veuillez remplir tous les champs obligatoires");
+      return;
+    }
 
     setIsLoading(true);
     try {
       const client = clients.find(c => c.id.toString() === selectedClient);
-      if (!client) return;
+      if (!client) {
+        toast.error("Client non trouvé");
+        return;
+      }
 
       // Split time string to get hours, minutes, and seconds
       const [hours, minutes, seconds] = time.split(':').map(Number);
@@ -61,16 +68,26 @@ export const StandaloneDepositForm = ({
         description
       };
 
-      await onConfirm(newDeposit as Deposit);
-      await refreshClientBalance(selectedClient);
+      // Effectuer le dépôt
+      const result = await onConfirm(newDeposit as Deposit);
+      
+      // Si le dépôt a réussi, on rafraîchit le solde du client
+      if (result !== false && selectedClient) {
+        console.log("Rafraîchissement du solde après dépôt pour le client:", selectedClient);
+        await refreshClientBalance(selectedClient);
+      }
 
+      // Réinitialiser le formulaire
       setSelectedClient("");
       setAmount("");
       setDescription("");
       setDate(new Date());
       setTime(format(new Date(), "HH:mm:ss")); // Reset with seconds
+      
+      toast.success("Versement effectué avec succès");
     } catch (error) {
       console.error("Error submitting deposit:", error);
+      toast.error("Erreur lors du traitement du versement");
     } finally {
       setIsLoading(false);
     }

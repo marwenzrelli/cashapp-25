@@ -32,15 +32,16 @@ const ClientProfile = () => {
     exportToExcel,
     exportToPDF,
     refetchClient,
+    refreshClientBalance,
     clientBalance
   } = useClientProfile();
 
-  // Add additional debug logging
+  // Ajouter des journaux de débogage supplémentaires
   useEffect(() => {
-    console.log(`ClientProfile - Route parameters: clientId=${clientId}, path=${window.location.pathname}`);
+    console.log(`ClientProfile - Paramètres de la route: clientId=${clientId}, chemin=${window.location.pathname}`);
     
     if (error) {
-      console.error("ClientProfile - Error detected:", error);
+      console.error("ClientProfile - Erreur détectée:", error);
       toast.error("Erreur de chargement", {
         description: error
       });
@@ -49,15 +50,15 @@ const ClientProfile = () => {
 
   useEffect(() => {
     if (client && clientOperations?.length === 0) {
-      console.log("Client loaded but no operations found. This might indicate a data fetching issue.");
+      console.log("Client chargé mais aucune opération trouvée. Cela pourrait indiquer un problème de récupération de données.");
       
-      // Log the client name as it's used for operation matching
+      // Enregistrer le nom du client car il est utilisé pour la correspondance des opérations
       const clientFullName = client ? `${client.prenom} ${client.nom}` : null;
-      console.log(`Client full name used for operation filtering: "${clientFullName}"`);
+      console.log(`Nom complet du client utilisé pour le filtrage des opérations: "${clientFullName}"`);
     }
   }, [client, clientOperations]);
 
-  console.log("ClientProfile - Full state:", { 
+  console.log("ClientProfile - État complet:", { 
     client, 
     isLoading, 
     error, 
@@ -73,22 +74,22 @@ const ClientProfile = () => {
     return <PublicClientLoading onRetry={refetchClient} />;
   }
 
-  // Check if there's an explicit error first
+  // Vérifier d'abord s'il y a une erreur explicite
   if (error) {
-    console.log("Displaying error:", error);
+    console.log("Affichage de l'erreur:", error);
     return <PublicClientError error={error} onRetry={refetchClient} />;
   }
 
-  // Then check if client exists
+  // Ensuite vérifier si le client existe
   if (!client) {
-    console.log("Client not found for ID:", clientId);
+    console.log("Client non trouvé pour l'ID:", clientId);
     const errorMessage = `Le client avec l'identifiant ${clientId} n'existe pas ou a été supprimé.`;
     return <PublicClientError error={errorMessage} onRetry={refetchClient} />;
   }
 
-  // Enhanced debug to confirm client ID
+  // Débogage amélioré pour confirmer l'ID du client
   const actualClientId = typeof client.id === 'string' ? parseInt(client.id, 10) : client.id;
-  console.log("Using client ID for QR code:", actualClientId);
+  console.log("Utilisation de l'ID client pour le code QR:", actualClientId);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -110,6 +111,7 @@ const ClientProfile = () => {
           qrCodeRef={qrCodeRef}
           formatAmount={formatAmount}
           refetchClient={refetchClient}
+          refreshClientBalance={refreshClientBalance}
           clientBalance={clientBalance}
         />
 

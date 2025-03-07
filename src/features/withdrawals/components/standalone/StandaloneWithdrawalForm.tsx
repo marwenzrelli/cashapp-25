@@ -65,12 +65,16 @@ export const StandaloneWithdrawalForm: React.FC<StandaloneWithdrawalFormProps> =
         notes: newWithdrawal.notes
       };
 
-      await onConfirm(withdrawal);
+      // Effectuer le retrait
+      const result = await onConfirm(withdrawal);
       
-      if (newWithdrawal.clientId) {
+      // Si le retrait a réussi, on rafraîchit le solde du client
+      if (result !== false && newWithdrawal.clientId) {
+        console.log("Rafraîchissement du solde après retrait pour le client:", newWithdrawal.clientId);
         await refreshClientBalance(newWithdrawal.clientId);
       }
       
+      // Réinitialiser le formulaire
       setNewWithdrawal({
         clientId: "",
         amount: "",
@@ -79,6 +83,7 @@ export const StandaloneWithdrawalForm: React.FC<StandaloneWithdrawalFormProps> =
       });
     } catch (error) {
       console.error("Error submitting withdrawal:", error);
+      toast.error("Erreur lors du traitement du retrait");
     } finally {
       setIsLoading(false);
     }
