@@ -10,8 +10,17 @@ import { ErrorRetryButton } from "./ErrorRetryButton";
 import { AuthRetryButton } from "./AuthRetryButton";
 import { useWithdrawalPagination } from "../hooks/useWithdrawalPagination";
 import { toast } from "sonner";
+import { Operation } from "@/features/operations/types";
 
-export const WithdrawalsPage: React.FC = () => {
+interface WithdrawalsPageProps {
+  onEditWithdrawal?: (operation: Operation) => void;
+  onDeleteWithdrawal?: (operation: Operation) => void;
+}
+
+export const WithdrawalsPage: React.FC<WithdrawalsPageProps> = ({ 
+  onEditWithdrawal, 
+  onDeleteWithdrawal 
+}) => {
   const { 
     withdrawals, 
     isLoading,
@@ -42,6 +51,43 @@ export const WithdrawalsPage: React.FC = () => {
     filteredWithdrawals,
     paginatedWithdrawals
   } = useWithdrawalPagination(withdrawals);
+
+  // Use custom handlers if provided, otherwise use default handlers
+  const handleEditWithdrawal = (withdrawal: any) => {
+    if (onEditWithdrawal) {
+      // Convert withdrawal to Operation format and pass to custom handler
+      const operation: Operation = {
+        id: withdrawal.id,
+        amount: withdrawal.amount,
+        date: withdrawal.operation_date || withdrawal.created_at,
+        type: "withdrawal",
+        fromClient: withdrawal.client_name,
+        description: withdrawal.notes || "",
+      };
+      onEditWithdrawal(operation);
+    } else {
+      // Use default edit handler if available
+      // This would be defined if we had an internal edit implementation
+    }
+  };
+
+  const handleDeleteWithdrawal = (withdrawal: any) => {
+    if (onDeleteWithdrawal) {
+      // Convert withdrawal to Operation format and pass to custom handler
+      const operation: Operation = {
+        id: withdrawal.id,
+        amount: withdrawal.amount,
+        date: withdrawal.operation_date || withdrawal.created_at,
+        type: "withdrawal",
+        fromClient: withdrawal.client_name,
+        description: withdrawal.notes || "",
+      };
+      onDeleteWithdrawal(operation);
+    } else {
+      // Use default delete handler from useWithdrawals
+      deleteWithdrawal(withdrawal);
+    }
+  };
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -132,7 +178,7 @@ export const WithdrawalsPage: React.FC = () => {
             fetchWithdrawals={fetchWithdrawals}
             fetchClients={fetchClients}
             refreshClientBalance={handleRefreshClientBalance}
-            deleteWithdrawal={deleteWithdrawal}
+            deleteWithdrawal={handleDeleteWithdrawal}
             showDeleteDialog={showDeleteDialog}
             setShowDeleteDialog={setShowDeleteDialog}
             confirmDeleteWithdrawal={confirmDeleteWithdrawal}
@@ -162,7 +208,7 @@ export const WithdrawalsPage: React.FC = () => {
       fetchWithdrawals={fetchWithdrawals}
       fetchClients={fetchClients}
       refreshClientBalance={handleRefreshClientBalance}
-      deleteWithdrawal={deleteWithdrawal}
+      deleteWithdrawal={handleDeleteWithdrawal}
       showDeleteDialog={showDeleteDialog}
       setShowDeleteDialog={setShowDeleteDialog}
       confirmDeleteWithdrawal={confirmDeleteWithdrawal}
