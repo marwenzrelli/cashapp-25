@@ -356,7 +356,13 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      is_valid_public_client_access: {
+        Args: {
+          client_id: number
+          token: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

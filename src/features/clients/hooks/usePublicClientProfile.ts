@@ -3,6 +3,7 @@ import { useEffect, useCallback } from "react";
 import { usePublicClientData } from "./publicClientProfile/usePublicClientData";
 import { useRealtimeSubscriptions } from "./publicClientProfile/useRealtimeSubscriptions";
 import { validateToken } from "./publicClientProfile/validation";
+import { checkClientOperations } from "./utils/checkClientOperations";
 
 export const usePublicClientProfile = (token: string | undefined) => {
   // Validate token format before proceeding
@@ -31,6 +32,29 @@ export const usePublicClientProfile = (token: string | undefined) => {
 
   // Pass clientId and refreshData to useRealtimeSubscriptions
   useRealtimeSubscriptions(clientId, refreshData);
+  
+  // Verify operations if we have client but no operations
+  useEffect(() => {
+    const verifyOperationsExist = async () => {
+      if (client && operations.length === 0 && !isLoading && !error && token) {
+        console.log("Client loaded but no operations found. Running verification check...");
+        const clientFullName = `${client.prenom} ${client.nom}`.trim();
+        
+        // Check database operations with token authentication
+        const opsCheck = await checkClientOperations(clientFullName, client.id, token);
+        
+        if (opsCheck.totalCount > 0) {
+          console.log(`Found ${opsCheck.totalCount} operations in database, but none retrieved. Retrying fetch...`);
+          // If operations exist but weren't retrieved, retry the fetch
+          fetchClientData();
+        } else {
+          console.log("No operations found for this client in the database.");
+        }
+      }
+    };
+    
+    verifyOperationsExist();
+  }, [client, operations, isLoading, error, token, fetchClientData]);
   
   // Log detailed information for debugging
   useEffect(() => {

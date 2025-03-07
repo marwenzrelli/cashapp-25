@@ -3,9 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { ClientOperation } from "./types";
 import { showErrorToast } from "../utils/errorUtils";
 
-export const fetchClientOperations = async (clientFullName: string): Promise<ClientOperation[]> => {
+export const fetchClientOperations = async (clientFullName: string, token?: string): Promise<ClientOperation[]> => {
   try {
-    console.log("Fetching operations for client:", clientFullName);
+    console.log("Fetching operations for client:", clientFullName, "with token:", token ? `${token.substring(0, 8)}...` : "none");
     
     // Validate client name
     if (!clientFullName || clientFullName.trim() === '') {
@@ -13,11 +13,11 @@ export const fetchClientOperations = async (clientFullName: string): Promise<Cli
       return [];
     }
     
-    // Properly formatted client name might be different (space positions, capitalization)
-    // so we need to be flexible with our queries
-    const clientNameParts = clientFullName.trim().split(/\s+/);
-    console.log("Client name parts for search:", clientNameParts);
-    
+    // If we have a token, set it in the Supabase client auth header
+    if (token) {
+      supabase.auth.setAuth(token);
+    }
+
     // Fetch deposits
     const { data: deposits, error: depositsError } = await supabase
       .from('deposits')
@@ -73,6 +73,11 @@ export const fetchClientOperations = async (clientFullName: string): Promise<Cli
     }
     
     console.log(`Found ${transfersAsReceiver?.length || 0} transfers as receiver for client:`, clientFullName);
+
+    // Reset the auth if we set it
+    if (token) {
+      supabase.auth.setAuth(null);
+    }
 
     // Format and combine all operations
     const allOperations: ClientOperation[] = [

@@ -73,10 +73,10 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
       console.log(`Step 3: Retrieved client data:`, clientData);
       setClient(clientData);
       
-      // Step 3: Get client operations
+      // Step 3: Get client operations using the token for authentication
       const fullName = `${clientData.prenom} ${clientData.nom}`;
-      console.log(`Step 4: Fetching operations for ${fullName}`);
-      const operationsData = await fetchClientOperations(fullName);
+      console.log(`Step 4: Fetching operations for ${fullName} with token for auth`);
+      const operationsData = await fetchClientOperations(fullName, token);
       setOperations(operationsData);
       
       console.log(`Step 5: Retrieved ${operationsData.length} client operations`);

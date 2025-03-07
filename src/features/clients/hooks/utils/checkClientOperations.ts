@@ -3,10 +3,15 @@ import { supabase } from "@/integrations/supabase/client";
 
 // This utility function checks different operation tables to see if any operations
 // exist for a given client name or ID
-export const checkClientOperations = async (clientName: string, clientId: number) => {
-  console.log(`Checking operations for client: "${clientName}" (ID: ${clientId})`);
+export const checkClientOperations = async (clientName: string, clientId: number, token?: string) => {
+  console.log(`Checking operations for client: "${clientName}" (ID: ${clientId})${token ? ' with token' : ''}`);
   
   try {
+    // Set auth token if provided (for public client access)
+    if (token) {
+      supabase.auth.setAuth(token);
+    }
+    
     // Check deposits
     const { count: depositCount, error: depositError } = await supabase
       .from('deposits')
@@ -38,6 +43,11 @@ export const checkClientOperations = async (clientName: string, clientId: number
       .ilike('to_client', `%${clientName}%`);
       
     if (transferReceiverError) console.error("Error checking transfers (receiver):", transferReceiverError);
+    
+    // Reset auth if token was provided
+    if (token) {
+      supabase.auth.setAuth(null);
+    }
     
     const results = {
       depositCount: depositCount || 0,

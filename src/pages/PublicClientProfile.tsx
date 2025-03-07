@@ -7,6 +7,7 @@ import { PublicClientOperationsHistory } from "@/features/clients/components/Pub
 import { usePublicClientProfile } from "@/features/clients/hooks/usePublicClientProfile";
 import { useEffect } from "react";
 import { showErrorToast } from "@/features/clients/hooks/utils/errorUtils";
+import { toast } from "sonner";
 
 const PublicClientProfile = () => {
   const { token } = useParams<{ token: string }>();
@@ -41,19 +42,14 @@ const PublicClientProfile = () => {
         message: "Le client demandé n'existe pas dans notre système. Veuillez vérifier l'URL ou contacter le support." 
       });
     }
-  }, [token, client, operations, isLoading, error, loadingTime]);
-
-  // Additional debug logging for current path
-  useEffect(() => {
-    console.log("Current path:", window.location.pathname);
-    console.log("Current params:", { token });
     
-    // Check if we're at /clients/1 (direct client ID path)
-    if (window.location.pathname === '/clients/1' || window.location.pathname.match(/\/clients\/\d+$/)) {
-      const directClientId = window.location.pathname.split('/').pop();
-      console.log("Direct client ID access detected:", directClientId);
+    // Show success toast when client data loads
+    if (client && operations && !error && !isLoading) {
+      toast.success("Données client chargées", {
+        description: `${operations.length} opérations trouvées pour ${client.prenom} ${client.nom}`
+      });
     }
-  }, [token]);
+  }, [token, client, operations, isLoading, error, loadingTime]);
 
   // Basic token format validation on component mount and trigger data fetch
   useEffect(() => {
