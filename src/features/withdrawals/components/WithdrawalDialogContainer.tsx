@@ -1,4 +1,3 @@
-
 import React from "react";
 import { WithdrawalFormDialog } from "./dialog/WithdrawalFormDialog";
 import { Client } from "@/features/clients/types";
@@ -43,11 +42,9 @@ export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps>
     operation_date?: string;
   }) => {
     try {
-      // Find the client ID from the client name
       const selectedClientObj = clients.find(c => `${c.prenom} ${c.nom}` === data.client_name);
       
       if (selectedClientObj) {
-        // Convert client ID to number for refreshClientBalance
         const clientIdNum = typeof selectedClientObj.id === 'string' 
           ? parseInt(selectedClientObj.id, 10) 
           : selectedClientObj.id;
@@ -74,13 +71,11 @@ export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps>
     }
   };
 
-  // Convert clients to ExtendedClients by adding the dateCreation property
   const extendedClients: ExtendedClient[] = clients.map(client => ({
     ...client,
     dateCreation: client.date_creation || new Date().toISOString()
   }));
 
-  // Only render the dialog if showDialog is true to prevent unnecessary renders
   if (!showDialog) {
     return null;
   }

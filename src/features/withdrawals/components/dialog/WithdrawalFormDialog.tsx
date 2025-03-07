@@ -48,20 +48,22 @@ export const WithdrawalFormDialog: React.FC<WithdrawalFormDialogProps> = ({
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  // Initialize form when editing or when selectedClient changes
+  // Résolution du problème: initialiser correctement le formulaire lors de l'édition
   useEffect(() => {
     if (isEditing && selectedWithdrawal) {
-      // Find the client by name
+      // Trouver le client par nom
       const client = clients.find(c => `${c.prenom} ${c.nom}` === selectedWithdrawal.client_name);
       
-      setNewWithdrawal({
-        clientId: client ? client.id.toString() : "",
-        amount: selectedWithdrawal.amount.toString(),
-        notes: selectedWithdrawal.notes || "",
-        date: selectedWithdrawal.date || new Date().toISOString(),
-      });
+      if (client) {
+        setNewWithdrawal({
+          clientId: client.id.toString(),
+          amount: selectedWithdrawal.amount.toString(),
+          notes: selectedWithdrawal.notes || "",
+          date: selectedWithdrawal.date || new Date().toISOString(),
+        });
+      }
     } else if (selectedClient) {
-      // Just update the client ID when selectedClient changes
+      // Mise à jour du client ID quand selectedClient change
       setNewWithdrawal(prev => ({
         ...prev,
         clientId: selectedClient
@@ -72,7 +74,7 @@ export const WithdrawalFormDialog: React.FC<WithdrawalFormDialogProps> = ({
   const handleSubmit = async () => {
     setIsLoading(true);
     try {
-      // Find the client name based on the selected client ID
+      // Rechercher le nom du client en fonction de l'ID client sélectionné
       const client = clients.find(c => c.id.toString() === newWithdrawal.clientId);
       if (!client) {
         console.error("Client not found");
@@ -90,7 +92,7 @@ export const WithdrawalFormDialog: React.FC<WithdrawalFormDialogProps> = ({
       });
 
       if (success) {
-        // Reset the form
+        // Réinitialiser le formulaire
         setNewWithdrawal({
           clientId: "",
           amount: "",
