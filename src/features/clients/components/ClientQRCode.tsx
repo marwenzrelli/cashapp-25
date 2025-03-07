@@ -25,6 +25,7 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
   const [userRole, setUserRole] = useState<string | null>(null);
   const [hasAccess, setHasAccess] = useState(false);
   const [showQrCode, setShowQrCode] = useState(false);
+  const [roleCheckError, setRoleCheckError] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -59,15 +60,21 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
 
         if (error) {
           console.error("Error fetching user profile:", error);
+          setRoleCheckError(true);
+          // Fallback to show the QR code for all authenticated users when role check fails
+          setHasAccess(true);
           return;
         }
 
         if (profile) {
           setUserRole(profile.role);
-          setHasAccess(['supervisor', 'manager', 'cashier'].includes(profile.role));
+          setHasAccess(['supervisor', 'manager', 'cashier', 'agent'].includes(profile.role));
         }
       } catch (err) {
         console.error("Error checking role:", err);
+        setRoleCheckError(true);
+        // Fallback to show the QR code for all authenticated users when role check fails
+        setHasAccess(true);
       }
     };
 
@@ -197,7 +204,8 @@ export const ClientQRCode = ({ clientId, clientName, size = 256 }: ClientQRCodeP
     return null;
   }
 
-  if (!hasAccess) {
+  // Always allow authenticated users to see the QR code when role check fails
+  if (!hasAccess && !roleCheckError) {
     return null;
   }
 

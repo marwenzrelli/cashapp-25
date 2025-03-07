@@ -19,6 +19,9 @@ export const ClientPersonalInfo = ({
   qrCodeRef,
   formatAmount = (amount) => `${amount.toLocaleString()} €`
 }: ClientPersonalInfoProps) => {
+  // Debugging log to ensure clientId is properly passed
+  console.log("ClientPersonalInfo - clientId:", clientId, "client:", client?.id);
+  
   return (
     <Card className="md:col-span-3">
       <CardHeader>
@@ -36,10 +39,10 @@ export const ClientPersonalInfo = ({
               showBalance={true}
             />
           </div>
-          {clientId && (
+          {client && client.id && (
             <div className="flex justify-center md:justify-end" ref={qrCodeRef}>
               <ClientQRCode
-                clientId={clientId}
+                clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id}
                 clientName={`${client.prenom} ${client.nom}`}
                 size={256}
               />

@@ -84,6 +84,10 @@ const ClientProfile = () => {
     return <PublicClientError error={errorMessage} onRetry={refetchClient} />;
   }
 
+  // Enhanced debug to confirm client ID
+  const actualClientId = typeof client.id === 'string' ? parseInt(client.id, 10) : client.id;
+  console.log("Using client ID for QR code:", actualClientId);
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       <div className="space-y-6">
@@ -100,7 +104,7 @@ const ClientProfile = () => {
 
         <ClientPersonalInfo 
           client={client} 
-          clientId={clientId}
+          clientId={actualClientId}
           qrCodeRef={qrCodeRef}
           formatAmount={formatAmount}
         />

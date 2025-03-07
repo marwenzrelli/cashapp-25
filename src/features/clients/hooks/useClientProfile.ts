@@ -14,6 +14,9 @@ export const useClientProfile = () => {
   const qrCodeRef = useRef<HTMLDivElement>(null);
   const clientId = id ? Number(id) : null;
   
+  // Debug to ensure client ID is parsed correctly
+  console.log("useClientProfile - Raw ID from params:", id, "Parsed clientId:", clientId);
+  
   // Get client data
   const { client, isLoading, error, fetchClient } = useClientData(clientId);
   
