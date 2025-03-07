@@ -15,18 +15,6 @@ export const fetchClientDetails = async (clientId: number): Promise<Client> => {
     // Log the query we're about to execute for debugging
     console.log(`Executing query for client ID ${clientId}...`);
     
-    // DETAILED DEBUGGING: First examine the entire clients table to see what exists
-    const { data: allClients, error: listError } = await supabase
-      .from('clients')
-      .select('id, nom, prenom')
-      .limit(10);
-    
-    if (listError) {
-      console.error("Error listing clients:", listError);
-    } else {
-      console.log("Available clients in database:", allClients);
-    }
-    
     // First, check if client exists directly to provide better error messages
     const { count, error: countError } = await supabase
       .from('clients')
@@ -50,7 +38,7 @@ export const fetchClientDetails = async (clientId: number): Promise<Client> => {
       .from('clients')
       .select('*')
       .eq('id', clientId)
-      .maybeSingle();  // Using maybeSingle instead of single
+      .maybeSingle();  // Using maybeSingle instead of single to better handle not found cases
 
     if (error) {
       console.error("Error fetching client:", error);
