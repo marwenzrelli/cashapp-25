@@ -1,28 +1,16 @@
 
 import { useState } from "react";
-import { AddUserDialog } from "@/features/admin/components/AddUserDialog";
-import { UserProfile } from "@/features/admin/components/UserProfile";
-import { ServiceExplanations } from "@/features/admin/components/ServiceExplanations";
 import { useUsers } from "@/features/admin/hooks/useUsers";
-import { UserRole } from "@/types/admin";
-import { AdminHeader } from "@/features/admin/components/administration/AdminHeader";
-import { StatsSection } from "@/features/admin/components/administration/StatsSection";
-import { UsersSection } from "@/features/admin/components/administration/UsersSection";
-import { AuditLogSection } from "@/features/admin/components/administration/AuditLogSection";
-import { AccessDenied } from "@/features/admin/components/administration/AccessDenied";
-import { LoadingState } from "@/features/admin/components/administration/LoadingState";
-import { ErrorState } from "@/features/admin/components/administration/ErrorState";
 import { useAuthenticationCheck } from "@/features/admin/hooks/useAuthenticationCheck";
-import { Button } from "@/components/ui/button";
-import { RefreshCw, Shield } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
+import { LoadingState } from "@/features/admin/components/administration/LoadingState";
+import { AccessDenied } from "@/features/admin/components/administration/AccessDenied";
+import { AdminDashboard } from "@/features/admin/components/administration/AdminDashboard";
+import { PermissionErrorState } from "@/features/admin/components/administration/PermissionErrorState";
+import { GeneralErrorState } from "@/features/admin/components/administration/GeneralErrorState";
+import { NoUserProfileState } from "@/features/admin/components/administration/NoUserProfileState";
 
 const Administration = () => {
   useAuthenticationCheck();
-  const navigate = useNavigate();
   
   const { 
     users, 
@@ -41,10 +29,6 @@ const Administration = () => {
     makeSelfSupervisor
   } = useUsers();
   
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isAddUserOpen, setIsAddUserOpen] = useState(false);
-  const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
-  const [selectedRole, setSelectedRole] = useState<UserRole | "all">("all");
   const [email, setEmail] = useState("");
   const [showPromotionForm, setShowPromotionForm] = useState(false);
 
@@ -60,145 +44,37 @@ const Administration = () => {
 
   if (hasPermissionError) {
     return (
-      <ErrorState 
-        permissionError={true} 
+      <PermissionErrorState
         errorMessage={usersError?.message}
+        isRetrying={isRetrying}
+        showPromotionForm={showPromotionForm}
+        email={email}
+        setEmail={setEmail}
+        isMakingSupervisor={isMakingSupervisor}
         onRetry={retryInitialization}
-      >
-        <div className="mt-4 space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Vous n'avez pas les permissions nécessaires pour accéder ou modifier les profils utilisateurs.
-            Cette fonctionnalité est réservée aux superviseurs de la plateforme.
-          </p>
-          
-          {!showPromotionForm ? (
-            <div className="flex flex-col sm:flex-row gap-2 justify-center mt-4">
-              <Button 
-                onClick={() => navigate("/dashboard")} 
-                variant="default"
-                className="flex items-center gap-2"
-              >
-                Retourner au tableau de bord
-              </Button>
-              <Button
-                onClick={retryInitialization}
-                variant="outline"
-                className="flex items-center gap-2"
-                disabled={isRetrying}
-              >
-                <RefreshCw className={`h-4 w-4 ${isRetrying ? 'animate-spin' : ''}`} />
-                {isRetrying ? 'Vérification...' : 'Vérifier les permissions'}
-              </Button>
-              <Button
-                onClick={() => setShowPromotionForm(true)}
-                variant="secondary"
-                className="flex items-center gap-2"
-              >
-                <Shield className="h-4 w-4" />
-                Obtenir les droits d'accès
-              </Button>
-            </div>
-          ) : (
-            <Card className="mt-4">
-              <CardContent className="pt-6">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-amber-500 mb-2">
-                    <Shield className="h-5 w-5" />
-                    <h3 className="font-medium">Demande d'accès superviseur</h3>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Votre email</Label>
-                    <Input 
-                      id="email" 
-                      type="email" 
-                      value={email} 
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Entrez votre email pour obtenir le rôle superviseur"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      L'email doit correspondre à votre compte utilisateur actuel
-                    </p>
-                  </div>
-                  
-                  <div className="flex gap-2 mt-4">
-                    <Button
-                      onClick={() => makeSelfSupervisor(email)}
-                      disabled={!email || isMakingSupervisor}
-                      className="flex items-center gap-2"
-                    >
-                      {isMakingSupervisor ? (
-                        <>
-                          <RefreshCw className="h-4 w-4 animate-spin" />
-                          Attribution en cours...
-                        </>
-                      ) : (
-                        <>
-                          <Shield className="h-4 w-4" />
-                          Obtenir le rôle superviseur
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowPromotionForm(false)}
-                    >
-                      Annuler
-                    </Button>
-                  </div>
-                  
-                  <p className="text-xs text-muted-foreground">
-                    Après avoir obtenu le rôle superviseur, vous devrez actualiser la page pour accéder à l'interface d'administration.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </ErrorState>
+        onShowPromotionForm={() => setShowPromotionForm(true)}
+        onHidePromotionForm={() => setShowPromotionForm(false)}
+        onPromote={makeSelfSupervisor}
+      />
     );
   }
 
   if (usersError) {
     return (
-      <ErrorState errorMessage={usersError.message}>
-        <div className="mt-4 space-y-4">
-          <p className="text-muted-foreground">
-            {usersError.message || "Une erreur s'est produite lors du chargement des données"}
-          </p>
-          <Button 
-            onClick={retryInitialization} 
-            variant="outline"
-            className="flex items-center gap-2"
-            disabled={isRetrying}
-          >
-            <RefreshCw className={`h-4 w-4 ${isRetrying ? 'animate-spin' : ''}`} />
-            {isRetrying ? 'Chargement en cours...' : 'Réessayer'}
-          </Button>
-        </div>
-      </ErrorState>
+      <GeneralErrorState 
+        errorMessage={usersError.message || ""}
+        isRetrying={isRetrying}
+        onRetry={retryInitialization}
+      />
     );
   }
 
   if (!currentUser) {
     return (
-      <ErrorState errorMessage="Profil utilisateur non disponible">
-        <div className="mt-4 space-y-4">
-          <p className="text-muted-foreground">
-            Impossible de charger les informations de votre profil.
-            Veuillez vous reconnecter ou contactez l'administrateur.
-          </p>
-          <Button 
-            onClick={retryInitialization} 
-            variant="outline"
-            className="flex items-center gap-2"
-            disabled={isRetrying}
-          >
-            <RefreshCw className={`h-4 w-4 ${isRetrying ? 'animate-spin' : ''}`} />
-            {isRetrying ? 'Chargement en cours...' : 'Réessayer'}
-          </Button>
-        </div>
-      </ErrorState>
+      <NoUserProfileState
+        isRetrying={isRetrying}
+        onRetry={retryInitialization}
+      />
     );
   }
 
@@ -207,38 +83,15 @@ const Administration = () => {
   }
 
   return (
-    <div className="space-y-8 animate-in">
-      <AdminHeader onAddUser={() => setIsAddUserOpen(true)} />
-      
-      <StatsSection users={users} />
-      
-      <UsersSection 
-        users={users}
-        currentUser={currentUser}
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        selectedDepartment={selectedDepartment}
-        onDepartmentChange={setSelectedDepartment}
-        selectedRole={selectedRole}
-        onRoleChange={setSelectedRole}
-        onToggleStatus={toggleUserStatus}
-        onUpdateUser={updateUser}
-        onUpdatePermissions={updatePermissions}
-        onDeleteUser={deleteUser}
-      />
-      
-      <AuditLogSection />
-
-      <AddUserDialog
-        isOpen={isAddUserOpen}
-        onClose={() => setIsAddUserOpen(false)}
-        onAddUser={addUser}
-      />
-
-      <UserProfile user={currentUser} />
-      
-      <ServiceExplanations />
-    </div>
+    <AdminDashboard
+      users={users}
+      currentUser={currentUser}
+      toggleUserStatus={toggleUserStatus}
+      updateUser={updateUser}
+      updatePermissions={updatePermissions}
+      deleteUser={deleteUser}
+      addUser={addUser}
+    />
   );
 };
 
