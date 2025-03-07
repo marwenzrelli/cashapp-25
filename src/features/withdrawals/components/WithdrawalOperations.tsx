@@ -11,7 +11,7 @@ interface WithdrawalOperationsProps {
   clients: Client[];
   fetchWithdrawals: () => Promise<void>;
   fetchClients: () => Promise<void>;
-  refreshClientBalance: (clientId: number) => Promise<void>;
+  refreshClientBalance: (clientId: string) => Promise<boolean>;
   searchTerm: string;
   setSearchTerm: (term: string) => void;
   itemsPerPage: string;
@@ -50,7 +50,7 @@ export const WithdrawalOperations: React.FC<WithdrawalOperationsProps> = ({
   // Create a wrapper function to handle the type mismatch
   const handleRefreshClientBalance = async (clientId: string): Promise<boolean> => {
     try {
-      await refreshClientBalance(parseInt(clientId, 10));
+      await refreshClientBalance(clientId);
       return true;
     } catch (error) {
       console.error("Error refreshing client balance:", error);
