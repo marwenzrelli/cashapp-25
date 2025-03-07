@@ -74,17 +74,19 @@ export const calculateDailyTransactions = (
     return acc;
   }, {} as Record<string, number>);
 
-  // Calculate the total number of transactions
-  // Use an explicit type assertion to handle the values properly
-  const totalTransactions = Object.values(dailyTransactions).reduce(
-    (sum, count) => sum + (typeof count === 'number' ? count : 0), 
+  // Calculate the total number of transactions by explicitly checking and converting types
+  const totalTransactions = Object.values(dailyTransactions).reduce<number>(
+    (sum, count) => {
+      // Explicitly cast or check the type of count before adding
+      return sum + (typeof count === 'number' ? count : 0);
+    }, 
     0
   );
   
   const daysCount = Math.max(Object.keys(dailyTransactions).length, 1);
   
-  // Calculate the average after ensuring totalTransactions and daysCount are definitely numbers
-  const averageTransactionsPerDay = totalTransactions / daysCount;
+  // Make sure to convert to numbers before division
+  const averageTransactionsPerDay = Number(totalTransactions) / Number(daysCount);
     
   return { averageTransactionsPerDay };
 };
