@@ -32,7 +32,7 @@ export const AllOperationsTab = ({ operations, currency = "TND" }: AllOperations
               <TableHead>Date</TableHead>
               <TableHead>Description</TableHead>
               <TableHead className="text-center">Montant</TableHead>
-              <TableHead>Client</TableHead>
+              <TableHead>Détails</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -62,7 +62,7 @@ export const AllOperationsTab = ({ operations, currency = "TND" }: AllOperations
                     {operation.type === "transfer" ? (
                       <>{operation.fromClient} → {operation.toClient}</>
                     ) : (
-                      operation.fromClient
+                      ""
                     )}
                   </TableCell>
                 </TableRow>
