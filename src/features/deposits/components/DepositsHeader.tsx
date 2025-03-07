@@ -1,15 +1,18 @@
 
 import { StatsCard } from "@/features/deposits/components/StatsCard";
 import { type Deposit } from "@/components/deposits/types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface DepositsHeaderProps {
   deposits: Deposit[];
   filteredDeposits: Deposit[];
+  isLoading?: boolean;
 }
 
 export const DepositsHeader = ({
   deposits,
-  filteredDeposits
+  filteredDeposits,
+  isLoading = false
 }: DepositsHeaderProps) => {
   return (
     <>
@@ -21,7 +24,11 @@ export const DepositsHeader = ({
       </div>
 
       <div className="grid gap-6 md:grid-cols-1">
-        <StatsCard deposits={deposits} />
+        {isLoading ? (
+          <Skeleton className="h-32 w-full" />
+        ) : (
+          <StatsCard deposits={deposits} />
+        )}
       </div>
     </>
   );

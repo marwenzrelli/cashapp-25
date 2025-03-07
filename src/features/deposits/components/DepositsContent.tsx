@@ -9,6 +9,7 @@ import { useClients } from "@/features/clients/hooks/useClients";
 import { StandaloneDepositForm } from "./DepositForm";
 import { TransferPagination } from "@/features/transfers/components/TransferPagination";
 import { EditDepositDialog } from "./dialog/EditDepositDialog";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface DepositsContentProps {
   deposits: Deposit[];
@@ -33,6 +34,7 @@ interface DepositsContentProps {
   handleEditFormChange: (field: string, value: string) => void;
   handleConfirmEdit: () => Promise<void>;
   handleCreateDeposit: (deposit: Deposit) => Promise<void>;
+  isLoading?: boolean;
 }
 
 export const DepositsContent = ({
@@ -57,7 +59,8 @@ export const DepositsContent = ({
   handleEdit,
   handleEditFormChange,
   handleConfirmEdit,
-  handleCreateDeposit
+  handleCreateDeposit,
+  isLoading = false
 }: DepositsContentProps) => {
   const {
     clients,
@@ -89,6 +92,7 @@ export const DepositsContent = ({
       <DepositsHeader 
         deposits={deposits}
         filteredDeposits={filteredDeposits}
+        isLoading={isLoading}
       />
       
       {/* Place the deposit form directly below statistics with the same width */}
@@ -118,11 +122,19 @@ export const DepositsContent = ({
           label="versements"
         />
         
-        <DepositsTable 
-          deposits={paginatedDeposits} 
-          onEdit={handleEdit} 
-          onDelete={handleDelete} 
-        />
+        {isLoading ? (
+          <div className="space-y-4">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+          </div>
+        ) : (
+          <DepositsTable 
+            deposits={paginatedDeposits} 
+            onEdit={handleEdit} 
+            onDelete={handleDelete} 
+          />
+        )}
       </div>
 
       <DeleteDepositDialog 

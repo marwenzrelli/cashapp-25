@@ -22,6 +22,7 @@ export const useDepositsPage = () => {
   
   const { 
     deposits, 
+    isLoading,
     createDeposit, 
     deleteDeposit, 
     updateDeposit, 
@@ -195,6 +196,7 @@ export const useDepositsPage = () => {
     filteredDeposits,
     paginatedDeposits,
     isDeleting,
+    isLoading,
     
     handleDelete,
     confirmDelete,

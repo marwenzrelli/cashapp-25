@@ -26,6 +26,9 @@ export const useFetchDeposits = (
         return;
       }
 
+      // Log the raw data for debugging
+      console.log("Raw deposits data from Supabase:", data);
+
       if (!data || data.length === 0) {
         console.log("No deposits found in the database");
         setDeposits([]);

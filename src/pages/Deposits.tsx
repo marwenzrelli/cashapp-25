@@ -28,7 +28,8 @@ const Deposits = () => {
     handleEditFormChange,
     handleConfirmEdit,
     handleCreateDeposit,
-    fetchDeposits
+    fetchDeposits,
+    isLoading
   } = useDepositsPage();
 
   // Fetch deposits when the component mounts
@@ -38,6 +39,7 @@ const Deposits = () => {
   }, [fetchDeposits]);
 
   console.log("Deposits page render - deposits count:", deposits?.length);
+  console.log("Deposits page render - isLoading:", isLoading);
   console.log("Deposits page render - isEditDialogOpen:", isEditDialogOpen);
   
   return (
@@ -64,6 +66,7 @@ const Deposits = () => {
       handleEditFormChange={handleEditFormChange}
       handleConfirmEdit={handleConfirmEdit}
       handleCreateDeposit={handleCreateDeposit}
+      isLoading={isLoading}
     />
   );
 };
