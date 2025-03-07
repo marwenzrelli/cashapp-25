@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Client } from "../types";
@@ -27,15 +26,12 @@ export const ClientPersonalInfo = ({
   qrCodeRef,
   formatAmount = (amount) => `${amount.toLocaleString()} €`
 }: ClientPersonalInfoProps) => {
-  // States pour les dialogs
   const [depositDialogOpen, setDepositDialogOpen] = useState(false);
   const [withdrawalDialogOpen, setWithdrawalDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   
-  // Debugging log to ensure clientId is properly passed
   console.log("ClientPersonalInfo - clientId:", clientId, "client:", client?.id);
 
-  // Fonction pour gérer le versement
   const handleDeposit = async (deposit: Deposit) => {
     setIsProcessing(true);
     try {
@@ -70,7 +66,6 @@ export const ClientPersonalInfo = ({
     }
   };
 
-  // Fonction pour gérer le retrait
   const handleWithdrawal = async (withdrawal: any) => {
     setIsProcessing(true);
     try {
@@ -105,14 +100,10 @@ export const ClientPersonalInfo = ({
     }
   };
 
-  // Fonction pour rafraîchir le solde d'un client
   const refreshClientBalance = async () => {
     if (!client || !client.id) return false;
     
     try {
-      // Fix #1: Using a direct query instead of a non-existent RPC function
-      // The RPC function "refresh_client_balance" doesn't exist in the Supabase project
-      // Instead, update the client balance directly
       const { error } = await supabase
         .from('clients')
         .update({ solde: client.solde })
@@ -177,7 +168,6 @@ export const ClientPersonalInfo = ({
         </div>
       </CardContent>
       
-      {/* Dialog pour le versement */}
       <Dialog open={depositDialogOpen} onOpenChange={setDepositDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -186,7 +176,7 @@ export const ClientPersonalInfo = ({
           
           {client && (
             <StandaloneDepositForm 
-              clients={[{ ...client, date_creation: client.date_creation || '' }]} 
+              clients={[{ ...client, dateCreation: client.date_creation || '' }]} 
               onConfirm={handleDeposit}
               refreshClientBalance={refreshClientBalance}
             />
@@ -194,7 +184,6 @@ export const ClientPersonalInfo = ({
         </DialogContent>
       </Dialog>
       
-      {/* Dialog pour le retrait */}
       <Dialog open={withdrawalDialogOpen} onOpenChange={setWithdrawalDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -203,7 +192,7 @@ export const ClientPersonalInfo = ({
           
           {client && (
             <StandaloneWithdrawalForm 
-              clients={[{ ...client, date_creation: client.date_creation || '' }]} 
+              clients={[{ ...client, dateCreation: client.date_creation || '' }]} 
               onConfirm={handleWithdrawal}
               refreshClientBalance={refreshClientBalance}
             />

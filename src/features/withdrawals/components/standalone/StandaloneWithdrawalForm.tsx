@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowDownCircle } from "lucide-react";
@@ -11,6 +12,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 
+// Define the ExtendedClient interface that includes dateCreation property
 export interface ExtendedClient extends Client {
   dateCreation: string;
 }

@@ -16,8 +16,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ClientBalanceDisplay } from "@/features/clients/components/client-list/ClientBalanceDisplay";
 import { useCurrency } from "@/contexts/CurrencyContext";
 
+// Define the ExtendedClient interface that includes dateCreation property
+interface ExtendedClient extends Client {
+  dateCreation: string;
+}
+
 interface StandaloneDepositFormProps {
-  clients: Client[];
+  clients: ExtendedClient[];
   onConfirm: (deposit: Deposit) => Promise<void>;
   refreshClientBalance: (clientId: string) => Promise<boolean>;
 }

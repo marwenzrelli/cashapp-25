@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { StandaloneWithdrawalForm } from "./standalone/StandaloneWithdrawalForm";
+import { StandaloneWithdrawalForm, ExtendedClient } from "./standalone/StandaloneWithdrawalForm";
 import { WithdrawalTable } from "./WithdrawalTable";
 import { WithdrawalHeader } from "./WithdrawalHeader";
 import { QuickActions } from "./QuickActions";
@@ -98,7 +98,6 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
     }
   };
 
-  // Function to handle withdrawal confirmation
   const handleWithdrawalConfirm = async (withdrawal: any): Promise<void> => {
     try {
       const { error } = await supabase
