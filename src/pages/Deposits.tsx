@@ -20,7 +20,6 @@ const Deposits = () => {
     setCurrentPage,
     editForm,
     deposits,
-    filteredDeposits,
     paginatedDeposits,
     handleDelete,
     confirmDelete,
