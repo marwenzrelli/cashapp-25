@@ -32,6 +32,7 @@ export const AllOperationsTab = ({ operations, currency = "TND" }: AllOperations
               <TableHead>Date</TableHead>
               <TableHead>Description</TableHead>
               <TableHead className="text-center">Montant</TableHead>
+              <TableHead>Client</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -56,6 +57,13 @@ export const AllOperationsTab = ({ operations, currency = "TND" }: AllOperations
                   <TableCell className="max-w-[200px] truncate">{operation.description}</TableCell>
                   <TableCell className={`text-center font-medium ${getAmountColor(operation.type)}`}>
                     {operation.type === "withdrawal" ? "-" : ""}{Math.round(operation.amount)} {currency}
+                  </TableCell>
+                  <TableCell className="max-w-[200px] truncate">
+                    {operation.type === "transfer" ? (
+                      <>{operation.fromClient} → {operation.toClient}</>
+                    ) : (
+                      operation.fromClient
+                    )}
                   </TableCell>
                 </TableRow>
               );

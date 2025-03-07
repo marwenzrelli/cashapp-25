@@ -18,21 +18,21 @@ export const useClientOperationsFilter = (
   });
   const [isCustomRange, setIsCustomRange] = useState<boolean>(false);
 
-  // Get operations for this client only
+  // Get operations for this client
   const clientOperations = useMemo(() => {
     if (!client || !operations.length) {
       console.log("No client or operations data available", { client, operationsCount: operations.length });
       return [];
     }
     
-    const clientFullName = `${client.prenom} ${client.nom}`.trim().toLowerCase();
+    const clientFullName = `${client.prenom} ${client.nom}`.trim();
     console.log(`Filtering operations for client: "${clientFullName}"`, { 
       totalOperations: operations.length,
       clientId: client.id
     });
     
     // Normalize function to handle case sensitivity and whitespace
-    const normalizeString = (str: string | undefined) => {
+    const normalizeString = (str: string) => {
       if (!str) return '';
       return str.toLowerCase().trim();
     };
@@ -41,16 +41,17 @@ export const useClientOperationsFilter = (
     const matchesClient = (name: string | undefined) => {
       if (!name) return false;
       
+      const normalizedClientName = normalizeString(clientFullName);
       const normalizedName = normalizeString(name);
       
       // Check for exact match
-      if (normalizedName === clientFullName) return true;
+      if (normalizedName === normalizedClientName) return true;
       
       // Check if client name is part of the operation name (for partial matches)
-      if (normalizedName.includes(clientFullName)) return true;
+      if (normalizedName.includes(normalizedClientName)) return true;
       
       // Check if operation name is part of client name (for partial matches)
-      if (clientFullName.includes(normalizedName)) return true;
+      if (normalizedClientName.includes(normalizedName)) return true;
       
       // Check if the first or last name matches
       const clientFirstName = normalizeString(client.prenom);
@@ -81,6 +82,16 @@ export const useClientOperationsFilter = (
     
     console.log(`Found ${clientOps.length} operations for client "${clientFullName}"`);
     
+    // If no operations found but we know they should exist, log details for debugging
+    if (clientOps.length === 0 && operations.length > 0) {
+      console.log("No operations matched. Logging available operations for debugging:");
+      operations.forEach((op, index) => {
+        if (index < 5) { // Limit to first 5 to avoid console spam
+          console.log(`Operation ${index}: type=${op.type}, fromClient="${op.fromClient}", toClient="${op.toClient}"`);
+        }
+      });
+    }
+    
     return clientOps;
   }, [client, operations]);
 
@@ -108,7 +119,7 @@ export const useClientOperationsFilter = (
       
       // Filter by date range
       if (dateRange.from && dateRange.to) {
-        const opDate = new Date(op.operation_date || op.date);
+        const opDate = new Date(op.date);
         const startDate = startOfDay(dateRange.from);
         const endDate = endOfDay(dateRange.to);
         
