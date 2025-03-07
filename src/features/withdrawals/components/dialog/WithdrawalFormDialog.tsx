@@ -49,15 +49,18 @@ export const WithdrawalFormDialog: React.FC<WithdrawalFormDialogProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [formInitialized, setFormInitialized] = useState(false);
 
-  // Reset form when dialog opens/closes or when selection changes
+  // Initialize the form when modal opens
   useEffect(() => {
-    // Reset state when dialog is closed
     if (!isOpen) {
+      // Reset form state when dialog closes
       setFormInitialized(false);
       return;
     }
 
-    // Initialize the form
+    // Reset form initialization to ensure we properly initialize
+    setFormInitialized(false);
+    
+    // Initialize form with a slight delay to ensure all props are ready
     const initializeForm = () => {
       try {
         console.log("Initializing withdrawal form with:", { 
@@ -171,12 +174,9 @@ export const WithdrawalFormDialog: React.FC<WithdrawalFormDialogProps> = ({
       }
     };
     
-    // Slight delay to ensure dialog is properly mounted
-    const timer = setTimeout(() => {
-      initializeForm();
-    }, 50);
+    // Immediate initialization when dialog opens
+    initializeForm();
     
-    return () => clearTimeout(timer);
   }, [isOpen, isEditing, selectedWithdrawal, selectedClient, clients, setSelectedClient]);
 
   // Helper to reset form
