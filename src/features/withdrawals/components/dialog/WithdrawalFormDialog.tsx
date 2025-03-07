@@ -9,6 +9,7 @@ import { AmountField } from "../form-fields/AmountField";
 import { NotesField } from "../form-fields/NotesField";
 import { Client } from "@/features/clients/types";
 import { Withdrawal } from "@/features/withdrawals/types";
+import { formatDate } from "../../hooks/utils/formatUtils";
 
 interface ExtendedClient extends Client {
   dateCreation: string;
@@ -78,12 +79,49 @@ export const WithdrawalFormDialog: React.FC<WithdrawalFormDialogProps> = ({
           const amountStr = selectedWithdrawal.amount !== undefined && selectedWithdrawal.amount !== null
             ? selectedWithdrawal.amount.toString()
             : "";
+          
+          // Parse date from the formatted string back to ISO format if needed
+          let dateValue = new Date().toISOString();
+          
+          if (selectedWithdrawal.date) {
+            // Handle formatting differences - the date might come formatted or as ISO string
+            if (selectedWithdrawal.date.includes('T')) {
+              // Already in ISO format
+              dateValue = selectedWithdrawal.date;
+            } else {
+              try {
+                // Try to parse formatted date back to ISO
+                const parts = selectedWithdrawal.date.split(' ');
+                if (parts.length >= 2) {
+                  const dateParts = parts[0].split('/');
+                  const timeParts = parts[1].split(':');
+                  
+                  if (dateParts.length === 3 && timeParts.length >= 2) {
+                    const day = parseInt(dateParts[0]);
+                    const month = parseInt(dateParts[1]) - 1; // JS months are 0-indexed
+                    const year = parseInt(dateParts[2]);
+                    const hours = parseInt(timeParts[0]);
+                    const minutes = parseInt(timeParts[1]);
+                    
+                    const date = new Date(year, month, day, hours, minutes);
+                    if (!isNaN(date.getTime())) {
+                      dateValue = date.toISOString();
+                    }
+                  }
+                }
+              } catch (error) {
+                console.error("Error parsing date:", error);
+                // Fallback to current date
+                dateValue = new Date().toISOString();
+              }
+            }
+          }
             
           setNewWithdrawal({
             clientId: clientId,
             amount: amountStr,
             notes: selectedWithdrawal.notes || "",
-            date: selectedWithdrawal.date || new Date().toISOString(), // Use the 'date' property instead of 'operation_date'
+            date: dateValue,
           });
           
           // Update selected client in parent
@@ -156,7 +194,7 @@ export const WithdrawalFormDialog: React.FC<WithdrawalFormDialogProps> = ({
   };
 
   // Render null if the form is not yet initialized to prevent flash of default values
-  if (!isOpen || !formInitialized) {
+  if (!isOpen) {
     return null;
   }
 
@@ -176,36 +214,42 @@ export const WithdrawalFormDialog: React.FC<WithdrawalFormDialogProps> = ({
         </DialogDescription>
       </DialogHeader>
 
-      <div className="grid gap-6 py-4">
-        <div className="relative overflow-hidden rounded-lg border bg-gradient-to-b from-background to-muted/50 p-6">
-          <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))]" />
-          <div className="relative grid gap-4">
-            <DateField 
-              value={newWithdrawal.date}
-              onChange={(value) => setNewWithdrawal({ ...newWithdrawal, date: value })}
-            />
+      {formInitialized ? (
+        <div className="grid gap-6 py-4">
+          <div className="relative overflow-hidden rounded-lg border bg-gradient-to-b from-background to-muted/50 p-6">
+            <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))]" />
+            <div className="relative grid gap-4">
+              <DateField 
+                value={newWithdrawal.date}
+                onChange={(value) => setNewWithdrawal({ ...newWithdrawal, date: value })}
+              />
 
-            <ClientSelectField
-              value={newWithdrawal.clientId}
-              onChange={(value) => {
-                setNewWithdrawal({ ...newWithdrawal, clientId: value });
-                setSelectedClient(value);
-              }}
-              clients={clients}
-            />
+              <ClientSelectField
+                value={newWithdrawal.clientId}
+                onChange={(value) => {
+                  setNewWithdrawal({ ...newWithdrawal, clientId: value });
+                  setSelectedClient(value);
+                }}
+                clients={clients}
+              />
 
-            <AmountField
-              value={newWithdrawal.amount}
-              onChange={(value) => setNewWithdrawal({ ...newWithdrawal, amount: value })}
-            />
+              <AmountField
+                value={newWithdrawal.amount}
+                onChange={(value) => setNewWithdrawal({ ...newWithdrawal, amount: value })}
+              />
 
-            <NotesField
-              value={newWithdrawal.notes}
-              onChange={(value) => setNewWithdrawal({ ...newWithdrawal, notes: value })}
-            />
+              <NotesField
+                value={newWithdrawal.notes}
+                onChange={(value) => setNewWithdrawal({ ...newWithdrawal, notes: value })}
+              />
+            </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="py-4 text-center">
+          <p>Chargement du formulaire...</p>
+        </div>
+      )}
 
       <DialogFooter className="sm:justify-between">
         <Button variant="ghost" onClick={onClose} className="gap-2">
@@ -214,7 +258,7 @@ export const WithdrawalFormDialog: React.FC<WithdrawalFormDialogProps> = ({
         <Button
           onClick={handleSubmit}
           className="bg-red-600 hover:bg-red-700 text-white gap-2 min-w-[200px]"
-          disabled={isLoading}
+          disabled={isLoading || !formInitialized}
         >
           <ArrowDownCircle className="h-4 w-4" />
           {isLoading 
