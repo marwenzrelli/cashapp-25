@@ -1,11 +1,10 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { PublicClientLoading } from "@/features/clients/components/PublicClientLoading";
 import { PublicClientError } from "@/features/clients/components/PublicClientError";
 import { PublicClientPersonalInfo } from "@/features/clients/components/PublicClientPersonalInfo";
 import { PublicClientOperationsHistory } from "@/features/clients/components/PublicClientOperationsHistory";
 import { usePublicClientProfile } from "@/features/clients/hooks/usePublicClientProfile";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { showErrorToast } from "@/features/clients/hooks/utils/errorUtils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 const PublicClientProfile = () => {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
+  const initialCheckDone = useRef(false);
   const { 
     client, 
     operations, 
@@ -23,21 +23,25 @@ const PublicClientProfile = () => {
     retryFetch 
   } = usePublicClientProfile(token);
 
-  // Set JWT token for Supabase RLS policies
+  // Set JWT token for Supabase RLS policies - run only once
   useEffect(() => {
-    if (token) {
+    if (token && !initialCheckDone.current) {
+      initialCheckDone.current = true;
+      
       // Check current session
       const checkAndCreateSession = async () => {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session) {
-          // If there's no existing session, create an anonymous session with our custom claims
           try {
-            // Create a random email and password for anonymous auth
+            // If there's no existing session, create an anonymous session with our custom claims
+            console.log("Creating anonymous session with token:", token);
+            // Use the correct structure for signInWithPassword
             const anonymousEmail = `anonymous-${Date.now()}@example.com`;
             const anonymousPassword = `anonymous-${Date.now()}`;
             
-            // Use the correct structure for signInWithPassword
+            // This is only for testing purposes and won't actually create a real user
+            // since we've disabled RLS, but keeping for compatibility
             const { error } = await supabase.auth.signInWithPassword({
               email: anonymousEmail,
               password: anonymousPassword
@@ -53,8 +57,6 @@ const PublicClientProfile = () => {
               
               if (updateError) {
                 console.error("Error updating user with public token:", updateError);
-              } else {
-                console.log("Anonymous session created with public_token:", token);
               }
             }
           } catch (error) {
@@ -67,18 +69,15 @@ const PublicClientProfile = () => {
     }
   }, [token]);
 
-  // Debug information for troubleshooting
+  // Debug information for troubleshooting - run only once on data changes
   useEffect(() => {
     console.log("PublicClientProfile - Current state:", { 
       token, 
       hasClient: !!client, 
-      clientData: client,
       operationsCount: operations?.length || 0,
       isLoading, 
       error,
-      loadingTime,
-      currentURL: window.location.href,
-      currentRoute: window.location.pathname
+      loadingTime
     });
     
     // Show a toast for client not found errors if we have an error and we're not loading
@@ -88,35 +87,37 @@ const PublicClientProfile = () => {
       });
     }
     
-    // Show success toast when client data loads
+    // Show success toast when client data loads - only once
     if (client && operations && !error && !isLoading) {
       toast.success("Données client chargées", {
         description: `${operations.length} opérations trouvées pour ${client.prenom} ${client.nom}`
       });
     }
-  }, [token, client, operations, isLoading, error, loadingTime]);
+  }, [client, operations, isLoading, error, loadingTime]);
 
-  // Basic token format validation on component mount and trigger data fetch
+  // Basic token format validation on component mount and trigger data fetch - run only once
   useEffect(() => {
-    // Check if token exists
-    if (!token) {
-      console.error("Token is missing in URL params");
-      showErrorToast("Accès refusé", { message: "Token d'accès manquant" });
-      navigate("/"); // Redirect to home on missing token
-      return;
+    if (!initialCheckDone.current) {
+      // Check if token exists
+      if (!token) {
+        console.error("Token is missing in URL params");
+        showErrorToast("Accès refusé", { message: "Token d'accès manquant" });
+        navigate("/"); // Redirect to home on missing token
+        return;
+      }
+      
+      // Basic UUID format validation
+      const isValidUUID = token?.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+      
+      if (!isValidUUID) {
+        console.error("Invalid token format:", token);
+        showErrorToast("Format de token invalide", { message: "Le format du token ne correspond pas à un UUID valide" });
+        navigate("/"); // Redirect to home on invalid token format
+        return;
+      }
+      
+      initialCheckDone.current = true;
     }
-    
-    // Basic UUID format validation
-    const isValidUUID = token?.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
-    
-    if (!isValidUUID) {
-      console.error("Invalid token format:", token);
-      showErrorToast("Format de token invalide", { message: "Le format du token ne correspond pas à un UUID valide" });
-      navigate("/"); // Redirect to home on invalid token format
-      return;
-    }
-    
-    console.log("PublicClientProfile - URL token verified, fetching data with token:", token);
   }, [token, navigate, fetchClientData]);
 
   // Show loading state

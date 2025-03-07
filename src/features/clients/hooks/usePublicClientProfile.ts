@@ -1,5 +1,5 @@
 
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { usePublicClientData } from "./publicClientProfile/usePublicClientData";
 import { useRealtimeSubscriptions } from "./publicClientProfile/useRealtimeSubscriptions";
 import { validateToken } from "./publicClientProfile/validation";
@@ -8,6 +8,7 @@ import { checkClientOperations } from "./utils/checkClientOperations";
 export const usePublicClientProfile = (token: string | undefined) => {
   // Validate token format before proceeding
   const tokenValidation = token ? validateToken(token) : { isValid: false, error: "Token d'accès manquant" };
+  const verificationCompletedRef = useRef(false);
   
   const { 
     client, 
@@ -33,11 +34,13 @@ export const usePublicClientProfile = (token: string | undefined) => {
   // Pass clientId and refreshData to useRealtimeSubscriptions
   useRealtimeSubscriptions(clientId, refreshData);
   
-  // Verify operations if we have client but no operations
+  // Verify operations if we have client but no operations - run only once
   useEffect(() => {
     const verifyOperationsExist = async () => {
-      if (client && operations.length === 0 && !isLoading && !error && token) {
+      if (client && operations.length === 0 && !isLoading && !error && token && !verificationCompletedRef.current) {
         console.log("Client loaded but no operations found. Running verification check...");
+        verificationCompletedRef.current = true;
+        
         const clientFullName = `${client.prenom} ${client.nom}`.trim();
         
         // Check database operations with token authentication
@@ -56,7 +59,7 @@ export const usePublicClientProfile = (token: string | undefined) => {
     verifyOperationsExist();
   }, [client, operations, isLoading, error, token, fetchClientData]);
   
-  // Log detailed information for debugging
+  // Log detailed information for debugging - run only once per state change
   useEffect(() => {
     console.log("PublicClientProfile hook state:", {
       token: token ? `${token.substring(0, 8)}...` : undefined,

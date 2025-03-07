@@ -14,6 +14,7 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
   const [loadingTime, setLoadingTime] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const fetchingRef = useRef(false);
+  const initialLoadCompletedRef = useRef(false);
 
   // Timer pour suivre le temps de chargement
   useEffect(() => {
@@ -81,6 +82,7 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
       
       console.log(`Step 5: Retrieved ${operationsData.length} client operations`);
       setIsLoading(false);
+      initialLoadCompletedRef.current = true;
     } catch (err: any) {
       console.error("Error in fetchClientData:", err);
       setClient(null);
@@ -101,11 +103,11 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
 
   // Initial fetch on mount or token change
   useEffect(() => {
-    if (token) {
-      console.log("Token changed or component mounted, fetching client data");
+    if (token && !initialLoadCompletedRef.current) {
+      console.log("Initial data load with token:", token);
       fetchClientData();
     }
-  }, [token]);
+  }, [token, fetchClientData]);
 
   return {
     client,
