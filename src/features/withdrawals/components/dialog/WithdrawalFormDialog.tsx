@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ArrowDownCircle } from "lucide-react";
+import { ArrowDownCircle, Loader2 } from "lucide-react";
 import { DateField } from "../form-fields/DateField";
 import { ClientSelectField } from "../form-fields/ClientSelectField";
 import { AmountField } from "../form-fields/AmountField";
@@ -83,15 +83,18 @@ export const WithdrawalFormDialog: React.FC<WithdrawalFormDialogProps> = ({
           // Parse date from the formatted string back to ISO format if needed
           let dateValue = new Date().toISOString();
           
-          if (selectedWithdrawal.date) {
+          // First check operation_date, then date, then created_at
+          const sourceDate = selectedWithdrawal.operation_date || selectedWithdrawal.date || selectedWithdrawal.created_at;
+          
+          if (sourceDate) {
             // Handle formatting differences - the date might come formatted or as ISO string
-            if (selectedWithdrawal.date.includes('T')) {
+            if (sourceDate.includes('T')) {
               // Already in ISO format
-              dateValue = selectedWithdrawal.date;
+              dateValue = sourceDate;
             } else {
               try {
                 // Try to parse formatted date back to ISO
-                const parts = selectedWithdrawal.date.split(' ');
+                const parts = sourceDate.split(' ');
                 if (parts.length >= 2) {
                   const dateParts = parts[0].split('/');
                   const timeParts = parts[1].split(':');
@@ -193,9 +196,21 @@ export const WithdrawalFormDialog: React.FC<WithdrawalFormDialogProps> = ({
     }
   };
 
-  // Render null if the form is not yet initialized to prevent flash of default values
+  // If the dialog is not open, don't render anything to avoid blank screen
   if (!isOpen) {
     return null;
+  }
+
+  // Show a loading state until form is initialized
+  if (!formInitialized) {
+    return (
+      <DialogContent className="sm:max-w-md">
+        <div className="flex flex-col items-center justify-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="mt-2 text-sm text-muted-foreground">Chargement du formulaire...</p>
+        </div>
+      </DialogContent>
+    );
   }
 
   return (
@@ -214,58 +229,57 @@ export const WithdrawalFormDialog: React.FC<WithdrawalFormDialogProps> = ({
         </DialogDescription>
       </DialogHeader>
 
-      {formInitialized ? (
-        <div className="grid gap-6 py-4">
-          <div className="relative overflow-hidden rounded-lg border bg-gradient-to-b from-background to-muted/50 p-6">
-            <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))]" />
-            <div className="relative grid gap-4">
-              <DateField 
-                value={newWithdrawal.date}
-                onChange={(value) => setNewWithdrawal({ ...newWithdrawal, date: value })}
-              />
+      <div className="grid gap-6 py-4">
+        <div className="relative overflow-hidden rounded-lg border bg-gradient-to-b from-background to-muted/50 p-6">
+          <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))]" />
+          <div className="relative grid gap-4">
+            <DateField 
+              value={newWithdrawal.date}
+              onChange={(value) => setNewWithdrawal({ ...newWithdrawal, date: value })}
+            />
 
-              <ClientSelectField
-                value={newWithdrawal.clientId}
-                onChange={(value) => {
-                  setNewWithdrawal({ ...newWithdrawal, clientId: value });
-                  setSelectedClient(value);
-                }}
-                clients={clients}
-              />
+            <ClientSelectField
+              value={newWithdrawal.clientId}
+              onChange={(value) => {
+                setNewWithdrawal({ ...newWithdrawal, clientId: value });
+                setSelectedClient(value);
+              }}
+              clients={clients}
+            />
 
-              <AmountField
-                value={newWithdrawal.amount}
-                onChange={(value) => setNewWithdrawal({ ...newWithdrawal, amount: value })}
-              />
+            <AmountField
+              value={newWithdrawal.amount}
+              onChange={(value) => setNewWithdrawal({ ...newWithdrawal, amount: value })}
+            />
 
-              <NotesField
-                value={newWithdrawal.notes}
-                onChange={(value) => setNewWithdrawal({ ...newWithdrawal, notes: value })}
-              />
-            </div>
+            <NotesField
+              value={newWithdrawal.notes}
+              onChange={(value) => setNewWithdrawal({ ...newWithdrawal, notes: value })}
+            />
           </div>
         </div>
-      ) : (
-        <div className="py-4 text-center">
-          <p>Chargement du formulaire...</p>
-        </div>
-      )}
+      </div>
 
       <DialogFooter className="sm:justify-between">
-        <Button variant="ghost" onClick={onClose} className="gap-2">
+        <Button variant="ghost" onClick={onClose} className="gap-2" disabled={isLoading}>
           Annuler
         </Button>
         <Button
           onClick={handleSubmit}
           className="bg-red-600 hover:bg-red-700 text-white gap-2 min-w-[200px]"
-          disabled={isLoading || !formInitialized}
+          disabled={isLoading}
         >
-          <ArrowDownCircle className="h-4 w-4" />
-          {isLoading 
-            ? "En cours..." 
-            : isEditing 
-              ? "Modifier le retrait" 
-              : "Effectuer le retrait"}
+          {isLoading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              En cours...
+            </>
+          ) : (
+            <>
+              <ArrowDownCircle className="h-4 w-4" />
+              {isEditing ? "Modifier le retrait" : "Effectuer le retrait"}
+            </>
+          )}
         </Button>
       </DialogFooter>
     </DialogContent>
