@@ -57,6 +57,9 @@ export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps>
       console.log("Processing withdrawal with data:", data);
       console.log("Is editing mode:", isEditing);
       
+      // Convert string amount to number
+      const amountNumber = parseFloat(data.amount);
+      
       // Handle editing vs creating
       if (isEditing && selectedWithdrawal) {
         console.log("Updating withdrawal with ID:", selectedWithdrawal.id);
@@ -82,7 +85,7 @@ export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps>
           .from('withdrawals')
           .update({
             client_name: data.client_name,
-            amount: parseFloat(data.amount),
+            amount: amountNumber,
             notes: data.notes || null,
             operation_date: data.operation_date || new Date().toISOString(),
             last_modified_at: new Date().toISOString()
@@ -103,7 +106,7 @@ export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps>
           .from('withdrawals')
           .insert({
             client_name: data.client_name,
-            amount: parseFloat(data.amount),
+            amount: amountNumber,
             notes: data.notes || null,
             operation_date: data.operation_date || new Date().toISOString()
           });
