@@ -3,8 +3,12 @@ import { DepositsContent } from "@/features/deposits/components/DepositsContent"
 import { useDepositsPage } from "@/features/deposits/hooks/useDepositsPage";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthenticationCheck } from "@/features/admin/hooks/useAuthenticationCheck";
 
 const Deposits = () => {
+  // Vérifier l'authentification de l'utilisateur
+  useAuthenticationCheck();
+  
   const {
     searchTerm, 
     setSearchTerm,
