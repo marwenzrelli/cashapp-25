@@ -22,10 +22,12 @@ export const useClientBalanceRefresh = (
       const { data: deposits, error: depositsError } = await supabase
         .from('deposits')
         .select('amount')
-        .eq('client_name', clientFullName);
+        .eq('client_name', clientFullName)
+        .eq('status', 'completed');
       
       if (depositsError) {
         console.error("Error retrieving deposits:", depositsError);
+        toast.error("Erreur lors de la récupération des dépôts");
         return;
       }
       
@@ -33,10 +35,12 @@ export const useClientBalanceRefresh = (
       const { data: withdrawals, error: withdrawalsError } = await supabase
         .from('withdrawals')
         .select('amount')
-        .eq('client_name', clientFullName);
+        .eq('client_name', clientFullName)
+        .eq('status', 'completed');
       
       if (withdrawalsError) {
         console.error("Error retrieving withdrawals:", withdrawalsError);
+        toast.error("Erreur lors de la récupération des retraits");
         return;
       }
       
@@ -58,21 +62,21 @@ export const useClientBalanceRefresh = (
       
       if (updateError) {
         console.error("Error updating balance:", updateError);
-        toast.error("Error updating balance");
+        toast.error("Erreur lors de la mise à jour du solde");
         return;
       }
       
       // Update real-time balance locally
       setRealTimeBalance(balance);
       
-      toast.success("Client balance updated successfully");
+      toast.success("Solde client mis à jour avec succès");
       
       // Refresh client data
       refetchClient();
       
     } catch (error) {
       console.error("Error refreshing balance:", error);
-      toast.error("Error refreshing balance");
+      toast.error("Erreur lors de l'actualisation du solde");
     }
   }, [clientId, client, setRealTimeBalance, refetchClient]);
 

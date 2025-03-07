@@ -12,6 +12,9 @@ import { TransactionTrends } from "@/features/dashboard/components/TransactionTr
 import { AISuggestions } from "@/features/dashboard/components/AISuggestions";
 import { RecentActivityCard } from "@/features/dashboard/components/RecentActivity";
 import { useDashboardData } from "@/features/dashboard/hooks/useDashboardData";
+import { Button } from "@/components/ui/button";
+import { RotateCw } from "lucide-react";
+import { recalculateAllClientBalances } from "@/features/statistics/utils/balanceCalculator";
 
 const Dashboard = () => {
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
@@ -19,6 +22,7 @@ const Dashboard = () => {
   const { currency } = useCurrency();
   const [currentUser, setCurrentUser] = useState<SystemUser | null>(null);
   const { stats, isLoading, recentActivity, handleRefresh } = useDashboardData();
+  const [isRecalculating, setIsRecalculating] = useState(false);
 
   const handleUpdateProfile = async (updatedUser: Partial<SystemUser>) => {
     try {
@@ -43,9 +47,42 @@ const Dashboard = () => {
     }
   };
 
+  const handleRecalculateBalances = async () => {
+    setIsRecalculating(true);
+    try {
+      toast.info("Recalcul des soldes clients en cours...");
+      const success = await recalculateAllClientBalances();
+      
+      if (success) {
+        toast.success("Tous les soldes clients ont été recalculés avec succès");
+        // Rafraîchir le tableau de bord pour afficher les nouvelles données
+        handleRefresh();
+      } else {
+        toast.error("Erreur lors du recalcul des soldes clients");
+      }
+    } catch (error) {
+      console.error("Error recalculating balances:", error);
+      toast.error("Erreur lors du recalcul des soldes clients");
+    } finally {
+      setIsRecalculating(false);
+    }
+  };
+
   return (
     <div className="space-y-8 animate-in">
-      <DashboardHeader isLoading={isLoading} onRefresh={handleRefresh} />
+      <div className="flex justify-between items-center">
+        <DashboardHeader isLoading={isLoading} onRefresh={handleRefresh} />
+        
+        <Button 
+          variant="outline" 
+          onClick={handleRecalculateBalances}
+          disabled={isRecalculating}
+          className="ml-auto"
+        >
+          <RotateCw className={`h-4 w-4 mr-2 ${isRecalculating ? 'animate-spin' : ''}`} />
+          {isRecalculating ? 'Recalcul en cours...' : 'Recalculer tous les soldes'}
+        </Button>
+      </div>
 
       <StatsCardGrid stats={stats} currency={currency} />
 

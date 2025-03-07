@@ -57,13 +57,16 @@ export const useDashboardData = () => {
       // Generate mock monthly stats since the operation_statistics table doesn't exist
       const monthlyStats = generateMockMonthlyStats();
 
-      // Fetch balance data
-      const { data: balanceData, error: balanceError } = await supabase
+      // Fetch all clients to calculate the total balance
+      const { data: clientsData, error: clientsDataError } = await supabase
         .from('clients')
-        .select('solde')
+        .select('id, solde')
         .eq('status', 'active');
 
-      if (balanceError) throw balanceError;
+      if (clientsDataError) throw clientsDataError;
+
+      // Calculate actual balance from client soldes instead of using deposits - withdrawals
+      const total_balance = clientsData?.reduce((sum, client) => sum + Number(client.solde || 0), 0) || 0;
 
       // Fetch transfers
       const { data: transfers, error: transfersError } = await supabase
@@ -76,10 +79,17 @@ export const useDashboardData = () => {
       // Calculate statistics
       const total_deposits = deposits?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
       const total_withdrawals = withdrawals?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
-      const total_balance = balanceData?.reduce((sum, client) => sum + Number(client.solde || 0), 0) || 0;
       const sent_transfers = transfers?.reduce((sum, t) => sum + Number(t.amount), 0) || 0;
       const received_transfers = transfers?.reduce((sum, t) => sum + Number(t.amount), 0) || 0;
       const transfer_count = transfers?.length || 0;
+
+      // Log calculation for debugging
+      console.log(`Dashboard balance calculation:
+        Total deposits: ${total_deposits}
+        Total withdrawals: ${total_withdrawals}
+        Raw calculated balance: ${total_deposits - total_withdrawals}
+        Actual client balances sum: ${total_balance}
+      `);
 
       setStats({
         total_deposits,
