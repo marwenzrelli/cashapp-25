@@ -26,22 +26,35 @@ const PublicClientProfile = () => {
   // Set JWT token for Supabase RLS policies
   useEffect(() => {
     if (token) {
-      // Set a custom claim in the JWT to use with RLS policies
-      const jwt = supabase.auth.session()?.access_token || null;
-      
-      if (!jwt) {
-        // If there's no existing session, we create an anonymous session with our custom claims
-        supabase.auth.signIn({
-          email: `anonymous-${Date.now()}@example.com`,
-          password: `anonymous-${Date.now()}`,
-        }, {
-          data: {
-            public_token: token
+      // Check current session
+      const checkAndCreateSession = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          // If there's no existing session, create an anonymous session with our custom claims
+          try {
+            const { error } = await supabase.auth.signInWithPassword({
+              email: `anonymous-${Date.now()}@example.com`,
+              password: `anonymous-${Date.now()}`,
+              options: {
+                data: {
+                  public_token: token
+                }
+              }
+            });
+            
+            if (error) {
+              console.error("Error setting anonymous auth:", error);
+            } else {
+              console.log("Anonymous session created with public_token:", token);
+            }
+          } catch (error) {
+            console.error("Error creating anonymous session:", error);
           }
-        }).catch(error => {
-          console.error("Error setting anonymous auth:", error);
-        });
-      }
+        }
+      };
+      
+      checkAndCreateSession();
     }
   }, [token]);
 
