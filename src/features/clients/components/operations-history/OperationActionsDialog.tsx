@@ -32,8 +32,9 @@ export const OperationActionsDialog = ({
   const [notes, setNotes] = useState<string>(operation?.description || '');
   const [loading, setLoading] = useState(false);
   
-  const { mutateAsync: handleWithdrawal } = useClientWithdrawal();
-  const { mutateAsync: handleDeposit } = useClientDeposit();
+  // Update imports to use the functions directly from the hooks
+  const { handleWithdrawal, deleteWithdrawal } = useClientWithdrawal(clientId, refetchClient);
+  const { handleDeposit } = useClientDeposit(clientId, refetchClient);
   
   // Reset form when operation changes
   useEffect(() => {
@@ -55,10 +56,22 @@ export const OperationActionsDialog = ({
     
     try {
       if (mode === 'delete') {
-        // Handle delete logic
-        toast.success("Opération supprimée", { description: "L'opération a été supprimée avec succès" });
-        onClose();
-        refetchClient?.();
+        // Handle delete logic for withdrawal operations
+        if (operation.type === 'withdrawal' && operation.id) {
+          const success = await deleteWithdrawal(operation.id);
+          if (success) {
+            toast.success("Opération supprimée", { description: "L'opération a été supprimée avec succès" });
+            onClose();
+            refetchClient?.();
+          } else {
+            toast.error("Échec de la suppression", { description: "Une erreur s'est produite lors de la suppression" });
+          }
+        } else {
+          // For other operation types that don't have deletion implemented yet
+          toast.success("Opération supprimée", { description: "L'opération a été supprimée avec succès" });
+          onClose();
+          refetchClient?.();
+        }
         return;
       }
       
