@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { UserCircle } from "lucide-react";
 import {
@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select";
 import { Client } from "@/features/clients/types";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ExtendedClient extends Client {
   dateCreation: string;
@@ -30,6 +31,37 @@ export const ClientSelectField: React.FC<ClientSelectFieldProps> = ({
   id = "clientId"
 }) => {
   const { currency } = useCurrency();
+  const [realTimeBalances, setRealTimeBalances] = useState<Record<string, number>>({});
+  
+  // Subscribe to real-time updates for client balances
+  useEffect(() => {
+    // Initialize with current balances
+    const initialBalances: Record<string, number> = {};
+    clients.forEach(client => {
+      initialBalances[client.id.toString()] = client.solde;
+    });
+    setRealTimeBalances(initialBalances);
+    
+    // Set up real-time subscription for balance updates
+    const channel = supabase
+      .channel('client-balance-updates')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'clients' },
+        (payload) => {
+          if (payload.new && 'id' in payload.new && 'solde' in payload.new) {
+            setRealTimeBalances(prev => ({
+              ...prev,
+              [payload.new.id]: payload.new.solde
+            }));
+          }
+        }
+      )
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [clients]);
 
   return (
     <div className="space-y-2">
@@ -53,12 +85,12 @@ export const ClientSelectField: React.FC<ClientSelectFieldProps> = ({
               </div>
               <span
                 className={`font-mono text-sm ${
-                  client.solde >= 0
+                  (realTimeBalances[client.id.toString()] ?? client.solde) >= 0
                     ? "text-green-600 dark:text-green-400"
                     : "text-red-600 dark:text-red-400"
                 }`}
               >
-                {client.solde.toLocaleString()} {currency}
+                {(realTimeBalances[client.id.toString()] ?? client.solde).toLocaleString()} {currency}
               </span>
             </SelectItem>
           ))}
