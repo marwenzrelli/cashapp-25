@@ -47,6 +47,7 @@ export const WithdrawalFormDialog: React.FC<WithdrawalFormDialogProps> = ({
     date: new Date().toISOString(),
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [formInitialized, setFormInitialized] = useState(false);
 
   // Reset form when dialog opens/closes or when editing status changes
   useEffect(() => {
@@ -58,46 +59,59 @@ export const WithdrawalFormDialog: React.FC<WithdrawalFormDialogProps> = ({
         notes: "",
         date: new Date().toISOString(),
       });
+      setFormInitialized(false);
       return;
     }
     
-    if (isEditing && selectedWithdrawal) {
-      console.log("Setting form for editing withdrawal:", selectedWithdrawal);
-      
-      // Find client by name when editing
-      const clientFullName = selectedWithdrawal.client_name;
-      const client = clients.find(c => `${c.prenom} ${c.nom}` === clientFullName);
-      
-      if (client) {
-        const clientId = client.id.toString();
+    try {
+      if (isEditing && selectedWithdrawal) {
+        console.log("Setting form for editing withdrawal:", selectedWithdrawal);
         
-        // Convert amount to string safely
-        const amountStr = selectedWithdrawal.amount !== undefined && selectedWithdrawal.amount !== null
-          ? selectedWithdrawal.amount.toString()
-          : "";
+        // Find client by name when editing
+        const clientFullName = selectedWithdrawal.client_name;
+        const client = clients.find(c => `${c.prenom} ${c.nom}` === clientFullName);
+        
+        if (client) {
+          const clientId = client.id.toString();
           
-        setNewWithdrawal({
-          clientId: clientId,
-          amount: amountStr,
-          notes: selectedWithdrawal.notes || "",
-          date: selectedWithdrawal.date || new Date().toISOString(),
-        });
-        
-        // Update selected client in parent
-        setSelectedClient(clientId);
-      } else {
-        console.error("Client not found for withdrawal:", selectedWithdrawal);
+          // Convert amount to string safely
+          const amountStr = selectedWithdrawal.amount !== undefined && selectedWithdrawal.amount !== null
+            ? selectedWithdrawal.amount.toString()
+            : "";
+            
+          setNewWithdrawal({
+            clientId: clientId,
+            amount: amountStr,
+            notes: selectedWithdrawal.notes || "",
+            date: selectedWithdrawal.operation_date || new Date().toISOString(),
+          });
+          
+          // Update selected client in parent
+          setSelectedClient(clientId);
+        } else {
+          console.error("Client not found for withdrawal:", selectedWithdrawal);
+        }
+      } else if (selectedClient) {
+        // Just update the client ID when not editing
+        setNewWithdrawal(prev => ({
+          ...prev,
+          clientId: selectedClient
+        }));
       }
-    } else if (selectedClient) {
-      // Just update the client ID when not editing
-      setNewWithdrawal(prev => ({
-        ...prev,
-        clientId: selectedClient
-      }));
+      
+      setFormInitialized(true);
+    } catch (error) {
+      console.error("Error initializing form:", error);
+      setFormInitialized(true); // Ensure form is marked as initialized even on error
     }
   }, [isOpen, isEditing, selectedWithdrawal, selectedClient, clients, setSelectedClient]);
 
   const handleSubmit = async () => {
+    if (!formInitialized) {
+      console.error("Form not initialized yet");
+      return;
+    }
+    
     setIsLoading(true);
     try {
       // Find the client to get full name
@@ -140,6 +154,11 @@ export const WithdrawalFormDialog: React.FC<WithdrawalFormDialogProps> = ({
       setIsLoading(false);
     }
   };
+
+  // Render null if the form is not yet initialized to prevent flash of default values
+  if (!isOpen || !formInitialized) {
+    return null;
+  }
 
   return (
     <DialogContent className="sm:max-w-md">

@@ -61,10 +61,21 @@ export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps>
       if (isEditing && selectedWithdrawal) {
         console.log("Updating withdrawal with ID:", selectedWithdrawal.id);
         
+        // Validate the ID before using it
+        if (!selectedWithdrawal.id) {
+          console.error("Missing withdrawal ID for update operation");
+          throw new Error("ID de retrait manquant pour la mise à jour");
+        }
+        
         // Convert ID to number if it's a string to fix the type error
         const withdrawalId = typeof selectedWithdrawal.id === 'string' 
           ? parseInt(selectedWithdrawal.id, 10) 
           : selectedWithdrawal.id;
+
+        if (isNaN(withdrawalId)) {
+          console.error("Invalid withdrawal ID:", selectedWithdrawal.id);
+          throw new Error("ID de retrait invalide");
+        }
 
         // Update existing withdrawal
         const { error } = await supabase
