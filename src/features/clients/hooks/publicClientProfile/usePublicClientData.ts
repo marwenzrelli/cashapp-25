@@ -15,6 +15,7 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const fetchingRef = useRef(false);
   const initialLoadCompletedRef = useRef(false);
+  const dataFetchedRef = useRef(false);
 
   // Timer pour suivre le temps de chargement
   useEffect(() => {
@@ -34,16 +35,8 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
   }, [isLoading, error]);
 
   const fetchClientData = useCallback(async () => {
-    if (!token) {
-      console.log("Cannot fetch data: Missing token");
-      setError("Token d'accès manquant");
-      setIsLoading(false);
-      return;
-    }
-
-    // Éviter les requêtes en double
-    if (fetchingRef.current) {
-      console.log("Already fetching data, ignoring duplicate request");
+    // Skip if no token or already fetching or already fetched
+    if (!token || fetchingRef.current || (dataFetchedRef.current && client)) {
       return;
     }
 
@@ -81,6 +74,7 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
       setOperations(operationsData);
       
       console.log(`Step 5: Retrieved ${operationsData.length} client operations`);
+      dataFetchedRef.current = true;
       setIsLoading(false);
       initialLoadCompletedRef.current = true;
     } catch (err: any) {
@@ -94,14 +88,15 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
     } finally {
       fetchingRef.current = false;
     }
-  }, [token, fetchCount]);
+  }, [token, fetchCount, client]);
 
   const retryFetch = useCallback(() => {
     console.log("Retrying client data fetch with token:", token);
+    dataFetchedRef.current = false; // Reset the data fetched flag to allow a new fetch
     fetchClientData();
-  }, [fetchClientData]);
+  }, [fetchClientData, token]);
 
-  // Initial fetch on mount or token change
+  // Initial fetch on mount or token change - only run once
   useEffect(() => {
     if (token && !initialLoadCompletedRef.current) {
       console.log("Initial data load with token:", token);

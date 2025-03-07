@@ -9,6 +9,7 @@ export const usePublicClientProfile = (token: string | undefined) => {
   // Validate token format before proceeding
   const tokenValidation = token ? validateToken(token) : { isValid: false, error: "Token d'accès manquant" };
   const verificationCompletedRef = useRef(false);
+  const operationsCheckedRef = useRef(false);
   
   const { 
     client, 
@@ -23,13 +24,13 @@ export const usePublicClientProfile = (token: string | undefined) => {
   // Extract the client ID from the client object for subscriptions
   const clientId = client?.id;
 
-  // Set up realtime subscriptions
+  // Set up realtime subscriptions - but limit refreshes
   const refreshData = useCallback(() => {
     console.log("Refreshing client data due to realtime update");
-    if (token) {
+    if (token && !isLoading) {
       fetchClientData();
     }
-  }, [fetchClientData, token]);
+  }, [fetchClientData, token, isLoading]);
 
   // Pass clientId and refreshData to useRealtimeSubscriptions
   useRealtimeSubscriptions(clientId, refreshData);
@@ -37,9 +38,11 @@ export const usePublicClientProfile = (token: string | undefined) => {
   // Verify operations if we have client but no operations - run only once
   useEffect(() => {
     const verifyOperationsExist = async () => {
-      if (client && operations.length === 0 && !isLoading && !error && token && !verificationCompletedRef.current) {
+      if (client && operations.length === 0 && !isLoading && !error && token && 
+          !verificationCompletedRef.current && !operationsCheckedRef.current) {
         console.log("Client loaded but no operations found. Running verification check...");
         verificationCompletedRef.current = true;
+        operationsCheckedRef.current = true;
         
         const clientFullName = `${client.prenom} ${client.nom}`.trim();
         
@@ -49,17 +52,20 @@ export const usePublicClientProfile = (token: string | undefined) => {
         if (opsCheck.totalCount > 0) {
           console.log(`Found ${opsCheck.totalCount} operations in database, but none retrieved. Retrying fetch...`);
           // If operations exist but weren't retrieved, retry the fetch
-          fetchClientData();
+          retryFetch();
         } else {
           console.log("No operations found for this client in the database.");
         }
       }
     };
     
-    verifyOperationsExist();
-  }, [client, operations, isLoading, error, token, fetchClientData]);
+    // Only check if we haven't already
+    if (!operationsCheckedRef.current) {
+      verifyOperationsExist();
+    }
+  }, [client, operations, isLoading, error, token, retryFetch]);
   
-  // Log detailed information for debugging - run only once per state change
+  // Log detailed information for debugging - only when state changes
   useEffect(() => {
     console.log("PublicClientProfile hook state:", {
       token: token ? `${token.substring(0, 8)}...` : undefined,
