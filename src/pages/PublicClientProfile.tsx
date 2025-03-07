@@ -8,6 +8,7 @@ import { usePublicClientProfile } from "@/features/clients/hooks/usePublicClient
 import { useEffect } from "react";
 import { showErrorToast } from "@/features/clients/hooks/utils/errorUtils";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const PublicClientProfile = () => {
   const { token } = useParams<{ token: string }>();
@@ -21,6 +22,28 @@ const PublicClientProfile = () => {
     fetchClientData, 
     retryFetch 
   } = usePublicClientProfile(token);
+
+  // Set JWT token for Supabase RLS policies
+  useEffect(() => {
+    if (token) {
+      // Set a custom claim in the JWT to use with RLS policies
+      const jwt = supabase.auth.session()?.access_token || null;
+      
+      if (!jwt) {
+        // If there's no existing session, we create an anonymous session with our custom claims
+        supabase.auth.signIn({
+          email: `anonymous-${Date.now()}@example.com`,
+          password: `anonymous-${Date.now()}`,
+        }, {
+          data: {
+            public_token: token
+          }
+        }).catch(error => {
+          console.error("Error setting anonymous auth:", error);
+        });
+      }
+    }
+  }, [token]);
 
   // Debug information for troubleshooting
   useEffect(() => {

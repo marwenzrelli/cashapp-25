@@ -8,8 +8,15 @@ export const checkClientOperations = async (clientName: string, clientId: number
   
   try {
     // Set auth token if provided (for public client access)
+    let authHeader = {};
     if (token) {
-      supabase.auth.setAuth(token);
+      authHeader = {
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      };
     }
     
     // Check deposits
@@ -43,11 +50,6 @@ export const checkClientOperations = async (clientName: string, clientId: number
       .ilike('to_client', `%${clientName}%`);
       
     if (transferReceiverError) console.error("Error checking transfers (receiver):", transferReceiverError);
-    
-    // Reset auth if token was provided
-    if (token) {
-      supabase.auth.setAuth(null);
-    }
     
     const results = {
       depositCount: depositCount || 0,

@@ -14,8 +14,15 @@ export const fetchClientOperations = async (clientFullName: string, token?: stri
     }
     
     // If we have a token, set it in the Supabase client auth header
+    let authHeader = {};
     if (token) {
-      supabase.auth.setAuth(token);
+      authHeader = {
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      };
     }
 
     // Fetch deposits
@@ -73,11 +80,6 @@ export const fetchClientOperations = async (clientFullName: string, token?: stri
     }
     
     console.log(`Found ${transfersAsReceiver?.length || 0} transfers as receiver for client:`, clientFullName);
-
-    // Reset the auth if we set it
-    if (token) {
-      supabase.auth.setAuth(null);
-    }
 
     // Format and combine all operations
     const allOperations: ClientOperation[] = [
