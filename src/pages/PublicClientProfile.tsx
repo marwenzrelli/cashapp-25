@@ -37,22 +37,25 @@ const PublicClientProfile = () => {
             const anonymousEmail = `anonymous-${Date.now()}@example.com`;
             const anonymousPassword = `anonymous-${Date.now()}`;
             
-            // Use correct options structure for signInWithPassword
+            // Use the correct structure for signInWithPassword
             const { error } = await supabase.auth.signInWithPassword({
               email: anonymousEmail,
-              password: anonymousPassword,
-              options: {
-                captchaToken: undefined, // This is optional so we can set it to undefined
-                meta: { // Use meta instead of data for custom claims
-                  public_token: token
-                }
-              }
+              password: anonymousPassword
             });
             
             if (error) {
               console.error("Error setting anonymous auth:", error);
             } else {
-              console.log("Anonymous session created with public_token:", token);
+              // After sign in, set the session data with the token
+              const { error: updateError } = await supabase.auth.updateUser({
+                data: { public_token: token }
+              });
+              
+              if (updateError) {
+                console.error("Error updating user with public token:", updateError);
+              } else {
+                console.log("Anonymous session created with public_token:", token);
+              }
             }
           } catch (error) {
             console.error("Error creating anonymous session:", error);
