@@ -18,6 +18,7 @@ export const useDashboardData = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [dataFetched, setDataFetched] = useState(false);
 
   const fetchStats = async () => {
     try {
@@ -85,6 +86,8 @@ export const useDashboardData = () => {
         sent_transfers,
         received_transfers
       });
+      
+      setDataFetched(true);
     } catch (error: any) {
       console.error('Error fetching stats:', error);
       setError(error.message || "Erreur lors du chargement des statistiques");
@@ -199,18 +202,21 @@ export const useDashboardData = () => {
   };
 
   useEffect(() => {
-    fetchStats();
-    fetchRecentActivity();
+    // Only fetch data if it hasn't been fetched already
+    if (!dataFetched) {
+      fetchStats();
+      fetchRecentActivity();
+    }
     
     // Setup refresh interval - reduced frequency to avoid overwhelming the server
     const interval = setInterval(() => {
       console.log("Auto-refreshing dashboard data");
       fetchStats();
       fetchRecentActivity();
-    }, 60000); // Changed from 30s to 60s
+    }, 5 * 60 * 1000); // Changed from 60s to 5 minutes
     
     return () => clearInterval(interval);
-  }, []);
+  }, [dataFetched]);
 
   return {
     stats,

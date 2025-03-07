@@ -1,3 +1,4 @@
+
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, Area, AreaChart } from "recharts";
 import { 
@@ -50,6 +51,25 @@ const Statistics = () => {
   const [clientFilter, setClientFilter] = useState("");
   const [transactionType, setTransactionType] = useState<"all" | "deposits" | "withdrawals" | "transfers">("all");
   const [isSyncing, setIsSyncing] = useState(false);
+  
+  // Add a timeout to handle cases where the loading state gets stuck
+  const [timeoutExceeded, setTimeoutExceeded] = useState(false);
+  
+  useEffect(() => {
+    // Reset timeout state when loading starts
+    if (isLoadingStats || isLoadingDeposits || isLoadingWithdrawals || isLoadingTransfers) {
+      setTimeoutExceeded(false);
+      
+      // Set a timeout to show a different state if loading takes too long
+      const timeout = setTimeout(() => {
+        if (isLoadingStats || isLoadingDeposits || isLoadingWithdrawals || isLoadingTransfers) {
+          setTimeoutExceeded(true);
+        }
+      }, 15000); // 15 seconds timeout
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [isLoadingStats, isLoadingDeposits, isLoadingWithdrawals, isLoadingTransfers]);
 
   const refreshData = async () => {
     setIsSyncing(true);
@@ -311,10 +331,14 @@ const Statistics = () => {
 
   if (isLoadingDeposits || isLoadingWithdrawals || isLoadingTransfers || isLoadingStats) {
     return (
-      <LoadingState message="Chargement des statistiques en cours..." />
+      <LoadingState 
+        message={timeoutExceeded ? "Le chargement prend plus de temps que prévu..." : "Chargement des statistiques en cours..."} 
+        retrying={timeoutExceeded}
+      />
     );
   }
 
+  // If we have any error, show it to the user
   if (error) {
     return (
       <div className="p-6 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 space-y-4">

@@ -24,7 +24,7 @@ export const DashboardHeader = ({ isLoading, onRefresh }: DashboardHeaderProps) 
           disabled={isLoading}
         >
           <RefreshCcw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-          Actualiser
+          {isLoading ? 'Actualisation...' : 'Actualiser'}
         </Button>
       </div>
     </div>
