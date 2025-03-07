@@ -1,57 +1,149 @@
 
-import React from "react";
-import { ArrowUpCircle, ArrowDownCircle, RefreshCcw } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Operation } from "@/features/operations/types";
 import { AllOperationsTab } from "./AllOperationsTab";
 import { DepositOperationsTab } from "./DepositOperationsTab";
 import { WithdrawalOperationsTab } from "./WithdrawalOperationsTab";
 import { TransferOperationsTab } from "./TransferOperationsTab";
+import { EmptyOperations } from "./EmptyOperations";
+import { useState } from "react";
+import { OperationActionsDialog } from "./OperationActionsDialog";
+import { Button } from "@/components/ui/button";
+import { Pencil, Trash2 } from "lucide-react";
 
 interface ClientOperationsHistoryTabsProps {
   filteredOperations: Operation[];
-  currency?: string;
+  currency: string;
+  clientId?: number;
+  refetchClient?: () => void;
 }
 
-export const ClientOperationsHistoryTabs = ({ 
+export const ClientOperationsHistoryTabs = ({
   filteredOperations,
-  currency = "TND" 
+  currency,
+  clientId,
+  refetchClient
 }: ClientOperationsHistoryTabsProps) => {
+  const [selectedOperation, setSelectedOperation] = useState<Operation | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  const handleEditOperation = (operation: Operation) => {
+    setSelectedOperation(operation);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDeleteOperation = (operation: Operation) => {
+    setSelectedOperation(operation);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setIsEditDialogOpen(false);
+    setIsDeleteDialogOpen(false);
+    setSelectedOperation(null);
+  };
+
+  // Render action buttons for each operation
+  const renderActionButtons = (operation: Operation) => {
+    // Only allow editing withdrawals and deposits for now
+    const canEdit = ['withdrawal', 'deposit'].includes(operation.type);
+    const canDelete = operation.type === 'withdrawal'; // Only allow deleting withdrawals for now
+    
+    return (
+      <div className="flex space-x-2 justify-end">
+        {canEdit && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEditOperation(operation);
+            }}
+            className="h-8 w-8 p-0 text-blue-600 hover:text-blue-800 hover:bg-blue-100"
+          >
+            <Pencil className="h-4 w-4" />
+            <span className="sr-only">Edit</span>
+          </Button>
+        )}
+        {canDelete && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDeleteOperation(operation);
+            }}
+            className="h-8 w-8 p-0 text-red-600 hover:text-red-800 hover:bg-red-100"
+          >
+            <Trash2 className="h-4 w-4" />
+            <span className="sr-only">Delete</span>
+          </Button>
+        )}
+      </div>
+    );
+  };
+
+  if (filteredOperations.length === 0) {
+    return <EmptyOperations />;
+  }
+
   return (
-    <Tabs defaultValue="all" className="w-full">
-      <TabsList className="mb-4 flex flex-wrap gap-2">
-        <TabsTrigger value="all" className="flex items-center gap-2">
-          Toutes les opérations
-        </TabsTrigger>
-        <TabsTrigger value="deposits" className="flex items-center gap-2">
-          <ArrowUpCircle className="h-4 w-4" />
-          Versements
-        </TabsTrigger>
-        <TabsTrigger value="withdrawals" className="flex items-center gap-2">
-          <ArrowDownCircle className="h-4 w-4" />
-          Retraits
-        </TabsTrigger>
-        <TabsTrigger value="transfers" className="flex items-center gap-2">
-          <RefreshCcw className="h-4 w-4" />
-          Virements
-        </TabsTrigger>
-      </TabsList>
+    <>
+      <Tabs defaultValue="all">
+        <TabsList className="mb-6">
+          <TabsTrigger value="all">Tous</TabsTrigger>
+          <TabsTrigger value="deposits">Versements</TabsTrigger>
+          <TabsTrigger value="withdrawals">Retraits</TabsTrigger>
+          <TabsTrigger value="transfers">Virements</TabsTrigger>
+        </TabsList>
+        <TabsContent value="all">
+          <AllOperationsTab 
+            operations={filteredOperations} 
+            currency={currency} 
+            renderActions={renderActionButtons} 
+          />
+        </TabsContent>
+        <TabsContent value="deposits">
+          <DepositOperationsTab 
+            operations={filteredOperations} 
+            currency={currency} 
+            renderActions={renderActionButtons} 
+          />
+        </TabsContent>
+        <TabsContent value="withdrawals">
+          <WithdrawalOperationsTab 
+            operations={filteredOperations} 
+            currency={currency} 
+            renderActions={renderActionButtons} 
+          />
+        </TabsContent>
+        <TabsContent value="transfers">
+          <TransferOperationsTab 
+            operations={filteredOperations} 
+            currency={currency} 
+            renderActions={renderActionButtons} 
+          />
+        </TabsContent>
+      </Tabs>
 
-      <TabsContent value="all">
-        <AllOperationsTab operations={filteredOperations} currency={currency} />
-      </TabsContent>
+      <OperationActionsDialog
+        operation={selectedOperation}
+        isOpen={isEditDialogOpen}
+        onClose={handleCloseDialog}
+        clientId={clientId}
+        refetchClient={refetchClient}
+        mode="edit"
+      />
 
-      <TabsContent value="deposits">
-        <DepositOperationsTab operations={filteredOperations} currency={currency} />
-      </TabsContent>
-
-      <TabsContent value="withdrawals">
-        <WithdrawalOperationsTab operations={filteredOperations} currency={currency} />
-      </TabsContent>
-
-      <TabsContent value="transfers">
-        <TransferOperationsTab operations={filteredOperations} currency={currency} />
-      </TabsContent>
-    </Tabs>
+      <OperationActionsDialog
+        operation={selectedOperation}
+        isOpen={isDeleteDialogOpen}
+        onClose={handleCloseDialog}
+        clientId={clientId}
+        refetchClient={refetchClient}
+        mode="delete"
+      />
+    </>
   );
 };

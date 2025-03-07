@@ -88,6 +88,45 @@ export function useClientWithdrawal(clientId?: number, refetchClient?: () => voi
     }
   };
   
+  const deleteWithdrawal = async (withdrawalId: number | string) => {
+    setIsProcessing(true);
+    try {
+      // Convert ID to number if it's a string
+      const numericId = typeof withdrawalId === 'string' ? parseInt(withdrawalId, 10) : withdrawalId;
+      
+      // Delete withdrawal
+      const { error } = await supabase.from('withdrawals').delete().eq('id', numericId);
+      
+      if (error) {
+        console.error("Error deleting withdrawal:", error);
+        toast.error("Error deleting withdrawal", {
+          description: error.message
+        });
+        return false;
+      }
+      
+      toast.success("Withdrawal deleted", {
+        description: "The withdrawal has been successfully deleted"
+      });
+      
+      // Invalidate cached queries to update operation lists
+      invalidateQueries(clientId);
+      
+      // Call update function if available
+      if (refetchClient) {
+        refetchClient();
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("Error during withdrawal deletion:", error);
+      toast.error("Error deleting withdrawal");
+      return false;
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+  
   const invalidateQueries = (id?: number) => {
     queryClient.invalidateQueries({ queryKey: ['operations'] });
     queryClient.invalidateQueries({ queryKey: ['clients'] });
@@ -100,6 +139,7 @@ export function useClientWithdrawal(clientId?: number, refetchClient?: () => voi
   
   return {
     isProcessing,
-    handleWithdrawal
+    handleWithdrawal,
+    deleteWithdrawal
   };
 }

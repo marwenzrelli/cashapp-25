@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 import { useClientProfile } from "@/features/clients/hooks/useClientProfile";
@@ -122,6 +123,8 @@ const ClientProfile = () => {
           setIsCustomRange={setIsCustomRange}
           filteredOperations={filteredOperations}
           refreshOperations={refreshClientOperations}
+          clientId={clientId ?? undefined}
+          refetchClient={refetchClient}
         />
 
         <OperationsDetailCards

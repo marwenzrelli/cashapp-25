@@ -19,6 +19,8 @@ interface ClientOperationsHistoryProps {
   setIsCustomRange: (isCustom: boolean) => void;
   filteredOperations: Operation[];
   refreshOperations?: () => void;
+  clientId?: number;
+  refetchClient?: () => void;
 }
 
 export const ClientOperationsHistory = ({
@@ -33,6 +35,8 @@ export const ClientOperationsHistory = ({
   setIsCustomRange,
   filteredOperations,
   refreshOperations,
+  clientId,
+  refetchClient,
 }: ClientOperationsHistoryProps) => {
   return (
     <Card>
@@ -65,6 +69,8 @@ export const ClientOperationsHistory = ({
         <ClientOperationsHistoryTabs 
           filteredOperations={filteredOperations} 
           currency="TND" 
+          clientId={clientId}
+          refetchClient={refetchClient}
         />
       </CardContent>
     </Card>
