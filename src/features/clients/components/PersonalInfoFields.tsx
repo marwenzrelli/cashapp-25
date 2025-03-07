@@ -59,7 +59,7 @@ export const PersonalInfoFields = ({
         {showBalance && <div className="flex items-center gap-3">
             <Wallet className="h-5 w-5 text-primary" />
             <div>
-              <p className="text-sm text-muted-foreground">Solde</p>
+              <p className="text-muted-foreground text-left text-base font-normal">Solde</p>
               <p className={cn("font-medium", effectiveBalance >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400")}>
                 {formatAmount(effectiveBalance)}
               </p>
