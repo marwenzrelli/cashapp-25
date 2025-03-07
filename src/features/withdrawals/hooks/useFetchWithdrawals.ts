@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Withdrawal } from "../types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -11,8 +11,9 @@ export const useFetchWithdrawals = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retries, setRetries] = useState(0);
+  const [lastError, setLastError] = useState<Error | null>(null);
 
-  const fetchWithdrawals = async () => {
+  const fetchWithdrawals = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -22,7 +23,7 @@ export const useFetchWithdrawals = () => {
       
       if (sessionError) {
         console.error("Erreur de session:", sessionError);
-        setError(handleSupabaseError(sessionError));
+        setError("Erreur d'authentification. Veuillez vous reconnecter.");
         setLoading(false);
         return;
       }
@@ -32,7 +33,8 @@ export const useFetchWithdrawals = () => {
       if (!session) {
         console.warn("No active session found when fetching withdrawals");
         setLoading(false);
-        setError("Authentication required");
+        setError("Authentication requise");
+        setWithdrawals([]);
         return;
       }
       
@@ -73,13 +75,16 @@ export const useFetchWithdrawals = () => {
       });
 
       setWithdrawals(transformedWithdrawals);
+      setLastError(null);
       // Reset retries on success
       setRetries(0);
     } catch (error) {
+      const err = error as Error;
+      setLastError(err);
       console.error("Erreur inattendue lors de la récupération des retraits:", error);
       
       // Handle network errors specifically
-      if (error instanceof Error && error.message.includes("Failed to fetch")) {
+      if (err.message.includes("Failed to fetch") || err.message.includes("NetworkError")) {
         setError("Problème de connexion au serveur. Vérifiez votre connexion internet.");
         
         // Only show toast for first few retries to avoid spamming
@@ -107,13 +112,14 @@ export const useFetchWithdrawals = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [retries]);
 
   return {
     withdrawals,
     isLoading: loading,
     error,
     fetchWithdrawals,
-    retries
+    retries,
+    lastError
   };
 };

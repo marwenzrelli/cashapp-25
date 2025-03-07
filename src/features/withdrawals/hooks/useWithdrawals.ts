@@ -9,13 +9,15 @@ export const useWithdrawals = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [authChecking, setAuthChecking] = useState(true);
   const [networkStatus, setNetworkStatus] = useState<'online' | 'offline' | 'reconnecting'>('online');
+  const [authRetries, setAuthRetries] = useState(0);
   
   const { 
     withdrawals, 
     isLoading: fetchLoading, 
     error, 
     fetchWithdrawals,
-    retries 
+    retries,
+    lastError 
   } = useFetchWithdrawals();
 
   const {
@@ -36,37 +38,45 @@ export const useWithdrawals = () => {
       if (sessionError) {
         console.error("Error checking auth session:", sessionError);
         setIsAuthenticated(false);
+        setAuthRetries(prev => prev + 1);
         return false;
       }
       
       if (session) {
         console.log("Active session found for user:", session.user.id);
         setIsAuthenticated(true);
+        setAuthRetries(0);
         return true;
       } else {
         console.warn("No active session found in useWithdrawals");
         setIsAuthenticated(false);
+        setAuthRetries(prev => prev + 1);
         return false;
       }
     } catch (err) {
       console.error("Unexpected error checking auth:", err);
       setIsAuthenticated(false);
+      setAuthRetries(prev => prev + 1);
       return false;
     } finally {
       setAuthChecking(false);
     }
   }, []);
 
-  // Update network status based on retry count
+  // Update network status based on retry count and window.navigator.onLine
   useEffect(() => {
-    if (retries > 0) {
-      setNetworkStatus('reconnecting');
-    } else if (navigator.onLine) {
-      setNetworkStatus('online');
-    } else {
-      setNetworkStatus('offline');
-    }
-  }, [retries]);
+    const updateNetworkStatus = () => {
+      if (!navigator.onLine) {
+        setNetworkStatus('offline');
+      } else if (retries > 0 || (lastError && lastError.message.includes("Failed to fetch"))) {
+        setNetworkStatus('reconnecting');
+      } else {
+        setNetworkStatus('online');
+      }
+    };
+
+    updateNetworkStatus();
+  }, [retries, lastError]);
 
   // Listen for online/offline events
   useEffect(() => {
@@ -111,7 +121,9 @@ export const useWithdrawals = () => {
   }, [fetchWithdrawals, checkAuth]);
 
   useEffect(() => {
-    fetchData();
+    if (authRetries < 3) {
+      fetchData();
+    }
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -121,13 +133,14 @@ export const useWithdrawals = () => {
         fetchData();
       } else if (event === 'SIGNED_OUT') {
         setIsAuthenticated(false);
+        setWithdrawals([]);
       }
     });
     
     return () => {
       subscription.unsubscribe();
     };
-  }, [fetchData]);
+  }, [fetchData, authRetries]);
 
   return {
     withdrawals,
@@ -142,6 +155,7 @@ export const useWithdrawals = () => {
     withdrawalToDelete,
     showDeleteDialog,
     setShowDeleteDialog,
-    networkStatus
+    networkStatus,
+    retrying: retries > 0 || authRetries > 0
   };
 };

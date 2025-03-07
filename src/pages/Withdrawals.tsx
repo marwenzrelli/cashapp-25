@@ -5,14 +5,17 @@ import { useWithdrawals } from "@/features/withdrawals/hooks/useWithdrawals";
 import { useClientSubscription } from "@/features/withdrawals/components/useClientSubscription";
 import { WithdrawalsContent } from "@/features/withdrawals/components/WithdrawalsContent";
 import { containsPartialText } from "@/features/operations/utils/display-helpers";
-import { toast } from "sonner";
 import { GeneralErrorState } from "@/features/admin/components/administration/GeneralErrorState";
 import { NoUserProfileState } from "@/features/admin/components/administration/NoUserProfileState";
 import { LoadingState } from "@/features/admin/components/administration/LoadingState";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Wifi, WifiOff } from "lucide-react";
+import { Wifi, WifiOff, AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useAuthenticationCheck } from "@/features/admin/hooks/useAuthenticationCheck";
 
 const Withdrawals = () => {
+  useAuthenticationCheck(); // Add this to ensure we're authenticated
+
   const { 
     withdrawals, 
     isLoading,
@@ -25,7 +28,8 @@ const Withdrawals = () => {
     isAuthenticated,
     authChecking,
     checkAuth,
-    networkStatus
+    networkStatus,
+    retrying
   } = useWithdrawals();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -42,6 +46,11 @@ const Withdrawals = () => {
   }, [isAuthenticated, fetchClients]);
 
   useClientSubscription({ fetchClients });
+
+  useEffect(() => {
+    // Reset current page when search term changes
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   const handleAuthRetry = async () => {
     setRetryingAuth(true);
@@ -93,8 +102,8 @@ const Withdrawals = () => {
   );
 
   // If still checking auth status, show loading state
-  if (authChecking) {
-    return <LoadingState message="Vérification de l'authentification..." />;
+  if (authChecking && !isAuthenticated) {
+    return <LoadingState message="Vérification de l'authentification..." variant="minimal" />;
   }
 
   // If not authenticated
@@ -110,7 +119,7 @@ const Withdrawals = () => {
   // Show network status alert
   if (networkStatus === 'offline') {
     return (
-      <div className="space-y-8">
+      <div className="space-y-8 animate-in fade-in duration-300">
         <Alert variant="destructive" className="mb-6">
           <WifiOff className="h-5 w-5 mr-2" />
           <AlertTitle>Connexion Internet perdue</AlertTitle>
@@ -129,7 +138,7 @@ const Withdrawals = () => {
 
   if (networkStatus === 'reconnecting') {
     return (
-      <div className="space-y-8">
+      <div className="space-y-8 animate-in fade-in duration-300">
         <Alert className="mb-6 border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20">
           <Wifi className="h-5 w-5 mr-2 text-yellow-600" />
           <AlertTitle>Tentative de reconnexion...</AlertTitle>
@@ -137,7 +146,7 @@ const Withdrawals = () => {
             Nous essayons de rétablir la connexion avec le serveur.
           </AlertDescription>
         </Alert>
-        <LoadingState message="Tentative de reconnexion en cours..." />
+        <LoadingState message="Tentative de reconnexion en cours..." retrying={true} />
       </div>
     );
   }
@@ -145,17 +154,52 @@ const Withdrawals = () => {
   // If there's an error fetching data
   if (error) {
     return (
-      <GeneralErrorState 
-        errorMessage={error}
-        isRetrying={isLoading} 
-        onRetry={fetchWithdrawals}
-      />
+      <div className="space-y-4 animate-in fade-in duration-300">
+        <Alert className="mb-4 border-orange-500 bg-orange-50 dark:bg-orange-950/20">
+          <AlertTriangle className="h-5 w-5 mr-2 text-orange-600" />
+          <AlertTitle>Problème de chargement</AlertTitle>
+          <AlertDescription>
+            {error}
+          </AlertDescription>
+        </Alert>
+        
+        <div className="flex justify-center">
+          <Button 
+            onClick={fetchWithdrawals} 
+            variant="default"
+            disabled={isLoading || retrying}
+          >
+            {isLoading || retrying ? 'Chargement...' : 'Réessayer'}
+          </Button>
+        </div>
+        
+        {!isLoading && withdrawals.length > 0 && (
+          <WithdrawalsContent
+            withdrawals={filteredWithdrawals}
+            paginatedWithdrawals={paginatedWithdrawals}
+            clients={clients}
+            fetchWithdrawals={fetchWithdrawals}
+            fetchClients={fetchClients}
+            refreshClientBalance={handleRefreshClientBalance}
+            deleteWithdrawal={deleteWithdrawal}
+            showDeleteDialog={showDeleteDialog}
+            setShowDeleteDialog={setShowDeleteDialog}
+            confirmDeleteWithdrawal={confirmDeleteWithdrawal}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            itemsPerPage={itemsPerPage}
+            setItemsPerPage={setItemsPerPage}
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+          />
+        )}
+      </div>
     );
   }
 
   // Show loading state while fetching data
   if (isLoading && !error && withdrawals.length === 0) {
-    return <LoadingState message="Chargement des retraits..." />;
+    return <LoadingState message="Chargement des retraits..." retrying={retrying} />;
   }
 
   return (
