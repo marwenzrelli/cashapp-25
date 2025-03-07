@@ -64,10 +64,13 @@ export const useDashboardData = () => {
 
       if (clientsDataError) throw clientsDataError;
 
-      // Calculate the total balance by summing client balances (only for active clients)
+      // CORRECTION: Calculer précisément la somme des soldes en convertissant en nombre
       const total_balance = clientsData
         ?.filter(client => client.status === 'active')
-        ?.reduce((sum, client) => sum + Number(client.solde || 0), 0) || 0;
+        ?.reduce((sum, client) => {
+          const clientBalance = parseFloat(client.solde?.toString() || '0');
+          return sum + clientBalance;
+        }, 0) || 0;
 
       // Fetch transfers
       const { data: transfers, error: transfersError } = await supabase
@@ -77,11 +80,11 @@ export const useDashboardData = () => {
 
       if (transfersError) throw transfersError;
 
-      // Calculate statistics
-      const total_deposits = deposits?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
-      const total_withdrawals = withdrawals?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
-      const sent_transfers = transfers?.reduce((sum, t) => sum + Number(t.amount), 0) || 0;
-      const received_transfers = transfers?.reduce((sum, t) => sum + Number(t.amount), 0) || 0;
+      // Calculate statistics with enhanced numeric conversion
+      const total_deposits = deposits?.reduce((sum, d) => sum + parseFloat(d.amount.toString()), 0) || 0;
+      const total_withdrawals = withdrawals?.reduce((sum, w) => sum + parseFloat(w.amount.toString()), 0) || 0;
+      const sent_transfers = transfers?.reduce((sum, t) => sum + parseFloat(t.amount.toString()), 0) || 0;
+      const received_transfers = transfers?.reduce((sum, t) => sum + parseFloat(t.amount.toString()), 0) || 0;
       const transfer_count = transfers?.length || 0;
 
       // Log calculation for debugging

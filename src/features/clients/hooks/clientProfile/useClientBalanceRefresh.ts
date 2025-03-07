@@ -44,9 +44,21 @@ export const useClientBalanceRefresh = (
         return;
       }
       
-      // Calculate balance manually with detailed logging
-      const totalDeposits = deposits?.reduce((acc, dep) => acc + Number(dep.amount), 0) || 0;
-      const totalWithdrawals = withdrawals?.reduce((acc, wd) => acc + Number(wd.amount), 0) || 0;
+      // CORRECTION: Calculer le solde avec une meilleure conversion numérique
+      const totalDeposits = deposits?.reduce((acc, dep) => {
+        const amount = typeof dep.amount === 'number' 
+          ? dep.amount 
+          : parseFloat(dep.amount.toString());
+        return acc + amount;
+      }, 0) || 0;
+      
+      const totalWithdrawals = withdrawals?.reduce((acc, wd) => {
+        const amount = typeof wd.amount === 'number' 
+          ? wd.amount 
+          : parseFloat(wd.amount.toString());
+        return acc + amount;
+      }, 0) || 0;
+      
       const balance = totalDeposits - totalWithdrawals;
       
       console.log(`Balance calculated for ${clientFullName}: 

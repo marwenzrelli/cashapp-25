@@ -62,9 +62,23 @@ export const recalculateAllClientBalances = async (): Promise<boolean> => {
           return;
         }
         
-        // Calculer le solde
-        const totalDeposits = deposits?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
-        const totalWithdrawals = withdrawals?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
+        // CORRECTION: Calculer le solde avec une meilleure conversion numérique
+        const totalDeposits = deposits?.reduce((sum, d) => {
+          // Assure que le montant est bien traité comme un nombre
+          const amount = typeof d.amount === 'number' 
+            ? d.amount 
+            : parseFloat(d.amount.toString());
+          return sum + amount;
+        }, 0) || 0;
+        
+        const totalWithdrawals = withdrawals?.reduce((sum, w) => {
+          // Assure que le montant est bien traité comme un nombre
+          const amount = typeof w.amount === 'number' 
+            ? w.amount 
+            : parseFloat(w.amount.toString());
+          return sum + amount;
+        }, 0) || 0;
+        
         const balance = totalDeposits - totalWithdrawals;
         
         // Log le calcul pour debugging

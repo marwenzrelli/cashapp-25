@@ -159,7 +159,8 @@ export function useClientOperations(client: Client, clientId?: number, refetchCl
       const { data: deposits, error: depositsError } = await supabase
         .from('deposits')
         .select('amount')
-        .eq('client_name', clientFullName);
+        .eq('client_name', clientFullName)
+        .eq('status', 'completed');
       
       if (depositsError) {
         console.error("Error retrieving deposits:", depositsError);
@@ -170,16 +171,17 @@ export function useClientOperations(client: Client, clientId?: number, refetchCl
       const { data: withdrawals, error: withdrawalsError } = await supabase
         .from('withdrawals')
         .select('amount')
-        .eq('client_name', clientFullName);
+        .eq('client_name', clientFullName)
+        .eq('status', 'completed');
       
       if (withdrawalsError) {
         console.error("Error retrieving withdrawals:", withdrawalsError);
         return false;
       }
       
-      // Calculate balance manually
-      const totalDeposits = deposits?.reduce((acc, dep) => acc + Number(dep.amount), 0) || 0;
-      const totalWithdrawals = withdrawals?.reduce((acc, wd) => acc + Number(wd.amount), 0) || 0;
+      // Calculate balance manually - FIXED: using proper number conversion
+      const totalDeposits = deposits?.reduce((acc, dep) => acc + parseFloat(dep.amount.toString()), 0) || 0;
+      const totalWithdrawals = withdrawals?.reduce((acc, wd) => acc + parseFloat(wd.amount.toString()), 0) || 0;
       const balance = totalDeposits - totalWithdrawals;
       
       console.log(`Balance calculated for ${clientFullName}: 
@@ -211,6 +213,7 @@ export function useClientOperations(client: Client, clientId?: number, refetchCl
   const invalidateQueries = () => {
     queryClient.invalidateQueries({ queryKey: ['operations'] });
     queryClient.invalidateQueries({ queryKey: ['clients'] });
+    queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     if (clientId) {
       queryClient.invalidateQueries({ queryKey: ['client', clientId] });
       queryClient.invalidateQueries({ queryKey: ['clientOperations', clientId] });
