@@ -76,13 +76,13 @@ export const RecentActivityCard = ({ activities, currency }: RecentActivityProps
                     toClient: activity.toClient,
                     description: activity.description || ''
                   }}
-                  formatAmount={(amount) => `${amount.toLocaleString()}`}
                   currency={currency}
                   colorClass={
                     activity.type === 'deposit' ? "text-green-600 dark:text-green-400" :
                     activity.type === 'withdrawal' ? "text-red-600 dark:text-red-400" :
                     "text-blue-600 dark:text-blue-400"
                   }
+                  formatAmount={(amount) => `${amount.toLocaleString()}`}
                 />
               </div>
             </div>

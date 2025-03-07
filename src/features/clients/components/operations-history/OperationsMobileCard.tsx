@@ -4,18 +4,36 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatOperationAmount, getOperationTypeIcon } from "./utils";
 import React from "react";
+import { ArrowDownCircle, ArrowUpCircle, RefreshCw } from "lucide-react";
 
 interface OperationsMobileCardProps {
   operation: Operation;
   currency: string;
   renderActions?: (operation: Operation) => React.ReactNode;
+  colorClass?: string;
+  formatAmount?: (amount: number) => string;
 }
 
 export const OperationsMobileCard = ({ 
   operation, 
   currency,
-  renderActions 
+  renderActions,
+  colorClass,
+  formatAmount
 }: OperationsMobileCardProps) => {
+  // Custom or default formatting based on props
+  const renderAmount = () => {
+    if (formatAmount) {
+      return (
+        <div className={colorClass || ""}>
+          {operation.type === "withdrawal" ? "-" : "+"}
+          {formatAmount(Math.abs(operation.amount))}
+        </div>
+      );
+    }
+    return formatOperationAmount(operation, currency);
+  };
+
   return (
     <Card>
       <CardContent className="p-4">
@@ -36,7 +54,7 @@ export const OperationsMobileCard = ({
             </div>
           </div>
           <div className="text-right">
-            <div>{formatOperationAmount(operation, currency)}</div>
+            {renderAmount()}
           </div>
         </div>
 

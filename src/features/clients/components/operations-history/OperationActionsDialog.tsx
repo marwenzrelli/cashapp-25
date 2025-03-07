@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -85,7 +84,11 @@ export function OperationActionsDialog({
     } else if (operation.type === "deposit") {
       success = await handleDeposit({
         ...operationData,
-        description: notes
+        description: notes,
+        id: 0,
+        status: "completed",
+        created_at: new Date().toISOString(),
+        created_by: null
       });
     }
     
