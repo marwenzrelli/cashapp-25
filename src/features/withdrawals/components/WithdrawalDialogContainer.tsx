@@ -54,8 +54,13 @@ export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps>
         await refreshClientBalance(clientIdNum.toString());
       }
       
+      console.log("Processing withdrawal with data:", data);
+      console.log("Is editing mode:", isEditing);
+      
       // Handle editing vs creating
       if (isEditing && selectedWithdrawal) {
+        console.log("Updating withdrawal with ID:", selectedWithdrawal.id);
+        
         // Convert ID to number if it's a string to fix the type error
         const withdrawalId = typeof selectedWithdrawal.id === 'string' 
           ? parseInt(selectedWithdrawal.id, 10) 
@@ -77,7 +82,11 @@ export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps>
           console.error("Error updating withdrawal:", error);
           throw error;
         }
+        
+        console.log("Withdrawal updated successfully");
       } else {
+        console.log("Creating new withdrawal");
+        
         // Create new withdrawal
         const { error } = await supabase
           .from('withdrawals')
@@ -92,6 +101,8 @@ export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps>
           console.error("Error creating withdrawal:", error);
           throw error;
         }
+        
+        console.log("New withdrawal created successfully");
       }
       
       await fetchWithdrawals();

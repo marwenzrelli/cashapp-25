@@ -62,6 +62,8 @@ export const WithdrawalFormDialog: React.FC<WithdrawalFormDialogProps> = ({
     }
     
     if (isEditing && selectedWithdrawal) {
+      console.log("Setting form for editing withdrawal:", selectedWithdrawal);
+      
       // Find client by name when editing
       const clientFullName = selectedWithdrawal.client_name;
       const client = clients.find(c => `${c.prenom} ${c.nom}` === clientFullName);
@@ -107,6 +109,13 @@ export const WithdrawalFormDialog: React.FC<WithdrawalFormDialogProps> = ({
       }
 
       const clientName = `${client.prenom} ${client.nom}`;
+      
+      console.log("Submitting withdrawal form with:", {
+        clientName,
+        amount: newWithdrawal.amount,
+        notes: newWithdrawal.notes,
+        date: newWithdrawal.date
+      });
       
       const success = await onCreateWithdrawal({
         client_name: clientName,
