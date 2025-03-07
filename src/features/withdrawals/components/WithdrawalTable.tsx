@@ -6,6 +6,7 @@ import { Withdrawal } from "../types";
 import { UserCircle, ArrowDownCircle, Pencil, Trash2 } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { Client } from "@/features/clients/types";
+import { formatDate } from "../hooks/utils/formatUtils";
 
 interface WithdrawalTableProps {
   withdrawals: Withdrawal[];
@@ -39,7 +40,7 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
               <tr className="text-left">
                 <th className="p-3">Client</th>
                 <th className="p-3 text-center">Montant</th>
-                <th className="p-3">Date</th>
+                <th className="p-3">Date d'opération</th>
                 <th className="p-3">Notes</th>
                 <th className="p-3 text-center">Actions</th>
               </tr>
@@ -47,6 +48,10 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
             <tbody>
               {withdrawals.map((withdrawal) => {
                 const client = findClientById(withdrawal.client_name);
+                // Format the operation_date using the formatDate utility
+                const formattedOperationDate = withdrawal.operation_date 
+                  ? formatDate(withdrawal.operation_date) 
+                  : "Date inconnue";
 
                 return (
                   <tr
@@ -76,7 +81,7 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
                       </div>
                     </td>
                     <td className="p-3 text-muted-foreground">
-                      {withdrawal.date}
+                      {formattedOperationDate}
                     </td>
                     <td className="p-3 text-muted-foreground">{withdrawal.notes}</td>
                     <td className="p-3 text-center">

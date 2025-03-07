@@ -62,13 +62,14 @@ export const useFetchWithdrawals = () => {
       // Transform the data to match our Withdrawal type
       const transformedWithdrawals: Withdrawal[] = data.map(withdrawal => {
         const createdAtIso = withdrawal.created_at;
-        const formattedDate = formatDate(createdAtIso);
+        const operationDateIso = withdrawal.operation_date;
         
         return {
           id: withdrawal.id.toString(), // Convert number to string for ID
           client_name: withdrawal.client_name,
           amount: withdrawal.amount,
-          date: formattedDate,
+          date: formatDate(createdAtIso), // Keep this for backward compatibility
+          operation_date: operationDateIso, // Add the operation_date
           notes: withdrawal.notes || "",
           status: withdrawal.status,
         };
