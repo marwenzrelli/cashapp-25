@@ -23,6 +23,7 @@ export const useFetchDeposits = (
         toast.error("Erreur lors du chargement des versements", {
           description: error.message
         });
+        setDeposits([]);
         return;
       }
 
