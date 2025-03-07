@@ -75,13 +75,15 @@ export const calculateDailyTransactions = (
   }, {} as Record<string, number>);
 
   // Calculate the total number of transactions and ensure we're working with numbers
-  const totalTransactions = Object.values(dailyTransactions).reduce(
+  const totalTransactions: number = Object.values(dailyTransactions).reduce(
     (sum: number, count: unknown) => sum + (typeof count === 'number' ? count : 0), 
     0
   );
   
   const daysCount: number = Math.max(Object.keys(dailyTransactions).length, 1);
-  const averageTransactionsPerDay: number = totalTransactions / daysCount;
+  
+  // Convert to number to ensure type safety
+  const averageTransactionsPerDay: number = Number(totalTransactions) / Number(daysCount);
     
   return { averageTransactionsPerDay };
 };
