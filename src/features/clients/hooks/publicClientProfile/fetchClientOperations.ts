@@ -13,53 +13,66 @@ export const fetchClientOperations = async (clientFullName: string): Promise<Cli
       return [];
     }
     
+    // Properly formatted client name might be different (space positions, capitalization)
+    // so we need to be flexible with our queries
+    const clientNameParts = clientFullName.trim().split(/\s+/);
+    console.log("Client name parts for search:", clientNameParts);
+    
     // Fetch deposits
     const { data: deposits, error: depositsError } = await supabase
       .from('deposits')
       .select('*')
-      .eq('client_name', clientFullName)
+      .ilike('client_name', `%${clientFullName}%`)
       .order('created_at', { ascending: false });
 
     if (depositsError) {
       console.error("Error fetching deposits:", depositsError);
       showErrorToast("Erreur de données", { message: "Erreur lors de la récupération des dépôts" });
     }
+    
+    console.log(`Found ${deposits?.length || 0} deposits for client:`, clientFullName);
 
     // Fetch withdrawals
     const { data: withdrawals, error: withdrawalsError } = await supabase
       .from('withdrawals')
       .select('*')
-      .eq('client_name', clientFullName)
+      .ilike('client_name', `%${clientFullName}%`)
       .order('created_at', { ascending: false });
 
     if (withdrawalsError) {
       console.error("Error fetching withdrawals:", withdrawalsError);
       showErrorToast("Erreur de données", { message: "Erreur lors de la récupération des retraits" });
     }
+    
+    console.log(`Found ${withdrawals?.length || 0} withdrawals for client:`, clientFullName);
 
     // Fetch transfers (as sender)
     const { data: transfersAsSender, error: senderError } = await supabase
       .from('transfers')
       .select('*')
-      .eq('from_client', clientFullName)
+      .ilike('from_client', `%${clientFullName}%`)
       .order('created_at', { ascending: false });
 
     if (senderError) {
       console.error("Error fetching transfers as sender:", senderError);
       showErrorToast("Erreur de données", { message: "Erreur lors de la récupération des virements envoyés" });
     }
+    
+    console.log(`Found ${transfersAsSender?.length || 0} transfers as sender for client:`, clientFullName);
 
     // Fetch transfers (as receiver)
     const { data: transfersAsReceiver, error: receiverError } = await supabase
       .from('transfers')
       .select('*')
-      .eq('to_client', clientFullName)
+      .ilike('to_client', `%${clientFullName}%`)
       .order('created_at', { ascending: false });
 
     if (receiverError) {
       console.error("Error fetching transfers as receiver:", receiverError);
       showErrorToast("Erreur de données", { message: "Erreur lors de la récupération des virements reçus" });
     }
+    
+    console.log(`Found ${transfersAsReceiver?.length || 0} transfers as receiver for client:`, clientFullName);
 
     // Format and combine all operations
     const allOperations: ClientOperation[] = [

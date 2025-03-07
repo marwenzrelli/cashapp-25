@@ -1,10 +1,11 @@
 
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useOperations } from "@/features/operations/hooks/useOperations";
 import { useClientData } from "./clientProfile/useClientData";
 import { useClientOperationsFilter } from "./clientProfile/useClientOperationsFilter";
 import { useClientProfileExport } from "./clientProfile/useClientProfileExport";
+import { checkClientOperations } from "./utils/checkClientOperations";
 
 export const useClientProfile = () => {
   const { id } = useParams();
@@ -46,6 +47,24 @@ export const useClientProfile = () => {
     clientOperations,
     qrCodeRef
   );
+  
+  // Check for operations if client loads but no operations are found
+  useEffect(() => {
+    const verifyClientOperations = async () => {
+      if (client && operations.length > 0 && clientOperations.length === 0) {
+        console.log("Client found but no operations matched. Running operation check...");
+        const clientFullName = `${client.prenom} ${client.nom}`.trim();
+        const opsCheck = await checkClientOperations(clientFullName, client.id);
+        
+        if (opsCheck.totalCount > 0) {
+          console.log(`Found ${opsCheck.totalCount} operations in database, but none matched in memory. 
+          This suggests a client name format mismatch.`);
+        }
+      }
+    };
+    
+    verifyClientOperations();
+  }, [client, operations, clientOperations]);
 
   return {
     client,

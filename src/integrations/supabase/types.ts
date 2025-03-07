@@ -343,7 +343,17 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      operation_statistics: {
+        Row: {
+          deposit_count: number | null
+          deposit_total: number | null
+          transfer_count: number | null
+          transfer_total: number | null
+          withdrawal_count: number | null
+          withdrawal_total: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never

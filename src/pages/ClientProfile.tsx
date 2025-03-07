@@ -46,6 +46,16 @@ const ClientProfile = () => {
     }
   }, [clientId, error]);
 
+  useEffect(() => {
+    if (client && clientOperations?.length === 0) {
+      console.log("Client loaded but no operations found. This might indicate a data fetching issue.");
+      
+      // Log the client name as it's used for operation matching
+      const clientFullName = client ? `${client.prenom} ${client.nom}` : null;
+      console.log(`Client full name used for operation filtering: "${clientFullName}"`);
+    }
+  }, [client, clientOperations]);
+
   console.log("ClientProfile - Full state:", { 
     client, 
     isLoading, 

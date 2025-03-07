@@ -14,7 +14,10 @@ interface AllOperationsTabProps {
 }
 
 export const AllOperationsTab = ({ operations, currency = "TND" }: AllOperationsTabProps) => {
-  if (operations.length === 0) {
+  console.log("AllOperationsTab rendering with operations:", operations?.length);
+  
+  if (!operations || operations.length === 0) {
+    console.log("No operations to display");
     return <EmptyOperations />;
   }
 
@@ -36,6 +39,10 @@ export const AllOperationsTab = ({ operations, currency = "TND" }: AllOperations
             {operations.map((operation) => {
               // Use operation_date if available, otherwise fall back to date
               const displayDate = operation.operation_date || operation.date;
+              const formattedDate = typeof displayDate === 'string' 
+                ? format(new Date(displayDate), "dd/MM/yyyy HH:mm") 
+                : format(displayDate, "dd/MM/yyyy HH:mm");
+                
               return (
                 <TableRow key={operation.id}>
                   <TableCell>
@@ -46,7 +53,7 @@ export const AllOperationsTab = ({ operations, currency = "TND" }: AllOperations
                       <span>{getTypeLabel(operation.type)}</span>
                     </div>
                   </TableCell>
-                  <TableCell>{format(new Date(displayDate), "dd/MM/yyyy HH:mm")}</TableCell>
+                  <TableCell>{formattedDate}</TableCell>
                   <TableCell className="max-w-[200px] truncate">{operation.description}</TableCell>
                   <TableCell className={`text-center font-medium ${getAmountColor(operation.type)}`}>
                     {operation.type === "withdrawal" ? "-" : ""}{Math.round(operation.amount)} {currency}

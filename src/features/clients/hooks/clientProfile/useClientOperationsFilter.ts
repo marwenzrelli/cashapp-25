@@ -20,19 +20,45 @@ export const useClientOperationsFilter = (
 
   // Get operations for this client
   const clientOperations = useMemo(() => {
-    if (!client || !operations.length) return [];
+    if (!client || !operations.length) {
+      console.log("No client or operations data available", { client, operationsCount: operations.length });
+      return [];
+    }
     
-    const clientFullName = `${client.prenom} ${client.nom}`;
+    const clientFullName = `${client.prenom} ${client.nom}`.trim();
+    console.log(`Filtering operations for client: "${clientFullName}"`, { 
+      totalOperations: operations.length,
+      clientId: client.id
+    });
     
-    return operations.filter(operation => {
+    // More flexible matching to handle variations in name format
+    const matchesClient = (name: string | undefined) => {
+      if (!name) return false;
+      
+      // Check for exact match
+      if (name.toLowerCase() === clientFullName.toLowerCase()) return true;
+      
+      // Check if client name is part of the operation name (for partial matches)
+      if (name.toLowerCase().includes(clientFullName.toLowerCase())) return true;
+      
+      // Check if operation name is part of client name (for partial matches)
+      if (clientFullName.toLowerCase().includes(name.toLowerCase())) return true;
+      
+      return false;
+    };
+    
+    const clientOps = operations.filter(operation => {
       // Check if this operation is related to the current client
-      if (operation.fromClient === clientFullName) {
+      if (matchesClient(operation.fromClient)) {
         return true;
-      } else if (operation.type === 'transfer' && operation.toClient === clientFullName) {
+      } else if (operation.type === 'transfer' && matchesClient(operation.toClient)) {
         return true;
       }
       return false;
     });
+    
+    console.log(`Found ${clientOps.length} operations for client "${clientFullName}"`);
+    return clientOps;
   }, [client, operations]);
 
   // Filter operations based on user selections
