@@ -9,14 +9,19 @@ interface PersonalInfoFieldsProps {
   formatAmount?: (amount: number) => string;
   showBalanceOnMobile?: boolean;
   showBalance?: boolean;
+  realTimeBalance?: number | null;
 }
 
 export const PersonalInfoFields = ({ 
   client, 
   formatAmount = (amount) => `${amount.toLocaleString()} €`,
   showBalanceOnMobile = false,
-  showBalance = true
+  showBalance = true,
+  realTimeBalance = null
 }: PersonalInfoFieldsProps) => {
+  // Use real-time balance if available, otherwise fall back to client.solde
+  const effectiveBalance = realTimeBalance !== null ? realTimeBalance : client.solde;
+
   return (
     <div className="space-y-6">
       <div className="space-y-4">
@@ -63,9 +68,9 @@ export const PersonalInfoFields = ({
               <p className="text-sm text-muted-foreground">Solde</p>
               <p className={cn(
                 "font-medium",
-                client.solde >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
+                effectiveBalance >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
               )}>
-                {formatAmount(client.solde)}
+                {formatAmount(effectiveBalance)}
               </p>
             </div>
           </div>

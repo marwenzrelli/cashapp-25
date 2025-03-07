@@ -1,11 +1,12 @@
 
-import { useRef, useCallback, useEffect } from "react";
+import { useRef, useCallback, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useOperations } from "@/features/operations/hooks/useOperations";
 import { useClientData } from "./clientProfile/useClientData";
 import { useClientOperationsFilter } from "./clientProfile/useClientOperationsFilter";
 import { useClientProfileExport } from "./clientProfile/useClientProfileExport";
 import { checkClientOperations } from "./utils/checkClientOperations";
+import { supabase } from "@/integrations/supabase/client";
 
 export const useClientProfile = () => {
   const { id } = useParams();
@@ -13,12 +14,42 @@ export const useClientProfile = () => {
   const { operations } = useOperations();
   const qrCodeRef = useRef<HTMLDivElement>(null);
   const clientId = id ? Number(id) : null;
+  const [realTimeBalance, setRealTimeBalance] = useState<number | null>(null);
   
   // Debug to ensure client ID is parsed correctly
   console.log("useClientProfile - Raw ID from params:", id, "Parsed clientId:", clientId);
   
   // Get client data
   const { client, isLoading, error, fetchClient } = useClientData(clientId);
+  
+  // Set up real-time subscription for client balance
+  useEffect(() => {
+    if (!clientId) return;
+    
+    console.log("Setting up real-time balance subscription for client ID:", clientId);
+    
+    const channel = supabase
+      .channel(`client-balance-${clientId}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'clients',
+        filter: `id=eq.${clientId}`
+      }, (payload) => {
+        if (payload.new && typeof payload.new === 'object' && 'solde' in payload.new) {
+          console.log("Real-time balance update received:", payload.new.solde);
+          setRealTimeBalance(payload.new.solde);
+        }
+      })
+      .subscribe((status) => {
+        console.log(`Real-time subscription status for client ${clientId}:`, status);
+      });
+      
+    return () => {
+      console.log("Cleaning up real-time balance subscription");
+      supabase.removeChannel(channel);
+    };
+  }, [clientId]);
   
   // Function to manually refetch client data
   const refetchClient = useCallback(() => {
@@ -69,6 +100,9 @@ export const useClientProfile = () => {
     verifyClientOperations();
   }, [client, operations, clientOperations]);
 
+  // Get the effective balance (real-time or from client object)
+  const effectiveBalance = realTimeBalance !== null ? realTimeBalance : client?.solde;
+
   return {
     client,
     clientId,
@@ -89,6 +123,7 @@ export const useClientProfile = () => {
     formatAmount,
     exportToExcel,
     exportToPDF,
-    refetchClient
+    refetchClient,
+    clientBalance: effectiveBalance
   };
 };

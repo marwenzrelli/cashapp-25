@@ -31,7 +31,8 @@ const ClientProfile = () => {
     formatAmount,
     exportToExcel,
     exportToPDF,
-    refetchClient
+    refetchClient,
+    clientBalance
   } = useClientProfile();
 
   // Add additional debug logging
@@ -64,7 +65,8 @@ const ClientProfile = () => {
     hasOperations: clientOperations?.length > 0,
     filteredOpsCount: filteredOperations?.length,
     clientName: client ? `${client.prenom} ${client.nom}` : null,
-    currentPath: window.location.pathname
+    currentPath: window.location.pathname,
+    currentBalance: clientBalance
   });
 
   if (isLoading) {
@@ -108,6 +110,7 @@ const ClientProfile = () => {
           qrCodeRef={qrCodeRef}
           formatAmount={formatAmount}
           refetchClient={refetchClient}
+          clientBalance={clientBalance}
         />
 
         <ClientOperationsHistory

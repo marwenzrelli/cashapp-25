@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Client } from "../types";
 import { ClientQRCode } from "./ClientQRCode";
-import { RefObject, useState, useEffect } from "react";
+import { RefObject, useState } from "react";
 import { PersonalInfoFields } from "./PersonalInfoFields";
 import { ClientIdBadge } from "./ClientIdBadge";
 import { ArrowDownToLine, ArrowUpToLine } from "lucide-react";
@@ -12,7 +12,6 @@ import { StandaloneWithdrawalForm } from "@/features/withdrawals/components/stan
 import { Deposit } from "@/features/deposits/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ExtendedClient } from "@/features/withdrawals/components/standalone/StandaloneWithdrawalForm";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface ClientPersonalInfoProps {
@@ -21,6 +20,7 @@ interface ClientPersonalInfoProps {
   qrCodeRef?: RefObject<HTMLDivElement>;
   formatAmount?: (amount: number) => string;
   refetchClient?: () => void;
+  clientBalance?: number | null;
 }
 
 export const ClientPersonalInfo = ({
@@ -28,14 +28,15 @@ export const ClientPersonalInfo = ({
   clientId,
   qrCodeRef,
   formatAmount = amount => `${amount.toLocaleString()} €`,
-  refetchClient
+  refetchClient,
+  clientBalance = null
 }: ClientPersonalInfoProps) => {
   const [depositDialogOpen, setDepositDialogOpen] = useState(false);
   const [withdrawalDialogOpen, setWithdrawalDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const queryClient = useQueryClient();
   
-  console.log("ClientPersonalInfo - clientId:", clientId, "client:", client?.id);
+  console.log("ClientPersonalInfo - clientId:", clientId, "client:", client?.id, "realTimeBalance:", clientBalance);
   
   const handleDeposit = async (deposit: Deposit) => {
     setIsProcessing(true);
@@ -172,7 +173,12 @@ export const ClientPersonalInfo = ({
       <CardContent>
         <div className="grid gap-6 md:grid-cols-2">
           <div>
-            <PersonalInfoFields client={client} formatAmount={formatAmount} showBalance={true} />
+            <PersonalInfoFields 
+              client={client} 
+              formatAmount={formatAmount} 
+              showBalance={true} 
+              realTimeBalance={clientBalance}
+            />
           </div>
           {client && client.id && <div className="flex justify-center md:justify-end" ref={qrCodeRef}>
               <ClientQRCode clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} clientName={`${client.prenom} ${client.nom}`} size={256} />
