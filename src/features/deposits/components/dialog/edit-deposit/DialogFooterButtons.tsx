@@ -22,7 +22,7 @@ export const DialogFooterButtons: React.FC<DialogFooterButtonsProps> = ({
       </Button>
       <Button
         onClick={onConfirm}
-        className="bg-blue-600 hover:bg-blue-700 text-white gap-2 px-6 py-2 rounded-full text-base"
+        className="bg-green-600 hover:bg-green-700 text-white gap-2 px-6 py-2 rounded-full text-base"
         disabled={isLoading}
       >
         <Pencil className="h-4 w-4" />

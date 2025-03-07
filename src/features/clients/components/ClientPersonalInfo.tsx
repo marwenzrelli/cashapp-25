@@ -12,6 +12,7 @@ import { StandaloneWithdrawalForm } from "@/features/withdrawals/components/stan
 import { Deposit } from "@/features/deposits/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { ExtendedClient } from "@/features/withdrawals/components/standalone/StandaloneWithdrawalForm";
 
 interface ClientPersonalInfoProps {
   client: Client;
@@ -129,7 +130,7 @@ export const ClientPersonalInfo = ({
           <div className="flex gap-2">
             <Button 
               onClick={() => setDepositDialogOpen(true)} 
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white"
               size="sm"
             >
               <ArrowDownToLine className="h-4 w-4" />
@@ -137,8 +138,7 @@ export const ClientPersonalInfo = ({
             </Button>
             <Button 
               onClick={() => setWithdrawalDialogOpen(true)} 
-              variant="outline" 
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white"
               size="sm"
             >
               <ArrowUpToLine className="h-4 w-4" />
@@ -176,7 +176,7 @@ export const ClientPersonalInfo = ({
           
           {client && (
             <StandaloneDepositForm 
-              clients={[{ ...client, dateCreation: client.date_creation || '' }]} 
+              clients={[{ ...client, dateCreation: client.date_creation || new Date().toISOString() }]} 
               onConfirm={handleDeposit}
               refreshClientBalance={refreshClientBalance}
             />
@@ -192,7 +192,7 @@ export const ClientPersonalInfo = ({
           
           {client && (
             <StandaloneWithdrawalForm 
-              clients={[{ ...client, dateCreation: client.date_creation || '' }]} 
+              clients={[{ ...client, dateCreation: client.date_creation || new Date().toISOString() }]} 
               onConfirm={handleWithdrawal}
               refreshClientBalance={refreshClientBalance}
             />

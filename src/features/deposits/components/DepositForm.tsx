@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
@@ -182,7 +181,11 @@ export const StandaloneDepositForm = ({
             </div>
           </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button 
+            type="submit" 
+            className="w-full bg-green-600 hover:bg-green-700 text-white" 
+            disabled={isLoading}
+          >
             {isLoading ? "En cours..." : "Enregistrer le versement"}
           </Button>
         </form>
