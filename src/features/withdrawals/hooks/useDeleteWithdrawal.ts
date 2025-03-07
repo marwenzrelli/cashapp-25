@@ -34,6 +34,11 @@ export const useDeleteWithdrawal = (fetchWithdrawals: () => Promise<void>) => {
       console.log("Session utilisateur:", session);
       console.log("User ID pour la suppression:", userId);
       
+      if (!userId) {
+        toast.error("Vous devez être connecté pour supprimer un retrait");
+        throw new Error("Utilisateur non authentifié");
+      }
+      
       // Récupérer les détails complets du retrait avant suppression
       const withdrawalId = typeof withdrawalToDelete.id === 'string' 
         ? parseInt(withdrawalToDelete.id, 10)
@@ -70,7 +75,7 @@ export const useDeleteWithdrawal = (fetchWithdrawals: () => Promise<void>) => {
         amount: Number(withdrawalData.amount),
         operation_date: withdrawalData.operation_date || withdrawalData.created_at,
         notes: withdrawalData.notes || null,
-        deleted_by: userId || null,
+        deleted_by: userId,
         status: withdrawalData.status
       };
 

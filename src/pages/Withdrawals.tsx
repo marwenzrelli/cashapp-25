@@ -5,6 +5,7 @@ import { useWithdrawals } from "@/features/withdrawals/hooks/useWithdrawals";
 import { useClientSubscription } from "@/features/withdrawals/components/useClientSubscription";
 import { WithdrawalsContent } from "@/features/withdrawals/components/WithdrawalsContent";
 import { containsPartialText } from "@/features/operations/utils/display-helpers";
+import { supabase } from "@/integrations/supabase/client";
 
 const Withdrawals = () => {
   const { 
@@ -36,8 +37,20 @@ const Withdrawals = () => {
 
   useEffect(() => {
     fetchClients();
-    fetchWithdrawals();
-  }, []);
+    // fetchWithdrawals is already called in the useWithdrawals hook
+    
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed in Withdrawals page:", event, session?.user?.id);
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        fetchClients();
+      }
+    });
+    
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [fetchClients]);
 
   useClientSubscription({ fetchClients });
 

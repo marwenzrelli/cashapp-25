@@ -15,6 +15,17 @@ export const useFetchWithdrawals = () => {
     setError(null);
 
     try {
+      // Check if the user is authenticated
+      const { data: sessionData } = await supabase.auth.getSession();
+      const session = sessionData.session;
+      
+      if (!session) {
+        console.warn("No active session found when fetching withdrawals");
+        // We continue anyway for now as this might be during login flow
+      } else {
+        console.log("Fetching withdrawals with authenticated session:", session.user.id);
+      }
+      
       const { data, error } = await supabase
         .from('withdrawals')
         .select('*')
