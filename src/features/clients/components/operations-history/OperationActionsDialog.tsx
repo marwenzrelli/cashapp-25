@@ -13,7 +13,7 @@ import { formatDate } from "@/features/withdrawals/hooks/utils/formatUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { EditDepositDialog } from "@/features/deposits/components/dialog/EditDepositDialog";
 import { Client } from "@/features/clients/types";
-import { Deposit } from "@/features/deposits/types";
+import { Deposit } from "@/components/deposits/types";
 import { EditFormData } from "@/components/deposits/types";
 import { formatISODateTime } from "@/features/deposits/hooks/utils/dateUtils";
 
@@ -87,7 +87,7 @@ export const OperationActionsDialog = ({
       const { data, error } = await supabase
         .from('deposits')
         .select('*')
-        .eq('id', operation.id)
+        .eq('id', parseInt(operation.id, 10)) // Parse string to number
         .single();
       
       if (error) {
@@ -96,7 +96,20 @@ export const OperationActionsDialog = ({
       }
       
       if (data) {
-        setSelectedDeposit(data as Deposit);
+        // Type conversion for deposit data
+        const depositData: Deposit = {
+          id: data.id,
+          amount: data.amount,
+          date: data.operation_date || data.created_at,
+          description: data.notes || '',
+          client_name: data.client_name,
+          status: data.status,
+          created_at: data.created_at,
+          created_by: data.created_by,
+          operation_date: data.operation_date
+        };
+        
+        setSelectedDeposit(depositData);
         
         // Mise à jour du formulaire avec les données complètes
         const formattedDateTime = formatISODateTime(data.operation_date || data.created_at);
@@ -209,7 +222,7 @@ export const OperationActionsDialog = ({
   
   // Confirmer les modifications du dépôt
   const handleConfirmDepositEdit = async () => {
-    if (!operation?.id || operation.type !== 'deposit') return;
+    if (!operation?.id || operation.type !== 'deposit') return false;
     
     setLoading(true);
     try {
@@ -229,7 +242,7 @@ export const OperationActionsDialog = ({
           operation_date: operationDate,
           last_modified_at: new Date().toISOString()
         })
-        .eq('id', operation.id);
+        .eq('id', parseInt(operation.id, 10)); // Parse string to number
       
       if (error) {
         console.error("Erreur lors de la mise à jour du dépôt:", error);
@@ -264,7 +277,7 @@ export const OperationActionsDialog = ({
       if (mode === 'delete') {
         // Handle delete logic based on operation type
         if (operation.type === 'withdrawal' && operation.id) {
-          const success = await deleteWithdrawal(operation.id);
+          const success = await deleteWithdrawal(parseInt(operation.id, 10));
           if (success) {
             toast.success("Opération supprimée", { description: "Le retrait a été supprimé avec succès" });
             onClose();
@@ -436,3 +449,4 @@ export const OperationActionsDialog = ({
     </Dialog>
   );
 };
+
