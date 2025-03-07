@@ -3,10 +3,11 @@ import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Withdrawal } from "../types";
-import { UserCircle, ArrowDownCircle, Pencil, Trash2 } from "lucide-react";
+import { UserCircle, ArrowDownCircle, Pencil, Trash2, ExternalLink } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { Client } from "@/features/clients/types";
 import { formatDate } from "../hooks/utils/formatUtils";
+import { useNavigate } from "react-router-dom";
 
 interface WithdrawalTableProps {
   withdrawals: Withdrawal[];
@@ -22,6 +23,13 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
   findClientById,
 }) => {
   const { currency } = useCurrency();
+  const navigate = useNavigate();
+
+  const handleClientClick = (client: (Client & { dateCreation: string }) | null) => {
+    if (client) {
+      navigate(`/clients/${client.id}`);
+    }
+  };
 
   return (
     <Card>
@@ -65,7 +73,13 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
                           <div className="absolute inset-0 animate-pulse rounded-full bg-primary/5" />
                         </div>
                         <div>
-                          <p className="font-medium">{withdrawal.client_name}</p>
+                          <p 
+                            className="font-medium flex items-center cursor-pointer hover:text-primary hover:underline transition-colors"
+                            onClick={() => handleClientClick(client)}
+                          >
+                            {withdrawal.client_name}
+                            <ExternalLink className="h-3.5 w-3.5 ml-1 opacity-50" />
+                          </p>
                           <p className="text-sm text-muted-foreground">
                             ID: {client ? client.id : "Non trouvé"}
                           </p>
