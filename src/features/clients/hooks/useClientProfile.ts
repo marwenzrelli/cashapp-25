@@ -12,7 +12,7 @@ import { useOperationsVerification } from "./clientProfile/useOperationsVerifica
 export const useClientProfile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { operations } = useOperations();
+  const { operations, refreshOperations } = useOperations();
   const qrCodeRef = useRef<HTMLDivElement>(null);
   const clientId = id ? Number(id) : null;
   
@@ -70,6 +70,18 @@ export const useClientProfile = () => {
   // Get effective balance (real-time or from client object)
   const effectiveBalance = realTimeBalance !== null ? realTimeBalance : client?.solde;
 
+  // Function to refresh operations data and update client data if needed
+  const refreshClientOperations = useCallback(async () => {
+    console.log("Refreshing operations for client:", client?.id);
+    await refreshOperations();
+    // Optionally refresh client info to update balance
+    if (clientId) {
+      setTimeout(() => {
+        refreshClientBalance();
+      }, 500);
+    }
+  }, [refreshOperations, client, clientId, refreshClientBalance]);
+
   return {
     client,
     clientId,
@@ -92,6 +104,7 @@ export const useClientProfile = () => {
     exportToPDF,
     refetchClient,
     refreshClientBalance,
+    refreshClientOperations,
     clientBalance: effectiveBalance
   };
 };

@@ -1,9 +1,11 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Operation } from "@/features/operations/types";
 import { OperationFilters } from "@/features/operations/components/OperationFilters";
 import { DateRange } from "react-day-picker";
 import { ClientOperationsHistoryTabs } from "./operations-history/ClientOperationsHistoryTabs";
+import { RefreshCw } from "lucide-react";
 
 interface ClientOperationsHistoryProps {
   operations: Operation[];
@@ -16,6 +18,7 @@ interface ClientOperationsHistoryProps {
   isCustomRange: boolean;
   setIsCustomRange: (isCustom: boolean) => void;
   filteredOperations: Operation[];
+  refreshOperations?: () => void;
 }
 
 export const ClientOperationsHistory = ({
@@ -29,11 +32,23 @@ export const ClientOperationsHistory = ({
   isCustomRange,
   setIsCustomRange,
   filteredOperations,
+  refreshOperations,
 }: ClientOperationsHistoryProps) => {
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Historique des opérations</CardTitle>
+        {refreshOperations && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={refreshOperations}
+            className="flex items-center gap-1"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Actualiser
+          </Button>
+        )}
       </CardHeader>
       <CardContent>
         <div className="mb-6">

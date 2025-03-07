@@ -4,6 +4,7 @@ import { Operation } from "../types";
 import { useOperationsState } from "./useOperationsState";
 import { useFetchOperations } from "./useFetchOperations";
 import { useDeleteOperation } from "./useDeleteOperation";
+import { toast } from "sonner";
 
 export const useOperations = () => {
   const {
@@ -36,10 +37,25 @@ export const useOperations = () => {
     await confirmDeleteOperationLogic(operationToDelete);
   };
 
+  // Function to refresh operations with UI feedback
+  const refreshOperations = async () => {
+    try {
+      setIsLoading(true);
+      await fetchAllOperations();
+      toast.success("Opérations actualisées");
+    } catch (error) {
+      console.error("Erreur lors de l'actualisation des opérations:", error);
+      toast.error("Erreur lors de l'actualisation des opérations");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     operations,
     isLoading,
     fetchOperations: fetchAllOperations,
+    refreshOperations,
     deleteOperation,
     showDeleteDialog,
     setShowDeleteDialog,

@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 import { useClientProfile } from "@/features/clients/hooks/useClientProfile";
@@ -33,10 +32,10 @@ const ClientProfile = () => {
     exportToPDF,
     refetchClient,
     refreshClientBalance,
+    refreshClientOperations,
     clientBalance
   } = useClientProfile();
 
-  // Ajouter des journaux de débogage supplémentaires
   useEffect(() => {
     console.log(`ClientProfile - Paramètres de la route: clientId=${clientId}, chemin=${window.location.pathname}`);
     
@@ -52,7 +51,6 @@ const ClientProfile = () => {
     if (client && clientOperations?.length === 0) {
       console.log("Client chargé mais aucune opération trouvée. Cela pourrait indiquer un problème de récupération de données.");
       
-      // Enregistrer le nom du client car il est utilisé pour la correspondance des opérations
       const clientFullName = client ? `${client.prenom} ${client.nom}` : null;
       console.log(`Nom complet du client utilisé pour le filtrage des opérations: "${clientFullName}"`);
     }
@@ -74,20 +72,17 @@ const ClientProfile = () => {
     return <PublicClientLoading onRetry={refetchClient} />;
   }
 
-  // Vérifier d'abord s'il y a une erreur explicite
   if (error) {
     console.log("Affichage de l'erreur:", error);
     return <PublicClientError error={error} onRetry={refetchClient} />;
   }
 
-  // Ensuite vérifier si le client existe
   if (!client) {
     console.log("Client non trouvé pour l'ID:", clientId);
     const errorMessage = `Le client avec l'identifiant ${clientId} n'existe pas ou a été supprimé.`;
     return <PublicClientError error={errorMessage} onRetry={refetchClient} />;
   }
 
-  // Débogage amélioré pour confirmer l'ID du client
   const actualClientId = typeof client.id === 'string' ? parseInt(client.id, 10) : client.id;
   console.log("Utilisation de l'ID client pour le code QR:", actualClientId);
 
@@ -107,7 +102,7 @@ const ClientProfile = () => {
 
         <ClientPersonalInfo 
           client={client} 
-          clientId={actualClientId}
+          clientId={typeof client?.id === 'string' ? parseInt(client.id, 10) : client?.id}
           qrCodeRef={qrCodeRef}
           formatAmount={formatAmount}
           refetchClient={refetchClient}
@@ -126,6 +121,7 @@ const ClientProfile = () => {
           isCustomRange={isCustomRange}
           setIsCustomRange={setIsCustomRange}
           filteredOperations={filteredOperations}
+          refreshOperations={refreshClientOperations}
         />
 
         <OperationsDetailCards
