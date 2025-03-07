@@ -7,7 +7,7 @@ import { WithdrawalOperationsTab } from "./WithdrawalOperationsTab";
 import { TransferOperationsTab } from "./TransferOperationsTab";
 import { EmptyOperations } from "./EmptyOperations";
 import { useState } from "react";
-import { OperationActionsDialog } from "./operation-dialog";
+import { OperationActionsDialog } from "./OperationActionsDialog";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from "lucide-react";
 
