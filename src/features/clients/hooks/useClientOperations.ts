@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -179,9 +178,23 @@ export function useClientOperations(client: Client, clientId?: number, refetchCl
         return false;
       }
       
-      // Calculate balance manually - FIXED: using proper number conversion
-      const totalDeposits = deposits?.reduce((acc, dep) => acc + parseFloat(dep.amount.toString()), 0) || 0;
-      const totalWithdrawals = withdrawals?.reduce((acc, wd) => acc + parseFloat(wd.amount.toString()), 0) || 0;
+      // Fixed: Calculate balance with proper type handling
+      const totalDeposits = deposits?.reduce((acc, dep) => {
+        // Handle any type of amount value safely
+        const amount = typeof dep.amount === 'number' 
+          ? dep.amount 
+          : dep.amount ? parseFloat(String(dep.amount)) : 0;
+        return acc + amount;
+      }, 0) || 0;
+      
+      const totalWithdrawals = withdrawals?.reduce((acc, wd) => {
+        // Handle any type of amount value safely
+        const amount = typeof wd.amount === 'number' 
+          ? wd.amount 
+          : wd.amount ? parseFloat(String(wd.amount)) : 0;
+        return acc + amount;
+      }, 0) || 0;
+      
       const balance = totalDeposits - totalWithdrawals;
       
       console.log(`Balance calculated for ${clientFullName}: 

@@ -44,18 +44,20 @@ export const useClientBalanceRefresh = (
         return;
       }
       
-      // CORRECTION: Calculer le solde avec une meilleure conversion numérique
+      // Fixed: Proper type checking before conversion to avoid 'never' type issues
       const totalDeposits = deposits?.reduce((acc, dep) => {
+        // Safely convert amount to number regardless of its original type
         const amount = typeof dep.amount === 'number' 
           ? dep.amount 
-          : parseFloat(dep.amount.toString());
+          : dep.amount ? parseFloat(String(dep.amount)) : 0;
         return acc + amount;
       }, 0) || 0;
       
       const totalWithdrawals = withdrawals?.reduce((acc, wd) => {
+        // Safely convert amount to number regardless of its original type
         const amount = typeof wd.amount === 'number' 
           ? wd.amount 
-          : parseFloat(wd.amount.toString());
+          : wd.amount ? parseFloat(String(wd.amount)) : 0;
         return acc + amount;
       }, 0) || 0;
       

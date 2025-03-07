@@ -62,20 +62,20 @@ export const recalculateAllClientBalances = async (): Promise<boolean> => {
           return;
         }
         
-        // CORRECTION: Calculer le solde avec une meilleure conversion numérique
+        // Fixed: Proper type checking and safer conversion
         const totalDeposits = deposits?.reduce((sum, d) => {
-          // Assure que le montant est bien traité comme un nombre
+          // Safely convert to number using String() first to avoid 'never' type issues
           const amount = typeof d.amount === 'number' 
             ? d.amount 
-            : parseFloat(d.amount.toString());
+            : d.amount ? parseFloat(String(d.amount)) : 0;
           return sum + amount;
         }, 0) || 0;
         
         const totalWithdrawals = withdrawals?.reduce((sum, w) => {
-          // Assure que le montant est bien traité comme un nombre
+          // Safely convert to number using String() first to avoid 'never' type issues
           const amount = typeof w.amount === 'number' 
             ? w.amount 
-            : parseFloat(w.amount.toString());
+            : w.amount ? parseFloat(String(w.amount)) : 0;
           return sum + amount;
         }, 0) || 0;
         
