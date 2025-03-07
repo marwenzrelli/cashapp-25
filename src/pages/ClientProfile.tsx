@@ -107,6 +107,7 @@ const ClientProfile = () => {
           clientId={actualClientId}
           qrCodeRef={qrCodeRef}
           formatAmount={formatAmount}
+          refetchClient={refetchClient}
         />
 
         <ClientOperationsHistory

@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Client } from "../types";
 import { ClientQRCode } from "./ClientQRCode";
-import { RefObject, useState } from "react";
+import { RefObject, useState, useEffect } from "react";
 import { PersonalInfoFields } from "./PersonalInfoFields";
 import { ClientIdBadge } from "./ClientIdBadge";
 import { ArrowDownToLine, ArrowUpToLine } from "lucide-react";
@@ -13,22 +13,30 @@ import { Deposit } from "@/features/deposits/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ExtendedClient } from "@/features/withdrawals/components/standalone/StandaloneWithdrawalForm";
+import { useQueryClient } from "@tanstack/react-query";
+
 interface ClientPersonalInfoProps {
   client: Client;
   clientId?: number;
   qrCodeRef?: RefObject<HTMLDivElement>;
   formatAmount?: (amount: number) => string;
+  refetchClient?: () => void;
 }
+
 export const ClientPersonalInfo = ({
   client,
   clientId,
   qrCodeRef,
-  formatAmount = amount => `${amount.toLocaleString()} €`
+  formatAmount = amount => `${amount.toLocaleString()} €`,
+  refetchClient
 }: ClientPersonalInfoProps) => {
   const [depositDialogOpen, setDepositDialogOpen] = useState(false);
   const [withdrawalDialogOpen, setWithdrawalDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const queryClient = useQueryClient();
+  
   console.log("ClientPersonalInfo - clientId:", clientId, "client:", client?.id);
+  
   const handleDeposit = async (deposit: Deposit) => {
     setIsProcessing(true);
     try {
@@ -56,6 +64,17 @@ export const ClientPersonalInfo = ({
         description: `Un versement de ${deposit.amount} TND a été ajouté pour ${deposit.client_name}`
       });
       setDepositDialogOpen(false);
+      
+      // Invalidate cached operations data to refresh the operations list
+      queryClient.invalidateQueries({ queryKey: ['operations'] });
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+      queryClient.invalidateQueries({ queryKey: ['client', clientId] });
+      queryClient.invalidateQueries({ queryKey: ['clientOperations', clientId] });
+      
+      // Call the refetch function if available
+      if (refetchClient) {
+        refetchClient();
+      }
     } catch (error) {
       console.error("Erreur lors du versement:", error);
       toast.error("Erreur lors du traitement du versement");
@@ -63,6 +82,7 @@ export const ClientPersonalInfo = ({
       setIsProcessing(false);
     }
   };
+  
   const handleWithdrawal = async (withdrawal: any) => {
     setIsProcessing(true);
     try {
@@ -90,6 +110,17 @@ export const ClientPersonalInfo = ({
         description: `Un retrait de ${withdrawal.amount} TND a été effectué pour ${withdrawal.client_name}`
       });
       setWithdrawalDialogOpen(false);
+      
+      // Invalidate cached operations data to refresh the operations list
+      queryClient.invalidateQueries({ queryKey: ['operations'] });
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+      queryClient.invalidateQueries({ queryKey: ['client', clientId] });
+      queryClient.invalidateQueries({ queryKey: ['clientOperations', clientId] });
+      
+      // Call the refetch function if available
+      if (refetchClient) {
+        refetchClient();
+      }
     } catch (error) {
       console.error("Erreur lors du retrait:", error);
       toast.error("Erreur lors du traitement du retrait");
@@ -97,6 +128,7 @@ export const ClientPersonalInfo = ({
       setIsProcessing(false);
     }
   };
+  
   const refreshClientBalance = async () => {
     if (!client || !client.id) return false;
     try {
@@ -105,12 +137,18 @@ export const ClientPersonalInfo = ({
       } = await supabase.from('clients').update({
         solde: client.solde
       }).eq('id', client.id).select();
+      
+      // Invalidate cached client data to refresh the client's balance
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+      queryClient.invalidateQueries({ queryKey: ['client', clientId] });
+      
       return !error;
     } catch (error) {
       console.error("Erreur lors du rafraîchissement du solde:", error);
       return false;
     }
   };
+
   return <Card className="md:col-span-3">
       <CardHeader>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
