@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Client } from "@/features/clients/types";
 import { Withdrawal } from "@/features/withdrawals/types";
 
@@ -39,26 +39,19 @@ export const useWithdrawalFormState = ({
   });
   const [isLoading, setIsLoading] = useState(false);
   const [formInitialized, setFormInitialized] = useState(false);
-  
-  // Add a ref to track if form has been initialized for this session
-  const initializedRef = useRef(false);
 
-  // Initialize the form only when the modal opens
+  // Initialize the form as soon as the modal opens
   useEffect(() => {
     if (!isOpen) {
-      // Reset state when modal closes
+      // Reset form state when dialog closes
       setFormInitialized(false);
-      initializedRef.current = false;
       return;
     }
 
-    // Only initialize if not already done for this session
-    if (!initializedRef.current) {
-      initializedRef.current = true;
-      initializeForm();
-    }
+    // Initialize form immediately without delay
+    initializeForm();
     
-  }, [isOpen]);
+  }, [isOpen, isEditing, selectedWithdrawal, selectedClient, clients]);
 
   const initializeForm = () => {
     try {

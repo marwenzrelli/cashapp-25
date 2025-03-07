@@ -3,6 +3,7 @@ import React from "react";
 import { Operation } from "@/features/operations/types";
 import { format } from "date-fns";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { getTypeStyle, getTypeIcon } from "@/features/operations/utils/operation-helpers";
 import { OperationsMobileCard } from "./OperationsMobileCard";
 import { EmptyOperations } from "./EmptyOperations";
 
@@ -28,6 +29,7 @@ export const TransferOperationsTab = ({ operations, currency = "TND" }: Transfer
               <TableHead>Date</TableHead>
               <TableHead>Description</TableHead>
               <TableHead className="text-center">Montant</TableHead>
+              <TableHead>De</TableHead>
               <TableHead>À</TableHead>
             </TableRow>
           </TableHeader>
@@ -39,9 +41,10 @@ export const TransferOperationsTab = ({ operations, currency = "TND" }: Transfer
                 <TableRow key={operation.id}>
                   <TableCell>{format(new Date(displayDate), "dd/MM/yyyy HH:mm")}</TableCell>
                   <TableCell className="max-w-[200px] truncate">{operation.description}</TableCell>
-                  <TableCell className="text-center font-medium text-blue-600 dark:text-blue-400">
+                  <TableCell className="text-center font-medium text-green-600 dark:text-green-400">
                     {Math.round(operation.amount)} {currency}
                   </TableCell>
+                  <TableCell className="max-w-[200px] truncate">{operation.fromClient}</TableCell>
                   <TableCell className="max-w-[200px] truncate">{operation.toClient}</TableCell>
                 </TableRow>
               );
