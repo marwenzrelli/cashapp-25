@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { StandaloneWithdrawalForm, ExtendedClient } from "./standalone/StandaloneWithdrawalForm";
+import { StandaloneWithdrawalForm } from "./standalone/StandaloneWithdrawalForm";
 import { WithdrawalTable } from "./WithdrawalTable";
 import { WithdrawalHeader } from "./WithdrawalHeader";
 import { QuickActions } from "./QuickActions";
@@ -14,9 +14,7 @@ import { TransferPagination } from "@/features/transfers/components/TransferPagi
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-interface ExtendedClient extends Client {
-  dateCreation: string;
-}
+import { ExtendedClient } from "./standalone/StandaloneWithdrawalForm";
 
 interface WithdrawalsContentProps {
   withdrawals: Withdrawal[];

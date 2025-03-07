@@ -10,6 +10,7 @@ import { StandaloneDepositForm } from "./DepositForm";
 import { TransferPagination } from "@/features/transfers/components/TransferPagination";
 import { EditDepositDialog } from "./dialog/EditDepositDialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ExtendedClient } from "@/features/withdrawals/components/standalone/StandaloneWithdrawalForm";
 
 interface DepositsContentProps {
   deposits: Deposit[];
@@ -94,6 +95,12 @@ export const DepositsContent = ({
     }
   };
 
+  // Convert clients to ExtendedClients
+  const extendedClients: ExtendedClient[] = clients.map(client => ({
+    ...client,
+    dateCreation: client.date_creation || new Date().toISOString()
+  }));
+
   return (
     <div className="space-y-8 animate-in">
       <DepositsHeader 
@@ -105,7 +112,7 @@ export const DepositsContent = ({
       {/* Place the deposit form directly below statistics with the same width */}
       <div>
         <StandaloneDepositForm
-          clients={clients}
+          clients={extendedClients}
           onConfirm={handleCreateDeposit}
           refreshClientBalance={handleRefreshClientBalance}
         />
