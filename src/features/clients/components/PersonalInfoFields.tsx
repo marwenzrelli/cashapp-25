@@ -23,7 +23,7 @@ export const PersonalInfoFields = ({
         <div className="flex items-center gap-3">
           <User className="h-5 w-5 text-primary" />
           <div>
-            <p className="text-sm text-muted-foreground">Nom complet</p>
+            <p className="text-sm text-muted-foreground mx-0 px-0 my-0 py-0 text-left">Nom complet</p>
             <p className="font-medium mx-0 my-px text-xl text-left">
               {client.prenom} {client.nom}
             </p>
