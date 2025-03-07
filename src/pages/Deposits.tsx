@@ -29,15 +29,16 @@ const Deposits = () => {
     handleConfirmEdit,
     handleCreateDeposit,
     fetchDeposits,
-    isLoading
+    isLoading,
+    isDeleting,
+    totalItems
   } = useDepositsPage();
 
   // Fetch deposits only when the component mounts
   useEffect(() => {
     console.log("Deposits page mounted - fetching deposits");
     fetchDeposits();
-    // Intentionally not including fetchDeposits in the dependency array
-    // to prevent multiple fetches
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   console.log("Deposits page render - deposits count:", deposits?.length);
@@ -71,6 +72,7 @@ const Deposits = () => {
       handleConfirmEdit={handleConfirmEdit}
       handleCreateDeposit={handleCreateDeposit}
       isLoading={isLoading}
+      totalItems={totalItems}
     />
   );
 };

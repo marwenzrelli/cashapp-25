@@ -36,6 +36,7 @@ interface DepositsContentProps {
   handleConfirmEdit: () => Promise<void>;
   handleCreateDeposit: (deposit: Deposit) => Promise<void>;
   isLoading?: boolean;
+  totalItems?: number;
 }
 
 export const DepositsContent = ({
@@ -62,7 +63,8 @@ export const DepositsContent = ({
   handleEditFormChange,
   handleConfirmEdit,
   handleCreateDeposit,
-  isLoading = false
+  isLoading = false,
+  totalItems = 0
 }: DepositsContentProps) => {
   const {
     clients,
@@ -74,6 +76,13 @@ export const DepositsContent = ({
   React.useEffect(() => {
     fetchClients();
   }, [fetchClients]);
+
+  console.log("DepositsContent render with:", {
+    depositsLength: deposits?.length,
+    filteredDepositsLength: filteredDeposits?.length,
+    paginatedDepositsLength: paginatedDeposits?.length,
+    isLoading
+  });
 
   const handleRefreshClientBalance = async (clientId: string): Promise<boolean> => {
     try {
@@ -108,13 +117,13 @@ export const DepositsContent = ({
           onSearchChange={setSearchTerm}
           itemsPerPage={itemsPerPage}
           onItemsPerPageChange={setItemsPerPage}
-          totalDeposits={filteredDeposits.length}
+          totalDeposits={totalItems}
         />
         
         <TransferPagination
           itemsPerPage={itemsPerPage}
           setItemsPerPage={setItemsPerPage}
-          totalItems={filteredDeposits.length}
+          totalItems={totalItems}
           currentPage={currentPage}
           setCurrentPage={setCurrentPage}
           label="versements"
@@ -127,7 +136,7 @@ export const DepositsContent = ({
             <Skeleton className="h-12 w-full" />
           </div>
         ) : (
-          paginatedDeposits.length > 0 ? (
+          paginatedDeposits && paginatedDeposits.length > 0 ? (
             <DepositsTable 
               deposits={paginatedDeposits} 
               onEdit={handleEdit} 

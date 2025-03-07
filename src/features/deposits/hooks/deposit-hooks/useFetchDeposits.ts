@@ -55,11 +55,13 @@ export const useFetchDeposits = (
         };
       });
 
-      console.log("Deposits loaded (in local time):", formattedDeposits);
+      console.log("Deposits loaded and formatted:", formattedDeposits);
       setDeposits(formattedDeposits);
     } catch (error) {
       console.error("Error loading deposits:", error);
       toast.error("Erreur lors du chargement des versements");
+      // Set empty array to avoid undefined issues
+      setDeposits([]);
     } finally {
       setIsLoading(false);
     }
