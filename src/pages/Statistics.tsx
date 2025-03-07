@@ -23,6 +23,7 @@ import { Transfer } from "@/features/transfers/types";
 import { useDashboardData } from "@/features/dashboard/hooks/useDashboardData";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { LoadingState } from "@/features/admin/components/administration/LoadingState";
 
 interface FilteredData {
   client_name?: string;
@@ -37,7 +38,7 @@ const Statistics = () => {
   const { deposits, isLoading: isLoadingDeposits } = useDeposits();
   const { withdrawals, isLoading: isLoadingWithdrawals } = useWithdrawals();
   const { transfers, isLoading: isLoadingTransfers } = useTransfersList();
-  const { stats, isLoading: isLoadingStats, recentActivity, handleRefresh } = useDashboardData();
+  const { stats, isLoading: isLoadingStats, recentActivity, handleRefresh, error } = useDashboardData();
   const { currency } = useCurrency();
 
   const transfersArray = Array.isArray(transfers) ? transfers : [];
@@ -64,38 +65,58 @@ const Statistics = () => {
   };
 
   const filterData = (data: FilteredData[], type: string) => {
+    if (!data || !Array.isArray(data)) {
+      console.warn(`Invalid data for type ${type}:`, data);
+      return [];
+    }
+    
     return data.filter(item => {
-      const itemDate = new Date(item.operation_date || item.created_at || '');
-      const dateMatch = !dateRange?.from || !dateRange?.to || 
-        isWithinInterval(itemDate, { 
-          start: dateRange.from, 
-          end: dateRange.to 
-        });
+      if (!item) return false;
       
-      const clientMatch = !clientFilter || 
-        (type === "transfers" 
-          ? (item.fromClient?.toLowerCase().includes(clientFilter.toLowerCase()) ||
-             item.toClient?.toLowerCase().includes(clientFilter.toLowerCase()))
-          : item.client_name?.toLowerCase().includes(clientFilter.toLowerCase()));
+      try {
+        const itemDate = new Date(item.operation_date || item.created_at || '');
+        const dateMatch = !dateRange?.from || !dateRange?.to || 
+          isWithinInterval(itemDate, { 
+            start: dateRange.from, 
+            end: dateRange.to 
+          });
+        
+        const clientMatch = !clientFilter || 
+          (type === "transfers" 
+            ? (item.fromClient?.toLowerCase().includes(clientFilter.toLowerCase()) ||
+               item.toClient?.toLowerCase().includes(clientFilter.toLowerCase()))
+            : item.client_name?.toLowerCase().includes(clientFilter.toLowerCase()));
 
-      const typeMatch = transactionType === "all" || 
-        (transactionType === "deposits" && type === "deposits") ||
-        (transactionType === "withdrawals" && type === "withdrawals") ||
-        (transactionType === "transfers" && type === "transfers");
+        const typeMatch = transactionType === "all" || 
+          (transactionType === "deposits" && type === "deposits") ||
+          (transactionType === "withdrawals" && type === "withdrawals") ||
+          (transactionType === "transfers" && type === "transfers");
 
-      return dateMatch && clientMatch && typeMatch;
+        return dateMatch && clientMatch && typeMatch;
+      } catch (err) {
+        console.error(`Error filtering ${type} item:`, err, item);
+        return false;
+      }
     });
   };
 
-  const filteredDeposits = filterData(deposits as FilteredData[], "deposits");
-  const filteredWithdrawals = filterData(withdrawals as FilteredData[], "withdrawals");
+  const filteredDeposits = filterData(
+    Array.isArray(deposits) ? deposits as FilteredData[] : [], 
+    "deposits"
+  );
+  
+  const filteredWithdrawals = filterData(
+    Array.isArray(withdrawals) ? withdrawals as FilteredData[] : [], 
+    "withdrawals"
+  );
+  
   const filteredTransfers = filterData(
-    transfersArray.map(t => ({
+    Array.isArray(transfersArray) ? transfersArray.map(t => ({
       fromClient: t.fromClient,
       toClient: t.toClient,
       amount: t.amount,
       operation_date: t.date,
-    })) as FilteredData[],
+    }) as FilteredData) : [],
     "transfers"
   );
 
@@ -108,7 +129,7 @@ const Statistics = () => {
     ...filteredWithdrawals.map(w => w.client_name),
     ...filteredTransfers.map(transfer => transfer.fromClient),
     ...filteredTransfers.map(transfer => transfer.toClient)
-  ]).size;
+  ].filter(Boolean)).size;
   
   const netFlow = stats.total_deposits - stats.total_withdrawals;
 
@@ -117,18 +138,33 @@ const Statistics = () => {
   const endOfCurrentMonth = endOfMonth(currentMonth);
 
   const currentMonthDeposits = filteredDeposits.filter(dep => {
-    const depositDate = new Date(dep.created_at || dep.operation_date || '');
-    return depositDate >= startOfCurrentMonth && depositDate <= endOfCurrentMonth;
+    try {
+      const depositDate = new Date(dep.created_at || dep.operation_date || '');
+      return depositDate >= startOfCurrentMonth && depositDate <= endOfCurrentMonth;
+    } catch (error) {
+      console.warn("Invalid deposit date:", dep.created_at || dep.operation_date);
+      return false;
+    }
   });
 
   const currentMonthWithdrawals = filteredWithdrawals.filter(w => {
-    const withdrawalDate = new Date(w.created_at || w.operation_date || '');
-    return withdrawalDate >= startOfCurrentMonth && withdrawalDate <= endOfCurrentMonth;
+    try {
+      const withdrawalDate = new Date(w.created_at || w.operation_date || '');
+      return withdrawalDate >= startOfCurrentMonth && withdrawalDate <= endOfCurrentMonth;
+    } catch (error) {
+      console.warn("Invalid withdrawal date:", w.created_at || w.operation_date);
+      return false;
+    }
   });
 
   const currentMonthTransfers = filteredTransfers.filter(transfer => {
-    const transferDate = new Date(transfer.operation_date || transfer.created_at || '');
-    return !isNaN(transferDate.getTime()) && transferDate >= startOfCurrentMonth && transferDate <= endOfCurrentMonth;
+    try {
+      const transferDate = new Date(transfer.operation_date || transfer.created_at || '');
+      return !isNaN(transferDate.getTime()) && transferDate >= startOfCurrentMonth && transferDate <= endOfCurrentMonth;
+    } catch (error) {
+      console.warn("Invalid transfer date:", transfer.operation_date || transfer.created_at);
+      return false;
+    }
   });
 
   const lastMonth = subDays(startOfCurrentMonth, 1);
@@ -136,18 +172,30 @@ const Statistics = () => {
   const endOfLastMonth = endOfMonth(lastMonth);
 
   const lastMonthDeposits = filteredDeposits.filter(dep => {
-    const depositDate = new Date(dep.created_at || dep.operation_date || '');
-    return depositDate >= startOfLastMonth && depositDate <= endOfLastMonth;
+    try {
+      const depositDate = new Date(dep.created_at || dep.operation_date || '');
+      return depositDate >= startOfLastMonth && depositDate <= endOfLastMonth;
+    } catch (error) {
+      return false;
+    }
   });
 
   const lastMonthWithdrawals = filteredWithdrawals.filter(w => {
-    const withdrawalDate = new Date(w.created_at || w.operation_date || '');
-    return withdrawalDate >= startOfLastMonth && withdrawalDate <= endOfLastMonth;
+    try {
+      const withdrawalDate = new Date(w.created_at || w.operation_date || '');
+      return withdrawalDate >= startOfLastMonth && withdrawalDate <= endOfLastMonth;
+    } catch (error) {
+      return false;
+    }
   });
 
   const lastMonthTransfers = filteredTransfers.filter(transfer => {
-    const transferDate = new Date(transfer.operation_date || transfer.created_at || '');
-    return !isNaN(transferDate.getTime()) && transferDate >= startOfLastMonth && transferDate <= endOfLastMonth;
+    try {
+      const transferDate = new Date(transfer.operation_date || transfer.created_at || '');
+      return !isNaN(transferDate.getTime()) && transferDate >= startOfLastMonth && transferDate <= endOfLastMonth;
+    } catch (error) {
+      return false;
+    }
   });
 
   const currentMonthTotal = currentMonthDeposits.reduce((acc, dep) => acc + dep.amount, 0) -
@@ -167,7 +215,7 @@ const Statistics = () => {
       const date = format(new Date(dep.created_at || dep.operation_date || ''), 'dd/MM/yyyy');
       acc[date] = (acc[date] || 0) + 1;
     } catch (error) {
-      console.error("Error formatting date:", dep.created_at || dep.operation_date);
+      console.warn("Error formatting date:", dep.created_at || dep.operation_date);
     }
     return acc;
   }, {} as Record<string, number>);
@@ -180,7 +228,7 @@ const Statistics = () => {
       );
       acc[date] = (acc[date] || 0) + 1;
     } catch (error) {
-      console.error("Error formatting operation date:", op.created_at || op.operation_date);
+      console.warn("Error formatting operation date:", op.created_at || op.operation_date);
     }
     return acc;
   }, {} as Record<string, number>);
@@ -196,7 +244,6 @@ const Statistics = () => {
       try {
         return format(new Date(dep.created_at || dep.operation_date || ''), 'dd/MM') === formattedDate;
       } catch (error) {
-        console.error("Error filtering deposit date:", dep.created_at || dep.operation_date);
         return false;
       }
     });
@@ -205,7 +252,6 @@ const Statistics = () => {
       try {
         return format(new Date(w.created_at || w.operation_date || ''), 'dd/MM') === formattedDate;
       } catch (error) {
-        console.error("Error filtering withdrawal date:", w.created_at || w.operation_date);
         return false;
       }
     });
@@ -216,7 +262,6 @@ const Statistics = () => {
         return !isNaN(transferDate.getTime()) && 
           format(transferDate, 'dd/MM') === formattedDate;
       } catch (error) {
-        console.error("Error filtering transfer date:", transfer.operation_date || transfer.created_at);
         return false;
       }
     });
@@ -266,8 +311,29 @@ const Statistics = () => {
 
   if (isLoadingDeposits || isLoadingWithdrawals || isLoadingTransfers || isLoadingStats) {
     return (
-      <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      <LoadingState message="Chargement des statistiques en cours..." />
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 space-y-4">
+        <div className="flex items-start gap-3">
+          <AlertTriangle className="h-6 w-6 text-red-500 mt-0.5" />
+          <div>
+            <h2 className="text-lg font-semibold">Erreur de chargement</h2>
+            <p className="text-muted-foreground">{error}</p>
+            <Button 
+              onClick={refreshData} 
+              variant="outline" 
+              className="mt-4 flex items-center gap-2"
+              disabled={isSyncing}
+            >
+              <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
+              Réessayer
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }

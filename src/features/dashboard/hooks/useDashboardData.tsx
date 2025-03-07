@@ -17,9 +17,14 @@ export const useDashboardData = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchStats = async () => {
     try {
+      setIsLoading(true);
+      setError(null);
+      
+      // Fetch deposits
       const { data: deposits, error: depositsError } = await supabase
         .from('deposits')
         .select('amount')
@@ -27,6 +32,7 @@ export const useDashboardData = () => {
 
       if (depositsError) throw depositsError;
 
+      // Fetch withdrawals
       const { data: withdrawals, error: withdrawalsError } = await supabase
         .from('withdrawals')
         .select('amount')
@@ -34,6 +40,7 @@ export const useDashboardData = () => {
 
       if (withdrawalsError) throw withdrawalsError;
 
+      // Fetch client count
       const { count: clientCount, error: clientsError } = await supabase
         .from('clients')
         .select('*', { count: 'exact' })
@@ -44,6 +51,7 @@ export const useDashboardData = () => {
       // Generate mock monthly stats since the operation_statistics table doesn't exist
       const monthlyStats = generateMockMonthlyStats();
 
+      // Fetch balance data
       const { data: balanceData, error: balanceError } = await supabase
         .from('clients')
         .select('solde')
@@ -51,6 +59,7 @@ export const useDashboardData = () => {
 
       if (balanceError) throw balanceError;
 
+      // Fetch transfers
       const { data: transfers, error: transfersError } = await supabase
         .from('transfers')
         .select('amount, from_client, to_client')
@@ -58,9 +67,10 @@ export const useDashboardData = () => {
 
       if (transfersError) throw transfersError;
 
+      // Calculate statistics
       const total_deposits = deposits?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
       const total_withdrawals = withdrawals?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
-      const total_balance = balanceData?.reduce((sum, client) => sum + Number(client.solde), 0) || 0;
+      const total_balance = balanceData?.reduce((sum, client) => sum + Number(client.solde || 0), 0) || 0;
       const sent_transfers = transfers?.reduce((sum, t) => sum + Number(t.amount), 0) || 0;
       const received_transfers = transfers?.reduce((sum, t) => sum + Number(t.amount), 0) || 0;
       const transfer_count = transfers?.length || 0;
@@ -75,9 +85,21 @@ export const useDashboardData = () => {
         sent_transfers,
         received_transfers
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching stats:', error);
+      setError(error.message || "Erreur lors du chargement des statistiques");
       toast.error("Erreur lors du chargement des statistiques");
+      // Set default values to ensure the UI can render properly
+      setStats({
+        total_deposits: 0,
+        total_withdrawals: 0,
+        client_count: 0,
+        transfer_count: 0,
+        total_balance: 0,
+        sent_transfers: 0,
+        received_transfers: 0,
+        monthly_stats: generateMockMonthlyStats()
+      });
     } finally {
       setIsLoading(false);
     }
@@ -161,9 +183,11 @@ export const useDashboardData = () => {
         .slice(0, 10);
 
       setRecentActivity(allActivity);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching recent activity:', error);
       toast.error("Erreur lors du chargement de l'activité récente");
+      // Set an empty array to ensure UI can render
+      setRecentActivity([]);
     }
   };
 
@@ -177,16 +201,21 @@ export const useDashboardData = () => {
   useEffect(() => {
     fetchStats();
     fetchRecentActivity();
+    
+    // Setup refresh interval - reduced frequency to avoid overwhelming the server
     const interval = setInterval(() => {
+      console.log("Auto-refreshing dashboard data");
       fetchStats();
       fetchRecentActivity();
-    }, 30000);
+    }, 60000); // Changed from 30s to 60s
+    
     return () => clearInterval(interval);
   }, []);
 
   return {
     stats,
     isLoading,
+    error,
     recentActivity,
     handleRefresh
   };
