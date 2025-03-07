@@ -4,7 +4,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatOperationAmount, getOperationTypeIcon } from "./utils";
 import React from "react";
-import { ArrowDownCircle, ArrowUpCircle, RefreshCw } from "lucide-react";
 
 interface OperationsMobileCardProps {
   operation: Operation;
