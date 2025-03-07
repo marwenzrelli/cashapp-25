@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
@@ -22,7 +23,7 @@ interface ExtendedClient extends Client {
 
 interface StandaloneDepositFormProps {
   clients: ExtendedClient[];
-  onConfirm: (deposit: Deposit) => Promise<void>;
+  onConfirm: (deposit: Deposit) => Promise<boolean | void>; // Updated return type
   refreshClientBalance: (clientId: string) => Promise<boolean>;
 }
 

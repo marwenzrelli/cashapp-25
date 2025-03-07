@@ -19,7 +19,7 @@ export interface ExtendedClient extends Client {
 
 export interface StandaloneWithdrawalFormProps {
   clients: ExtendedClient[];
-  onConfirm: (withdrawal: any) => Promise<void>;
+  onConfirm: (withdrawal: any) => Promise<boolean | void>; // Updated return type
   refreshClientBalance: (clientId?: string) => Promise<boolean>;
 }
 
