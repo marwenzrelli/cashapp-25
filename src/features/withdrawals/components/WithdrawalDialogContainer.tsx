@@ -1,8 +1,10 @@
+
 import React from "react";
 import { WithdrawalFormDialog } from "./dialog/WithdrawalFormDialog";
 import { Client } from "@/features/clients/types";
 import { Withdrawal } from "@/features/withdrawals/types";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface WithdrawalDialogContainerProps {
   showDialog: boolean;
@@ -50,6 +52,41 @@ export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps>
           : selectedClientObj.id;
           
         await refreshClientBalance(clientIdNum.toString());
+      }
+      
+      // Handle editing vs creating
+      if (isEditing && selectedWithdrawal) {
+        // Update existing withdrawal
+        const { error } = await supabase
+          .from('withdrawals')
+          .update({
+            client_name: data.client_name,
+            amount: parseFloat(data.amount),
+            notes: data.notes || null,
+            operation_date: data.operation_date || new Date().toISOString(),
+            last_modified_at: new Date().toISOString()
+          })
+          .eq('id', selectedWithdrawal.id);
+          
+        if (error) {
+          console.error("Error updating withdrawal:", error);
+          throw error;
+        }
+      } else {
+        // Create new withdrawal
+        const { error } = await supabase
+          .from('withdrawals')
+          .insert({
+            client_name: data.client_name,
+            amount: parseFloat(data.amount),
+            notes: data.notes || null,
+            operation_date: data.operation_date || new Date().toISOString()
+          });
+          
+        if (error) {
+          console.error("Error creating withdrawal:", error);
+          throw error;
+        }
       }
       
       await fetchWithdrawals();

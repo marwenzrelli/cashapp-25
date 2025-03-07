@@ -48,33 +48,57 @@ export const WithdrawalFormDialog: React.FC<WithdrawalFormDialogProps> = ({
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  // Résolution du problème: initialiser correctement le formulaire lors de l'édition
+  // Reset form when dialog opens/closes or when editing status changes
   useEffect(() => {
+    if (!isOpen) {
+      // Reset form when dialog closes
+      setNewWithdrawal({
+        clientId: "",
+        amount: "",
+        notes: "",
+        date: new Date().toISOString(),
+      });
+      return;
+    }
+    
     if (isEditing && selectedWithdrawal) {
-      // Trouver le client par nom
-      const client = clients.find(c => `${c.prenom} ${c.nom}` === selectedWithdrawal.client_name);
+      // Find client by name when editing
+      const clientFullName = selectedWithdrawal.client_name;
+      const client = clients.find(c => `${c.prenom} ${c.nom}` === clientFullName);
       
       if (client) {
+        const clientId = client.id.toString();
+        
+        // Convert amount to string safely
+        const amountStr = selectedWithdrawal.amount !== undefined && selectedWithdrawal.amount !== null
+          ? selectedWithdrawal.amount.toString()
+          : "";
+          
         setNewWithdrawal({
-          clientId: client.id.toString(),
-          amount: selectedWithdrawal.amount.toString(),
+          clientId: clientId,
+          amount: amountStr,
           notes: selectedWithdrawal.notes || "",
           date: selectedWithdrawal.date || new Date().toISOString(),
         });
+        
+        // Update selected client in parent
+        setSelectedClient(clientId);
+      } else {
+        console.error("Client not found for withdrawal:", selectedWithdrawal);
       }
     } else if (selectedClient) {
-      // Mise à jour du client ID quand selectedClient change
+      // Just update the client ID when not editing
       setNewWithdrawal(prev => ({
         ...prev,
         clientId: selectedClient
       }));
     }
-  }, [isEditing, selectedWithdrawal, selectedClient, clients]);
+  }, [isOpen, isEditing, selectedWithdrawal, selectedClient, clients, setSelectedClient]);
 
   const handleSubmit = async () => {
     setIsLoading(true);
     try {
-      // Rechercher le nom du client en fonction de l'ID client sélectionné
+      // Find the client to get full name
       const client = clients.find(c => c.id.toString() === newWithdrawal.clientId);
       if (!client) {
         console.error("Client not found");
@@ -92,7 +116,7 @@ export const WithdrawalFormDialog: React.FC<WithdrawalFormDialogProps> = ({
       });
 
       if (success) {
-        // Réinitialiser le formulaire
+        // Reset form after successful submission
         setNewWithdrawal({
           clientId: "",
           amount: "",
