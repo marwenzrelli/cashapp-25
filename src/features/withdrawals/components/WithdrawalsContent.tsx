@@ -1,6 +1,5 @@
-
 import React, { useState } from "react";
-import { StandaloneWithdrawalForm } from "./WithdrawalForm";
+import { StandaloneWithdrawalForm } from "./standalone/StandaloneWithdrawalForm";
 import { WithdrawalTable } from "./WithdrawalTable";
 import { WithdrawalHeader } from "./WithdrawalHeader";
 import { QuickActions } from "./QuickActions";
@@ -13,6 +12,7 @@ import { Search } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { TransferPagination } from "@/features/transfers/components/TransferPagination";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ExtendedClient extends Client {
   dateCreation: string;
@@ -98,6 +98,33 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
     }
   };
 
+  // Function to handle withdrawal confirmation
+  const handleWithdrawalConfirm = async (withdrawal: any): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('withdrawals')
+        .insert({
+          client_name: withdrawal.client_name,
+          amount: withdrawal.amount,
+          operation_date: withdrawal.date,
+          notes: withdrawal.notes
+        });
+
+      if (error) {
+        console.error("Erreur lors de l'ajout du retrait:", error);
+        toast.error("Erreur lors de l'ajout du retrait");
+        throw error;
+      }
+
+      toast.success("Retrait ajouté avec succès");
+      await handleFetchWithdrawals();
+    } catch (error) {
+      console.error("Error confirming withdrawal:", error);
+      toast.error("Erreur lors de la confirmation du retrait");
+      throw error;
+    }
+  };
+
   return (
     <div className="space-y-8 animate-in">
       <WithdrawalHeader withdrawals={withdrawals} />
@@ -105,7 +132,7 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
       <div className="w-full">
         <StandaloneWithdrawalForm 
           clients={extendedClients} 
-          fetchWithdrawals={handleFetchWithdrawals} 
+          onConfirm={handleWithdrawalConfirm} 
           refreshClientBalance={refreshClientBalance} 
         />
       </div>
