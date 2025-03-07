@@ -8,7 +8,7 @@ interface DepositDialogProps {
   client: Client;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (deposit: Deposit) => Promise<boolean | void>;
+  onConfirm: (deposit: Deposit) => Promise<boolean | void>; // Updated return type
   refreshClientBalance: () => Promise<boolean>;
 }
 
