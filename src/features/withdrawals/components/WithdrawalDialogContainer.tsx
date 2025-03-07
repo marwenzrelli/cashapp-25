@@ -56,6 +56,11 @@ export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps>
       
       // Handle editing vs creating
       if (isEditing && selectedWithdrawal) {
+        // Convert ID to number if it's a string to fix the type error
+        const withdrawalId = typeof selectedWithdrawal.id === 'string' 
+          ? parseInt(selectedWithdrawal.id, 10) 
+          : selectedWithdrawal.id;
+
         // Update existing withdrawal
         const { error } = await supabase
           .from('withdrawals')
@@ -66,7 +71,7 @@ export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps>
             operation_date: data.operation_date || new Date().toISOString(),
             last_modified_at: new Date().toISOString()
           })
-          .eq('id', selectedWithdrawal.id);
+          .eq('id', withdrawalId);
           
         if (error) {
           console.error("Error updating withdrawal:", error);
