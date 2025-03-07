@@ -1,4 +1,3 @@
-
 import { filterByDateRange } from "./dateHelpers";
 
 export const calculateTotals = (
@@ -36,13 +35,13 @@ export const calculateMonthlyComparison = (
   const lastMonthWithdrawals = filterByDateRange(filteredWithdrawals, lastMonth.start, lastMonth.end);
   const lastMonthTransfers = filterByDateRange(filteredTransfers, lastMonth.start, lastMonth.end);
 
-  const currentMonthTotal = currentMonthDeposits.reduce((acc, dep) => acc + dep.amount, 0) -
-    currentMonthWithdrawals.reduce((acc, w) => acc + w.amount, 0) +
-    currentMonthTransfers.reduce((acc, transfer) => acc + transfer.amount, 0);
+  const currentMonthTotal = currentMonthDeposits.reduce((acc, dep) => acc + (dep.amount || 0), 0) -
+    currentMonthWithdrawals.reduce((acc, w) => acc + (w.amount || 0), 0) +
+    currentMonthTransfers.reduce((acc, transfer) => acc + (transfer.amount || 0), 0);
   
-  const lastMonthTotal = lastMonthDeposits.reduce((acc, dep) => acc + dep.amount, 0) -
-    lastMonthWithdrawals.reduce((acc, w) => acc + w.amount, 0) +
-    lastMonthTransfers.reduce((acc, transfer) => acc + transfer.amount, 0);
+  const lastMonthTotal = lastMonthDeposits.reduce((acc, dep) => acc + (dep.amount || 0), 0) -
+    lastMonthWithdrawals.reduce((acc, w) => acc + (w.amount || 0), 0) +
+    lastMonthTransfers.reduce((acc, transfer) => acc + (transfer.amount || 0), 0);
   
   const percentageChange = lastMonthTotal !== 0 
     ? ((currentMonthTotal - lastMonthTotal) / lastMonthTotal) * 100 
@@ -60,15 +59,18 @@ export const calculateDailyTransactions = (
   const dailyTransactions = [...filteredDeposits, ...filteredWithdrawals, ...filteredTransfers].reduce((acc, op) => {
     try {
       const date = new Date(op.created_at || op.operation_date || '').toLocaleDateString();
-      acc[date] = (acc[date] || 0) + 1;
+      if (date) {
+        acc[date] = (typeof acc[date] === 'number' ? acc[date] : 0) + 1;
+      }
     } catch (error) {
       console.warn("Error formatting operation date:", op.created_at || op.operation_date);
     }
     return acc;
   }, {} as Record<string, number>);
 
-  const averageTransactionsPerDay = Object.values(dailyTransactions).reduce((a, b) => a + b, 0) / 
-    Math.max(Object.keys(dailyTransactions).length, 1);
+  const totalTransactions = Object.values(dailyTransactions).reduce((a, b) => a + b, 0);
+  const daysCount = Math.max(Object.keys(dailyTransactions).length, 1);
+  const averageTransactionsPerDay = totalTransactions / daysCount;
     
   return { averageTransactionsPerDay };
 };
