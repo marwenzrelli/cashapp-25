@@ -7,35 +7,54 @@ export const useDepositSearch = (deposits: Deposit[]) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState("10");
 
+  // Corrected filtering logic
   const filteredDeposits = deposits.filter(deposit => {
+    // If search term is empty, return all deposits
     if (!searchTerm.trim()) return true;
     
-    const searchTerms = searchTerm.toLowerCase().split(',').map(term => term.trim());
+    const lowerSearchTerm = searchTerm.toLowerCase();
     
-    return searchTerms.some(term => {
-      if (deposit.client_name.toLowerCase().includes(term)) return true;
-      
-      if (deposit.description && deposit.description.toLowerCase().includes(term)) return true;
-      
-      if (deposit.id.toString().includes(term)) return true;
-      
-      return false;
-    });
+    // Check if the client name includes the search term
+    if (deposit.client_name.toLowerCase().includes(lowerSearchTerm)) {
+      return true;
+    }
+    
+    // Check if the description includes the search term
+    if (deposit.description && deposit.description.toLowerCase().includes(lowerSearchTerm)) {
+      return true;
+    }
+    
+    // Check if the ID includes the search term
+    if (deposit.id.toString().includes(lowerSearchTerm)) {
+      return true;
+    }
+    
+    return false;
   });
 
+  // Calculate pagination correctly
+  const totalItems = filteredDeposits.length;
+  const totalPages = Math.ceil(totalItems / parseInt(itemsPerPage));
+  
+  // Ensure current page is valid
+  const validCurrentPage = Math.max(1, Math.min(currentPage, totalPages || 1));
+  if (validCurrentPage !== currentPage) {
+    setCurrentPage(validCurrentPage);
+  }
+
   const paginatedDeposits = filteredDeposits.slice(
-    (currentPage - 1) * parseInt(itemsPerPage),
-    currentPage * parseInt(itemsPerPage)
+    (validCurrentPage - 1) * parseInt(itemsPerPage),
+    validCurrentPage * parseInt(itemsPerPage)
   );
 
   const handleSearchChange = (term: string) => {
     setSearchTerm(term);
-    setCurrentPage(1);
+    setCurrentPage(1); // Reset to first page when search changes
   };
 
   const handleItemsPerPageChange = (value: string) => {
     setItemsPerPage(value);
-    setCurrentPage(1);
+    setCurrentPage(1); // Reset to first page when items per page changes
   };
 
   return {
@@ -46,6 +65,7 @@ export const useDepositSearch = (deposits: Deposit[]) => {
     currentPage,
     setCurrentPage,
     filteredDeposits,
-    paginatedDeposits
+    paginatedDeposits,
+    totalItems
   };
 };

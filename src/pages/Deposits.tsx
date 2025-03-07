@@ -21,6 +21,7 @@ const Deposits = () => {
     editForm,
     deposits,
     paginatedDeposits,
+    filteredDeposits,
     handleDelete,
     confirmDelete,
     handleEdit,
@@ -31,19 +32,23 @@ const Deposits = () => {
     isLoading
   } = useDepositsPage();
 
-  // Fetch deposits when the component mounts
+  // Fetch deposits only when the component mounts
   useEffect(() => {
     console.log("Deposits page mounted - fetching deposits");
     fetchDeposits();
-  }, [fetchDeposits]);
+    // Intentionally not including fetchDeposits in the dependency array
+    // to prevent multiple fetches
+  }, []);
 
   console.log("Deposits page render - deposits count:", deposits?.length);
+  console.log("Deposits page render - filtered deposits count:", filteredDeposits?.length);
+  console.log("Deposits page render - paginated deposits count:", paginatedDeposits?.length);
   console.log("Deposits page render - isLoading:", isLoading);
-  console.log("Deposits page render - isEditDialogOpen:", isEditDialogOpen);
   
   return (
     <DepositsContent
       deposits={deposits}
+      filteredDeposits={filteredDeposits}
       paginatedDeposits={paginatedDeposits}
       searchTerm={searchTerm}
       setSearchTerm={setSearchTerm}

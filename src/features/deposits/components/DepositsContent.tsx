@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 interface DepositsContentProps {
   deposits: Deposit[];
+  filteredDeposits: Deposit[];
   paginatedDeposits: Deposit[];
   searchTerm: string;
   setSearchTerm: (term: string) => void;
@@ -39,6 +40,7 @@ interface DepositsContentProps {
 
 export const DepositsContent = ({
   deposits,
+  filteredDeposits,
   paginatedDeposits,
   searchTerm,
   setSearchTerm,
@@ -72,10 +74,6 @@ export const DepositsContent = ({
   React.useEffect(() => {
     fetchClients();
   }, [fetchClients]);
-  
-  const filteredDeposits = deposits.filter(deposit => 
-    deposit.client_name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   const handleRefreshClientBalance = async (clientId: string): Promise<boolean> => {
     try {
@@ -129,11 +127,22 @@ export const DepositsContent = ({
             <Skeleton className="h-12 w-full" />
           </div>
         ) : (
-          <DepositsTable 
-            deposits={paginatedDeposits} 
-            onEdit={handleEdit} 
-            onDelete={handleDelete} 
-          />
+          paginatedDeposits.length > 0 ? (
+            <DepositsTable 
+              deposits={paginatedDeposits} 
+              onEdit={handleEdit} 
+              onDelete={handleDelete} 
+            />
+          ) : (
+            <div className="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
+              <p className="text-gray-500">Aucun versement trouvé</p>
+              {searchTerm && (
+                <p className="text-sm text-gray-400 mt-2">
+                  Essayez de modifier vos critères de recherche
+                </p>
+              )}
+            </div>
+          )
         )}
       </div>
 

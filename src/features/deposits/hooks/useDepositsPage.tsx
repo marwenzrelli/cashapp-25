@@ -25,7 +25,8 @@ export const useDepositsPage = () => {
     currentPage,
     setCurrentPage,
     filteredDeposits,
-    paginatedDeposits
+    paginatedDeposits,
+    totalItems
   } = useDepositSearch(deposits);
 
   const {
@@ -84,6 +85,7 @@ export const useDepositsPage = () => {
     paginatedDeposits,
     isDeleting,
     isLoading,
+    totalItems,
     
     handleDelete,
     confirmDelete,
