@@ -33,11 +33,17 @@ const PublicClientProfile = () => {
         if (!session) {
           // If there's no existing session, create an anonymous session with our custom claims
           try {
+            // Create a random email and password for anonymous auth
+            const anonymousEmail = `anonymous-${Date.now()}@example.com`;
+            const anonymousPassword = `anonymous-${Date.now()}`;
+            
+            // Use correct options structure for signInWithPassword
             const { error } = await supabase.auth.signInWithPassword({
-              email: `anonymous-${Date.now()}@example.com`,
-              password: `anonymous-${Date.now()}`,
+              email: anonymousEmail,
+              password: anonymousPassword,
               options: {
-                data: {
+                captchaToken: undefined, // This is optional so we can set it to undefined
+                meta: { // Use meta instead of data for custom claims
                   public_token: token
                 }
               }
