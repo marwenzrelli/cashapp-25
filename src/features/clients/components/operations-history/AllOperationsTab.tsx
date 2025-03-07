@@ -14,10 +14,7 @@ interface AllOperationsTabProps {
 }
 
 export const AllOperationsTab = ({ operations, currency = "TND" }: AllOperationsTabProps) => {
-  console.log("AllOperationsTab rendering with operations:", operations?.length);
-  
   if (!operations || operations.length === 0) {
-    console.log("No operations to display");
     return <EmptyOperations />;
   }
 
@@ -32,6 +29,10 @@ export const AllOperationsTab = ({ operations, currency = "TND" }: AllOperations
               <TableHead>Date</TableHead>
               <TableHead>Description</TableHead>
               <TableHead className="text-center">Montant</TableHead>
+              {/* Only show transfer details column for transfer operations */}
+              {operations.some(op => op.type === "transfer") && (
+                <TableHead>Détails</TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -57,6 +58,16 @@ export const AllOperationsTab = ({ operations, currency = "TND" }: AllOperations
                   <TableCell className={`text-center font-medium ${getAmountColor(operation.type)}`}>
                     {operation.type === "withdrawal" ? "-" : ""}{Math.round(operation.amount)} {currency}
                   </TableCell>
+                  {/* Show transfer details only for transfers and if there are any transfers in the list */}
+                  {operations.some(op => op.type === "transfer") && operation.type === "transfer" && (
+                    <TableCell className="max-w-[200px] truncate">
+                      {operation.fromClient} → {operation.toClient}
+                    </TableCell>
+                  )}
+                  {/* Add empty cell for non-transfers to maintain table structure */}
+                  {operations.some(op => op.type === "transfer") && operation.type !== "transfer" && (
+                    <TableCell></TableCell>
+                  )}
                 </TableRow>
               );
             })}
@@ -73,6 +84,7 @@ export const AllOperationsTab = ({ operations, currency = "TND" }: AllOperations
             formatAmount={(amount) => `${Math.round(amount)}`}
             currency={currency}
             colorClass={getAmountColor(operation.type)}
+            showType={true}
           />
         ))}
       </div>
