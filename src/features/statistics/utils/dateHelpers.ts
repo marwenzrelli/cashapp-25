@@ -22,54 +22,98 @@ export const getMonthBoundaries = () => {
   };
 };
 
+/**
+ * Safely checks if a date is valid
+ */
+const isValidDate = (date: any): boolean => {
+  if (!date) return false;
+  const parsedDate = new Date(date);
+  return !isNaN(parsedDate.getTime());
+};
+
+/**
+ * Filters items by date range, handling invalid dates safely
+ */
 export const filterByDateRange = (items: any[], startDate: Date, endDate: Date, dateField: string = 'created_at') => {
+  if (!Array.isArray(items)) return [];
+  
   return items.filter(item => {
+    if (!item) return false;
+    
     try {
-      const itemDate = new Date(item[dateField] || item.operation_date || '');
-      return !isNaN(itemDate.getTime()) && itemDate >= startDate && itemDate <= endDate;
+      // Try operation_date first, then fall back to created_at
+      const dateStr = item[dateField] || item.operation_date || item.created_at || '';
+      if (!dateStr) return false;
+      
+      const itemDate = new Date(dateStr);
+      
+      // Skip invalid dates
+      if (isNaN(itemDate.getTime())) return false;
+      
+      return itemDate >= startDate && itemDate <= endDate;
     } catch (error) {
-      console.warn("Invalid date:", item[dateField] || item.operation_date);
       return false;
     }
   });
 };
 
+/**
+ * Generates last 30 days data with improved date validation
+ */
 export const generateLast30DaysData = (deposits: any[], withdrawals: any[], transfers: any[]) => {
+  // Ensure all arrays are valid
+  const safeDeposits = Array.isArray(deposits) ? deposits : [];
+  const safeWithdrawals = Array.isArray(withdrawals) ? withdrawals : [];
+  const safeTransfers = Array.isArray(transfers) ? transfers : [];
+  
+  // Pre-filter to remove invalid data
+  const validDeposits = safeDeposits.filter(dep => dep && (isValidDate(dep.created_at) || isValidDate(dep.operation_date)));
+  const validWithdrawals = safeWithdrawals.filter(w => w && (isValidDate(w.created_at) || isValidDate(w.operation_date)));
+  const validTransfers = safeTransfers.filter(t => t && (isValidDate(t.created_at) || isValidDate(t.operation_date)));
+  
+  // Generate data for last 30 days
   return Array.from({ length: 30 }, (_, i) => {
     const date = subDays(new Date(), i);
     const formattedDate = format(date, 'dd/MM');
     
-    const dayDeposits = deposits.filter(dep => {
+    const dayDeposits = validDeposits.filter(dep => {
       try {
-        return format(new Date(dep.created_at || dep.operation_date || ''), 'dd/MM') === formattedDate;
+        const depDate = new Date(dep.created_at || dep.operation_date || '');
+        return !isNaN(depDate.getTime()) && format(depDate, 'dd/MM') === formattedDate;
       } catch (error) {
         return false;
       }
     });
     
-    const dayWithdrawals = withdrawals.filter(w => {
+    const dayWithdrawals = validWithdrawals.filter(w => {
       try {
-        return format(new Date(w.created_at || w.operation_date || ''), 'dd/MM') === formattedDate;
+        const wDate = new Date(w.created_at || w.operation_date || '');
+        return !isNaN(wDate.getTime()) && format(wDate, 'dd/MM') === formattedDate;
       } catch (error) {
         return false;
       }
     });
     
-    const dayTransfers = transfers.filter(transfer => {
+    const dayTransfers = validTransfers.filter(transfer => {
       try {
         const transferDate = new Date(transfer.operation_date || transfer.created_at || '');
-        return !isNaN(transferDate.getTime()) && 
-          format(transferDate, 'dd/MM') === formattedDate;
+        return !isNaN(transferDate.getTime()) && format(transferDate, 'dd/MM') === formattedDate;
       } catch (error) {
         return false;
       }
     });
+    
+    // Safely calculate totals
+    const safeAmount = (val: unknown) => {
+      const num = Number(val);
+      return isNaN(num) ? 0 : Math.max(num, 0);
+    };
     
     return {
       date: formattedDate,
-      versements: dayDeposits.reduce((acc, dep) => acc + Math.max(dep.amount, 0), 0),
-      retraits: dayWithdrawals.reduce((acc, w) => acc + w.amount, 0),
-      virements: dayTransfers.reduce((acc, transfer) => acc + transfer.amount, 0),
+      versements: dayDeposits.reduce((acc, dep) => acc + safeAmount(dep.amount), 0),
+      retraits: dayWithdrawals.reduce((acc, w) => acc + safeAmount(w.amount), 0),
+      virements: dayTransfers.reduce((acc, transfer) => acc + safeAmount(transfer.amount), 0),
       transactions: dayDeposits.length + dayWithdrawals.length + dayTransfers.length
     };
   }).reverse();

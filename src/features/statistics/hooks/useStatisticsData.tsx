@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { filterData } from "../utils/dataFilters";
 import { getMonthBoundaries, generateLast30DaysData } from "../utils/dateHelpers";
@@ -45,38 +44,39 @@ export const useStatisticsData = () => {
     }
   }, [isLoading, attempted]);
 
-  // Check if we have valid data before attempting to process it
-  const hasValidData = validateStatisticsData(stats, deposits, withdrawals, transfersArray);
+  // Always consider data valid to show UI even with partial data
+  // This prevents the UI from getting stuck in loading state
+  const hasValidData = true;
 
-  // Processed data - only calculate if we have valid data
-  const filteredDeposits = hasValidData ? filterData(
-    deposits, 
+  // Processed data - filter out bad data before processing
+  const filteredDeposits = filterData(
+    Array.isArray(deposits) ? deposits : [], 
     "deposits",
     dateRange,
     clientFilter,
     transactionType
-  ) : [];
+  );
   
-  const filteredWithdrawals = hasValidData ? filterData(
-    withdrawals, 
+  const filteredWithdrawals = filterData(
+    Array.isArray(withdrawals) ? withdrawals : [], 
     "withdrawals",
     dateRange,
     clientFilter,
     transactionType
-  ) : [];
+  );
   
-  const filteredTransfers = hasValidData ? filterData(
-    transfersArray.map(t => ({
+  const filteredTransfers = filterData(
+    Array.isArray(transfersArray) ? transfersArray.map(t => ({
       fromClient: t.fromClient,
       toClient: t.toClient,
       amount: t.amount,
       operation_date: t.date,
-    })),
+    })) : [],
     "transfers",
     dateRange,
     clientFilter,
     transactionType
-  ) : [];
+  );
 
   // Calculate totals
   const { totalDeposits, totalWithdrawals, totalTransfers } = calculateTotals(
@@ -85,13 +85,15 @@ export const useStatisticsData = () => {
     filteredTransfers
   );
   
-  const netFlow = (stats?.total_deposits || 0) - (stats?.total_withdrawals || 0);
+  // Make sure we have access to stats, even if it's empty
+  const safeStats = ensureSafeStats(stats);
+  const netFlow = safeStats.total_deposits - safeStats.total_withdrawals;
 
   // Calculate monthly comparisons and daily averages
   let percentageChange = 0;
   let averageTransactionsPerDay = 0;
   
-  if (hasValidData) {
+  try {
     const monthBoundaries = getMonthBoundaries();
     
     // Get percentage change from monthly comparison
@@ -110,30 +112,42 @@ export const useStatisticsData = () => {
       filteredTransfers
     );
     averageTransactionsPerDay = dailyStats.averageTransactionsPerDay;
+  } catch (err) {
+    console.error("Error calculating statistics:", err);
+    // Keep default values
   }
 
-  // Chart data - only calculate if we have valid data
-  const last30DaysData = hasValidData 
-    ? generateLast30DaysData(filteredDeposits, filteredWithdrawals, filteredTransfers) 
-    : [];
+  // Chart data - try to generate even with partial data
+  let last30DaysData = [];
+  try {
+    last30DaysData = generateLast30DaysData(filteredDeposits, filteredWithdrawals, filteredTransfers);
+  } catch (err) {
+    console.error("Error generating chart data:", err);
+    last30DaysData = [];
+  }
 
-  // Client statistics - only calculate if we have valid deposits
-  const clientStats = hasValidData && filteredDeposits.length > 0 
-    ? generateClientStats(filteredDeposits) 
-    : {};
+  // Client statistics - generate if we have deposits
+  let clientStats = {};
+  try {
+    if (filteredDeposits.length > 0) {
+      clientStats = generateClientStats(filteredDeposits);
+    }
+  } catch (err) {
+    console.error("Error generating client stats:", err);
+    clientStats = {};
+  }
     
-  const topClients = hasValidData ? getTopClients(clientStats) : [];
+  // Top clients - generate if we have client stats
+  let topClients = [];
+  try {
+    topClients = getTopClients(clientStats);
+  } catch (err) {
+    console.error("Error generating top clients:", err);
+    topClients = [];
+  }
 
-  // Improved data validation
-  const dataIsValid = 
-    hasValidData &&
-    stats.total_deposits !== undefined &&
-    stats.total_withdrawals !== undefined &&
-    stats.client_count !== undefined &&
-    !isLoading;
-
-  // Make sure stats is always a valid object
-  const safeStats = ensureSafeStats(stats);
+  // Check if data is completely valid (for UI purposes)
+  const dataIsValid = !isLoading && stats && stats.total_deposits !== undefined;
 
   return {
     // Original data
@@ -168,7 +182,7 @@ export const useStatisticsData = () => {
     setTransactionType,
     
     // Loading and error states
-    isLoading,
+    isLoading: isLoading && !attempted, // Force loading to end if we've already attempted
     isSyncing,
     error,
     timeoutExceeded,

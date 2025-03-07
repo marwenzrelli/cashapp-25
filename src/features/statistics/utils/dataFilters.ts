@@ -11,6 +11,15 @@ interface FilteredData {
   operation_date?: string;
 }
 
+/**
+ * Safely checks if a date is valid
+ */
+const isValidDate = (dateStr: any): boolean => {
+  if (!dateStr) return false;
+  const date = new Date(dateStr);
+  return !isNaN(date.getTime());
+};
+
 export const filterData = (
   data: FilteredData[], 
   type: string, 
@@ -20,7 +29,6 @@ export const filterData = (
 ) => {
   // Validate input data
   if (!data || !Array.isArray(data)) {
-    console.warn(`Invalid data for type ${type}:`, data);
     return [];
   }
   
@@ -29,19 +37,15 @@ export const filterData = (
     if (!item) return false;
     
     try {
-      // Get date from item - fallback to current date if invalid
-      let itemDate: Date;
-      try {
-        itemDate = new Date(item.operation_date || item.created_at || '');
-        // Check if date is valid
-        if (isNaN(itemDate.getTime())) {
-          console.warn(`Invalid date for ${type}:`, item.operation_date || item.created_at);
-          itemDate = new Date(); // Fallback to current date
-        }
-      } catch (error) {
-        console.warn(`Error parsing date for ${type}:`, error);
-        itemDate = new Date(); // Fallback to current date
+      // Get date from item
+      const dateStr = item.operation_date || item.created_at;
+      
+      // Skip items with invalid dates
+      if (!isValidDate(dateStr)) {
+        return false;
       }
+      
+      const itemDate = new Date(dateStr);
       
       // Date range filtering
       const dateMatch = !dateRange?.from || !dateRange?.to || 
@@ -69,7 +73,7 @@ export const filterData = (
 
       return dateMatch && clientMatch && typeMatch;
     } catch (err) {
-      console.error(`Error filtering ${type} item:`, err, item);
+      // Silently handle errors to prevent console noise
       return false;
     }
   });
