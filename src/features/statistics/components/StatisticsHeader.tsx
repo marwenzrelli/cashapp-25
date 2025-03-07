@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface StatisticsHeaderProps {
   isSyncing: boolean;
@@ -28,7 +29,7 @@ export const StatisticsHeader = ({
         disabled={isSyncing || isLoading}
       >
         <RefreshCw className={`h-4 w-4 ${isSyncing || isLoading ? 'animate-spin' : ''}`} />
-        {isSyncing ? 'Synchronisation...' : 'Synchroniser'}
+        {isSyncing ? 'Synchronisation...' : isLoading ? 'Chargement...' : 'Synchroniser'}
       </Button>
     </div>
   );

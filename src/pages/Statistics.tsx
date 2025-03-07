@@ -44,13 +44,24 @@ const Statistics = () => {
     error,
     timeoutExceeded,
     dataIsValid,
+    hasValidData,
     
     // Actions
     refreshData
   } = useStatisticsData();
 
-  // If data is still loading
-  if (isLoading) {
+  // Track if we've attempted to show data
+  const [attempted, setAttempted] = useState(false);
+  
+  useEffect(() => {
+    // If we were loading and now we're not, mark as attempted
+    if (!isLoading && !attempted) {
+      setAttempted(true);
+    }
+  }, [isLoading, attempted]);
+
+  // If data is still loading and we haven't attempted to show data yet
+  if (isLoading && !attempted) {
     return (
       <div className="space-y-8">
         <StatisticsHeader 
@@ -89,6 +100,7 @@ const Statistics = () => {
     );
   }
 
+  // Fall back to showing the data even if it's not fully valid after the first loading
   return (
     <div className="space-y-8 animate-in">
       <StatisticsHeader 
@@ -106,28 +118,45 @@ const Statistics = () => {
         setTransactionType={setTransactionType}
       />
 
-      <StatisticsCards
-        totalDeposits={stats.total_deposits}
-        totalWithdrawals={stats.total_withdrawals}
-        sentTransfers={stats.sent_transfers}
-        transferCount={stats.transfer_count}
-        netFlow={netFlow}
-        clientCount={stats.client_count}
-        percentageChange={percentageChange}
-        averageTransactionsPerDay={averageTransactionsPerDay}
-      />
+      {(!hasValidData && attempted) ? (
+        <div className="p-6 rounded-lg border border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20 space-y-4">
+          <p className="text-center text-muted-foreground">
+            Certaines données n'ont pas pu être chargées correctement. 
+            <button 
+              onClick={refreshData} 
+              className="ml-2 text-primary hover:underline"
+              disabled={isSyncing || isLoading}
+            >
+              Réessayer
+            </button>
+          </p>
+        </div>
+      ) : (
+        <>
+          <StatisticsCards
+            totalDeposits={stats.total_deposits}
+            totalWithdrawals={stats.total_withdrawals}
+            sentTransfers={stats.sent_transfers}
+            transferCount={stats.transfer_count}
+            netFlow={netFlow}
+            clientCount={stats.client_count}
+            percentageChange={percentageChange}
+            averageTransactionsPerDay={averageTransactionsPerDay}
+          />
 
-      <ChartSection
-        last30DaysData={last30DaysData}
-        topClients={topClients}
-      />
+          <ChartSection
+            last30DaysData={last30DaysData}
+            topClients={topClients}
+          />
 
-      <InsightsSection
-        percentageChange={percentageChange}
-        averageTransactionsPerDay={averageTransactionsPerDay}
-        totalDeposits={stats.total_deposits}
-        depositsLength={Array.isArray(deposits) ? deposits.length : 0}
-      />
+          <InsightsSection
+            percentageChange={percentageChange}
+            averageTransactionsPerDay={averageTransactionsPerDay}
+            totalDeposits={stats.total_deposits}
+            depositsLength={Array.isArray(deposits) ? deposits.length : 0}
+          />
+        </>
+      )}
     </div>
   );
 };
