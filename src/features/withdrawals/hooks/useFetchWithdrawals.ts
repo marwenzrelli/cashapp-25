@@ -10,6 +10,7 @@ export const useFetchWithdrawals = () => {
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retries, setRetries] = useState(0);
 
   const fetchWithdrawals = async () => {
     setLoading(true);
@@ -22,9 +23,6 @@ export const useFetchWithdrawals = () => {
       if (sessionError) {
         console.error("Erreur de session:", sessionError);
         setError(handleSupabaseError(sessionError));
-        toast.error("Erreur d'authentification", {
-          description: handleSupabaseError(sessionError),
-        });
         setLoading(false);
         return;
       }
@@ -35,7 +33,6 @@ export const useFetchWithdrawals = () => {
         console.warn("No active session found when fetching withdrawals");
         setLoading(false);
         setError("Authentication required");
-        toast.error("Vous devez être connecté pour accéder aux retraits");
         return;
       }
       
@@ -49,7 +46,6 @@ export const useFetchWithdrawals = () => {
       if (fetchError) {
         console.error("Erreur lors de la récupération des retraits:", fetchError);
         setError(handleSupabaseError(fetchError));
-        showErrorToast("Erreur lors de la récupération des retraits", fetchError);
         setLoading(false);
         return;
       }
@@ -77,12 +73,37 @@ export const useFetchWithdrawals = () => {
       });
 
       setWithdrawals(transformedWithdrawals);
+      // Reset retries on success
+      setRetries(0);
     } catch (error) {
       console.error("Erreur inattendue lors de la récupération des retraits:", error);
-      setError("Erreur inattendue lors de la récupération des retraits.");
-      toast.error("Erreur inattendue", {
-        description: "Une erreur s'est produite lors de la récupération des retraits.",
-      });
+      
+      // Handle network errors specifically
+      if (error instanceof Error && error.message.includes("Failed to fetch")) {
+        setError("Problème de connexion au serveur. Vérifiez votre connexion internet.");
+        
+        // Only show toast for first few retries to avoid spamming
+        if (retries < 3) {
+          toast.error("Problème de connexion", {
+            description: "Tentative de reconnexion en cours...",
+          });
+        }
+        
+        // Increment retry count
+        setRetries(prev => prev + 1);
+        
+        // Auto retry after delay (only for first 5 retries)
+        if (retries < 5) {
+          setTimeout(() => {
+            fetchWithdrawals();
+          }, 3000); // 3 second delay between retries
+        }
+      } else {
+        setError("Erreur inattendue lors de la récupération des retraits.");
+        toast.error("Erreur inattendue", {
+          description: "Une erreur s'est produite lors de la récupération des retraits.",
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -92,6 +113,7 @@ export const useFetchWithdrawals = () => {
     withdrawals,
     isLoading: loading,
     error,
-    fetchWithdrawals
+    fetchWithdrawals,
+    retries
   };
 };

@@ -3,16 +3,19 @@ import { useEffect, useCallback, useState } from "react";
 import { useFetchWithdrawals } from "./useFetchWithdrawals";
 import { useDeleteWithdrawal } from "./useDeleteWithdrawal";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const useWithdrawals = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [authChecking, setAuthChecking] = useState(true);
+  const [networkStatus, setNetworkStatus] = useState<'online' | 'offline' | 'reconnecting'>('online');
   
   const { 
     withdrawals, 
     isLoading: fetchLoading, 
     error, 
-    fetchWithdrawals 
+    fetchWithdrawals,
+    retries 
   } = useFetchWithdrawals();
 
   const {
@@ -52,6 +55,43 @@ export const useWithdrawals = () => {
     } finally {
       setAuthChecking(false);
     }
+  }, []);
+
+  // Update network status based on retry count
+  useEffect(() => {
+    if (retries > 0) {
+      setNetworkStatus('reconnecting');
+    } else if (navigator.onLine) {
+      setNetworkStatus('online');
+    } else {
+      setNetworkStatus('offline');
+    }
+  }, [retries]);
+
+  // Listen for online/offline events
+  useEffect(() => {
+    const handleOnline = () => {
+      setNetworkStatus('online');
+      toast.success("Connexion rétablie", { 
+        description: "La connexion internet a été rétablie" 
+      });
+      fetchData();
+    };
+    
+    const handleOffline = () => {
+      setNetworkStatus('offline');
+      toast.error("Connexion perdue", { 
+        description: "Vérifiez votre connexion internet" 
+      });
+    };
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
   }, []);
 
   // Memoize fetchWithdrawals to avoid infinite loops
@@ -101,6 +141,7 @@ export const useWithdrawals = () => {
     confirmDeleteWithdrawal,
     withdrawalToDelete,
     showDeleteDialog,
-    setShowDeleteDialog
+    setShowDeleteDialog,
+    networkStatus
   };
 };

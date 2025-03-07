@@ -9,6 +9,8 @@ import { toast } from "sonner";
 import { GeneralErrorState } from "@/features/admin/components/administration/GeneralErrorState";
 import { NoUserProfileState } from "@/features/admin/components/administration/NoUserProfileState";
 import { LoadingState } from "@/features/admin/components/administration/LoadingState";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Wifi, WifiOff } from "lucide-react";
 
 const Withdrawals = () => {
   const { 
@@ -22,7 +24,8 @@ const Withdrawals = () => {
     setShowDeleteDialog,
     isAuthenticated,
     authChecking,
-    checkAuth
+    checkAuth,
+    networkStatus
   } = useWithdrawals();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -101,6 +104,41 @@ const Withdrawals = () => {
         isRetrying={retryingAuth}
         onRetry={handleAuthRetry}
       />
+    );
+  }
+
+  // Show network status alert
+  if (networkStatus === 'offline') {
+    return (
+      <div className="space-y-8">
+        <Alert variant="destructive" className="mb-6">
+          <WifiOff className="h-5 w-5 mr-2" />
+          <AlertTitle>Connexion Internet perdue</AlertTitle>
+          <AlertDescription>
+            Veuillez vérifier votre connexion internet et réessayer.
+          </AlertDescription>
+        </Alert>
+        <GeneralErrorState 
+          errorMessage="Problème de connexion réseau"
+          isRetrying={isLoading} 
+          onRetry={fetchWithdrawals}
+        />
+      </div>
+    );
+  }
+
+  if (networkStatus === 'reconnecting') {
+    return (
+      <div className="space-y-8">
+        <Alert className="mb-6 border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20">
+          <Wifi className="h-5 w-5 mr-2 text-yellow-600" />
+          <AlertTitle>Tentative de reconnexion...</AlertTitle>
+          <AlertDescription>
+            Nous essayons de rétablir la connexion avec le serveur.
+          </AlertDescription>
+        </Alert>
+        <LoadingState message="Tentative de reconnexion en cours..." />
+      </div>
     );
   }
 
