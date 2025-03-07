@@ -42,7 +42,7 @@ export const PersonalInfoFields = ({
         <div className="flex items-center gap-3">
           <Mail className="h-5 w-5 text-primary" />
           <div>
-            <p className="text-sm text-muted-foreground">Email</p>
+            <p className="text-sm text-muted-foreground text-left">Email</p>
             <p className="font-medium">{client.email || "Non renseigné"}</p>
           </div>
         </div>
