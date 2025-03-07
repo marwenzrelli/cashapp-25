@@ -56,16 +56,25 @@ export const calculateDailyTransactions = (
   filteredWithdrawals: any[],
   filteredTransfers: any[]
 ) => {
+  // Combine all transactions and filter out any with invalid dates
+  const allTransactions = [
+    ...filteredDeposits,
+    ...filteredWithdrawals, 
+    ...filteredTransfers
+  ].filter(op => {
+    const dateStr = op.created_at || op.operation_date || '';
+    return dateStr && !isNaN(new Date(dateStr).getTime());
+  });
+
   // Daily transactions
-  const dailyTransactions = [...filteredDeposits, ...filteredWithdrawals, ...filteredTransfers].reduce((acc, op) => {
+  const dailyTransactions = allTransactions.reduce((acc, op) => {
     try {
       const dateStr = op.created_at || op.operation_date || '';
-      if (!dateStr) return acc;
-      
       const date = new Date(dateStr).toLocaleDateString();
-      if (date) {
-        // Ensure we're working with numbers by explicitly converting or defaulting to 0
-        const currentCount = typeof acc[date] === 'number' ? acc[date] : 0;
+      
+      // Only process if we have a valid date
+      if (date && !isNaN(new Date(date).getTime())) {
+        const currentCount = acc[date] || 0;
         acc[date] = currentCount + 1;
       }
     } catch (error) {
