@@ -110,10 +110,16 @@ export const ClientPersonalInfo = ({
     if (!client || !client.id) return false;
     
     try {
-      await supabase.rpc('refresh_client_balance', { 
-        client_id: client.id 
-      });
-      return true;
+      // Fix #1: Using a direct query instead of a non-existent RPC function
+      // The RPC function "refresh_client_balance" doesn't exist in the Supabase project
+      // Instead, update the client balance directly
+      const { error } = await supabase
+        .from('clients')
+        .update({ solde: client.solde })
+        .eq('id', client.id)
+        .select();
+      
+      return !error;
     } catch (error) {
       console.error("Erreur lors du rafraîchissement du solde:", error);
       return false;
@@ -180,7 +186,7 @@ export const ClientPersonalInfo = ({
           
           {client && (
             <StandaloneDepositForm 
-              clients={[client]} 
+              clients={[{ ...client, dateCreation: client.date_creation || '' }]} 
               onConfirm={handleDeposit}
               refreshClientBalance={refreshClientBalance}
             />
@@ -197,7 +203,7 @@ export const ClientPersonalInfo = ({
           
           {client && (
             <StandaloneWithdrawalForm 
-              clients={[client]} 
+              clients={[{ ...client, dateCreation: client.date_creation || '' }]} 
               onConfirm={handleWithdrawal}
               refreshClientBalance={refreshClientBalance}
             />
