@@ -3,7 +3,6 @@ import React from "react";
 import { useWithdrawals } from "../hooks/useWithdrawals";
 import { useClients } from "@/features/clients/hooks/useClients";
 import { useWithdrawalPagination } from "../hooks/useWithdrawalPagination";
-import { LoadingState } from "@/features/admin/components/administration/LoadingState";
 import { Operation } from "@/features/operations/types";
 import { ClientSubscriptionHandler } from "./ClientSubscriptionHandler";
 import { WithdrawalAuthState } from "./WithdrawalAuthState";
@@ -53,6 +52,17 @@ export const WithdrawalsPage: React.FC<WithdrawalsPageProps> = ({
     paginatedWithdrawals
   } = useWithdrawalPagination(withdrawals);
 
+  // Helper function for refreshClientBalance that adapts the types
+  const handleRefreshClientBalance = async (clientId: string): Promise<boolean> => {
+    try {
+      await refreshClientBalance(parseInt(clientId, 10));
+      return true;
+    } catch (error) {
+      console.error("Error refreshing client balance:", error);
+      return false;
+    }
+  };
+
   // Auth state component
   const authStateComponent = (
     <WithdrawalAuthState 
@@ -63,7 +73,7 @@ export const WithdrawalsPage: React.FC<WithdrawalsPageProps> = ({
     />
   );
 
-  if (authStateComponent) {
+  if (authStateComponent.props.isAuthenticated === false || authStateComponent.props.authChecking) {
     return authStateComponent;
   }
 
@@ -86,7 +96,7 @@ export const WithdrawalsPage: React.FC<WithdrawalsPageProps> = ({
       clients={clients}
       fetchClients={fetchClients}
       refreshClientBalance={handleRefreshClientBalance}
-      deleteWithdrawal={handleDeleteWithdrawal}
+      deleteWithdrawal={deleteWithdrawal}
       showDeleteDialog={showDeleteDialog}
       setShowDeleteDialog={setShowDeleteDialog}
       confirmDeleteWithdrawal={confirmDeleteWithdrawal}
@@ -99,7 +109,7 @@ export const WithdrawalsPage: React.FC<WithdrawalsPageProps> = ({
     />
   );
 
-  if (networkStateComponent) {
+  if (networkStateComponent.props.networkStatus !== 'online' || networkStateComponent.props.error) {
     return (
       <>
         {clientSubscription}
@@ -118,7 +128,7 @@ export const WithdrawalsPage: React.FC<WithdrawalsPageProps> = ({
     />
   );
 
-  if (loadingStateComponent) {
+  if (loadingStateComponent.props.isLoading && !loadingStateComponent.props.error && withdrawals.length === 0) {
     return (
       <>
         {clientSubscription}
@@ -126,17 +136,6 @@ export const WithdrawalsPage: React.FC<WithdrawalsPageProps> = ({
       </>
     );
   }
-
-  // Helper function for refreshClientBalance
-  const handleRefreshClientBalance = async (clientId: string): Promise<boolean> => {
-    try {
-      await refreshClientBalance(parseInt(clientId, 10));
-      return true;
-    } catch (error) {
-      console.error("Error refreshing client balance:", error);
-      return false;
-    }
-  };
 
   // Main content component
   return (
@@ -147,7 +146,7 @@ export const WithdrawalsPage: React.FC<WithdrawalsPageProps> = ({
         clients={clients}
         fetchWithdrawals={useWithdrawals().fetchWithdrawals}
         fetchClients={fetchClients}
-        refreshClientBalance={refreshClientBalance}
+        refreshClientBalance={handleRefreshClientBalance}
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         itemsPerPage={itemsPerPage}
