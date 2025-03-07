@@ -9,7 +9,7 @@ import { ClientIdBadge } from "./ClientIdBadge";
 import { ArrowDownToLine, ArrowUpToLine } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { StandaloneDepositForm } from "@/features/deposits/components/DepositForm";
-import { StandaloneWithdrawalForm } from "@/features/withdrawals/components/WithdrawalForm";
+import { StandaloneWithdrawalForm } from "@/features/withdrawals/components/standalone/StandaloneWithdrawalForm";
 import { Deposit } from "@/features/deposits/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";

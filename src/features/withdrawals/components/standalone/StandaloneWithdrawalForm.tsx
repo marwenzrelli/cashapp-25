@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowDownCircle } from "lucide-react";
@@ -12,19 +11,19 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 
-interface ExtendedClient extends Client {
+export interface ExtendedClient extends Client {
   dateCreation: string;
 }
 
 export interface StandaloneWithdrawalFormProps {
   clients: ExtendedClient[];
-  fetchWithdrawals: () => Promise<void>;
-  refreshClientBalance: (clientId: string) => Promise<boolean>;
+  onConfirm: (withdrawal: any) => Promise<void>;
+  refreshClientBalance: (clientId?: string) => Promise<boolean>;
 }
 
 export const StandaloneWithdrawalForm: React.FC<StandaloneWithdrawalFormProps> = ({
   clients,
-  fetchWithdrawals,
+  onConfirm,
   refreshClientBalance,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -57,24 +56,14 @@ export const StandaloneWithdrawalForm: React.FC<StandaloneWithdrawalFormProps> =
 
       const dateObj = new Date(newWithdrawal.date);
       
-      const { data, error } = await supabase
-        .from('withdrawals')
-        .insert({
-          client_name: `${selectedClient.prenom} ${selectedClient.nom}`,
-          amount: amount,
-          operation_date: dateObj.toISOString(),
-          notes: newWithdrawal.notes
-        });
+      const withdrawal = {
+        client_name: `${selectedClient.prenom} ${selectedClient.nom}`,
+        amount: amount,
+        date: dateObj.toISOString(),
+        notes: newWithdrawal.notes
+      };
 
-      if (error) {
-        console.error("Erreur lors de l'ajout du retrait:", error);
-        toast.error("Erreur lors de l'ajout du retrait");
-        throw error;
-      }
-
-      toast.success("Retrait ajouté avec succès");
-      
-      await fetchWithdrawals();
+      await onConfirm(withdrawal);
       
       if (newWithdrawal.clientId) {
         await refreshClientBalance(newWithdrawal.clientId);
