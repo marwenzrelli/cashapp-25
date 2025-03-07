@@ -83,7 +83,7 @@ export const WithdrawalFormDialog: React.FC<WithdrawalFormDialogProps> = ({
             clientId: clientId,
             amount: amountStr,
             notes: selectedWithdrawal.notes || "",
-            date: selectedWithdrawal.operation_date || new Date().toISOString(),
+            date: selectedWithdrawal.date || new Date().toISOString(), // Use the 'date' property instead of 'operation_date'
           });
           
           // Update selected client in parent
@@ -135,7 +135,7 @@ export const WithdrawalFormDialog: React.FC<WithdrawalFormDialogProps> = ({
         client_name: clientName,
         amount: newWithdrawal.amount,
         notes: newWithdrawal.notes,
-        operation_date: newWithdrawal.date,
+        operation_date: newWithdrawal.date, // Map the date to operation_date for the API call
       });
 
       if (success) {
