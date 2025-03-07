@@ -3,7 +3,6 @@ import React from "react";
 import { Operation } from "@/features/operations/types";
 import { format } from "date-fns";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getTypeStyle, getTypeIcon } from "@/features/operations/utils/operation-helpers";
 import { OperationsMobileCard } from "./OperationsMobileCard";
 import { EmptyOperations } from "./EmptyOperations";
 
@@ -29,7 +28,6 @@ export const DepositOperationsTab = ({ operations, currency = "TND" }: DepositOp
               <TableHead>Date</TableHead>
               <TableHead>Description</TableHead>
               <TableHead className="text-center">Montant</TableHead>
-              <TableHead>Client</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -43,7 +41,6 @@ export const DepositOperationsTab = ({ operations, currency = "TND" }: DepositOp
                   <TableCell className="text-center font-medium text-green-600 dark:text-green-400">
                     {Math.round(operation.amount)} {currency}
                   </TableCell>
-                  <TableCell className="max-w-[200px] truncate">{operation.fromClient}</TableCell>
                 </TableRow>
               );
             })}
