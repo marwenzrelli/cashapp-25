@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -45,14 +44,11 @@ export const OperationActionsDialog = ({
     notes: ""
   });
   
-  // Pour gérer les dépôts
   const [selectedDeposit, setSelectedDeposit] = useState<Deposit | null>(null);
   
-  // Update imports to use the functions directly from the hooks
   const { handleWithdrawal, deleteWithdrawal } = useClientWithdrawal(clientId, refetchClient);
   const { handleDeposit } = useClientDeposit(clientId, refetchClient);
   
-  // Fetch client data when needed
   useEffect(() => {
     if (isOpen && operation?.type === 'deposit' && clientId) {
       fetchClients();
@@ -60,14 +56,12 @@ export const OperationActionsDialog = ({
     }
   }, [isOpen, operation, clientId]);
   
-  // Reset form when operation changes
   useEffect(() => {
     if (operation) {
       setAmount(Math.abs(operation.amount));
       setNotes(operation.description || '');
       
       if (operation.type === 'deposit' && operation.id) {
-        // Préparer le formulaire pour le dépôt
         setEditForm({
           clientName: operation.fromClient || '',
           amount: Math.abs(operation.amount).toString(),
@@ -79,7 +73,6 @@ export const OperationActionsDialog = ({
     }
   }, [operation]);
   
-  // Récupérer les informations de dépôt détaillées
   const fetchDepositDetails = async () => {
     if (!operation?.id || operation.type !== 'deposit') return;
     
@@ -87,7 +80,7 @@ export const OperationActionsDialog = ({
       const { data, error } = await supabase
         .from('deposits')
         .select('*')
-        .eq('id', parseInt(operation.id, 10)) // Parse string to number
+        .eq('id', parseInt(operation.id, 10))
         .single();
       
       if (error) {
@@ -96,7 +89,6 @@ export const OperationActionsDialog = ({
       }
       
       if (data) {
-        // Type conversion for deposit data
         const depositData: Deposit = {
           id: data.id,
           amount: data.amount,
@@ -111,7 +103,6 @@ export const OperationActionsDialog = ({
         
         setSelectedDeposit(depositData);
         
-        // Mise à jour du formulaire avec les données complètes
         const formattedDateTime = formatISODateTime(data.operation_date || data.created_at);
         
         setEditForm({
@@ -127,7 +118,6 @@ export const OperationActionsDialog = ({
     }
   };
   
-  // Récupérer la liste des clients
   const fetchClients = async () => {
     try {
       const { data, error } = await supabase
@@ -148,18 +138,14 @@ export const OperationActionsDialog = ({
     }
   };
   
-  // Function to delete a deposit
   const deleteDeposit = async (depositId: string | number) => {
     setLoading(true);
     try {
-      // Get the user session
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id;
       
-      // Convert ID to number if it's a string
       const numericId = typeof depositId === 'string' ? parseInt(depositId, 10) : depositId;
       
-      // First, get the deposit to log it before deletion
       const { data: depositData, error: fetchError } = await supabase
         .from('deposits')
         .select('*')
@@ -172,7 +158,6 @@ export const OperationActionsDialog = ({
         return false;
       }
       
-      // Log the deposit in deleted_deposits
       const { error: logError } = await supabase
         .from('deleted_deposits')
         .insert({
@@ -191,7 +176,6 @@ export const OperationActionsDialog = ({
         return false;
       }
       
-      // Delete the deposit
       const { error: deleteError } = await supabase
         .from('deposits')
         .delete()
@@ -212,7 +196,6 @@ export const OperationActionsDialog = ({
     }
   };
   
-  // Gérer le changement de formulaire pour le dépôt
   const handleEditFormChange = (field: keyof EditFormData, value: string) => {
     setEditForm(prev => ({
       ...prev,
@@ -220,18 +203,15 @@ export const OperationActionsDialog = ({
     }));
   };
   
-  // Confirmer les modifications du dépôt
   const handleConfirmDepositEdit = async () => {
     if (!operation?.id || operation.type !== 'deposit') return false;
     
     setLoading(true);
     try {
-      // Construire la date d'opération à partir des champs date et heure
       const operationDate = editForm.date && editForm.time 
         ? `${editForm.date}T${editForm.time}` 
         : new Date().toISOString();
       
-      // Mise à jour du dépôt dans la base de données
       const { data: { session } } = await supabase.auth.getSession();
       const { error } = await supabase
         .from('deposits')
@@ -242,7 +222,7 @@ export const OperationActionsDialog = ({
           operation_date: operationDate,
           last_modified_at: new Date().toISOString()
         })
-        .eq('id', parseInt(operation.id, 10)); // Parse string to number
+        .eq('id', parseInt(operation.id, 10));
       
       if (error) {
         console.error("Erreur lors de la mise à jour du dépôt:", error);
@@ -275,7 +255,6 @@ export const OperationActionsDialog = ({
     
     try {
       if (mode === 'delete') {
-        // Handle delete logic based on operation type
         if (operation.type === 'withdrawal' && operation.id) {
           const success = await deleteWithdrawal(parseInt(operation.id, 10));
           if (success) {
@@ -295,7 +274,6 @@ export const OperationActionsDialog = ({
             toast.error("Échec de la suppression", { description: "Une erreur s'est produite lors de la suppression du versement" });
           }
         } else {
-          // For other operation types that don't have deletion implemented yet
           toast.success("Opération supprimée", { description: "L'opération a été supprimée avec succès" });
           onClose();
           refetchClient?.();
@@ -303,14 +281,12 @@ export const OperationActionsDialog = ({
         return;
       }
       
-      // Pour les modifications, si c'est un dépôt, on affiche le modal spécifique
       if (operation.type === 'deposit') {
         setEditDepositDialogOpen(true);
         setLoading(false);
         return;
       }
       
-      // Prepare operation data for other operation types
       const operationData = {
         client_name: operation.fromClient,
         amount: Math.abs(amount),
@@ -318,7 +294,6 @@ export const OperationActionsDialog = ({
         notes: notes
       };
       
-      // Call appropriate API based on operation type
       let success = false;
       
       if (operation.type === "withdrawal") {
@@ -354,7 +329,11 @@ export const OperationActionsDialog = ({
   
   if (!operation) return null;
   
-  // Si c'est un dépôt en mode édition et que le modal d'édition est ouvert
+  const handleConfirmDepositEditWrapper = async () => {
+    const result = await handleConfirmDepositEdit();
+    return;
+  };
+  
   if (operation.type === 'deposit' && mode === 'edit' && editDepositDialogOpen) {
     return (
       <EditDepositDialog
@@ -365,7 +344,7 @@ export const OperationActionsDialog = ({
         }}
         editForm={editForm}
         onEditFormChange={handleEditFormChange}
-        onConfirm={handleConfirmDepositEdit}
+        onConfirm={handleConfirmDepositEditWrapper}
         isLoading={loading}
         selectedDeposit={selectedDeposit}
         clients={clients}
@@ -449,4 +428,3 @@ export const OperationActionsDialog = ({
     </Dialog>
   );
 };
-
