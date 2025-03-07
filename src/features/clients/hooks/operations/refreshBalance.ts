@@ -6,20 +6,20 @@ import { toast } from "sonner";
 export const useRefreshClientBalance = (
   setClients: React.Dispatch<React.SetStateAction<Client[]>>
 ) => {
-  // Fonction pour rafraîchir le solde d'un client
-  const refreshClientBalance = async (id: number | string) => {
+  // Function to refresh a client's balance
+  const refreshClientBalance = async (id: number | string): Promise<boolean> => {
     try {
-      // Assurer que l'id est un nombre
+      // Ensure the ID is a number
       const clientId = typeof id === 'string' ? parseInt(id, 10) : id;
       
-      console.log("Rafraîchissement du solde pour le client ID:", clientId);
+      console.log("Refreshing balance for client ID:", clientId);
       
-      // Vérifier la connexion à Supabase
+      // Check Supabase connection
       if (!supabase) {
-        throw new Error("La connexion à la base de données n'est pas disponible");
+        throw new Error("Database connection is not available");
       }
       
-      // Obtenir les informations du client
+      // Get client information
       const { data: clientData, error: clientError } = await supabase
         .from('clients')
         .select('prenom, nom')
@@ -27,77 +27,77 @@ export const useRefreshClientBalance = (
         .single();
       
       if (clientError) {
-        console.error("Erreur lors de la récupération du client:", clientError);
+        console.error("Error retrieving client:", clientError);
         return false;
       }
       
       if (!clientData) {
-        console.error("Client non trouvé pour l'ID:", clientId);
+        console.error("Client not found for ID:", clientId);
         return false;
       }
       
       const clientFullName = `${clientData.prenom} ${clientData.nom}`;
-      console.log("Nom complet du client:", clientFullName);
+      console.log("Client full name:", clientFullName);
       
-      // Obtenir le total des versements pour ce client
+      // Get total deposits for this client
       const { data: deposits, error: depositsError } = await supabase
         .from('deposits')
         .select('amount')
         .eq('client_name', clientFullName);
       
       if (depositsError) {
-        console.error("Erreur lors de la récupération des versements:", depositsError);
+        console.error("Error retrieving deposits:", depositsError);
         return false;
       }
       
-      // Obtenir le total des retraits pour ce client
+      // Get total withdrawals for this client
       const { data: withdrawals, error: withdrawalsError } = await supabase
         .from('withdrawals')
         .select('amount')
         .eq('client_name', clientFullName);
       
       if (withdrawalsError) {
-        console.error("Erreur lors de la récupération des retraits:", withdrawalsError);
+        console.error("Error retrieving withdrawals:", withdrawalsError);
         return false;
       }
       
-      // Calculer le solde manuellement
+      // Calculate balance manually
       const totalDeposits = deposits?.reduce((acc, dep) => acc + Number(dep.amount), 0) || 0;
       const totalWithdrawals = withdrawals?.reduce((acc, wd) => acc + Number(wd.amount), 0) || 0;
       const balance = totalDeposits - totalWithdrawals;
       
-      console.log(`Solde calculé pour ${clientFullName}: 
-        Versements: ${totalDeposits}, 
-        Retraits: ${totalWithdrawals}, 
-        Solde final: ${balance}`);
+      console.log(`Balance calculated for ${clientFullName}: 
+        Deposits: ${totalDeposits}, 
+        Withdrawals: ${totalWithdrawals}, 
+        Final balance: ${balance}`);
       
-      // Mettre à jour le solde dans la base de données
+      // Update balance in database
       const { error: updateError } = await supabase
         .from('clients')
         .update({ solde: balance })
         .eq('id', clientId);
       
       if (updateError) {
-        console.error("Erreur lors de la mise à jour du solde:", updateError);
-        toast.error("Erreur lors de la mise à jour du solde", {
+        console.error("Error updating balance:", updateError);
+        toast.error("Error updating balance", {
           description: updateError.message
         });
         return false;
       }
       
-      // Mettre à jour le client dans l'état local
+      // Update client in local state
       setClients(prevClients => 
         prevClients.map(client => 
           client.id === clientId ? { ...client, solde: balance } : client
         )
       );
       
-      console.log(`Solde du client ${clientFullName} mis à jour avec succès: ${balance}`);
+      console.log(`Client ${clientFullName} balance successfully updated: ${balance}`);
       return true;
     } catch (error) {
-      console.error("Erreur lors du rafraîchissement du solde:", error);
-      toast.error("Erreur lors du rafraîchissement du solde", {
-        description: error instanceof Error ? error.message : "Erreur inconnue"
+      console.error("Error refreshing balance:", error);
+      toast.error("Error refreshing balance", {
+        description: error instanceof Error ? error.message : "Unknown error"
       });
       return false;
     }

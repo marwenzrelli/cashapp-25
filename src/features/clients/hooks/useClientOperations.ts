@@ -19,7 +19,7 @@ export function useClientOperations(client: Client, clientId?: number, refetchCl
         }
       } = await supabase.auth.getSession();
       
-      // Insérer le versement dans la base de données
+      // Insert deposit into database
       const {
         data: insertedDeposit,
         error
@@ -32,35 +32,35 @@ export function useClientOperations(client: Client, clientId?: number, refetchCl
       }).select();
       
       if (error) {
-        console.error("Erreur lors de la création du versement:", error);
-        toast.error("Erreur lors de la création du versement", {
+        console.error("Error creating deposit:", error);
+        toast.error("Error creating deposit", {
           description: error.message
         });
         return false;
       }
       
-      toast.success("Versement effectué", {
-        description: `Un versement de ${deposit.amount} TND a été ajouté pour ${deposit.client_name}`
+      toast.success("Deposit completed", {
+        description: `A deposit of ${deposit.amount} TND has been added for ${deposit.client_name}`
       });
       
-      // Rafraîchir manuellement le solde client
+      // Manually refresh client balance
       const clientIdToRefresh = client?.id || clientId;
       if (clientIdToRefresh) {
         await refreshClientBalance(clientIdToRefresh);
       }
       
-      // Invalider les requêtes mises en cache pour actualiser les listes d'opérations
+      // Invalidate cached queries to update operation lists
       invalidateQueries();
       
-      // Appeler la fonction de mise à jour si disponible
+      // Call update function if available
       if (refetchClient) {
         refetchClient();
       }
       
       return true;
     } catch (error) {
-      console.error("Erreur lors du versement:", error);
-      toast.error("Erreur lors du traitement du versement");
+      console.error("Error during deposit:", error);
+      toast.error("Error processing deposit");
       return false;
     } finally {
       setIsProcessing(false);
@@ -76,7 +76,7 @@ export function useClientOperations(client: Client, clientId?: number, refetchCl
         }
       } = await supabase.auth.getSession();
       
-      // Insérer le retrait dans la base de données
+      // Insert withdrawal into database
       const {
         data: insertedWithdrawal,
         error
@@ -89,118 +89,121 @@ export function useClientOperations(client: Client, clientId?: number, refetchCl
       }).select();
       
       if (error) {
-        console.error("Erreur lors de la création du retrait:", error);
-        toast.error("Erreur lors de la création du retrait", {
+        console.error("Error creating withdrawal:", error);
+        toast.error("Error creating withdrawal", {
           description: error.message
         });
         return false;
       }
       
-      toast.success("Retrait effectué", {
-        description: `Un retrait de ${withdrawal.amount} TND a été effectué pour ${withdrawal.client_name}`
+      toast.success("Withdrawal completed", {
+        description: `A withdrawal of ${withdrawal.amount} TND has been made for ${withdrawal.client_name}`
       });
       
-      // Rafraîchir manuellement le solde client
+      // Manually refresh client balance
       const clientIdToRefresh = client?.id || clientId;
       if (clientIdToRefresh) {
         await refreshClientBalance(clientIdToRefresh);
       }
       
-      // Invalider les requêtes mises en cache pour actualiser les listes d'opérations
+      // Invalidate cached queries to update operation lists
       invalidateQueries();
       
-      // Appeler la fonction de mise à jour si disponible
+      // Call update function if available
       if (refetchClient) {
         refetchClient();
       }
       
       return true;
     } catch (error) {
-      console.error("Erreur lors du retrait:", error);
-      toast.error("Erreur lors du traitement du retrait");
+      console.error("Error during withdrawal:", error);
+      toast.error("Error processing withdrawal");
       return false;
     } finally {
       setIsProcessing(false);
     }
   };
   
-  const refreshClientBalance = async (id: number | string) => {
+  const refreshClientBalance = async (id: number | string): Promise<boolean> => {
     try {
       if (!id) {
-        console.error("ID client non fourni pour le rafraîchissement du solde");
+        console.error("Client ID not provided for balance refresh");
         return false;
       }
       
-      console.log("Rafraîchissement du solde pour le client ID:", id);
+      // Ensure the ID is a number for database operations
+      const clientId = typeof id === 'string' ? parseInt(id, 10) : id;
       
-      // Obtenir les informations du client
+      console.log("Refreshing balance for client ID:", clientId);
+      
+      // Get client information
       const { data: clientData, error: clientError } = await supabase
         .from('clients')
         .select('prenom, nom')
-        .eq('id', id)
+        .eq('id', clientId)
         .single();
       
       if (clientError) {
-        console.error("Erreur lors de la récupération du client:", clientError);
+        console.error("Error retrieving client:", clientError);
         return false;
       }
       
       if (!clientData) {
-        console.error("Client non trouvé pour l'ID:", id);
+        console.error("Client not found for ID:", clientId);
         return false;
       }
       
       const clientFullName = `${clientData.prenom} ${clientData.nom}`;
       
-      // Obtenir le total des versements pour ce client
+      // Get total deposits for this client
       const { data: deposits, error: depositsError } = await supabase
         .from('deposits')
         .select('amount')
         .eq('client_name', clientFullName);
       
       if (depositsError) {
-        console.error("Erreur lors de la récupération des versements:", depositsError);
+        console.error("Error retrieving deposits:", depositsError);
         return false;
       }
       
-      // Obtenir le total des retraits pour ce client
+      // Get total withdrawals for this client
       const { data: withdrawals, error: withdrawalsError } = await supabase
         .from('withdrawals')
         .select('amount')
         .eq('client_name', clientFullName);
       
       if (withdrawalsError) {
-        console.error("Erreur lors de la récupération des retraits:", withdrawalsError);
+        console.error("Error retrieving withdrawals:", withdrawalsError);
         return false;
       }
       
-      // Calculer le solde manuellement
+      // Calculate balance manually
       const totalDeposits = deposits?.reduce((acc, dep) => acc + Number(dep.amount), 0) || 0;
       const totalWithdrawals = withdrawals?.reduce((acc, wd) => acc + Number(wd.amount), 0) || 0;
       const balance = totalDeposits - totalWithdrawals;
       
-      console.log(`Solde calculé pour ${clientFullName}: 
-        Versements: ${totalDeposits}, 
-        Retraits: ${totalWithdrawals}, 
-        Solde final: ${balance}`);
+      console.log(`Balance calculated for ${clientFullName}: 
+        Deposits: ${totalDeposits}, 
+        Withdrawals: ${totalWithdrawals}, 
+        Final balance: ${balance}`);
       
-      // Mettre à jour le solde dans la base de données
+      // Update balance in database
       const { error: updateError } = await supabase
         .from('clients')
         .update({ solde: balance })
-        .eq('id', id);
+        .eq('id', clientId);
       
       if (updateError) {
-        console.error("Erreur lors de la mise à jour du solde:", updateError);
+        console.error("Error updating balance:", updateError);
         return false;
       }
       
-      // Invalider les requêtes mises en cache pour actualiser les informations du client
+      // Invalidate cached queries to update client information
       invalidateQueries();
       
       return true;
     } catch (error) {
-      console.error("Erreur lors du rafraîchissement du solde:", error);
+      console.error("Error refreshing balance:", error);
       return false;
     }
   };

@@ -46,20 +46,36 @@ export const ClientPersonalInfo = ({
   
   const handleRefreshBalance = async () => {
     if (!refreshClientBalance) {
-      toast.error("Fonction de rafraîchissement du solde non disponible");
+      toast.error("Balance refresh function not available");
       return;
     }
     
     setIsRefreshing(true);
     try {
       await refreshClientBalance();
-      toast.success("Solde client rafraîchi avec succès");
+      toast.success("Client balance refreshed successfully");
     } catch (error) {
-      console.error("Erreur lors du rafraîchissement du solde:", error);
-      toast.error("Erreur lors du rafraîchissement du solde");
+      console.error("Error refreshing client balance:", error);
+      toast.error("Error refreshing client balance");
     } finally {
       setIsRefreshing(false);
     }
+  };
+
+  // Helper function to pass client ID to refreshBalance
+  const handleDepositRefresh = async (): Promise<boolean> => {
+    if (client && client.id) {
+      return await refreshBalance(client.id);
+    }
+    return false;
+  };
+
+  // Helper function to pass client ID to refreshBalance
+  const handleWithdrawalRefresh = async (): Promise<boolean> => {
+    if (client && client.id) {
+      return await refreshBalance(client.id);
+    }
+    return false;
   };
 
   return (
@@ -116,7 +132,7 @@ export const ClientPersonalInfo = ({
         open={depositDialogOpen}
         onOpenChange={setDepositDialogOpen}
         onConfirm={handleDeposit}
-        refreshClientBalance={refreshBalance}
+        refreshClientBalance={handleDepositRefresh}
       />
       
       <WithdrawalDialog
@@ -124,7 +140,7 @@ export const ClientPersonalInfo = ({
         open={withdrawalDialogOpen}
         onOpenChange={setWithdrawalDialogOpen}
         onConfirm={handleWithdrawal}
-        refreshClientBalance={refreshBalance}
+        refreshClientBalance={handleWithdrawalRefresh}
       />
     </Card>
   );
