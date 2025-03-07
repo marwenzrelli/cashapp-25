@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { TransferPagination } from "@/features/transfers/components/TransferPagination";
+import { toast } from "sonner";
 
 interface ExtendedClient extends Client {
   dateCreation: string;
@@ -85,15 +86,28 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
   }));
 
   const handleFetchWithdrawals = async (): Promise<void> => {
-    fetchWithdrawals();
-    return Promise.resolve();
+    try {
+      fetchWithdrawals();
+      return Promise.resolve();
+    } catch (error) {
+      console.error("Error fetching withdrawals:", error);
+      toast.error("Erreur lors du chargement des retraits", {
+        description: "Veuillez réessayer ultérieurement"
+      });
+      return Promise.reject(error);
+    }
   };
 
-  return <div className="space-y-8 animate-in">
+  return (
+    <div className="space-y-8 animate-in">
       <WithdrawalHeader withdrawals={withdrawals} />
 
       <div className="w-full">
-        <StandaloneWithdrawalForm clients={extendedClients} fetchWithdrawals={handleFetchWithdrawals} refreshClientBalance={refreshClientBalance} />
+        <StandaloneWithdrawalForm 
+          clients={extendedClients} 
+          fetchWithdrawals={handleFetchWithdrawals} 
+          refreshClientBalance={refreshClientBalance} 
+        />
       </div>
 
       <Card>
@@ -132,8 +146,26 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
         findClientById={findClientById} 
       />
 
-      <WithdrawalDialogContainer showDialog={showDialog} setShowDialog={setShowDialog} clients={clients} selectedClient={selectedClient} setSelectedClient={setSelectedClient} isEditing={isEditing} selectedWithdrawal={selectedWithdrawal} fetchWithdrawals={handleFetchWithdrawals} refreshClientBalance={refreshClientBalance} />
+      {showDialog && (
+        <WithdrawalDialogContainer 
+          showDialog={showDialog} 
+          setShowDialog={setShowDialog} 
+          clients={clients} 
+          selectedClient={selectedClient} 
+          setSelectedClient={setSelectedClient} 
+          isEditing={isEditing} 
+          selectedWithdrawal={selectedWithdrawal} 
+          fetchWithdrawals={handleFetchWithdrawals} 
+          refreshClientBalance={refreshClientBalance} 
+        />
+      )}
 
-      <DeleteWithdrawalDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog} onConfirm={confirmDeleteWithdrawal} withdrawal={selectedWithdrawal} />
-    </div>;
+      <DeleteWithdrawalDialog 
+        open={showDeleteDialog} 
+        onOpenChange={setShowDeleteDialog} 
+        onConfirm={confirmDeleteWithdrawal} 
+        withdrawal={selectedWithdrawal} 
+      />
+    </div>
+  );
 };

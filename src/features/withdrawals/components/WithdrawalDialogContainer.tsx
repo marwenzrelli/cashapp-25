@@ -3,6 +3,7 @@ import React from "react";
 import { WithdrawalFormDialog } from "./dialog/WithdrawalFormDialog";
 import { Client } from "@/features/clients/types";
 import { Withdrawal } from "@/features/withdrawals/types";
+import { toast } from "sonner";
 
 interface WithdrawalDialogContainerProps {
   showDialog: boolean;
@@ -57,9 +58,18 @@ export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps>
       await fetchWithdrawals();
       setShowDialog(false);
       
+      toast.success("Opération réussie", {
+        description: "Le retrait a été " + (isEditing ? "modifié" : "créé") + " avec succès"
+      });
+      
       return true;
     } catch (error) {
       console.error("Error in handleCreateWithdrawal:", error);
+      
+      toast.error("Erreur", {
+        description: "Une erreur est survenue lors du " + (isEditing ? "la modification" : "la création") + " du retrait"
+      });
+      
       return false;
     }
   };
@@ -69,6 +79,11 @@ export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps>
     ...client,
     dateCreation: client.date_creation || new Date().toISOString()
   }));
+
+  // Only render the dialog if showDialog is true to prevent unnecessary renders
+  if (!showDialog) {
+    return null;
+  }
 
   return (
     <WithdrawalFormDialog

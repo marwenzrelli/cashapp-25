@@ -133,8 +133,8 @@ export const useWithdrawals = () => {
         fetchData();
       } else if (event === 'SIGNED_OUT') {
         setIsAuthenticated(false);
-        // We need to remove this line because setWithdrawals is not defined
-        // and not needed since we're not directly managing the withdrawals state here
+        // We don't need to reset withdrawals here as the component will unmount
+        // or the WithdrawalsPage will handle the authentication state
       }
     });
     

@@ -9,6 +9,7 @@ import { NetworkStatusAlerts } from "./NetworkStatusAlerts";
 import { ErrorRetryButton } from "./ErrorRetryButton";
 import { AuthRetryButton } from "./AuthRetryButton";
 import { useWithdrawalPagination } from "../hooks/useWithdrawalPagination";
+import { toast } from "sonner";
 
 export const WithdrawalsPage: React.FC = () => {
   const { 
@@ -44,20 +45,34 @@ export const WithdrawalsPage: React.FC = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      fetchClients();
+      fetchClients().catch(err => {
+        console.error("Error fetching clients:", err);
+        toast.error("Erreur lors du chargement des clients", {
+          description: "Veuillez réessayer ultérieurement"
+        });
+      });
     }
   }, [isAuthenticated, fetchClients]);
 
+  // Subscribe to real-time client updates
   useClientSubscription({ fetchClients });
 
   const handleAuthRetry = async () => {
     setRetryingAuth(true);
-    await checkAuth();
-    if (isAuthenticated) {
-      fetchClients();
-      fetchWithdrawals();
+    try {
+      await checkAuth();
+      if (isAuthenticated) {
+        await fetchClients();
+        await fetchWithdrawals();
+      }
+    } catch (error) {
+      console.error("Error during auth retry:", error);
+      toast.error("Erreur lors de l'authentification", {
+        description: "Veuillez vous reconnecter"
+      });
+    } finally {
+      setRetryingAuth(false);
     }
-    setRetryingAuth(false);
   };
 
   // Create a wrapper function to handle the type mismatch
@@ -67,6 +82,9 @@ export const WithdrawalsPage: React.FC = () => {
       return true;
     } catch (error) {
       console.error("Error refreshing client balance:", error);
+      toast.error("Erreur lors de la mise à jour du solde", {
+        description: "Veuillez réessayer"
+      });
       return false;
     }
   };
@@ -86,21 +104,8 @@ export const WithdrawalsPage: React.FC = () => {
     );
   }
 
-  // Network status alerts
+  // Network status alerts or error state
   if (networkStatus === 'offline' || networkStatus === 'reconnecting' || error) {
-    return (
-      <NetworkStatusAlerts 
-        networkStatus={networkStatus}
-        isLoading={isLoading}
-        retrying={retrying}
-        error={error}
-        fetchWithdrawals={fetchWithdrawals}
-      />
-    );
-  }
-
-  // Error state with retry button
-  if (error) {
     return (
       <>
         <NetworkStatusAlerts 
@@ -111,11 +116,13 @@ export const WithdrawalsPage: React.FC = () => {
           fetchWithdrawals={fetchWithdrawals}
         />
         
-        <ErrorRetryButton 
-          onRetry={fetchWithdrawals}
-          isLoading={isLoading}
-          retrying={retrying}
-        />
+        {error && (
+          <ErrorRetryButton 
+            onRetry={fetchWithdrawals}
+            isLoading={isLoading}
+            retrying={retrying}
+          />
+        )}
         
         {!isLoading && withdrawals.length > 0 && (
           <WithdrawalsContent
