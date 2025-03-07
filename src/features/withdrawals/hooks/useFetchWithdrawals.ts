@@ -4,6 +4,7 @@ import { Withdrawal } from "../types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatDate } from "./utils/formatUtils";
+import { handleSupabaseError, showErrorToast } from "@/features/clients/hooks/utils/errorUtils";
 
 export const useFetchWithdrawals = () => {
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
@@ -16,7 +17,18 @@ export const useFetchWithdrawals = () => {
 
     try {
       // Check if the user is authenticated
-      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error("Erreur de session:", sessionError);
+        setError(handleSupabaseError(sessionError));
+        toast.error("Erreur d'authentification", {
+          description: handleSupabaseError(sessionError),
+        });
+        setLoading(false);
+        return;
+      }
+      
       const session = sessionData.session;
       
       if (!session) {
@@ -29,23 +41,23 @@ export const useFetchWithdrawals = () => {
       
       console.log("Fetching withdrawals with authenticated session:", session.user.id);
       
-      const { data, error } = await supabase
+      const { data, error: fetchError } = await supabase
         .from('withdrawals')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error("Erreur lors de la récupération des retraits:", error);
-        setError(error.message);
-        toast.error("Erreur lors de la récupération des retraits", {
-          description: error.message,
-        });
+      if (fetchError) {
+        console.error("Erreur lors de la récupération des retraits:", fetchError);
+        setError(handleSupabaseError(fetchError));
+        showErrorToast("Erreur lors de la récupération des retraits", fetchError);
+        setLoading(false);
         return;
       }
 
       if (!data) {
         console.log("Aucun retrait trouvé.");
         setWithdrawals([]);
+        setLoading(false);
         return;
       }
 

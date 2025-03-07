@@ -1,11 +1,17 @@
 
-export const LoadingState = () => {
+import React from 'react';
+
+interface LoadingStateProps {
+  message?: string;
+}
+
+export const LoadingState: React.FC<LoadingStateProps> = ({ 
+  message = "Chargement en cours..." 
+}) => {
   return (
-    <div className="flex items-center justify-center h-screen">
-      <div className="text-center">
-        <h2 className="text-2xl font-semibold mb-2">Chargement...</h2>
-        <p className="text-muted-foreground">Veuillez patienter pendant le chargement des données.</p>
-      </div>
+    <div className="flex flex-col items-center justify-center p-8 min-h-[300px] text-center space-y-4">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      <p className="text-muted-foreground font-medium">{message}</p>
     </div>
   );
 };
