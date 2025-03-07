@@ -1,3 +1,4 @@
+
 import { filterByDateRange } from "./dateHelpers";
 
 export const calculateTotals = (
@@ -58,9 +59,14 @@ export const calculateDailyTransactions = (
   // Daily transactions
   const dailyTransactions = [...filteredDeposits, ...filteredWithdrawals, ...filteredTransfers].reduce((acc, op) => {
     try {
-      const date = new Date(op.created_at || op.operation_date || '').toLocaleDateString();
+      const dateStr = op.created_at || op.operation_date || '';
+      if (!dateStr) return acc;
+      
+      const date = new Date(dateStr).toLocaleDateString();
       if (date) {
-        acc[date] = (typeof acc[date] === 'number' ? acc[date] : 0) + 1;
+        // Ensure we're working with numbers by explicitly converting or defaulting to 0
+        const currentCount = typeof acc[date] === 'number' ? acc[date] : 0;
+        acc[date] = currentCount + 1;
       }
     } catch (error) {
       console.warn("Error formatting operation date:", op.created_at || op.operation_date);
@@ -68,7 +74,8 @@ export const calculateDailyTransactions = (
     return acc;
   }, {} as Record<string, number>);
 
-  const totalTransactions = Object.values(dailyTransactions).reduce((a, b) => a + b, 0);
+  // Calculate the total number of transactions and ensure we're working with numbers
+  const totalTransactions = Object.values(dailyTransactions).reduce((sum: number, count: number) => sum + count, 0);
   const daysCount = Math.max(Object.keys(dailyTransactions).length, 1);
   const averageTransactionsPerDay = totalTransactions / daysCount;
     
