@@ -53,11 +53,14 @@ export const OperationActionsDialog = ({
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id;
       
+      // Convert ID to number if it's a string
+      const numericId = typeof depositId === 'string' ? parseInt(depositId, 10) : depositId;
+      
       // First, get the deposit to log it before deletion
       const { data: depositData, error: fetchError } = await supabase
         .from('deposits')
         .select('*')
-        .eq('id', depositId)
+        .eq('id', numericId)
         .single();
       
       if (fetchError) {
@@ -89,7 +92,7 @@ export const OperationActionsDialog = ({
       const { error: deleteError } = await supabase
         .from('deposits')
         .delete()
-        .eq('id', depositId);
+        .eq('id', numericId);
       
       if (deleteError) {
         console.error("Erreur lors de la suppression du versement:", deleteError);
