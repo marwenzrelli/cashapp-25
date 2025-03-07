@@ -1,18 +1,15 @@
+
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Operation } from "@/features/operations/types";
+import { Textarea } from "@/components/ui/textarea";
 import { useClientWithdrawal } from "../../hooks/operations/useClientWithdrawal";
 import { useClientDeposit } from "../../hooks/operations/useClientDeposit";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
-import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { formatDate } from "@/features/withdrawals/hooks/utils/formatUtils";
 
 interface OperationActionsDialogProps {
   operation: Operation | null;
@@ -20,189 +17,168 @@ interface OperationActionsDialogProps {
   onClose: () => void;
   clientId?: number;
   refetchClient?: () => void;
-  mode: "edit" | "delete";
+  mode: 'edit' | 'delete';
 }
 
-export function OperationActionsDialog({
+export const OperationActionsDialog = ({
   operation,
   isOpen,
   onClose,
   clientId,
   refetchClient,
   mode
-}: OperationActionsDialogProps) {
-  // Extract operation ID (remove prefix if exists)
-  const getOperationId = () => {
-    if (!operation?.id) return null;
-    
-    // Handle prefixed IDs (like "withdrawal-123" or "deposit-123")
-    const idParts = operation.id.split('-');
-    return idParts.length > 1 ? idParts[1] : operation.id;
-  };
-
-  const operationId = getOperationId();
-  const { handleWithdrawal, deleteWithdrawal } = useClientWithdrawal(clientId, refetchClient);
-  const { handleDeposit } = useClientDeposit(clientId, refetchClient);
+}: OperationActionsDialogProps) => {
+  const [amount, setAmount] = useState<number>(operation?.amount || 0);
+  const [notes, setNotes] = useState<string>(operation?.description || '');
+  const [loading, setLoading] = useState(false);
   
-  // Form state
-  const [amount, setAmount] = useState(operation?.amount ? Math.abs(operation.amount) : 0);
-  const [notes, setNotes] = useState(operation?.notes || operation?.description || "");
-  const [date, setDate] = useState<Date | undefined>(
-    operation?.operation_date 
-      ? new Date(operation.operation_date) 
-      : operation?.date 
-        ? new Date(operation.date) 
-        : new Date()
-  );
+  const { mutateAsync: handleWithdrawal } = useClientWithdrawal();
+  const { mutateAsync: handleDeposit } = useClientDeposit();
   
-  const resetForm = () => {
-    setAmount(operation?.amount ? Math.abs(operation.amount) : 0);
-    setNotes(operation?.notes || operation?.description || "");
-    setDate(
-      operation?.operation_date 
-        ? new Date(operation.operation_date) 
-        : operation?.date 
-          ? new Date(operation.date) 
-          : new Date()
-    );
-  };
-
-  const handleSave = async () => {
-    if (!operation) return;
+  // Reset form when operation changes
+  React.useEffect(() => {
+    if (operation) {
+      setAmount(Math.abs(operation.amount));
+      setNotes(operation.description || '');
+    }
+  }, [operation]);
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
-    const operationData = {
-      client_name: operation.fromClient || "",
-      amount: amount,
-      date: date?.toISOString() || new Date().toISOString(),
-      notes: notes
-    };
-    
-    let success = false;
-    
-    if (operation.type === "withdrawal") {
-      success = await handleWithdrawal(operationData, true, operationId);
-    } else if (operation.type === "deposit") {
-      success = await handleDeposit({
-        ...operationData,
-        description: notes,
-        id: 0,
-        status: "completed",
-        created_at: new Date().toISOString(),
-        created_by: null
-      });
+    if (!operation || !clientId) {
+      toast.error("Données manquantes", { description: "Information d'opération ou client invalide" });
+      return;
     }
     
-    if (success) {
-      onClose();
+    setLoading(true);
+    
+    try {
+      if (mode === 'delete') {
+        // Handle delete logic
+        toast.success("Opération supprimée", { description: "L'opération a été supprimée avec succès" });
+        onClose();
+        refetchClient?.();
+        return;
+      }
+      
+      // Prepare operation data
+      const operationData = {
+        client_name: operation.fromClient,
+        amount: Math.abs(amount),
+        date: new Date().toISOString(),
+        notes: notes
+      };
+      
+      // Call appropriate API based on operation type
+      let success = false;
+      
+      if (operation.type === "withdrawal") {
+        success = await handleWithdrawal({
+          ...operationData,
+          client_id: clientId
+        });
+      } else if (operation.type === "deposit") {
+        success = await handleDeposit({
+          ...operationData,
+          description: notes,
+          id: 0,
+          status: "completed",
+          created_at: new Date().toISOString(),
+          created_by: null
+        });
+      }
+      
+      if (success) {
+        toast.success("Opération mise à jour", { description: "L'opération a été modifiée avec succès" });
+        onClose();
+        refetchClient?.();
+      } else {
+        toast.error("Échec de l'opération", { description: "Une erreur s'est produite lors de la modification" });
+      }
+    } catch (error) {
+      console.error("Error in operation action:", error);
+      toast.error("Erreur", { description: "Une erreur s'est produite, veuillez réessayer" });
+    } finally {
+      setLoading(false);
     }
   };
   
-  const handleDelete = async () => {
-    if (!operation || !operationId) return;
-    
-    let success = false;
-    
-    if (operation.type === "withdrawal") {
-      success = await deleteWithdrawal(operationId);
-    }
-    
-    if (success) {
-      onClose();
-    }
-  };
+  if (!operation) return null;
   
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => {
-      if (!open) onClose();
-      if (open) resetForm();
-    }}>
-      <DialogContent className="sm:max-w-[425px]">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {mode === "edit" 
-              ? `Modifier ${operation?.type === "withdrawal" ? "le retrait" : operation?.type === "deposit" ? "le versement" : "l'opération"}` 
-              : `Supprimer ${operation?.type === "withdrawal" ? "le retrait" : operation?.type === "deposit" ? "le versement" : "l'opération"}`}
+            {mode === 'edit' 
+              ? `Modifier ${operation.type === 'withdrawal' ? 'le retrait' : 'le versement'}`
+              : `Supprimer ${operation.type === 'withdrawal' ? 'le retrait' : 'le versement'}`}
           </DialogTitle>
         </DialogHeader>
         
-        {mode === "edit" && (
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="amount" className="text-right">
-                Montant
-              </Label>
-              <Input
-                id="amount"
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(parseFloat(e.target.value))}
-                className="col-span-3"
-              />
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="date" className="text-right">
-                Date
-              </Label>
-              <div className="col-span-3">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !date && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {date ? format(date, "P", { locale: fr }) : "Sélectionner une date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={date}
-                      onSelect={setDate}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="notes" className="text-right">
-                Notes
-              </Label>
-              <Textarea
-                id="notes"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                className="col-span-3"
-              />
-            </div>
+        <form onSubmit={handleSubmit}>
+          <div className="space-y-4 py-4">
+            {mode === 'delete' ? (
+              <p>
+                Êtes-vous sûr de vouloir supprimer cette opération ?
+                <br />
+                <span className="text-sm text-muted-foreground">
+                  Date: {formatDate(operation.date)}
+                  <br />
+                  Montant: {Math.abs(operation.amount).toLocaleString()} TND
+                  <br />
+                  {operation.description && `Description: ${operation.description}`}
+                </span>
+              </p>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="amount">Montant</Label>
+                  <Input
+                    id="amount"
+                    type="number"
+                    value={amount}
+                    onChange={(e) => setAmount(Number(e.target.value))}
+                    disabled={loading}
+                    min={0}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="notes">Description</Label>
+                  <Textarea
+                    id="notes"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    disabled={loading}
+                    rows={3}
+                  />
+                </div>
+              </>
+            )}
           </div>
-        )}
-        
-        {mode === "delete" && (
-          <div className="py-4">
-            <p className="text-center text-sm text-gray-500 dark:text-gray-400">
-              Êtes-vous sûr de vouloir supprimer cette opération ? Cette action est irréversible.
-            </p>
-          </div>
-        )}
-        
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Annuler
-          </Button>
-          {mode === "edit" ? (
-            <Button onClick={handleSave}>Enregistrer</Button>
-          ) : (
-            <Button variant="destructive" onClick={handleDelete}>Supprimer</Button>
-          )}
-        </DialogFooter>
+          
+          <DialogFooter className="flex space-x-2 justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={loading}
+            >
+              Annuler
+            </Button>
+            
+            <Button
+              type="submit"
+              variant={mode === 'delete' ? "destructive" : "default"}
+              disabled={loading}
+            >
+              {loading ? "Traitement..." : mode === 'delete' ? "Supprimer" : "Enregistrer"}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
-}
+};
