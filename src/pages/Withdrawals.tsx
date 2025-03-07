@@ -6,11 +6,15 @@ import { useClientSubscription } from "@/features/withdrawals/components/useClie
 import { WithdrawalsContent } from "@/features/withdrawals/components/WithdrawalsContent";
 import { containsPartialText } from "@/features/operations/utils/display-helpers";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { GeneralErrorState } from "@/features/admin/components/administration/GeneralErrorState";
+import { NoUserProfileState } from "@/features/admin/components/administration/NoUserProfileState";
 
 const Withdrawals = () => {
   const { 
     withdrawals, 
     isLoading,
+    error,
     fetchWithdrawals, 
     deleteWithdrawal,
     confirmDeleteWithdrawal,
@@ -21,8 +25,55 @@ const Withdrawals = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [itemsPerPage, setItemsPerPage] = useState("10");
   const [currentPage, setCurrentPage] = useState(1);
+  const [authChecking, setAuthChecking] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [retryingAuth, setRetryingAuth] = useState(false);
 
   const { clients, fetchClients, refreshClientBalance } = useClients();
+
+  const checkAuthentication = async () => {
+    try {
+      setRetryingAuth(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        console.warn("No active session found");
+        setIsAuthenticated(false);
+        toast.error("Vous devez être connecté pour accéder à cette page");
+      } else {
+        console.log("User is authenticated:", session.user.id);
+        setIsAuthenticated(true);
+        fetchClients();
+      }
+    } catch (error) {
+      console.error("Authentication check error:", error);
+      setIsAuthenticated(false);
+    } finally {
+      setAuthChecking(false);
+      setRetryingAuth(false);
+    }
+  };
+
+  useEffect(() => {
+    checkAuthentication();
+    
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed in Withdrawals page:", event, session?.user?.id);
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        setIsAuthenticated(true);
+        fetchClients();
+      } else if (event === 'SIGNED_OUT') {
+        setIsAuthenticated(false);
+      }
+    });
+    
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [fetchClients]);
+
+  useClientSubscription({ fetchClients });
 
   // Create a wrapper function to handle the type mismatch
   const handleRefreshClientBalance = async (clientId: string): Promise<boolean> => {
@@ -34,25 +85,6 @@ const Withdrawals = () => {
       return false;
     }
   };
-
-  useEffect(() => {
-    fetchClients();
-    // fetchWithdrawals is already called in the useWithdrawals hook
-    
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed in Withdrawals page:", event, session?.user?.id);
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        fetchClients();
-      }
-    });
-    
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [fetchClients]);
-
-  useClientSubscription({ fetchClients });
 
   const filteredWithdrawals = withdrawals.filter(withdrawal => {
     if (!searchTerm.trim()) return true;
@@ -81,6 +113,34 @@ const Withdrawals = () => {
     (currentPage - 1) * parseInt(itemsPerPage),
     currentPage * parseInt(itemsPerPage)
   );
+
+  // If still checking auth status, show nothing yet
+  if (authChecking) {
+    return <div className="flex items-center justify-center p-8">
+      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+    </div>;
+  }
+
+  // If not authenticated
+  if (!isAuthenticated) {
+    return (
+      <NoUserProfileState 
+        isRetrying={retryingAuth}
+        onRetry={checkAuthentication}
+      />
+    );
+  }
+
+  // If there's an error fetching data
+  if (error) {
+    return (
+      <GeneralErrorState 
+        errorMessage={error}
+        isRetrying={isLoading} 
+        onRetry={fetchWithdrawals}
+      />
+    );
+  }
 
   return (
     <WithdrawalsContent

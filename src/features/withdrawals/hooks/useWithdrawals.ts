@@ -28,8 +28,8 @@ export const useWithdrawals = () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        console.warn("No active session found, but will attempt to fetch withdrawals anyway");
-        // Continue with fetch despite no session - this allows testing without auth
+        console.warn("No active session found in useWithdrawals");
+        return;
       } else {
         console.log("Active session found for user:", session.user.id);
       }

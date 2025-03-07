@@ -21,10 +21,13 @@ export const useFetchWithdrawals = () => {
       
       if (!session) {
         console.warn("No active session found when fetching withdrawals");
-        // We continue anyway for now as this might be during login flow
-      } else {
-        console.log("Fetching withdrawals with authenticated session:", session.user.id);
+        setLoading(false);
+        setError("Authentication required");
+        toast.error("Vous devez être connecté pour accéder aux retraits");
+        return;
       }
+      
+      console.log("Fetching withdrawals with authenticated session:", session.user.id);
       
       const { data, error } = await supabase
         .from('withdrawals')

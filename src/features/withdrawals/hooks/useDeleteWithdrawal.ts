@@ -26,13 +26,9 @@ export const useDeleteWithdrawal = (fetchWithdrawals: () => Promise<void>) => {
     
     try {
       console.log("Début de la suppression du retrait avec ID:", formatId(withdrawalToDelete.id));
-      console.log("Type de l'ID:", typeof withdrawalToDelete.id);
       
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id;
-      
-      console.log("Session utilisateur:", session);
-      console.log("User ID pour la suppression:", userId);
       
       if (!userId) {
         toast.error("Vous devez être connecté pour supprimer un retrait");
@@ -66,8 +62,6 @@ export const useDeleteWithdrawal = (fetchWithdrawals: () => Promise<void>) => {
         throw new Error("Retrait introuvable");
       }
       
-      console.log("Récupération des détails du retrait réussie:", withdrawalData);
-      
       // Préparer les données à insérer dans deleted_withdrawals
       const logEntry = {
         original_id: withdrawalData.id,
@@ -78,22 +72,16 @@ export const useDeleteWithdrawal = (fetchWithdrawals: () => Promise<void>) => {
         deleted_by: userId,
         status: withdrawalData.status
       };
-
-      console.log("Données à insérer dans deleted_withdrawals:", JSON.stringify(logEntry));
       
       // Insérer dans la table des retraits supprimés
-      const { data: logData, error: logError } = await supabase
+      const { error: logError } = await supabase
         .from('deleted_withdrawals')
         .insert(logEntry);
         
       if (logError) {
         console.error("Erreur lors de l'enregistrement dans deleted_withdrawals:", logError);
-        console.error("Détails de l'erreur:", logError.message, logError.details, logError.hint);
-        console.error("Code de l'erreur:", logError.code);
         throw logError;
       } 
-      
-      console.log("Retrait enregistré avec succès dans deleted_withdrawals");
       
       // Maintenant supprimer le retrait original
       const { error: deleteError } = await supabase
@@ -109,7 +97,6 @@ export const useDeleteWithdrawal = (fetchWithdrawals: () => Promise<void>) => {
         throw deleteError;
       }
       
-      console.log("Retrait supprimé avec succès, ID:", formatId(withdrawalToDelete.id));
       toast.success("Retrait supprimé avec succès");
       
       await fetchWithdrawals();
