@@ -7,6 +7,7 @@ import { StatisticsCards } from "@/features/statistics/components/StatisticsCard
 import { ChartSection } from "@/features/statistics/components/ChartSection";
 import { InsightsSection } from "@/features/statistics/components/InsightsSection";
 import { ErrorDisplay } from "@/features/statistics/components/ErrorDisplay";
+import { useEffect } from "react";
 
 const Statistics = () => {
   const { 
@@ -37,10 +38,20 @@ const Statistics = () => {
     timeoutExceeded,
     hasValidData,
     attempted,
+    setAttempted,
     
     // Actions
     refreshData
   } = useStatisticsData();
+
+  // Force show the data after 10 seconds no matter what
+  useEffect(() => {
+    const forceShowTimeout = setTimeout(() => {
+      setAttempted(true);
+    }, 10000);
+    
+    return () => clearTimeout(forceShowTimeout);
+  }, [setAttempted]);
 
   // If data is still loading and we haven't attempted to show data yet
   if (isLoading && !attempted) {
@@ -82,7 +93,7 @@ const Statistics = () => {
     );
   }
 
-  // Fall back to showing the data even if it's not fully valid after the first loading
+  // Always show the data even if it's incomplete
   return (
     <div className="space-y-8 animate-in">
       <StatisticsHeader 
@@ -113,32 +124,30 @@ const Statistics = () => {
             </button>
           </p>
         </div>
-      ) : (
-        <>
-          <StatisticsCards
-            totalDeposits={stats.total_deposits}
-            totalWithdrawals={stats.total_withdrawals}
-            sentTransfers={stats.sent_transfers}
-            transferCount={stats.transfer_count}
-            netFlow={stats.total_deposits - stats.total_withdrawals}
-            clientCount={stats.client_count}
-            percentageChange={percentageChange}
-            averageTransactionsPerDay={averageTransactionsPerDay}
-          />
+      ) : null}
+      
+      <StatisticsCards
+        totalDeposits={stats.total_deposits || 0}
+        totalWithdrawals={stats.total_withdrawals || 0}
+        sentTransfers={stats.sent_transfers || 0}
+        transferCount={stats.transfer_count || 0}
+        netFlow={(stats.total_deposits || 0) - (stats.total_withdrawals || 0)}
+        clientCount={stats.client_count || 0}
+        percentageChange={percentageChange}
+        averageTransactionsPerDay={averageTransactionsPerDay}
+      />
 
-          <ChartSection
-            last30DaysData={last30DaysData}
-            topClients={topClients}
-          />
+      <ChartSection
+        last30DaysData={last30DaysData}
+        topClients={topClients}
+      />
 
-          <InsightsSection
-            percentageChange={percentageChange}
-            averageTransactionsPerDay={averageTransactionsPerDay}
-            totalDeposits={stats.total_deposits}
-            depositsLength={Array.isArray(filteredDeposits) ? filteredDeposits.length : 0}
-          />
-        </>
-      )}
+      <InsightsSection
+        percentageChange={percentageChange}
+        averageTransactionsPerDay={averageTransactionsPerDay}
+        totalDeposits={stats.total_deposits || 0}
+        depositsLength={Array.isArray(filteredDeposits) ? filteredDeposits.length : 0}
+      />
     </div>
   );
 };

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { filterData } from "../utils/dataFilters";
 import { getMonthBoundaries, generateLast30DaysData } from "../utils/dateHelpers";
@@ -37,6 +38,17 @@ export const useStatisticsData = () => {
   // Track if we've attempted to show data
   const [attempted, setAttempted] = useState(false);
   
+  // Force end loading state after 8 seconds
+  useEffect(() => {
+    if (isLoading) {
+      const timeout = setTimeout(() => {
+        setAttempted(true);
+      }, 8000);
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [isLoading]);
+  
   useEffect(() => {
     // If we were loading and now we're not, mark as attempted
     if (!isLoading && !attempted) {
@@ -45,15 +57,14 @@ export const useStatisticsData = () => {
   }, [isLoading, attempted]);
 
   // Always consider data valid to show UI even with partial data
-  // This prevents the UI from getting stuck in loading state
   const hasValidData = true;
 
-  // Processed data - filter out bad data before processing
+  // Processed data - added null/undefined checks at each point
   const filteredDeposits = filterData(
     Array.isArray(deposits) ? deposits : [], 
     "deposits",
     dateRange,
-    clientFilter,
+    clientFilter || "",
     transactionType
   );
   
@@ -61,20 +72,20 @@ export const useStatisticsData = () => {
     Array.isArray(withdrawals) ? withdrawals : [], 
     "withdrawals",
     dateRange,
-    clientFilter,
+    clientFilter || "",
     transactionType
   );
   
   const filteredTransfers = filterData(
     Array.isArray(transfersArray) ? transfersArray.map(t => ({
-      fromClient: t.fromClient,
-      toClient: t.toClient,
-      amount: t.amount,
-      operation_date: t.date,
+      fromClient: t?.fromClient || "",
+      toClient: t?.toClient || "",
+      amount: t?.amount || 0,
+      operation_date: t?.date || "",
     })) : [],
     "transfers",
     dateRange,
-    clientFilter,
+    clientFilter || "",
     transactionType
   );
 
@@ -89,7 +100,7 @@ export const useStatisticsData = () => {
   const safeStats = ensureSafeStats(stats);
   const netFlow = safeStats.total_deposits - safeStats.total_withdrawals;
 
-  // Calculate monthly comparisons and daily averages
+  // Calculate monthly comparisons and daily averages with safer defaults
   let percentageChange = 0;
   let averageTransactionsPerDay = 0;
   
@@ -103,7 +114,7 @@ export const useStatisticsData = () => {
       filteredTransfers,
       monthBoundaries
     );
-    percentageChange = monthlyComparison.percentageChange;
+    percentageChange = isNaN(monthlyComparison.percentageChange) ? 0 : monthlyComparison.percentageChange;
     
     // Get average transactions per day
     const dailyStats = calculateDailyTransactions(
@@ -111,7 +122,7 @@ export const useStatisticsData = () => {
       filteredWithdrawals,
       filteredTransfers
     );
-    averageTransactionsPerDay = dailyStats.averageTransactionsPerDay;
+    averageTransactionsPerDay = isNaN(dailyStats.averageTransactionsPerDay) ? 0 : dailyStats.averageTransactionsPerDay;
   } catch (err) {
     console.error("Error calculating statistics:", err);
     // Keep default values
@@ -182,7 +193,7 @@ export const useStatisticsData = () => {
     setTransactionType,
     
     // Loading and error states
-    isLoading: isLoading && !attempted, // Force loading to end if we've already attempted
+    isLoading: isLoading && !attempted, // Force loading to end after timeout
     isSyncing,
     error,
     timeoutExceeded,
