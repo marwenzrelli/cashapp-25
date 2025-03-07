@@ -28,8 +28,7 @@ export const TransferOperationsTab = ({ operations, currency = "TND" }: Transfer
               <TableHead>Date</TableHead>
               <TableHead>Description</TableHead>
               <TableHead className="text-center">Montant</TableHead>
-              <TableHead>De</TableHead>
-              <TableHead>À</TableHead>
+              <TableHead>Détails</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -43,8 +42,9 @@ export const TransferOperationsTab = ({ operations, currency = "TND" }: Transfer
                   <TableCell className="text-center font-medium text-blue-600 dark:text-blue-400">
                     {Math.round(operation.amount)} {currency}
                   </TableCell>
-                  <TableCell className="max-w-[200px] truncate">{operation.fromClient}</TableCell>
-                  <TableCell className="max-w-[200px] truncate">{operation.toClient}</TableCell>
+                  <TableCell className="max-w-[200px] truncate">
+                    {operation.fromClient} → {operation.toClient}
+                  </TableCell>
                 </TableRow>
               );
             })}
