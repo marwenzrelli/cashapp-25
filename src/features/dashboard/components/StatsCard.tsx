@@ -18,17 +18,17 @@ export const StatsCard = ({
   icon,
   gradientFrom = "blue" 
 }: StatsCardProps) => {
-  // Déterminer si la valeur est numérique et négative
+  // Determine if the value is numeric and negative
   const isNumeric = typeof value === 'number' || !isNaN(parseFloat(value as string));
   const rawValue = typeof value === 'number' ? value : parseFloat(value as string);
   const isNegative = isNumeric && !isNaN(rawValue) && rawValue < 0;
   
-  // Déterminer la couleur du texte en fonction de la valeur
-  const valueColorClass = isNegative ? "text-red-600 dark:text-red-400" : 
-                          (title.includes("Retraits") ? "text-red-600 dark:text-red-400" : 
-                          "text-green-600 dark:text-green-400");
+  // Determine text color based on value and card type
+  const valueColorClass = isNegative || title.includes("Retraits") || title.includes("Émis") 
+    ? "text-red-600 dark:text-red-400" 
+    : "text-green-600 dark:text-green-400";
   
-  // Déterminer le gradient en fonction du type de stats
+  // Determine gradient based on stats type
   const gradientClasses = {
     green: "from-green-50 to-transparent dark:from-green-950/20",
     red: "from-red-50 to-transparent dark:from-red-950/20",

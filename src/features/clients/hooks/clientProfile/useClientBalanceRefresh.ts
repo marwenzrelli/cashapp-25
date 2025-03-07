@@ -44,7 +44,7 @@ export const useClientBalanceRefresh = (
         return;
       }
       
-      // Calculate balance manually
+      // Calculate balance manually with detailed logging
       const totalDeposits = deposits?.reduce((acc, dep) => acc + Number(dep.amount), 0) || 0;
       const totalWithdrawals = withdrawals?.reduce((acc, wd) => acc + Number(wd.amount), 0) || 0;
       const balance = totalDeposits - totalWithdrawals;

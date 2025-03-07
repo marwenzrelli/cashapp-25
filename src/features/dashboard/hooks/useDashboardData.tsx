@@ -57,16 +57,17 @@ export const useDashboardData = () => {
       // Generate mock monthly stats since the operation_statistics table doesn't exist
       const monthlyStats = generateMockMonthlyStats();
 
-      // Fetch all clients to calculate the total balance
+      // Fetch all clients to calculate the total balance from client soldes
       const { data: clientsData, error: clientsDataError } = await supabase
         .from('clients')
-        .select('id, solde')
-        .eq('status', 'active');
+        .select('id, solde, status');
 
       if (clientsDataError) throw clientsDataError;
 
-      // Calculate actual balance from client soldes instead of using deposits - withdrawals
-      const total_balance = clientsData?.reduce((sum, client) => sum + Number(client.solde || 0), 0) || 0;
+      // Calculate the total balance by summing client balances (only for active clients)
+      const total_balance = clientsData
+        ?.filter(client => client.status === 'active')
+        ?.reduce((sum, client) => sum + Number(client.solde || 0), 0) || 0;
 
       // Fetch transfers
       const { data: transfers, error: transfersError } = await supabase

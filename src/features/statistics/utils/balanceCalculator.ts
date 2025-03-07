@@ -13,8 +13,7 @@ export const recalculateAllClientBalances = async (): Promise<boolean> => {
     // Récupérer tous les clients
     const { data: clients, error: clientsError } = await supabase
       .from('clients')
-      .select('id, prenom, nom')
-      .eq('status', 'active');
+      .select('id, prenom, nom');
       
     if (clientsError) {
       console.error("Error fetching clients:", clientsError);
@@ -22,7 +21,7 @@ export const recalculateAllClientBalances = async (): Promise<boolean> => {
     }
     
     if (!clients || clients.length === 0) {
-      console.log("No active clients found");
+      console.log("No clients found");
       return true;
     }
     
@@ -67,6 +66,9 @@ export const recalculateAllClientBalances = async (): Promise<boolean> => {
         const totalDeposits = deposits?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
         const totalWithdrawals = withdrawals?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
         const balance = totalDeposits - totalWithdrawals;
+        
+        // Log le calcul pour debugging
+        console.log(`${clientFullName}: Deposits=${totalDeposits}, Withdrawals=${totalWithdrawals}, Balance=${balance}`);
         
         // Mettre à jour le solde du client
         const { error: updateError } = await supabase
