@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect, useCallback } from "react";
 import { type Deposit, type EditFormData } from "@/components/deposits/types";
 import { useDeposits } from "@/features/deposits/hooks/useDeposits";
 import { toast } from "sonner";
@@ -26,7 +27,8 @@ export const useDepositsPage = () => {
     updateDeposit, 
     confirmDeleteDeposit, 
     setShowDeleteDialog, 
-    setDepositToDelete 
+    setDepositToDelete,
+    fetchDeposits
   } = useDeposits();
 
   const handleDelete = (deposit: Deposit) => {
@@ -199,6 +201,7 @@ export const useDepositsPage = () => {
     handleEdit,
     handleEditFormChange,
     handleConfirmEdit,
-    handleCreateDeposit
+    handleCreateDeposit,
+    fetchDeposits
   };
 };

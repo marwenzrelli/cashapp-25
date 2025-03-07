@@ -1,6 +1,7 @@
 
 import { DepositsContent } from "@/features/deposits/components/DepositsContent";
 import { useDepositsPage } from "@/features/deposits/hooks/useDepositsPage";
+import { useEffect } from "react";
 
 const Deposits = () => {
   const {
@@ -26,9 +27,17 @@ const Deposits = () => {
     handleEdit,
     handleEditFormChange,
     handleConfirmEdit,
-    handleCreateDeposit
+    handleCreateDeposit,
+    fetchDeposits
   } = useDepositsPage();
 
+  // Fetch deposits when the component mounts
+  useEffect(() => {
+    console.log("Deposits page mounted - fetching deposits");
+    fetchDeposits();
+  }, [fetchDeposits]);
+
+  console.log("Deposits page render - deposits count:", deposits?.length);
   console.log("Deposits page render - isEditDialogOpen:", isEditDialogOpen);
   
   return (
