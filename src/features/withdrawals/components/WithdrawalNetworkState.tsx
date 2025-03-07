@@ -1,22 +1,21 @@
 
 import React from "react";
-import { NetworkStatusAlerts } from "./NetworkStatusAlerts";
-import { ErrorRetryButton } from "./ErrorRetryButton";
-import { WithdrawalsContent } from "./WithdrawalsContent";
-import { Client } from "@/features/clients/types";
+import { NetworkErrorState } from "@/features/admin/components/administration/ErrorState";
 import { Withdrawal } from "../types";
+import { Client } from "@/features/clients/types";
+import { WithdrawalOperations } from "./WithdrawalOperations";
 
 interface WithdrawalNetworkStateProps {
   networkStatus: 'online' | 'offline' | 'reconnecting';
   isLoading: boolean;
   retrying: boolean;
   error: string | null;
-  fetchWithdrawals: () => void;
+  fetchWithdrawals: () => Promise<void>;
   withdrawals: Withdrawal[];
   filteredWithdrawals: Withdrawal[];
   paginatedWithdrawals: Withdrawal[];
   clients: Client[];
-  fetchClients: () => void;
+  fetchClients: () => Promise<void>;
   refreshClientBalance: (clientId: string) => Promise<boolean>;
   deleteWithdrawal: (withdrawal: Withdrawal) => void;
   showDeleteDialog: boolean;
@@ -53,48 +52,36 @@ export const WithdrawalNetworkState: React.FC<WithdrawalNetworkStateProps> = ({
   currentPage,
   setCurrentPage
 }) => {
-  if (networkStatus === 'offline' || networkStatus === 'reconnecting' || error) {
+  if (networkStatus !== 'online' || error) {
     return (
-      <>
-        <NetworkStatusAlerts 
-          networkStatus={networkStatus}
-          isLoading={isLoading}
-          retrying={retrying}
-          error={error}
-          fetchWithdrawals={fetchWithdrawals}
-        />
-        
-        {error && (
-          <ErrorRetryButton 
-            onRetry={fetchWithdrawals}
-            isLoading={isLoading}
-            retrying={retrying}
-          />
-        )}
-        
-        {!isLoading && withdrawals.length > 0 && (
-          <WithdrawalsContent
-            withdrawals={filteredWithdrawals}
-            paginatedWithdrawals={paginatedWithdrawals}
-            clients={clients}
-            fetchWithdrawals={fetchWithdrawals}
-            fetchClients={fetchClients}
-            refreshClientBalance={refreshClientBalance}
-            deleteWithdrawal={deleteWithdrawal}
-            showDeleteDialog={showDeleteDialog}
-            setShowDeleteDialog={setShowDeleteDialog}
-            confirmDeleteWithdrawal={confirmDeleteWithdrawal}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            itemsPerPage={itemsPerPage}
-            setItemsPerPage={setItemsPerPage}
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-          />
-        )}
-      </>
+      <NetworkErrorState
+        status={networkStatus}
+        error={error}
+        onRetry={fetchWithdrawals}
+        retrying={retrying}
+      />
     );
   }
 
-  return null;
+  // If online and no error, pass through to main operations component
+  return (
+    <WithdrawalOperations
+      withdrawals={withdrawals}
+      clients={clients}
+      fetchWithdrawals={fetchWithdrawals}
+      fetchClients={fetchClients}
+      refreshClientBalance={refreshClientBalance}
+      searchTerm={searchTerm}
+      setSearchTerm={setSearchTerm}
+      itemsPerPage={itemsPerPage}
+      setItemsPerPage={setItemsPerPage}
+      currentPage={currentPage}
+      setCurrentPage={setCurrentPage}
+      filteredWithdrawals={filteredWithdrawals}
+      paginatedWithdrawals={paginatedWithdrawals}
+      showDeleteDialog={showDeleteDialog}
+      setShowDeleteDialog={setShowDeleteDialog}
+      confirmDeleteWithdrawal={confirmDeleteWithdrawal}
+    />
+  );
 };

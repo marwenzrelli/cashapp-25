@@ -20,6 +20,17 @@ export const WithdrawalsPage: React.FC<WithdrawalsPageProps> = ({
   onEditWithdrawal, 
   onDeleteWithdrawal 
 }) => {
+  // Helper function for refreshClientBalance that adapts the types
+  const handleRefreshClientBalance = async (clientId: string): Promise<boolean> => {
+    try {
+      await refreshClientBalance(parseInt(clientId, 10));
+      return true;
+    } catch (error) {
+      console.error("Error refreshing client balance:", error);
+      return false;
+    }
+  };
+  
   const { 
     withdrawals, 
     isLoading,
@@ -51,17 +62,6 @@ export const WithdrawalsPage: React.FC<WithdrawalsPageProps> = ({
     filteredWithdrawals,
     paginatedWithdrawals
   } = useWithdrawalPagination(withdrawals);
-
-  // Helper function for refreshClientBalance that adapts the types
-  const handleRefreshClientBalance = async (clientId: string): Promise<boolean> => {
-    try {
-      await refreshClientBalance(parseInt(clientId, 10));
-      return true;
-    } catch (error) {
-      console.error("Error refreshing client balance:", error);
-      return false;
-    }
-  };
 
   // Auth state component
   const authStateComponent = (
