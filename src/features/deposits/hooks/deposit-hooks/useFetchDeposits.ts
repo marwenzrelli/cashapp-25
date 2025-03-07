@@ -13,6 +13,17 @@ export const useFetchDeposits = (
       console.log("Starting to fetch deposits from Supabase...");
       setIsLoading(true);
       
+      // First check if the user is authenticated
+      const { data: sessionData } = await supabase.auth.getSession();
+      const session = sessionData.session;
+      
+      if (!session) {
+        console.warn("No active session found when fetching deposits");
+        // We continue anyway for now as RLS might be disabled during testing
+      } else {
+        console.log("Fetching deposits with authenticated session:", session.user.id);
+      }
+      
       const { data, error } = await supabase
         .from('deposits')
         .select('*')

@@ -9,6 +9,7 @@ import { useCreateDeposit } from "./deposit-hooks/useCreateDeposit";
 import { useUpdateDeposit } from "./deposit-hooks/useUpdateDeposit";
 import { useDeleteDeposit } from "./deposit-hooks/useDeleteDeposit";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export const useDeposits = () => {
   const navigate = useNavigate();
@@ -39,20 +40,16 @@ export const useDeposits = () => {
   const fetchDeposits = useCallback(async () => {
     console.log("Fetching deposits data from Supabase...");
     try {
-      // For now, let's bypass the authentication check to see if we get data
-      /*
-      const isAuthenticated = await checkAuth();
-      if (isAuthenticated) {
-        setIsLoading(true);
-        await fetchDepositsFunction();
-        console.log("Deposits fetched successfully");
-      } else {
-        console.error("Authentication failed when fetching deposits");
-        toast.error("Veuillez vous connecter pour accéder aux versements");
-      }
-      */
+      // Check for active session
+      const { data: { session } } = await supabase.auth.getSession();
       
-      // Temporarily bypass auth check for debugging
+      if (!session) {
+        console.warn("No active session found, but will attempt to fetch deposits anyway");
+        // Continue with fetch despite no session - this allows testing without auth
+      } else {
+        console.log("Active session found for user:", session.user.id);
+      }
+      
       setIsLoading(true);
       await fetchDepositsFunction();
       console.log("Deposits fetched successfully");
@@ -63,8 +60,6 @@ export const useDeposits = () => {
       setIsLoading(false);
     }
   }, [fetchDepositsFunction, setIsLoading]);
-
-  // No auto-fetch on mount anymore - we'll fetch explicitly from the page component
   
   return {
     deposits,

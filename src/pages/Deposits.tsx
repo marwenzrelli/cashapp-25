@@ -2,6 +2,7 @@
 import { DepositsContent } from "@/features/deposits/components/DepositsContent";
 import { useDepositsPage } from "@/features/deposits/hooks/useDepositsPage";
 import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Deposits = () => {
   const {
@@ -34,11 +35,24 @@ const Deposits = () => {
     totalItems
   } = useDepositsPage();
 
-  // Fetch deposits only when the component mounts
+  // Track authentication state and fetch deposits when auth changes
   useEffect(() => {
-    console.log("Deposits page mounted - fetching deposits");
+    console.log("Setting up auth state listener");
+    
+    // Initial fetch
     fetchDeposits();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed:", event, session?.user?.id);
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        fetchDeposits();
+      }
+    });
+    
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   console.log("Deposits page render - deposits count:", deposits?.length);
