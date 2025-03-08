@@ -22,6 +22,8 @@ export const DeleteDepositDialog = ({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleConfirm = async () => {
+    if (isDeleting) return; // Prevent double submission
+    
     setIsDeleting(true);
     try {
       console.log("Démarrage de la suppression du versement dans DeleteDepositDialog");
@@ -42,11 +44,10 @@ export const DeleteDepositDialog = ({
 
   return (
     <AlertDialog open={isOpen} onOpenChange={(open) => {
-      // Prevent closing the dialog during deletion
-      if (isDeleting && !open) return;
-      
-      // Only allow closing if we're not in the middle of deleting
-      if (!isDeleting) {
+      // Only allow state changes if we're not in the middle of deleting
+      if (isDeleting) {
+        if (!open) return; // Prevent closing during deletion
+      } else {
         onOpenChange(open);
       }
     }}>
@@ -69,7 +70,7 @@ export const DeleteDepositDialog = ({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={() => onOpenChange(false)} disabled={isDeleting}>
+          <AlertDialogCancel disabled={isDeleting}>
             Annuler
           </AlertDialogCancel>
           <AlertDialogAction
