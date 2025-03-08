@@ -1,27 +1,13 @@
 
 import { useState, useEffect, useRef } from "react";
-import { Client } from "@/features/clients/types";
-import { Withdrawal } from "@/features/withdrawals/types";
-
-interface ExtendedClient extends Client {
-  dateCreation: string;
-}
-
-interface UseWithdrawalFormStateProps {
-  isOpen: boolean;
-  clients: ExtendedClient[];
-  selectedClient: string;
-  setSelectedClient: (clientId: string) => void;
-  isEditing: boolean;
-  selectedWithdrawal: Withdrawal | null;
-}
-
-interface WithdrawalFormState {
-  clientId: string;
-  amount: string;
-  notes: string;
-  date: string;
-}
+import { 
+  UseWithdrawalFormStateProps, 
+  WithdrawalFormState 
+} from "./form/withdrawalFormTypes";
+import { 
+  initializeNewForm, 
+  initializeFormFromWithdrawal 
+} from "./form/withdrawalFormInitializer";
 
 export const useWithdrawalFormState = ({
   isOpen,
@@ -31,12 +17,7 @@ export const useWithdrawalFormState = ({
   isEditing,
   selectedWithdrawal
 }: UseWithdrawalFormStateProps) => {
-  const [formState, setFormState] = useState<WithdrawalFormState>({
-    clientId: "",
-    amount: "",
-    notes: "",
-    date: new Date().toISOString(),
-  });
+  const [formState, setFormState] = useState<WithdrawalFormState>(initializeNewForm());
   const [isLoading, setIsLoading] = useState(false);
   const [formInitialized, setFormInitialized] = useState(false);
   
@@ -69,88 +50,16 @@ export const useWithdrawalFormState = ({
       });
       
       if (isEditing && selectedWithdrawal) {
-        // Find client by name when editing
-        const clientFullName = selectedWithdrawal.client_name;
+        // Initialize form data from existing withdrawal
+        const formData = initializeFormFromWithdrawal(selectedWithdrawal, clients);
         
-        // More flexible client matching
-        const normalizeString = (str: string) => str ? str.toLowerCase().trim() : '';
-        
-        const client = clients.find(c => {
-          const fullName = `${c.prenom} ${c.nom}`;
-          const reversedName = `${c.nom} ${c.prenom}`;
-          
-          const normalizedFullName = normalizeString(fullName);
-          const normalizedReversedName = normalizeString(reversedName);
-          const normalizedClientName = normalizeString(clientFullName);
-          
-          return normalizedFullName === normalizedClientName || 
-                 normalizedReversedName === normalizedClientName ||
-                 normalizedFullName.includes(normalizedClientName) ||
-                 normalizedClientName.includes(normalizedFullName);
-        });
-        
-        if (client) {
-          const clientId = client.id.toString();
-          
-          // Convert amount to string safely
-          const amountStr = selectedWithdrawal.amount !== undefined && selectedWithdrawal.amount !== null
-            ? selectedWithdrawal.amount.toString()
-            : "";
-          
-          // Parse date from the formatted string back to ISO format if needed
-          let dateValue = new Date().toISOString();
-          
-          // First check operation_date, then date, then created_at
-          const sourceDate = selectedWithdrawal.operation_date || selectedWithdrawal.date || selectedWithdrawal.created_at;
-          
-          if (sourceDate) {
-            // Handle formatting differences - the date might come formatted or as ISO string
-            if (sourceDate.includes('T')) {
-              // Already in ISO format
-              dateValue = sourceDate;
-            } else {
-              try {
-                // Try to parse formatted date back to ISO
-                const parts = sourceDate.split(' ');
-                if (parts.length >= 2) {
-                  const dateParts = parts[0].split('/');
-                  const timeParts = parts[1].split(':');
-                  
-                  if (dateParts.length === 3 && timeParts.length >= 2) {
-                    const day = parseInt(dateParts[0]);
-                    const month = parseInt(dateParts[1]) - 1; // JS months are 0-indexed
-                    const year = parseInt(dateParts[2]);
-                    const hours = parseInt(timeParts[0]);
-                    const minutes = parseInt(timeParts[1]);
-                    
-                    const date = new Date(year, month, day, hours, minutes);
-                    if (!isNaN(date.getTime())) {
-                      dateValue = date.toISOString();
-                    }
-                  }
-                }
-              } catch (error) {
-                console.error("Error parsing date:", error);
-                // Fallback to current date
-                dateValue = new Date().toISOString();
-              }
-            }
-          }
-          
-          const formData = {
-            clientId: clientId,
-            amount: amountStr,
-            notes: selectedWithdrawal.notes || "",
-            date: dateValue,
-          };
-          
+        if (formData) {
           console.log("Setting withdrawal form data:", formData);
           setFormState(formData);
           
           // Update selected client in parent
-          setSelectedClient(clientId);
+          setSelectedClient(formData.clientId);
         } else {
-          console.error("Client not found for withdrawal:", selectedWithdrawal);
           // Fallback to empty form if client not found
           resetForm();
         }
@@ -175,12 +84,7 @@ export const useWithdrawalFormState = ({
 
   // Helper to reset form
   const resetForm = () => {
-    setFormState({
-      clientId: "",
-      amount: "",
-      notes: "",
-      date: new Date().toISOString(),
-    });
+    setFormState(initializeNewForm());
   };
 
   const handleInputChange = (field: keyof WithdrawalFormState, value: string) => {

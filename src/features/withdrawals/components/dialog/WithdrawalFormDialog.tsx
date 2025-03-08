@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Dialog } from "@/components/ui/dialog";
 import { WithdrawalFormLoading } from "./WithdrawalFormLoading";
@@ -6,10 +5,7 @@ import { WithdrawalFormContent } from "./WithdrawalFormContent";
 import { useWithdrawalFormState } from "../../hooks/useWithdrawalFormState";
 import { Client } from "@/features/clients/types";
 import { Withdrawal } from "@/features/withdrawals/types";
-
-interface ExtendedClient extends Client {
-  dateCreation: string;
-}
+import { ExtendedClient } from "../../hooks/form/withdrawalFormTypes";
 
 export interface WithdrawalFormDialogProps {
   isOpen: boolean;

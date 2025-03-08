@@ -2,12 +2,13 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Client } from "../../types";
 import { StandaloneWithdrawalForm } from "@/features/withdrawals/components/standalone/StandaloneWithdrawalForm";
+import { ExtendedClient } from "@/features/withdrawals/hooks/form/withdrawalFormTypes";
 
 interface WithdrawalDialogProps {
   client: Client;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (withdrawal: any) => Promise<boolean | void>; // Updated return type
+  onConfirm: (withdrawal: any) => Promise<boolean | void>;
   refreshClientBalance: () => Promise<boolean>;
 }
 

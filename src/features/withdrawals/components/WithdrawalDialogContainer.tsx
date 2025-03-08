@@ -5,6 +5,7 @@ import { Client } from "@/features/clients/types";
 import { Withdrawal } from "@/features/withdrawals/types";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { ExtendedClient } from "../hooks/form/withdrawalFormTypes";
 
 interface WithdrawalDialogContainerProps {
   showDialog: boolean;
