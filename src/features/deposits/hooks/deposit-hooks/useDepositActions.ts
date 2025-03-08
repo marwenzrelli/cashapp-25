@@ -30,12 +30,18 @@ export const useDepositActions = ({
   
   const handleDelete = (deposit: Deposit) => {
     console.log("Demande de suppression pour le versement:", deposit);
+    // Make sure we're setting the deposit to delete before opening the dialog
     setDepositToDelete(deposit);
-    setIsDeleteDialogOpen(true);
-    setShowDeleteDialog(true);
+    // Small delay to ensure state is updated before dialog opens
+    setTimeout(() => {
+      setIsDeleteDialogOpen(true);
+      setShowDeleteDialog(true);
+    }, 10);
   };
 
   const confirmDelete = async (): Promise<boolean> => {
+    console.log("confirmDelete called, selectedDeposit:", selectedDeposit);
+    
     if (!selectedDeposit) {
       toast.error("Aucun versement sélectionné");
       return false;
