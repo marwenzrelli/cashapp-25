@@ -34,3 +34,24 @@ export interface DeleteDepositDialogProps {
   selectedDeposit: Deposit | null;
   onConfirm: () => Promise<boolean | void>;
 }
+
+// Add the missing types that were referenced in the error messages
+export interface DepositDialogProps {
+  client: any;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: (deposit: Deposit) => Promise<boolean | void>;
+  refreshClientBalance: () => Promise<boolean | void>;
+}
+
+export interface SearchBarProps {
+  searchTerm: string;
+  onSearchChange: (term: string) => void;
+  itemsPerPage: string;
+  onItemsPerPageChange: (value: string) => void;
+  totalDeposits: number;
+}
+
+export interface StatsCardProps {
+  deposits: Deposit[];
+}
