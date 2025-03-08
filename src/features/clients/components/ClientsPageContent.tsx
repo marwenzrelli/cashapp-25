@@ -1,4 +1,3 @@
-
 import { Client } from "@/features/clients/types";
 import { ClientList } from "./ClientList";
 import { ClientInsights } from "./ClientInsights";
@@ -6,7 +5,6 @@ import { ClientSearch } from "./ClientSearch";
 import { Loader2, AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AISuggestion } from "../types";
-
 interface ClientsPageContentProps {
   clients: Client[];
   filteredClients: Client[];
@@ -19,7 +17,6 @@ interface ClientsPageContentProps {
   handleRetry: () => void;
   openNewClientDialog: () => void;
 }
-
 export const ClientsPageContent = ({
   clients,
   filteredClients,
@@ -30,38 +27,33 @@ export const ClientsPageContent = ({
   handleEdit,
   handleDelete,
   handleRetry,
-  openNewClientDialog,
+  openNewClientDialog
 }: ClientsPageContentProps) => {
   // Fixed the type issue by explicitly setting the type properties to valid values
-  const aiSuggestions: AISuggestion[] = [
-    {
-      id: "1",
-      message: "Nouveau client potentiel détecté",
-      type: "success", // Changed from string to specific union type value
-      clientId: "1",
-    },
-    {
-      id: "2",
-      message: "Mise à jour des informations recommandée",
-      type: "info", // Changed from string to specific union type value
-      clientId: "3",
-    },
-  ];
+  const aiSuggestions: AISuggestion[] = [{
+    id: "1",
+    message: "Nouveau client potentiel détecté",
+    type: "success",
+    // Changed from string to specific union type value
+    clientId: "1"
+  }, {
+    id: "2",
+    message: "Mise à jour des informations recommandée",
+    type: "info",
+    // Changed from string to specific union type value
+    clientId: "3"
+  }];
 
   // Render content based on loading state and errors
   const renderContent = () => {
     if (loading && clients.length === 0) {
-      return (
-        <div className="flex flex-col items-center justify-center py-16 space-y-4">
+      return <div className="flex flex-col items-center justify-center py-16 space-y-4">
           <Loader2 className="h-12 w-12 text-primary animate-spin" />
           <p className="text-muted-foreground">Chargement des clients...</p>
-        </div>
-      );
+        </div>;
     }
-
     if (error) {
-      return (
-        <div className="flex flex-col items-center justify-center py-16 space-y-6 text-center">
+      return <div className="flex flex-col items-center justify-center py-16 space-y-6 text-center">
           <div className="rounded-full bg-red-100 dark:bg-red-900/20 p-3">
             <AlertTriangle className="h-10 w-10 text-red-600" />
           </div>
@@ -69,44 +61,24 @@ export const ClientsPageContent = ({
             <h3 className="text-xl font-semibold">Erreur de connexion</h3>
             <p className="text-muted-foreground max-w-md">{error}</p>
           </div>
-          <Button 
-            onClick={handleRetry} 
-            variant="outline" 
-            className="gap-2"
-          >
+          <Button onClick={handleRetry} variant="outline" className="gap-2">
             <RefreshCw className="h-4 w-4" />
             Réessayer
           </Button>
-        </div>
-      );
+        </div>;
     }
-
     if (clients.length === 0) {
-      return (
-        <div className="flex flex-col items-center justify-center py-16 space-y-4">
+      return <div className="flex flex-col items-center justify-center py-16 space-y-4">
           <p className="text-muted-foreground">Aucun client trouvé.</p>
-          <Button 
-            onClick={openNewClientDialog}
-            variant="default"
-          >
+          <Button onClick={openNewClientDialog} variant="default">
             Ajouter un client
           </Button>
-        </div>
-      );
+        </div>;
     }
-
-    return (
-      <ClientList
-        clients={filteredClients}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
-    );
+    return <ClientList clients={filteredClients} onEdit={handleEdit} onDelete={handleDelete} />;
   };
-
-  return (
-    <>
-      <div className="space-y-6 animate-in px-2 md:px-0">
+  return <>
+      <div className="space-y-6 animate-in md:px-0 px-0 mx-0 my-0 py-0">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold">Gestion des clients</h1>
           <p className="text-sm md:text-base text-muted-foreground">
@@ -116,15 +88,10 @@ export const ClientsPageContent = ({
 
         <div className="grid gap-4 md:gap-6 md:grid-cols-2">
           <ClientInsights suggestions={aiSuggestions} />
-          <ClientSearch
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            onNewClient={openNewClientDialog}
-          />
+          <ClientSearch searchTerm={searchTerm} onSearchChange={setSearchTerm} onNewClient={openNewClientDialog} />
         </div>
 
         {renderContent()}
       </div>
-    </>
-  );
+    </>;
 };
