@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Deposit } from "../types"; 
+import { Deposit } from "@/components/deposits/types"; // Keep consistent with component imports
 import { useClients } from "@/features/clients/hooks/useClients";
 import { ExtendedClient } from "@/features/withdrawals/components/standalone/StandaloneWithdrawalForm";
 import { toast } from "sonner";
@@ -13,7 +13,7 @@ import {
 } from "./content";
 
 // Define a type adapter function to ensure deposits have required fields
-const adaptDepositsForUI = (deposits: Deposit[]) => {
+const adaptDepositsForUI = (deposits: any[]): Deposit[] => {
   return deposits.map(deposit => ({
     ...deposit,
     description: deposit.description || deposit.notes || ""  // Ensure description is always present
@@ -21,9 +21,9 @@ const adaptDepositsForUI = (deposits: Deposit[]) => {
 };
 
 interface DepositsContentProps {
-  deposits: Deposit[];
-  filteredDeposits: Deposit[];
-  paginatedDeposits: Deposit[];
+  deposits: any[];
+  filteredDeposits: any[];
+  paginatedDeposits: any[];
   searchTerm: string;
   setSearchTerm: (term: string) => void;
   isDialogOpen: boolean;
@@ -32,18 +32,18 @@ interface DepositsContentProps {
   setIsDeleteDialogOpen: (open: boolean) => void;
   isEditDialogOpen: boolean;
   setIsEditDialogOpen: (open: boolean) => void;
-  selectedDeposit: Deposit | null;
+  selectedDeposit: any | null;
   itemsPerPage: string;
   setItemsPerPage: (value: string) => void;
   currentPage: number;
   setCurrentPage: (page: number) => void;
   editForm: any;
-  handleDelete: (deposit: Deposit) => void;
+  handleDelete: (deposit: any) => void;
   confirmDelete: () => Promise<boolean>;
-  handleEdit: (deposit: Deposit) => void;
+  handleEdit: (deposit: any) => void;
   handleEditFormChange: (field: string, value: string) => void;
   handleConfirmEdit: () => Promise<void>;
-  handleCreateDeposit: (deposit: Deposit) => Promise<void>;
+  handleCreateDeposit: (deposit: any) => Promise<void>;
   isLoading?: boolean;
   totalItems?: number;
   fetchDeposits?: () => Promise<void>;
