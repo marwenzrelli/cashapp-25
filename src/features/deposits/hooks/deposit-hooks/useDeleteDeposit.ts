@@ -82,7 +82,7 @@ export const useDeleteDeposit = (
       // Mettre à jour l'état local
       setDeposits(prevDeposits => prevDeposits.filter(deposit => deposit.id !== depositId));
       
-      toast.success("Dépôt supprimé avec succès");
+      console.log("Dépôt supprimé avec succès, ID:", depositId);
       return true;
     } catch (error) {
       console.error("Erreur complète lors de la suppression:", error);
@@ -107,7 +107,9 @@ export const useDeleteDeposit = (
       const success = await deleteDeposit(depositToDelete.id);
       
       if (success) {
+        console.log("Suppression réussie, réinitialisation de l'état");
         setDepositToDelete(null);
+        setShowDeleteDialog(false);
         return true;
       } else {
         throw new Error("Échec de la suppression du versement");

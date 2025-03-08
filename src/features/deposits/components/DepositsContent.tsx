@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { DepositsTable } from "./DepositsTable";
 import { DepositsHeader } from "./DepositsHeader";
 import { SearchBar } from "./SearchBar";
@@ -11,6 +11,7 @@ import { TransferPagination } from "@/features/transfers/components/TransferPagi
 import { EditDepositDialog } from "./dialog/EditDepositDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ExtendedClient } from "@/features/withdrawals/components/standalone/StandaloneWithdrawalForm";
+import { toast } from "sonner";
 
 // Define a type adapter function to ensure deposits have required fields
 const adaptDepositsForUI = (deposits: Deposit[]) => {
@@ -46,6 +47,7 @@ interface DepositsContentProps {
   handleCreateDeposit: (deposit: Deposit) => Promise<void>;
   isLoading?: boolean;
   totalItems?: number;
+  fetchDeposits?: () => Promise<void>;
 }
 
 export const DepositsContent = ({
@@ -73,7 +75,8 @@ export const DepositsContent = ({
   handleConfirmEdit,
   handleCreateDeposit,
   isLoading = false,
-  totalItems = 0
+  totalItems = 0,
+  fetchDeposits
 }: DepositsContentProps) => {
   const {
     clients,
@@ -81,15 +84,26 @@ export const DepositsContent = ({
     fetchClients
   } = useClients();
   
-  React.useEffect(() => {
+  useEffect(() => {
     fetchClients();
   }, [fetchClients]);
+
+  // Nouveau useEffect pour rafraîchir les dépôts après une suppression
+  useEffect(() => {
+    if (!isDeleteDialogOpen && selectedDeposit && fetchDeposits) {
+      // Si le dialogue de suppression vient d'être fermé et qu'un dépôt était sélectionné
+      // cela signifie probablement qu'une suppression a été effectuée
+      console.log("Rafraîchissement des dépôts après fermeture du dialogue de suppression");
+      fetchDeposits();
+    }
+  }, [isDeleteDialogOpen, selectedDeposit, fetchDeposits]);
 
   console.log("DepositsContent render with:", {
     depositsLength: deposits?.length,
     filteredDepositsLength: filteredDeposits?.length,
     paginatedDepositsLength: paginatedDeposits?.length,
-    isLoading
+    isLoading,
+    deleteDialogOpen: isDeleteDialogOpen
   });
 
   const handleRefreshClientBalance = async (clientId: string): Promise<boolean> => {
@@ -98,6 +112,21 @@ export const DepositsContent = ({
       return true;
     } catch (error) {
       console.error("Error refreshing client balance:", error);
+      return false;
+    }
+  };
+
+  const onConfirmDelete = async () => {
+    try {
+      const success = await confirmDelete();
+      if (success && fetchDeposits) {
+        toast.success("Versement supprimé avec succès");
+        // Rafraîchir la liste des dépôts après une suppression réussie
+        await fetchDeposits();
+      }
+      return success;
+    } catch (error) {
+      console.error("Erreur lors de la suppression:", error);
       return false;
     }
   };
@@ -175,7 +204,7 @@ export const DepositsContent = ({
       <DeleteDepositDialog 
         isOpen={isDeleteDialogOpen} 
         onOpenChange={setIsDeleteDialogOpen} 
-        onConfirm={confirmDelete} 
+        onConfirm={onConfirmDelete} 
         selectedDeposit={selectedDeposit} 
       />
 
