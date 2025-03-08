@@ -31,11 +31,11 @@ interface DepositsContentProps {
   setCurrentPage: (page: number) => void;
   editForm: any;
   handleDelete: (deposit: Deposit) => void;
-  confirmDelete: () => Promise<void>;
+  confirmDelete: () => Promise<boolean>;
   handleEdit: (deposit: Deposit) => void;
   handleEditFormChange: (field: string, value: string) => void;
-  handleConfirmEdit: () => Promise<void>;
-  handleCreateDeposit: (deposit: Deposit) => Promise<void>;
+  handleConfirmEdit: () => Promise<boolean>;
+  handleCreateDeposit: (deposit: Deposit) => Promise<boolean>;
   isLoading?: boolean;
   totalItems?: number;
 }

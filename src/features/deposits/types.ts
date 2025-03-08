@@ -7,14 +7,14 @@ export type { EditFormData } from "@/components/deposits/types";
 export interface DepositDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (deposit: Deposit) => Promise<void>;
+  onConfirm: (deposit: Deposit) => Promise<boolean>;
 }
 
 export interface DeleteDepositDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   selectedDeposit: Deposit | null;
-  onConfirm: () => void;
+  onConfirm: () => Promise<boolean | void>;
 }
 
 export interface StatsCardProps {
