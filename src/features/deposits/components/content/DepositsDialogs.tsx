@@ -9,7 +9,7 @@ interface DepositsDialogsProps {
   setIsDeleteDialogOpen: (open: boolean) => void;
   isEditDialogOpen: boolean;
   setIsEditDialogOpen: (open: boolean) => void;
-  selectedDeposit: Deposit | null;
+  selectedDeposit: any | null;
   editForm: any;
   handleEditFormChange: (field: string, value: string) => void;
   handleConfirmEdit: () => Promise<void>;

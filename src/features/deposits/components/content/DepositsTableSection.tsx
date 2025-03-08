@@ -7,8 +7,8 @@ interface DepositsTableSectionProps {
   isLoading: boolean;
   paginatedDeposits: Deposit[];
   searchTerm: string;
-  handleEdit: (deposit: Deposit) => void;
-  handleDelete: (deposit: Deposit) => void;
+  handleEdit: (deposit: any) => void;
+  handleDelete: (deposit: any) => void;
 }
 
 export const DepositsTableSection = ({

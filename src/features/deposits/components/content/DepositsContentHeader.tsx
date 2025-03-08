@@ -10,7 +10,7 @@ interface DepositsContentHeaderProps {
   filteredDeposits: Deposit[];
   isLoading?: boolean;
   clients: ExtendedClient[];
-  handleCreateDeposit: (deposit: Deposit) => Promise<void>;
+  handleCreateDeposit: (deposit: any) => Promise<void>;
   handleRefreshClientBalance: (clientId: string) => Promise<boolean>;
   fetchClients: () => Promise<void>;
 }
