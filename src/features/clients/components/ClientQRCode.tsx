@@ -7,11 +7,13 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+
 interface ClientQRCodeProps {
   clientId: number;
   clientName: string;
   size?: number;
 }
+
 export const ClientQRCode = ({
   clientId,
   clientName,
@@ -27,6 +29,7 @@ export const ClientQRCode = ({
   const [hasAccess, setHasAccess] = useState(false);
   const [showQrCode, setShowQrCode] = useState(false);
   const [roleCheckError, setRoleCheckError] = useState(false);
+
   useEffect(() => {
     supabase.auth.getSession().then(({
       data: {
@@ -50,6 +53,7 @@ export const ClientQRCode = ({
     });
     return () => subscription.unsubscribe();
   }, [navigate]);
+
   useEffect(() => {
     const checkUserRole = async () => {
       if (!session) return;
@@ -61,7 +65,6 @@ export const ClientQRCode = ({
         if (error) {
           console.error("Error fetching user profile:", error);
           setRoleCheckError(true);
-          // Fallback to show the QR code for all authenticated users when role check fails
           setHasAccess(true);
           return;
         }
@@ -72,19 +75,18 @@ export const ClientQRCode = ({
       } catch (err) {
         console.error("Error checking role:", err);
         setRoleCheckError(true);
-        // Fallback to show the QR code for all authenticated users when role check fails
         setHasAccess(true);
       }
     };
     checkUserRole();
   }, [session]);
+
   const generateQRAccess = async () => {
     if (!session || !hasAccess) return;
     try {
       setIsLoading(true);
       console.log("Starting QR code generation for client ID:", clientId);
 
-      // Check if there's an existing token for this client
       const {
         data: existingTokens,
         error: fetchError
@@ -98,13 +100,11 @@ export const ClientQRCode = ({
       }
       console.log("Existing tokens found:", existingTokens?.length || 0);
 
-      // If token exists, use it; otherwise create a new one
       if (existingTokens && existingTokens.length > 0) {
         tokenToUse = existingTokens[0].access_token;
         console.log("Using existing token:", tokenToUse);
         setAccessToken(tokenToUse);
       } else {
-        // Create a new token
         console.log("Creating new access token for client:", clientId);
         const newToken = crypto.randomUUID();
         const {
@@ -113,7 +113,6 @@ export const ClientQRCode = ({
         } = await supabase.from('qr_access').insert({
           client_id: clientId,
           expires_at: null,
-          // Set to null for permanent access
           access_token: newToken
         }).select('access_token').single();
         if (error) {
@@ -136,7 +135,6 @@ export const ClientQRCode = ({
             margin: 1,
             color: {
               dark: '#8B5CF6',
-              // Vivid purple for the QR code
               light: '#FFFFFF'
             }
           });
@@ -153,11 +151,13 @@ export const ClientQRCode = ({
       setIsLoading(false);
     }
   };
+
   useEffect(() => {
     if (session && hasAccess && showQrCode) {
       generateQRAccess();
     }
   }, [clientId, session, hasAccess, showQrCode]);
+
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(qrUrl);
@@ -168,6 +168,7 @@ export const ClientQRCode = ({
       toast.error("Impossible de copier le lien.");
     }
   };
+
   const handleOpenLink = () => {
     if (qrUrl) {
       window.open(qrUrl, '_blank');
@@ -175,21 +176,23 @@ export const ClientQRCode = ({
       toast.error("Le lien n'est pas encore disponible.");
     }
   };
+
   const handleRegenerateQR = () => {
     generateQRAccess();
   };
+
   if (!session) {
     return null;
   }
 
-  // Always allow authenticated users to see the QR code when role check fails
   if (!hasAccess && !roleCheckError) {
     return null;
   }
+
   if (!showQrCode) {
-    return <Card className="p-4 bg-gradient-to-br from-violet-100 to-purple-50 shadow-lg border-purple-200 hover:shadow-xl transition-all py-0 rounded-lg px-0">
-        <Button onClick={() => setShowQrCode(true)} className="w-full bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 transition-all px-0 mx-0 py-[7px] my-0">
-          <div className="flex items-center justify-between w-full my-0 py-0 px-0 mx-[9px]">
+    return <Card className="p-4 bg-gradient-to-br from-violet-100 to-purple-50 shadow-lg border-purple-200 hover:shadow-xl transition-all py-0 rounded-lg px-0 w-full">
+        <Button onClick={() => setShowQrCode(true)} className="w-full bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 transition-all">
+          <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-2">
               <QrCode className="h-5 w-5" />
               <span>Afficher le QR code</span>
@@ -199,9 +202,10 @@ export const ClientQRCode = ({
         </Button>
       </Card>;
   }
-  return <Card className="p-4 bg-gradient-to-br from-violet-100 to-purple-50 shadow-lg border-purple-200 hover:shadow-xl transition-all">
-      <div className="flex flex-col items-center gap-4">
-        <div className="bg-white p-3 rounded-2xl shadow-inner relative">
+
+  return <Card className="p-4 bg-gradient-to-br from-violet-100 to-purple-50 shadow-lg border-purple-200 hover:shadow-xl transition-all w-full">
+      <div className="flex flex-col items-center gap-4 w-full">
+        <div className="bg-white p-3 rounded-2xl shadow-inner relative w-full max-w-[256px]">
           {isLoading ? <div className="absolute inset-0 flex items-center justify-center bg-white/90 backdrop-blur-sm rounded-2xl z-10">
               <RefreshCw className="h-6 w-6 animate-spin text-violet-500" />
             </div> : !accessToken ? <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/90 backdrop-blur-sm rounded-2xl z-10">
@@ -210,7 +214,7 @@ export const ClientQRCode = ({
                 Chargement du QR code...
               </p>
             </div> : null}
-          <div className="p-2 rounded-xl bg-gradient-to-br from-violet-100 to-purple-50">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-violet-100 to-purple-50 flex justify-center">
             <canvas ref={canvasRef} className="rounded-lg" />
           </div>
         </div>

@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Client } from "../types";
 import { ClientQRCode } from "./ClientQRCode";
@@ -94,7 +95,7 @@ export const ClientPersonalInfo = ({
             <PersonalInfoFields client={client} formatAmount={formatAmount} showBalance={true} realTimeBalance={clientBalance} />
             
             {/* Refresh button for mobile */}
-            <div className="md:hidden mt-4">
+            <div className="md:hidden mt-4 w-full">
               <Button variant="outline" size="sm" onClick={handleRefreshBalance} disabled={isRefreshing} className="w-full">
                 <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
                 {isRefreshing ? 'Actualisation...' : 'Actualiser le solde'}
@@ -102,13 +103,13 @@ export const ClientPersonalInfo = ({
             </div>
           </div>
           
-          {client && client.id && <div className="flex flex-col items-center space-y-4">
-              <div className="flex justify-center" ref={qrCodeRef}>
+          {client && client.id && <div className="flex flex-col items-center space-y-4 w-full">
+              <div className="flex justify-center w-full" ref={qrCodeRef}>
                 <ClientQRCode clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} clientName={`${client.prenom} ${client.nom}`} size={256} />
               </div>
               
               {/* Action buttons below QR code on mobile */}
-              <div className="md:hidden w-full pt-2 py-0 px-[22px]">
+              <div className="md:hidden w-full">
                 <ClientActionButtons onDepositClick={() => setDepositDialogOpen(true)} onWithdrawalClick={() => setWithdrawalDialogOpen(true)} orientation="vertical" />
               </div>
             </div>}

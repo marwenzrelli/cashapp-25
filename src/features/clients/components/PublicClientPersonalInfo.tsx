@@ -16,7 +16,7 @@ export const PublicClientPersonalInfo = ({ client }: PublicClientPersonalInfoPro
   const { currency } = useCurrency();
   
   return (
-    <Card className="backdrop-blur-xl bg-white/50 dark:bg-gray-950/50 md:col-span-3">
+    <Card className="backdrop-blur-xl bg-white/50 dark:bg-gray-950/50 md:col-span-3 w-full">
       <CardHeader>
         <CardTitle className="text-xl flex items-center justify-between">
           Informations personnelles
@@ -24,18 +24,18 @@ export const PublicClientPersonalInfo = ({ client }: PublicClientPersonalInfoPro
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid gap-6 md:grid-cols-3">
-          <div className="md:col-span-2">
+        <div className="grid gap-6 md:grid-cols-3 w-full">
+          <div className="md:col-span-2 w-full">
             <PersonalInfoFields 
               client={client} 
               showBalance={false}
               showBalanceOnMobile={false}
             />
           </div>
-          <div className="mt-0">
-            <div className="flex items-start gap-3">
+          <div className="mt-0 w-full">
+            <div className="flex items-start gap-3 w-full">
               <Wallet className="h-6 w-6 text-primary mt-1" />
-              <div>
+              <div className="w-full">
                 <p className="text-sm text-muted-foreground">Solde actuel</p>
                 <p className={cn(
                   "text-3xl font-bold",

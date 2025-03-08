@@ -62,8 +62,10 @@
   .table-container {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    margin: 0 -1rem;
-    padding: 0 1rem;
+    margin: 0 -0.5rem;
+    padding: 0 0.5rem;
+    width: 100vw;
+    max-width: 100%;
   }
   
   table {
@@ -76,4 +78,28 @@
 .overflow-fix {
   max-width: 100%;
   overflow-x: hidden;
+}
+
+/* Full width containers on mobile */
+@media (max-width: 640px) {
+  .container {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .card {
+    border-radius: 0.5rem;
+  }
+}
+
+/* Text overflow for long content on mobile */
+@media (max-width: 640px) {
+  .mobile-text-ellipsis {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
 }

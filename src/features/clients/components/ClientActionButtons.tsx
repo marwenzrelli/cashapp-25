@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { ArrowDownToLine, ArrowUpToLine } from "lucide-react";
 interface ClientActionButtonsProps {
@@ -10,12 +11,12 @@ export const ClientActionButtons = ({
   onWithdrawalClick,
   orientation = "horizontal"
 }: ClientActionButtonsProps) => {
-  return <div className={`flex ${orientation === "vertical" ? "flex-col" : "flex-row"} gap-2`}>
-      <Button onClick={onDepositClick} size="sm" className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-0">
+  return <div className={`flex ${orientation === "vertical" ? "flex-col w-full" : "flex-row"} gap-2`}>
+      <Button onClick={onDepositClick} size="sm" className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white w-full">
         <ArrowDownToLine className="h-4 w-4" />
         Versement
       </Button>
-      <Button onClick={onWithdrawalClick} size="sm" className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-[19px]">
+      <Button onClick={onWithdrawalClick} size="sm" className="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white w-full">
         <ArrowUpToLine className="h-4 w-4" />
         Retrait
       </Button>
