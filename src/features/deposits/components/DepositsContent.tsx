@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Deposit } from "@/components/deposits/types"; // Use component deposit type consistently
+import { Deposit } from "@/features/deposits/types"; // Use deposit type consistently
 import { useClients } from "@/features/clients/hooks/useClients";
 import { ExtendedClient } from "@/features/withdrawals/components/standalone/StandaloneWithdrawalForm";
 import { toast } from "sonner";
