@@ -12,13 +12,13 @@ export const useDeleteOperation = (
   fetchAllOperations: () => Promise<void>,
   setIsLoading: (isLoading: boolean) => void
 ) => {
-  const deleteOperation = async (operation: Operation) => {
+  const deleteOperation = async (operation: Operation): Promise<Operation> => {
     const operationToDelete = operation;
     return operationToDelete;
   };
 
-  const confirmDeleteOperation = async (operationToDelete: Operation | undefined) => {
-    if (!operationToDelete) return;
+  const confirmDeleteOperation = async (operationToDelete: Operation | undefined): Promise<boolean | void> => {
+    if (!operationToDelete) return false;
     
     try {
       setIsLoading(true);
@@ -44,11 +44,13 @@ export const useDeleteOperation = (
       
       toast.success("Opération supprimée avec succès");
       await fetchAllOperations();
+      return true;
     } catch (error: any) {
       console.error("Erreur lors de la suppression de l'opération:", error);
       toast.error("Erreur lors de la suppression de l'opération", {
         description: error.message || "Une erreur s'est produite lors de la suppression."
       });
+      return false;
     } finally {
       setIsLoading(false);
     }

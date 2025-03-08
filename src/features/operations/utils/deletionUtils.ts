@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -7,8 +6,9 @@ import { toast } from "sonner";
  * 
  * @param id The ID of the deposit to delete
  * @param userId The ID of the user performing the deletion
+ * @returns Promise that resolves when the deletion is complete
  */
-export async function handleDepositDeletion(id: string, userId: string | undefined) {
+export async function handleDepositDeletion(id: string, userId: string | undefined): Promise<void> {
   const { data: depositData, error: depositFetchError } = await supabase
     .from('deposits')
     .select('*')
@@ -60,8 +60,9 @@ export async function handleDepositDeletion(id: string, userId: string | undefin
  * 
  * @param id The ID of the withdrawal to delete
  * @param userId The ID of the user performing the deletion
+ * @returns Promise that resolves when the deletion is complete
  */
-export async function handleWithdrawalDeletion(id: string, userId: string | undefined) {
+export async function handleWithdrawalDeletion(id: string, userId: string | undefined): Promise<void> {
   const { data: withdrawalData, error: withdrawalFetchError } = await supabase
     .from('withdrawals')
     .select('*')
@@ -113,8 +114,9 @@ export async function handleWithdrawalDeletion(id: string, userId: string | unde
  * 
  * @param id The ID of the transfer to delete
  * @param userId The ID of the user performing the deletion
+ * @returns Promise that resolves when the deletion is complete
  */
-export async function handleTransferDeletion(id: string, userId: string | undefined) {
+export async function handleTransferDeletion(id: string, userId: string | undefined): Promise<void> {
   const { data: transferData, error: transferFetchError } = await supabase
     .from('transfers')
     .select('*')

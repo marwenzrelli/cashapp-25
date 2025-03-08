@@ -1,13 +1,31 @@
 
-import { type Deposit, type EditFormData } from "@/components/deposits/types";
+export interface Deposit {
+  id: number;
+  amount: number;
+  date: string;
+  description: string;
+  client_name: string;
+  status: string;
+  created_at: string;
+  created_by: string | null;
+  operation_date?: string;
+  last_modified_at?: string; // New field to track modifications
+}
 
-export type { Deposit } from "@/components/deposits/types";
-export type { EditFormData } from "@/components/deposits/types";
+export interface AISuggestion {
+  id: string;
+  message: string;
+  amount: number;
+  clientName: string;
+}
 
-export interface DepositDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onConfirm: (deposit: Deposit) => Promise<boolean | void>;
+export interface EditFormData {
+  clientName: string;
+  amount: string;
+  notes: string;
+  date?: string;
+  time?: string;
+  clientBalance?: string;
 }
 
 export interface DeleteDepositDialogProps {
@@ -15,21 +33,4 @@ export interface DeleteDepositDialogProps {
   onOpenChange: (open: boolean) => void;
   selectedDeposit: Deposit | null;
   onConfirm: () => Promise<boolean | void>;
-}
-
-export interface StatsCardProps {
-  deposits: Deposit[];
-}
-
-export interface SearchBarProps {
-  searchTerm: string;
-  onSearchChange: (value: string) => void;
-  itemsPerPage: string;
-  onItemsPerPageChange: (value: string) => void;
-  totalDeposits: number;
-}
-
-// This interface is now redundant as EditFormData already includes all these fields
-export interface ExtendedEditFormData extends EditFormData {
-  id?: number;
 }

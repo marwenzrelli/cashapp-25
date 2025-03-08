@@ -12,7 +12,7 @@ export const useDeleteDeposit = (
   setDepositToDelete: React.Dispatch<React.SetStateAction<Deposit | null>>,
   setShowDeleteDialog: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
-  const deleteDeposit = async (depositId: number): Promise<boolean> => {
+  const deleteDeposit = async (depositId: number): Promise<boolean | void> => {
     try {
       console.log(`Tentative de suppression du dépôt avec l'ID: ${depositId}`);
       setIsLoading(true);
@@ -39,7 +39,7 @@ export const useDeleteDeposit = (
     }
   };
 
-  const confirmDeleteDeposit = async (): Promise<boolean> => {
+  const confirmDeleteDeposit = async (): Promise<boolean | void> => {
     if (!depositToDelete) {
       toast.error("Aucun versement sélectionné pour la suppression");
       return false;
