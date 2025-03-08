@@ -10,6 +10,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Trash2 } from "lucide-react";
+import { useState } from "react";
 import { type DeleteDepositDialogProps } from "../types";
 
 export const DeleteDepositDialog = ({
@@ -18,6 +19,17 @@ export const DeleteDepositDialog = ({
   selectedDeposit,
   onConfirm,
 }: DeleteDepositDialogProps) => {
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleConfirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await onConfirm();
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
       <AlertDialogContent className="sm:max-w-md">
@@ -39,12 +51,13 @@ export const DeleteDepositDialog = ({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Annuler</AlertDialogCancel>
+          <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
           <AlertDialogAction
-            onClick={onConfirm}
+            onClick={handleConfirmDelete}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
+            disabled={isDeleting}
           >
-            Supprimer
+            {isDeleting ? "Suppression..." : "Supprimer"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

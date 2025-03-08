@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Deposit } from "@/components/deposits/types";
+import { handleDepositDeletion } from "@/features/operations/utils/deletionUtils";
 
 export const useDeleteDeposit = (
   deposits: Deposit[],
@@ -11,63 +12,18 @@ export const useDeleteDeposit = (
   setDepositToDelete: React.Dispatch<React.SetStateAction<Deposit | null>>,
   setShowDeleteDialog: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
-  const deleteDeposit = async (depositId: number) => {
+  const deleteDeposit = async (depositId: number): Promise<boolean> => {
     try {
       console.log(`Tentative de suppression du dépôt avec l'ID: ${depositId}`);
       setIsLoading(true);
 
-      const { data: depositToDelete, error: fetchError } = await supabase
-        .from('deposits')
-        .select('*')
-        .eq('id', depositId)
-        .single();
-
-      if (fetchError) {
-        console.error("Erreur lors de la récupération des détails du dépôt:", fetchError);
-        throw new Error(`Impossible de récupérer les détails du dépôt: ${fetchError.message}`);
-      }
-
-      if (!depositToDelete) {
-        throw new Error(`Dépôt avec l'ID ${depositId} non trouvé`);
-      }
-
-      console.log("Détails du dépôt à supprimer:", depositToDelete);
-      
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id;
 
-      try {
-        const { error: logError } = await supabase
-          .from('deleted_deposits')
-          .insert({
-            original_id: depositToDelete.id,
-            client_name: depositToDelete.client_name,
-            amount: depositToDelete.amount,
-            operation_date: depositToDelete.operation_date,
-            notes: depositToDelete.notes || null,
-            deleted_by: userId,
-            status: depositToDelete.status
-          });
-
-        if (logError) {
-          console.error("Erreur lors de la création du log de suppression:", logError);
-          console.error("Détails complets de l'erreur:", JSON.stringify(logError));
-        } else {
-          console.log("Log de suppression créé avec succès dans deleted_deposits");
-        }
-      } catch (logError) {
-        console.error("Exception lors de la création du log:", logError);
-      }
-
-      const { error: deleteError } = await supabase
-        .from('deposits')
-        .delete()
-        .eq('id', depositId);
-
-      if (deleteError) {
-        throw new Error(`Erreur lors de la suppression du dépôt: ${deleteError.message}`);
-      }
-
+      // Use the utility function to handle deletion and logging
+      await handleDepositDeletion(depositId.toString(), userId);
+      
+      // Update UI state after successful deletion
       setDeposits(prevDeposits => prevDeposits.filter(deposit => deposit.id !== depositId));
       
       toast.success("Dépôt supprimé avec succès");
@@ -83,7 +39,7 @@ export const useDeleteDeposit = (
     }
   };
 
-  const confirmDeleteDeposit = async () => {
+  const confirmDeleteDeposit = async (): Promise<boolean> => {
     if (!depositToDelete) {
       toast.error("Aucun versement sélectionné pour la suppression");
       return false;

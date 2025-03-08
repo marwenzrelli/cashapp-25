@@ -35,10 +35,10 @@ export const useDepositActions = ({
     setShowDeleteDialog(true);
   };
 
-  const confirmDelete = async () => {
+  const confirmDelete = async (): Promise<boolean> => {
     if (!selectedDeposit) {
       toast.error("Aucun versement sélectionné");
-      return;
+      return false;
     }
     
     setIsDeleting(true);
@@ -52,11 +52,13 @@ export const useDepositActions = ({
         toast.success("Versement supprimé avec succès", {
           description: `Le versement de ${selectedDeposit.amount} TND a été supprimé.`
         });
+        return true;
       } else {
         console.error("La suppression a échoué mais sans erreur lancée");
         toast.error("Échec de la suppression du versement", {
           description: "La suppression n'a pas pu être effectuée. Veuillez réessayer."
         });
+        return false;
       }
     } catch (error: any) {
       console.error("Erreur détaillée lors de la suppression:", {
@@ -68,15 +70,16 @@ export const useDepositActions = ({
       toast.error("Échec de la suppression du versement", {
         description: error.message || "Une erreur est survenue lors de la suppression"
       });
+      return false;
     } finally {
       setIsDeleting(false);
     }
   };
 
-  const handleConfirmEdit = async () => {
+  const handleConfirmEdit = async (): Promise<boolean> => {
     if (!selectedDeposit) {
       console.error("Aucun versement sélectionné pour la modification");
-      return;
+      return false;
     }
 
     console.log("Confirmation des modifications pour:", selectedDeposit);
@@ -102,14 +105,17 @@ export const useDepositActions = ({
       toast.success("Versement mis à jour", {
         description: `Le versement a été modifié avec succès.`
       });
+      return true;
     }
+    return false;
   };
 
-  const handleCreateDeposit = async (deposit: Deposit) => {
+  const handleCreateDeposit = async (deposit: Deposit): Promise<boolean> => {
     const success = await createDeposit(deposit);
     if (success) {
       setIsDeleteDialogOpen(false);
     }
+    return success;
   };
 
   return {
