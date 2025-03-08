@@ -330,8 +330,7 @@ export const OperationActionsDialog = ({
   if (!operation) return null;
   
   const handleConfirmDepositEditWrapper = async () => {
-    const result = await handleConfirmDepositEdit();
-    return;
+    await handleConfirmDepositEdit();
   };
   
   if (operation.type === 'deposit' && mode === 'edit' && editDepositDialogOpen) {
