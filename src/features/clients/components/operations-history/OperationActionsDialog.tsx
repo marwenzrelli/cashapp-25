@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Operation } from "@/features/operations/types";
 import { useOperationDialog } from "../../hooks/operations-dialog/useOperationDialog";
@@ -30,7 +29,7 @@ export const OperationActionsDialog = ({
     setNotes,
     loading,
     handleSubmit
-  } = useOperationDialog(operation, clientId, refetchClient, mode, onClose);
+  } = useOperationDialog(operation, mode, onClose, clientId, refetchClient);
   
   if (!operation) return null;
   

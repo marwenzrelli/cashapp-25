@@ -7,10 +7,10 @@ import { toast } from "sonner";
 
 export const useOperationDialog = (
   operation: Operation | null,
-  clientId?: number,
-  refetchClient?: () => void,
   mode: 'edit' | 'delete',
-  onClose: () => void
+  onClose: () => void,
+  clientId?: number,
+  refetchClient?: () => void
 ) => {
   const [amount, setAmount] = useState<number>(0);
   const [notes, setNotes] = useState<string>('');
