@@ -50,7 +50,7 @@ export const MobileDepositDialog: React.FC<MobileDepositDialogProps> = ({
 }) => {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent position="bottom" size="content" className="h-[85vh] overflow-y-auto">
+      <SheetContent className="h-[85vh] overflow-y-auto">
         <SheetHeader className="text-left">
           <SheetTitle>Nouveau versement</SheetTitle>
           <SheetDescription>

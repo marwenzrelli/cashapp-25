@@ -1,7 +1,11 @@
 
 import { Check } from "lucide-react";
 
-export const SuccessMessage = () => {
+interface SuccessMessageProps {
+  amount?: string;
+}
+
+export const SuccessMessage: React.FC<SuccessMessageProps> = ({ amount }) => {
   return (
     <div className="flex flex-col items-center justify-center py-10">
       <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-4">
@@ -10,6 +14,7 @@ export const SuccessMessage = () => {
       <h3 className="text-xl font-medium">Versement enregistré</h3>
       <p className="text-muted-foreground text-center mt-2">
         Le versement a été enregistré avec succès
+        {amount && <span className="font-medium"> ({amount} TND)</span>}
       </p>
     </div>
   );

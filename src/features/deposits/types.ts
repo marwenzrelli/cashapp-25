@@ -7,7 +7,7 @@ export type { EditFormData } from "@/components/deposits/types";
 export interface DepositDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (deposit: Deposit) => Promise<boolean>;
+  onConfirm: (deposit: Deposit) => Promise<boolean | void>;
 }
 
 export interface DeleteDepositDialogProps {
