@@ -62,7 +62,7 @@ export const useDeleteDeposit = (
       const result = await deleteDeposit(depositId);
       console.log("Delete operation completed with result:", result);
       
-      // Clear the depositToDelete state after a successful deletion
+      // Clear the depositToDelete state and close the dialog after a successful deletion
       if (result) {
         setDepositToDelete(null);
         setShowDeleteDialog(false);

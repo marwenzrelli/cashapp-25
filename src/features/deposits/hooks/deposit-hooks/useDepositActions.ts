@@ -29,14 +29,11 @@ export const useDepositActions = ({
   
   const handleDelete = (deposit: Deposit) => {
     console.log("Demande de suppression pour le versement:", deposit);
-    // Make sure we're setting the deposit to delete before opening the dialog
+    // Définir le dépôt à supprimer et ouvrir immédiatement le dialogue sans délai
     setDepositToDelete(deposit);
-    // Small delay to ensure state is updated before dialog opens
-    setTimeout(() => {
-      console.log("Opening delete dialog for deposit:", deposit);
-      setIsDeleteDialogOpen(true);
-      setShowDeleteDialog(true);
-    }, 100); // Increased the delay to ensure state updates
+    console.log("Opening delete dialog for deposit:", deposit);
+    setIsDeleteDialogOpen(true);
+    setShowDeleteDialog(true);
   };
 
   const confirmDelete = async (): Promise<boolean> => {

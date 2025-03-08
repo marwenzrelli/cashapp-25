@@ -14,6 +14,7 @@ export const handleDepositDeletion = async (depositId: string | number, userId: 
     }
     
     // First, fetch the deposit to be deleted
+    console.log(`Fetching deposit with ID ${numericId} for archiving`);
     const { data: depositData, error: fetchError } = await supabase
       .from('deposits')
       .select('*')
@@ -32,6 +33,7 @@ export const handleDepositDeletion = async (depositId: string | number, userId: 
     console.log("Found deposit to archive:", depositData);
     
     // Archive the deposit in the deleted_deposits table
+    console.log("Archiving deposit to deleted_deposits table");
     const { data: insertData, error: archiveError } = await supabase
       .from('deleted_deposits')
       .insert({
@@ -52,6 +54,7 @@ export const handleDepositDeletion = async (depositId: string | number, userId: 
     console.log("Successfully archived deposit to deleted_deposits", insertData);
     
     // Now delete the deposit record
+    console.log(`Deleting deposit with ID ${numericId}`);
     const { error: deleteError } = await supabase
       .from('deposits')
       .delete()
