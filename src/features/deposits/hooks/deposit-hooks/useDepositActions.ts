@@ -34,9 +34,10 @@ export const useDepositActions = ({
     setDepositToDelete(deposit);
     // Small delay to ensure state is updated before dialog opens
     setTimeout(() => {
+      console.log("Opening delete dialog for deposit:", deposit.id);
       setIsDeleteDialogOpen(true);
       setShowDeleteDialog(true);
-    }, 10);
+    }, 50); // Increased the delay to ensure state updates
   };
 
   const confirmDelete = async (): Promise<boolean> => {
@@ -56,7 +57,7 @@ export const useDepositActions = ({
       if (success === true) {
         setIsDeleteDialogOpen(false);
         toast.success("Versement supprimé avec succès", {
-          description: `Le versement de ${selectedDeposit.amount} TND a été supprimé.`
+          description: `Le versement de ${selectedDeposit.amount} TND a été supprimé et archivé.`
         });
         return true;
       } else {

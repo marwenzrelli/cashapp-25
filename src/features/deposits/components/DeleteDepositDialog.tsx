@@ -2,7 +2,7 @@
 import React from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { DeleteDepositDialogProps } from "@/features/deposits/types";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
@@ -12,6 +12,13 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
   onConfirm
 }) => {
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Add effect to log when the component receives a new selected deposit
+  useEffect(() => {
+    if (selectedDeposit) {
+      console.log("DeleteDepositDialog received deposit:", selectedDeposit.id);
+    }
+  }, [selectedDeposit]);
 
   const handleConfirm = async () => {
     if (!onConfirm) {
@@ -34,9 +41,6 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
       console.log("Deletion result:", result);
       
       if (result === true) {
-        toast.success("Versement supprimé avec succès", {
-          description: "Le versement a été archivé et sera visible dans l'historique des suppressions."
-        });
         // Close the dialog after successful deletion
         onOpenChange(false);
       } else {

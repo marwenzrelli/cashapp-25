@@ -56,7 +56,15 @@ export const useDeleteDeposit = (
     
     try {
       console.log("Attempting to delete deposit with ID:", depositToDelete.id);
-      return await deleteDeposit(depositToDelete.id);
+      const result = await deleteDeposit(depositToDelete.id);
+      
+      // Clear the depositToDelete state after a successful deletion
+      if (result) {
+        setDepositToDelete(null);
+        setShowDeleteDialog(false);
+      }
+      
+      return result;
     } catch (error) {
       console.error("Error in confirmDeleteDeposit:", error);
       toast.error("Erreur lors de la suppression du versement", {

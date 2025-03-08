@@ -32,13 +32,13 @@ export const handleDepositDeletion = async (depositId: string | number, userId: 
     console.log("Found deposit to archive:", depositData);
     
     // Archive the deposit in the deleted_deposits table
-    const { error: archiveError } = await supabase
+    const { data: insertData, error: archiveError } = await supabase
       .from('deleted_deposits')
       .insert({
         original_id: depositData.id,
         amount: depositData.amount,
         client_name: depositData.client_name,
-        notes: depositData.notes,
+        notes: depositData.notes || '',
         operation_date: depositData.operation_date,
         status: depositData.status,
         deleted_by: userId
@@ -49,7 +49,7 @@ export const handleDepositDeletion = async (depositId: string | number, userId: 
       throw new Error(`Erreur lors de l'archivage du versement: ${archiveError.message}`);
     }
     
-    console.log("Successfully archived deposit to deleted_deposits");
+    console.log("Successfully archived deposit to deleted_deposits", insertData);
     
     // Now delete the deposit record
     const { error: deleteError } = await supabase
