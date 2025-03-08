@@ -3,7 +3,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { Deposit } from "@/features/deposits/types";
 import { StandaloneDepositForm } from "./DepositForm";
 import { Client } from "@/features/clients/types";
-import { ExtendedClient } from "@/features/withdrawals/components/standalone/StandaloneWithdrawalForm";
+import { ExtendedClient } from "@/features/withdrawals/hooks/form/withdrawalFormTypes";
 
 interface DepositDialogContainerProps {
   open: boolean;

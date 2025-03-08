@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { StandaloneWithdrawalForm } from "./standalone/StandaloneWithdrawalForm";
 import { WithdrawalTable } from "./WithdrawalTable";
@@ -14,7 +15,7 @@ import { TransferPagination } from "@/features/transfers/components/TransferPagi
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-import { ExtendedClient } from "./standalone/StandaloneWithdrawalForm";
+import { ExtendedClient } from "../hooks/form/withdrawalFormTypes";
 
 interface WithdrawalsContentProps {
   withdrawals: Withdrawal[];

@@ -3,13 +3,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Client } from "../../types";
 import { StandaloneDepositForm } from "@/features/deposits/components/DepositForm";
 import { Deposit } from "@/features/deposits/types";
+import { ExtendedClient } from "@/features/withdrawals/hooks/form/withdrawalFormTypes";
 
 interface DepositDialogProps {
   client: Client;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (deposit: Deposit) => Promise<boolean | void>; // Updated return type
-  refreshClientBalance: () => Promise<boolean | void>; // Updated return type
+  onConfirm: (deposit: Deposit) => Promise<boolean | void>; 
+  refreshClientBalance: () => Promise<boolean | void>; 
 }
 
 export const DepositDialog = ({
