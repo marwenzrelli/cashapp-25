@@ -1,7 +1,7 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Client } from "@/features/clients/types";
-import { StandaloneDepositForm } from "@/features/deposits/components/DepositForm";
+import { StandaloneDepositForm } from "@/features/deposits/components/deposit-form/StandaloneDepositForm";
 import { Deposit } from "@/features/deposits/types";
 
 interface DepositDialogProps {

@@ -1,7 +1,7 @@
 
 import { Dialog } from "@/components/ui/dialog";
 import { Deposit } from "@/features/deposits/types";
-import { StandaloneDepositForm } from "./DepositForm";
+import { StandaloneDepositForm } from "@/features/deposits/components/deposit-form/StandaloneDepositForm";
 import { Client } from "@/features/clients/types";
 import { ExtendedClient } from "@/features/withdrawals/components/standalone/StandaloneWithdrawalForm";
 
