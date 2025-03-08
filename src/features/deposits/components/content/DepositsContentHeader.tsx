@@ -1,7 +1,7 @@
 
 import { DepositsHeader } from "../DepositsHeader";
 import { Deposit } from "@/components/deposits/types";
-import { StandaloneDepositForm } from "../DepositForm";
+import { StandaloneDepositForm } from "../deposit-form/StandaloneDepositForm";
 import { ExtendedClient } from "@/features/withdrawals/components/standalone/StandaloneWithdrawalForm";
 import { useEffect } from "react";
 
