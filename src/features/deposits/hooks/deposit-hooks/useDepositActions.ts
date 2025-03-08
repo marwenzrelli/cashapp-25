@@ -35,7 +35,7 @@ export const useDepositActions = ({
     setShowDeleteDialog(true);
   };
 
-  const confirmDelete = async (): Promise<boolean> => {
+  const confirmDelete = async (): Promise<boolean | void> => {
     if (!selectedDeposit) {
       toast.error("Aucun versement sélectionné");
       return false;
@@ -76,7 +76,7 @@ export const useDepositActions = ({
     }
   };
 
-  const handleConfirmEdit = async (): Promise<boolean> => {
+  const handleConfirmEdit = async (): Promise<boolean | void> => {
     if (!selectedDeposit) {
       console.error("Aucun versement sélectionné pour la modification");
       return false;
@@ -110,7 +110,7 @@ export const useDepositActions = ({
     return false;
   };
 
-  const handleCreateDeposit = async (deposit: Deposit): Promise<boolean> => {
+  const handleCreateDeposit = async (deposit: Deposit): Promise<boolean | void> => {
     const success = await createDeposit(deposit);
     if (success) {
       setIsDeleteDialogOpen(false);

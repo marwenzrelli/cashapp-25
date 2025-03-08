@@ -31,7 +31,7 @@ interface DepositsContentProps {
   setCurrentPage: (page: number) => void;
   editForm: any;
   handleDelete: (deposit: Deposit) => void;
-  confirmDelete: () => Promise<boolean>;
+  confirmDelete: () => Promise<boolean | void>;
   handleEdit: (deposit: Deposit) => void;
   handleEditFormChange: (field: string, value: string) => void;
   handleConfirmEdit: () => Promise<boolean | void>;
