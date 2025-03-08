@@ -8,11 +8,13 @@ import { toast } from "sonner";
  * @param id The ID of the deposit to delete
  * @param userId The ID of the user performing the deletion
  */
-export async function handleDepositDeletion(id: string, userId: string | undefined) {
+export async function handleDepositDeletion(id: string | number, userId: string | undefined) {
+  const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
+  
   const { data: depositData, error: depositFetchError } = await supabase
     .from('deposits')
     .select('*')
-    .eq('id', parseInt(id))
+    .eq('id', numericId)
     .single();
     
   if (depositFetchError) {
@@ -44,7 +46,7 @@ export async function handleDepositDeletion(id: string, userId: string | undefin
     const { error: depositError } = await supabase
       .from('deposits')
       .delete()
-      .eq('id', parseInt(id));
+      .eq('id', numericId);
       
     if (depositError) {
       console.error("Erreur lors de la suppression du versement:", depositError);
@@ -61,11 +63,13 @@ export async function handleDepositDeletion(id: string, userId: string | undefin
  * @param id The ID of the withdrawal to delete
  * @param userId The ID of the user performing the deletion
  */
-export async function handleWithdrawalDeletion(id: string, userId: string | undefined) {
+export async function handleWithdrawalDeletion(id: string | number, userId: string | undefined) {
+  const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
+  
   const { data: withdrawalData, error: withdrawalFetchError } = await supabase
     .from('withdrawals')
     .select('*')
-    .eq('id', parseInt(id))
+    .eq('id', numericId)
     .single();
     
   if (withdrawalFetchError) {
@@ -97,7 +101,7 @@ export async function handleWithdrawalDeletion(id: string, userId: string | unde
     const { error: withdrawalError } = await supabase
       .from('withdrawals')
       .delete()
-      .eq('id', parseInt(id));
+      .eq('id', numericId);
       
     if (withdrawalError) {
       console.error("Erreur lors de la suppression du retrait:", withdrawalError);
@@ -114,11 +118,13 @@ export async function handleWithdrawalDeletion(id: string, userId: string | unde
  * @param id The ID of the transfer to delete
  * @param userId The ID of the user performing the deletion
  */
-export async function handleTransferDeletion(id: string, userId: string | undefined) {
+export async function handleTransferDeletion(id: string | number, userId: string | undefined) {
+  const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
+  
   const { data: transferData, error: transferFetchError } = await supabase
     .from('transfers')
     .select('*')
-    .eq('id', parseInt(id))
+    .eq('id', numericId)
     .single();
     
   if (transferFetchError) {
@@ -151,7 +157,7 @@ export async function handleTransferDeletion(id: string, userId: string | undefi
     const { error: transferError } = await supabase
       .from('transfers')
       .delete()
-      .eq('id', parseInt(id));
+      .eq('id', numericId);
       
     if (transferError) {
       console.error("Erreur lors de la suppression du virement:", transferError);

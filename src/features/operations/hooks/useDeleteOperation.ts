@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { Operation } from "../types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -12,13 +13,18 @@ export const useDeleteOperation = (
   fetchAllOperations: () => Promise<void>,
   setIsLoading: (isLoading: boolean) => void
 ) => {
+  const [operationToDelete, setOperationToDelete] = useState<Operation | null>(null);
+  
   const deleteOperation = async (operation: Operation) => {
-    const operationToDelete = operation;
-    return operationToDelete;
+    setOperationToDelete(operation);
+    return operation;
   };
 
   const confirmDeleteOperation = async (operationToDelete: Operation | undefined) => {
-    if (!operationToDelete) return;
+    if (!operationToDelete) {
+      console.log("No operation selected for deletion");
+      return;
+    }
     
     try {
       setIsLoading(true);
@@ -44,6 +50,7 @@ export const useDeleteOperation = (
       
       toast.success("Opération supprimée avec succès");
       await fetchAllOperations();
+      setOperationToDelete(null);
     } catch (error: any) {
       console.error("Erreur lors de la suppression de l'opération:", error);
       toast.error("Erreur lors de la suppression de l'opération", {
@@ -55,6 +62,7 @@ export const useDeleteOperation = (
   };
 
   return {
+    operationToDelete,
     deleteOperation,
     confirmDeleteOperation
   };
