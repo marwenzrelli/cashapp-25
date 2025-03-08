@@ -1,16 +1,16 @@
 
-import { DeleteDepositDialog } from "../DeleteDepositDialog";
-import { EditDepositDialog } from "../dialog/EditDepositDialog";
-import { Deposit } from "@/features/deposits/types";
 import { Client } from "@/features/clients/types";
+import { Deposit, EditFormData } from "@/features/deposits/types"; // Use consistent type
+import { DeleteDepositDialog } from "@/features/deposits/components/DeleteDepositDialog";
+import { EditDepositDialog } from "@/features/deposits/components/dialog/EditDepositDialog";
 
 interface DepositsDialogsProps {
   isDeleteDialogOpen: boolean;
   setIsDeleteDialogOpen: (open: boolean) => void;
   isEditDialogOpen: boolean;
   setIsEditDialogOpen: (open: boolean) => void;
-  selectedDeposit: any | null;
-  editForm: any;
+  selectedDeposit: Deposit | null;
+  editForm: EditFormData;
   handleEditFormChange: (field: string, value: string) => void;
   handleConfirmEdit: () => Promise<void>;
   confirmDelete: () => Promise<boolean>;
@@ -31,18 +31,20 @@ export const DepositsDialogs = ({
 }: DepositsDialogsProps) => {
   return (
     <>
+      {/* Delete Dialog */}
       <DeleteDepositDialog 
-        isOpen={isDeleteDialogOpen} 
-        onOpenChange={setIsDeleteDialogOpen} 
-        onConfirm={confirmDelete} 
-        selectedDeposit={selectedDeposit} 
+        isOpen={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        selectedDeposit={selectedDeposit}
+        onConfirm={confirmDelete}
       />
-
-      <EditDepositDialog
+      
+      {/* Edit Dialog */}
+      <EditDepositDialog 
         isOpen={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
         editForm={editForm}
-        onEditFormChange={handleEditFormChange}
+        onEditFormChange={(field, value) => handleEditFormChange(field as string, value)}
         onConfirm={handleConfirmEdit}
         selectedDeposit={selectedDeposit}
         clients={clients}
