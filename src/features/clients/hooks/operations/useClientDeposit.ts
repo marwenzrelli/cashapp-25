@@ -9,7 +9,7 @@ export function useClientDeposit(clientId?: number, refetchClient?: () => void) 
   const [isProcessing, setIsProcessing] = useState(false);
   const queryClient = useQueryClient();
   
-  const handleDeposit = async (deposit: Deposit) => {
+  const handleDeposit = async (deposit: Deposit): Promise<boolean | void> => {
     setIsProcessing(true);
     try {
       const {

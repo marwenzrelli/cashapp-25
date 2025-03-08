@@ -25,7 +25,7 @@ interface ExtendedClient extends Client {
 interface StandaloneDepositFormProps {
   clients: ExtendedClient[];
   onConfirm: (deposit: Deposit) => Promise<boolean | void>; // Updated return type
-  refreshClientBalance: (clientId: string) => Promise<boolean>;
+  refreshClientBalance: (clientId: string) => Promise<boolean | void>; // Updated return type
 }
 
 export const StandaloneDepositForm = ({

@@ -9,7 +9,7 @@ interface DepositDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: (deposit: Deposit) => Promise<boolean | void>; // Updated return type
-  refreshClientBalance: () => Promise<boolean>;
+  refreshClientBalance: () => Promise<boolean | void>; // Updated return type
 }
 
 export const DepositDialog = ({
