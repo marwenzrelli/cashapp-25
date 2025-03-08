@@ -102,7 +102,7 @@ export const DepositsContent = ({
   }));
 
   return (
-    <div className="space-y-8 animate-in">
+    <div className="space-y-8 animate-in px-2 sm:px-4 md:px-6 w-full">
       <DepositsHeader 
         deposits={deposits}
         filteredDeposits={filteredDeposits}
@@ -110,7 +110,7 @@ export const DepositsContent = ({
       />
       
       {/* Place the deposit form directly below statistics with the same width */}
-      <div>
+      <div className="w-full">
         <StandaloneDepositForm
           clients={extendedClients}
           onConfirm={handleCreateDeposit}
@@ -118,7 +118,7 @@ export const DepositsContent = ({
         />
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-4 w-full">
         <SearchBar
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
@@ -137,7 +137,7 @@ export const DepositsContent = ({
         />
         
         {isLoading ? (
-          <div className="space-y-4">
+          <div className="space-y-4 w-full">
             <Skeleton className="h-12 w-full" />
             <Skeleton className="h-12 w-full" />
             <Skeleton className="h-12 w-full" />
@@ -150,7 +150,7 @@ export const DepositsContent = ({
               onDelete={handleDelete} 
             />
           ) : (
-            <div className="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="text-center py-8 bg-gray-50 rounded-lg border border-gray-200 w-full">
               <p className="text-gray-500">Aucun versement trouvé</p>
               {searchTerm && (
                 <p className="text-sm text-gray-400 mt-2">

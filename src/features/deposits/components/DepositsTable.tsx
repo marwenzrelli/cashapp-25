@@ -22,7 +22,7 @@ export const DepositsTable = ({ deposits, onEdit, onDelete }: DepositsTableProps
       </div>
 
       {/* Mobile cards with no container border */}
-      <div className="md:hidden px-0">
+      <div className="md:hidden w-full">
         <MobileDepositsTable 
           deposits={deposits} 
           onEdit={onEdit} 

@@ -48,7 +48,7 @@ export const OperationsMobileCard = ({
   const operationDate = operation.operation_date || operation.date;
   
   return (
-    <div className="flex flex-col p-3 bg-white dark:bg-gray-800 rounded-lg border shadow-sm overflow-hidden">
+    <div className="flex flex-col p-3 bg-white dark:bg-gray-800 rounded-lg border shadow-sm overflow-hidden w-full">
       <div className="flex items-start justify-between mb-2">
         {showType && (
           <Badge variant={operation.type === "deposit" ? "default" : operation.type === "withdrawal" ? "destructive" : "outline"} className="text-xs">

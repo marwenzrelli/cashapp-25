@@ -14,7 +14,7 @@ interface RecentActivityProps {
 
 export const RecentActivityCard = ({ activities, currency }: RecentActivityProps) => {
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>Activité Récente</CardTitle>
       </CardHeader>

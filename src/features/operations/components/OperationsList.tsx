@@ -35,7 +35,7 @@ export const OperationsList = ({ operations, isLoading, onDelete }: OperationsLi
 
   return (
     <Card className="w-full overflow-hidden">
-      <CardHeader className="px-4 sm:px-6">
+      <CardHeader className="px-4">
         <CardTitle className="text-lg sm:text-xl">Liste des opérations</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
@@ -103,10 +103,10 @@ export const OperationsList = ({ operations, isLoading, onDelete }: OperationsLi
         </div>
 
         {/* Liste pour mobile */}
-        <div className="md:hidden space-y-2 p-2">
+        <div className="md:hidden space-y-2 p-2 w-full">
           {operationsWithFormattedDates.map((operation) => (
             <div key={`${operation.type}-${operation.id}`} 
-                 className="p-3 bg-white dark:bg-gray-800 rounded-lg border shadow-sm">
+                 className="p-3 bg-white dark:bg-gray-800 rounded-lg border shadow-sm w-full">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getTypeStyle(operation.type)}`}>

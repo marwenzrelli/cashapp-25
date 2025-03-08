@@ -82,7 +82,7 @@ export const ClientsPageContent = ({
   };
   
   return (
-    <div className="space-y-6 animate-in px-2 sm:px-0">
+    <div className="space-y-6 animate-in px-2 sm:px-4 md:px-6 max-w-full">
       <div>
         <h1 className="text-2xl md:text-3xl font-bold">Gestion des clients</h1>
         <p className="text-sm md:text-base text-muted-foreground">

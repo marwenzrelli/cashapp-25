@@ -76,7 +76,7 @@ export const AllOperationsTab = ({ operations, currency = "TND" }: AllOperations
       </div>
 
       {/* Mobile version */}
-      <div className="md:hidden space-y-3">
+      <div className="md:hidden space-y-3 w-full">
         {operations.map((operation) => (
           <OperationsMobileCard 
             key={operation.id} 

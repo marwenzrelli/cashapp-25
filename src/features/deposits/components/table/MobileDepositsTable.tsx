@@ -17,11 +17,11 @@ export const MobileDepositsTable = ({
   onDelete 
 }: MobileDepositsTableProps) => {
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 w-full">
       {deposits.map((deposit) => (
         <div 
           key={deposit.id} 
-          className="bg-white dark:bg-gray-800 p-3 border rounded-lg shadow-sm"
+          className="bg-white dark:bg-gray-800 p-3 border rounded-lg shadow-sm w-full"
         >
           <div className="flex items-center justify-between mb-2">
             <DepositClientInfo 
