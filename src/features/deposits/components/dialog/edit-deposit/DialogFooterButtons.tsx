@@ -6,7 +6,7 @@ import { DialogFooter } from "@/components/ui/dialog";
 
 interface DialogFooterButtonsProps {
   onOpenChange: (open: boolean) => void;
-  onConfirm: () => Promise<boolean | void>;
+  onConfirm: () => Promise<void>;
   isLoading: boolean;
 }
 

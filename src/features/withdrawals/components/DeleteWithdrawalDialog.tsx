@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { formatId } from "@/utils/formatId";
 import { Withdrawal } from "../types";
-import { Trash2 } from "lucide-react";
 
 interface DeleteWithdrawalDialogProps {
   open: boolean;
@@ -35,12 +34,7 @@ export const DeleteWithdrawalDialog: React.FC<DeleteWithdrawalDialogProps> = ({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center gap-2">
-            <div className="rounded-lg bg-red-50 dark:bg-red-950/50 p-2 text-red-600">
-              <Trash2 className="h-5 w-5" />
-            </div>
-            Confirmer la suppression
-          </AlertDialogTitle>
+          <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
           <AlertDialogDescription>
             Êtes-vous sûr de vouloir supprimer ce retrait?
             <div className="my-4 p-4 border rounded-lg bg-muted">
@@ -57,7 +51,7 @@ export const DeleteWithdrawalDialog: React.FC<DeleteWithdrawalDialogProps> = ({
                 <strong>Date:</strong> {withdrawal.date}
               </p>
             </div>
-            <p className="text-destructive font-medium">Cette action est irréversible.</p>
+            Cette action est irréversible et supprimera définitivement le retrait de la base de données.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

@@ -31,11 +31,11 @@ interface DepositsContentProps {
   setCurrentPage: (page: number) => void;
   editForm: any;
   handleDelete: (deposit: Deposit) => void;
-  confirmDelete: () => Promise<boolean | void>;
+  confirmDelete: () => Promise<void>;
   handleEdit: (deposit: Deposit) => void;
   handleEditFormChange: (field: string, value: string) => void;
-  handleConfirmEdit: () => Promise<boolean | void>;
-  handleCreateDeposit: (deposit: Deposit) => Promise<boolean | void>;
+  handleConfirmEdit: () => Promise<void>;
+  handleCreateDeposit: (deposit: Deposit) => Promise<void>;
   isLoading?: boolean;
   totalItems?: number;
 }
@@ -73,6 +73,7 @@ export const DepositsContent = ({
     fetchClients
   } = useClients();
   
+  // Make sure clients are loaded when the component mounts
   React.useEffect(() => {
     fetchClients();
   }, [fetchClients]);
@@ -94,6 +95,7 @@ export const DepositsContent = ({
     }
   };
 
+  // Convert clients to ExtendedClients
   const extendedClients: ExtendedClient[] = clients.map(client => ({
     ...client,
     dateCreation: client.date_creation || new Date().toISOString()
@@ -107,6 +109,7 @@ export const DepositsContent = ({
         isLoading={isLoading}
       />
       
+      {/* Place the deposit form directly below statistics with the same width */}
       <div>
         <StandaloneDepositForm
           clients={extendedClients}
@@ -166,6 +169,7 @@ export const DepositsContent = ({
         selectedDeposit={selectedDeposit} 
       />
 
+      {/* Modal d'édition de dépôt */}
       <EditDepositDialog
         isOpen={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
