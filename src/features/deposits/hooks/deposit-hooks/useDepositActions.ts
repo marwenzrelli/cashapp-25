@@ -1,5 +1,5 @@
 
-import { Deposit, EditFormData } from "@/components/deposits/types";
+import { Deposit, EditFormData } from "@/features/deposits/types";
 import { toast } from "sonner";
 
 interface UseDepositActionsProps {

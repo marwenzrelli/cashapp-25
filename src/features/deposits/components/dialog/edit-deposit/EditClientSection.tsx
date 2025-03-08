@@ -2,7 +2,7 @@
 import React from "react";
 import { Label } from "@/components/ui/label";
 import { User } from "lucide-react";
-import { EditFormData } from "@/components/deposits/types";
+import { EditFormData } from "@/features/deposits/types";
 import { Client } from "@/features/clients/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCurrency } from "@/contexts/CurrencyContext";

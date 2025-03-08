@@ -1,7 +1,7 @@
 
 import { DeleteDepositDialog } from "../DeleteDepositDialog";
 import { EditDepositDialog } from "../dialog/EditDepositDialog";
-import { Deposit } from "@/components/deposits/types";
+import { Deposit } from "@/features/deposits/types";
 import { Client } from "@/features/clients/types";
 
 interface DepositsDialogsProps {
