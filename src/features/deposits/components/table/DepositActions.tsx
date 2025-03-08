@@ -1,7 +1,7 @@
 
-import { Pencil, Trash2 } from "lucide-react";
+import { Deposit } from "@/features/deposits/types";
 import { Button } from "@/components/ui/button";
-import { type Deposit } from "@/components/deposits/types";
+import { Edit, Trash } from "lucide-react";
 
 interface DepositActionsProps {
   deposit: Deposit;
@@ -13,51 +13,28 @@ interface DepositActionsProps {
 export const DepositActions = ({ 
   deposit, 
   onEdit, 
-  onDelete, 
+  onDelete,
   isMobile = false 
 }: DepositActionsProps) => {
-  if (isMobile) {
-    return (
-      <div className="flex gap-2 justify-end">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="relative hover:bg-blue-50 dark:hover:bg-blue-950/50 text-blue-600 hover:text-blue-600"
-          onClick={() => onEdit(deposit)}
-        >
-          <Pencil className="h-4 w-4 mr-2" />
-          Modifier
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="relative hover:bg-red-50 dark:hover:bg-red-950/50 text-red-600 hover:text-red-600"
-          onClick={() => onDelete(deposit)}
-        >
-          <Trash2 className="h-4 w-4 mr-2" />
-          Supprimer
-        </Button>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
+    <div className={`flex ${isMobile ? 'justify-end' : 'justify-center'} space-x-2`}>
       <Button
+        onClick={() => onEdit(deposit)}
         variant="ghost"
         size="icon"
-        className="relative hover:bg-blue-50 dark:hover:bg-blue-950/50 text-blue-600 hover:text-blue-600"
-        onClick={() => onEdit(deposit)}
+        className="h-8 w-8 text-blue-500 hover:text-blue-600 hover:bg-blue-50"
       >
-        <Pencil className="h-4 w-4" />
+        <Edit className="h-4 w-4" />
+        <span className="sr-only">Edit</span>
       </Button>
       <Button
+        onClick={() => onDelete(deposit)}
         variant="ghost"
         size="icon"
-        className="relative hover:bg-red-50 dark:hover:bg-red-950/50 text-red-600 hover:text-red-600"
-        onClick={() => onDelete(deposit)}
+        className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
       >
-        <Trash2 className="h-4 w-4" />
+        <Trash className="h-4 w-4" />
+        <span className="sr-only">Delete</span>
       </Button>
     </div>
   );

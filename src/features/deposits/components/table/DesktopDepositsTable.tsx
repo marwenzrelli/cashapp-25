@@ -1,5 +1,5 @@
 
-import { type Deposit } from "@/components/deposits/types";
+import { Deposit } from "@/features/deposits/types";
 import { DepositClientInfo } from "./DepositClientInfo";
 import { DepositAmount } from "./DepositAmount";
 import { DepositDateInfo } from "./DepositDateInfo";
@@ -42,7 +42,7 @@ export const DesktopDepositsTable = ({
             <td className="p-3 text-muted-foreground">
               <DepositDateInfo deposit={deposit} />
             </td>
-            <td className="p-3 text-muted-foreground">{deposit.description}</td>
+            <td className="p-3 text-muted-foreground">{deposit.description || deposit.notes || ""}</td>
             <td className="p-3">
               <DepositActions 
                 deposit={deposit} 

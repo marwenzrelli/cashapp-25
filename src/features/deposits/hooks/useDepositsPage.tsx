@@ -3,6 +3,7 @@ import { useDeposits } from "@/features/deposits/hooks/useDeposits";
 import { useDepositSearch } from "./deposit-hooks/useDepositSearch";
 import { useDepositDialogs } from "./deposit-hooks/useDepositDialogs";
 import { useDepositActions } from "./deposit-hooks/useDepositActions";
+import { Deposit } from "@/features/deposits/types";
 
 export const useDepositsPage = () => {
   const { 

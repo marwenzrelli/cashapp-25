@@ -1,6 +1,6 @@
 
 import { StatsCard } from "@/features/deposits/components/StatsCard";
-import { type Deposit } from "@/components/deposits/types";
+import { Deposit } from "@/features/deposits/types";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface DepositsHeaderProps {

@@ -1,12 +1,10 @@
 
-import { Deposit as ComponentDeposit } from "@/components/deposits/types";
-import { Deposit as FeatureDeposit } from "@/features/deposits/types";
+import { Deposit } from "@/features/deposits/types";
 
 /**
- * Adapts deposits from the feature type to the component type
- * ensuring all required fields are present
+ * Adapts deposits from any source to ensure all required fields are present
  */
-export const adaptDepositsForUI = (deposits: FeatureDeposit[] | any[]): ComponentDeposit[] => {
+export const adaptDepositsForUI = (deposits: Deposit[] | any[]): Deposit[] => {
   if (!deposits || !Array.isArray(deposits)) {
     console.warn("Invalid deposits data passed to adapter:", deposits);
     return [];
@@ -14,7 +12,7 @@ export const adaptDepositsForUI = (deposits: FeatureDeposit[] | any[]): Componen
   
   return deposits.map(deposit => ({
     ...deposit,
-    // Ensure description is always present (required in ComponentDeposit)
+    // Ensure description is always present
     description: deposit.description || deposit.notes || "",
     // Make sure all other required fields exist
     amount: typeof deposit.amount === 'number' ? deposit.amount : Number(deposit.amount) || 0,

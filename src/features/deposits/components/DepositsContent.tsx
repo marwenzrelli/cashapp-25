@@ -14,9 +14,9 @@ import {
 } from "./content";
 
 interface DepositsContentProps {
-  deposits: any[];
-  filteredDeposits: any[];
-  paginatedDeposits: any[];
+  deposits: Deposit[];
+  filteredDeposits: Deposit[];
+  paginatedDeposits: Deposit[];
   searchTerm: string;
   setSearchTerm: (term: string) => void;
   isDialogOpen: boolean;
@@ -25,18 +25,18 @@ interface DepositsContentProps {
   setIsDeleteDialogOpen: (open: boolean) => void;
   isEditDialogOpen: boolean;
   setIsEditDialogOpen: (open: boolean) => void;
-  selectedDeposit: any | null;
+  selectedDeposit: Deposit | null;
   itemsPerPage: string;
   setItemsPerPage: (value: string) => void;
   currentPage: number;
   setCurrentPage: (page: number) => void;
   editForm: any;
-  handleDelete: (deposit: any) => void;
+  handleDelete: (deposit: Deposit) => void;
   confirmDelete: () => Promise<boolean>;
-  handleEdit: (deposit: any) => void;
+  handleEdit: (deposit: Deposit) => void;
   handleEditFormChange: (field: string, value: string) => void;
   handleConfirmEdit: () => Promise<void>;
-  handleCreateDeposit: (deposit: any) => Promise<void>;
+  handleCreateDeposit: (deposit: Deposit) => Promise<void>;
   isLoading?: boolean;
   totalItems?: number;
   fetchDeposits?: () => Promise<void>;
@@ -106,16 +106,11 @@ export const DepositsContent = ({
     dateCreation: client.date_creation || new Date().toISOString()
   }));
 
-  // Use our adapter to ensure all deposits have the required fields
-  const adaptedDeposits = adaptDepositsForUI(deposits);
-  const adaptedFilteredDeposits = adaptDepositsForUI(filteredDeposits);
-  const adaptedPaginatedDeposits = adaptDepositsForUI(paginatedDeposits);
-
   return (
     <div className="space-y-8 animate-in">
       <DepositsContentHeader 
-        deposits={adaptedDeposits}
-        filteredDeposits={adaptedFilteredDeposits}
+        deposits={deposits}
+        filteredDeposits={filteredDeposits}
         isLoading={isLoading}
         clients={extendedClients}
         handleCreateDeposit={handleCreateDeposit}
@@ -136,7 +131,7 @@ export const DepositsContent = ({
         
         <DepositsTableSection
           isLoading={isLoading}
-          paginatedDeposits={adaptedPaginatedDeposits}
+          paginatedDeposits={paginatedDeposits}
           searchTerm={searchTerm}
           handleEdit={handleEdit}
           handleDelete={handleDelete}

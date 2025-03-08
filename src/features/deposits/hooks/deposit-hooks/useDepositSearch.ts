@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Deposit } from "@/components/deposits/types";
+import { Deposit } from "@/features/deposits/types";
 
 export const useDepositSearch = (deposits: Deposit[]) => {
   const [searchTerm, setSearchTerm] = useState("");

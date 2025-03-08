@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Deposit } from "@/components/deposits/types";
+import { Deposit } from "@/features/deposits/types";
 import { formatDateTime } from "@/features/deposits/hooks/utils/dateUtils";
 import { adaptDepositsForUI } from "@/features/deposits/utils/depositAdapters";
 
