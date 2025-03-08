@@ -55,7 +55,7 @@ export const useDeleteDeposit = (
           client_name: depositToDelete.client_name,
           amount: depositToDelete.amount,
           operation_date: depositToDelete.operation_date || depositToDelete.created_at,
-          notes: depositToDelete.notes || depositToDelete.description || null,
+          notes: depositToDelete.notes || null,
           deleted_by: userId,
           status: depositToDelete.status
         }]);

@@ -6,7 +6,8 @@ export interface Deposit {
   amount: number;
   date: string;
   client_name: string;
-  description: string;
+  description?: string;
+  notes?: string;
   status: string;
   created_at: string;
   created_by: string | null;
