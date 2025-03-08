@@ -40,22 +40,31 @@ export const useOperationDialog = (
     
     try {
       if (mode === 'delete') {
+        console.log("Traitement de la suppression:", operation.type, operation.id);
+        
         // Handle delete logic based on operation type
         if (operation.type === 'withdrawal' && operation.id) {
           const success = await deleteWithdrawal(operation.id);
           if (success) {
             toast.success("Opération supprimée", { description: "Le retrait a été supprimé avec succès" });
             onClose();
-            refetchClient?.();
+            if (refetchClient) {
+              console.log("Actualisation des données du client après suppression de retrait");
+              await refetchClient();
+            }
           } else {
             toast.error("Échec de la suppression", { description: "Une erreur s'est produite lors de la suppression du retrait" });
           }
         } else if (operation.type === 'deposit' && operation.id) {
+          console.log("Tentative de suppression du dépôt:", operation.id);
           const success = await deleteDeposit(operation.id);
           if (success) {
             toast.success("Opération supprimée", { description: "Le versement a été supprimé avec succès" });
             onClose();
-            refetchClient?.();
+            if (refetchClient) {
+              console.log("Actualisation des données du client après suppression de versement");
+              await refetchClient();
+            }
           } else {
             toast.error("Échec de la suppression", { description: "Une erreur s'est produite lors de la suppression du versement" });
           }
@@ -87,8 +96,6 @@ export const useOperationDialog = (
           operation.id
         );
       } else if (operation.type === "deposit") {
-        // The issue is here - handleDeposit is expecting different parameters
-        // Let's fix it based on the useClientDeposit implementation
         success = await handleDeposit({
           client_name: operationData.client_name,
           amount: operationData.amount,
@@ -107,7 +114,10 @@ export const useOperationDialog = (
       if (success) {
         toast.success("Opération mise à jour", { description: "L'opération a été modifiée avec succès" });
         onClose();
-        refetchClient?.();
+        if (refetchClient) {
+          console.log("Actualisation des données du client après modification");
+          await refetchClient();
+        }
       } else {
         toast.error("Échec de l'opération", { description: "Une erreur s'est produite lors de la modification" });
       }

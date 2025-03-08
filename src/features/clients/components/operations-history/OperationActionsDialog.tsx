@@ -1,9 +1,11 @@
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Operation } from "@/features/operations/types";
 import { useOperationDialog } from "../../hooks/operations-dialog/useOperationDialog";
 import { DeleteOperationConfirmation } from "./dialogs/DeleteOperationConfirmation";
 import { EditOperationForm } from "./dialogs/EditOperationForm";
 import { OperationDialogFooter } from "./dialogs/OperationDialogFooter";
+import { useEffect } from "react";
 
 interface OperationActionsDialogProps {
   operation: Operation | null;
@@ -31,10 +33,22 @@ export const OperationActionsDialog = ({
     handleSubmit
   } = useOperationDialog(operation, mode, onClose, clientId, refetchClient);
   
+  // Log when the dialog is opened or closed
+  useEffect(() => {
+    if (isOpen) {
+      console.log("Dialog opened for operation:", operation?.id, "mode:", mode);
+    } else {
+      console.log("Dialog closed");
+    }
+  }, [isOpen, operation, mode]);
+  
   if (!operation) return null;
   
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      console.log("Dialog open state changed to:", open);
+      if (!open) onClose();
+    }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>

@@ -1,87 +1,74 @@
 
-import { useRef, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useOperations } from "@/features/operations/hooks/useOperations";
+import { DateRange } from "react-day-picker";
 import { useClientData } from "./clientProfile/useClientData";
 import { useClientOperationsFilter } from "./clientProfile/useClientOperationsFilter";
 import { useClientProfileExport } from "./clientProfile/useClientProfileExport";
-import { useRealTimeBalance } from "./clientProfile/useRealTimeBalance";
 import { useClientBalanceRefresh } from "./clientProfile/useClientBalanceRefresh";
-import { useOperationsVerification } from "./clientProfile/useOperationsVerification";
+import { useRealTimeBalance } from "./clientProfile/useRealTimeBalance";
+import { Operation } from "@/features/operations/types";
+import { subDays } from "date-fns";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const useClientProfile = () => {
-  const { id } = useParams();
   const navigate = useNavigate();
-  const { operations, refreshOperations } = useOperations();
+  const { id } = useParams<{ id: string }>();
+  const clientId = id ? parseInt(id, 10) : null;
+  const queryClient = useQueryClient();
+  
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedType, setSelectedType] = useState<"all" | "deposits" | "withdrawals" | "transfers">("all");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: subDays(new Date(), 30),
+    to: new Date(),
+  });
+  const [isCustomRange, setIsCustomRange] = useState(false);
+  
   const qrCodeRef = useRef<HTMLDivElement>(null);
-  const clientId = id ? Number(id) : null;
   
-  // Debug to ensure ID is parsed correctly
-  console.log("useClientProfile - Raw ID from params:", id, "Parsed client ID:", clientId);
+  // Get client data using the custom hook
+  const { client, clientOperations, isLoading, error, fetchClient, fetchClientOperations, clientBalance } = useClientData(clientId);
   
-  // Get client data
-  const { client, isLoading, error, fetchClient } = useClientData(clientId);
-  
-  // Refetch client manually
-  const refetchClient = useCallback(() => {
-    if (clientId) {
-      console.log("Manual refetch of client data for ID:", clientId);
-      fetchClient(clientId);
-    } else {
-      console.error("Cannot refetch: No client ID available");
-    }
-  }, [clientId, fetchClient]);
-  
-  // Real-time balance tracking
-  const { realTimeBalance, setRealTimeBalance } = useRealTimeBalance(clientId);
-  
-  // Client balance refresh functionality
-  const { refreshClientBalance } = useClientBalanceRefresh(
-    clientId, 
-    client, 
-    setRealTimeBalance, 
-    refetchClient
-  );
-  
-  // Filter operations
-  const {
+  // Filter operations based on type, search term, and date range
+  const { filteredOperations } = useClientOperationsFilter(
     clientOperations,
-    filteredOperations,
     selectedType,
-    setSelectedType,
     searchTerm,
-    setSearchTerm,
-    dateRange,
-    setDateRange,
-    isCustomRange,
-    setIsCustomRange
-  } = useClientOperationsFilter(operations, client);
-  
-  // Verify operations when client is loaded
-  useOperationsVerification(client, operations, clientOperations, refreshClientBalance);
-  
-  // Export functionality
-  const { formatAmount, exportToExcel, exportToPDF } = useClientProfileExport(
-    client, 
-    clientOperations,
-    qrCodeRef
+    dateRange
   );
-
-  // Get effective balance (real-time or from client object)
-  const effectiveBalance = realTimeBalance !== null ? realTimeBalance : client?.solde;
-
-  // Function to refresh operations data and update client data if needed
+  
+  // Setup export functionality
+  const { exportToExcel, exportToPDF, formatAmount } = useClientProfileExport(client, filteredOperations);
+  
+  // Setup balance refresh functionality
+  const { refreshClientBalance } = useClientBalanceRefresh(clientId, fetchClient);
+  
+  // Initialize real-time balance subscription
+  useRealTimeBalance(clientId, fetchClient);
+  
+  // Function to refresh client operations
   const refreshClientOperations = useCallback(async () => {
-    console.log("Refreshing operations for client:", client?.id);
-    await refreshOperations();
-    // Optionally refresh client info to update balance
     if (clientId) {
-      setTimeout(() => {
-        refreshClientBalance();
-      }, 500);
+      console.log("Refreshing client operations for client ID:", clientId);
+      await fetchClientOperations();
     }
-  }, [refreshOperations, client, clientId, refreshClientBalance]);
-
+  }, [clientId, fetchClientOperations]);
+  
+  // Function to refetch everything about the client
+  const refetchClient = useCallback(async () => {
+    console.log("Refetching all client data for client ID:", clientId);
+    if (clientId) {
+      // Invalidate all client-related queries
+      queryClient.invalidateQueries({ queryKey: ['client', clientId] });
+      queryClient.invalidateQueries({ queryKey: ['clientOperations', clientId] });
+      
+      // Fetch fresh data
+      await fetchClient();
+      await fetchClientOperations();
+    }
+  }, [clientId, fetchClient, fetchClientOperations, queryClient]);
+  
   return {
     client,
     clientId,
@@ -105,6 +92,6 @@ export const useClientProfile = () => {
     refetchClient,
     refreshClientBalance,
     refreshClientOperations,
-    clientBalance: effectiveBalance
+    clientBalance
   };
 };

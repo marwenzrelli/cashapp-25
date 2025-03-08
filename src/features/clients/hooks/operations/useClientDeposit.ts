@@ -79,7 +79,8 @@ export function useClientDeposit(clientId?: number, refetchClient?: () => void) 
       
       // Call update function if available
       if (refetchClient) {
-        refetchClient();
+        console.log("Calling refetchClient after deposit operation");
+        await refetchClient();
       }
       
       return true;
@@ -95,6 +96,8 @@ export function useClientDeposit(clientId?: number, refetchClient?: () => void) 
   const deleteDeposit = async (depositId: string | number) => {
     setIsProcessing(true);
     try {
+      console.log("Starting deleteDeposit with ID:", depositId);
+      
       // Get the user session
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id;
@@ -153,13 +156,6 @@ export function useClientDeposit(clientId?: number, refetchClient?: () => void) 
       
       console.log("Successfully logged in deleted_deposits:", logData);
       
-      // Verify the log was created
-      if (!logData || logData.length === 0) {
-        console.error("Failed to verify log creation in deleted_deposits");
-        toast.error("Deletion failed", { description: "Could not verify deletion log creation" });
-        return false;
-      }
-      
       // Delete the deposit
       const { error: deleteError } = await supabase
         .from('deposits')
@@ -172,14 +168,15 @@ export function useClientDeposit(clientId?: number, refetchClient?: () => void) 
         return false;
       }
       
-      console.log("Deposit successfully deleted");
+      console.log("Deposit successfully deleted, ID:", numericId);
       
       // Invalidate cached queries to update operation lists
       invalidateQueries(clientId);
       
       // Call update function if available
       if (refetchClient) {
-        refetchClient();
+        console.log("Calling refetchClient after deposit deletion");
+        await refetchClient();
       }
       
       return true;
@@ -192,6 +189,7 @@ export function useClientDeposit(clientId?: number, refetchClient?: () => void) 
   };
   
   const invalidateQueries = (id?: number) => {
+    console.log("Invalidating queries after deposit operation");
     queryClient.invalidateQueries({ queryKey: ['operations'] });
     queryClient.invalidateQueries({ queryKey: ['clients'] });
     queryClient.invalidateQueries({ queryKey: ['dashboard'] });
