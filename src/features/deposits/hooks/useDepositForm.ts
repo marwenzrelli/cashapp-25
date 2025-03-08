@@ -1,23 +1,39 @@
 
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
+import { Client } from "@/features/clients/types";
+import { Deposit } from "@/components/deposits/types";
+import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
-import { toast } from "sonner";
-import { type Deposit } from "@/features/deposits/types";
-import { useClients } from "@/features/clients/hooks/useClients";
 
-export const useDepositForm = (onConfirm: (deposit: Deposit) => Promise<void>, onOpenChange: (open: boolean) => void) => {
+export const useDepositForm = (
+  onConfirm: (deposit: Deposit) => Promise<boolean | void>,
+  onOpenChange: (open: boolean) => void
+) => {
+  const [clients, setClients] = useState<Client[]>([]);
   const [selectedClient, setSelectedClient] = useState("");
   const [amount, setAmount] = useState("");
-  const [date, setDate] = useState<Date>(new Date());
+  const [date, setDate] = useState(new Date());
   const [description, setDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isValid, setIsValid] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const { clients, fetchClients } = useClients();
 
-  useEffect(() => {
-    setIsValid(!!selectedClient && !!amount && parseFloat(amount) > 0);
-  }, [selectedClient, amount]);
+  const fetchClients = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('*')
+        .order('date_creation', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching clients:', error);
+        return;
+      }
+      
+      setClients(data || []);
+    } catch (error) {
+      console.error('Error in fetchClients:', error);
+    }
+  }, []);
 
   const handleDateChange = (newDate: Date | undefined) => {
     if (newDate) {
@@ -25,57 +41,61 @@ export const useDepositForm = (onConfirm: (deposit: Deposit) => Promise<void>, o
     }
   };
 
-  const resetForm = () => {
-    setSelectedClient("");
-    setAmount("");
-    setDescription("");
-    setIsLoading(false);
-  };
+  const isValid = Boolean(selectedClient && amount && parseFloat(amount) > 0);
 
-  const handleSubmit = async () => {
-    if (!isValid) {
-      toast.error("Veuillez remplir tous les champs obligatoires");
-      return;
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
     }
 
+    if (!isValid) return;
+
     setIsLoading(true);
+    
     try {
-      const selectedClientData = clients.find(c => c.id.toString() === selectedClient);
-      if (!selectedClientData) {
-        toast.error("Client non trouvé");
-        return;
+      const client = clients.find(c => c.id.toString() === selectedClient);
+      
+      if (!client) {
+        throw new Error('Client non trouvé');
       }
 
-      const newDeposit: Omit<Deposit, 'id' | 'status' | 'created_at' | 'created_by'> = {
-        client_name: `${selectedClientData.prenom} ${selectedClientData.nom}`,
-        amount: Number(amount),
-        date: format(date, "yyyy-MM-dd"),
+      const newDeposit: Partial<Deposit> = {
+        client_name: `${client.prenom} ${client.nom}`,
+        amount: parseFloat(amount),
+        date: format(date, "yyyy-MM-dd'T'HH:mm:ss"),
         description
       };
 
-      await onConfirm(newDeposit as Deposit);
+      const result = await onConfirm(newDeposit as Deposit);
       
-      setShowSuccess(true);
-      setTimeout(() => {
-        setShowSuccess(false);
-        resetForm();
-        onOpenChange(false);
-      }, 1500);
-      
+      if (result !== false) {
+        setShowSuccess(true);
+        // Reset form after successful submission
+        setTimeout(() => {
+          setSelectedClient("");
+          setAmount("");
+          setDate(new Date());
+          setDescription("");
+          setShowSuccess(false);
+          onOpenChange(false);
+        }, 2000);
+      }
     } catch (error) {
-      console.error("Error submitting deposit:", error);
-      toast.error("Une erreur s'est produite lors de l'enregistrement du versement");
+      console.error('Error submitting deposit:', error);
+    } finally {
       setIsLoading(false);
     }
   };
 
+  const formState = {
+    selectedClient,
+    amount,
+    date,
+    description
+  };
+
   return {
-    formState: {
-      selectedClient,
-      amount,
-      date,
-      description,
-    },
+    formState,
     setSelectedClient,
     setAmount,
     setDescription,

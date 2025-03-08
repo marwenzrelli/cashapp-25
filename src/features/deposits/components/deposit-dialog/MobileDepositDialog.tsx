@@ -1,20 +1,23 @@
 
-import { useState } from "react";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import React from "react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
-import { type Deposit } from "@/features/deposits/types";
-import { ClientSelectDropdown } from "../ClientSelectDropdown";
-import { AmountInput } from "../AmountInput";
-import { DatePickerField } from "../DatePickerField";
-import { DescriptionField } from "../DescriptionField";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { Client } from "@/features/clients/types";
+import { Deposit } from "@/components/deposits/types";
+import { Loader2 } from "lucide-react";
 import { SuccessMessage } from "./SuccessMessage";
 
 interface MobileDepositDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (deposit: Deposit) => Promise<void>;
-  clients: any[];
+  onConfirm: (deposit: Deposit) => Promise<boolean | void>;
+  clients: Client[];
   formState: {
     selectedClient: string;
     amount: string;
@@ -25,13 +28,13 @@ interface MobileDepositDialogProps {
   setAmount: (amount: string) => void;
   setDescription: (description: string) => void;
   handleDateChange: (date: Date | undefined) => void;
-  handleSubmit: () => Promise<void>;
+  handleSubmit: (e?: React.FormEvent) => Promise<void>;
   isLoading: boolean;
   isValid: boolean;
   showSuccess: boolean;
 }
 
-export const MobileDepositDialog = ({
+export const MobileDepositDialog: React.FC<MobileDepositDialogProps> = ({
   open,
   onOpenChange,
   clients,
@@ -44,57 +47,89 @@ export const MobileDepositDialog = ({
   isLoading,
   isValid,
   showSuccess
-}: MobileDepositDialogProps) => {
+}) => {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[95vh] pb-8 rounded-t-2xl">
-        <div className="w-12 h-1.5 bg-muted rounded-full mt-2 mx-auto mb-6"></div>
+      <SheetContent position="bottom" size="content" className="h-[85vh] overflow-y-auto">
+        <SheetHeader className="text-left">
+          <SheetTitle>Nouveau versement</SheetTitle>
+          <SheetDescription>
+            Créez un nouveau versement pour un client
+          </SheetDescription>
+        </SheetHeader>
         
-        <div className="flex flex-col gap-0.5 mb-4">
-          <h2 className="text-xl font-semibold">Nouveau versement</h2>
-          <p className="text-muted-foreground text-sm">
-            Enregistrez un nouveau versement pour un client
-          </p>
-        </div>
-        
-        {showSuccess ? (
-          <SuccessMessage />
-        ) : (
-          <>
-            <div className="space-y-6 py-4">
-              <ClientSelectDropdown 
-                clients={clients}
-                selectedClient={formState.selectedClient}
-                onClientSelect={setSelectedClient}
-              />
-        
-              <AmountInput 
-                amount={formState.amount}
-                onAmountChange={setAmount}
-              />
-        
-              <DatePickerField 
-                date={formState.date}
-                onDateChange={handleDateChange}
-              />
-        
-              <DescriptionField 
-                description={formState.description}
-                onDescriptionChange={setDescription}
+        {!showSuccess ? (
+          <form onSubmit={handleSubmit} className="space-y-6 mt-6">
+            <div className="space-y-2">
+              <Label htmlFor="client">Client</Label>
+              <Select value={formState.selectedClient} onValueChange={setSelectedClient}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un client" />
+                </SelectTrigger>
+                <SelectContent>
+                  {clients.map(client => (
+                    <SelectItem key={client.id} value={client.id.toString()}>
+                      {client.prenom} {client.nom}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="amount">Montant (TND)</Label>
+              <Input
+                id="amount"
+                type="number"
+                placeholder="0.00"
+                value={formState.amount}
+                onChange={(e) => setAmount(e.target.value)}
               />
             </div>
             
-            <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-background">
-              <Button 
-                onClick={handleSubmit} 
-                disabled={isLoading || !isValid} 
-                className="w-full py-6"
-                size="lg"
-              >
-                {isLoading ? "Enregistrement..." : "Enregistrer le versement"}
-              </Button>
+            <div className="space-y-2">
+              <Label>Date du versement</Label>
+              <div className="border rounded-md p-3">
+                <Calendar
+                  mode="single"
+                  selected={formState.date}
+                  onSelect={handleDateChange}
+                  locale={fr}
+                  className="mx-auto"
+                />
+              </div>
+              <div className="text-center text-sm text-gray-500">
+                {format(formState.date, 'dd MMMM yyyy', { locale: fr })}
+              </div>
             </div>
-          </>
+            
+            <div className="space-y-2">
+              <Label htmlFor="description">Description (optionnel)</Label>
+              <Input
+                id="description"
+                placeholder="Entrez une description..."
+                value={formState.description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </div>
+            
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={!isValid || isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Traitement en cours...
+                </>
+              ) : (
+                "Confirmer le versement"
+              )}
+            </Button>
+          </form>
+        ) : (
+          <SuccessMessage amount={formState.amount} />
         )}
       </SheetContent>
     </Sheet>
