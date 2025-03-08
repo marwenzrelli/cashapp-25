@@ -1,14 +1,23 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Client } from "../../clients/types";
+import { Client } from "@/features/clients/types";
 import { StandaloneDepositForm } from "./DepositForm";
-import { Deposit } from "../types";
+import { Deposit } from "@/features/deposits/types";
+
+interface DepositDialogProps {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  clients: Client[];
+  onConfirm: (deposit: Deposit) => Promise<void>;
+  refreshClientBalance?: () => Promise<boolean>;
+}
 
 export const DepositDialog = ({
-  clients,
   isOpen,
   onOpenChange,
-  onConfirm
+  clients,
+  onConfirm,
+  refreshClientBalance
 }: DepositDialogProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -18,8 +27,9 @@ export const DepositDialog = ({
         </DialogHeader>
         
         <StandaloneDepositForm 
-          clients={clients}
-          onConfirm={onConfirm}
+          clients={clients} 
+          onConfirm={onConfirm} 
+          refreshClientBalance={refreshClientBalance} 
         />
       </DialogContent>
     </Dialog>

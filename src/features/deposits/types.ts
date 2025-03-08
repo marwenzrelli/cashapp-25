@@ -6,10 +6,10 @@ export interface Deposit {
   amount: number;
   date: string;
   client_name: string;
-  description: string; // Changed from optional to required to match components/deposits/types
-  status: string; // Changed from optional to required to match components/deposits/types
-  created_at: string; // Changed from optional to required to match components/deposits/types
-  created_by?: string | null;
+  description: string;
+  status: string;
+  created_at: string;
+  created_by: string | null;
   operation_date?: string;
   last_modified_at?: string | null;
 }
@@ -30,13 +30,13 @@ export interface DeleteDepositDialogProps {
 }
 
 export interface DepositDialogProps {
-  isOpen: boolean; // Using isOpen to be consistent
+  isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   clients: Client[];
   onConfirm: (deposit: Deposit) => Promise<void>;
+  refreshClientBalance?: () => Promise<boolean>;
 }
 
-// Add the missing interfaces
 export interface StatsCardProps {
   deposits: Deposit[];
 }

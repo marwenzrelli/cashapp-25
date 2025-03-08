@@ -1,6 +1,4 @@
-
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 /**
  * Handles the deletion of a deposit operation
@@ -32,7 +30,7 @@ export async function handleDepositDeletion(id: string | number, userId: string 
             client_name: depositData.client_name,
             amount: Number(depositData.amount),
             operation_date: depositData.operation_date || depositData.created_at,
-            notes: depositData.notes || depositData.description || null,
+            notes: depositData.notes || null,
             deleted_by: userId,
             status: depositData.status
           }])

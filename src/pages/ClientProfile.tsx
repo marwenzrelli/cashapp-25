@@ -87,6 +87,12 @@ const ClientProfile = () => {
   const actualClientId = typeof client.id === 'string' ? parseInt(client.id, 10) : client.id;
   console.log("Utilisation de l'ID client pour le code QR:", actualClientId);
 
+  // Create a wrapper function for refreshClientBalance that returns a Promise<boolean>
+  const handleRefreshClientBalance = async () => {
+    await refreshClientBalance();
+    return true;
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       <div className="space-y-6">
@@ -103,12 +109,7 @@ const ClientProfile = () => {
 
         <ClientPersonalInfo 
           client={client} 
-          clientId={typeof client?.id === 'string' ? parseInt(client.id, 10) : client?.id}
-          qrCodeRef={qrCodeRef}
-          formatAmount={formatAmount}
-          refetchClient={refetchClient}
-          refreshClientBalance={refreshClientBalance}
-          clientBalance={clientBalance}
+          refreshClientBalance={handleRefreshClientBalance}
         />
 
         <ClientOperationsHistory

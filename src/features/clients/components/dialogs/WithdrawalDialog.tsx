@@ -7,7 +7,7 @@ interface WithdrawalDialogProps {
   client: Client;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (withdrawal: any) => Promise<boolean | void>; // Updated return type
+  onConfirm: (withdrawal: any) => Promise<boolean | void>;
   refreshClientBalance: () => Promise<boolean>;
 }
 

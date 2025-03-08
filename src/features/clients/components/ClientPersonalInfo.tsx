@@ -1,9 +1,10 @@
+
 import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { MoreVertical, Edit, Copy, User, Mail, Phone, Calendar } from "lucide-react"
+import { MoreVertical, Edit, Copy, User, Mail, Phone } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,35 +14,43 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Client } from "@/features/clients/types";
-import { useClipboard } from '@mantine/hooks';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { DepositDialog } from './dialogs/DepositDialog';
 import { useClientDeposit } from '../hooks/operations/useClientDeposit';
 import { WithdrawalDialog } from './dialogs/WithdrawalDialog';
 import { useClientWithdrawal } from '../hooks/operations/useClientWithdrawal';
-import { TransferDialog } from './dialogs/TransferDialog';
-import { useClientTransfer } from '../hooks/operations/useClientTransfer';
 import { formatCurrency } from '@/lib/utils';
 
 interface ClientPersonalInfoProps {
   client: Client;
+  clientId?: number;
+  qrCodeRef?: React.RefObject<HTMLDivElement>;
+  formatAmount?: (amount: number) => string;
+  refetchClient?: () => Promise<void>;
   refreshClientBalance: () => Promise<boolean>;
+  clientBalance?: number;
 }
 
-export const ClientPersonalInfo: React.FC<ClientPersonalInfoProps> = ({ client, refreshClientBalance }) => {
+export const ClientPersonalInfo: React.FC<ClientPersonalInfoProps> = ({ 
+  client, 
+  refreshClientBalance 
+}) => {
   const [isDepositOpen, setIsDepositOpen] = useState(false);
   const [isWithdrawalOpen, setIsWithdrawalOpen] = useState(false);
-  const [isTransferOpen, setIsTransferOpen] = useState(false);
-  const clipboard = useClipboard();
   const navigate = useNavigate();
   
-  const { handleDeposit, isProcessing: isDepositProcessing } = useClientDeposit(client.id, refreshClientBalance);
-  const { handleWithdrawal, isProcessing: isWithdrawalProcessing } = useClientWithdrawal(client.id, refreshClientBalance);
-  const { handleTransfer, isProcessing: isTransferProcessing } = useClientTransfer(client.id, refreshClientBalance);
+  const { handleDeposit: depositHandler, isProcessing: isDepositProcessing } = useClientDeposit(
+    typeof client.id === 'string' ? parseInt(client.id, 10) : client.id, 
+    refreshClientBalance
+  );
+  const { handleWithdrawal: withdrawalHandler, isProcessing: isWithdrawalProcessing } = useClientWithdrawal(
+    typeof client.id === 'string' ? parseInt(client.id, 10) : client.id, 
+    refreshClientBalance
+  );
 
   const handleCopy = (text: string, label: string) => {
-    clipboard.copy(text);
+    navigator.clipboard.writeText(text);
     toast.success(`${label} copié dans le presse-papier!`);
   };
 
@@ -49,25 +58,20 @@ export const ClientPersonalInfo: React.FC<ClientPersonalInfoProps> = ({ client, 
     navigate(`/clients/edit/${client.id}`);
   }, [client.id, navigate]);
 
-  const handleDeposit = async (deposit: any) => {
-    const success = await handleDeposit(deposit);
+  const onDepositConfirm = async (deposit: any) => {
+    const success = await depositHandler(deposit);
     if (success) {
       setIsDepositOpen(false);
     }
+    return success;
   };
 
-  const handleWithdrawal = async (withdrawal: any) => {
-    const success = await handleWithdrawal(withdrawal);
+  const onWithdrawalConfirm = async (withdrawal: any) => {
+    const success = await withdrawalHandler(withdrawal);
     if (success) {
       setIsWithdrawalOpen(false);
     }
-  };
-
-  const handleTransfer = async (transfer: any) => {
-    const success = await handleTransfer(transfer);
-    if (success) {
-      setIsTransferOpen(false);
-    }
+    return success;
   };
 
   return (
@@ -98,7 +102,7 @@ export const ClientPersonalInfo: React.FC<ClientPersonalInfoProps> = ({ client, 
         <div className="grid gap-4">
           <div>
             <div className="text-sm font-medium">Solde actuel</div>
-            <div className="text-2xl font-bold">{formatCurrency(client.balance)}</div>
+            <div className="text-2xl font-bold">{formatCurrency(client.solde || 0)}</div>
           </div>
 
           <div className="grid gap-2">
@@ -150,9 +154,6 @@ export const ClientPersonalInfo: React.FC<ClientPersonalInfoProps> = ({ client, 
               <DropdownMenuItem onClick={() => setIsWithdrawalOpen(true)} disabled={isWithdrawalProcessing}>
                 Nouveau retrait
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setIsTransferOpen(true)} disabled={isTransferProcessing}>
-                Nouveau virement
-              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -161,23 +162,15 @@ export const ClientPersonalInfo: React.FC<ClientPersonalInfoProps> = ({ client, 
           client={client}
           isOpen={isDepositOpen} 
           onOpenChange={setIsDepositOpen}
-          onConfirm={handleDeposit}
+          onConfirm={onDepositConfirm}
           refreshClientBalance={refreshClientBalance}
         />
 
         <WithdrawalDialog
           client={client}
-          isOpen={isWithdrawalOpen}
+          open={isWithdrawalOpen}
           onOpenChange={setIsWithdrawalOpen}
-          onConfirm={handleWithdrawal}
-          refreshClientBalance={refreshClientBalance}
-        />
-
-        <TransferDialog
-          client={client}
-          isOpen={isTransferOpen}
-          onOpenChange={setIsTransferOpen}
-          onConfirm={handleTransfer}
+          onConfirm={onWithdrawalConfirm}
           refreshClientBalance={refreshClientBalance}
         />
       </CardContent>
