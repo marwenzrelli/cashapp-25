@@ -1,91 +1,45 @@
 
-import { useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { type DepositDialogProps } from "@/features/deposits/types";
-import { MobileDepositDialog } from "./deposit-dialog/MobileDepositDialog";
-import { DesktopDepositDialog } from "./deposit-dialog/DesktopDepositDialog";
-import { useDepositForm } from "../hooks/useDepositForm";
+import React from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { StandaloneDepositForm } from "./DepositForm";
+import { Deposit } from "@/features/deposits/types";
+import { ExtendedClient } from "@/features/withdrawals/hooks/form/withdrawalFormTypes";
 
-export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogProps) => {
-  const {
-    formState,
-    setSelectedClient,
-    setAmount,
-    setDescription,
-    handleDateChange,
-    handleSubmit,
-    isLoading,
-    isValid,
-    showSuccess,
-    clients,
-    fetchClients
-  } = useDepositForm(onConfirm, onOpenChange);
+interface DepositDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: (deposit: Deposit) => Promise<boolean | void>;
+  clients: ExtendedClient[];
+  selectedClient: string;
+  refreshClientBalance: (clientId: string) => Promise<boolean | void>;
+}
 
-  useEffect(() => {
-    if (open) {
-      fetchClients();
-    }
-  }, [open, fetchClients]);
+export const DepositDialog: React.FC<DepositDialogProps> = ({
+  open,
+  onOpenChange,
+  onConfirm,
+  clients,
+  selectedClient,
+  refreshClientBalance
+}) => {
+  // Filter clients if a client is selected
+  const filteredClients = selectedClient
+    ? clients.filter(client => client.id.toString() === selectedClient)
+    : clients;
 
-  useEffect(() => {
-    const channel = supabase
-      .channel('public:clients')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'clients'
-        },
-        () => {
-          console.log('Mise à jour des soldes détectée');
-          fetchClients();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [fetchClients]);
-
-  // Mobile version using Sheet
-  if (window.innerWidth < 768) {
-    return (
-      <MobileDepositDialog
-        open={open}
-        onOpenChange={onOpenChange}
-        onConfirm={onConfirm}
-        clients={clients}
-        formState={formState}
-        setSelectedClient={setSelectedClient}
-        setAmount={setAmount}
-        setDescription={setDescription}
-        handleDateChange={handleDateChange}
-        handleSubmit={handleSubmit}
-        isLoading={isLoading}
-        isValid={isValid}
-        showSuccess={showSuccess}
-      />
-    );
-  }
-
-  // Desktop version using Dialog
   return (
-    <DesktopDepositDialog
-      open={open}
-      onOpenChange={onOpenChange}
-      onConfirm={onConfirm}
-      clients={clients}
-      formState={formState}
-      setSelectedClient={setSelectedClient}
-      setAmount={setAmount}
-      setDescription={setDescription}
-      handleDateChange={handleDateChange}
-      handleSubmit={handleSubmit}
-      isLoading={isLoading}
-      isValid={isValid}
-      showSuccess={showSuccess}
-    />
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Nouveau versement</DialogTitle>
+        </DialogHeader>
+        
+        <StandaloneDepositForm 
+          clients={filteredClients}
+          onConfirm={onConfirm}
+          refreshClientBalance={refreshClientBalance}
+        />
+      </DialogContent>
+    </Dialog>
   );
 };

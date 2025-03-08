@@ -1,83 +1,80 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowDownCircle } from "lucide-react";
-import { DateField } from "../form-fields/DateField";
 import { ClientSelectField } from "../form-fields/ClientSelectField";
 import { AmountField } from "../form-fields/AmountField";
 import { NotesField } from "../form-fields/NotesField";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { DateField } from "../form-fields/DateField";
 import { format } from "date-fns";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { ExtendedClient } from "../../hooks/form/withdrawalFormTypes";
+import { toast } from "sonner";
 
-export interface StandaloneWithdrawalFormProps {
+interface StandaloneWithdrawalFormProps {
   clients: ExtendedClient[];
-  onConfirm: (withdrawal: any) => Promise<boolean | void>; // Updated return type
-  refreshClientBalance: (clientId?: string) => Promise<boolean>;
+  onConfirm: (withdrawal: any) => Promise<boolean | void>;
+  refreshClientBalance: (clientId: string) => Promise<boolean | void>;
 }
 
 export const StandaloneWithdrawalForm: React.FC<StandaloneWithdrawalFormProps> = ({
   clients,
   onConfirm,
-  refreshClientBalance,
+  refreshClientBalance
 }) => {
+  const [clientId, setClientId] = useState("");
+  const [amount, setAmount] = useState("");
+  const [notes, setNotes] = useState("");
+  const [date, setDate] = useState<string>(new Date().toISOString());
   const [isLoading, setIsLoading] = useState(false);
-  const [newWithdrawal, setNewWithdrawal] = useState({
-    clientId: "",
-    amount: "",
-    notes: "",
-    date: format(new Date(), "yyyy-MM-dd'T'HH:mm:ss"),
-  });
 
-  const handleSubmit = async () => {
-    if (!newWithdrawal.clientId || !newWithdrawal.amount) {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!clientId || !amount) {
       toast.error("Veuillez remplir tous les champs obligatoires");
       return;
     }
 
     setIsLoading(true);
     try {
-      const selectedClient = clients.find(client => client.id.toString() === newWithdrawal.clientId);
-      if (!selectedClient) {
+      const client = clients.find(c => c.id.toString() === clientId);
+      if (!client) {
         toast.error("Client non trouvé");
         return;
       }
 
-      const amount = parseFloat(newWithdrawal.amount);
-      if (isNaN(amount)) {
-        toast.error("Montant invalide");
-        return;
-      }
-
-      const dateObj = new Date(newWithdrawal.date);
+      const clientName = `${client.prenom} ${client.nom}`;
       
-      const withdrawal = {
-        client_name: `${selectedClient.prenom} ${selectedClient.nom}`,
-        amount: amount,
-        date: dateObj.toISOString(),
-        notes: newWithdrawal.notes
-      };
-
-      // Effectuer le retrait
-      const result = await onConfirm(withdrawal);
-      
-      // Si le retrait a réussi, on rafraîchit le solde du client
-      if (result !== false && newWithdrawal.clientId) {
-        console.log("Rafraîchissement du solde après retrait pour le client:", newWithdrawal.clientId);
-        await refreshClientBalance(newWithdrawal.clientId);
-      }
-      
-      // Réinitialiser le formulaire
-      setNewWithdrawal({
-        clientId: "",
-        amount: "",
-        notes: "",
-        date: format(new Date(), "yyyy-MM-dd'T'HH:mm:ss"),
+      console.log("Submitting withdrawal form with:", {
+        clientName,
+        amount,
+        notes,
+        date
       });
+      
+      const withdrawalResult = await onConfirm({
+        client_name: clientName,
+        amount,
+        notes,
+        date
+      });
+      
+      if (withdrawalResult !== false) {
+        // Reset form on success
+        setClientId("");
+        setAmount("");
+        setNotes("");
+        setDate(new Date().toISOString());
+        
+        // Refresh client balance
+        if (client.id) {
+          await refreshClientBalance(client.id.toString());
+        }
+        
+        toast.success("Retrait effectué avec succès");
+      }
     } catch (error) {
-      console.error("Error submitting withdrawal:", error);
+      console.error("Error processing withdrawal:", error);
       toast.error("Erreur lors du traitement du retrait");
     } finally {
       setIsLoading(false);
@@ -85,49 +82,46 @@ export const StandaloneWithdrawalForm: React.FC<StandaloneWithdrawalFormProps> =
   };
 
   return (
-    <Card className="bg-gradient-to-r from-red-50 to-rose-50 border-red-100 shadow-md">
+    <Card className="bg-gradient-to-r from-red-50 to-amber-50 border-red-100 shadow-md">
       <CardHeader className="pb-3">
         <CardTitle className="text-base text-red-700">Nouveau retrait</CardTitle>
         <CardDescription>
-          Enregistrez un nouveau retrait pour un client
+          Effectuez un retrait pour un client
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid gap-4">
-          <DateField
-            value={newWithdrawal.date}
-            onChange={(value) => setNewWithdrawal({ ...newWithdrawal, date: value })}
-            id="standalone-date"
-          />
-
+        <form onSubmit={handleSubmit} className="space-y-4">
           <ClientSelectField
-            value={newWithdrawal.clientId}
-            onChange={(value) => setNewWithdrawal({ ...newWithdrawal, clientId: value })}
+            value={clientId}
+            onChange={setClientId}
             clients={clients}
-            id="standalone-clientId"
           />
-
-          <AmountField
-            value={newWithdrawal.amount}
-            onChange={(value) => setNewWithdrawal({ ...newWithdrawal, amount: value })}
-            id="standalone-amount"
-          />
-
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <AmountField
+              value={amount}
+              onChange={setAmount}
+            />
+            
+            <DateField
+              value={date}
+              onChange={setDate}
+            />
+          </div>
+          
           <NotesField
-            value={newWithdrawal.notes}
-            onChange={(value) => setNewWithdrawal({ ...newWithdrawal, notes: value })}
-            id="standalone-notes"
+            value={notes}
+            onChange={setNotes}
           />
-
-          <Button
-            onClick={handleSubmit}
-            className="bg-red-600 hover:bg-red-700 text-white w-full mt-4"
+          
+          <Button 
+            type="submit" 
+            className="w-full bg-red-600 hover:bg-red-700" 
             disabled={isLoading}
           >
-            <ArrowDownCircle className="h-4 w-4 mr-2" />
             {isLoading ? "En cours..." : "Effectuer le retrait"}
           </Button>
-        </div>
+        </form>
       </CardContent>
     </Card>
   );
