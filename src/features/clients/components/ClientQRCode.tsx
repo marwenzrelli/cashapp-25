@@ -187,9 +187,9 @@ export const ClientQRCode = ({
     return null;
   }
   if (!showQrCode) {
-    return <Card className="p-4 bg-gradient-to-br from-violet-100 to-purple-50 shadow-lg border-purple-200 hover:shadow-xl transition-all px-[38px] py-0 rounded-lg">
-        <Button onClick={() => setShowQrCode(true)} className="w-full bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 transition-all">
-          <div className="flex items-center justify-between w-full my-0 py-0 px-0 mx-[108px]">
+    return <Card className="p-4 bg-gradient-to-br from-violet-100 to-purple-50 shadow-lg border-purple-200 hover:shadow-xl transition-all py-0 rounded-lg px-0">
+        <Button onClick={() => setShowQrCode(true)} className="w-full bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 transition-all px-0 mx-0 py-[7px] my-0">
+          <div className="flex items-center justify-between w-full my-0 py-0 px-0 mx-[9px]">
             <div className="flex items-center gap-2">
               <QrCode className="h-5 w-5" />
               <span>Afficher le QR code</span>
