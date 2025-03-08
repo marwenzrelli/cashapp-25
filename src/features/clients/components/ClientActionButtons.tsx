@@ -12,10 +12,10 @@ export const ClientActionButtons = ({
   onWithdrawalClick
 }: ClientActionButtonsProps) => {
   return (
-    <div className="flex gap-2">
+    <div className="flex flex-col sm:flex-row gap-2 w-full">
       <Button 
         onClick={onDepositClick} 
-        className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white" 
+        className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto" 
         size="sm"
       >
         <ArrowDownToLine className="h-4 w-4" />
@@ -23,8 +23,8 @@ export const ClientActionButtons = ({
       </Button>
       <Button 
         onClick={onWithdrawalClick} 
-        size="sm" 
-        className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-[19px]"
+        className="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white w-full sm:w-auto"
+        size="sm"
       >
         <ArrowUpToLine className="h-4 w-4" />
         Retrait
