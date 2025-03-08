@@ -9,13 +9,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Client } from "@/features/clients/types";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { supabase } from "@/integrations/supabase/client";
-
-interface ExtendedClient extends Client {
-  dateCreation: string;
-}
+import { ExtendedClient } from "../../hooks/form/withdrawalFormTypes";
 
 interface ClientSelectFieldProps {
   value: string;

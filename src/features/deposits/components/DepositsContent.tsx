@@ -10,7 +10,7 @@ import { StandaloneDepositForm } from "./DepositForm";
 import { TransferPagination } from "@/features/transfers/components/TransferPagination";
 import { EditDepositDialog } from "./dialog/EditDepositDialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ExtendedClient } from "@/features/withdrawals/components/standalone/StandaloneWithdrawalForm";
+import { ExtendedClient } from "@/features/withdrawals/hooks/form/withdrawalFormTypes";
 
 interface DepositsContentProps {
   deposits: Deposit[];

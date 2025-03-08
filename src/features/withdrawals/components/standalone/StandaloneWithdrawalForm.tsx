@@ -6,16 +6,11 @@ import { DateField } from "../form-fields/DateField";
 import { ClientSelectField } from "../form-fields/ClientSelectField";
 import { AmountField } from "../form-fields/AmountField";
 import { NotesField } from "../form-fields/NotesField";
-import { Client } from "@/features/clients/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
-
-// Define the ExtendedClient interface that includes dateCreation property
-export interface ExtendedClient extends Client {
-  dateCreation: string;
-}
+import { ExtendedClient } from "../../hooks/form/withdrawalFormTypes";
 
 export interface StandaloneWithdrawalFormProps {
   clients: ExtendedClient[];
