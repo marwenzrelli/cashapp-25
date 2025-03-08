@@ -26,7 +26,6 @@ export const useDeleteOperation = (
       const userId = session?.user?.id;
       
       console.log(`Début de la suppression de l'opération: ${operationToDelete.type} avec l'ID: ${operationToDelete.id}`);
-      console.log("Type de l'ID:", typeof operationToDelete.id);
       
       let success = false;
       

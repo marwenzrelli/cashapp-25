@@ -13,7 +13,7 @@ export const handleDepositDeletion = async (depositId: string | number, userId: 
       throw new Error("Invalid deposit ID format");
     }
     
-    // 1. First, delete the deposit record
+    // Delete the deposit record
     const { error: deleteError } = await supabase
       .from('deposits')
       .delete()
@@ -46,7 +46,7 @@ export const handleWithdrawalDeletion = async (withdrawalId: string | number, us
       throw new Error("Invalid withdrawal ID format");
     }
     
-    // 1. First, delete the withdrawal record
+    // Delete the withdrawal record
     const { error: deleteError } = await supabase
       .from('withdrawals')
       .delete()
@@ -79,7 +79,7 @@ export const handleTransferDeletion = async (transferId: string | number, userId
       throw new Error("Invalid transfer ID format");
     }
     
-    // 1. First, delete the transfer record
+    // Delete the transfer record
     const { error: deleteError } = await supabase
       .from('transfers')
       .delete()

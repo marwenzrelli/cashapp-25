@@ -64,7 +64,9 @@ export const useDeleteDeposit = (
       }
     } catch (error) {
       console.error("Erreur lors de la confirmation de suppression:", error);
-      toast.error("Erreur lors de la suppression du versement");
+      toast.error("Erreur lors de la suppression du versement", {
+        description: error instanceof Error ? error.message : "Une erreur inconnue est survenue"
+      });
       return false;
     } finally {
       setIsLoading(false);
