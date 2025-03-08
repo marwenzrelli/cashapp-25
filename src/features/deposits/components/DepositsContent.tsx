@@ -1,17 +1,16 @@
 
-import React, { useEffect } from "react";
-import { DepositsTable } from "./DepositsTable";
-import { DepositsHeader } from "./DepositsHeader";
-import { SearchBar } from "./SearchBar";
-import { DeleteDepositDialog } from "./DeleteDepositDialog";
-import { Deposit } from "../types"; // Using the feature's Deposit type
+import React from "react";
+import { Deposit } from "../types"; 
 import { useClients } from "@/features/clients/hooks/useClients";
-import { StandaloneDepositForm } from "./DepositForm";
-import { TransferPagination } from "@/features/transfers/components/TransferPagination";
-import { EditDepositDialog } from "./dialog/EditDepositDialog";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ExtendedClient } from "@/features/withdrawals/components/standalone/StandaloneWithdrawalForm";
 import { toast } from "sonner";
+
+import { 
+  DepositsContentHeader,
+  DepositsSearchSection,
+  DepositsTableSection,
+  DepositsDialogs
+} from "./content";
 
 // Define a type adapter function to ensure deposits have required fields
 const adaptDepositsForUI = (deposits: Deposit[]) => {
@@ -83,28 +82,6 @@ export const DepositsContent = ({
     refreshClientBalance,
     fetchClients
   } = useClients();
-  
-  useEffect(() => {
-    fetchClients();
-  }, [fetchClients]);
-
-  // Nouveau useEffect pour rafraîchir les dépôts après une suppression
-  useEffect(() => {
-    if (!isDeleteDialogOpen && selectedDeposit && fetchDeposits) {
-      // Si le dialogue de suppression vient d'être fermé et qu'un dépôt était sélectionné
-      // cela signifie probablement qu'une suppression a été effectuée
-      console.log("Rafraîchissement des dépôts après fermeture du dialogue de suppression");
-      fetchDeposits();
-    }
-  }, [isDeleteDialogOpen, selectedDeposit, fetchDeposits]);
-
-  console.log("DepositsContent render with:", {
-    depositsLength: deposits?.length,
-    filteredDepositsLength: filteredDeposits?.length,
-    paginatedDepositsLength: paginatedDeposits?.length,
-    isLoading,
-    deleteDialogOpen: isDeleteDialogOpen
-  });
 
   const handleRefreshClientBalance = async (clientId: string): Promise<boolean> => {
     try {
@@ -143,78 +120,46 @@ export const DepositsContent = ({
 
   return (
     <div className="space-y-8 animate-in">
-      <DepositsHeader 
+      <DepositsContentHeader 
         deposits={adaptedDeposits}
         filteredDeposits={adaptedFilteredDeposits}
         isLoading={isLoading}
+        clients={extendedClients}
+        handleCreateDeposit={handleCreateDeposit}
+        handleRefreshClientBalance={handleRefreshClientBalance}
+        fetchClients={fetchClients}
       />
       
-      <div>
-        <StandaloneDepositForm
-          clients={extendedClients}
-          onConfirm={handleCreateDeposit}
-          refreshClientBalance={handleRefreshClientBalance}
-        />
-      </div>
-
       <div className="space-y-4">
-        <SearchBar
+        <DepositsSearchSection
           searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          itemsPerPage={itemsPerPage}
-          onItemsPerPageChange={setItemsPerPage}
-          totalDeposits={totalItems}
-        />
-        
-        <TransferPagination
+          setSearchTerm={setSearchTerm}
           itemsPerPage={itemsPerPage}
           setItemsPerPage={setItemsPerPage}
           totalItems={totalItems}
           currentPage={currentPage}
           setCurrentPage={setCurrentPage}
-          label="versements"
         />
         
-        {isLoading ? (
-          <div className="space-y-4">
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-12 w-full" />
-          </div>
-        ) : (
-          adaptedPaginatedDeposits && adaptedPaginatedDeposits.length > 0 ? (
-            <DepositsTable 
-              deposits={adaptedPaginatedDeposits} 
-              onEdit={handleEdit} 
-              onDelete={handleDelete} 
-            />
-          ) : (
-            <div className="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
-              <p className="text-gray-500">Aucun versement trouvé</p>
-              {searchTerm && (
-                <p className="text-sm text-gray-400 mt-2">
-                  Essayez de modifier vos critères de recherche
-                </p>
-              )}
-            </div>
-          )
-        )}
+        <DepositsTableSection
+          isLoading={isLoading}
+          paginatedDeposits={adaptedPaginatedDeposits}
+          searchTerm={searchTerm}
+          handleEdit={handleEdit}
+          handleDelete={handleDelete}
+        />
       </div>
 
-      <DeleteDepositDialog 
-        isOpen={isDeleteDialogOpen} 
-        onOpenChange={setIsDeleteDialogOpen} 
-        onConfirm={onConfirmDelete} 
-        selectedDeposit={selectedDeposit} 
-      />
-
-      <EditDepositDialog
-        isOpen={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
-        editForm={editForm}
-        onEditFormChange={handleEditFormChange}
-        onConfirm={handleConfirmEdit}
+      <DepositsDialogs
+        isDeleteDialogOpen={isDeleteDialogOpen}
+        setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+        isEditDialogOpen={isEditDialogOpen}
+        setIsEditDialogOpen={setIsEditDialogOpen}
         selectedDeposit={selectedDeposit}
+        editForm={editForm}
+        handleEditFormChange={handleEditFormChange}
+        handleConfirmEdit={handleConfirmEdit}
+        confirmDelete={onConfirmDelete}
         clients={clients}
       />
     </div>
