@@ -2,10 +2,10 @@
 import { Operation } from "@/features/operations/types";
 import { ArrowDownCircle, ArrowUpCircle, RefreshCw } from "lucide-react";
 import React from "react";
-import { OperationsFilterButtons } from "./OperationsFilterButtons";
 
-// Re-export the OperationsFilterButtons component for backwards compatibility
-export { OperationsFilterButtons };
+// Ne plus réexporter OperationsFilterButtons, car cela crée une dépendance circulaire
+// Supprimons la ligne suivante qui cause l'erreur:
+// export { OperationsFilterButtons };
 
 export const getAmountColor = (type: Operation["type"]) => {
   switch (type) {
