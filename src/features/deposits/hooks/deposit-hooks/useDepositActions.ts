@@ -49,6 +49,7 @@ export const useDepositActions = ({
       
       if (success) {
         setIsDeleteDialogOpen(false);
+        setShowDeleteDialog(false);
         toast.success("Versement supprimé avec succès", {
           description: `Le versement de ${selectedDeposit.amount} TND a été supprimé.`
         });

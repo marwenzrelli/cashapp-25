@@ -39,9 +39,12 @@ export const DeleteDepositDialog = ({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Annuler</AlertDialogCancel>
+          <AlertDialogCancel onClick={() => onOpenChange(false)}>Annuler</AlertDialogCancel>
           <AlertDialogAction
-            onClick={onConfirm}
+            onClick={() => {
+              onConfirm();
+              // Ne pas fermer le modal ici, car il sera fermé dans la fonction de confirmation
+            }}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
           >
             Supprimer
