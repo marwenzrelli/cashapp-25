@@ -5,7 +5,7 @@ import { toast } from "sonner";
 interface UseDepositActionsProps {
   createDeposit: (deposit: Deposit) => Promise<boolean | void>;
   updateDeposit: (id: number, updates: any) => Promise<boolean | void>;
-  confirmDeleteDeposit: () => Promise<boolean | void>;
+  confirmDeleteDeposit: () => Promise<boolean>;
   setDepositToDelete: (deposit: Deposit | null) => void;
   setShowDeleteDialog: (show: boolean) => void;
   setIsDeleteDialogOpen: (isOpen: boolean) => void;
@@ -100,8 +100,8 @@ export const useDepositActions = ({
     console.log("Final updates being sent:", updates);
 
     try {
-      const success = await updateDeposit(selectedDeposit.id, updates);
-      if (success === true) {
+      const result = await updateDeposit(selectedDeposit.id, updates);
+      if (result === true) {
         setIsEditDialogOpen(false);
         toast.success("Versement mis à jour", {
           description: `Le versement a été modifié avec succès.`
@@ -118,8 +118,8 @@ export const useDepositActions = ({
 
   const handleCreateDeposit = async (deposit: Deposit): Promise<boolean> => {
     try {
-      const success = await createDeposit(deposit);
-      if (success === true) {
+      const result = await createDeposit(deposit);
+      if (result === true) {
         setIsDeleteDialogOpen(false);
         return true;
       }

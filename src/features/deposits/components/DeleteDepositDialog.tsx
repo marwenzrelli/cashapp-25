@@ -13,6 +13,11 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleConfirm = async () => {
+    if (!onConfirm) {
+      console.error("No onConfirm handler provided");
+      return;
+    }
+    
     setIsDeleting(true);
     try {
       const success = await onConfirm();

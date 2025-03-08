@@ -25,8 +25,7 @@ export const handleDepositDeletion = async (depositId: string, userId: string | 
       throw new Error(`Erreur lors de la suppression: ${deleteError.message}`);
     }
     
-    // We're not logging to operations_log as it doesn't exist in the schema
-    // Just log to console instead
+    // Log to console since we don't have an operations_log table
     console.log(`Successfully deleted deposit with ID: ${depositId} by user ${userId || 'unknown'}`);
     
     return true;
@@ -59,8 +58,7 @@ export const handleWithdrawalDeletion = async (withdrawalId: string, userId: str
       throw new Error(`Erreur lors de la suppression: ${deleteError.message}`);
     }
     
-    // We're not logging to operations_log as it doesn't exist in the schema
-    // Just log to console instead
+    // Log to console since we don't have an operations_log table
     console.log(`Successfully deleted withdrawal with ID: ${withdrawalId} by user ${userId || 'unknown'}`);
     
     return true;
@@ -93,8 +91,7 @@ export const handleTransferDeletion = async (transferId: string, userId: string 
       throw new Error(`Erreur lors de la suppression: ${deleteError.message}`);
     }
     
-    // We're not logging to operations_log as it doesn't exist in the schema
-    // Just log to console instead
+    // Log to console since we don't have an operations_log table
     console.log(`Successfully deleted transfer with ID: ${transferId} by user ${userId || 'unknown'}`);
     
     return true;

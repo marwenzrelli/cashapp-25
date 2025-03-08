@@ -21,13 +21,16 @@ export const useDeleteDeposit = (
       const userId = session?.user?.id;
 
       // Use the utility function to handle deletion and logging
-      await handleDepositDeletion(depositId.toString(), userId);
+      const result = await handleDepositDeletion(depositId.toString(), userId);
       
       // Update UI state after successful deletion
-      setDeposits(prevDeposits => prevDeposits.filter(deposit => deposit.id !== depositId));
-      
-      toast.success("Dépôt supprimé avec succès");
-      return true;
+      if (result === true) {
+        setDeposits(prevDeposits => prevDeposits.filter(deposit => deposit.id !== depositId));
+        toast.success("Dépôt supprimé avec succès");
+        return true;
+      } else {
+        throw new Error("Échec de la suppression du dépôt");
+      }
     } catch (error) {
       console.error("Erreur complète lors de la suppression:", error);
       toast.error("Erreur lors de la suppression du versement", {
@@ -52,7 +55,7 @@ export const useDeleteDeposit = (
       
       const success = await deleteDeposit(depositToDelete.id);
       
-      if (success) {
+      if (success === true) {
         setDepositToDelete(null);
         setShowDeleteDialog(false);
         return true;

@@ -60,40 +60,6 @@ const Deposits = () => {
   console.log("Deposits page render - paginated deposits count:", paginatedDeposits?.length);
   console.log("Deposits page render - isLoading:", isLoading);
   
-  // Create wrapper functions that conform to the expected return types
-  const handleConfirmDeleteWrapper = async (): Promise<boolean> => {
-    try {
-      const result = await confirmDelete();
-      // Explicitly convert any result to boolean
-      return result === true;
-    } catch (error) {
-      console.error("Error in confirmDelete:", error);
-      return false;
-    }
-  };
-  
-  const handleConfirmEditWrapper = async (): Promise<boolean> => {
-    try {
-      const result = await handleConfirmEdit();
-      // Explicitly convert any result to boolean
-      return result === true;
-    } catch (error) {
-      console.error("Error in handleConfirmEdit:", error);
-      return false;
-    }
-  };
-  
-  const handleCreateDepositWrapper = async (deposit: any): Promise<boolean> => {
-    try {
-      const result = await handleCreateDeposit(deposit);
-      // Explicitly convert any result to boolean
-      return result === true;
-    } catch (error) {
-      console.error("Error in handleCreateDeposit:", error);
-      return false;
-    }
-  };
-  
   return (
     <DepositsContent
       deposits={deposits}
@@ -114,11 +80,11 @@ const Deposits = () => {
       setCurrentPage={setCurrentPage}
       editForm={editForm}
       handleDelete={handleDelete}
-      confirmDelete={handleConfirmDeleteWrapper}
+      confirmDelete={confirmDelete}
       handleEdit={handleEdit}
       handleEditFormChange={handleEditFormChange}
-      handleConfirmEdit={handleConfirmEditWrapper}
-      handleCreateDeposit={handleCreateDepositWrapper}
+      handleConfirmEdit={handleConfirmEdit}
+      handleCreateDeposit={handleCreateDeposit}
       isLoading={isLoading}
       totalItems={totalItems}
     />
