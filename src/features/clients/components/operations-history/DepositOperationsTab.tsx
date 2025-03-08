@@ -9,7 +9,7 @@ import {
   TableCell 
 } from "@/components/ui/table";
 import { OperationsMobileCard } from "./OperationsMobileCard";
-import { ArrowDownCircle } from "lucide-react";
+import { ArrowUpCircle } from "lucide-react";
 import React from "react";
 
 interface DepositOperationsTabProps {
@@ -67,7 +67,7 @@ export const DepositOperationsTab = ({
                 <TableCell>{operation.description}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-2 text-success">
-                    <ArrowDownCircle className="h-4 w-4" />
+                    <ArrowUpCircle className="h-4 w-4" />
                     <span className="font-medium">
                       +{operation.amount.toLocaleString()} {currency}
                     </span>

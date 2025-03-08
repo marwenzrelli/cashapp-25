@@ -1,14 +1,17 @@
 
-// Créons un fichier index pour exposer tous les composants de ce répertoire
-export * from './OperationsFilterButtons';
-export * from './OperationsMobileCard';
-export * from './AllOperationsTab';
-export * from './DepositOperationsTab';
-export * from './TransferOperationsTab';
-export * from './WithdrawalOperationsTab';
-export * from './ClientOperationsHistoryTabs';
-export * from './EmptyOperations';
-export * from './utils';
+// Exposing all components from this directory
+export { OperationsFilterButtons } from './OperationsFilterButtons';
+export { OperationsMobileCard } from './OperationsMobileCard';
+export { AllOperationsTab } from './AllOperationsTab';
+export { DepositOperationsTab } from './DepositOperationsTab';
+export { TransferOperationsTab } from './TransferOperationsTab';
+export { WithdrawalOperationsTab } from './WithdrawalOperationsTab';
+export { ClientOperationsHistoryTabs } from './ClientOperationsHistoryTabs';
+export { EmptyOperations } from './EmptyOperations';
+export { getAmountColor, getOperationTypeIcon, formatOperationAmount } from './utils';
+export { OperationActionsDialog } from './OperationActionsDialog';
+
+// Export dialog components
 export * from './dialogs/DeleteOperationConfirmation';
 export * from './dialogs/EditOperationForm';
 export * from './dialogs/OperationDialogFooter';
