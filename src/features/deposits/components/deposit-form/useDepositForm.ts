@@ -1,36 +1,21 @@
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Client } from "@/features/clients/types";
-import { Deposit } from "@/features/deposits/types";
 import { format } from "date-fns";
-import { useCurrency } from "@/contexts/CurrencyContext";
+import { Deposit } from "@/features/deposits/types";
 import { toast } from "sonner";
-import { ExtendedClient } from "@/features/withdrawals/hooks/form/withdrawalFormTypes";
-import { ClientSelect } from "./deposit-form/ClientSelect";
-import { AmountField } from "./deposit-form/AmountField";
-import { DateTimeField } from "./deposit-form/DateTimeField";
-import { DescriptionField } from "./deposit-form/DescriptionField";
-import { SubmitButton } from "./deposit-form/SubmitButton";
 
-interface StandaloneDepositFormProps {
-  clients: ExtendedClient[];
+interface UseDepositFormProps {
   onConfirm: (deposit: Deposit) => Promise<boolean | void>;
   refreshClientBalance: (clientId: string) => Promise<boolean | void>;
 }
 
-export const StandaloneDepositForm = ({
-  clients,
-  onConfirm,
-  refreshClientBalance
-}: StandaloneDepositFormProps) => {
+export const useDepositForm = ({ onConfirm, refreshClientBalance }: UseDepositFormProps) => {
   const [selectedClient, setSelectedClient] = useState("");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState<Date>(new Date());
   const [time, setTime] = useState(format(new Date(), "HH:mm:ss")); // Include seconds
   const [description, setDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { currency } = useCurrency();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +26,7 @@ export const StandaloneDepositForm = ({
 
     setIsLoading(true);
     try {
-      const client = clients.find(c => c.id.toString() === selectedClient);
+      const client = clients?.find(c => c.id.toString() === selectedClient);
       if (!client) {
         toast.error("Client non trouvé");
         return;
@@ -84,44 +69,18 @@ export const StandaloneDepositForm = ({
     }
   };
 
-  return (
-    <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-100 shadow-md">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base text-blue-700">Nouveau versement</CardTitle>
-        <CardDescription>
-          Créez un nouveau versement pour un client
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <DateTimeField 
-            date={date} 
-            setDate={setDate} 
-            time={time} 
-            setTime={setTime} 
-          />
-
-          <ClientSelect 
-            clients={clients} 
-            selectedClient={selectedClient} 
-            setSelectedClient={setSelectedClient} 
-            currency={currency} 
-          />
-
-          <AmountField 
-            amount={amount} 
-            setAmount={setAmount} 
-            currency={currency} 
-          />
-
-          <DescriptionField 
-            description={description} 
-            setDescription={setDescription} 
-          />
-
-          <SubmitButton isLoading={isLoading} />
-        </form>
-      </CardContent>
-    </Card>
-  );
+  return {
+    selectedClient,
+    setSelectedClient,
+    amount,
+    setAmount,
+    date,
+    setDate,
+    time,
+    setTime,
+    description,
+    setDescription,
+    isLoading,
+    handleSubmit
+  };
 };
