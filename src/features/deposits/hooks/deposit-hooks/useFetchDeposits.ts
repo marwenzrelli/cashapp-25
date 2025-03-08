@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Deposit } from "@/components/deposits/types";
 import { formatDateTime } from "@/features/deposits/hooks/utils/dateUtils";
+import { adaptDepositsForUI } from "@/features/deposits/utils/depositAdapters";
 
 export const useFetchDeposits = (
   setDeposits: React.Dispatch<React.SetStateAction<Deposit[]>>,
@@ -49,25 +50,9 @@ export const useFetchDeposits = (
 
       console.log(`Retrieved ${data.length} deposits from Supabase`);
 
-      const formattedDeposits: Deposit[] = data.map(d => {
-        // Always use operation_date for the main display date if available
-        const displayDate = d.operation_date ? formatDateTime(d.operation_date) : formatDateTime(d.created_at);
-        
-        return {
-          id: d.id,
-          amount: Number(d.amount),
-          date: displayDate,
-          // Ensure description is always present - this is crucial for type compatibility
-          description: d.notes || '',
-          client_name: d.client_name,
-          status: d.status,
-          created_at: d.created_at,
-          created_by: d.created_by || null,
-          operation_date: d.operation_date,
-          last_modified_at: d.last_modified_at
-        };
-      });
-
+      // Use our adapter to ensure all deposits have the required fields
+      const formattedDeposits = adaptDepositsForUI(data);
+      
       console.log("Deposits loaded and formatted:", formattedDeposits);
       setDeposits(formattedDeposits);
     } catch (error) {
