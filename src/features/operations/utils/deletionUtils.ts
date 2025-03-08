@@ -7,33 +7,28 @@ export const handleDepositDeletion = async (depositId: string, userId: string | 
   console.log(`Attempting to delete deposit with ID: ${depositId}`);
   
   try {
+    // Convert string ID to number for database operation
+    const numericId = parseInt(depositId, 10);
+    
+    if (isNaN(numericId)) {
+      throw new Error("Invalid deposit ID format");
+    }
+    
     // 1. First, delete the deposit record
     const { error: deleteError } = await supabase
       .from('deposits')
       .delete()
-      .eq('id', depositId);
+      .eq('id', numericId);
     
     if (deleteError) {
       console.error("Error deleting deposit:", deleteError);
       throw new Error(`Erreur lors de la suppression: ${deleteError.message}`);
     }
     
-    // 2. Log the deletion in the operations_log table
-    const { error: logError } = await supabase
-      .from('operations_log')
-      .insert({
-        operation_type: 'deposit_deletion',
-        entity_id: depositId,
-        performed_by: userId,
-        details: JSON.stringify({ deposit_id: depositId, deleted_at: new Date().toISOString() })
-      });
+    // We're not logging to operations_log as it doesn't exist in the schema
+    // Just log to console instead
+    console.log(`Successfully deleted deposit with ID: ${depositId} by user ${userId || 'unknown'}`);
     
-    if (logError) {
-      console.error("Error logging deposit deletion:", logError);
-      // We continue even if logging fails - the main operation succeeded
-    }
-    
-    console.log(`Successfully deleted deposit with ID: ${depositId}`);
     return true;
   } catch (error) {
     console.error("Complete error during deposit deletion:", error);
@@ -46,33 +41,28 @@ export const handleWithdrawalDeletion = async (withdrawalId: string, userId: str
   console.log(`Attempting to delete withdrawal with ID: ${withdrawalId}`);
   
   try {
+    // Convert string ID to number for database operation
+    const numericId = parseInt(withdrawalId, 10);
+    
+    if (isNaN(numericId)) {
+      throw new Error("Invalid withdrawal ID format");
+    }
+    
     // 1. First, delete the withdrawal record
     const { error: deleteError } = await supabase
       .from('withdrawals')
       .delete()
-      .eq('id', withdrawalId);
+      .eq('id', numericId);
     
     if (deleteError) {
       console.error("Error deleting withdrawal:", deleteError);
       throw new Error(`Erreur lors de la suppression: ${deleteError.message}`);
     }
     
-    // 2. Log the deletion in the operations_log table
-    const { error: logError } = await supabase
-      .from('operations_log')
-      .insert({
-        operation_type: 'withdrawal_deletion',
-        entity_id: withdrawalId,
-        performed_by: userId,
-        details: JSON.stringify({ withdrawal_id: withdrawalId, deleted_at: new Date().toISOString() })
-      });
+    // We're not logging to operations_log as it doesn't exist in the schema
+    // Just log to console instead
+    console.log(`Successfully deleted withdrawal with ID: ${withdrawalId} by user ${userId || 'unknown'}`);
     
-    if (logError) {
-      console.error("Error logging withdrawal deletion:", logError);
-      // We continue even if logging fails - the main operation succeeded
-    }
-    
-    console.log(`Successfully deleted withdrawal with ID: ${withdrawalId}`);
     return true;
   } catch (error) {
     console.error("Complete error during withdrawal deletion:", error);
@@ -85,33 +75,28 @@ export const handleTransferDeletion = async (transferId: string, userId: string 
   console.log(`Attempting to delete transfer with ID: ${transferId}`);
   
   try {
+    // Convert string ID to number for database operation
+    const numericId = parseInt(transferId, 10);
+    
+    if (isNaN(numericId)) {
+      throw new Error("Invalid transfer ID format");
+    }
+    
     // 1. First, delete the transfer record
     const { error: deleteError } = await supabase
       .from('transfers')
       .delete()
-      .eq('id', transferId);
+      .eq('id', numericId);
     
     if (deleteError) {
       console.error("Error deleting transfer:", deleteError);
       throw new Error(`Erreur lors de la suppression: ${deleteError.message}`);
     }
     
-    // 2. Log the deletion in the operations_log table
-    const { error: logError } = await supabase
-      .from('operations_log')
-      .insert({
-        operation_type: 'transfer_deletion',
-        entity_id: transferId,
-        performed_by: userId,
-        details: JSON.stringify({ transfer_id: transferId, deleted_at: new Date().toISOString() })
-      });
+    // We're not logging to operations_log as it doesn't exist in the schema
+    // Just log to console instead
+    console.log(`Successfully deleted transfer with ID: ${transferId} by user ${userId || 'unknown'}`);
     
-    if (logError) {
-      console.error("Error logging transfer deletion:", logError);
-      // We continue even if logging fails - the main operation succeeded
-    }
-    
-    console.log(`Successfully deleted transfer with ID: ${transferId}`);
     return true;
   } catch (error) {
     console.error("Complete error during transfer deletion:", error);

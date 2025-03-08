@@ -17,7 +17,7 @@ export const useDeleteOperation = (
     return operationToDelete;
   };
 
-  const confirmDeleteOperation = async (operationToDelete: Operation | undefined): Promise<boolean | void> => {
+  const confirmDeleteOperation = async (operationToDelete: Operation | undefined): Promise<boolean> => {
     if (!operationToDelete) return false;
     
     try {
@@ -28,23 +28,29 @@ export const useDeleteOperation = (
       console.log(`Début de la suppression de l'opération: ${operationToDelete.type} avec l'ID: ${operationToDelete.id}`);
       console.log("Type de l'ID:", typeof operationToDelete.id);
       
+      let success = false;
+      
       switch (operationToDelete.type) {
         case "deposit":
-          await handleDepositDeletion(operationToDelete.id, userId);
+          success = await handleDepositDeletion(operationToDelete.id, userId);
           break;
           
         case "withdrawal":
-          await handleWithdrawalDeletion(operationToDelete.id, userId);
+          success = await handleWithdrawalDeletion(operationToDelete.id, userId);
           break;
           
         case "transfer":
-          await handleTransferDeletion(operationToDelete.id, userId);
+          success = await handleTransferDeletion(operationToDelete.id, userId);
           break;
       }
       
-      toast.success("Opération supprimée avec succès");
-      await fetchAllOperations();
-      return true;
+      if (success) {
+        toast.success("Opération supprimée avec succès");
+        await fetchAllOperations();
+        return true;
+      } else {
+        throw new Error("Échec de la suppression de l'opération");
+      }
     } catch (error: any) {
       console.error("Erreur lors de la suppression de l'opération:", error);
       toast.error("Erreur lors de la suppression de l'opération", {
