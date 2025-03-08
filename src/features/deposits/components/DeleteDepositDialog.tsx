@@ -24,10 +24,14 @@ export const DeleteDepositDialog = ({
   const handleConfirm = async () => {
     setIsDeleting(true);
     try {
-      await onConfirm();
-      // Modal will be closed by parent component after successful deletion
+      const success = await onConfirm();
+      // Only close if successful
+      if (success) {
+        onOpenChange(false);
+      }
     } catch (error) {
       console.error("Error during deletion:", error);
+    } finally {
       setIsDeleting(false);
     }
   };

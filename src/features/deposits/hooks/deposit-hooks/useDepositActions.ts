@@ -35,7 +35,7 @@ export const useDepositActions = ({
     setShowDeleteDialog(true);
   };
 
-  const confirmDelete = async () => {
+  const confirmDelete = async (): Promise<boolean> => {
     if (!selectedDeposit) {
       toast.error("Aucun versement sélectionné");
       return false;
@@ -51,9 +51,6 @@ export const useDepositActions = ({
         toast.success("Versement supprimé avec succès", {
           description: `Le versement de ${selectedDeposit.amount} TND a été supprimé.`
         });
-        // Close dialog after successful deletion
-        setIsDeleteDialogOpen(false);
-        setShowDeleteDialog(false);
         return true;
       } else {
         console.error("La suppression a échoué mais sans erreur lancée");
