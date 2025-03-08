@@ -4,13 +4,21 @@ import { DepositsTable } from "./DepositsTable";
 import { DepositsHeader } from "./DepositsHeader";
 import { SearchBar } from "./SearchBar";
 import { DeleteDepositDialog } from "./DeleteDepositDialog";
-import { Deposit } from "../types"; // Changed to import from the same types file
+import { Deposit } from "../types"; // Using the feature's Deposit type
 import { useClients } from "@/features/clients/hooks/useClients";
 import { StandaloneDepositForm } from "./DepositForm";
 import { TransferPagination } from "@/features/transfers/components/TransferPagination";
 import { EditDepositDialog } from "./dialog/EditDepositDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ExtendedClient } from "@/features/withdrawals/components/standalone/StandaloneWithdrawalForm";
+
+// Define a type adapter function to ensure deposits have required fields
+const adaptDepositsForUI = (deposits: Deposit[]) => {
+  return deposits.map(deposit => ({
+    ...deposit,
+    description: deposit.description || deposit.notes || ""  // Ensure description is always present
+  }));
+};
 
 interface DepositsContentProps {
   deposits: Deposit[];
@@ -99,11 +107,16 @@ export const DepositsContent = ({
     dateCreation: client.date_creation || new Date().toISOString()
   }));
 
+  // Adapt deposits for UI components
+  const adaptedDeposits = adaptDepositsForUI(deposits);
+  const adaptedFilteredDeposits = adaptDepositsForUI(filteredDeposits);
+  const adaptedPaginatedDeposits = adaptDepositsForUI(paginatedDeposits);
+
   return (
     <div className="space-y-8 animate-in">
       <DepositsHeader 
-        deposits={deposits}
-        filteredDeposits={filteredDeposits}
+        deposits={adaptedDeposits}
+        filteredDeposits={adaptedFilteredDeposits}
         isLoading={isLoading}
       />
       
@@ -140,9 +153,9 @@ export const DepositsContent = ({
             <Skeleton className="h-12 w-full" />
           </div>
         ) : (
-          paginatedDeposits && paginatedDeposits.length > 0 ? (
+          adaptedPaginatedDeposits && adaptedPaginatedDeposits.length > 0 ? (
             <DepositsTable 
-              deposits={paginatedDeposits} 
+              deposits={adaptedPaginatedDeposits} 
               onEdit={handleEdit} 
               onDelete={handleDelete} 
             />

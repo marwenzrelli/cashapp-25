@@ -19,6 +19,14 @@ export const DepositDialog = ({
   onConfirm,
   refreshClientBalance
 }: DepositDialogProps) => {
+  // Create a function to transform Client to ExtendedClient
+  const getExtendedClient = () => {
+    return {
+      ...client,
+      dateCreation: client.date_creation || new Date().toISOString()
+    };
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
@@ -27,10 +35,7 @@ export const DepositDialog = ({
         </DialogHeader>
         
         <StandaloneDepositForm 
-          clients={[{
-            ...client,
-            dateCreation: client.date_creation || new Date().toISOString()
-          }]} 
+          clients={[getExtendedClient()]} 
           onConfirm={onConfirm} 
           refreshClientBalance={() => refreshClientBalance()} 
         />

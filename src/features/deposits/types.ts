@@ -6,7 +6,7 @@ export interface Deposit {
   amount: number;
   date: string;
   client_name: string;
-  description?: string;
+  description?: string;  // Make description optional but provide default in adapters
   notes?: string;
   status: string;
   created_at: string;
