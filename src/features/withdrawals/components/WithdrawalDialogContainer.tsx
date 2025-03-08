@@ -1,4 +1,3 @@
-
 import React from "react";
 import { WithdrawalFormDialog } from "./dialog/WithdrawalFormDialog";
 import { Client } from "@/features/clients/types";
@@ -17,10 +16,6 @@ interface WithdrawalDialogContainerProps {
   selectedWithdrawal: Withdrawal | null;
   fetchWithdrawals: () => Promise<void>;
   refreshClientBalance: (clientId: string) => Promise<boolean>;
-}
-
-interface ExtendedClient extends Client {
-  dateCreation: string;
 }
 
 export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps> = ({
