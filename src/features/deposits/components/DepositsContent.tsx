@@ -1,3 +1,4 @@
+
 import React from "react";
 import { DepositsTable } from "./DepositsTable";
 import { DepositsHeader } from "./DepositsHeader";
@@ -33,8 +34,8 @@ interface DepositsContentProps {
   confirmDelete: () => Promise<boolean>;
   handleEdit: (deposit: Deposit) => void;
   handleEditFormChange: (field: string, value: string) => void;
-  handleConfirmEdit: () => Promise<void | boolean>;
-  handleCreateDeposit: (deposit: Deposit) => Promise<void | boolean>;
+  handleConfirmEdit: () => Promise<boolean | void>;
+  handleCreateDeposit: (deposit: Deposit) => Promise<boolean | void>;
   isLoading?: boolean;
   totalItems?: number;
 }

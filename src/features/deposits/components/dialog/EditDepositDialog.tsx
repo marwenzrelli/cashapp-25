@@ -16,7 +16,7 @@ export interface EditDepositDialogProps {
   onOpenChange: (open: boolean) => void;
   editForm: EditFormData;
   onEditFormChange: (field: keyof EditFormData, value: string) => void;
-  onConfirm: () => Promise<void>;
+  onConfirm: () => Promise<boolean | void>;
   isLoading?: boolean;
   selectedDeposit?: any;
   clients?: Client[];
