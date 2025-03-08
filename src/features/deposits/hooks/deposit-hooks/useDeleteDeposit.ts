@@ -13,63 +13,55 @@ export const useDeleteDeposit = (
   setShowDeleteDialog: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
   const deleteDeposit = async (depositId: number): Promise<boolean> => {
+    console.log(`Calling deleteDeposit function with ID: ${depositId}`);
+    
     try {
-      console.log(`Tentative de suppression du dépôt avec l'ID: ${depositId}`);
       setIsLoading(true);
+      console.log("Setting isLoading to true");
 
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id;
+      console.log("Got user ID from session:", userId);
 
       // Use the utility function to handle deletion
       const result = await handleDepositDeletion(depositId, userId);
+      console.log("Deposit deletion result:", result);
       
       // Update UI state after successful deletion
       if (result === true) {
+        console.log("Updating deposits state after successful deletion");
         setDeposits(prevDeposits => prevDeposits.filter(deposit => deposit.id !== depositId));
-        toast.success("Dépôt supprimé avec succès");
         return true;
       } else {
         throw new Error("Échec de la suppression du dépôt");
       }
     } catch (error) {
-      console.error("Erreur complète lors de la suppression:", error);
-      toast.error("Erreur lors de la suppression du versement", {
-        description: error instanceof Error ? error.message : "Une erreur inconnue est survenue"
-      });
-      return false;
+      console.error("Error during deleteDeposit function:", error);
+      throw error; // Re-throw to be handled by caller
     } finally {
+      console.log("Setting isLoading to false");
       setIsLoading(false);
     }
   };
 
   const confirmDeleteDeposit = async (): Promise<boolean> => {
+    console.log("confirmDeleteDeposit called with depositToDelete:", depositToDelete);
+    
     if (!depositToDelete) {
+      console.error("No deposit selected for deletion");
       toast.error("Aucun versement sélectionné pour la suppression");
       return false;
     }
     
-    setIsLoading(true);
-    
     try {
-      console.log("Confirmation de la suppression du versement:", depositToDelete);
-      
-      const success = await deleteDeposit(depositToDelete.id);
-      
-      if (success) {
-        setDepositToDelete(null);
-        setShowDeleteDialog(false);
-        return true;
-      } else {
-        throw new Error("Échec de la suppression du versement");
-      }
+      console.log("Attempting to delete deposit with ID:", depositToDelete.id);
+      return await deleteDeposit(depositToDelete.id);
     } catch (error) {
-      console.error("Erreur lors de la confirmation de suppression:", error);
+      console.error("Error in confirmDeleteDeposit:", error);
       toast.error("Erreur lors de la suppression du versement", {
         description: error instanceof Error ? error.message : "Une erreur inconnue est survenue"
       });
       return false;
-    } finally {
-      setIsLoading(false);
     }
   };
 
