@@ -1,30 +1,26 @@
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Trash2 } from "lucide-react";
+import React from "react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { DeleteDepositDialogProps } from "@/features/deposits/types";
 import { useState } from "react";
-import { type DeleteDepositDialogProps } from "../types";
 
-export const DeleteDepositDialog = ({
+export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
   isOpen,
   onOpenChange,
   selectedDeposit,
-  onConfirm,
-}: DeleteDepositDialogProps) => {
+  onConfirm
+}) => {
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleConfirmDelete = async () => {
+  const handleConfirm = async () => {
     setIsDeleting(true);
     try {
-      await onConfirm();
+      const success = await onConfirm();
+      if (!success) {
+        console.error("Delete operation did not complete successfully");
+      }
+    } catch (error) {
+      console.error("Error occurred during deletion:", error);
     } finally {
       setIsDeleting(false);
     }
@@ -32,32 +28,22 @@ export const DeleteDepositDialog = ({
 
   return (
     <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="sm:max-w-md">
+      <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center gap-2">
-            <div className="rounded-lg bg-red-50 dark:bg-red-950/50 p-2 text-red-600">
-              <Trash2 className="h-5 w-5" />
-            </div>
-            Confirmer la suppression
-          </AlertDialogTitle>
-          <AlertDialogDescription className="space-y-2">
-            <p>Êtes-vous sûr de vouloir supprimer ce versement ?</p>
-            {selectedDeposit && (
-              <div className="rounded-lg border bg-muted/50 p-4 font-medium text-foreground">
-                Versement de {selectedDeposit.amount} TND
-              </div>
-            )}
-            <p className="text-destructive font-medium">Cette action est irréversible.</p>
+          <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+          <AlertDialogDescription>
+            Êtes-vous sûr de vouloir supprimer ce versement {selectedDeposit ? `de ${selectedDeposit.amount} TND pour ${selectedDeposit.client_name}` : ''}? 
+            Cette action ne peut pas être annulée.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleConfirmDelete}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
+          <AlertDialogAction 
+            onClick={handleConfirm} 
             disabled={isDeleting}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {isDeleting ? "Suppression..." : "Supprimer"}
+            {isDeleting ? "Suppression en cours..." : "Supprimer"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

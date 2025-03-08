@@ -1,165 +1,120 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-/**
- * Handles the deletion of a deposit operation
- * 
- * @param id The ID of the deposit to delete
- * @param userId The ID of the user performing the deletion
- * @returns Promise that resolves when the deletion is complete
- */
-export async function handleDepositDeletion(id: string, userId: string | undefined): Promise<void> {
-  const { data: depositData, error: depositFetchError } = await supabase
-    .from('deposits')
-    .select('*')
-    .eq('id', parseInt(id))
-    .single();
-    
-  if (depositFetchError) {
-    console.error("Erreur lors de la récupération du versement:", depositFetchError);
-    throw depositFetchError;
-  } else if (depositData) {
-    console.log("Enregistrement dans deleted_deposits du versement:", depositData);
-    
-    const { data: depositLogData, error: depositLogError } = await supabase
-      .from('deleted_deposits')
-      .insert({
-        original_id: depositData.id,
-        client_name: depositData.client_name,
-        amount: Number(depositData.amount),
-        operation_date: depositData.operation_date,
-        notes: depositData.notes || null,
-        deleted_by: userId,
-        status: depositData.status
-      })
-      .select();
-    
-    if (depositLogError) {
-      console.error("Erreur lors de l'enregistrement dans deleted_deposits:", depositLogError);
-      throw depositLogError;
-    } else {
-      console.log("Versement enregistré avec succès dans deleted_deposits:", depositLogData);
-    }
-    
-    const { error: depositError } = await supabase
+// Helper function to handle deposit deletion and logging
+export const handleDepositDeletion = async (depositId: string, userId: string | undefined): Promise<boolean> => {
+  console.log(`Attempting to delete deposit with ID: ${depositId}`);
+  
+  try {
+    // 1. First, delete the deposit record
+    const { error: deleteError } = await supabase
       .from('deposits')
       .delete()
-      .eq('id', parseInt(id));
-      
-    if (depositError) {
-      console.error("Erreur lors de la suppression du versement:", depositError);
-      throw depositError;
+      .eq('id', depositId);
+    
+    if (deleteError) {
+      console.error("Error deleting deposit:", deleteError);
+      throw new Error(`Erreur lors de la suppression: ${deleteError.message}`);
     }
     
-    console.log("Versement supprimé avec succès");
-  }
-}
-
-/**
- * Handles the deletion of a withdrawal operation
- * 
- * @param id The ID of the withdrawal to delete
- * @param userId The ID of the user performing the deletion
- * @returns Promise that resolves when the deletion is complete
- */
-export async function handleWithdrawalDeletion(id: string, userId: string | undefined): Promise<void> {
-  const { data: withdrawalData, error: withdrawalFetchError } = await supabase
-    .from('withdrawals')
-    .select('*')
-    .eq('id', parseInt(id))
-    .single();
-    
-  if (withdrawalFetchError) {
-    console.error("Erreur lors de la récupération du retrait:", withdrawalFetchError);
-    throw withdrawalFetchError;
-  } else if (withdrawalData) {
-    console.log("Enregistrement dans deleted_withdrawals du retrait:", withdrawalData);
-    
-    const { data: withdrawalLogData, error: withdrawalLogError } = await supabase
-      .from('deleted_withdrawals')
+    // 2. Log the deletion in the operations_log table
+    const { error: logError } = await supabase
+      .from('operations_log')
       .insert({
-        original_id: withdrawalData.id,
-        client_name: withdrawalData.client_name,
-        amount: Number(withdrawalData.amount),
-        operation_date: withdrawalData.operation_date,
-        notes: withdrawalData.notes || null,
-        deleted_by: userId,
-        status: withdrawalData.status
-      })
-      .select();
+        operation_type: 'deposit_deletion',
+        entity_id: depositId,
+        performed_by: userId,
+        details: JSON.stringify({ deposit_id: depositId, deleted_at: new Date().toISOString() })
+      });
     
-    if (withdrawalLogError) {
-      console.error("Erreur lors de l'enregistrement dans deleted_withdrawals:", withdrawalLogError);
-      throw withdrawalLogError;
-    } else {
-      console.log("Retrait enregistré avec succès dans deleted_withdrawals:", withdrawalLogData);
+    if (logError) {
+      console.error("Error logging deposit deletion:", logError);
+      // We continue even if logging fails - the main operation succeeded
     }
     
-    const { error: withdrawalError } = await supabase
+    console.log(`Successfully deleted deposit with ID: ${depositId}`);
+    return true;
+  } catch (error) {
+    console.error("Complete error during deposit deletion:", error);
+    throw error; // Re-throw the error to be handled by the caller
+  }
+};
+
+// Helper function to handle withdrawal deletion and logging
+export const handleWithdrawalDeletion = async (withdrawalId: string, userId: string | undefined): Promise<boolean> => {
+  console.log(`Attempting to delete withdrawal with ID: ${withdrawalId}`);
+  
+  try {
+    // 1. First, delete the withdrawal record
+    const { error: deleteError } = await supabase
       .from('withdrawals')
       .delete()
-      .eq('id', parseInt(id));
-      
-    if (withdrawalError) {
-      console.error("Erreur lors de la suppression du retrait:", withdrawalError);
-      throw withdrawalError;
+      .eq('id', withdrawalId);
+    
+    if (deleteError) {
+      console.error("Error deleting withdrawal:", deleteError);
+      throw new Error(`Erreur lors de la suppression: ${deleteError.message}`);
     }
     
-    console.log("Retrait supprimé avec succès");
-  }
-}
-
-/**
- * Handles the deletion of a transfer operation
- * 
- * @param id The ID of the transfer to delete
- * @param userId The ID of the user performing the deletion
- * @returns Promise that resolves when the deletion is complete
- */
-export async function handleTransferDeletion(id: string, userId: string | undefined): Promise<void> {
-  const { data: transferData, error: transferFetchError } = await supabase
-    .from('transfers')
-    .select('*')
-    .eq('id', parseInt(id))
-    .single();
-    
-  if (transferFetchError) {
-    console.error("Erreur lors de la récupération du virement:", transferFetchError);
-    throw transferFetchError;
-  } else if (transferData) {
-    console.log("Enregistrement dans deleted_transfers du virement:", transferData);
-    
-    const { data: transferLogData, error: transferLogError } = await supabase
-      .from('deleted_transfers')
+    // 2. Log the deletion in the operations_log table
+    const { error: logError } = await supabase
+      .from('operations_log')
       .insert({
-        original_id: transferData.id,
-        from_client: transferData.from_client,
-        to_client: transferData.to_client,
-        amount: Number(transferData.amount),
-        operation_date: transferData.operation_date,
-        reason: transferData.reason,
-        deleted_by: userId,
-        status: transferData.status
-      })
-      .select();
+        operation_type: 'withdrawal_deletion',
+        entity_id: withdrawalId,
+        performed_by: userId,
+        details: JSON.stringify({ withdrawal_id: withdrawalId, deleted_at: new Date().toISOString() })
+      });
     
-    if (transferLogError) {
-      console.error("Erreur lors de l'enregistrement dans deleted_transfers:", transferLogError);
-      throw transferLogError;
-    } else {
-      console.log("Virement enregistré avec succès dans deleted_transfers:", transferLogData);
+    if (logError) {
+      console.error("Error logging withdrawal deletion:", logError);
+      // We continue even if logging fails - the main operation succeeded
     }
     
-    const { error: transferError } = await supabase
+    console.log(`Successfully deleted withdrawal with ID: ${withdrawalId}`);
+    return true;
+  } catch (error) {
+    console.error("Complete error during withdrawal deletion:", error);
+    throw error; // Re-throw the error to be handled by the caller
+  }
+};
+
+// Helper function to handle transfer deletion and logging
+export const handleTransferDeletion = async (transferId: string, userId: string | undefined): Promise<boolean> => {
+  console.log(`Attempting to delete transfer with ID: ${transferId}`);
+  
+  try {
+    // 1. First, delete the transfer record
+    const { error: deleteError } = await supabase
       .from('transfers')
       .delete()
-      .eq('id', parseInt(id));
-      
-    if (transferError) {
-      console.error("Erreur lors de la suppression du virement:", transferError);
-      throw transferError;
+      .eq('id', transferId);
+    
+    if (deleteError) {
+      console.error("Error deleting transfer:", deleteError);
+      throw new Error(`Erreur lors de la suppression: ${deleteError.message}`);
     }
     
-    console.log("Virement supprimé avec succès");
+    // 2. Log the deletion in the operations_log table
+    const { error: logError } = await supabase
+      .from('operations_log')
+      .insert({
+        operation_type: 'transfer_deletion',
+        entity_id: transferId,
+        performed_by: userId,
+        details: JSON.stringify({ transfer_id: transferId, deleted_at: new Date().toISOString() })
+      });
+    
+    if (logError) {
+      console.error("Error logging transfer deletion:", logError);
+      // We continue even if logging fails - the main operation succeeded
+    }
+    
+    console.log(`Successfully deleted transfer with ID: ${transferId}`);
+    return true;
+  } catch (error) {
+    console.error("Complete error during transfer deletion:", error);
+    throw error; // Re-throw the error to be handled by the caller
   }
-}
+};

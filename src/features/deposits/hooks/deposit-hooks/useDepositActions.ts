@@ -35,7 +35,7 @@ export const useDepositActions = ({
     setShowDeleteDialog(true);
   };
 
-  const confirmDelete = async (): Promise<boolean | void> => {
+  const confirmDelete = async (): Promise<boolean> => {
     if (!selectedDeposit) {
       toast.error("Aucun versement sélectionné");
       return false;
@@ -47,7 +47,7 @@ export const useDepositActions = ({
     try {
       const success = await confirmDeleteDeposit();
       
-      if (success) {
+      if (success === true) {
         setIsDeleteDialogOpen(false);
         toast.success("Versement supprimé avec succès", {
           description: `Le versement de ${selectedDeposit.amount} TND a été supprimé.`
@@ -76,7 +76,7 @@ export const useDepositActions = ({
     }
   };
 
-  const handleConfirmEdit = async (): Promise<boolean | void> => {
+  const handleConfirmEdit = async (): Promise<boolean> => {
     if (!selectedDeposit) {
       console.error("Aucun versement sélectionné pour la modification");
       return false;
@@ -99,23 +99,36 @@ export const useDepositActions = ({
 
     console.log("Final updates being sent:", updates);
 
-    const success = await updateDeposit(selectedDeposit.id, updates);
-    if (success) {
-      setIsEditDialogOpen(false);
-      toast.success("Versement mis à jour", {
-        description: `Le versement a été modifié avec succès.`
-      });
-      return true;
+    try {
+      const success = await updateDeposit(selectedDeposit.id, updates);
+      if (success === true) {
+        setIsEditDialogOpen(false);
+        toast.success("Versement mis à jour", {
+          description: `Le versement a été modifié avec succès.`
+        });
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Error during deposit update:", error);
+      toast.error("Échec de la mise à jour du versement");
+      return false;
     }
-    return false;
   };
 
-  const handleCreateDeposit = async (deposit: Deposit): Promise<boolean | void> => {
-    const success = await createDeposit(deposit);
-    if (success) {
-      setIsDeleteDialogOpen(false);
+  const handleCreateDeposit = async (deposit: Deposit): Promise<boolean> => {
+    try {
+      const success = await createDeposit(deposit);
+      if (success === true) {
+        setIsDeleteDialogOpen(false);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Error creating deposit:", error);
+      toast.error("Échec de la création du versement");
+      return false;
     }
-    return success;
   };
 
   return {

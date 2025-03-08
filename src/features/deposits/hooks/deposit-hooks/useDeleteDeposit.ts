@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Deposit } from "@/components/deposits/types";
+import { Deposit } from "@/features/deposits/types";
 import { handleDepositDeletion } from "@/features/operations/utils/deletionUtils";
 
 export const useDeleteDeposit = (
@@ -12,7 +12,7 @@ export const useDeleteDeposit = (
   setDepositToDelete: React.Dispatch<React.SetStateAction<Deposit | null>>,
   setShowDeleteDialog: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
-  const deleteDeposit = async (depositId: number): Promise<boolean | void> => {
+  const deleteDeposit = async (depositId: number): Promise<boolean> => {
     try {
       console.log(`Tentative de suppression du dépôt avec l'ID: ${depositId}`);
       setIsLoading(true);
@@ -39,7 +39,7 @@ export const useDeleteDeposit = (
     }
   };
 
-  const confirmDeleteDeposit = async (): Promise<boolean | void> => {
+  const confirmDeleteDeposit = async (): Promise<boolean> => {
     if (!depositToDelete) {
       toast.error("Aucun versement sélectionné pour la suppression");
       return false;
