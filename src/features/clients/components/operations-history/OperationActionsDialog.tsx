@@ -69,8 +69,10 @@ export const OperationActionsDialog = ({
         return false;
       }
       
+      console.log("Préparation de l'enregistrement dans deleted_deposits:", depositData);
+      
       // Log the deposit in deleted_deposits
-      const { error: logError } = await supabase
+      const { data: logData, error: logError } = await supabase
         .from('deleted_deposits')
         .insert({
           original_id: depositData.id,
@@ -80,13 +82,16 @@ export const OperationActionsDialog = ({
           notes: depositData.notes || null,
           deleted_by: userId,
           status: depositData.status
-        });
+        })
+        .select();
       
       if (logError) {
         console.error("Erreur lors de l'enregistrement dans deleted_deposits:", logError);
         toast.error("Échec de la suppression", { description: "Erreur lors de la journalisation" });
         return false;
       }
+      
+      console.log("Enregistrement dans deleted_deposits réussi:", logData);
       
       // Delete the deposit
       const { error: deleteError } = await supabase
@@ -100,6 +105,7 @@ export const OperationActionsDialog = ({
         return false;
       }
       
+      console.log("Versement supprimé avec succès");
       return true;
     } catch (error) {
       console.error("Erreur lors de la suppression du versement:", error);
@@ -141,10 +147,8 @@ export const OperationActionsDialog = ({
             toast.error("Échec de la suppression", { description: "Une erreur s'est produite lors de la suppression du versement" });
           }
         } else {
-          // For other operation types that don't have deletion implemented yet
-          toast.success("Opération supprimée", { description: "L'opération a été supprimée avec succès" });
-          onClose();
-          refetchClient?.();
+          // Pour les autres types d'opérations qui n'ont pas encore de suppression implémentée
+          toast.error("Non implémenté", { description: `La suppression des opérations de type ${operation.type} n'est pas encore supportée` });
         }
         return;
       }
@@ -164,7 +168,7 @@ export const OperationActionsDialog = ({
         success = await handleWithdrawal({
           ...operationData,
           client_id: clientId
-        });
+        }, true, operation.id);
       } else if (operation.type === "deposit") {
         success = await handleDeposit({
           ...operationData,
@@ -173,7 +177,7 @@ export const OperationActionsDialog = ({
           status: "completed",
           created_at: new Date().toISOString(),
           created_by: null
-        });
+        }, true, operation.id);
       }
       
       if (success) {
@@ -199,8 +203,8 @@ export const OperationActionsDialog = ({
         <DialogHeader>
           <DialogTitle>
             {mode === 'edit' 
-              ? `Modifier ${operation.type === 'withdrawal' ? 'le retrait' : 'le versement'}`
-              : `Supprimer ${operation.type === 'withdrawal' ? 'le retrait' : 'le versement'}`}
+              ? `Modifier ${operation.type === 'withdrawal' ? 'le retrait' : operation.type === 'deposit' ? 'le versement' : 'l\'opération'}`
+              : `Supprimer ${operation.type === 'withdrawal' ? 'le retrait' : operation.type === 'deposit' ? 'le versement' : 'l\'opération'}`}
           </DialogTitle>
         </DialogHeader>
         

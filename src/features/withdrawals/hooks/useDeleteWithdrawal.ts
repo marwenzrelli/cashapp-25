@@ -73,15 +73,23 @@ export const useDeleteWithdrawal = (fetchWithdrawals: () => Promise<void>) => {
         status: withdrawalData.status
       };
       
+      console.log("Préparation de l'enregistrement dans deleted_withdrawals:", logEntry);
+      
       // Insérer dans la table des retraits supprimés
-      const { error: logError } = await supabase
+      const { data: logData, error: logError } = await supabase
         .from('deleted_withdrawals')
-        .insert(logEntry);
+        .insert(logEntry)
+        .select();
         
       if (logError) {
         console.error("Erreur lors de l'enregistrement dans deleted_withdrawals:", logError);
+        toast.error("Erreur lors de l'archivage du retrait", {
+          description: logError.message
+        });
         throw logError;
-      } 
+      }
+      
+      console.log("Enregistrement dans deleted_withdrawals réussi:", logData);
       
       // Maintenant supprimer le retrait original
       const { error: deleteError } = await supabase
@@ -97,6 +105,7 @@ export const useDeleteWithdrawal = (fetchWithdrawals: () => Promise<void>) => {
         throw deleteError;
       }
       
+      console.log("Retrait supprimé avec succès");
       toast.success("Retrait supprimé avec succès");
       
       await fetchWithdrawals();
