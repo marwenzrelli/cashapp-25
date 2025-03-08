@@ -33,7 +33,8 @@ export const DeleteDepositDialog = ({
       
       if (success) {
         console.log("Suppression réussie, fermeture de la boîte de dialogue");
-        onOpenChange(false); // Ferme la boîte de dialogue explicitement après succès
+        // Force close the dialog
+        onOpenChange(false);
       } else {
         console.error("La suppression a échoué");
       }
@@ -45,15 +46,16 @@ export const DeleteDepositDialog = ({
   };
 
   return (
-    <AlertDialog open={isOpen} onOpenChange={(open) => {
-      // Empêche la fermeture pendant que nous supprimons
-      if (isDeleting) {
-        return;
-      }
-      
-      // Permet de changer l'état uniquement si nous ne sommes pas en train de supprimer
-      onOpenChange(open);
-    }}>
+    <AlertDialog 
+      open={isOpen} 
+      onOpenChange={(open) => {
+        if (isDeleting) {
+          // Don't allow closing during deletion process
+          return;
+        }
+        onOpenChange(open);
+      }}
+    >
       <AlertDialogContent className="sm:max-w-md">
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">

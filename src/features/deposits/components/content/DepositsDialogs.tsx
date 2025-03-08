@@ -3,6 +3,7 @@ import { Client } from "@/features/clients/types";
 import { Deposit, EditFormData } from "@/features/deposits/types"; // Use consistent type
 import { DeleteDepositDialog } from "@/features/deposits/components/DeleteDepositDialog";
 import { EditDepositDialog } from "@/features/deposits/components/dialog/EditDepositDialog";
+import { useState } from "react";
 
 interface DepositsDialogsProps {
   isDeleteDialogOpen: boolean;
@@ -29,18 +30,35 @@ export const DepositsDialogs = ({
   confirmDelete,
   clients
 }: DepositsDialogsProps) => {
+  const [isProcessingDelete, setIsProcessingDelete] = useState(false);
+
   // Fonction de confirmation qui s'assure de fermer la boîte de dialogue après une suppression réussie
   const handleConfirmDelete = async () => {
     console.log("DepositsDialogs: Démarrage de la confirmation de suppression");
-    const success = await confirmDelete();
-    console.log("DepositsDialogs: Résultat de la suppression:", success);
     
-    if (success) {
-      console.log("DepositsDialogs: Fermeture de la boîte de dialogue après suppression réussie");
-      setIsDeleteDialogOpen(false);
+    if (isProcessingDelete) {
+      console.log("DepositsDialogs: Déjà en cours de traitement, ignoré");
+      return false;
     }
     
-    return success;
+    setIsProcessingDelete(true);
+    
+    try {
+      const success = await confirmDelete();
+      console.log("DepositsDialogs: Résultat de la suppression:", success);
+      
+      if (success) {
+        console.log("DepositsDialogs: Fermeture de la boîte de dialogue après suppression réussie");
+        setIsDeleteDialogOpen(false);
+      }
+      
+      return success;
+    } catch (error) {
+      console.error("DepositsDialogs: Erreur lors de la suppression", error);
+      return false;
+    } finally {
+      setIsProcessingDelete(false);
+    }
   };
 
   return (

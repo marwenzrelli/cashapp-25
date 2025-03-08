@@ -29,7 +29,8 @@ export const useDeleteDeposit = (
       const success = await handleDepositDeletion(depositId, userId);
       
       if (!success) {
-        throw new Error("La suppression du versement a échoué");
+        console.error("La suppression du versement a échoué dans deleteDeposit");
+        return false;
       }
 
       // Mettre à jour l'état local seulement si la suppression a réussi
