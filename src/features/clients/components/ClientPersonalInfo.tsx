@@ -97,6 +97,11 @@ export const ClientPersonalInfo = ({
               <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
               {isRefreshing ? 'Actualisation...' : 'Actualiser le solde'}
             </Button>
+            
+            <ClientActionButtons
+              onDepositClick={() => setDepositDialogOpen(true)}
+              onWithdrawalClick={() => setWithdrawalDialogOpen(true)}
+            />
           </div>
         </div>
       </CardHeader>
@@ -110,27 +115,15 @@ export const ClientPersonalInfo = ({
               realTimeBalance={clientBalance}
             />
           </div>
-          
-          {/* QR code and action buttons container - new layout for mobile */}
-          <div className="flex flex-col items-center gap-4">
-            {client && client.id && (
-              <div className="w-full md:flex md:justify-end" ref={qrCodeRef}>
-                <ClientQRCode 
-                  clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} 
-                  clientName={`${client.prenom} ${client.nom}`} 
-                  size={256} 
-                />
-              </div>
-            )}
-            
-            {/* Action buttons now placed below QR code on mobile */}
-            <div className="w-full">
-              <ClientActionButtons
-                onDepositClick={() => setDepositDialogOpen(true)}
-                onWithdrawalClick={() => setWithdrawalDialogOpen(true)}
+          {client && client.id && (
+            <div className="flex justify-center md:justify-end" ref={qrCodeRef}>
+              <ClientQRCode 
+                clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} 
+                clientName={`${client.prenom} ${client.nom}`} 
+                size={256} 
               />
             </div>
-          </div>
+          )}
         </div>
       </CardContent>
       
