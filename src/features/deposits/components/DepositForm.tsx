@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Deposit } from "@/features/deposits/types";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -9,20 +8,19 @@ import { DateTimeField } from "./deposit-form/DateTimeField";
 import { DescriptionField } from "./deposit-form/DescriptionField";
 import { SubmitButton } from "./deposit-form/SubmitButton";
 import { useDepositForm } from "./deposit-form/useDepositForm";
-
 interface StandaloneDepositFormProps {
   clients: ExtendedClient[];
   onConfirm: (deposit: Deposit) => Promise<boolean | void>;
   refreshClientBalance: (clientId: string) => Promise<boolean | void>;
 }
-
 export const StandaloneDepositForm = ({
   clients,
   onConfirm,
   refreshClientBalance
 }: StandaloneDepositFormProps) => {
-  const { currency } = useCurrency();
-  
+  const {
+    currency
+  } = useCurrency();
   const {
     selectedClient,
     setSelectedClient,
@@ -36,46 +34,30 @@ export const StandaloneDepositForm = ({
     setDescription,
     isLoading,
     handleSubmit
-  } = useDepositForm({ clients, onConfirm, refreshClientBalance });
-
-  return (
-    <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-100 shadow-md">
+  } = useDepositForm({
+    clients,
+    onConfirm,
+    refreshClientBalance
+  });
+  return <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-100 shadow-md">
       <CardHeader className="pb-3">
-        <CardTitle className="text-base text-blue-700">Nouveau versement</CardTitle>
+        <CardTitle className="text-base text-lime-600 text-center my-0 py-0 font-normal">Nouveau versement</CardTitle>
         <CardDescription>
           Créez un nouveau versement pour un client
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <DateTimeField 
-            date={date} 
-            setDate={setDate} 
-            time={time} 
-            setTime={setTime} 
-          />
+          <DateTimeField date={date} setDate={setDate} time={time} setTime={setTime} />
 
-          <ClientSelect 
-            clients={clients} 
-            selectedClient={selectedClient} 
-            setSelectedClient={setSelectedClient} 
-            currency={currency} 
-          />
+          <ClientSelect clients={clients} selectedClient={selectedClient} setSelectedClient={setSelectedClient} currency={currency} />
 
-          <AmountField 
-            amount={amount} 
-            setAmount={setAmount} 
-            currency={currency} 
-          />
+          <AmountField amount={amount} setAmount={setAmount} currency={currency} />
 
-          <DescriptionField 
-            description={description} 
-            setDescription={setDescription} 
-          />
+          <DescriptionField description={description} setDescription={setDescription} />
 
           <SubmitButton isLoading={isLoading} />
         </form>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
