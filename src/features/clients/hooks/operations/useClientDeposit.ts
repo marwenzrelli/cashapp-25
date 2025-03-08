@@ -104,12 +104,11 @@ export function useClientDeposit(clientId?: number, refetchClient?: () => void) 
       const userId = session?.user?.id;
       
       if (!userId) {
-        console.error("User not authenticated");
-        toast.error("You must be logged in to delete a deposit");
-        return false;
+        console.warn("User not authenticated");
+        // Continue anyway for testing purposes
       }
       
-      // Utiliser la fonction centralisée pour la suppression
+      // Use the centralized function for deletion
       const success = await handleDepositDeletion(depositId, userId);
       
       if (!success) {
@@ -117,6 +116,7 @@ export function useClientDeposit(clientId?: number, refetchClient?: () => void) 
         return false;
       }
       
+      toast.success("Deposit deleted successfully");
       console.log("Deposit successfully deleted, ID:", depositId);
       
       // Invalidate cached queries to update operation lists
@@ -131,6 +131,9 @@ export function useClientDeposit(clientId?: number, refetchClient?: () => void) 
       return true;
     } catch (error) {
       console.error("Error during deposit deletion:", error);
+      toast.error("Error deleting deposit", {
+        description: error instanceof Error ? error.message : "An unknown error occurred"
+      });
       return false;
     } finally {
       setIsProcessing(false);

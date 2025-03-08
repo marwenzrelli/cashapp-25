@@ -21,6 +21,10 @@ export const useDeleteDeposit = (
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id;
 
+      if (!userId) {
+        console.warn("Aucun utilisateur authentifié trouvé lors de la suppression du dépôt");
+      }
+
       // Utiliser la fonction centralisée pour la suppression
       const success = await handleDepositDeletion(depositId, userId);
       
@@ -32,6 +36,7 @@ export const useDeleteDeposit = (
       setDeposits(prevDeposits => prevDeposits.filter(deposit => deposit.id !== depositId));
       
       console.log("Dépôt supprimé avec succès, ID:", depositId);
+      toast.success("Versement supprimé avec succès");
       return true;
     } catch (error) {
       console.error("Erreur complète lors de la suppression:", error);

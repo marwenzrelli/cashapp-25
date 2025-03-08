@@ -42,7 +42,13 @@ export const DeleteDepositDialog = ({
   };
 
   return (
-    <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
+    <AlertDialog open={isOpen} onOpenChange={(open) => {
+      // Prevent closing the dialog during deletion
+      if (isDeleting && !open) return;
+      
+      console.log("Dialog open state changed to:", open);
+      if (!open) onOpenChange(false);
+    }}>
       <AlertDialogContent className="sm:max-w-md">
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
@@ -66,7 +72,10 @@ export const DeleteDepositDialog = ({
             Annuler
           </AlertDialogCancel>
           <AlertDialogAction
-            onClick={handleConfirm}
+            onClick={(e) => {
+              e.preventDefault(); // Prevent the dialog from closing automatically
+              handleConfirm();
+            }}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
             disabled={isDeleting}
           >
