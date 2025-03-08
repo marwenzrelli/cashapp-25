@@ -29,9 +29,11 @@ export const DeleteDepositDialog = ({
       console.log("Démarrage de la suppression du versement dans DeleteDepositDialog");
       const success = await onConfirm();
       
+      console.log("Résultat de la suppression:", success);
+      
       if (success) {
         console.log("Suppression réussie, fermeture de la boîte de dialogue");
-        onOpenChange(false);
+        onOpenChange(false); // Ferme la boîte de dialogue explicitement après succès
       } else {
         console.error("La suppression a échoué");
       }
@@ -44,12 +46,13 @@ export const DeleteDepositDialog = ({
 
   return (
     <AlertDialog open={isOpen} onOpenChange={(open) => {
-      // Only allow state changes if we're not in the middle of deleting
+      // Empêche la fermeture pendant que nous supprimons
       if (isDeleting) {
-        if (!open) return; // Prevent closing during deletion
-      } else {
-        onOpenChange(open);
+        return;
       }
+      
+      // Permet de changer l'état uniquement si nous ne sommes pas en train de supprimer
+      onOpenChange(open);
     }}>
       <AlertDialogContent className="sm:max-w-md">
         <AlertDialogHeader>

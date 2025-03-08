@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 /**
@@ -23,7 +22,7 @@ export async function handleDepositDeletion(id: string | number, userId: string 
       
     if (depositFetchError) {
       console.error("Erreur lors de la récupération du versement:", depositFetchError);
-      throw depositFetchError;
+      return false;
     }
     
     if (!depositData) {
@@ -63,7 +62,7 @@ export async function handleDepositDeletion(id: string | number, userId: string 
       
     if (deleteError) {
       console.error("Erreur lors de la suppression du versement:", deleteError);
-      throw deleteError;
+      return false;
     }
     
     console.log(`Versement ID: ${numericId} supprimé avec succès`);

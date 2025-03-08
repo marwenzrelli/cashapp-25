@@ -66,7 +66,8 @@ export const useDeleteDeposit = (
         setShowDeleteDialog(false);
         return true;
       } else {
-        throw new Error("Échec de la suppression du versement");
+        console.error("Échec de la suppression du versement");
+        return false;
       }
     } catch (error) {
       console.error("Erreur lors de la confirmation de suppression:", error);

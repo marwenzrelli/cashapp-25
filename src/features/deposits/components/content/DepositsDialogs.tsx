@@ -29,6 +29,20 @@ export const DepositsDialogs = ({
   confirmDelete,
   clients
 }: DepositsDialogsProps) => {
+  // Fonction de confirmation qui s'assure de fermer la boîte de dialogue après une suppression réussie
+  const handleConfirmDelete = async () => {
+    console.log("DepositsDialogs: Démarrage de la confirmation de suppression");
+    const success = await confirmDelete();
+    console.log("DepositsDialogs: Résultat de la suppression:", success);
+    
+    if (success) {
+      console.log("DepositsDialogs: Fermeture de la boîte de dialogue après suppression réussie");
+      setIsDeleteDialogOpen(false);
+    }
+    
+    return success;
+  };
+
   return (
     <>
       {/* Delete Dialog */}
@@ -36,7 +50,7 @@ export const DepositsDialogs = ({
         isOpen={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
         selectedDeposit={selectedDeposit}
-        onConfirm={confirmDelete}
+        onConfirm={handleConfirmDelete}
       />
       
       {/* Edit Dialog */}
