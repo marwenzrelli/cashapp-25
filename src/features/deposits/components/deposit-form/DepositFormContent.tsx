@@ -13,7 +13,7 @@ import { SubmitButton } from "./SubmitButton";
 interface DepositFormContentProps {
   clients: ExtendedClient[];
   onConfirm: (deposit: Deposit) => Promise<boolean | void>;
-  refreshClientBalance: (clientId: string) => Promise<boolean>;
+  refreshClientBalance: () => Promise<boolean>;
 }
 
 export const DepositFormContent = ({
@@ -61,9 +61,9 @@ export const DepositFormContent = ({
       const result = await onConfirm(newDeposit as Deposit);
       
       // Si le dépôt a réussi, on rafraîchit le solde du client
-      if (result !== false && selectedClient) {
-        console.log("Rafraîchissement du solde après dépôt pour le client:", selectedClient);
-        await refreshClientBalance(selectedClient);
+      if (result !== false) {
+        console.log("Rafraîchissement du solde après dépôt");
+        await refreshClientBalance();
       }
 
       // Réinitialiser le formulaire

@@ -37,7 +37,7 @@ export const DepositDialog = ({
         <StandaloneDepositForm 
           clients={[getExtendedClient()]} 
           onConfirm={onConfirm} 
-          refreshClientBalance={() => refreshClientBalance()} 
+          refreshClientBalance={refreshClientBalance} 
         />
       </DialogContent>
     </Dialog>

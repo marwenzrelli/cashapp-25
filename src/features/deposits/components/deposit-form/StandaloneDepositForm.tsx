@@ -8,7 +8,7 @@ import { DepositFormContent } from "./DepositFormContent";
 interface StandaloneDepositFormProps {
   clients: ExtendedClient[];
   onConfirm: (deposit: Deposit) => Promise<boolean | void>;
-  refreshClientBalance: (clientId: string) => Promise<boolean>;
+  refreshClientBalance: () => Promise<boolean>;
 }
 
 export const StandaloneDepositForm = ({

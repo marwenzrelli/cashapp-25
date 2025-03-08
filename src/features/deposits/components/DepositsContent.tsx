@@ -86,6 +86,15 @@ export const DepositsContent = ({
     }
   };
 
+  // Create an adapter for the DepositsContentHeader component
+  const handleRefreshBalanceForHeader = () => {
+    // If we have clients, refresh the balance of the first one as default behavior
+    if (clients && clients.length > 0) {
+      return handleRefreshClientBalance(clients[0].id.toString());
+    }
+    return Promise.resolve(false);
+  };
+
   const onConfirmDelete = async () => {
     try {
       const success = await confirmDelete();
