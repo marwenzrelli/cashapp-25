@@ -16,7 +16,7 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
   // Add effect to log when the component receives a new selected deposit
   useEffect(() => {
     if (selectedDeposit) {
-      console.log("DeleteDepositDialog received deposit:", selectedDeposit.id);
+      console.log("DeleteDepositDialog received deposit:", selectedDeposit);
     }
   }, [selectedDeposit]);
 
@@ -43,6 +43,9 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
       if (result === true) {
         // Close the dialog after successful deletion
         onOpenChange(false);
+        toast.success("Versement supprimé avec succès", {
+          description: `Le versement de ${selectedDeposit.amount} TND a été supprimé et archivé.`
+        });
       } else {
         throw new Error("La suppression n'a pas pu être effectuée");
       }

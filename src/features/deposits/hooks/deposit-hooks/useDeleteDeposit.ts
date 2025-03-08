@@ -55,8 +55,12 @@ export const useDeleteDeposit = (
     }
     
     try {
-      console.log("Attempting to delete deposit with ID:", depositToDelete.id);
-      const result = await deleteDeposit(depositToDelete.id);
+      // Make sure we're working with a valid deposit ID
+      const depositId = depositToDelete.id;
+      console.log("Attempting to delete deposit with ID:", depositId);
+      
+      const result = await deleteDeposit(depositId);
+      console.log("Delete operation completed with result:", result);
       
       // Clear the depositToDelete state after a successful deletion
       if (result) {

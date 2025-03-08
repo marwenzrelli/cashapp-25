@@ -1,4 +1,3 @@
-
 import { Deposit, EditFormData } from "@/components/deposits/types";
 import { toast } from "sonner";
 
@@ -34,10 +33,10 @@ export const useDepositActions = ({
     setDepositToDelete(deposit);
     // Small delay to ensure state is updated before dialog opens
     setTimeout(() => {
-      console.log("Opening delete dialog for deposit:", deposit.id);
+      console.log("Opening delete dialog for deposit:", deposit);
       setIsDeleteDialogOpen(true);
       setShowDeleteDialog(true);
-    }, 50); // Increased the delay to ensure state updates
+    }, 100); // Increased the delay to ensure state updates
   };
 
   const confirmDelete = async (): Promise<boolean> => {
@@ -56,9 +55,6 @@ export const useDepositActions = ({
       
       if (success === true) {
         setIsDeleteDialogOpen(false);
-        toast.success("Versement supprimé avec succès", {
-          description: `Le versement de ${selectedDeposit.amount} TND a été supprimé et archivé.`
-        });
         return true;
       } else {
         console.error("La suppression a échoué mais sans erreur lancée");
@@ -111,7 +107,7 @@ export const useDepositActions = ({
       if (result === true) {
         setIsEditDialogOpen(false);
         toast.success("Versement mis à jour", {
-          description: `Le versement a été modifié avec succès.`
+          description: `Le versement a été modifié avec succ��s.`
         });
         return true;
       }
