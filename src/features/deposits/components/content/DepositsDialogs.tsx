@@ -47,11 +47,7 @@ export const DepositsDialogs = ({
       const success = await confirmDelete();
       console.log("DepositsDialogs: Résultat de la suppression:", success);
       
-      if (success) {
-        console.log("DepositsDialogs: Fermeture de la boîte de dialogue après suppression réussie");
-        setIsDeleteDialogOpen(false);
-      }
-      
+      // La fermeture du dialog est maintenant gérée par le composant DeleteDepositDialog
       return success;
     } catch (error) {
       console.error("DepositsDialogs: Erreur lors de la suppression", error);
