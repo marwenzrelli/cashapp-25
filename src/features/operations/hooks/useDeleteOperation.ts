@@ -44,7 +44,7 @@ export const useDeleteOperation = (
           break;
       }
       
-      if (success === true) {
+      if (success) {
         toast.success("Opération supprimée avec succès");
         await fetchAllOperations();
         return true;

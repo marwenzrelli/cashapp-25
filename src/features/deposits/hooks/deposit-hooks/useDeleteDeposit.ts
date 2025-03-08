@@ -20,8 +20,8 @@ export const useDeleteDeposit = (
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id;
 
-      // Use the utility function to handle deletion and logging
-      const result = await handleDepositDeletion(depositId.toString(), userId);
+      // Use the utility function to handle deletion
+      const result = await handleDepositDeletion(depositId, userId);
       
       // Update UI state after successful deletion
       if (result === true) {
@@ -55,7 +55,7 @@ export const useDeleteDeposit = (
       
       const success = await deleteDeposit(depositToDelete.id);
       
-      if (success === true) {
+      if (success) {
         setDepositToDelete(null);
         setShowDeleteDialog(false);
         return true;

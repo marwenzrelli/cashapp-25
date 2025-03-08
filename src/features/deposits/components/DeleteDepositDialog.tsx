@@ -20,10 +20,7 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
     
     setIsDeleting(true);
     try {
-      const success = await onConfirm();
-      if (success !== true) {
-        console.error("Delete operation did not complete successfully");
-      }
+      await onConfirm();
     } catch (error) {
       console.error("Error occurred during deletion:", error);
     } finally {
