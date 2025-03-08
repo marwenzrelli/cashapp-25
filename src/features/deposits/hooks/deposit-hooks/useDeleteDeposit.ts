@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Deposit } from "@/components/deposits/types";
+import { Deposit } from "@/features/deposits/types";
 
 export const useDeleteDeposit = (
   deposits: Deposit[],
@@ -52,11 +52,13 @@ export const useDeleteDeposit = (
         if (logError) {
           console.error("Erreur lors de la création du log de suppression:", logError);
           console.error("Détails complets de l'erreur:", JSON.stringify(logError));
+          throw logError;
         } else {
           console.log("Log de suppression créé avec succès dans deleted_deposits");
         }
       } catch (logError) {
         console.error("Exception lors de la création du log:", logError);
+        throw logError;
       }
 
       const { error: deleteError } = await supabase
@@ -97,8 +99,9 @@ export const useDeleteDeposit = (
       const success = await deleteDeposit(depositToDelete.id);
       
       if (success) {
-        setDepositToDelete(null);
+        // Only close the dialog and reset state if deletion was successful
         setShowDeleteDialog(false);
+        setDepositToDelete(null);
         return true;
       } else {
         throw new Error("Échec de la suppression du versement");
