@@ -23,7 +23,7 @@ export const PublicClientOperationsHistory = ({ operations }: PublicClientOperat
       case "withdrawal":
         return "text-red-600 dark:text-red-400";
       case "transfer":
-        return "text-green-600 dark:text-green-400";
+        return "text-blue-600 dark:text-blue-400";
     }
   };
 
@@ -114,65 +114,17 @@ export const PublicClientOperationsHistory = ({ operations }: PublicClientOperat
           </Table>
         </div>
         
-        {/* Enhanced cards for mobile */}
-        <div className="md:hidden space-y-3 px-2">
+        {/* Enhanced cards for mobile - using the OperationsMobileCard component */}
+        <div className="md:hidden space-y-4 px-2">
           {filteredOperations.map((operation) => (
-            <div key={operation.id} className="bg-white dark:bg-gray-800 rounded-lg border p-3 shadow-sm">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <div className={`w-9 h-9 rounded-full flex items-center justify-center ${getTypeStyle(operation.type)}`}>
-                    {getTypeIcon(operation.type)}
-                  </div>
-                  <div>
-                    <div className="font-medium">{getTypeLabel(operation.type)}</div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        <span>{operation.formattedDate ? 
-                          operation.formattedDate.split(' ')[0] : 
-                          formatDate(operation.operation_date || operation.date)
-                        }</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        <span>{operation.formattedDate ? 
-                          operation.formattedDate.split(' ')[1] : 
-                          formatTime(operation.operation_date || operation.date)
-                        }</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className={cn("font-semibold text-right", getAmountColor(operation.type))}>
-                  {operation.type === "withdrawal" ? "-" : ""}{operation.amount.toLocaleString()} {currency}
-                </div>
-              </div>
-              
-              {operation.description && (
-                <div className="flex items-start mb-2">
-                  <FileText className="h-4 w-4 mr-2 mt-0.5 text-muted-foreground shrink-0" />
-                  <span className="flex-1 text-sm line-clamp-2">{operation.description}</span>
-                </div>
-              )}
-              
-              {operation.type === "transfer" ? (
-                <div className="flex flex-col gap-1 text-xs text-muted-foreground border-t pt-2">
-                  <div className="flex items-center">
-                    <User className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <span>De: {operation.fromClient}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <User className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <span>À: {operation.toClient}</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center text-xs text-muted-foreground border-t pt-2">
-                  <User className="h-4 w-4 mr-2 text-muted-foreground" />
-                  <span>{operation.fromClient}</span>
-                </div>
-              )}
-            </div>
+            <OperationsMobileCard 
+              key={operation.id} 
+              operation={operation}
+              formatAmount={(amount) => `${amount.toLocaleString()}`}
+              currency={currency}
+              showType={true}
+              colorClass={getAmountColor(operation.type)}
+            />
           ))}
         </div>
       </>
@@ -180,7 +132,7 @@ export const PublicClientOperationsHistory = ({ operations }: PublicClientOperat
   };
 
   return (
-    <Card>
+    <Card className="shadow-sm">
       <CardHeader>
         <CardTitle className="text-xl">Historique des opérations</CardTitle>
       </CardHeader>
@@ -204,7 +156,7 @@ export const PublicClientOperationsHistory = ({ operations }: PublicClientOperat
             </TabsTrigger>
           </TabsList>
 
-          <div className="px-0 py-2">
+          <div className="px-0 py-4">
             <TabsContent value="all" className="mt-0">
               {renderOperationsTable(operations)}
             </TabsContent>
