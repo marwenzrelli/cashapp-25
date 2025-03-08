@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Deposit } from "@/features/deposits/types";
 import { useQueryClient } from "@tanstack/react-query";
+import { handleDepositDeletion } from "@/features/operations/utils/deletionUtils";
 
 export function useClientDeposit(clientId?: number, refetchClient?: () => void) {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -108,67 +109,15 @@ export function useClientDeposit(clientId?: number, refetchClient?: () => void) 
         return false;
       }
       
-      // Convert ID to number if it's a string
-      const numericId = typeof depositId === 'string' ? parseInt(depositId, 10) : depositId;
+      // Utiliser la fonction centralisée pour la suppression
+      const success = await handleDepositDeletion(depositId, userId);
       
-      console.log(`Starting deletion of deposit with ID: ${numericId}`);
-      
-      // First, get the deposit to log it before deletion
-      const { data: depositData, error: fetchError } = await supabase
-        .from('deposits')
-        .select('*')
-        .eq('id', numericId)
-        .single();
-      
-      if (fetchError) {
-        console.error("Error fetching deposit:", fetchError);
-        toast.error("Deletion failed", { description: "Unable to retrieve deposit information" });
+      if (!success) {
+        toast.error("Deletion failed", { description: "Error during deposit deletion" });
         return false;
       }
       
-      if (!depositData) {
-        console.error("No deposit found with ID:", numericId);
-        toast.error("Deposit not found", { description: "The deposit you're trying to delete couldn't be found" });
-        return false;
-      }
-      
-      console.log("Preparing to log in deleted_deposits:", depositData);
-      
-      // Log the deposit in deleted_deposits
-      const { data: logData, error: logError } = await supabase
-        .from('deleted_deposits')
-        .insert({
-          original_id: depositData.id,
-          client_name: depositData.client_name,
-          amount: Number(depositData.amount),
-          operation_date: depositData.operation_date || depositData.created_at,
-          notes: depositData.notes || null,
-          deleted_by: userId,
-          status: depositData.status
-        })
-        .select();
-      
-      if (logError) {
-        console.error("Error logging to deleted_deposits:", logError);
-        toast.error("Deletion failed", { description: "Error during logging" });
-        return false;
-      }
-      
-      console.log("Successfully logged in deleted_deposits:", logData);
-      
-      // Delete the deposit
-      const { error: deleteError } = await supabase
-        .from('deposits')
-        .delete()
-        .eq('id', numericId);
-      
-      if (deleteError) {
-        console.error("Error deleting deposit:", deleteError);
-        toast.error("Deletion failed", { description: "Error during deletion" });
-        return false;
-      }
-      
-      console.log("Deposit successfully deleted, ID:", numericId);
+      console.log("Deposit successfully deleted, ID:", depositId);
       
       // Invalidate cached queries to update operation lists
       invalidateQueries(clientId);

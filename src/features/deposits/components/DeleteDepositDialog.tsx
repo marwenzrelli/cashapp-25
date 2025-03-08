@@ -24,10 +24,15 @@ export const DeleteDepositDialog = ({
   const handleConfirm = async () => {
     setIsDeleting(true);
     try {
+      console.log("Démarrage de la suppression du versement dans DeleteDepositDialog");
       const success = await onConfirm();
+      
       // Only close if successful
       if (success) {
+        console.log("Suppression réussie, fermeture de la boîte de dialogue");
         onOpenChange(false);
+      } else {
+        console.error("La suppression a échoué");
       }
     } catch (error) {
       console.error("Error during deletion:", error);
@@ -50,7 +55,7 @@ export const DeleteDepositDialog = ({
             <p>Êtes-vous sûr de vouloir supprimer ce versement ?</p>
             {selectedDeposit && (
               <div className="rounded-lg border bg-muted/50 p-4 font-medium text-foreground">
-                Versement de {selectedDeposit.amount} TND
+                Versement de {selectedDeposit.amount} TND pour {selectedDeposit.client_name}
               </div>
             )}
             <p className="text-destructive font-medium">Cette action est irréversible.</p>
