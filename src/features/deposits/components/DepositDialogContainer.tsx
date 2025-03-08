@@ -6,31 +6,31 @@ import { Client } from "@/features/clients/types";
 import { ExtendedClient } from "@/features/withdrawals/components/standalone/StandaloneWithdrawalForm";
 
 interface DepositDialogContainerProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  isOpen: boolean; 
   clients: Client[];
-  onConfirm: (deposit: Deposit) => Promise<void>;
+  onConfirmDeposit: (deposit: Deposit) => Promise<boolean>;
+  onOpenChange: (open: boolean) => void;
   refreshClientBalance: (clientId: string) => Promise<boolean>;
 }
 
 export const DepositDialogContainer = ({
-  open,
-  onOpenChange,
+  isOpen,
   clients,
-  onConfirm,
-  refreshClientBalance,
+  onConfirmDeposit,
+  onOpenChange,
+  refreshClientBalance
 }: DepositDialogContainerProps) => {
-  // Convert regular clients to ExtendedClients
+  // Convert Client[] to ExtendedClient[] for the deposit form
   const extendedClients: ExtendedClient[] = clients.map(client => ({
     ...client,
     dateCreation: client.date_creation || new Date().toISOString()
   }));
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <StandaloneDepositForm
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <StandaloneDepositForm 
         clients={extendedClients}
-        onConfirm={onConfirm}
+        onConfirm={onConfirmDeposit}
         refreshClientBalance={refreshClientBalance}
       />
     </Dialog>
