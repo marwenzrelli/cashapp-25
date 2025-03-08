@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Trash2 } from "lucide-react";
 import { type DeleteDepositDialogProps } from "../types";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export const DeleteDepositDialog = ({
   isOpen,
@@ -20,26 +20,43 @@ export const DeleteDepositDialog = ({
   onConfirm,
 }: DeleteDepositDialogProps) => {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(isOpen);
+  
+  // Sync internal state with external prop
+  useEffect(() => {
+    setInternalOpen(isOpen);
+  }, [isOpen]);
+
+  // Handle dialog closing internally
+  const handleOpenChange = (open: boolean) => {
+    if (isDeleting) return; // Don't allow closing while deleting
+    
+    setInternalOpen(open);
+    if (!open) {
+      // Only propagate close events to parent
+      onOpenChange(false);
+    }
+  };
 
   const handleConfirm = async () => {
     if (isDeleting) return; // Prevent double submission
     
     setIsDeleting(true);
     try {
-      console.log("Démarrage de la suppression du versement dans DeleteDepositDialog");
+      console.log("DeleteDepositDialog: Démarrage de la suppression");
       const success = await onConfirm();
       
-      console.log("Résultat de la suppression:", success);
+      console.log("DeleteDepositDialog: Résultat de la suppression:", success);
       
       if (success) {
-        console.log("Suppression réussie, fermeture explicite de la boîte de dialogue");
-        // Force close the dialog after a successful deletion
-        setTimeout(() => onOpenChange(false), 100);
-      } else {
-        console.error("La suppression a échoué");
+        console.log("DeleteDepositDialog: Suppression réussie, fermeture du dialogue");
+        // Force close using internal state first
+        setInternalOpen(false);
+        // Then notify parent
+        setTimeout(() => onOpenChange(false), 50);
       }
     } catch (error) {
-      console.error("Error during deletion:", error);
+      console.error("DeleteDepositDialog: Erreur lors de la suppression:", error);
     } finally {
       setIsDeleting(false);
     }
@@ -47,14 +64,8 @@ export const DeleteDepositDialog = ({
 
   return (
     <AlertDialog 
-      open={isOpen} 
-      onOpenChange={(open) => {
-        if (isDeleting) {
-          // Don't allow closing during deletion process
-          return;
-        }
-        onOpenChange(open);
-      }}
+      open={internalOpen} 
+      onOpenChange={handleOpenChange}
     >
       <AlertDialogContent className="sm:max-w-md">
         <AlertDialogHeader>
@@ -80,7 +91,7 @@ export const DeleteDepositDialog = ({
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={(e) => {
-              e.preventDefault(); // Prevent the dialog from closing automatically
+              e.preventDefault(); // Prevent the default action
               handleConfirm();
             }}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"

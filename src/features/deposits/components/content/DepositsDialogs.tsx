@@ -1,9 +1,10 @@
 
 import { Client } from "@/features/clients/types";
-import { Deposit, EditFormData } from "@/features/deposits/types"; // Use consistent type
+import { Deposit, EditFormData } from "@/features/deposits/types";
 import { DeleteDepositDialog } from "@/features/deposits/components/DeleteDepositDialog";
 import { EditDepositDialog } from "@/features/deposits/components/dialog/EditDepositDialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 interface DepositsDialogsProps {
   isDeleteDialogOpen: boolean;
@@ -31,8 +32,14 @@ export const DepositsDialogs = ({
   clients
 }: DepositsDialogsProps) => {
   const [isProcessingDelete, setIsProcessingDelete] = useState(false);
+  
+  // Reset processing state when dialog closes
+  useEffect(() => {
+    if (!isDeleteDialogOpen) {
+      setIsProcessingDelete(false);
+    }
+  }, [isDeleteDialogOpen]);
 
-  // Fonction de confirmation qui délègue à la fonction de suppression parente
   const handleConfirmDelete = async () => {
     console.log("DepositsDialogs: Démarrage de la confirmation de suppression");
     
@@ -47,12 +54,27 @@ export const DepositsDialogs = ({
       // Appel à la fonction de suppression parente
       const success = await confirmDelete();
       console.log("DepositsDialogs: Résultat de la suppression:", success);
+      
+      if (success) {
+        toast.success("Versement supprimé avec succès");
+        // Ensure dialog closes after successful deletion
+        setTimeout(() => {
+          setIsDeleteDialogOpen(false);
+          setIsProcessingDelete(false);
+        }, 200);
+      }
+      
       return success;
     } catch (error) {
       console.error("DepositsDialogs: Erreur lors de la suppression", error);
+      toast.error("Erreur lors de la suppression");
       return false;
     } finally {
-      setIsProcessingDelete(false);
+      // We'll only reset processing state here if there was an error
+      // For success case, we'll do it after ensuring dialog is closed
+      if (!isProcessingDelete) {
+        setIsProcessingDelete(false);
+      }
     }
   };
 
@@ -61,7 +83,10 @@ export const DepositsDialogs = ({
       {/* Delete Dialog */}
       <DeleteDepositDialog 
         isOpen={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
+        onOpenChange={(open) => {
+          console.log("DeleteDepositDialog requested state change to:", open);
+          setIsDeleteDialogOpen(open);
+        }}
         selectedDeposit={selectedDeposit}
         onConfirm={handleConfirmDelete}
       />

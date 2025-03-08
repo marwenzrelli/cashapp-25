@@ -14,7 +14,7 @@ export const useDeleteDeposit = (
 ) => {
   const deleteDeposit = async (depositId: number) => {
     try {
-      console.log(`Tentative de suppression du dépôt avec l'ID: ${depositId}`);
+      console.log(`useDeleteDeposit: Tentative de suppression du dépôt avec l'ID: ${depositId}`);
       setIsLoading(true);
 
       // Obtenir l'ID de l'utilisateur actuel
@@ -37,13 +37,9 @@ export const useDeleteDeposit = (
       setDeposits(prevDeposits => prevDeposits.filter(deposit => deposit.id !== depositId));
       
       console.log("Dépôt supprimé avec succès, ID:", depositId);
-      toast.success("Versement supprimé avec succès");
       return true;
     } catch (error) {
       console.error("Erreur complète lors de la suppression:", error);
-      toast.error("Erreur lors de la suppression du versement", {
-        description: error instanceof Error ? error.message : "Une erreur inconnue est survenue"
-      });
       return false;
     } finally {
       setIsLoading(false);
