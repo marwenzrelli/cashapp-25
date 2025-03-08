@@ -7,7 +7,7 @@ export interface Deposit {
   date: string;
   client_name: string;
   description: string; // Changed from optional to required to match components/deposits/types
-  status?: string;
+  status: string; // Changed from optional to required to match components/deposits/types
   created_at?: string;
   created_by?: string | null;
   operation_date?: string;

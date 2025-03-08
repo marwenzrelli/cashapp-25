@@ -1,9 +1,10 @@
+
 import React from "react";
 import { DepositsTable } from "./DepositsTable";
 import { DepositsHeader } from "./DepositsHeader";
 import { SearchBar } from "./SearchBar";
 import { DeleteDepositDialog } from "./DeleteDepositDialog";
-import { Deposit } from "../types";
+import { Deposit } from "../types"; // Changed to import from the same types file
 import { useClients } from "@/features/clients/hooks/useClients";
 import { StandaloneDepositForm } from "./DepositForm";
 import { TransferPagination } from "@/features/transfers/components/TransferPagination";

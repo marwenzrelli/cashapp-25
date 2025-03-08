@@ -6,7 +6,7 @@ import { Deposit } from "@/features/deposits/types";
 
 interface DepositDialogProps {
   client: Client;
-  open: boolean;
+  isOpen: boolean; // Changed from 'open' to 'isOpen' to match the interface
   onOpenChange: (open: boolean) => void;
   onConfirm: (deposit: Deposit) => Promise<boolean | void>; // Updated return type
   refreshClientBalance: () => Promise<boolean>;
@@ -14,13 +14,13 @@ interface DepositDialogProps {
 
 export const DepositDialog = ({
   client,
-  open,
+  isOpen, // Changed from 'open' to 'isOpen'
   onOpenChange,
   onConfirm,
   refreshClientBalance
 }: DepositDialogProps) => {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}> {/* Changed from 'open={open}' to 'open={isOpen}' */}
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Nouveau versement</DialogTitle>
