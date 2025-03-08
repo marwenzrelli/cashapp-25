@@ -12,7 +12,7 @@ export const useDeleteDeposit = (
   setDepositToDelete: React.Dispatch<React.SetStateAction<Deposit | null>>,
   setShowDeleteDialog: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
-  const deleteDeposit = async (depositId: number): Promise<boolean> => {
+  const deleteDeposit = async (depositId: number | string): Promise<boolean> => {
     console.log(`Calling deleteDeposit function with ID: ${depositId}`);
     
     try {
@@ -30,7 +30,8 @@ export const useDeleteDeposit = (
       // Update UI state after successful deletion
       if (result === true) {
         console.log("Updating deposits state after successful deletion");
-        setDeposits(prevDeposits => prevDeposits.filter(deposit => deposit.id !== depositId));
+        const numericId = typeof depositId === 'string' ? parseInt(depositId, 10) : depositId;
+        setDeposits(prevDeposits => prevDeposits.filter(deposit => deposit.id !== numericId));
         return true;
       } else {
         throw new Error("Échec de la suppression du dépôt");

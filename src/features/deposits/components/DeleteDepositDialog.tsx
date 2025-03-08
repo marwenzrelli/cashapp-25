@@ -35,12 +35,11 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
       
       if (result === true) {
         toast.success("Versement supprimé avec succès");
+        // Close the dialog after successful deletion
+        onOpenChange(false);
       } else {
         throw new Error("La suppression n'a pas pu être effectuée");
       }
-      
-      // Close the dialog after successful deletion
-      onOpenChange(false);
     } catch (error) {
       console.error("Error occurred during deletion:", error);
       toast.error("Erreur lors de la suppression", {
