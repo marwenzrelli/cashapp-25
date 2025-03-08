@@ -14,7 +14,7 @@ interface DepositsContentHeaderProps {
   isLoading: boolean;
   clients: ExtendedClient[];
   handleCreateDeposit: (deposit: Deposit) => Promise<void>;
-  handleRefreshClientBalance: (clientId: string) => Promise<boolean>;
+  handleRefreshClientBalance: () => Promise<boolean>;
   fetchClients: () => Promise<void>;
 }
 
@@ -28,16 +28,6 @@ export const DepositsContentHeader = ({
   fetchClients
 }: DepositsContentHeaderProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  
-  // Create a wrapper function to adapt the function signature
-  const handleRefreshClientBalanceWrapper = () => {
-    // When no specific client ID is provided, we can use the first client ID
-    // or handle it based on your application's logic
-    if (clients && clients.length > 0) {
-      return handleRefreshClientBalance(clients[0].id.toString());
-    }
-    return Promise.resolve(false);
-  };
   
   return (
     <div className="space-y-8">
@@ -62,7 +52,7 @@ export const DepositsContentHeader = ({
         onOpenChange={setIsDialogOpen} 
         clients={clients as Client[]} 
         onConfirm={handleCreateDeposit}
-        refreshClientBalance={handleRefreshClientBalanceWrapper}
+        refreshClientBalance={handleRefreshClientBalance}
       />
     </div>
   );

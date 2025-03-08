@@ -10,7 +10,7 @@ interface DepositDialogContainerProps {
   clients: Client[];
   onConfirmDeposit: (deposit: Deposit) => Promise<boolean>;
   onOpenChange: (open: boolean) => void;
-  refreshClientBalance: (clientId: string) => Promise<boolean>;
+  refreshClientBalance: () => Promise<boolean>;
 }
 
 export const DepositDialogContainer = ({
@@ -26,22 +26,12 @@ export const DepositDialogContainer = ({
     dateCreation: client.date_creation || new Date().toISOString()
   }));
 
-  // Create a wrapper function that handles calling refreshClientBalance with the appropriate clientId
-  const handleRefreshClientBalance = () => {
-    // If there are clients available, use the first one's ID
-    if (clients && clients.length > 0) {
-      return refreshClientBalance(clients[0].id.toString());
-    }
-    // Return a resolved promise with false if no clients are available
-    return Promise.resolve(false);
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <StandaloneDepositForm 
         clients={extendedClients}
         onConfirm={onConfirmDeposit}
-        refreshClientBalance={handleRefreshClientBalance}
+        refreshClientBalance={refreshClientBalance}
       />
     </Dialog>
   );

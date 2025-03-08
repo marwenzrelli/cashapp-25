@@ -19,14 +19,6 @@ export const DepositDialog = ({
   onConfirm,
   refreshClientBalance
 }: DepositDialogProps) => {
-  // Create a function to transform Client to ExtendedClient
-  const getExtendedClient = () => {
-    return {
-      ...clients[0],
-      dateCreation: clients[0].date_creation || new Date().toISOString()
-    };
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">

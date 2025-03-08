@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Deposit } from "@/features/deposits/types"; // Use deposit type consistently
 import { useClients } from "@/features/clients/hooks/useClients";
@@ -76,9 +75,11 @@ export const DepositsContent = ({
     fetchClients
   } = useClients();
 
-  const handleRefreshClientBalance = async (clientId: string): Promise<boolean> => {
+  const handleRefreshClientBalance = async (): Promise<boolean> => {
     try {
-      await refreshClientBalance(parseInt(clientId, 10));
+      if (clients && clients.length > 0) {
+        await refreshClientBalance(clients[0].id.toString());
+      }
       return true;
     } catch (error) {
       console.error("Error refreshing client balance:", error);
@@ -86,21 +87,11 @@ export const DepositsContent = ({
     }
   };
 
-  // Create an adapter for the DepositsContentHeader component
-  const handleRefreshBalanceForHeader = () => {
-    // If we have clients, refresh the balance of the first one as default behavior
-    if (clients && clients.length > 0) {
-      return handleRefreshClientBalance(clients[0].id.toString());
-    }
-    return Promise.resolve(false);
-  };
-
   const onConfirmDelete = async () => {
     try {
       const success = await confirmDelete();
       if (success && fetchDeposits) {
         toast.success("Versement supprimé avec succès");
-        // Rafraîchir la liste des dépôts après une suppression réussie
         await fetchDeposits();
       }
       return success;
