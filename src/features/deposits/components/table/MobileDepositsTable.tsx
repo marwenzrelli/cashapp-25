@@ -17,9 +17,12 @@ export const MobileDepositsTable = ({
   onDelete 
 }: MobileDepositsTableProps) => {
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       {deposits.map((deposit) => (
-        <div key={deposit.id} className="p-4 border-b last:border-b-0">
+        <div 
+          key={deposit.id} 
+          className="bg-white dark:bg-gray-800 p-3 border rounded-lg shadow-sm"
+        >
           <div className="flex items-center justify-between mb-2">
             <DepositClientInfo 
               clientName={deposit.client_name} 
@@ -27,20 +30,28 @@ export const MobileDepositsTable = ({
             />
             <DepositAmount amount={deposit.amount} />
           </div>
-          <div className="space-y-1 text-sm text-muted-foreground mb-3">
+          <div className="text-sm text-muted-foreground mb-3">
             <div className="flex items-center gap-1">
               <DepositDateInfo deposit={deposit} />
             </div>
-            <p>{deposit.description}</p>
+            <p className="mt-1 line-clamp-2">{deposit.description}</p>
           </div>
-          <DepositActions 
-            deposit={deposit} 
-            onEdit={onEdit} 
-            onDelete={onDelete} 
-            isMobile={true} 
-          />
+          <div className="flex justify-end">
+            <DepositActions 
+              deposit={deposit} 
+              onEdit={onEdit} 
+              onDelete={onDelete} 
+              isMobile={true} 
+            />
+          </div>
         </div>
       ))}
+      
+      {deposits.length === 0 && (
+        <div className="text-center py-4 text-muted-foreground">
+          Aucun versement trouvé
+        </div>
+      )}
     </div>
   );
 };

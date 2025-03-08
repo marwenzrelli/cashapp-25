@@ -3,7 +3,7 @@ import { Operation } from "@/features/operations/types";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, Trash2 } from "lucide-react";
+import { User, Trash2, CalendarIcon, ClockIcon } from "lucide-react";
 import { getTypeStyle, getTypeIcon, getTypeLabel } from "@/features/operations/utils/operation-helpers";
 import { formatOperationId, getAmountColor } from "../utils/display-helpers";
 
@@ -103,48 +103,62 @@ export const OperationsList = ({ operations, isLoading, onDelete }: OperationsLi
         </div>
 
         {/* Liste pour mobile */}
-        <div className="md:hidden divide-y">
+        <div className="md:hidden space-y-2 p-2">
           {operationsWithFormattedDates.map((operation) => (
-            <div key={`${operation.type}-${operation.id}`} className="p-4 flex items-start justify-between">
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ${getTypeStyle(operation.type)}`}>
+            <div key={`${operation.type}-${operation.id}`} 
+                 className="p-3 bg-white dark:bg-gray-800 rounded-lg border shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getTypeStyle(operation.type)}`}>
                     {getTypeIcon(operation.type)}
                   </div>
-                  <span className="font-medium">{getTypeLabel(operation.type)}</span>
-                  <span className="text-xs text-muted-foreground">#{formatOperationId(operation.id)}</span>
+                  <div>
+                    <span className="font-medium">{getTypeLabel(operation.type)}</span>
+                    <p className="text-xs text-muted-foreground">#{formatOperationId(operation.id)}</p>
+                  </div>
                 </div>
                 
-                <p className="text-sm text-muted-foreground mb-1">
-                  {operation.formattedDate}
-                </p>
+                <span className={`font-semibold ${getAmountColor(operation.type)}`}>
+                  {operation.type === "withdrawal" ? "-" : ""}{Math.round(operation.amount).toLocaleString()} TND
+                </span>
+              </div>
+              
+              <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground mb-2">
+                <div className="flex items-center gap-1">
+                  <CalendarIcon className="h-3 w-3" />
+                  <span>{operation.formattedDate?.split(' ')[0]}</span>
+                </div>
                 
-                <p className="mb-1 truncate">{operation.description}</p>
-                
-                <div className="text-xs text-muted-foreground">
-                  {operation.type === "transfer" ? (
-                    <>
-                      <div className="flex items-center gap-1"><User className="h-3 w-3" /> De: {operation.fromClient}</div>
-                      <div className="flex items-center gap-1"><User className="h-3 w-3" /> À: {operation.toClient}</div>
-                    </>
-                  ) : (
-                    <div className="flex items-center gap-1"><User className="h-3 w-3" /> {operation.fromClient}</div>
-                  )}
+                <div className="flex items-center gap-1">
+                  <ClockIcon className="h-3 w-3" />
+                  <span>{operation.formattedDate?.split(' ')[1]}</span>
                 </div>
               </div>
               
-              <div className="flex flex-col items-end gap-2">
-                <span className={`font-semibold whitespace-nowrap ${getAmountColor(operation.type)}`}>
-                  {operation.type === "withdrawal" ? "-" : ""}{Math.round(operation.amount).toLocaleString()} TND
-                </span>
-                
+              {operation.description && (
+                <p className="text-sm mb-2 line-clamp-2">{operation.description}</p>
+              )}
+              
+              <div className="text-xs text-muted-foreground mb-2">
+                {operation.type === "transfer" ? (
+                  <>
+                    <div className="flex items-center gap-1"><User className="h-3 w-3" /> De: {operation.fromClient}</div>
+                    <div className="flex items-center gap-1"><User className="h-3 w-3" /> À: {operation.toClient}</div>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-1"><User className="h-3 w-3" /> {operation.fromClient}</div>
+                )}
+              </div>
+              
+              <div className="flex justify-end">
                 <Button
                   variant="ghost"
-                  size="icon"
+                  size="sm"
                   onClick={() => onDelete(operation)}
-                  className="h-8 w-8 text-red-600"
+                  className="h-8 text-red-600"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Supprimer
                 </Button>
               </div>
             </div>

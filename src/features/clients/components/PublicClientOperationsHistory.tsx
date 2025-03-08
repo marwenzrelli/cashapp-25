@@ -1,5 +1,5 @@
 
-import { ArrowUpCircle, ArrowDownCircle, RefreshCcw, FileText, User } from "lucide-react";
+import { ArrowUpCircle, ArrowDownCircle, RefreshCcw, FileText, User, Calendar, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Operation } from "@/features/operations/types";
@@ -84,17 +84,36 @@ export const PublicClientOperationsHistory = ({ operations }: PublicClientOperat
         </div>
         
         {/* Enhanced cards for mobile */}
-        <div className="md:hidden space-y-3">
+        <div className="md:hidden space-y-3 px-2">
           {filteredOperations.map((operation) => (
             <div key={operation.id} className="bg-white dark:bg-gray-800 rounded-lg border p-3 shadow-sm">
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <div className={`w-9 h-9 rounded-full flex items-center justify-center ${getTypeStyle(operation.type)}`}>
                     {getTypeIcon(operation.type)}
                   </div>
                   <div>
                     <div className="font-medium">{getTypeLabel(operation.type)}</div>
-                    <div className="text-xs text-muted-foreground">{operation.formattedDate || operation.date}</div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        <span>{typeof operation.formattedDate === 'string' ? 
+                          operation.formattedDate.split(' ')[0] : 
+                          typeof operation.date === 'string' ? 
+                            new Date(operation.date).toLocaleDateString() : 
+                            operation.date.toLocaleDateString()
+                        }</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        <span>{typeof operation.formattedDate === 'string' ? 
+                          operation.formattedDate.split(' ')[1] : 
+                          typeof operation.date === 'string' ? 
+                            new Date(operation.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 
+                            operation.date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                        }</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div className={cn("font-semibold text-right", getAmountColor(operation.type))}>
@@ -102,30 +121,30 @@ export const PublicClientOperationsHistory = ({ operations }: PublicClientOperat
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 gap-1 text-sm border-t pt-2">
-                <div className="flex items-start">
-                  <FileText className="h-4 w-4 mr-2 mt-0.5 text-muted-foreground" />
-                  <span className="flex-1">{operation.description}</span>
+              {operation.description && (
+                <div className="flex items-start mb-2">
+                  <FileText className="h-4 w-4 mr-2 mt-0.5 text-muted-foreground shrink-0" />
+                  <span className="flex-1 text-sm line-clamp-2">{operation.description}</span>
                 </div>
-                
-                {operation.type === "transfer" ? (
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center">
-                      <User className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span>De: {operation.fromClient}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <User className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span>À: {operation.toClient}</span>
-                    </div>
-                  </div>
-                ) : (
+              )}
+              
+              {operation.type === "transfer" ? (
+                <div className="flex flex-col gap-1 text-xs text-muted-foreground border-t pt-2">
                   <div className="flex items-center">
                     <User className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <span>{operation.fromClient}</span>
+                    <span>De: {operation.fromClient}</span>
                   </div>
-                )}
-              </div>
+                  <div className="flex items-center">
+                    <User className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <span>À: {operation.toClient}</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center text-xs text-muted-foreground border-t pt-2">
+                  <User className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <span>{operation.fromClient}</span>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -158,7 +177,7 @@ export const PublicClientOperationsHistory = ({ operations }: PublicClientOperat
             </TabsTrigger>
           </TabsList>
 
-          <div className="px-2 sm:px-0 py-2">
+          <div className="px-0 py-2">
             <TabsContent value="all" className="mt-0">
               {renderOperationsTable(operations)}
             </TabsContent>

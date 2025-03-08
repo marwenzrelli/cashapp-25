@@ -3,7 +3,7 @@ import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Withdrawal } from "../types";
-import { UserCircle, ArrowDownCircle, Pencil, Trash2, ExternalLink } from "lucide-react";
+import { UserCircle, ArrowDownCircle, Pencil, Trash2, ExternalLink, CalendarIcon } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { Client } from "@/features/clients/types";
 import { formatDate } from "../hooks/utils/formatUtils";
@@ -42,7 +42,8 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="relative w-full overflow-auto">
+        {/* Desktop Table View */}
+        <div className="hidden md:block relative w-full overflow-auto">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr className="text-left">
@@ -56,7 +57,6 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
             <tbody>
               {withdrawals.map((withdrawal) => {
                 const client = findClientById(withdrawal.client_name);
-                // Format the operation_date using the formatDate utility
                 const formattedOperationDate = withdrawal.operation_date 
                   ? formatDate(withdrawal.operation_date) 
                   : "Date inconnue";
@@ -125,6 +125,74 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
               })}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Card View */}
+        <div className="md:hidden space-y-3">
+          {withdrawals.map((withdrawal) => {
+            const client = findClientById(withdrawal.client_name);
+            const formattedOperationDate = withdrawal.operation_date 
+              ? formatDate(withdrawal.operation_date) 
+              : "Date inconnue";
+
+            return (
+              <div key={withdrawal.id} className="bg-white dark:bg-gray-800 rounded-lg border shadow-sm p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <p 
+                    className="font-medium text-primary flex items-center cursor-pointer"
+                    onClick={() => handleClientClick(client)}
+                  >
+                    {withdrawal.client_name}
+                    <ExternalLink className="h-3 w-3 ml-1" />
+                  </p>
+                  <div className="flex items-center text-danger">
+                    <ArrowDownCircle className="h-4 w-4 mr-1" />
+                    <span className="font-medium">
+                      {withdrawal.amount.toLocaleString()} {currency}
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="flex items-center text-xs text-muted-foreground mb-2">
+                  <CalendarIcon className="h-3 w-3 mr-1" />
+                  {formattedOperationDate}
+                </div>
+                
+                {withdrawal.notes && (
+                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                    {withdrawal.notes}
+                  </p>
+                )}
+                
+                <div className="flex justify-end gap-2 mt-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onEdit(withdrawal)}
+                    className="h-8 text-blue-600"
+                  >
+                    <Pencil className="h-4 w-4 mr-1" />
+                    Modifier
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onDelete(withdrawal)}
+                    className="h-8 text-red-600"
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Supprimer
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+          
+          {withdrawals.length === 0 && (
+            <div className="text-center py-4 text-muted-foreground">
+              Aucun retrait trouvé
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

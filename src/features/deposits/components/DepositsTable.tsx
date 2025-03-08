@@ -12,8 +12,9 @@ interface DepositsTableProps {
 
 export const DepositsTable = ({ deposits, onEdit, onDelete }: DepositsTableProps) => {
   return (
-    <div className="relative w-full overflow-auto rounded-lg border">
-      <div className="hidden md:block">
+    <div className="w-full">
+      {/* Desktop table with border */}
+      <div className="hidden md:block overflow-auto rounded-lg border">
         <DesktopDepositsTable 
           deposits={deposits} 
           onEdit={onEdit} 
@@ -21,7 +22,8 @@ export const DepositsTable = ({ deposits, onEdit, onDelete }: DepositsTableProps
         />
       </div>
 
-      <div className="md:hidden">
+      {/* Mobile cards with no container border */}
+      <div className="md:hidden px-1">
         <MobileDepositsTable 
           deposits={deposits} 
           onEdit={onEdit} 
