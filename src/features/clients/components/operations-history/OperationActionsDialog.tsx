@@ -35,7 +35,7 @@ export const OperationActionsDialog = ({
   
   // Update imports to use the functions directly from the hooks
   const { handleWithdrawal, deleteWithdrawal } = useClientWithdrawal(clientId, refetchClient);
-  const { handleDeposit } = useClientDeposit(clientId, refetchClient);
+  const { handleDeposit, deleteDeposit } = useClientDeposit(clientId, refetchClient);
   
   // Reset form when operation changes
   useEffect(() => {
@@ -44,76 +44,6 @@ export const OperationActionsDialog = ({
       setNotes(operation.description || '');
     }
   }, [operation]);
-  
-  // Function to delete a deposit
-  const deleteDeposit = async (depositId: string | number) => {
-    setLoading(true);
-    try {
-      // Get the user session
-      const { data: { session } } = await supabase.auth.getSession();
-      const userId = session?.user?.id;
-      
-      // Convert ID to number if it's a string
-      const numericId = typeof depositId === 'string' ? parseInt(depositId, 10) : depositId;
-      
-      // First, get the deposit to log it before deletion
-      const { data: depositData, error: fetchError } = await supabase
-        .from('deposits')
-        .select('*')
-        .eq('id', numericId)
-        .single();
-      
-      if (fetchError) {
-        console.error("Erreur lors de la récupération du versement:", fetchError);
-        toast.error("Échec de la suppression", { description: "Impossible de récupérer les informations du versement" });
-        return false;
-      }
-      
-      console.log("Préparation de l'enregistrement dans deleted_deposits:", depositData);
-      
-      // Log the deposit in deleted_deposits
-      const { data: logData, error: logError } = await supabase
-        .from('deleted_deposits')
-        .insert({
-          original_id: depositData.id,
-          client_name: depositData.client_name,
-          amount: Number(depositData.amount),
-          operation_date: depositData.operation_date,
-          notes: depositData.notes || null,
-          deleted_by: userId,
-          status: depositData.status
-        })
-        .select();
-      
-      if (logError) {
-        console.error("Erreur lors de l'enregistrement dans deleted_deposits:", logError);
-        toast.error("Échec de la suppression", { description: "Erreur lors de la journalisation" });
-        return false;
-      }
-      
-      console.log("Enregistrement dans deleted_deposits réussi:", logData);
-      
-      // Delete the deposit
-      const { error: deleteError } = await supabase
-        .from('deposits')
-        .delete()
-        .eq('id', numericId);
-      
-      if (deleteError) {
-        console.error("Erreur lors de la suppression du versement:", deleteError);
-        toast.error("Échec de la suppression", { description: "Erreur lors de la suppression" });
-        return false;
-      }
-      
-      console.log("Versement supprimé avec succès");
-      return true;
-    } catch (error) {
-      console.error("Erreur lors de la suppression du versement:", error);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -174,18 +104,21 @@ export const OperationActionsDialog = ({
           operation.id
         );
       } else if (operation.type === "deposit") {
-        success = await handleDeposit(
-          {
-            ...operationData,
-            description: notes,
-            id: 0,
-            status: "completed",
-            created_at: new Date().toISOString(),
-            created_by: null
-          }, 
-          true, 
-          operation.id
-        );
+        // The issue is here - handleDeposit is expecting different parameters
+        // Let's fix it based on the useClientDeposit implementation
+        success = await handleDeposit({
+          client_name: operationData.client_name,
+          amount: operationData.amount,
+          date: operationData.date,
+          description: notes,
+          id: operation.id as any,
+          status: "completed",
+          created_at: new Date().toISOString(),
+          created_by: null,
+          // Pass isEditing and depositId as properties of the object
+          isEditing: true,
+          depositId: operation.id
+        });
       }
       
       if (success) {
