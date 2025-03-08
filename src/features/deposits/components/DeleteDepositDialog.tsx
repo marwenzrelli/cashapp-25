@@ -34,7 +34,9 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
       console.log("Deletion result:", result);
       
       if (result === true) {
-        toast.success("Versement supprimé avec succès");
+        toast.success("Versement supprimé avec succès", {
+          description: "Le versement a été archivé et sera visible dans l'historique des suppressions."
+        });
         // Close the dialog after successful deletion
         onOpenChange(false);
       } else {
@@ -57,7 +59,7 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
           <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
           <AlertDialogDescription>
             Êtes-vous sûr de vouloir supprimer ce versement {selectedDeposit ? `de ${selectedDeposit.amount} TND pour ${selectedDeposit.client_name}` : ''}? 
-            Cette action ne peut pas être annulée.
+            Cette action ne peut pas être annulée, mais le versement sera archivé pour référence.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

@@ -13,7 +13,45 @@ export const handleDepositDeletion = async (depositId: string | number, userId: 
       throw new Error("Invalid deposit ID format");
     }
     
-    // Delete the deposit record
+    // First, fetch the deposit to be deleted
+    const { data: depositData, error: fetchError } = await supabase
+      .from('deposits')
+      .select('*')
+      .eq('id', numericId)
+      .single();
+    
+    if (fetchError) {
+      console.error("Error fetching deposit for archiving:", fetchError);
+      throw new Error(`Erreur lors de la récupération du versement: ${fetchError.message}`);
+    }
+    
+    if (!depositData) {
+      throw new Error("Versement introuvable");
+    }
+    
+    console.log("Found deposit to archive:", depositData);
+    
+    // Archive the deposit in the deleted_deposits table
+    const { error: archiveError } = await supabase
+      .from('deleted_deposits')
+      .insert({
+        original_id: depositData.id,
+        amount: depositData.amount,
+        client_name: depositData.client_name,
+        notes: depositData.notes,
+        operation_date: depositData.operation_date,
+        status: depositData.status,
+        deleted_by: userId
+      });
+    
+    if (archiveError) {
+      console.error("Error archiving deposit:", archiveError);
+      throw new Error(`Erreur lors de l'archivage du versement: ${archiveError.message}`);
+    }
+    
+    console.log("Successfully archived deposit to deleted_deposits");
+    
+    // Now delete the deposit record
     const { error: deleteError } = await supabase
       .from('deposits')
       .delete()
