@@ -165,19 +165,27 @@ export const OperationActionsDialog = ({
       let success = false;
       
       if (operation.type === "withdrawal") {
-        success = await handleWithdrawal({
-          ...operationData,
-          client_id: clientId
-        }, true, operation.id);
+        success = await handleWithdrawal(
+          {
+            ...operationData,
+            client_id: clientId
+          }, 
+          true, 
+          operation.id
+        );
       } else if (operation.type === "deposit") {
-        success = await handleDeposit({
-          ...operationData,
-          description: notes,
-          id: 0,
-          status: "completed",
-          created_at: new Date().toISOString(),
-          created_by: null
-        }, true, operation.id);
+        success = await handleDeposit(
+          {
+            ...operationData,
+            description: notes,
+            id: 0,
+            status: "completed",
+            created_at: new Date().toISOString(),
+            created_by: null
+          }, 
+          true, 
+          operation.id
+        );
       }
       
       if (success) {
