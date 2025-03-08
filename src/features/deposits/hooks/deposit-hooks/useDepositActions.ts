@@ -76,10 +76,10 @@ export const useDepositActions = ({
     }
   };
 
-  const handleConfirmEdit = async () => {
+  const handleConfirmEdit = async (): Promise<boolean> => {
     if (!selectedDeposit) {
       console.error("Aucun versement sélectionné pour la modification");
-      return;
+      return false;
     }
 
     console.log("Confirmation des modifications pour:", selectedDeposit);
@@ -105,14 +105,18 @@ export const useDepositActions = ({
       toast.success("Versement mis à jour", {
         description: `Le versement a été modifié avec succès.`
       });
+      return true;
     }
+    return false;
   };
 
-  const handleCreateDeposit = async (deposit: Deposit) => {
+  const handleCreateDeposit = async (deposit: Deposit): Promise<boolean> => {
     const success = await createDeposit(deposit);
     if (success) {
       setIsDeleteDialogOpen(false);
+      return true;
     }
+    return false;
   };
 
   return {

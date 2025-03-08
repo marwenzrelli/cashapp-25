@@ -11,11 +11,20 @@ export const useDeleteDeposit = (
   setDepositToDelete: React.Dispatch<React.SetStateAction<Deposit | null>>,
   setShowDeleteDialog: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
-  const deleteDeposit = async (depositId: number) => {
+  const deleteDeposit = async (depositId: number): Promise<boolean> => {
     try {
       console.log(`Tentative de suppression du dépôt avec l'ID: ${depositId}`);
-      setIsLoading(true);
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      
+      if (!userId) {
+        console.error("Utilisateur non authentifié");
+        toast.error("Vous devez être connecté pour effectuer cette action");
+        return false;
+      }
 
+      // Récupérer les détails du dépôt à supprimer
       const { data: depositToDelete, error: fetchError } = await supabase
         .from('deposits')
         .select('*')
@@ -33,34 +42,27 @@ export const useDeleteDeposit = (
 
       console.log("Détails du dépôt à supprimer:", depositToDelete);
       
-      const { data: { session } } = await supabase.auth.getSession();
-      const userId = session?.user?.id;
+      // Créer un enregistrement dans deleted_deposits
+      const { error: logError } = await supabase
+        .from('deleted_deposits')
+        .insert({
+          original_id: depositToDelete.id,
+          client_name: depositToDelete.client_name,
+          amount: depositToDelete.amount,
+          operation_date: depositToDelete.operation_date,
+          notes: depositToDelete.notes || null,
+          deleted_by: userId,
+          status: depositToDelete.status
+        });
 
-      try {
-        const { error: logError } = await supabase
-          .from('deleted_deposits')
-          .insert({
-            original_id: depositToDelete.id,
-            client_name: depositToDelete.client_name,
-            amount: depositToDelete.amount,
-            operation_date: depositToDelete.operation_date,
-            notes: depositToDelete.notes || null,
-            deleted_by: userId,
-            status: depositToDelete.status
-          });
-
-        if (logError) {
-          console.error("Erreur lors de la création du log de suppression:", logError);
-          console.error("Détails complets de l'erreur:", JSON.stringify(logError));
-          throw logError;
-        } else {
-          console.log("Log de suppression créé avec succès dans deleted_deposits");
-        }
-      } catch (logError) {
-        console.error("Exception lors de la création du log:", logError);
-        throw logError;
+      if (logError) {
+        console.error("Erreur lors de la création du log de suppression:", logError);
+        throw new Error(`Erreur lors de l'archivage du dépôt: ${logError.message}`);
       }
+      
+      console.log("Log de suppression créé avec succès dans deleted_deposits");
 
+      // Supprimer le dépôt
       const { error: deleteError } = await supabase
         .from('deposits')
         .delete()
@@ -70,9 +72,11 @@ export const useDeleteDeposit = (
         throw new Error(`Erreur lors de la suppression du dépôt: ${deleteError.message}`);
       }
 
+      console.log("Dépôt supprimé avec succès de la table deposits");
+      
+      // Mettre à jour l'état local
       setDeposits(prevDeposits => prevDeposits.filter(deposit => deposit.id !== depositId));
       
-      toast.success("Dépôt supprimé avec succès");
       return true;
     } catch (error) {
       console.error("Erreur complète lors de la suppression:", error);
@@ -80,18 +84,14 @@ export const useDeleteDeposit = (
         description: error instanceof Error ? error.message : "Une erreur inconnue est survenue"
       });
       return false;
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const confirmDeleteDeposit = async () => {
+  const confirmDeleteDeposit = async (): Promise<boolean> => {
     if (!depositToDelete) {
       toast.error("Aucun versement sélectionné pour la suppression");
       return false;
     }
-    
-    setIsLoading(true);
     
     try {
       console.log("Confirmation de la suppression du versement:", depositToDelete);
@@ -99,19 +99,17 @@ export const useDeleteDeposit = (
       const success = await deleteDeposit(depositToDelete.id);
       
       if (success) {
-        // Only close the dialog and reset state if deletion was successful
         setShowDeleteDialog(false);
         setDepositToDelete(null);
+        toast.success("Versement supprimé avec succès");
         return true;
       } else {
-        throw new Error("Échec de la suppression du versement");
+        console.error("La suppression a échoué");
+        return false;
       }
     } catch (error) {
       console.error("Erreur lors de la confirmation de suppression:", error);
-      toast.error("Erreur lors de la suppression du versement");
       return false;
-    } finally {
-      setIsLoading(false);
     }
   };
 

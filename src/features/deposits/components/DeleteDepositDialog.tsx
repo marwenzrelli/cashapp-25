@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,17 +29,24 @@ export const DeleteDepositDialog = ({
   onConfirm,
 }: DeleteDepositDialogProps) => {
   const { formatCurrency } = useCurrency();
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const handleConfirm = async (e: React.MouseEvent) => {
     e.preventDefault();
+    
+    if (isDeleting) return; // Prevent multiple clicks
+    
     try {
+      setIsDeleting(true);
       const success = await onConfirm();
+      
       if (success) {
-        // Dialog will be closed by the parent component after successful deletion
-        console.log("Deletion successful, dialog should close");
+        onOpenChange(false); // Close the dialog only on success
       }
     } catch (error) {
       console.error("Error during deposit deletion confirmation:", error);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -67,12 +74,13 @@ export const DeleteDepositDialog = ({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Annuler</AlertDialogCancel>
+          <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
+            disabled={isDeleting}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
           >
-            Supprimer
+            {isDeleting ? "Suppression..." : "Supprimer"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
