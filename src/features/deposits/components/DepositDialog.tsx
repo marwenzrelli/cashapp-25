@@ -5,25 +5,25 @@ import { StandaloneDepositForm } from "@/features/deposits/components/deposit-fo
 import { Deposit } from "@/features/deposits/types";
 
 interface DepositDialogProps {
-  client: Client;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
+  clients: Client[];
   onConfirm: (deposit: Deposit) => Promise<boolean | void>;
   refreshClientBalance: () => Promise<boolean>;
 }
 
 export const DepositDialog = ({
-  client,
   isOpen,
   onOpenChange,
+  clients,
   onConfirm,
   refreshClientBalance
 }: DepositDialogProps) => {
   // Create a function to transform Client to ExtendedClient
   const getExtendedClient = () => {
     return {
-      ...client,
-      dateCreation: client.date_creation || new Date().toISOString()
+      ...clients[0],
+      dateCreation: clients[0].date_creation || new Date().toISOString()
     };
   };
 
@@ -35,9 +35,12 @@ export const DepositDialog = ({
         </DialogHeader>
         
         <StandaloneDepositForm 
-          clients={[getExtendedClient()]} 
+          clients={clients.map(client => ({
+            ...client,
+            dateCreation: client.date_creation || new Date().toISOString()
+          }))} 
           onConfirm={onConfirm} 
-          refreshClientBalance={() => refreshClientBalance()} 
+          refreshClientBalance={refreshClientBalance} 
         />
       </DialogContent>
     </Dialog>
