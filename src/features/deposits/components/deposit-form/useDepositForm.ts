@@ -3,13 +3,15 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { Deposit } from "@/features/deposits/types";
 import { toast } from "sonner";
+import { ExtendedClient } from "@/features/withdrawals/hooks/form/withdrawalFormTypes";
 
 interface UseDepositFormProps {
+  clients: ExtendedClient[];
   onConfirm: (deposit: Deposit) => Promise<boolean | void>;
   refreshClientBalance: (clientId: string) => Promise<boolean | void>;
 }
 
-export const useDepositForm = ({ onConfirm, refreshClientBalance }: UseDepositFormProps) => {
+export const useDepositForm = ({ clients, onConfirm, refreshClientBalance }: UseDepositFormProps) => {
   const [selectedClient, setSelectedClient] = useState("");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState<Date>(new Date());
