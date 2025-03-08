@@ -1,5 +1,5 @@
 
-import { Deposit } from "@/features/deposits/types";
+import { type Deposit } from "@/components/deposits/types";
 import { DepositClientInfo } from "./DepositClientInfo";
 import { DepositAmount } from "./DepositAmount";
 import { DepositDateInfo } from "./DepositDateInfo";
@@ -31,7 +31,7 @@ export const MobileDepositsTable = ({
             <div className="flex items-center gap-1">
               <DepositDateInfo deposit={deposit} />
             </div>
-            <p>{deposit.description || deposit.notes || ""}</p>
+            <p>{deposit.description}</p>
           </div>
           <DepositActions 
             deposit={deposit} 

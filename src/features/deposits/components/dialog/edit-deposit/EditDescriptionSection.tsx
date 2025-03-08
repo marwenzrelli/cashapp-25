@@ -2,7 +2,7 @@
 import React from "react";
 import { Label } from "@/components/ui/label";
 import { ScrollText } from "lucide-react";
-import { EditFormData } from "@/features/deposits/types";
+import { EditFormData } from "@/components/deposits/types";
 
 interface EditDescriptionSectionProps {
   editForm: EditFormData;

@@ -1,40 +1,91 @@
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Client } from "@/features/clients/types";
-import { StandaloneDepositForm } from "@/features/deposits/components/deposit-form/StandaloneDepositForm";
-import { Deposit } from "@/features/deposits/types";
+import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { type DepositDialogProps } from "@/features/deposits/types";
+import { MobileDepositDialog } from "./deposit-dialog/MobileDepositDialog";
+import { DesktopDepositDialog } from "./deposit-dialog/DesktopDepositDialog";
+import { useDepositForm } from "../hooks/useDepositForm";
 
-interface DepositDialogProps {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
-  clients: Client[];
-  onConfirm: (deposit: Deposit) => Promise<boolean | void>;
-  refreshClientBalance: () => Promise<boolean>;
-}
+export const DepositDialog = ({ open, onOpenChange, onConfirm }: DepositDialogProps) => {
+  const {
+    formState,
+    setSelectedClient,
+    setAmount,
+    setDescription,
+    handleDateChange,
+    handleSubmit,
+    isLoading,
+    isValid,
+    showSuccess,
+    clients,
+    fetchClients
+  } = useDepositForm(onConfirm, onOpenChange);
 
-export const DepositDialog = ({
-  isOpen,
-  onOpenChange,
-  clients,
-  onConfirm,
-  refreshClientBalance
-}: DepositDialogProps) => {
+  useEffect(() => {
+    if (open) {
+      fetchClients();
+    }
+  }, [open, fetchClients]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('public:clients')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'clients'
+        },
+        () => {
+          console.log('Mise à jour des soldes détectée');
+          fetchClients();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchClients]);
+
+  // Mobile version using Sheet
+  if (window.innerWidth < 768) {
+    return (
+      <MobileDepositDialog
+        open={open}
+        onOpenChange={onOpenChange}
+        onConfirm={onConfirm}
+        clients={clients}
+        formState={formState}
+        setSelectedClient={setSelectedClient}
+        setAmount={setAmount}
+        setDescription={setDescription}
+        handleDateChange={handleDateChange}
+        handleSubmit={handleSubmit}
+        isLoading={isLoading}
+        isValid={isValid}
+        showSuccess={showSuccess}
+      />
+    );
+  }
+
+  // Desktop version using Dialog
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Nouveau versement</DialogTitle>
-        </DialogHeader>
-        
-        <StandaloneDepositForm 
-          clients={clients.map(client => ({
-            ...client,
-            dateCreation: client.date_creation || new Date().toISOString()
-          }))} 
-          onConfirm={onConfirm} 
-          refreshClientBalance={refreshClientBalance} 
-        />
-      </DialogContent>
-    </Dialog>
+    <DesktopDepositDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      onConfirm={onConfirm}
+      clients={clients}
+      formState={formState}
+      setSelectedClient={setSelectedClient}
+      setAmount={setAmount}
+      setDescription={setDescription}
+      handleDateChange={handleDateChange}
+      handleSubmit={handleSubmit}
+      isLoading={isLoading}
+      isValid={isValid}
+      showSuccess={showSuccess}
+    />
   );
 };

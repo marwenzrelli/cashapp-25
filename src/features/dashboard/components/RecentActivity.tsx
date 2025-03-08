@@ -1,6 +1,8 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowUpCircle, ArrowDownCircle, ArrowLeftRight } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import { OperationsMobileCard } from "@/features/clients/components/operations-history/OperationsMobileCard";
 import { RecentActivity } from "../types";
 import { formatDateTime } from "@/features/operations/types";
@@ -48,11 +50,12 @@ export const RecentActivityCard = ({ activities, currency }: RecentActivityProps
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-1">
-                  <p className={
+                  <p className={cn(
+                    "font-medium",
                     activity.type === 'deposit' ? "text-green-600 dark:text-green-400" :
                     activity.type === 'withdrawal' ? "text-red-600 dark:text-red-400" :
                     "text-blue-600 dark:text-blue-400"
-                  }>
+                  )}>
                     {activity.type === 'withdrawal' ? '-' : ''}{activity.amount.toLocaleString()} {currency}
                   </p>
                   <p className="text-xs text-muted-foreground">
@@ -73,13 +76,13 @@ export const RecentActivityCard = ({ activities, currency }: RecentActivityProps
                     toClient: activity.toClient,
                     description: activity.description || ''
                   }}
+                  formatAmount={(amount) => `${amount.toLocaleString()}`}
                   currency={currency}
                   colorClass={
                     activity.type === 'deposit' ? "text-green-600 dark:text-green-400" :
                     activity.type === 'withdrawal' ? "text-red-600 dark:text-red-400" :
                     "text-blue-600 dark:text-blue-400"
                   }
-                  formatAmount={(amount) => `${amount.toLocaleString()}`}
                 />
               </div>
             </div>

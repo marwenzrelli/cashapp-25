@@ -1,16 +1,16 @@
-import React from "react";
-import { Deposit } from "@/features/deposits/types"; // Use deposit type consistently
-import { useClients } from "@/features/clients/hooks/useClients";
-import { ExtendedClient } from "@/features/withdrawals/components/standalone/StandaloneWithdrawalForm";
-import { toast } from "sonner";
-import { adaptDepositsForUI } from "../utils/depositAdapters";
 
-import { 
-  DepositsContentHeader,
-  DepositsSearchSection,
-  DepositsTableSection,
-  DepositsDialogs
-} from "./content";
+import React from "react";
+import { DepositsTable } from "./DepositsTable";
+import { DepositsHeader } from "./DepositsHeader";
+import { SearchBar } from "./SearchBar";
+import { DeleteDepositDialog } from "./DeleteDepositDialog";
+import { Deposit } from "../types";
+import { useClients } from "@/features/clients/hooks/useClients";
+import { StandaloneDepositForm } from "./DepositForm";
+import { TransferPagination } from "@/features/transfers/components/TransferPagination";
+import { EditDepositDialog } from "./dialog/EditDepositDialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ExtendedClient } from "@/features/withdrawals/components/standalone/StandaloneWithdrawalForm";
 
 interface DepositsContentProps {
   deposits: Deposit[];
@@ -31,14 +31,13 @@ interface DepositsContentProps {
   setCurrentPage: (page: number) => void;
   editForm: any;
   handleDelete: (deposit: Deposit) => void;
-  confirmDelete: () => Promise<boolean>;
+  confirmDelete: () => Promise<void>;
   handleEdit: (deposit: Deposit) => void;
   handleEditFormChange: (field: string, value: string) => void;
   handleConfirmEdit: () => Promise<void>;
   handleCreateDeposit: (deposit: Deposit) => Promise<void>;
   isLoading?: boolean;
   totalItems?: number;
-  fetchDeposits?: () => Promise<void>;
 }
 
 export const DepositsContent = ({
@@ -66,20 +65,29 @@ export const DepositsContent = ({
   handleConfirmEdit,
   handleCreateDeposit,
   isLoading = false,
-  totalItems = 0,
-  fetchDeposits
+  totalItems = 0
 }: DepositsContentProps) => {
   const {
     clients,
     refreshClientBalance,
     fetchClients
   } = useClients();
+  
+  // Make sure clients are loaded when the component mounts
+  React.useEffect(() => {
+    fetchClients();
+  }, [fetchClients]);
 
-  const handleRefreshClientBalance = async (): Promise<boolean> => {
+  console.log("DepositsContent render with:", {
+    depositsLength: deposits?.length,
+    filteredDepositsLength: filteredDeposits?.length,
+    paginatedDepositsLength: paginatedDeposits?.length,
+    isLoading
+  });
+
+  const handleRefreshClientBalance = async (clientId: string): Promise<boolean> => {
     try {
-      if (clients && clients.length > 0) {
-        await refreshClientBalance(clients[0].id.toString());
-      }
+      await refreshClientBalance(parseInt(clientId, 10));
       return true;
     } catch (error) {
       console.error("Error refreshing client balance:", error);
@@ -87,20 +95,7 @@ export const DepositsContent = ({
     }
   };
 
-  const onConfirmDelete = async () => {
-    try {
-      const success = await confirmDelete();
-      if (success && fetchDeposits) {
-        toast.success("Versement supprimé avec succès");
-        await fetchDeposits();
-      }
-      return success;
-    } catch (error) {
-      console.error("Erreur lors de la suppression:", error);
-      return false;
-    }
-  };
-
+  // Convert clients to ExtendedClients
   const extendedClients: ExtendedClient[] = clients.map(client => ({
     ...client,
     dateCreation: client.date_creation || new Date().toISOString()
@@ -108,46 +103,80 @@ export const DepositsContent = ({
 
   return (
     <div className="space-y-8 animate-in">
-      <DepositsContentHeader 
+      <DepositsHeader 
         deposits={deposits}
         filteredDeposits={filteredDeposits}
         isLoading={isLoading}
-        clients={extendedClients}
-        handleCreateDeposit={handleCreateDeposit}
-        handleRefreshClientBalance={handleRefreshClientBalance}
-        fetchClients={fetchClients}
       />
       
+      {/* Place the deposit form directly below statistics with the same width */}
+      <div>
+        <StandaloneDepositForm
+          clients={extendedClients}
+          onConfirm={handleCreateDeposit}
+          refreshClientBalance={handleRefreshClientBalance}
+        />
+      </div>
+
       <div className="space-y-4">
-        <DepositsSearchSection
+        <SearchBar
           searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
+          onSearchChange={setSearchTerm}
+          itemsPerPage={itemsPerPage}
+          onItemsPerPageChange={setItemsPerPage}
+          totalDeposits={totalItems}
+        />
+        
+        <TransferPagination
           itemsPerPage={itemsPerPage}
           setItemsPerPage={setItemsPerPage}
           totalItems={totalItems}
           currentPage={currentPage}
           setCurrentPage={setCurrentPage}
+          label="versements"
         />
         
-        <DepositsTableSection
-          isLoading={isLoading}
-          paginatedDeposits={paginatedDeposits}
-          searchTerm={searchTerm}
-          handleEdit={handleEdit}
-          handleDelete={handleDelete}
-        />
+        {isLoading ? (
+          <div className="space-y-4">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+          </div>
+        ) : (
+          paginatedDeposits && paginatedDeposits.length > 0 ? (
+            <DepositsTable 
+              deposits={paginatedDeposits} 
+              onEdit={handleEdit} 
+              onDelete={handleDelete} 
+            />
+          ) : (
+            <div className="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
+              <p className="text-gray-500">Aucun versement trouvé</p>
+              {searchTerm && (
+                <p className="text-sm text-gray-400 mt-2">
+                  Essayez de modifier vos critères de recherche
+                </p>
+              )}
+            </div>
+          )
+        )}
       </div>
 
-      <DepositsDialogs
-        isDeleteDialogOpen={isDeleteDialogOpen}
-        setIsDeleteDialogOpen={setIsDeleteDialogOpen}
-        isEditDialogOpen={isEditDialogOpen}
-        setIsEditDialogOpen={setIsEditDialogOpen}
-        selectedDeposit={selectedDeposit}
+      <DeleteDepositDialog 
+        isOpen={isDeleteDialogOpen} 
+        onOpenChange={setIsDeleteDialogOpen} 
+        onConfirm={confirmDelete} 
+        selectedDeposit={selectedDeposit} 
+      />
+
+      {/* Modal d'édition de dépôt */}
+      <EditDepositDialog
+        isOpen={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
         editForm={editForm}
-        handleEditFormChange={handleEditFormChange}
-        handleConfirmEdit={handleConfirmEdit}
-        confirmDelete={onConfirmDelete}
+        onEditFormChange={handleEditFormChange}
+        onConfirm={handleConfirmEdit}
+        selectedDeposit={selectedDeposit}
         clients={clients}
       />
     </div>

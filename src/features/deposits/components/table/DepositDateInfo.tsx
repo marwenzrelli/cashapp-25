@@ -1,47 +1,55 @@
 
-import { Deposit } from "@/features/deposits/types";
-import { format, isValid } from "date-fns";
-import { fr } from "date-fns/locale";
+import { Clock, Calendar } from "lucide-react";
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipProvider, 
+  TooltipTrigger 
+} from "@/components/ui/tooltip";
+import { formatDateTime } from "@/features/deposits/hooks/utils/dateUtils";
+import { type Deposit } from "@/components/deposits/types";
 
 interface DepositDateInfoProps {
   deposit: Deposit;
 }
 
 export const DepositDateInfo = ({ deposit }: DepositDateInfoProps) => {
-  const formatDateDisplay = (dateString: string | undefined) => {
-    if (!dateString) return "Date inconnue";
-    
-    try {
-      const date = new Date(dateString);
-      if (!isValid(date)) return "Date invalide";
-      
-      return format(date, "d MMM yyyy à HH:mm", { locale: fr });
-    } catch (error) {
-      console.error("Error formatting date:", error);
-      return "Erreur de date";
-    }
-  };
-
-  // Prioritize operation_date if available, otherwise use created_at date
-  const dateToShow = deposit.operation_date || deposit.created_at;
-  const formattedDate = formatDateDisplay(dateToShow);
+  // Always prioritize operation_date for display
+  const displayDate = deposit.operation_date 
+    ? formatDateTime(deposit.operation_date)
+    : deposit.date;
   
-  // If using operation_date, show a note that it's a custom date
-  const isCustomDate = !!deposit.operation_date;
-
+  // Check if there's a difference between operation_date and created_at
+  const isCustomDate = deposit.operation_date !== undefined && 
+    deposit.operation_date !== null && 
+    new Date(deposit.operation_date).getTime() !== new Date(deposit.created_at).getTime();
+    
+  const hasBeenModified = deposit.last_modified_at !== undefined && deposit.last_modified_at !== null;
+  
+  if (!isCustomDate && !hasBeenModified) {
+    return <div>{displayDate}</div>;
+  }
+  
   return (
-    <div className="space-y-1">
-      <span>{formattedDate}</span>
-      {deposit.last_modified_at && (
-        <div className="text-xs text-amber-600">
-          Modifié le {formatDateDisplay(deposit.last_modified_at)}
-        </div>
-      )}
-      {isCustomDate && (
-        <div className="text-xs text-blue-600">
-          Date d'opération personnalisée
-        </div>
-      )}
-    </div>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="flex items-center gap-1 cursor-help">
+            {displayDate}
+            {isCustomDate && <Calendar className="h-3.5 w-3.5 text-blue-500" />}
+            {hasBeenModified && <Clock className="h-3.5 w-3.5 text-amber-500" />}
+          </div>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Date de création: {formatDateTime(deposit.created_at)}</p>
+          {isCustomDate && (
+            <p>Date d'opération: {formatDateTime(deposit.operation_date)}</p>
+          )}
+          {hasBeenModified && (
+            <p>Modifié le {formatDateTime(deposit.last_modified_at)}</p>
+          )}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 };

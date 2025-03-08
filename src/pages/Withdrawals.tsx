@@ -3,7 +3,7 @@ import { useAuthenticationCheck } from "@/features/admin/hooks/useAuthentication
 import { WithdrawalsPage } from "@/features/withdrawals/components/WithdrawalsPage";
 
 const Withdrawals = () => {
-  useAuthenticationCheck(); // Ensure we're authenticated
+  useAuthenticationCheck(); // Add this to ensure we're authenticated
   
   return <WithdrawalsPage />;
 };

@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { Operation } from "../types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -13,18 +12,13 @@ export const useDeleteOperation = (
   fetchAllOperations: () => Promise<void>,
   setIsLoading: (isLoading: boolean) => void
 ) => {
-  const [operationToDelete, setOperationToDelete] = useState<Operation | null>(null);
-  
   const deleteOperation = async (operation: Operation) => {
-    setOperationToDelete(operation);
-    return operation;
+    const operationToDelete = operation;
+    return operationToDelete;
   };
 
   const confirmDeleteOperation = async (operationToDelete: Operation | undefined) => {
-    if (!operationToDelete) {
-      console.log("No operation selected for deletion");
-      return false;
-    }
+    if (!operationToDelete) return;
     
     try {
       setIsLoading(true);
@@ -32,47 +26,35 @@ export const useDeleteOperation = (
       const userId = session?.user?.id;
       
       console.log(`Début de la suppression de l'opération: ${operationToDelete.type} avec l'ID: ${operationToDelete.id}`);
-      
-      let success = false;
+      console.log("Type de l'ID:", typeof operationToDelete.id);
       
       switch (operationToDelete.type) {
         case "deposit":
-          success = await handleDepositDeletion(operationToDelete.id, userId);
+          await handleDepositDeletion(operationToDelete.id, userId);
           break;
           
         case "withdrawal":
           await handleWithdrawalDeletion(operationToDelete.id, userId);
-          success = true;
           break;
           
         case "transfer":
           await handleTransferDeletion(operationToDelete.id, userId);
-          success = true;
           break;
       }
       
-      if (success) {
-        toast.success("Opération supprimée avec succès");
-        await fetchAllOperations();
-        setOperationToDelete(null);
-        return true;
-      } else {
-        toast.error("Échec de la suppression de l'opération");
-        return false;
-      }
+      toast.success("Opération supprimée avec succès");
+      await fetchAllOperations();
     } catch (error: any) {
       console.error("Erreur lors de la suppression de l'opération:", error);
       toast.error("Erreur lors de la suppression de l'opération", {
         description: error.message || "Une erreur s'est produite lors de la suppression."
       });
-      return false;
     } finally {
       setIsLoading(false);
     }
   };
 
   return {
-    operationToDelete,
     deleteOperation,
     confirmDeleteOperation
   };

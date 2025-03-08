@@ -1,75 +1,57 @@
+
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 /**
  * Handles the deletion of a deposit operation
  * 
  * @param id The ID of the deposit to delete
  * @param userId The ID of the user performing the deletion
- * @returns Promise resolving to true on successful deletion
  */
-export async function handleDepositDeletion(id: string | number, userId: string | undefined): Promise<boolean> {
-  const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-  
-  try {
-    console.log(`Suppression du versement ID: ${numericId}, par l'utilisateur ${userId || 'anonyme'}`);
+export async function handleDepositDeletion(id: string, userId: string | undefined) {
+  const { data: depositData, error: depositFetchError } = await supabase
+    .from('deposits')
+    .select('*')
+    .eq('id', parseInt(id))
+    .single();
     
-    // Récupérer les détails du versement avant suppression pour l'archiver
-    const { data: depositData, error: depositFetchError } = await supabase
-      .from('deposits')
-      .select('*')
-      .eq('id', numericId)
-      .single();
-      
-    if (depositFetchError) {
-      console.error("Erreur lors de la récupération du versement:", depositFetchError);
-      return false;
-    }
+  if (depositFetchError) {
+    console.error("Erreur lors de la récupération du versement:", depositFetchError);
+    throw depositFetchError;
+  } else if (depositData) {
+    console.log("Enregistrement dans deleted_deposits du versement:", depositData);
     
-    if (!depositData) {
-      console.error(`Aucun versement trouvé avec l'ID ${numericId}`);
-      return false;
-    }
-    
-    console.log("Dépôt trouvé, archivage dans deleted_deposits:", depositData);
-    
-    // Créer une entrée dans deleted_deposits pour conserver l'historique
-    const { error: depositLogError } = await supabase
+    const { data: depositLogData, error: depositLogError } = await supabase
       .from('deleted_deposits')
       .insert({
         original_id: depositData.id,
         client_name: depositData.client_name,
         amount: Number(depositData.amount),
-        operation_date: depositData.operation_date || depositData.created_at,
+        operation_date: depositData.operation_date,
         notes: depositData.notes || null,
         deleted_by: userId,
         status: depositData.status
-      });
+      })
+      .select();
     
     if (depositLogError) {
-      console.error("Erreur lors de l'archivage du versement:", depositLogError);
-      console.error("Détails:", depositLogError.message, depositLogError.details);
-      // Ne pas interrompre la suppression si l'archivage échoue
-      console.warn("L'archivage a échoué, mais nous continuons avec la suppression");
+      console.error("Erreur lors de l'enregistrement dans deleted_deposits:", depositLogError);
+      throw depositLogError;
     } else {
-      console.log("Versement archivé avec succès dans deleted_deposits");
+      console.log("Versement enregistré avec succès dans deleted_deposits:", depositLogData);
     }
     
-    // Supprimer le versement original
-    const { error: deleteError } = await supabase
+    const { error: depositError } = await supabase
       .from('deposits')
       .delete()
-      .eq('id', numericId);
+      .eq('id', parseInt(id));
       
-    if (deleteError) {
-      console.error("Erreur lors de la suppression du versement:", deleteError);
-      return false;
+    if (depositError) {
+      console.error("Erreur lors de la suppression du versement:", depositError);
+      throw depositError;
     }
     
-    console.log(`Versement ID: ${numericId} supprimé avec succès`);
-    return true;
-  } catch (error) {
-    console.error("Erreur dans handleDepositDeletion:", error);
-    return false;
+    console.log("Versement supprimé avec succès");
   }
 }
 
@@ -79,13 +61,11 @@ export async function handleDepositDeletion(id: string | number, userId: string 
  * @param id The ID of the withdrawal to delete
  * @param userId The ID of the user performing the deletion
  */
-export async function handleWithdrawalDeletion(id: string | number, userId: string | undefined) {
-  const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-  
+export async function handleWithdrawalDeletion(id: string, userId: string | undefined) {
   const { data: withdrawalData, error: withdrawalFetchError } = await supabase
     .from('withdrawals')
     .select('*')
-    .eq('id', numericId)
+    .eq('id', parseInt(id))
     .single();
     
   if (withdrawalFetchError) {
@@ -117,7 +97,7 @@ export async function handleWithdrawalDeletion(id: string | number, userId: stri
     const { error: withdrawalError } = await supabase
       .from('withdrawals')
       .delete()
-      .eq('id', numericId);
+      .eq('id', parseInt(id));
       
     if (withdrawalError) {
       console.error("Erreur lors de la suppression du retrait:", withdrawalError);
@@ -134,13 +114,11 @@ export async function handleWithdrawalDeletion(id: string | number, userId: stri
  * @param id The ID of the transfer to delete
  * @param userId The ID of the user performing the deletion
  */
-export async function handleTransferDeletion(id: string | number, userId: string | undefined) {
-  const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-  
+export async function handleTransferDeletion(id: string, userId: string | undefined) {
   const { data: transferData, error: transferFetchError } = await supabase
     .from('transfers')
     .select('*')
-    .eq('id', numericId)
+    .eq('id', parseInt(id))
     .single();
     
   if (transferFetchError) {
@@ -173,7 +151,7 @@ export async function handleTransferDeletion(id: string | number, userId: string
     const { error: transferError } = await supabase
       .from('transfers')
       .delete()
-      .eq('id', numericId);
+      .eq('id', parseInt(id));
       
     if (transferError) {
       console.error("Erreur lors de la suppression du virement:", transferError);

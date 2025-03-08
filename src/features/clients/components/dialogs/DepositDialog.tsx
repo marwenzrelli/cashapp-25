@@ -1,41 +1,36 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Client } from "../../types";
-import { StandaloneDepositForm } from "@/features/deposits/components/deposit-form/StandaloneDepositForm";
+import { StandaloneDepositForm } from "@/features/deposits/components/DepositForm";
 import { Deposit } from "@/features/deposits/types";
 
 interface DepositDialogProps {
   client: Client;
-  isOpen: boolean;
+  open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (deposit: Deposit) => Promise<boolean | void>;
+  onConfirm: (deposit: Deposit) => Promise<boolean | void>; // Updated return type
   refreshClientBalance: () => Promise<boolean>;
 }
 
 export const DepositDialog = ({
   client,
-  isOpen,
+  open,
   onOpenChange,
   onConfirm,
   refreshClientBalance
 }: DepositDialogProps) => {
-  // Create a function to transform Client to ExtendedClient
-  const getExtendedClient = () => {
-    return {
-      ...client,
-      dateCreation: client.date_creation || new Date().toISOString()
-    };
-  };
-
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Nouveau versement</DialogTitle>
         </DialogHeader>
         
         <StandaloneDepositForm 
-          clients={[getExtendedClient()]} 
+          clients={[{
+            ...client,
+            dateCreation: client.date_creation || new Date().toISOString()
+          }]} 
           onConfirm={onConfirm} 
           refreshClientBalance={refreshClientBalance} 
         />

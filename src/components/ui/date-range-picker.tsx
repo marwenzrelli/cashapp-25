@@ -16,35 +16,15 @@ import {
 
 interface DatePickerWithRangeProps {
   date?: DateRange | undefined;
-  setDate?: (date: DateRange | undefined) => void;
   onDateChange?: (date: DateRange | undefined) => void;
-  isCustomRange?: boolean;
-  setIsCustomRange?: (isCustom: boolean) => void;
-  className?: string;
 }
 
 export function DatePickerWithRange({
   date,
-  setDate,
   onDateChange,
-  isCustomRange,
-  setIsCustomRange,
-  className,
 }: DatePickerWithRangeProps) {
-  const handleSelect = (selectedDate: DateRange | undefined) => {
-    if (setDate) {
-      setDate(selectedDate);
-    }
-    if (onDateChange) {
-      onDateChange(selectedDate);
-    }
-    if (setIsCustomRange && selectedDate) {
-      setIsCustomRange(true);
-    }
-  };
-
   return (
-    <div className={cn("grid gap-2", className)}>
+    <div className={"grid gap-2"}>
       <Popover>
         <PopoverTrigger asChild>
           <Button
@@ -76,7 +56,7 @@ export function DatePickerWithRange({
             mode="range"
             defaultMonth={date?.from}
             selected={date}
-            onSelect={handleSelect}
+            onSelect={onDateChange}
             numberOfMonths={2}
             locale={fr}
           />

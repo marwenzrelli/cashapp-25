@@ -3,7 +3,7 @@ import React from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { DollarSign } from "lucide-react";
-import { EditFormData } from "@/features/deposits/types";
+import { EditFormData } from "@/components/deposits/types";
 import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface EditAmountSectionProps {

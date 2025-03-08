@@ -1,7 +1,8 @@
 
-import { Deposit } from "@/features/deposits/types";
+import { type Deposit } from "@/components/deposits/types";
 import { DesktopDepositsTable } from "./table/DesktopDepositsTable";
 import { MobileDepositsTable } from "./table/MobileDepositsTable";
+import { cn } from "@/lib/utils";
 
 interface DepositsTableProps {
   deposits: Deposit[];

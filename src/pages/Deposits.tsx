@@ -87,7 +87,6 @@ const Deposits = () => {
       handleCreateDeposit={handleCreateDeposit}
       isLoading={isLoading}
       totalItems={totalItems}
-      fetchDeposits={fetchDeposits}
     />
   );
 };

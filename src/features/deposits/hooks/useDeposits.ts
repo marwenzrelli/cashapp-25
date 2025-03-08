@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Deposit } from "@/features/deposits/types"; // Updated import path
+import { Deposit } from "@/components/deposits/types";
 import { useDepositState } from "./deposit-hooks/useDepositState";
 import { useDepositAuth } from "./deposit-hooks/useDepositAuth";
 import { useFetchDeposits } from "./deposit-hooks/useFetchDeposits";

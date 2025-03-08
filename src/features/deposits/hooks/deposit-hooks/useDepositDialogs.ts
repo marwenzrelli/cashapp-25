@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Deposit, EditFormData } from "@/features/deposits/types";
+import { Deposit, EditFormData } from "@/components/deposits/types";
 import { formatISODateTime } from "../utils/dateUtils";
 import { toast } from "sonner";
 
@@ -12,9 +12,7 @@ export const useDepositDialogs = () => {
   const [editForm, setEditForm] = useState<EditFormData>({
     clientName: "",
     amount: "",
-    notes: "",
-    date: "",
-    time: ""
+    notes: ""
   });
   const [isDeleting, setIsDeleting] = useState(false);
 
