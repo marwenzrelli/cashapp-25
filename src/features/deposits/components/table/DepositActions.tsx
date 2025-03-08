@@ -1,7 +1,7 @@
 
 import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { type Deposit } from "@/components/deposits/types";
+import { type Deposit } from "@/features/deposits/types";
 
 interface DepositActionsProps {
   deposit: Deposit;
