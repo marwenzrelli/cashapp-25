@@ -32,26 +32,34 @@ export const useDeleteOperation = (
       const userId = session?.user?.id;
       
       console.log(`Début de la suppression de l'opération: ${operationToDelete.type} avec l'ID: ${operationToDelete.id}`);
-      console.log("Type de l'ID:", typeof operationToDelete.id);
+      
+      let success = false;
       
       switch (operationToDelete.type) {
         case "deposit":
-          await handleDepositDeletion(operationToDelete.id, userId);
+          success = await handleDepositDeletion(operationToDelete.id, userId);
           break;
           
         case "withdrawal":
           await handleWithdrawalDeletion(operationToDelete.id, userId);
+          success = true;
           break;
           
         case "transfer":
           await handleTransferDeletion(operationToDelete.id, userId);
+          success = true;
           break;
       }
       
-      toast.success("Opération supprimée avec succès");
-      await fetchAllOperations();
-      setOperationToDelete(null);
-      return true;
+      if (success) {
+        toast.success("Opération supprimée avec succès");
+        await fetchAllOperations();
+        setOperationToDelete(null);
+        return true;
+      } else {
+        toast.error("Échec de la suppression de l'opération");
+        return false;
+      }
     } catch (error: any) {
       console.error("Erreur lors de la suppression de l'opération:", error);
       toast.error("Erreur lors de la suppression de l'opération", {

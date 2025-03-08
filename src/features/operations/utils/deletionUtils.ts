@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 /**
@@ -70,7 +69,7 @@ export async function handleDepositDeletion(id: string | number, userId: string 
     return true;
   } catch (error) {
     console.error("Erreur dans handleDepositDeletion:", error);
-    return false;
+    throw error; // Rethrow the error to be caught by the calling function
   }
 }
 
