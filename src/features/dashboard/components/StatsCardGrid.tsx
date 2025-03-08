@@ -13,9 +13,16 @@ import { DashboardStats } from "../types";
 interface StatsCardGridProps {
   stats: DashboardStats;
   currency: string;
+  onRecalculate?: () => void;
+  isRecalculating?: boolean;
 }
 
-export const StatsCardGrid = ({ stats, currency }: StatsCardGridProps) => {
+export const StatsCardGrid = ({ 
+  stats, 
+  currency, 
+  onRecalculate, 
+  isRecalculating 
+}: StatsCardGridProps) => {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 w-full px-2 sm:px-0">
       <StatsCard
@@ -24,6 +31,8 @@ export const StatsCardGrid = ({ stats, currency }: StatsCardGridProps) => {
         subtitle="Total des soldes clients"
         icon={<Wallet className="h-4 w-4 text-blue-600" />}
         gradientFrom="blue"
+        onRecalculate={onRecalculate}
+        isRecalculating={isRecalculating}
       />
 
       <StatsCard

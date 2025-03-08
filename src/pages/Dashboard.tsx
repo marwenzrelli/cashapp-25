@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { SystemUser } from "@/types/admin";
@@ -12,8 +11,6 @@ import { TransactionTrends } from "@/features/dashboard/components/TransactionTr
 import { AISuggestions } from "@/features/dashboard/components/AISuggestions";
 import { RecentActivityCard } from "@/features/dashboard/components/RecentActivity";
 import { useDashboardData } from "@/features/dashboard/hooks/useDashboardData";
-import { Button } from "@/components/ui/button";
-import { RotateCw } from "lucide-react";
 import { recalculateAllClientBalances } from "@/features/statistics/utils/balanceCalculator";
 
 const Dashboard = () => {
@@ -55,7 +52,6 @@ const Dashboard = () => {
       
       if (success) {
         toast.success("Tous les soldes clients ont été recalculés avec succès");
-        // Rafraîchir le tableau de bord pour afficher les nouvelles données
         handleRefresh();
       } else {
         toast.error("Erreur lors du recalcul des soldes clients");
@@ -70,21 +66,14 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-8 animate-in">
-      <div className="flex justify-between items-center">
-        <DashboardHeader isLoading={isLoading} onRefresh={handleRefresh} />
-        
-        <Button 
-          variant="outline" 
-          onClick={handleRecalculateBalances}
-          disabled={isRecalculating}
-          className="ml-auto"
-        >
-          <RotateCw className={`h-4 w-4 mr-2 ${isRecalculating ? 'animate-spin' : ''}`} />
-          {isRecalculating ? 'Recalcul en cours...' : 'Recalculer tous les soldes'}
-        </Button>
-      </div>
+      <DashboardHeader isLoading={isLoading} onRefresh={handleRefresh} />
 
-      <StatsCardGrid stats={stats} currency={currency} />
+      <StatsCardGrid 
+        stats={stats} 
+        currency={currency}
+        onRecalculate={handleRecalculateBalances}
+        isRecalculating={isRecalculating}
+      />
 
       <div className="grid gap-6 md:grid-cols-2">
         <TransactionTrends data={stats.monthly_stats} currency={currency} />

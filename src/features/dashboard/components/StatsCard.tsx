@@ -1,6 +1,8 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { RotateCw } from "lucide-react";
 import React from "react";
 
 interface StatsCardProps {
@@ -9,6 +11,8 @@ interface StatsCardProps {
   subtitle: string;
   icon: React.ReactNode;
   gradientFrom?: "green" | "red" | "blue" | "purple" | "amber";
+  onRecalculate?: () => void;
+  isRecalculating?: boolean;
 }
 
 export const StatsCard = ({ 
@@ -16,7 +20,9 @@ export const StatsCard = ({
   value, 
   subtitle, 
   icon,
-  gradientFrom = "blue" 
+  gradientFrom = "blue",
+  onRecalculate,
+  isRecalculating = false
 }: StatsCardProps) => {
   // Determine if the value is numeric and negative
   const isNumeric = typeof value === 'number' || !isNaN(parseFloat(value as string));
@@ -37,6 +43,9 @@ export const StatsCard = ({
     amber: "from-amber-50 to-transparent dark:from-amber-950/20"
   };
 
+  // Only show recalculate button for Solde Général (title check)
+  const showRecalculate = onRecalculate && title === "Solde Général";
+
   return (
     <Card className={`bg-gradient-to-br ${gradientClasses[gradientFrom]}`}>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -50,9 +59,24 @@ export const StatsCard = ({
         )}>
           {value}
         </div>
-        <p className="text-xs text-muted-foreground">
-          {subtitle}
-        </p>
+        <div className="flex flex-col md:flex-row md:items-center justify-between">
+          <p className="text-xs text-muted-foreground">
+            {subtitle}
+          </p>
+          
+          {showRecalculate && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={onRecalculate}
+              disabled={isRecalculating}
+              className="mt-2 md:mt-0 w-full md:w-auto text-xs"
+            >
+              <RotateCw className={`h-3 w-3 mr-1 ${isRecalculating ? 'animate-spin' : ''}`} />
+              {isRecalculating ? 'Recalcul...' : 'Recalculer tous les soldes'}
+            </Button>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
