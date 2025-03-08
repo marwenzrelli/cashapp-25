@@ -43,7 +43,7 @@ export const ClientListItem = ({
           <div className="flex-shrink-0 h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
             {client.prenom.charAt(0)}{client.nom.charAt(0)}
           </div>
-          <div>
+          <div className="flex-grow">
             <h3 
               className="font-medium cursor-pointer hover:text-primary hover:underline"
               onClick={handleView}
@@ -61,8 +61,8 @@ export const ClientListItem = ({
           </div>
         </div>
         
-        <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-6">
-          <div className="flex items-center justify-between">
+        <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-6 w-full md:w-auto">
+          <div className="flex items-center justify-between w-full md:w-auto">
             <ClientStatusBadge status={client.status}>
               {getStatusLabel(client.status)}
             </ClientStatusBadge>
@@ -79,7 +79,7 @@ export const ClientListItem = ({
             </div>
           </div>
           
-          <div className="flex items-center justify-between md:gap-8">
+          <div className="flex items-center justify-between md:gap-8 w-full md:w-auto">
             <ClientBalanceDisplay solde={client.solde} />
             
             <div className="hidden md:flex items-center">

@@ -69,7 +69,7 @@ export const PublicOperationsTable = ({ operations, currency }: PublicOperations
       </div>
       
       {/* Enhanced cards for mobile */}
-      <div className="md:hidden space-y-4 px-2">
+      <div className="md:hidden space-y-4 px-0">
         {operations.map((operation) => (
           <OperationsMobileCard 
             key={operation.id} 

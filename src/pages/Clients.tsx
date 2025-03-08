@@ -40,7 +40,7 @@ const Clients = () => {
 
   return (
     <TooltipProvider>
-      <div className="container mx-auto max-w-7xl pb-8">
+      <div className="sm:container mx-auto max-w-7xl pb-8 px-0 sm:px-4">
         <ClientsPageContent
           clients={clients}
           filteredClients={filteredClients}

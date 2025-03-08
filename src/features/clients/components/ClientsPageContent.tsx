@@ -1,3 +1,4 @@
+
 import { Client } from "@/features/clients/types";
 import { ClientList } from "./ClientList";
 import { ClientInsights } from "./ClientInsights";
@@ -5,6 +6,7 @@ import { ClientSearch } from "./ClientSearch";
 import { Loader2, AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AISuggestion } from "../types";
+
 interface ClientsPageContentProps {
   clients: Client[];
   filteredClients: Client[];
@@ -17,6 +19,7 @@ interface ClientsPageContentProps {
   handleRetry: () => void;
   openNewClientDialog: () => void;
 }
+
 export const ClientsPageContent = ({
   clients,
   filteredClients,
@@ -77,21 +80,22 @@ export const ClientsPageContent = ({
     }
     return <ClientList clients={filteredClients} onEdit={handleEdit} onDelete={handleDelete} />;
   };
-  return <>
-      <div className="space-y-6 animate-in md:px-0 px-0 mx-0 my-0 py-0">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Gestion des clients</h1>
-          <p className="text-sm md:text-base text-muted-foreground">
-            Gérez vos clients avec l'aide de l'intelligence artificielle
-          </p>
-        </div>
-
-        <div className="grid gap-4 md:gap-6 md:grid-cols-2">
-          <ClientInsights suggestions={aiSuggestions} />
-          <ClientSearch searchTerm={searchTerm} onSearchChange={setSearchTerm} onNewClient={openNewClientDialog} />
-        </div>
-
-        {renderContent()}
+  
+  return (
+    <div className="space-y-6 animate-in px-2 sm:px-0">
+      <div>
+        <h1 className="text-2xl md:text-3xl font-bold">Gestion des clients</h1>
+        <p className="text-sm md:text-base text-muted-foreground">
+          Gérez vos clients avec l'aide de l'intelligence artificielle
+        </p>
       </div>
-    </>;
+
+      <div className="grid gap-4 md:gap-6 md:grid-cols-2">
+        <ClientInsights suggestions={aiSuggestions} />
+        <ClientSearch searchTerm={searchTerm} onSearchChange={setSearchTerm} onNewClient={openNewClientDialog} />
+      </div>
+
+      {renderContent()}
+    </div>
+  );
 };

@@ -88,8 +88,8 @@ const ClientProfile = () => {
   console.log("Utilisation de l'ID client pour le code QR:", actualClientId);
 
   return (
-    <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 max-w-7xl overflow-x-hidden">
-      <div className="space-y-4 sm:space-y-6 w-full">
+    <div className="sm:container mx-auto px-0 sm:px-4 py-4 sm:py-8 max-w-7xl overflow-x-hidden">
+      <div className="space-y-4 sm:space-y-6 w-full px-2 sm:px-0">
         <div>
           <Button variant="ghost" onClick={() => navigate('/clients')} className="mb-4">
             <ChevronLeft className="mr-2 h-4 w-4" />

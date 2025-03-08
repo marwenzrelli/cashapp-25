@@ -5,7 +5,6 @@ import { ClientSelectField } from "../form-fields/ClientSelectField";
 import { AmountField } from "../form-fields/AmountField";
 import { NotesField } from "../form-fields/NotesField";
 import { DateField } from "../form-fields/DateField";
-import { format } from "date-fns";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { ExtendedClient } from "../../hooks/form/withdrawalFormTypes";
 import { toast } from "sonner";
@@ -82,7 +81,7 @@ export const StandaloneWithdrawalForm: React.FC<StandaloneWithdrawalFormProps> =
   };
 
   return (
-    <Card className="bg-gradient-to-r from-red-50 to-amber-50 border-red-100 shadow-md">
+    <Card className="bg-gradient-to-r from-red-50 to-amber-50 border-red-100 shadow-md w-full">
       <CardHeader className="pb-3">
         <CardTitle className="text-base text-red-700">Nouveau retrait</CardTitle>
         <CardDescription>
