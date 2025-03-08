@@ -1,7 +1,7 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Client } from "@/features/clients/types";
-import { StandaloneDepositForm } from "./DepositForm";
+import { StandaloneDepositForm } from "@/features/deposits/components/DepositForm";
 import { Deposit } from "@/features/deposits/types";
 
 interface DepositDialogProps {
@@ -19,6 +19,14 @@ export const DepositDialog = ({
   onConfirm,
   refreshClientBalance
 }: DepositDialogProps) => {
+  // Transform Client objects to ExtendedClient objects
+  const getExtendedClients = () => {
+    return clients.map(client => ({
+      ...client,
+      dateCreation: client.date_creation || new Date().toISOString()
+    }));
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
@@ -27,7 +35,7 @@ export const DepositDialog = ({
         </DialogHeader>
         
         <StandaloneDepositForm 
-          clients={clients} 
+          clients={getExtendedClients()} 
           onConfirm={onConfirm} 
           refreshClientBalance={refreshClientBalance} 
         />
