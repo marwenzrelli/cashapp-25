@@ -27,20 +27,20 @@ export async function handleDepositDeletion(id: string | number, userId: string 
       try {
         const { data: depositLogData, error: depositLogError } = await supabase
           .from('deleted_deposits')
-          .insert({
+          .insert([{  // Utilisez un tableau pour l'insertion
             original_id: depositData.id,
             client_name: depositData.client_name,
             amount: Number(depositData.amount),
-            operation_date: depositData.operation_date,
-            notes: depositData.notes || null,
+            operation_date: depositData.operation_date || depositData.created_at,
+            notes: depositData.notes || depositData.description || null,
             deleted_by: userId,
             status: depositData.status
-          })
+          }])
           .select();
         
         if (depositLogError) {
           console.error("Erreur lors de l'enregistrement dans deleted_deposits:", depositLogError);
-          // Log error but continue with deletion
+          console.error("Détails de l'erreur:", depositLogError.message, depositLogError.details);
           console.warn("Impossible d'archiver le versement, mais tentative de suppression quand même");
         } else {
           console.log("Versement enregistré avec succès dans deleted_deposits:", depositLogData);

@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Deposit } from "@/components/deposits/types";
+import { Deposit } from "@/features/deposits/types";
 
 export const useDeleteDeposit = (
   deposits: Deposit[],
@@ -36,31 +36,40 @@ export const useDeleteDeposit = (
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id;
 
-      // First, try to archive the deposit in deleted_deposits
+      // Créer un enregistrement dans deleted_deposits AVANT de supprimer
+      console.log("Création d'un log de suppression avec les données:", {
+        original_id: depositToDelete.id,
+        client_name: depositToDelete.client_name,
+        amount: depositToDelete.amount,
+        operation_date: depositToDelete.operation_date || depositToDelete.created_at,
+        notes: depositToDelete.notes || null,
+        deleted_by: userId,
+        status: depositToDelete.status
+      });
+
+      // Utilisez cette approche simplifiée pour insérer dans deleted_deposits
       const { error: logError } = await supabase
         .from('deleted_deposits')
-        .insert({
+        .insert([{
           original_id: depositToDelete.id,
           client_name: depositToDelete.client_name,
           amount: depositToDelete.amount,
-          operation_date: depositToDelete.operation_date,
-          notes: depositToDelete.notes || null,
+          operation_date: depositToDelete.operation_date || depositToDelete.created_at,
+          notes: depositToDelete.notes || depositToDelete.description || null,
           deleted_by: userId,
           status: depositToDelete.status
-        });
+        }]);
 
-      // If we can't archive, log but continue with deletion
       if (logError) {
-        console.error("Erreur lors de la création du log de suppression:", logError);
-        console.error("Détails complets de l'erreur:", JSON.stringify(logError));
+        console.error("Erreur détaillée lors de la création du log de suppression:", JSON.stringify(logError));
         
-        // But don't fail the operation - we'll try to delete anyway
+        // Ne pas échouer si l'archivage échoue, mais enregistrer l'erreur
         console.warn("Impossible d'archiver le dépôt dans deleted_deposits, mais la suppression va continuer");
       } else {
         console.log("Log de suppression créé avec succès dans deleted_deposits");
       }
 
-      // Now delete the deposit
+      // Supprimer le dépôt original
       const { error: deleteError } = await supabase
         .from('deposits')
         .delete()
@@ -70,7 +79,7 @@ export const useDeleteDeposit = (
         throw new Error(`Erreur lors de la suppression du dépôt: ${deleteError.message}`);
       }
 
-      // Update the local state to remove the deleted deposit
+      // Mettre à jour l'état local
       setDeposits(prevDeposits => prevDeposits.filter(deposit => deposit.id !== depositId));
       
       toast.success("Dépôt supprimé avec succès");

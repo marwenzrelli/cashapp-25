@@ -1,147 +1,186 @@
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Client } from "../types";
-import { ClientQRCode } from "./ClientQRCode";
-import { RefObject, useState } from "react";
-import { PersonalInfoFields } from "./PersonalInfoFields";
-import { ClientIdBadge } from "./ClientIdBadge";
-import { ClientActionButtons } from "./ClientActionButtons";
-import { DepositDialog } from "./dialogs/DepositDialog";
-import { WithdrawalDialog } from "./dialogs/WithdrawalDialog";
-import { useClientOperations } from "../hooks/useClientOperations";
-import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
-import { toast } from "sonner";
+import React, { useState, useCallback } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { MoreVertical, Edit, Copy, User, Mail, Phone, Calendar } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Client } from "@/features/clients/types";
+import { useClipboard } from '@mantine/hooks';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
+import { DepositDialog } from './dialogs/DepositDialog';
+import { useClientDeposit } from '../hooks/operations/useClientDeposit';
+import { WithdrawalDialog } from './dialogs/WithdrawalDialog';
+import { useClientWithdrawal } from '../hooks/operations/useClientWithdrawal';
+import { TransferDialog } from './dialogs/TransferDialog';
+import { useClientTransfer } from '../hooks/operations/useClientTransfer';
+import { formatCurrency } from '@/lib/utils';
 
 interface ClientPersonalInfoProps {
   client: Client;
-  clientId?: number;
-  qrCodeRef?: RefObject<HTMLDivElement>;
-  formatAmount?: (amount: number) => string;
-  refetchClient?: () => void;
-  refreshClientBalance?: () => Promise<void>;
-  clientBalance?: number | null;
+  refreshClientBalance: () => Promise<boolean>;
 }
 
-export const ClientPersonalInfo = ({
-  client,
-  clientId,
-  qrCodeRef,
-  formatAmount = amount => `${amount.toLocaleString()} €`,
-  refetchClient,
-  refreshClientBalance,
-  clientBalance = null
-}: ClientPersonalInfoProps) => {
-  const [depositDialogOpen, setDepositDialogOpen] = useState(false);
-  const [withdrawalDialogOpen, setWithdrawalDialogOpen] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+export const ClientPersonalInfo: React.FC<ClientPersonalInfoProps> = ({ client, refreshClientBalance }) => {
+  const [isDepositOpen, setIsDepositOpen] = useState(false);
+  const [isWithdrawalOpen, setIsWithdrawalOpen] = useState(false);
+  const [isTransferOpen, setIsTransferOpen] = useState(false);
+  const clipboard = useClipboard();
+  const navigate = useNavigate();
   
-  console.log("ClientPersonalInfo - clientId:", clientId, "client:", client?.id, "realTimeBalance:", clientBalance);
-  
-  const { 
-    handleDeposit, 
-    handleWithdrawal, 
-    refreshClientBalance: refreshBalance 
-  } = useClientOperations(client, clientId, refetchClient);
-  
-  const handleRefreshBalance = async () => {
-    if (!refreshClientBalance) {
-      toast.error("Balance refresh function not available");
-      return;
-    }
-    
-    setIsRefreshing(true);
-    try {
-      await refreshClientBalance();
-      toast.success("Client balance refreshed successfully");
-    } catch (error) {
-      console.error("Error refreshing client balance:", error);
-      toast.error("Error refreshing client balance");
-    } finally {
-      setIsRefreshing(false);
+  const { handleDeposit, isProcessing: isDepositProcessing } = useClientDeposit(client.id, refreshClientBalance);
+  const { handleWithdrawal, isProcessing: isWithdrawalProcessing } = useClientWithdrawal(client.id, refreshClientBalance);
+  const { handleTransfer, isProcessing: isTransferProcessing } = useClientTransfer(client.id, refreshClientBalance);
+
+  const handleCopy = (text: string, label: string) => {
+    clipboard.copy(text);
+    toast.success(`${label} copié dans le presse-papier!`);
+  };
+
+  const handleEditClient = useCallback(() => {
+    navigate(`/clients/edit/${client.id}`);
+  }, [client.id, navigate]);
+
+  const handleDeposit = async (deposit: any) => {
+    const success = await handleDeposit(deposit);
+    if (success) {
+      setIsDepositOpen(false);
     }
   };
 
-  // Helper function to pass client ID to refreshBalance
-  const handleDepositRefresh = async (): Promise<boolean> => {
-    if (client && client.id) {
-      return await refreshBalance(client.id);
+  const handleWithdrawal = async (withdrawal: any) => {
+    const success = await handleWithdrawal(withdrawal);
+    if (success) {
+      setIsWithdrawalOpen(false);
     }
-    return false;
   };
 
-  // Helper function to pass client ID to refreshBalance
-  const handleWithdrawalRefresh = async (): Promise<boolean> => {
-    if (client && client.id) {
-      return await refreshBalance(client.id);
+  const handleTransfer = async (transfer: any) => {
+    const success = await handleTransfer(transfer);
+    if (success) {
+      setIsTransferOpen(false);
     }
-    return false;
   };
 
   return (
-    <Card className="md:col-span-3">
+    <Card>
       <CardHeader>
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
-          <CardTitle className="flex items-center">
-            Informations personnelles
-            {clientId && <ClientIdBadge clientId={clientId} />}
-          </CardTitle>
-          
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={handleRefreshBalance}
-              disabled={isRefreshing}
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-              {isRefreshing ? 'Actualisation...' : 'Actualiser le solde'}
-            </Button>
-            
-            <ClientActionButtons
-              onDepositClick={() => setDepositDialogOpen(true)}
-              onWithdrawalClick={() => setWithdrawalDialogOpen(true)}
-            />
-          </div>
-        </div>
+        <CardTitle className="flex items-center gap-2">
+          <User className="h-4 w-4" />
+          Informations personnelles
+        </CardTitle>
+        <CardDescription>
+          Détails du client et options de gestion
+        </CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="grid gap-6 md:grid-cols-2">
-          <div>
-            <PersonalInfoFields 
-              client={client} 
-              formatAmount={formatAmount} 
-              showBalance={true} 
-              realTimeBalance={clientBalance}
-            />
+      <CardContent className="space-y-4">
+        <div className="flex items-center space-x-4">
+          <Avatar>
+            <AvatarImage src={`https://avatar.vercel.sh/${client.prenom} ${client.nom}.png`} />
+            <AvatarFallback>{client.prenom[0]}{client.nom[0]}</AvatarFallback>
+          </Avatar>
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold">{client.prenom} {client.nom}</h2>
+            <p className="text-sm text-muted-foreground">
+              Client depuis {new Date(client.date_creation).toLocaleDateString()}
+            </p>
           </div>
-          {client && client.id && (
-            <div className="flex justify-center md:justify-end" ref={qrCodeRef}>
-              <ClientQRCode 
-                clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} 
-                clientName={`${client.prenom} ${client.nom}`} 
-                size={256} 
-              />
-            </div>
-          )}
         </div>
+
+        <div className="grid gap-4">
+          <div>
+            <div className="text-sm font-medium">Solde actuel</div>
+            <div className="text-2xl font-bold">{formatCurrency(client.balance)}</div>
+          </div>
+
+          <div className="grid gap-2">
+            <div className="text-sm font-medium">Email</div>
+            <div className="flex items-center">
+              <Mail className="mr-2 h-4 w-4 opacity-70" />
+              <a href={`mailto:${client.email}`} className="hover:underline">
+                {client.email}
+              </a>
+              <Button variant="ghost" size="icon" onClick={() => handleCopy(client.email, 'Email')}>
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid gap-2">
+            <div className="text-sm font-medium">Téléphone</div>
+            <div className="flex items-center">
+              <Phone className="mr-2 h-4 w-4 opacity-70" />
+              <a href={`tel:${client.telephone}`} className="hover:underline">
+                {client.telephone}
+              </a>
+              <Button variant="ghost" size="icon" onClick={() => handleCopy(client.telephone, 'Téléphone')}>
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-between items-center">
+          <Badge variant="secondary">ID: {client.id}</Badge>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Ouvrir le menu</span>
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem onClick={handleEditClient}>
+                <Edit className="mr-2 h-4 w-4" />
+                Modifier
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setIsDepositOpen(true)} disabled={isDepositProcessing}>
+                Nouveau versement
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setIsWithdrawalOpen(true)} disabled={isWithdrawalProcessing}>
+                Nouveau retrait
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setIsTransferOpen(true)} disabled={isTransferProcessing}>
+                Nouveau virement
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        
+        <DepositDialog 
+          client={client}
+          isOpen={isDepositOpen} 
+          onOpenChange={setIsDepositOpen}
+          onConfirm={handleDeposit}
+          refreshClientBalance={refreshClientBalance}
+        />
+
+        <WithdrawalDialog
+          client={client}
+          isOpen={isWithdrawalOpen}
+          onOpenChange={setIsWithdrawalOpen}
+          onConfirm={handleWithdrawal}
+          refreshClientBalance={refreshClientBalance}
+        />
+
+        <TransferDialog
+          client={client}
+          isOpen={isTransferOpen}
+          onOpenChange={setIsTransferOpen}
+          onConfirm={handleTransfer}
+          refreshClientBalance={refreshClientBalance}
+        />
       </CardContent>
-      
-      <DepositDialog
-        client={client}
-        open={depositDialogOpen}
-        onOpenChange={setDepositDialogOpen}
-        onConfirm={handleDeposit}
-        refreshClientBalance={handleDepositRefresh}
-      />
-      
-      <WithdrawalDialog
-        client={client}
-        open={withdrawalDialogOpen}
-        onOpenChange={setWithdrawalDialogOpen}
-        onConfirm={handleWithdrawal}
-        refreshClientBalance={handleWithdrawalRefresh}
-      />
     </Card>
   );
 };
