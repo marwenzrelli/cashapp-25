@@ -12,15 +12,23 @@ import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from "lucide-react";
 
 interface ClientOperationsHistoryTabsProps {
-  filteredOperations: Operation[];
-  currency: string;
+  operations: Operation[];
+  filteredOperations?: Operation[];
+  selectedType: "all" | "deposits" | "withdrawals" | "transfers";
+  onEdit?: (operation: Operation) => void;
+  onDelete?: (operation: Operation) => void;
+  currency?: string;
   clientId?: number;
   refetchClient?: () => void;
 }
 
 export const ClientOperationsHistoryTabs = ({
-  filteredOperations,
-  currency,
+  operations,
+  filteredOperations = operations,
+  selectedType,
+  onEdit,
+  onDelete,
+  currency = "FCFA",
   clientId,
   refetchClient
 }: ClientOperationsHistoryTabsProps) => {
@@ -29,11 +37,19 @@ export const ClientOperationsHistoryTabs = ({
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const handleEditOperation = (operation: Operation) => {
+    if (onEdit) {
+      onEdit(operation);
+      return;
+    }
     setSelectedOperation(operation);
     setIsEditDialogOpen(true);
   };
 
   const handleDeleteOperation = (operation: Operation) => {
+    if (onDelete) {
+      onDelete(operation);
+      return;
+    }
     setSelectedOperation(operation);
     setIsDeleteDialogOpen(true);
   };
@@ -84,7 +100,7 @@ export const ClientOperationsHistoryTabs = ({
     );
   };
 
-  if (filteredOperations.length === 0) {
+  if (operations.length === 0) {
     return <EmptyOperations />;
   }
 
@@ -127,23 +143,28 @@ export const ClientOperationsHistoryTabs = ({
         </TabsContent>
       </Tabs>
 
-      <OperationActionsDialog
-        operation={selectedOperation}
-        isOpen={isEditDialogOpen}
-        onClose={handleCloseDialog}
-        clientId={clientId}
-        refetchClient={refetchClient}
-        mode="edit"
-      />
+      {/* Only render these dialogs if onEdit/onDelete are not provided */}
+      {!onEdit && !onDelete && (
+        <>
+          <OperationActionsDialog
+            operation={selectedOperation}
+            isOpen={isEditDialogOpen}
+            onClose={handleCloseDialog}
+            clientId={clientId}
+            refetchClient={refetchClient}
+            mode="edit"
+          />
 
-      <OperationActionsDialog
-        operation={selectedOperation}
-        isOpen={isDeleteDialogOpen}
-        onClose={handleCloseDialog}
-        clientId={clientId}
-        refetchClient={refetchClient}
-        mode="delete"
-      />
+          <OperationActionsDialog
+            operation={selectedOperation}
+            isOpen={isDeleteDialogOpen}
+            onClose={handleCloseDialog}
+            clientId={clientId}
+            refetchClient={refetchClient}
+            mode="delete"
+          />
+        </>
+      )}
     </>
   );
 };

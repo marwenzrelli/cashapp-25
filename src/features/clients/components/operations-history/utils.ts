@@ -2,6 +2,10 @@
 import { Operation } from "@/features/operations/types";
 import { ArrowDownCircle, ArrowUpCircle, RefreshCw } from "lucide-react";
 import React from "react";
+import { OperationsFilterButtons } from "./OperationsFilterButtons";
+
+// Re-export the OperationsFilterButtons component for backwards compatibility
+export { OperationsFilterButtons };
 
 export const getAmountColor = (type: Operation["type"]) => {
   switch (type) {

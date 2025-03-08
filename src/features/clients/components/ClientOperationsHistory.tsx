@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { Operation } from "@/features/operations/types";
 import { OperationActionsDialog } from "./operations-history/OperationActionsDialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { OperationsFilterButtons } from "./operations-history/utils";
+import { OperationsFilterButtons } from "./operations-history/OperationsFilterButtons";
 import { RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
