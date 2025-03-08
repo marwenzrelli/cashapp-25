@@ -1,9 +1,10 @@
 
 import React from "react";
-import { Deposit } from "@/components/deposits/types"; // Keep consistent with component imports
+import { Deposit } from "@/components/deposits/types"; // Use component deposit type consistently
 import { useClients } from "@/features/clients/hooks/useClients";
 import { ExtendedClient } from "@/features/withdrawals/components/standalone/StandaloneWithdrawalForm";
 import { toast } from "sonner";
+import { adaptDepositsForUI } from "../utils/depositAdapters";
 
 import { 
   DepositsContentHeader,
@@ -11,14 +12,6 @@ import {
   DepositsTableSection,
   DepositsDialogs
 } from "./content";
-
-// Define a type adapter function to ensure deposits have required fields
-const adaptDepositsForUI = (deposits: any[]): Deposit[] => {
-  return deposits.map(deposit => ({
-    ...deposit,
-    description: deposit.description || deposit.notes || ""  // Ensure description is always present
-  }));
-};
 
 interface DepositsContentProps {
   deposits: any[];
@@ -113,7 +106,7 @@ export const DepositsContent = ({
     dateCreation: client.date_creation || new Date().toISOString()
   }));
 
-  // Adapt deposits for UI components
+  // Use our adapter to ensure all deposits have the required fields
   const adaptedDeposits = adaptDepositsForUI(deposits);
   const adaptedFilteredDeposits = adaptDepositsForUI(filteredDeposits);
   const adaptedPaginatedDeposits = adaptDepositsForUI(paginatedDeposits);

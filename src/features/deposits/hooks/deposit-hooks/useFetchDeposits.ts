@@ -57,6 +57,7 @@ export const useFetchDeposits = (
           id: d.id,
           amount: Number(d.amount),
           date: displayDate,
+          // Ensure description is always present - this is crucial for type compatibility
           description: d.notes || '',
           client_name: d.client_name,
           status: d.status,
