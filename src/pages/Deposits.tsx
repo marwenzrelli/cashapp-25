@@ -62,18 +62,36 @@ const Deposits = () => {
   
   // Create wrapper functions that conform to the expected return types
   const handleConfirmDeleteWrapper = async (): Promise<boolean> => {
-    const result = await confirmDelete();
-    return result === undefined ? false : result;
+    try {
+      const result = await confirmDelete();
+      // Explicitly convert any result to boolean
+      return result === true;
+    } catch (error) {
+      console.error("Error in confirmDelete:", error);
+      return false;
+    }
   };
   
   const handleConfirmEditWrapper = async (): Promise<boolean> => {
-    const result = await handleConfirmEdit();
-    return result === undefined ? false : result;
+    try {
+      const result = await handleConfirmEdit();
+      // Explicitly convert any result to boolean
+      return result === true;
+    } catch (error) {
+      console.error("Error in handleConfirmEdit:", error);
+      return false;
+    }
   };
   
   const handleCreateDepositWrapper = async (deposit: any): Promise<boolean> => {
-    const result = await handleCreateDeposit(deposit);
-    return result === undefined ? false : result;
+    try {
+      const result = await handleCreateDeposit(deposit);
+      // Explicitly convert any result to boolean
+      return result === true;
+    } catch (error) {
+      console.error("Error in handleCreateDeposit:", error);
+      return false;
+    }
   };
   
   return (
