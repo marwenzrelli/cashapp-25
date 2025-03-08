@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { cn } from "@/lib/utils";
 import { getTypeStyle, getTypeIcon, getTypeLabel } from "@/features/operations/utils/operation-helpers";
+import { OperationsMobileCard } from "./operations-history/OperationsMobileCard";
 
 interface PublicClientOperationsHistoryProps {
   operations: Operation[];
@@ -23,6 +24,36 @@ export const PublicClientOperationsHistory = ({ operations }: PublicClientOperat
         return "text-red-600 dark:text-red-400";
       case "transfer":
         return "text-green-600 dark:text-green-400";
+    }
+  };
+
+  // Helper function to safely format dates
+  const formatDate = (dateInput: string | Date) => {
+    try {
+      const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return 'Date invalide';
+      }
+      return date.toLocaleDateString();
+    } catch (error) {
+      console.error("Error formatting date:", dateInput, error);
+      return 'Date invalide';
+    }
+  };
+
+  // Helper function to safely format times
+  const formatTime = (dateInput: string | Date) => {
+    try {
+      const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return '';
+      }
+      return date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    } catch (error) {
+      console.error("Error formatting time:", dateInput, error);
+      return '';
     }
   };
 
@@ -97,20 +128,16 @@ export const PublicClientOperationsHistory = ({ operations }: PublicClientOperat
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        <span>{typeof operation.formattedDate === 'string' ? 
+                        <span>{operation.formattedDate ? 
                           operation.formattedDate.split(' ')[0] : 
-                          typeof operation.date === 'string' ? 
-                            new Date(operation.date).toLocaleDateString() : 
-                            operation.date.toLocaleDateString()
+                          formatDate(operation.operation_date || operation.date)
                         }</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
-                        <span>{typeof operation.formattedDate === 'string' ? 
+                        <span>{operation.formattedDate ? 
                           operation.formattedDate.split(' ')[1] : 
-                          typeof operation.date === 'string' ? 
-                            new Date(operation.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 
-                            operation.date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                          formatTime(operation.operation_date || operation.date)
                         }</span>
                       </div>
                     </div>
