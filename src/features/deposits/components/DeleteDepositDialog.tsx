@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Trash2 } from "lucide-react";
 import { type DeleteDepositDialogProps } from "../types";
+import { useState } from "react";
 
 export const DeleteDepositDialog = ({
   isOpen,
@@ -18,6 +19,19 @@ export const DeleteDepositDialog = ({
   selectedDeposit,
   onConfirm,
 }: DeleteDepositDialogProps) => {
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleConfirm = async () => {
+    setIsDeleting(true);
+    try {
+      await onConfirm();
+      // Modal will be closed by parent component after successful deletion
+    } catch (error) {
+      console.error("Error during deletion:", error);
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
       <AlertDialogContent className="sm:max-w-md">
@@ -39,15 +53,15 @@ export const DeleteDepositDialog = ({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={() => onOpenChange(false)}>Annuler</AlertDialogCancel>
+          <AlertDialogCancel onClick={() => onOpenChange(false)} disabled={isDeleting}>
+            Annuler
+          </AlertDialogCancel>
           <AlertDialogAction
-            onClick={() => {
-              onConfirm();
-              // Ne pas fermer le modal ici, car il sera fermé dans la fonction de confirmation
-            }}
+            onClick={handleConfirm}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
+            disabled={isDeleting}
           >
-            Supprimer
+            {isDeleting ? "Suppression..." : "Supprimer"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

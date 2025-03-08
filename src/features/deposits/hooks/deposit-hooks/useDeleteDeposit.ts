@@ -36,29 +36,31 @@ export const useDeleteDeposit = (
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id;
 
-      try {
-        const { error: logError } = await supabase
-          .from('deleted_deposits')
-          .insert({
-            original_id: depositToDelete.id,
-            client_name: depositToDelete.client_name,
-            amount: depositToDelete.amount,
-            operation_date: depositToDelete.operation_date,
-            notes: depositToDelete.notes || null,
-            deleted_by: userId,
-            status: depositToDelete.status
-          });
+      // First, try to archive the deposit in deleted_deposits
+      const { error: logError } = await supabase
+        .from('deleted_deposits')
+        .insert({
+          original_id: depositToDelete.id,
+          client_name: depositToDelete.client_name,
+          amount: depositToDelete.amount,
+          operation_date: depositToDelete.operation_date,
+          notes: depositToDelete.notes || null,
+          deleted_by: userId,
+          status: depositToDelete.status
+        });
 
-        if (logError) {
-          console.error("Erreur lors de la création du log de suppression:", logError);
-          console.error("Détails complets de l'erreur:", JSON.stringify(logError));
-        } else {
-          console.log("Log de suppression créé avec succès dans deleted_deposits");
-        }
-      } catch (logError) {
-        console.error("Exception lors de la création du log:", logError);
+      // If we can't archive, log but continue with deletion
+      if (logError) {
+        console.error("Erreur lors de la création du log de suppression:", logError);
+        console.error("Détails complets de l'erreur:", JSON.stringify(logError));
+        
+        // But don't fail the operation - we'll try to delete anyway
+        console.warn("Impossible d'archiver le dépôt dans deleted_deposits, mais la suppression va continuer");
+      } else {
+        console.log("Log de suppression créé avec succès dans deleted_deposits");
       }
 
+      // Now delete the deposit
       const { error: deleteError } = await supabase
         .from('deposits')
         .delete()
@@ -68,6 +70,7 @@ export const useDeleteDeposit = (
         throw new Error(`Erreur lors de la suppression du dépôt: ${deleteError.message}`);
       }
 
+      // Update the local state to remove the deleted deposit
       setDeposits(prevDeposits => prevDeposits.filter(deposit => deposit.id !== depositId));
       
       toast.success("Dépôt supprimé avec succès");
@@ -89,8 +92,6 @@ export const useDeleteDeposit = (
       return false;
     }
     
-    setIsLoading(true);
-    
     try {
       console.log("Confirmation de la suppression du versement:", depositToDelete);
       
@@ -98,17 +99,13 @@ export const useDeleteDeposit = (
       
       if (success) {
         setDepositToDelete(null);
-        setShowDeleteDialog(false);
         return true;
       } else {
         throw new Error("Échec de la suppression du versement");
       }
     } catch (error) {
       console.error("Erreur lors de la confirmation de suppression:", error);
-      toast.error("Erreur lors de la suppression du versement");
       return false;
-    } finally {
-      setIsLoading(false);
     }
   };
 

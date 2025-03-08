@@ -23,7 +23,7 @@ export const useDeleteOperation = (
   const confirmDeleteOperation = async (operationToDelete: Operation | undefined) => {
     if (!operationToDelete) {
       console.log("No operation selected for deletion");
-      return;
+      return false;
     }
     
     try {
@@ -51,11 +51,13 @@ export const useDeleteOperation = (
       toast.success("Opération supprimée avec succès");
       await fetchAllOperations();
       setOperationToDelete(null);
+      return true;
     } catch (error: any) {
       console.error("Erreur lors de la suppression de l'opération:", error);
       toast.error("Erreur lors de la suppression de l'opération", {
         description: error.message || "Une erreur s'est produite lors de la suppression."
       });
+      return false;
     } finally {
       setIsLoading(false);
     }

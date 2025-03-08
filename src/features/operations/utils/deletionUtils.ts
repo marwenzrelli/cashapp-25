@@ -11,49 +11,61 @@ import { toast } from "sonner";
 export async function handleDepositDeletion(id: string | number, userId: string | undefined) {
   const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
   
-  const { data: depositData, error: depositFetchError } = await supabase
-    .from('deposits')
-    .select('*')
-    .eq('id', numericId)
-    .single();
-    
-  if (depositFetchError) {
-    console.error("Erreur lors de la récupération du versement:", depositFetchError);
-    throw depositFetchError;
-  } else if (depositData) {
-    console.log("Enregistrement dans deleted_deposits du versement:", depositData);
-    
-    const { data: depositLogData, error: depositLogError } = await supabase
-      .from('deleted_deposits')
-      .insert({
-        original_id: depositData.id,
-        client_name: depositData.client_name,
-        amount: Number(depositData.amount),
-        operation_date: depositData.operation_date,
-        notes: depositData.notes || null,
-        deleted_by: userId,
-        status: depositData.status
-      })
-      .select();
-    
-    if (depositLogError) {
-      console.error("Erreur lors de l'enregistrement dans deleted_deposits:", depositLogError);
-      throw depositLogError;
-    } else {
-      console.log("Versement enregistré avec succès dans deleted_deposits:", depositLogData);
-    }
-    
-    const { error: depositError } = await supabase
+  try {
+    const { data: depositData, error: depositFetchError } = await supabase
       .from('deposits')
-      .delete()
-      .eq('id', numericId);
+      .select('*')
+      .eq('id', numericId)
+      .single();
       
-    if (depositError) {
-      console.error("Erreur lors de la suppression du versement:", depositError);
-      throw depositError;
+    if (depositFetchError) {
+      console.error("Erreur lors de la récupération du versement:", depositFetchError);
+      throw depositFetchError;
+    } else if (depositData) {
+      console.log("Enregistrement dans deleted_deposits du versement:", depositData);
+      
+      try {
+        const { data: depositLogData, error: depositLogError } = await supabase
+          .from('deleted_deposits')
+          .insert({
+            original_id: depositData.id,
+            client_name: depositData.client_name,
+            amount: Number(depositData.amount),
+            operation_date: depositData.operation_date,
+            notes: depositData.notes || null,
+            deleted_by: userId,
+            status: depositData.status
+          })
+          .select();
+        
+        if (depositLogError) {
+          console.error("Erreur lors de l'enregistrement dans deleted_deposits:", depositLogError);
+          // Log error but continue with deletion
+          console.warn("Impossible d'archiver le versement, mais tentative de suppression quand même");
+        } else {
+          console.log("Versement enregistré avec succès dans deleted_deposits:", depositLogData);
+        }
+      } catch (logError) {
+        console.error("Exception lors de l'archivage:", logError);
+        // Continue with the deletion even if archiving fails
+      }
+      
+      // Now proceed with the actual deletion
+      const { error: depositError } = await supabase
+        .from('deposits')
+        .delete()
+        .eq('id', numericId);
+        
+      if (depositError) {
+        console.error("Erreur lors de la suppression du versement:", depositError);
+        throw depositError;
+      }
+      
+      console.log("Versement supprimé avec succès");
     }
-    
-    console.log("Versement supprimé avec succès");
+  } catch (error) {
+    console.error("Erreur dans handleDepositDeletion:", error);
+    throw error;
   }
 }
 
