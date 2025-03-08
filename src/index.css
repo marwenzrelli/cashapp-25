@@ -38,6 +38,17 @@
   }
 }
 
+@layer utilities {
+  .no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari and Opera */
+  }
+}
+
 .animate-in {
   animation: fadeIn 0.3s ease-out;
 }
@@ -46,3 +57,23 @@
   animation: slideIn 0.3s ease-out;
 }
 
+/* Responsive table styles */
+@media (max-width: 768px) {
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -1rem;
+    padding: 0 1rem;
+  }
+  
+  table {
+    width: 100%;
+    min-width: 100%;
+  }
+}
+
+/* Fix for mobile overflow issues */
+.overflow-fix {
+  max-width: 100%;
+  overflow-x: hidden;
+}

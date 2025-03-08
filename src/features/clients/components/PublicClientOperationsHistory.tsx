@@ -12,8 +12,8 @@ export const PublicClientOperationsHistory = ({ operations }: PublicClientOperat
   const { currency } = useCurrency();
   
   return (
-    <Card className="shadow-sm">
-      <CardHeader>
+    <Card className="shadow-sm max-w-full overflow-hidden">
+      <CardHeader className="px-4 sm:px-6">
         <CardTitle className="text-xl">Historique des opérations</CardTitle>
       </CardHeader>
       <CardContent className="p-0 sm:p-6">

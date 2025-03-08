@@ -23,21 +23,21 @@ export const PublicOperationsTable = ({ operations, currency }: PublicOperations
   return (
     <>
       {/* Table for desktop */}
-      <div className="hidden md:block">
+      <div className="hidden md:block overflow-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Type</TableHead>
-              <TableHead>Date</TableHead>
+              <TableHead className="whitespace-nowrap">Type</TableHead>
+              <TableHead className="whitespace-nowrap">Date</TableHead>
               <TableHead>Description</TableHead>
-              <TableHead>Montant</TableHead>
-              <TableHead>Client</TableHead>
+              <TableHead className="whitespace-nowrap">Montant</TableHead>
+              <TableHead className="whitespace-nowrap">Client</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {operations.map((operation) => (
               <TableRow key={operation.id}>
-                <TableCell>
+                <TableCell className="whitespace-nowrap">
                   <div className="flex items-center gap-2">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getTypeStyle(operation.type)}`}>
                       {getTypeIcon(operation.type)}
@@ -45,21 +45,21 @@ export const PublicOperationsTable = ({ operations, currency }: PublicOperations
                     <span>{getTypeLabel(operation.type)}</span>
                   </div>
                 </TableCell>
-                <TableCell className="text-muted-foreground">
+                <TableCell className="text-muted-foreground whitespace-nowrap">
                   {operation.formattedDate || operation.date}
                 </TableCell>
-                <TableCell>{operation.description}</TableCell>
-                <TableCell className={cn("font-medium", getAmountColor(operation.type))}>
+                <TableCell className="max-w-[150px] truncate">{operation.description}</TableCell>
+                <TableCell className={cn("font-medium whitespace-nowrap", getAmountColor(operation.type))}>
                   {operation.type === "withdrawal" ? "-" : ""}{operation.amount.toLocaleString()} {currency}
                 </TableCell>
-                <TableCell>
+                <TableCell className="max-w-[150px]">
                   {operation.type === "transfer" ? (
                     <div className="flex flex-col">
-                      <span className="text-sm">De: {operation.fromClient}</span>
-                      <span className="text-sm">À: {operation.toClient}</span>
+                      <span className="text-sm truncate">De: {operation.fromClient}</span>
+                      <span className="text-sm truncate">À: {operation.toClient}</span>
                     </div>
                   ) : (
-                    <span>{operation.fromClient}</span>
+                    <span className="truncate">{operation.fromClient}</span>
                   )}
                 </TableCell>
               </TableRow>

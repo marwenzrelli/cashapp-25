@@ -34,29 +34,29 @@ export const OperationsList = ({ operations, isLoading, onDelete }: OperationsLi
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Liste des opérations</CardTitle>
+    <Card className="w-full overflow-hidden">
+      <CardHeader className="px-4 sm:px-6">
+        <CardTitle className="text-lg sm:text-xl">Liste des opérations</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
         {/* Table pour la vue desktop */}
-        <div className="hidden md:block">
+        <div className="hidden md:block overflow-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Type</TableHead>
-                <TableHead>ID</TableHead>
-                <TableHead>Date</TableHead>
+                <TableHead className="whitespace-nowrap">Type</TableHead>
+                <TableHead className="whitespace-nowrap">ID</TableHead>
+                <TableHead className="whitespace-nowrap">Date</TableHead>
                 <TableHead>Description</TableHead>
-                <TableHead>Client(s)</TableHead>
-                <TableHead className="text-center">Montant</TableHead>
-                <TableHead className="text-center">Actions</TableHead>
+                <TableHead className="whitespace-nowrap">Client(s)</TableHead>
+                <TableHead className="text-center whitespace-nowrap">Montant</TableHead>
+                <TableHead className="text-center whitespace-nowrap">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {operationsWithFormattedDates.map((operation) => (
                 <TableRow key={`${operation.type}-${operation.id}`} className="group">
-                  <TableCell>
+                  <TableCell className="whitespace-nowrap">
                     <div className="flex items-center gap-2">
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center ${getTypeStyle(operation.type)}`}>
                         {getTypeIcon(operation.type)}
@@ -64,29 +64,29 @@ export const OperationsList = ({ operations, isLoading, onDelete }: OperationsLi
                       <span>{getTypeLabel(operation.type)}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">
+                  <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap">
                     #{formatOperationId(operation.id)}
                   </TableCell>
                   <TableCell className="text-muted-foreground whitespace-nowrap">
                     {operation.formattedDate}
                   </TableCell>
-                  <TableCell className="max-w-[200px] truncate">
+                  <TableCell className="max-w-[150px] truncate">
                     {operation.description}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="max-w-[150px]">
                     {operation.type === "transfer" ? (
                       <div className="flex flex-col">
-                        <span className="text-sm flex items-center gap-1"><User className="h-3 w-3" /> De: {operation.fromClient}</span>
-                        <span className="text-sm flex items-center gap-1"><User className="h-3 w-3" /> À: {operation.toClient}</span>
+                        <span className="text-sm truncate flex items-center gap-1"><User className="h-3 w-3" /> De: {operation.fromClient}</span>
+                        <span className="text-sm truncate flex items-center gap-1"><User className="h-3 w-3" /> À: {operation.toClient}</span>
                       </div>
                     ) : (
-                      <span className="flex items-center gap-1"><User className="h-3 w-3" /> {operation.fromClient}</span>
+                      <span className="truncate flex items-center gap-1"><User className="h-3 w-3" /> {operation.fromClient}</span>
                     )}
                   </TableCell>
-                  <TableCell className={`text-center font-medium ${getAmountColor(operation.type)}`}>
+                  <TableCell className={`text-center font-medium whitespace-nowrap ${getAmountColor(operation.type)}`}>
                     {operation.type === "withdrawal" ? "-" : ""}{Math.round(operation.amount).toLocaleString()} TND
                   </TableCell>
-                  <TableCell className="text-center">
+                  <TableCell className="text-center whitespace-nowrap">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -126,27 +126,27 @@ export const OperationsList = ({ operations, isLoading, onDelete }: OperationsLi
               <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground mb-2">
                 <div className="flex items-center gap-1">
                   <CalendarIcon className="h-3 w-3" />
-                  <span>{operation.formattedDate?.split(' ')[0]}</span>
+                  <span>{operation.formattedDate?.split(' ')[0] || ''}</span>
                 </div>
                 
                 <div className="flex items-center gap-1">
                   <ClockIcon className="h-3 w-3" />
-                  <span>{operation.formattedDate?.split(' ')[1]}</span>
+                  <span>{operation.formattedDate?.split(' ')[1] || ''}</span>
                 </div>
               </div>
               
               {operation.description && (
-                <p className="text-sm mb-2 line-clamp-2">{operation.description}</p>
+                <p className="text-sm mb-2 line-clamp-2 break-words">{operation.description}</p>
               )}
               
               <div className="text-xs text-muted-foreground mb-2">
                 {operation.type === "transfer" ? (
                   <>
-                    <div className="flex items-center gap-1"><User className="h-3 w-3" /> De: {operation.fromClient}</div>
-                    <div className="flex items-center gap-1"><User className="h-3 w-3" /> À: {operation.toClient}</div>
+                    <div className="flex items-center gap-1 truncate"><User className="h-3 w-3 flex-shrink-0" /> De: {operation.fromClient}</div>
+                    <div className="flex items-center gap-1 truncate"><User className="h-3 w-3 flex-shrink-0" /> À: {operation.toClient}</div>
                   </>
                 ) : (
-                  <div className="flex items-center gap-1"><User className="h-3 w-3" /> {operation.fromClient}</div>
+                  <div className="flex items-center gap-1 truncate"><User className="h-3 w-3 flex-shrink-0" /> {operation.fromClient}</div>
                 )}
               </div>
               

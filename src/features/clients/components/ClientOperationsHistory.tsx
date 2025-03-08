@@ -35,9 +35,9 @@ export const ClientOperationsHistory = ({
   refreshOperations,
 }: ClientOperationsHistoryProps) => {
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Historique des opérations</CardTitle>
+    <Card className="w-full overflow-hidden">
+      <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2 px-4 sm:px-6">
+        <CardTitle className="text-lg sm:text-xl">Historique des opérations</CardTitle>
         {refreshOperations && (
           <Button 
             variant="outline" 
@@ -46,12 +46,12 @@ export const ClientOperationsHistory = ({
             className="flex items-center gap-1"
           >
             <RefreshCw className="h-4 w-4" />
-            Actualiser
+            <span className="hidden sm:inline">Actualiser</span>
           </Button>
         )}
       </CardHeader>
-      <CardContent>
-        <div className="mb-6">
+      <CardContent className="px-2 sm:px-6">
+        <div className="mb-4 sm:mb-6 overflow-x-auto">
           <OperationFilters
             type={selectedType as any}
             setType={setSelectedType as any}

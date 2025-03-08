@@ -20,18 +20,42 @@ export const OperationsMobileCard = ({
   showType = true,
   colorClass
 }: OperationsMobileCardProps) => {
+  // Fonction sécurisée pour parser les dates
+  const parseDate = (dateValue: string | Date): Date => {
+    if (dateValue instanceof Date) return dateValue;
+    try {
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) throw new Error("Invalid date");
+      return date;
+    } catch (error) {
+      console.error("Error parsing date:", error);
+      return new Date(); // Fallback to current date
+    }
+  };
+
+  // Fonction sécurisée pour formater les dates
+  const formatDate = (dateValue: string | Date, formatStr: string): string => {
+    try {
+      const date = parseDate(dateValue);
+      return format(date, formatStr, { locale: fr });
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "Date inconnue";
+    }
+  };
+  
   // Use operation_date if available, otherwise fall back to date
-  const operationDate = operation.operation_date ? new Date(operation.operation_date) : new Date(operation.date);
+  const operationDate = operation.operation_date || operation.date;
   
   return (
-    <div className="flex flex-col p-4 bg-white dark:bg-gray-800 rounded-lg border shadow-sm">
-      <div className="flex items-start justify-between mb-3">
+    <div className="flex flex-col p-3 bg-white dark:bg-gray-800 rounded-lg border shadow-sm overflow-hidden">
+      <div className="flex items-start justify-between mb-2">
         {showType && (
-          <Badge variant={operation.type === "deposit" ? "default" : operation.type === "withdrawal" ? "destructive" : "outline"}>
+          <Badge variant={operation.type === "deposit" ? "default" : operation.type === "withdrawal" ? "destructive" : "outline"} className="text-xs">
             {operation.type === "deposit" ? "Dépôt" : operation.type === "withdrawal" ? "Retrait" : "Transfert"}
           </Badge>
         )}
-        <p className={`text-lg font-semibold ${colorClass || (operation.type === "withdrawal" ? "text-red-500" : operation.type === "deposit" ? "text-green-500" : "text-blue-500")}`}>
+        <p className={`text-base sm:text-lg font-semibold ${colorClass || (operation.type === "withdrawal" ? "text-red-500" : operation.type === "deposit" ? "text-green-500" : "text-blue-500")}`}>
           {operation.type === "withdrawal" ? "-" : operation.type === "deposit" ? "+" : ""}
           {formatAmount(operation.amount)}
           {currency && ` ${currency}`}
@@ -41,23 +65,23 @@ export const OperationsMobileCard = ({
       <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mb-2">
         <div className="flex items-center gap-1">
           <CalendarClock className="h-3 w-3" />
-          <span>{format(operationDate, "dd MMMM yyyy", { locale: fr })}</span>
+          <span>{formatDate(operationDate, "dd MMM yyyy")}</span>
         </div>
         
         <div className="flex items-center gap-1">
           <Clock className="h-3 w-3" />
-          <span>{format(operationDate, "HH:mm", { locale: fr })}</span>
+          <span>{formatDate(operationDate, "HH:mm")}</span>
         </div>
       </div>
       
       {operation.description && (
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 mb-2 line-clamp-2">{operation.description}</p>
+        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1 mb-2 line-clamp-2 break-words">{operation.description}</p>
       )}
       
       {operation.type === "transfer" && (
         <div className="text-xs text-muted-foreground border-t pt-2 mt-1">
-          <p>De: {operation.fromClient}</p>
-          <p>À: {operation.toClient}</p>
+          <p className="truncate">De: {operation.fromClient}</p>
+          <p className="truncate">À: {operation.toClient}</p>
         </div>
       )}
       

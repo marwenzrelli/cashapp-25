@@ -2,7 +2,6 @@
 import { type Deposit } from "@/components/deposits/types";
 import { DesktopDepositsTable } from "./table/DesktopDepositsTable";
 import { MobileDepositsTable } from "./table/MobileDepositsTable";
-import { cn } from "@/lib/utils";
 
 interface DepositsTableProps {
   deposits: Deposit[];
@@ -12,7 +11,7 @@ interface DepositsTableProps {
 
 export const DepositsTable = ({ deposits, onEdit, onDelete }: DepositsTableProps) => {
   return (
-    <div className="w-full">
+    <div className="w-full overflow-hidden">
       {/* Desktop table with border */}
       <div className="hidden md:block overflow-auto rounded-lg border">
         <DesktopDepositsTable 
