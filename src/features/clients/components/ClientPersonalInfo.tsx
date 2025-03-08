@@ -87,7 +87,7 @@ export const ClientPersonalInfo = ({
             {clientId && <ClientIdBadge clientId={clientId} />}
           </CardTitle>
           
-          <div className="flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-2">
             <Button 
               variant="outline" 
               size="sm"
@@ -114,14 +114,40 @@ export const ClientPersonalInfo = ({
               showBalance={true} 
               realTimeBalance={clientBalance}
             />
+            
+            {/* Refresh button for mobile */}
+            <div className="md:hidden mt-4">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleRefreshBalance}
+                disabled={isRefreshing}
+                className="w-full"
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                {isRefreshing ? 'Actualisation...' : 'Actualiser le solde'}
+              </Button>
+            </div>
           </div>
+          
           {client && client.id && (
-            <div className="flex justify-center md:justify-end" ref={qrCodeRef}>
-              <ClientQRCode 
-                clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} 
-                clientName={`${client.prenom} ${client.nom}`} 
-                size={256} 
-              />
+            <div className="flex flex-col items-center space-y-4">
+              <div className="flex justify-center" ref={qrCodeRef}>
+                <ClientQRCode 
+                  clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} 
+                  clientName={`${client.prenom} ${client.nom}`} 
+                  size={256} 
+                />
+              </div>
+              
+              {/* Action buttons below QR code on mobile */}
+              <div className="md:hidden w-full pt-2">
+                <ClientActionButtons
+                  onDepositClick={() => setDepositDialogOpen(true)}
+                  onWithdrawalClick={() => setWithdrawalDialogOpen(true)}
+                  orientation="vertical"
+                />
+              </div>
             </div>
           )}
         </div>
