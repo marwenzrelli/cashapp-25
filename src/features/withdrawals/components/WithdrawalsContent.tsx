@@ -124,7 +124,7 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
   };
 
   return (
-    <div className="space-y-8 animate-in">
+    <div className="space-y-8 animate-in w-full px-0 sm:px-0">
       <WithdrawalHeader withdrawals={withdrawals} />
 
       <div className="w-full">
@@ -135,7 +135,7 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
         />
       </div>
 
-      <Card>
+      <Card className="w-full mx-0">
         <CardHeader>
           <CardTitle>Recherche intelligente</CardTitle>
           <CardDescription>

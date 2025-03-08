@@ -24,7 +24,7 @@ export const StatsCardGrid = ({
   isRecalculating 
 }: StatsCardGridProps) => {
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 w-full px-2 sm:px-0">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 w-full px-0 sm:px-0">
       <StatsCard
         title="Solde Général"
         value={`${stats.total_balance.toLocaleString()} ${currency}`}

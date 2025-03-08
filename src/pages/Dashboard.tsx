@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { SystemUser } from "@/types/admin";
@@ -65,7 +66,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="space-y-8 animate-in">
+    <div className="space-y-8 animate-in w-full px-0 sm:px-0">
       <DashboardHeader isLoading={isLoading} onRefresh={handleRefresh} />
 
       <StatsCardGrid 
@@ -75,7 +76,7 @@ const Dashboard = () => {
         isRecalculating={isRecalculating}
       />
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 w-full">
         <TransactionTrends data={stats.monthly_stats} currency={currency} />
         <AISuggestions stats={stats} />
       </div>

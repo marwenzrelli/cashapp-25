@@ -37,7 +37,7 @@ const Layout = () => {
         setIsOpen={setIsOpen} 
         handleLogout={handleLogout} 
       />
-      <main className="w-full px-0 py-0">
+      <main className="w-full max-w-full px-0 py-0 sm:px-2">
         <Outlet />
       </main>
     </div>

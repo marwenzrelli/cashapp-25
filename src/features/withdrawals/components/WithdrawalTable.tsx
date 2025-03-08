@@ -32,7 +32,7 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
   };
 
   return (
-    <Card>
+    <Card className="w-full mx-0">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Liste des retraits</CardTitle>
@@ -41,7 +41,7 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
           </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-2 sm:px-6">
         {/* Desktop Table View */}
         <div className="hidden md:block relative w-full overflow-auto">
           <table className="w-full text-sm">
@@ -128,7 +128,7 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
         </div>
 
         {/* Mobile Card View */}
-        <div className="md:hidden space-y-3">
+        <div className="md:hidden space-y-3 w-full px-0">
           {withdrawals.map((withdrawal) => {
             const client = findClientById(withdrawal.client_name);
             const formattedOperationDate = withdrawal.operation_date 
@@ -136,7 +136,7 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
               : "Date inconnue";
 
             return (
-              <div key={withdrawal.id} className="bg-white dark:bg-gray-800 rounded-lg border shadow-sm p-3">
+              <div key={withdrawal.id} className="bg-white dark:bg-gray-800 rounded-lg border shadow-sm p-3 w-full">
                 <div className="flex items-center justify-between mb-2">
                   <p 
                     className="font-medium text-primary flex items-center cursor-pointer"

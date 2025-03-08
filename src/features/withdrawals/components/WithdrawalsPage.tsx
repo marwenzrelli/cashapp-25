@@ -107,7 +107,7 @@ export const WithdrawalsPage: React.FC = () => {
   // Network status alerts or error state
   if (networkStatus === 'offline' || networkStatus === 'reconnecting' || error) {
     return (
-      <>
+      <div className="w-full max-w-full px-0 sm:px-0">
         <NetworkStatusAlerts 
           networkStatus={networkStatus}
           isLoading={isLoading}
@@ -144,7 +144,7 @@ export const WithdrawalsPage: React.FC = () => {
             setCurrentPage={setCurrentPage}
           />
         )}
-      </>
+      </div>
     );
   }
 
@@ -155,23 +155,25 @@ export const WithdrawalsPage: React.FC = () => {
 
   // Main content
   return (
-    <WithdrawalsContent
-      withdrawals={filteredWithdrawals}
-      paginatedWithdrawals={paginatedWithdrawals}
-      clients={clients}
-      fetchWithdrawals={fetchWithdrawals}
-      fetchClients={fetchClients}
-      refreshClientBalance={handleRefreshClientBalance}
-      deleteWithdrawal={deleteWithdrawal}
-      showDeleteDialog={showDeleteDialog}
-      setShowDeleteDialog={setShowDeleteDialog}
-      confirmDeleteWithdrawal={confirmDeleteWithdrawal}
-      searchTerm={searchTerm}
-      setSearchTerm={setSearchTerm}
-      itemsPerPage={itemsPerPage}
-      setItemsPerPage={setItemsPerPage}
-      currentPage={currentPage}
-      setCurrentPage={setCurrentPage}
-    />
+    <div className="w-full max-w-full px-0 sm:px-0">
+      <WithdrawalsContent
+        withdrawals={filteredWithdrawals}
+        paginatedWithdrawals={paginatedWithdrawals}
+        clients={clients}
+        fetchWithdrawals={fetchWithdrawals}
+        fetchClients={fetchClients}
+        refreshClientBalance={handleRefreshClientBalance}
+        deleteWithdrawal={deleteWithdrawal}
+        showDeleteDialog={showDeleteDialog}
+        setShowDeleteDialog={setShowDeleteDialog}
+        confirmDeleteWithdrawal={confirmDeleteWithdrawal}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        itemsPerPage={itemsPerPage}
+        setItemsPerPage={setItemsPerPage}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+      />
+    </div>
   );
 };
