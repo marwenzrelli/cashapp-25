@@ -32,9 +32,9 @@ export const DeleteDepositDialog = ({
       console.log("Résultat de la suppression:", success);
       
       if (success) {
-        console.log("Suppression réussie, fermeture de la boîte de dialogue");
-        // Close the dialog after a successful deletion
-        onOpenChange(false);
+        console.log("Suppression réussie, fermeture explicite de la boîte de dialogue");
+        // Force close the dialog after a successful deletion
+        setTimeout(() => onOpenChange(false), 100);
       } else {
         console.error("La suppression a échoué");
       }

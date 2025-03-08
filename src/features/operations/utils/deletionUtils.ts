@@ -69,7 +69,7 @@ export async function handleDepositDeletion(id: string | number, userId: string 
     return true;
   } catch (error) {
     console.error("Erreur dans handleDepositDeletion:", error);
-    return false; // Return false instead of rethrowing to allow proper handling by calling functions
+    return false;
   }
 }
 

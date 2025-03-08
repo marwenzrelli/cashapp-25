@@ -32,7 +32,7 @@ export const DepositsDialogs = ({
 }: DepositsDialogsProps) => {
   const [isProcessingDelete, setIsProcessingDelete] = useState(false);
 
-  // Fonction de confirmation qui s'assure de fermer la boîte de dialogue après une suppression réussie
+  // Fonction de confirmation qui délègue à la fonction de suppression parente
   const handleConfirmDelete = async () => {
     console.log("DepositsDialogs: Démarrage de la confirmation de suppression");
     
@@ -44,10 +44,9 @@ export const DepositsDialogs = ({
     setIsProcessingDelete(true);
     
     try {
+      // Appel à la fonction de suppression parente
       const success = await confirmDelete();
       console.log("DepositsDialogs: Résultat de la suppression:", success);
-      
-      // La fermeture du dialog est maintenant gérée par le composant DeleteDepositDialog
       return success;
     } catch (error) {
       console.error("DepositsDialogs: Erreur lors de la suppression", error);

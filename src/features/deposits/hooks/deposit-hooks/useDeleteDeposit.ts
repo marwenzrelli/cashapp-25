@@ -64,7 +64,6 @@ export const useDeleteDeposit = (
       if (success) {
         console.log("Suppression réussie, réinitialisation de l'état");
         setDepositToDelete(null);
-        setShowDeleteDialog(false);
         return true;
       } else {
         console.error("Échec de la suppression du versement");
