@@ -47,9 +47,6 @@ export const EditClientSection: React.FC<EditClientSectionProps> = ({
           ))}
         </SelectContent>
       </Select>
-      {editForm.clientBalance && (
-        <p className="text-sm text-red-500">{editForm.clientBalance} {currency}</p>
-      )}
     </div>
   );
 };

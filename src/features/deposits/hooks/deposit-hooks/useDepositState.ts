@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Deposit } from "@/components/deposits/types";
+import { Deposit } from "@/features/deposits/types";
 
 export const useDepositState = () => {
   const [deposits, setDeposits] = useState<Deposit[]>([]);

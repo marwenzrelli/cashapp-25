@@ -74,7 +74,7 @@ export const useDepositsPage = () => {
     isEditDialogOpen,
     setIsEditDialogOpen,
     selectedDeposit,
-    setSelectedDeposit,
+    setSelectedDeposit: setSelectedDeposit as unknown as (deposit: any) => void, // Fix type casting
     itemsPerPage,
     setItemsPerPage,
     currentPage,

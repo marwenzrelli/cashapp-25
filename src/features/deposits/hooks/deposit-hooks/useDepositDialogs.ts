@@ -12,7 +12,9 @@ export const useDepositDialogs = () => {
   const [editForm, setEditForm] = useState<EditFormData>({
     clientName: "",
     amount: "",
-    notes: ""
+    notes: "",
+    date: "",
+    time: ""
   });
   const [isDeleting, setIsDeleting] = useState(false);
 

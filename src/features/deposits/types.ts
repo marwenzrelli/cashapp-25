@@ -21,6 +21,7 @@ export interface EditFormData {
   notes: string;
   date: string;
   time: string;
+  clientBalance?: string; // Add the missing property
 }
 
 export interface DeleteDepositDialogProps {
