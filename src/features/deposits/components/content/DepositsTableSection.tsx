@@ -1,7 +1,7 @@
 
 import { DepositsTable } from "../DepositsTable";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Deposit } from "../../types";
+import { Deposit } from "@/components/deposits/types";
 
 interface DepositsTableSectionProps {
   isLoading: boolean;
