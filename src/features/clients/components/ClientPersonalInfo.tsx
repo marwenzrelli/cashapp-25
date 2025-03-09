@@ -98,7 +98,7 @@ export const ClientPersonalInfo = ({
             
             {/* Mobile Action Buttons - Now placed here instead of inside the QR code section */}
             <div className="md:hidden w-full mt-4">
-              <ClientActionButtons onDepositClick={() => setDepositDialogOpen(true)} onWithdrawalClick={() => setWithdrawalDialogOpen(true)} orientation="vertical" />
+              <ClientActionButtons onDepositClick={() => setDepositDialogOpen(true)} onWithdrawalClick={() => setWithdrawalDialogOpen(true)} orientation="vertical" className="px-0 mx-[185px]" />
             </div>
             
             {/* QR Code Button - Now placed under the action buttons on mobile */}
