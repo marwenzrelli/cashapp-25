@@ -85,16 +85,6 @@ export const ClientPersonalInfo = ({
             
             <div className="flex items-center gap-4">
               {clientId && <ClientIdBadge clientId={clientId} />}
-              
-              {client && client.id && 
-                <div className="hidden md:block">
-                  <ClientQRCode 
-                    clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} 
-                    clientName={`${client.prenom} ${client.nom}`} 
-                    size={180} 
-                  />
-                </div>
-              }
             </div>
           </div>
         </div>
@@ -128,14 +118,32 @@ export const ClientPersonalInfo = ({
               <ClientActionButtons onDepositClick={() => setDepositDialogOpen(true)} onWithdrawalClick={() => setWithdrawalDialogOpen(true)} orientation="vertical" />
             </div>
             
+            {/* QR Code component - now moved below the action buttons on mobile */}
             {client && client.id && <div className="md:hidden mt-4 w-full" ref={qrCodeRef}>
               <ClientQRCode clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} clientName={`${client.prenom} ${client.nom}`} size={230} />
             </div>}
           </div>
           
-          {/* Remove QR code from the right column on desktop */}
           <div className="flex-col items-center space-y-4 w-full hidden md:flex">
-            {/* QR code is now shown in the header instead */}
+            {/* First show action buttons on desktop */}
+            <div className="w-full">
+              <ClientActionButtons 
+                onDepositClick={() => setDepositDialogOpen(true)} 
+                onWithdrawalClick={() => setWithdrawalDialogOpen(true)} 
+                orientation="vertical" 
+              />
+            </div>
+            
+            {/* Then show QR code below the action buttons on desktop */}
+            {client && client.id && 
+              <div className="w-full" ref={qrCodeRef}>
+                <ClientQRCode 
+                  clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} 
+                  clientName={`${client.prenom} ${client.nom}`} 
+                  size={180} 
+                />
+              </div>
+            }
           </div>
         </div>
       </CardContent>
