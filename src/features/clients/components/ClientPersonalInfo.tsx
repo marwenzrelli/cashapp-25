@@ -104,17 +104,6 @@ export const ClientPersonalInfo = ({
               realTimeBalance={clientBalance}
             />
             
-            {/* QR Code button moved to the middle of personal info space */}
-            {client && client.id && (
-              <div className="flex justify-center w-full my-4">
-                <ClientQRCode 
-                  clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} 
-                  clientName={`${client.prenom} ${client.nom}`} 
-                  size={230} 
-                />
-              </div>
-            )}
-            
             {/* Mobile buttons section with improved spacing */}
             <div className="md:hidden space-y-3">
               <Button 
@@ -136,10 +125,30 @@ export const ClientPersonalInfo = ({
             </div>
           </div>
           
-          {/* Right column - removed QR code from here since it's now in the middle */}
+          {/* Right column with QR code on desktop */}
           <div className="flex flex-col items-center space-y-4">
-            {/* Empty div for reference */}
-            <div className="hidden md:block w-full max-w-[280px]" ref={qrCodeRef}></div>
+            {client && client.id && (
+              <>
+                <div className="hidden md:block w-full max-w-[280px]" ref={qrCodeRef}>
+                  <ClientQRCode 
+                    clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} 
+                    clientName={`${client.prenom} ${client.nom}`} 
+                    size={230} 
+                  />
+                </div>
+              </>
+            )}
+            
+            {/* Mobile QR code placed below action buttons */}
+            {client && client.id && (
+              <div className="md:hidden w-full mt-2" ref={qrCodeRef}>
+                <ClientQRCode 
+                  clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} 
+                  clientName={`${client.prenom} ${client.nom}`} 
+                  size={230} 
+                />
+              </div>
+            )}
           </div>
         </div>
       </CardContent>
