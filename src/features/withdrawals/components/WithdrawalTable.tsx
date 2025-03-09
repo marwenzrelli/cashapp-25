@@ -1,12 +1,15 @@
+
 import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Withdrawal } from "../types";
-import { UserCircle, ArrowDownCircle, Pencil, Trash2, ExternalLink, CalendarIcon } from "lucide-react";
+import { UserCircle, ArrowDownCircle, Pencil, Trash2, ExternalLink, CalendarIcon, Hash } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { Client } from "@/features/clients/types";
 import { formatDate } from "../hooks/utils/formatUtils";
 import { useNavigate } from "react-router-dom";
+import { formatId } from "@/utils/formatId";
+
 interface WithdrawalTableProps {
   withdrawals: Withdrawal[];
   onEdit: (withdrawal: Withdrawal) => void;
@@ -15,6 +18,7 @@ interface WithdrawalTableProps {
     dateCreation: string;
   }) | null;
 }
+
 export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
   withdrawals,
   onEdit,
@@ -25,6 +29,7 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
     currency
   } = useCurrency();
   const navigate = useNavigate();
+  
   const handleClientClick = (client: (Client & {
     dateCreation: string;
   }) | null) => {
@@ -32,6 +37,7 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
       navigate(`/clients/${client.id}`);
     }
   };
+  
   return <Card className="w-full mx-0">
       <CardHeader>
         <div className="flex items-center justify-between">
@@ -47,6 +53,7 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr className="text-left">
+                <th className="p-3">ID</th>
                 <th className="p-3">Client</th>
                 <th className="p-3 text-center">Montant</th>
                 <th className="p-3">Date d'opération</th>
@@ -58,7 +65,10 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
               {withdrawals.map(withdrawal => {
               const client = findClientById(withdrawal.client_name);
               const formattedOperationDate = withdrawal.operation_date ? formatDate(withdrawal.operation_date) : "Date inconnue";
+              const operationId = isNaN(parseInt(withdrawal.id)) ? withdrawal.id : formatId(parseInt(withdrawal.id));
+              
               return <tr key={withdrawal.id} className="group border-b hover:bg-muted/50 transition-colors">
+                    <td className="p-3 font-mono text-xs">{operationId}</td>
                     <td className="p-3">
                       <div className="flex items-center gap-3">
                         <div className="relative">
@@ -111,12 +121,14 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
           {withdrawals.map(withdrawal => {
           const client = findClientById(withdrawal.client_name);
           const formattedOperationDate = withdrawal.operation_date ? formatDate(withdrawal.operation_date) : "Date inconnue";
+          const operationId = isNaN(parseInt(withdrawal.id)) ? withdrawal.id : formatId(parseInt(withdrawal.id));
+          
           return <div key={withdrawal.id} className="bg-white dark:bg-gray-800 rounded-lg border shadow-sm p-3 w-full">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="font-medium text-primary flex items-center cursor-pointer" onClick={() => handleClientClick(client)}>
-                    {withdrawal.client_name}
-                    <ExternalLink className="h-3 w-3 ml-1" />
-                  </p>
+                  <div className="flex items-center gap-1">
+                    <Hash className="h-3 w-3 text-muted-foreground" />
+                    <span className="text-xs font-mono text-muted-foreground">{operationId}</span>
+                  </div>
                   <div className="flex items-center text-danger">
                     <ArrowDownCircle className="h-4 w-4 mr-1" />
                     <span className="font-medium">
@@ -124,6 +136,11 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
                     </span>
                   </div>
                 </div>
+                
+                <p className="font-medium text-primary flex items-center cursor-pointer mb-2" onClick={() => handleClientClick(client)}>
+                  {withdrawal.client_name}
+                  <ExternalLink className="h-3 w-3 ml-1" />
+                </p>
                 
                 <div className="flex items-center text-xs text-muted-foreground mb-2">
                   <CalendarIcon className="h-3 w-3 mr-1" />
