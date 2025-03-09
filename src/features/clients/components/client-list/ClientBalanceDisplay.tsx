@@ -16,7 +16,11 @@ export const ClientBalanceDisplay = ({ solde }: ClientBalanceDisplayProps) => {
         <span className="text-sm text-muted-foreground">Solde</span>
       </div>
       <div className="mt-1">
-        <span className={`text-sm md:text-base font-medium text-left px-2 py-1 border border-gray-200 rounded-md ${solde >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+        <span className={`text-sm md:text-base font-medium px-2 py-1 border rounded-md ${
+          solde >= 0 
+            ? 'text-green-600 border-green-200 bg-green-50' 
+            : 'text-red-600 border-red-200 bg-red-50'
+        }`}>
           {solde.toLocaleString()} {currency}
         </span>
       </div>

@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Client } from "../../types";
+import { format } from "date-fns";
 
 interface ClientExpandedViewProps {
   client: Client;
@@ -11,25 +12,29 @@ export const ClientExpandedView = ({ client, onView }: ClientExpandedViewProps) 
   return (
     <div className="mt-4 md:pl-14 text-sm grid gap-2">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <p className="text-muted-foreground">Email</p>
-          <p className="truncate">{client.email}</p>
+        <div className="bg-white dark:bg-gray-800/60 rounded-lg p-3">
+          <p className="text-muted-foreground text-xs">Email</p>
+          <p className="truncate font-medium">{client.email || "Non renseigné"}</p>
         </div>
-        <div>
-          <p className="text-muted-foreground mb-1">Solde</p>
+        <div className="bg-white dark:bg-gray-800/60 rounded-lg p-3">
+          <p className="text-muted-foreground text-xs mb-1">Solde</p>
           <div>
-            <span className={`text-left px-2 py-1 inline-block border border-gray-200 rounded-md ${client.solde >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <span className={`px-2 py-1 inline-block border rounded-md ${
+              client.solde >= 0 
+                ? 'text-green-600 border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-900/30 dark:text-green-400' 
+                : 'text-red-600 border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-900/30 dark:text-red-400'
+            }`}>
               {client.solde.toLocaleString()} TND
             </span>
           </div>
         </div>
-        <div>
-          <p className="text-muted-foreground">Date de création</p>
-          <p>{new Date(client.date_creation || '').toLocaleDateString()}</p>
+        <div className="bg-white dark:bg-gray-800/60 rounded-lg p-3">
+          <p className="text-muted-foreground text-xs">Date de création</p>
+          <p className="font-medium">{format(new Date(client.date_creation || ''), "dd/MM/yyyy")}</p>
         </div>
-        <div>
-          <p className="text-muted-foreground">Dernière mise à jour</p>
-          <p>{new Date().toLocaleDateString()}</p>
+        <div className="bg-white dark:bg-gray-800/60 rounded-lg p-3">
+          <p className="text-muted-foreground text-xs">Dernière mise à jour</p>
+          <p className="font-medium">{format(new Date(), "dd/MM/yyyy")}</p>
         </div>
       </div>
       <div className="mt-2 flex justify-end">
@@ -37,6 +42,7 @@ export const ClientExpandedView = ({ client, onView }: ClientExpandedViewProps) 
           variant="outline" 
           size="sm"
           onClick={() => onView(client.id)}
+          className="hover:bg-primary/5"
         >
           Voir le profil complet
         </Button>

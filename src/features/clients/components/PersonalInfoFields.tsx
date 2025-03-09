@@ -1,5 +1,5 @@
 
-import { User, Phone, Mail, Calendar, Wallet } from "lucide-react";
+import { User, Phone, Mail, Calendar, Wallet, BadgeCheck } from "lucide-react";
 import { format } from "date-fns";
 import { Client } from "../types";
 import { cn } from "@/lib/utils";
@@ -22,58 +22,83 @@ export const PersonalInfoFields = ({
   // Use real-time balance if available, otherwise fall back to client.solde
   const effectiveBalance = realTimeBalance !== null ? realTimeBalance : client.solde;
   
-  return <div className="space-y-6 w-full">
-      <div className="space-y-4 w-full">
-        <div className="flex items-center gap-3">
-          <User className="h-5 w-5 text-primary" />
-          <div className="w-full">
-            <p className="text-sm text-muted-foreground mx-0 px-0 my-0 py-0 text-left">Nom complet</p>
-            <p className="font-medium mx-0 my-px text-xl text-left">
+  return (
+    <div className="w-full space-y-6 rounded-lg">
+      {/* Client primary info with gradient card */}
+      <div className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl p-5 shadow-sm">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="bg-primary/10 p-3 rounded-full">
+            <User className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h3 className="text-xl font-semibold tracking-tight">
               {client.prenom} {client.nom}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <Phone className="h-5 w-5 text-primary" />
-          <div className="w-full">
-            <p className="text-sm text-muted-foreground text-left">Téléphone</p>
-            <p className="font-medium text-left">{client.telephone}</p>
-          </div>
-        </div>
-      </div>
-      
-      <div className="space-y-4 w-full">
-        <div className="flex items-center gap-3">
-          <Mail className="h-5 w-5 text-primary" />
-          <div className="w-full">
-            <p className="text-sm text-muted-foreground text-left">Email</p>
-            <p className="font-medium overflow-hidden text-ellipsis text-left">{client.email || "Non renseigné"}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <Calendar className="h-5 w-5 text-primary" />
-          <div className="w-full">
-            <p className="text-sm text-muted-foreground text-left">Date de création</p>
-            <p className="font-medium text-left">
-              {format(new Date(client.date_creation || ""), "dd/MM/yyyy")}
+            </h3>
+            <p className="text-sm text-muted-foreground flex items-center gap-1">
+              <BadgeCheck className="h-3.5 w-3.5 text-primary/70" />
+              Client vérifié
             </p>
           </div>
         </div>
         
-        {showBalance && <div className="flex items-start gap-3">
-            <Wallet className="h-5 w-5 text-primary mt-1" />
-            <div className="w-full">
-              <p className="text-sm text-muted-foreground text-left mb-1">Solde</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex items-center gap-3">
+            <Phone className="h-5 w-5 text-primary" />
+            <div>
+              <p className="text-xs text-muted-foreground">Téléphone</p>
+              <p className="font-medium">{client.telephone}</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <Mail className="h-5 w-5 text-primary" />
+            <div>
+              <p className="text-xs text-muted-foreground">Email</p>
+              <p className="font-medium overflow-hidden text-ellipsis">
+                {client.email || "Non renseigné"}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Secondary info cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border shadow-sm">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="bg-primary/10 p-2 rounded-full">
+              <Calendar className="h-4 w-4 text-primary" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Date de création</p>
+              <p className="font-medium">
+                {format(new Date(client.date_creation || ""), "dd/MM/yyyy")}
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        {showBalance && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border shadow-sm">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="bg-primary/10 p-2 rounded-full">
+                <Wallet className="h-4 w-4 text-primary" />
+              </div>
               <div>
+                <p className="text-xs text-muted-foreground">Solde</p>
                 <span className={cn(
-                  "font-medium text-left px-2 py-1 inline-block border border-gray-200 rounded-md", 
-                  effectiveBalance >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
+                  "font-medium px-2 py-1 mt-1 inline-block border rounded-md", 
+                  effectiveBalance >= 0 
+                    ? "text-green-600 dark:text-green-400 border-green-200 dark:border-green-900/30 bg-green-50 dark:bg-green-900/20" 
+                    : "text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/30 bg-red-50 dark:bg-red-900/20"
                 )}>
                   {formatAmount(effectiveBalance)}
                 </span>
               </div>
             </div>
-          </div>}
+          </div>
+        )}
       </div>
-    </div>;
+    </div>
+  );
 };
