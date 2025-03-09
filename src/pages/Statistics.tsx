@@ -8,6 +8,7 @@ import { ChartSection } from "@/features/statistics/components/ChartSection";
 import { InsightsSection } from "@/features/statistics/components/InsightsSection";
 import { ErrorDisplay } from "@/features/statistics/components/ErrorDisplay";
 import { useEffect } from "react";
+import { toast } from "sonner";
 
 const Statistics = () => {
   const { 
@@ -39,6 +40,7 @@ const Statistics = () => {
     hasValidData,
     attempted,
     setAttempted,
+    usingCachedData,
     
     // Actions
     refreshData
@@ -48,10 +50,20 @@ const Statistics = () => {
   useEffect(() => {
     const forceShowTimeout = setTimeout(() => {
       setAttempted(true);
-    }, 10000);
+    }, 6000); // Reduced from 10 seconds to 6 seconds
     
     return () => clearTimeout(forceShowTimeout);
   }, [setAttempted]);
+
+  // Notify when using cached data
+  useEffect(() => {
+    if (usingCachedData) {
+      toast.info("Affichage des données en cache pendant le chargement", {
+        duration: 3000,
+        position: "top-right"
+      });
+    }
+  }, [usingCachedData]);
 
   // If data is still loading and we haven't attempted to show data yet
   if (isLoading && !attempted) {
@@ -60,7 +72,8 @@ const Statistics = () => {
         <StatisticsHeader 
           isSyncing={isSyncing} 
           isLoading={isLoading} 
-          refreshData={refreshData} 
+          refreshData={refreshData}
+          usingCachedData={usingCachedData}
         />
         
         <LoadingState 
@@ -69,6 +82,7 @@ const Statistics = () => {
             "Chargement des statistiques en cours..."
           } 
           retrying={timeoutExceeded}
+          variant="minimal"
         />
       </div>
     );
@@ -81,7 +95,8 @@ const Statistics = () => {
         <StatisticsHeader 
           isSyncing={isSyncing} 
           isLoading={isLoading} 
-          refreshData={refreshData} 
+          refreshData={refreshData}
+          usingCachedData={usingCachedData}
         />
         
         <ErrorDisplay 
@@ -99,7 +114,8 @@ const Statistics = () => {
       <StatisticsHeader 
         isSyncing={isSyncing} 
         isLoading={isLoading} 
-        refreshData={refreshData} 
+        refreshData={refreshData}
+        usingCachedData={usingCachedData}
       />
 
       <FilterSection

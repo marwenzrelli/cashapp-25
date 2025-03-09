@@ -1,18 +1,20 @@
 
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Database } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface StatisticsHeaderProps {
   isSyncing: boolean;
   isLoading: boolean;
   refreshData: () => void;
+  usingCachedData?: boolean;
 }
 
 export const StatisticsHeader = ({ 
   isSyncing, 
   isLoading, 
-  refreshData 
+  refreshData,
+  usingCachedData = false
 }: StatisticsHeaderProps) => {
   return (
     <div className="flex justify-between items-center">
@@ -20,6 +22,11 @@ export const StatisticsHeader = ({
         <h1 className="text-3xl font-bold">Statistiques</h1>
         <p className="text-muted-foreground">
           Vue d'ensemble et analyses détaillées
+          {usingCachedData && (
+            <span className="ml-2 text-yellow-600 dark:text-yellow-400 text-sm flex items-center gap-1">
+              <Database className="h-3 w-3" /> Données en cache
+            </span>
+          )}
         </p>
       </div>
       <Button 
