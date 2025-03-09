@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -136,7 +135,6 @@ export const useDashboardData = () => {
     }
   }, [retryCount]);
 
-  // Helper function to create mock monthly stats
   const generateMockMonthlyStats = () => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return months.map((month, index) => ({
@@ -150,30 +148,28 @@ export const useDashboardData = () => {
 
   const fetchRecentActivity = useCallback(async () => {
     try {
-      // Récupérer les versements récents
+      // Increased the limit to show more activities with pagination (20 instead of 5)
       const { data: recentDeposits, error: depositsError } = await supabase
         .from('deposits')
         .select('id, amount, created_at, client_name, status, notes')
         .order('created_at', { ascending: false })
-        .limit(5);
+        .limit(20);
 
       if (depositsError) throw depositsError;
 
-      // Récupérer les retraits récents
       const { data: recentWithdrawals, error: withdrawalsError } = await supabase
         .from('withdrawals')
         .select('id, amount, created_at, client_name, status, notes')
         .order('created_at', { ascending: false })
-        .limit(5);
+        .limit(20);
 
       if (withdrawalsError) throw withdrawalsError;
 
-      // Récupérer les transferts récents
       const { data: recentTransfers, error: transfersError } = await supabase
         .from('transfers')
         .select('id, amount, created_at, from_client, to_client, status, reason')
         .order('created_at', { ascending: false })
-        .limit(5);
+        .limit(20);
 
       if (transfersError) throw transfersError;
 
@@ -211,7 +207,7 @@ export const useDashboardData = () => {
           description: t.reason || `Virement de ${t.from_client} vers ${t.to_client}`
         })) || [])
       ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-        .slice(0, 10);
+       .slice(0, 30); // Increased to 30 activities total
 
       setRecentActivity(allActivity);
     } catch (error: any) {

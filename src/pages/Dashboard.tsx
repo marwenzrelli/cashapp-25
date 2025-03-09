@@ -13,6 +13,7 @@ import { AISuggestions } from "@/features/dashboard/components/AISuggestions";
 import { RecentActivityCard } from "@/features/dashboard/components/RecentActivity";
 import { useDashboardData } from "@/features/dashboard/hooks/useDashboardData";
 import { recalculateAllClientBalances } from "@/features/statistics/utils/balanceCalculator";
+import { TransferPagination } from "@/features/transfers/components/TransferPagination";
 
 const Dashboard = () => {
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
@@ -21,6 +22,15 @@ const Dashboard = () => {
   const [currentUser, setCurrentUser] = useState<SystemUser | null>(null);
   const { stats, isLoading, recentActivity, handleRefresh } = useDashboardData();
   const [isRecalculating, setIsRecalculating] = useState(false);
+
+  // Pagination state for recent activity
+  const [activitiesPerPage, setActivitiesPerPage] = useState("5");
+  const [currentActivityPage, setCurrentActivityPage] = useState(1);
+
+  // Get the current page of activities
+  const indexOfLastActivity = currentActivityPage * parseInt(activitiesPerPage);
+  const indexOfFirstActivity = indexOfLastActivity - parseInt(activitiesPerPage);
+  const currentActivities = recentActivity.slice(indexOfFirstActivity, indexOfLastActivity);
 
   const handleUpdateProfile = async (updatedUser: Partial<SystemUser>) => {
     try {
@@ -81,7 +91,18 @@ const Dashboard = () => {
         <AISuggestions stats={stats} />
       </div>
 
-      <RecentActivityCard activities={recentActivity} currency={currency} />
+      <div className="space-y-2">
+        <RecentActivityCard activities={currentActivities} currency={currency} />
+        
+        <TransferPagination
+          itemsPerPage={activitiesPerPage}
+          setItemsPerPage={setActivitiesPerPage}
+          totalItems={recentActivity.length}
+          currentPage={currentActivityPage}
+          setCurrentPage={setCurrentActivityPage}
+          label="activités"
+        />
+      </div>
 
       <EditProfileDialog
         isOpen={isEditProfileOpen}

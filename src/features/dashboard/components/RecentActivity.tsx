@@ -1,7 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowUpCircle, ArrowDownCircle, ArrowLeftRight } from "lucide-react";
-import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { OperationsMobileCard } from "@/features/clients/components/operations-history/OperationsMobileCard";
 import { RecentActivity } from "../types";
