@@ -40,21 +40,21 @@ export const ClientOperationsHistoryTabs = ({
         </CardContent>
       </Card>
 
-      <Card className="shadow-sm overflow-hidden">
-        <CardContent className="p-4 sm:p-4 px-2 sm:px-4 overflow-hidden">
-          <TabsContent value="all" className="w-full max-w-full overflow-hidden">
+      <Card className="shadow-sm">
+        <CardContent className="p-4 sm:p-4 px-2 sm:px-4">
+          <TabsContent value="all" className="w-full">
             <AllOperationsTab operations={filteredOperations} currency={currency} />
           </TabsContent>
 
-          <TabsContent value="deposits" className="w-full max-w-full overflow-hidden">
+          <TabsContent value="deposits" className="w-full">
             <DepositOperationsTab operations={filteredOperations} currency={currency} />
           </TabsContent>
 
-          <TabsContent value="withdrawals" className="w-full max-w-full overflow-hidden">
+          <TabsContent value="withdrawals" className="w-full">
             <WithdrawalOperationsTab operations={filteredOperations} currency={currency} />
           </TabsContent>
 
-          <TabsContent value="transfers" className="w-full max-w-full overflow-hidden">
+          <TabsContent value="transfers" className="w-full">
             <TransferOperationsTab operations={filteredOperations} currency={currency} />
           </TabsContent>
         </CardContent>

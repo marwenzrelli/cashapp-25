@@ -48,9 +48,9 @@ export const WithdrawalOperationsTab = ({ operations, currency = "TND" }: Withdr
         </Table>
       </div>
 
-      {/* Mobile version */}
-      <div className="md:hidden space-y-3 w-full px-0 overflow-x-hidden">
-        <div className="flex flex-col w-full max-w-full overflow-x-hidden">
+      {/* Mobile version - with narrower padding and better overflow control */}
+      <div className="md:hidden w-full overflow-hidden">
+        <div className="flex flex-col space-y-2 w-full">
           {withdrawals.map((operation) => (
             <OperationsMobileCard 
               key={operation.id} 

@@ -50,8 +50,8 @@ export const OperationsMobileCard = ({
   const operationDate = operation.operation_date || operation.date;
   
   return (
-    <div className="flex flex-col p-3 bg-white dark:bg-gray-800 rounded-lg border shadow-sm w-full max-w-full overflow-hidden px-2 mb-2">
-      <div className="flex items-start justify-between mb-2">
+    <div className="flex flex-col p-2 bg-white dark:bg-gray-800 rounded-lg border shadow-sm w-full">
+      <div className="flex items-start justify-between mb-1">
         {showType && (
           <Badge 
             variant={
@@ -71,7 +71,7 @@ export const OperationsMobileCard = ({
             }
           </Badge>
         )}
-        <p className={`text-base sm:text-lg font-semibold ${
+        <p className={`text-base font-semibold ${
           colorClass || (
             operation.type === "withdrawal" 
               ? "text-red-500" 
@@ -86,7 +86,7 @@ export const OperationsMobileCard = ({
         </p>
       </div>
       
-      <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mb-2">
+      <div className="flex flex-wrap gap-1 text-xs text-muted-foreground mb-1">
         <div className="flex items-center gap-1">
           <CalendarClock className="h-3 w-3" />
           <span>{formatDate(operationDate, "dd MMM yyyy")}</span>
@@ -99,13 +99,13 @@ export const OperationsMobileCard = ({
       </div>
       
       {operation.description && (
-        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1 mb-2 line-clamp-2 break-words">
+        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 mb-1 line-clamp-2 break-words">
           {operation.description}
         </p>
       )}
       
       {operation.type === "transfer" && (
-        <div className="text-xs text-muted-foreground border-t pt-2 mt-1">
+        <div className="text-xs text-muted-foreground border-t pt-1 mt-1">
           <p className="truncate">De: {operation.fromClient}</p>
           <p className="truncate">À: {operation.toClient}</p>
         </div>
