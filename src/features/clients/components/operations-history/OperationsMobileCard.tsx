@@ -50,8 +50,8 @@ export const OperationsMobileCard = ({
   const operationDate = operation.operation_date || operation.date;
   
   return (
-    <div className="flex flex-col p-2 bg-white dark:bg-gray-800 rounded-lg border shadow-sm w-full">
-      <div className="flex items-start justify-between mb-1">
+    <div className="flex flex-col p-3 bg-white dark:bg-gray-800 rounded-lg border shadow-sm w-full">
+      <div className="flex items-center justify-between mb-2">
         {showType && (
           <Badge 
             variant={
@@ -61,7 +61,7 @@ export const OperationsMobileCard = ({
                   ? "destructive" 
                   : "outline"
             } 
-            className="text-xs"
+            className="text-xs mr-2"
           >
             {operation.type === "deposit" 
               ? "Dépôt" 
@@ -71,22 +71,24 @@ export const OperationsMobileCard = ({
             }
           </Badge>
         )}
-        <p className={`text-base font-semibold ${
-          colorClass || (
-            operation.type === "withdrawal" 
-              ? "text-red-500" 
-              : operation.type === "deposit" 
-                ? "text-green-500" 
-                : "text-blue-500"
-          )}`}
-        >
-          {operation.type === "withdrawal" ? "-" : operation.type === "deposit" ? "+" : ""}
-          {formatAmount(operation.amount)}
-          {currency && ` ${currency}`}
-        </p>
+        <div className="flex-1 flex justify-end">
+          <p className={`text-base font-semibold ${
+            colorClass || (
+              operation.type === "withdrawal" 
+                ? "text-red-500" 
+                : operation.type === "deposit" 
+                  ? "text-green-500" 
+                  : "text-blue-500"
+            )}`}
+          >
+            {operation.type === "withdrawal" ? "-" : operation.type === "deposit" ? "+" : ""}
+            {formatAmount(operation.amount)}
+            {currency && ` ${currency}`}
+          </p>
+        </div>
       </div>
       
-      <div className="flex flex-wrap gap-1 text-xs text-muted-foreground mb-1">
+      <div className="flex justify-between text-xs text-muted-foreground mb-2">
         <div className="flex items-center gap-1">
           <CalendarClock className="h-3 w-3" />
           <span>{formatDate(operationDate, "dd MMM yyyy")}</span>
@@ -99,7 +101,7 @@ export const OperationsMobileCard = ({
       </div>
       
       {operation.description && (
-        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 mb-1 line-clamp-2 break-words">
+        <p className="text-sm text-gray-700 dark:text-gray-300 my-1 break-words">
           {operation.description}
         </p>
       )}

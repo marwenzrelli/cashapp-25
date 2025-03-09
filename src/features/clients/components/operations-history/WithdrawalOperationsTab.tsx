@@ -48,34 +48,17 @@ export const WithdrawalOperationsTab = ({ operations, currency = "TND" }: Withdr
         </Table>
       </div>
 
-      {/* Mobile version - redesigned for better fit */}
-      <div className="md:hidden w-full">
-        <div className="grid grid-cols-1 gap-2">
-          {withdrawals.map((operation) => (
-            <div key={operation.id} className="w-full">
-              <div className="grid grid-cols-3 items-center p-3 bg-white dark:bg-gray-800 rounded-lg border shadow-sm">
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium">
-                    {format(new Date(operation.operation_date || operation.date), "dd/MM/yyyy")}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {format(new Date(operation.operation_date || operation.date), "HH:mm")}
-                  </span>
-                </div>
-                
-                <div className="truncate px-1">
-                  <span className="text-sm">{operation.description}</span>
-                </div>
-                
-                <div className="text-right">
-                  <span className="text-base font-medium text-red-600 dark:text-red-400 whitespace-nowrap">
-                    -{Math.round(operation.amount)} {currency}
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+      {/* Mobile version - completely redesigned for better readability */}
+      <div className="md:hidden w-full space-y-3">
+        {withdrawals.map((operation) => (
+          <OperationsMobileCard
+            key={operation.id}
+            operation={operation}
+            currency={currency}
+            showType={false}
+            colorClass="text-red-600 dark:text-red-400"
+          />
+        ))}
       </div>
     </>
   );

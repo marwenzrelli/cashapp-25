@@ -8,15 +8,18 @@ import { DepositOperationsTab } from "./DepositOperationsTab";
 import { WithdrawalOperationsTab } from "./WithdrawalOperationsTab";
 import { TransferOperationsTab } from "./TransferOperationsTab";
 import { Card, CardContent } from "@/components/ui/card";
+
 interface ClientOperationsHistoryTabsProps {
   filteredOperations: Operation[];
   currency?: string;
 }
+
 export const ClientOperationsHistoryTabs = ({
   filteredOperations,
   currency = "TND"
 }: ClientOperationsHistoryTabsProps) => {
-  return <Tabs defaultValue="all" className="w-full">
+  return (
+    <Tabs defaultValue="all" className="w-full">
       <Card className="mb-4 shadow-sm my-0 py-0 px-0 mx-0">
         <CardContent className="p-1 sm:p-2 px-0 py-0 mx-0">
           <TabsList className="w-full grid grid-cols-2 sm:flex sm:flex-wrap gap-2 mx-0 px-0 my-[48px] py-0">
@@ -59,5 +62,6 @@ export const ClientOperationsHistoryTabs = ({
           </TabsContent>
         </CardContent>
       </Card>
-    </Tabs>;
+    </Tabs>
+  );
 };
