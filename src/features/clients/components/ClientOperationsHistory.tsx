@@ -36,7 +36,7 @@ export const ClientOperationsHistory = ({
 }: ClientOperationsHistoryProps) => {
   return (
     <div className="space-y-6">
-      {/* Search Filters Card - completely separate */}
+      {/* Search Filters Card */}
       <Card className="w-full shadow-md">
         <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2 px-4 sm:px-6">
           <CardTitle className="text-lg sm:text-xl">Recherche d'opérations</CardTitle>
@@ -64,18 +64,11 @@ export const ClientOperationsHistory = ({
         </CardContent>
       </Card>
 
-      {/* Operations History Card - completely separate */}
-      <Card className="w-full shadow-md">
-        <CardHeader className="px-4 sm:px-6 border-b">
-          <CardTitle className="text-lg sm:text-xl">Historique des opérations</CardTitle>
-        </CardHeader>
-        <CardContent className="px-2 sm:px-6 pt-4">
-          <ClientOperationsHistoryTabs 
-            filteredOperations={filteredOperations} 
-            currency="TND" 
-          />
-        </CardContent>
-      </Card>
+      {/* Operations History Tabs - now completely separate from content */}
+      <ClientOperationsHistoryTabs 
+        filteredOperations={filteredOperations} 
+        currency="TND" 
+      />
     </div>
   );
 };
