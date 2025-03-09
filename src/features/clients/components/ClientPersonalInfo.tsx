@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Client } from "../types";
 import { ClientQRCode } from "./ClientQRCode";
@@ -103,7 +102,7 @@ export const ClientPersonalInfo = ({
             </div>
           </div>
           
-          {client && client.id && <div className="flex flex-col items-center space-y-4 w-full">
+          {client && client.id && <div className="flex flex-col items-center space-y-4 w-full px-[172px] mx-[67px]">
               <div className="flex justify-center w-full" ref={qrCodeRef}>
                 <ClientQRCode clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} clientName={`${client.prenom} ${client.nom}`} size={256} />
               </div>
