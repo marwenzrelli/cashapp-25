@@ -79,27 +79,38 @@ export const ClientPersonalInfo = ({
   };
   
   return (
-    <Card className="md:col-span-3">
-      <CardHeader>
+    <Card className="md:col-span-3 overflow-hidden border border-gray-200 dark:border-gray-800 bg-gradient-to-br from-white to-gray-50 dark:from-gray-950 dark:to-gray-900 shadow-md hover:shadow-lg transition-all duration-300">
+      <CardHeader className="bg-gradient-to-r from-gray-50 to-white dark:from-gray-900 dark:to-gray-950 border-b border-gray-100 dark:border-gray-800">
         <div className="flex flex-col md:flex-row justify-between items-center gap-2">
-          <CardTitle className="flex items-center">
+          <CardTitle className="flex items-center text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-700 dark:from-primary dark:to-blue-500">
             Informations personnelles
             {clientId && <ClientIdBadge clientId={clientId} />}
           </CardTitle>
           
           <div className="hidden md:flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleRefreshBalance} disabled={isRefreshing}
-              className={cn("transition-all", isRefreshing && "opacity-70")}>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleRefreshBalance} 
+              disabled={isRefreshing}
+              className={cn(
+                "transition-all h-10 backdrop-blur-sm bg-white/80 dark:bg-gray-950/80 border border-gray-200 dark:border-gray-800 shadow-sm",
+                isRefreshing && "opacity-70"
+              )}
+            >
               <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
               {isRefreshing ? 'Actualisation...' : 'Actualiser le solde'}
             </Button>
             
-            <ClientActionButtons onDepositClick={() => setDepositDialogOpen(true)} onWithdrawalClick={() => setWithdrawalDialogOpen(true)} />
+            <ClientActionButtons 
+              onDepositClick={() => setDepositDialogOpen(true)} 
+              onWithdrawalClick={() => setWithdrawalDialogOpen(true)} 
+            />
           </div>
         </div>
       </CardHeader>
       
-      <CardContent>
+      <CardContent className="p-6">
         <div className="grid gap-6 md:grid-cols-2">
           <div className="flex flex-col items-center md:items-start">
             <PersonalInfoFields 
@@ -116,7 +127,7 @@ export const ClientPersonalInfo = ({
                 size="sm" 
                 onClick={handleRefreshBalance} 
                 disabled={isRefreshing} 
-                className="w-full"
+                className="w-full h-10 backdrop-blur-sm bg-white/80 dark:bg-gray-950/80 border border-gray-200 dark:border-gray-800 shadow-sm"
               >
                 <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
                 {isRefreshing ? 'Actualisation...' : 'Actualiser le solde'}
@@ -126,7 +137,7 @@ export const ClientPersonalInfo = ({
           
           {client && client.id && (
             <div className="flex flex-col items-center justify-center space-y-4 w-full">
-              <div className="flex justify-center w-full" ref={qrCodeRef}>
+              <div className="flex justify-center w-full p-4 bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 rounded-xl shadow-inner" ref={qrCodeRef}>
                 <ClientQRCode 
                   clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} 
                   clientName={`${client.prenom} ${client.nom}`} 
@@ -134,7 +145,7 @@ export const ClientPersonalInfo = ({
                 />
               </div>
               
-              {/* Action buttons below QR code on mobile - centered */}
+              {/* Action buttons below QR code on mobile - centered with consistent height */}
               <div className="md:hidden w-full max-w-xs mx-auto">
                 <ClientActionButtons 
                   onDepositClick={() => setDepositDialogOpen(true)} 

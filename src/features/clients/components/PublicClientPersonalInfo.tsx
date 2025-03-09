@@ -16,14 +16,14 @@ export const PublicClientPersonalInfo = ({ client }: PublicClientPersonalInfoPro
   const { currency } = useCurrency();
   
   return (
-    <Card className="backdrop-blur-xl bg-white/50 dark:bg-gray-950/50 md:col-span-3 w-full sm:rounded-lg rounded-none sm:border border-x-0">
-      <CardHeader>
-        <CardTitle className="text-xl flex items-center justify-between">
+    <Card className="backdrop-blur-xl bg-white/50 dark:bg-gray-950/50 md:col-span-3 w-full sm:rounded-lg rounded-none sm:border border-x-0 shadow-md hover:shadow-lg transition-all duration-300">
+      <CardHeader className="bg-gradient-to-r from-gray-50/70 to-white/70 dark:from-gray-900/70 dark:to-gray-800/70 backdrop-blur-md">
+        <CardTitle className="text-xl flex items-center justify-between text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-700 dark:from-primary dark:to-blue-500">
           Informations personnelles
           <ClientIdBadge clientId={client.id} />
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-6">
         <div className="grid gap-6 md:grid-cols-3 w-full">
           <div className="md:col-span-2 w-full">
             <PersonalInfoFields 
@@ -33,8 +33,10 @@ export const PublicClientPersonalInfo = ({ client }: PublicClientPersonalInfoPro
             />
           </div>
           <div className="mt-0 w-full">
-            <div className="flex items-start gap-3 w-full">
-              <Wallet className="h-6 w-6 text-primary mt-1" />
+            <div className="flex items-start gap-3 w-full p-4 rounded-lg bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 shadow-sm transition-all hover:shadow-md">
+              <div className="p-2 bg-primary/10 rounded-full">
+                <Wallet className="h-6 w-6 text-primary mt-1" />
+              </div>
               <div className="w-full">
                 <p className="text-sm text-muted-foreground">Solde actuel</p>
                 <p className={cn(
