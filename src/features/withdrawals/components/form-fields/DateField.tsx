@@ -23,7 +23,10 @@ export const DateField: React.FC<DateFieldProps> = ({
       const date = new Date(value);
       
       // Format date as YYYY-MM-DD
-      dateValue = date.toISOString().split('T')[0];
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      dateValue = `${year}-${month}-${day}`;
       
       // Format time as HH:MM:SS
       const hours = String(date.getHours()).padStart(2, '0');
@@ -39,16 +42,34 @@ export const DateField: React.FC<DateFieldProps> = ({
   
   const handleDateChange = (newDate: string) => {
     try {
-      // Create date object from the date input
-      const dateParts = newDate.split('-').map(Number);
-      const newDateObj = new Date();
-      newDateObj.setFullYear(dateParts[0], dateParts[1] - 1, dateParts[2]);
+      if (!newDate) return; // Si la date est vide, ne rien faire
       
-      // Extract time parts from existing value
-      const currentTime = timeValue.split(':').map(Number);
-      if (currentTime.length >= 2) {
-        newDateObj.setHours(currentTime[0], currentTime[1], currentTime[2] || 0);
-      }
+      // Préserver l'heure actuelle
+      const currentDate = new Date(value || new Date());
+      const hours = currentDate.getHours();
+      const minutes = currentDate.getMinutes();
+      const seconds = currentDate.getSeconds();
+      
+      // Créer une nouvelle date à partir de l'entrée utilisateur
+      const [yearStr, monthStr, dayStr] = newDate.split('-');
+      const year = parseInt(yearStr);
+      const month = parseInt(monthStr) - 1; // Mois est 0-indexé
+      const day = parseInt(dayStr);
+      
+      // Créer un objet date avec les valeurs extraites
+      const newDateObj = new Date();
+      newDateObj.setFullYear(year);
+      newDateObj.setMonth(month);
+      newDateObj.setDate(day);
+      
+      // Préserver l'heure
+      newDateObj.setHours(hours, minutes, seconds);
+      
+      console.log("Setting new date with preserved time:", {
+        input: newDate,
+        newDateObj: newDateObj.toISOString(),
+        components: { year, month, day, hours, minutes, seconds }
+      });
       
       onChange(newDateObj.toISOString());
     } catch (error) {
@@ -58,18 +79,29 @@ export const DateField: React.FC<DateFieldProps> = ({
 
   const handleTimeChange = (newTime: string) => {
     try {
-      // Create date object from the current date value
-      const dateParts = dateValue.split('-').map(Number);
-      const newDateObj = new Date();
-      newDateObj.setFullYear(dateParts[0], dateParts[1] - 1, dateParts[2]);
+      if (!newTime) return; // Si l'heure est vide, ne rien faire
       
-      // Set time parts
-      const timeParts = newTime.split(':').map(Number);
-      if (timeParts.length >= 2) {
-        newDateObj.setHours(timeParts[0], timeParts[1], timeParts[2] || 0);
-      }
+      // Préserver la date actuelle
+      const currentDate = new Date(value || new Date());
       
-      onChange(newDateObj.toISOString());
+      // Extraire les composants de la date
+      const [timeParts, ...rest] = newTime.split('.');
+      const [hoursStr, minutesStr, secondsStr] = timeParts.split(':');
+      
+      const hours = parseInt(hoursStr || '0');
+      const minutes = parseInt(minutesStr || '0');
+      const seconds = parseInt(secondsStr || '0');
+      
+      // Mettre à jour l'heure sur la date actuelle
+      currentDate.setHours(hours, minutes, seconds);
+      
+      console.log("Setting new time with preserved date:", {
+        input: newTime,
+        result: currentDate.toISOString(),
+        components: { hours, minutes, seconds }
+      });
+      
+      onChange(currentDate.toISOString());
     } catch (error) {
       console.error("Error handling time change:", error);
     }
