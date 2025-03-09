@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Client } from "../types";
 import { ClientQRCode } from "./ClientQRCode";
