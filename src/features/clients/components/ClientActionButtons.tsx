@@ -24,19 +24,19 @@ export const ClientActionButtons = ({
       <Button 
         onClick={onDepositClick} 
         size="sm" 
-        className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white w-full"
+        className="flex items-center justify-center gap-1 bg-green-600 hover:bg-green-700 text-white w-full px-2 sm:px-3"
       >
         <ArrowDownToLine className="h-4 w-4" />
-        Versement
+        <span className="text-xs sm:text-sm">Versement</span>
       </Button>
       
       <Button 
         onClick={onWithdrawalClick} 
         size="sm" 
-        className="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white w-full"
+        className="flex items-center justify-center gap-1 bg-red-600 hover:bg-red-700 text-white w-full px-2 sm:px-3"
       >
         <ArrowUpToLine className="h-4 w-4" />
-        Retrait
+        <span className="text-xs sm:text-sm">Retrait</span>
       </Button>
     </div>
   );

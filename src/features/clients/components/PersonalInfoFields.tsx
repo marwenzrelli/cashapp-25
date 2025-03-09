@@ -10,6 +10,7 @@ interface PersonalInfoFieldsProps {
   showBalanceOnMobile?: boolean;
   showBalance?: boolean;
   realTimeBalance?: number | null;
+  className?: string;
 }
 
 export const PersonalInfoFields = ({
@@ -17,13 +18,14 @@ export const PersonalInfoFields = ({
   formatAmount = amount => `${amount.toLocaleString()} €`,
   showBalanceOnMobile = false,
   showBalance = true,
-  realTimeBalance = null
+  realTimeBalance = null,
+  className
 }: PersonalInfoFieldsProps) => {
   // Use real-time balance if available, otherwise fall back to client.solde
   const effectiveBalance = realTimeBalance !== null ? realTimeBalance : client.solde;
   
   return (
-    <div className="space-y-6 w-full max-w-md mx-auto md:mx-0">
+    <div className={cn("space-y-6 w-full", className)}>
       <div className="space-y-4 w-full">
         <div className="flex items-center gap-3">
           <User className="h-5 w-5 text-primary flex-shrink-0" />
@@ -65,7 +67,7 @@ export const PersonalInfoFields = ({
           </div>
         </div>
         
-        {showBalance && (
+        {(showBalance && (showBalanceOnMobile || !showBalanceOnMobile)) && (
           <div className="flex items-center gap-3">
             <Wallet className="h-5 w-5 text-primary flex-shrink-0" />
             <div className="w-full">

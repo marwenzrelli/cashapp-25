@@ -94,23 +94,32 @@ export const ClientPersonalInfo = ({
               {isRefreshing ? 'Actualisation...' : 'Actualiser le solde'}
             </Button>
             
-            <ClientActionButtons onDepositClick={() => setDepositDialogOpen(true)} onWithdrawalClick={() => setWithdrawalDialogOpen(true)} />
+            <ClientActionButtons 
+              onDepositClick={() => setDepositDialogOpen(true)} 
+              onWithdrawalClick={() => setWithdrawalDialogOpen(true)} 
+            />
           </div>
         </div>
       </CardHeader>
       
       <CardContent>
-        <div className="grid gap-6 md:grid-cols-2">
-          <div className="flex flex-col items-center md:items-start">
+        <div className="flex flex-col items-center">
+          {/* Personal info with centered layout */}
+          <div className="w-full max-w-md mx-auto mb-6">
             <PersonalInfoFields 
               client={client} 
               formatAmount={formatAmount} 
               showBalance={true} 
-              realTimeBalance={clientBalance} 
+              realTimeBalance={clientBalance}
+              showBalanceOnMobile={true}
+              className="text-center md:text-left"
             />
-            
+          </div>
+          
+          {/* QR code and buttons section */}
+          <div className="w-full max-w-md mx-auto flex flex-col items-center space-y-4">
             {/* Refresh button for mobile - centered */}
-            <div className="md:hidden mt-6 w-full max-w-xs mx-auto">
+            <div className="md:hidden w-full">
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -122,28 +131,28 @@ export const ClientPersonalInfo = ({
                 {isRefreshing ? 'Actualisation...' : 'Actualiser le solde'}
               </Button>
             </div>
-          </div>
-          
-          {client && client.id && (
-            <div className="flex flex-col items-center justify-center space-y-4 w-full">
+            
+            {/* Action buttons for mobile */}
+            <div className="md:hidden w-full">
+              <ClientActionButtons 
+                onDepositClick={() => setDepositDialogOpen(true)} 
+                onWithdrawalClick={() => setWithdrawalDialogOpen(true)} 
+                orientation="horizontal" 
+                className="mb-4"
+              />
+            </div>
+            
+            {/* QR Code centered for both mobile and desktop */}
+            {client && client.id && (
               <div className="flex justify-center w-full" ref={qrCodeRef}>
                 <ClientQRCode 
                   clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} 
                   clientName={`${client.prenom} ${client.nom}`} 
-                  size={256} 
+                  size={220} 
                 />
               </div>
-              
-              {/* Action buttons below QR code on mobile - centered */}
-              <div className="md:hidden w-full max-w-xs mx-auto">
-                <ClientActionButtons 
-                  onDepositClick={() => setDepositDialogOpen(true)} 
-                  onWithdrawalClick={() => setWithdrawalDialogOpen(true)} 
-                  orientation="vertical" 
-                />
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </CardContent>
       
