@@ -40,6 +40,7 @@ export const useStatisticsDataLoading = () => {
   
   // Check if we have valid data loaded
   const hasValidData = useCallback(() => {
+    // Consider any non-empty data as valid to show something to the user faster
     return Boolean(
       (Array.isArray(deposits) && deposits.length > 0) || 
       (Array.isArray(withdrawals) && withdrawals.length > 0) || 
@@ -47,9 +48,11 @@ export const useStatisticsDataLoading = () => {
     );
   }, [deposits, withdrawals, stats]);
   
-  // Store data in cache when it's loaded
+  // Store data in cache immediately when any data is loaded
   useEffect(() => {
-    if (!isLoadingDeposits && !isLoadingWithdrawals && !isLoadingStats && hasValidData()) {
+    // Store in cache as soon as any data becomes available
+    if ((!isLoadingDeposits || !isLoadingWithdrawals || !isLoadingStats) && 
+        (Array.isArray(deposits) || Array.isArray(withdrawals) || stats)) {
       setCachedData({
         deposits: Array.isArray(deposits) ? [...deposits] : [],
         withdrawals: Array.isArray(withdrawals) ? [...withdrawals] : [],
@@ -58,10 +61,10 @@ export const useStatisticsDataLoading = () => {
         timestamp: Date.now()
       });
     }
-  }, [isLoadingDeposits, isLoadingWithdrawals, isLoadingStats, deposits, withdrawals, transfersArray, stats, hasValidData]);
+  }, [isLoadingDeposits, isLoadingWithdrawals, isLoadingStats, deposits, withdrawals, transfersArray, stats]);
 
   useEffect(() => {
-    // Reset timeout state when loading starts
+    // Set timeout much faster - show cached data sooner
     if (isLoadingStats || isLoadingDeposits || isLoadingWithdrawals || isLoadingTransfers) {
       setTimeoutExceeded(false);
       
@@ -70,16 +73,17 @@ export const useStatisticsDataLoading = () => {
         if (isLoadingStats || isLoadingDeposits || isLoadingWithdrawals || isLoadingTransfers) {
           setTimeoutExceeded(true);
           
-          // If we have cached data and loading takes too long, use the cached data
-          if (cachedData && timeoutExceeded) {
+          // Let user know we're using cached data
+          if (cachedData && !hasValidData()) {
             console.log("Using cached statistics data from", new Date(cachedData.timestamp).toLocaleTimeString());
+            // No toast here - we'll handle it in the component
           }
         }
-      }, 8000); // Reduced from 15 seconds to 8 seconds for faster fallback
+      }, 3000); // Reduced to 3 seconds for faster fallback to cache
       
       return () => clearTimeout(timeout);
     }
-  }, [isLoadingStats, isLoadingDeposits, isLoadingWithdrawals, isLoadingTransfers, manualRefreshAttempt, cachedData, timeoutExceeded]);
+  }, [isLoadingStats, isLoadingDeposits, isLoadingWithdrawals, isLoadingTransfers, manualRefreshAttempt, cachedData, hasValidData]);
 
   const refreshData = async () => {
     setIsSyncing(true);
@@ -98,8 +102,9 @@ export const useStatisticsDataLoading = () => {
   };
 
   // Return cached data if loading is taking too long and we have cached data
-  const getDataToUse = () => {
-    if (timeoutExceeded && cachedData && !hasValidData()) {
+  const getDataToUse = useCallback(() => {
+    // Always use cache if it exists and we're still loading
+    if (cachedData && (isLoadingStats || isLoadingDeposits || isLoadingWithdrawals || timeoutExceeded)) {
       return {
         deposits: cachedData.deposits,
         withdrawals: cachedData.withdrawals,
@@ -116,7 +121,7 @@ export const useStatisticsDataLoading = () => {
       stats,
       usingCachedData: false
     };
-  };
+  }, [deposits, withdrawals, transfersArray, stats, cachedData, isLoadingStats, isLoadingDeposits, isLoadingWithdrawals, timeoutExceeded]);
 
   const dataToUse = getDataToUse();
 

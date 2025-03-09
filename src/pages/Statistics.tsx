@@ -7,7 +7,7 @@ import { StatisticsCards } from "@/features/statistics/components/StatisticsCard
 import { ChartSection } from "@/features/statistics/components/ChartSection";
 import { InsightsSection } from "@/features/statistics/components/InsightsSection";
 import { ErrorDisplay } from "@/features/statistics/components/ErrorDisplay";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 const Statistics = () => {
@@ -46,11 +46,11 @@ const Statistics = () => {
     refreshData
   } = useStatisticsData();
 
-  // Force show the data after 10 seconds no matter what
+  // Force show the data after just 2 seconds
   useEffect(() => {
     const forceShowTimeout = setTimeout(() => {
       setAttempted(true);
-    }, 6000); // Reduced from 10 seconds to 6 seconds
+    }, 2000); // Significantly reduced from 6 seconds to 2 seconds
     
     return () => clearTimeout(forceShowTimeout);
   }, [setAttempted]);
@@ -65,8 +65,8 @@ const Statistics = () => {
     }
   }, [usingCachedData]);
 
-  // If data is still loading and we haven't attempted to show data yet
-  if (isLoading && !attempted) {
+  // Show loading for maximum 2 seconds, then always show at least something
+  if (isLoading && !attempted && !usingCachedData) {
     return (
       <div className="space-y-8">
         <StatisticsHeader 
@@ -77,11 +77,7 @@ const Statistics = () => {
         />
         
         <LoadingState 
-          message={timeoutExceeded ? 
-            "Le chargement prend plus de temps que prévu... Veuillez patienter ou actualiser la page." : 
-            "Chargement des statistiques en cours..."
-          } 
-          retrying={timeoutExceeded}
+          message="Chargement des statistiques en cours..."
           variant="minimal"
         />
       </div>

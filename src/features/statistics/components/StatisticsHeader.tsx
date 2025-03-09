@@ -20,7 +20,7 @@ export const StatisticsHeader = ({
     <div className="flex justify-between items-center">
       <div>
         <h1 className="text-3xl font-bold">Statistiques</h1>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground flex items-center gap-1">
           Vue d'ensemble et analyses détaillées
           {usingCachedData && (
             <span className="ml-2 text-yellow-600 dark:text-yellow-400 text-sm flex items-center gap-1">
@@ -33,7 +33,7 @@ export const StatisticsHeader = ({
         onClick={refreshData} 
         variant="outline" 
         className="flex items-center gap-2"
-        disabled={isSyncing || isLoading}
+        disabled={isSyncing}
       >
         <RefreshCw className={`h-4 w-4 ${isSyncing || isLoading ? 'animate-spin' : ''}`} />
         {isSyncing ? 'Synchronisation...' : isLoading ? 'Chargement...' : 'Synchroniser'}
