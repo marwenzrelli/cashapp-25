@@ -35,23 +35,23 @@ export const ClientOperationsHistory = ({
   refreshOperations,
 }: ClientOperationsHistoryProps) => {
   return (
-    <Card className="w-full overflow-hidden">
-      <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2 px-4 sm:px-6">
-        <CardTitle className="text-lg sm:text-xl">Historique des opérations</CardTitle>
-        {refreshOperations && (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={refreshOperations}
-            className="flex items-center gap-1"
-          >
-            <RefreshCw className="h-4 w-4" />
-            <span className="hidden sm:inline">Actualiser</span>
-          </Button>
-        )}
-      </CardHeader>
-      <CardContent className="px-2 sm:px-6">
-        <div className="mb-4 sm:mb-6 overflow-x-auto">
+    <div className="space-y-4">
+      <Card className="w-full overflow-hidden">
+        <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2 px-4 sm:px-6">
+          <CardTitle className="text-lg sm:text-xl">Recherche d'opérations</CardTitle>
+          {refreshOperations && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={refreshOperations}
+              className="flex items-center gap-1"
+            >
+              <RefreshCw className="h-4 w-4" />
+              <span className="hidden sm:inline">Actualiser</span>
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent className="px-4 sm:px-6 pb-6">
           <OperationFilters
             type={selectedType as any}
             setType={setSelectedType as any}
@@ -60,13 +60,20 @@ export const ClientOperationsHistory = ({
             date={dateRange}
             setDate={setDateRange}
           />
-        </div>
+        </CardContent>
+      </Card>
 
-        <ClientOperationsHistoryTabs 
-          filteredOperations={filteredOperations} 
-          currency="TND" 
-        />
-      </CardContent>
-    </Card>
+      <Card className="w-full overflow-hidden">
+        <CardHeader className="px-4 sm:px-6">
+          <CardTitle className="text-lg sm:text-xl">Historique des opérations</CardTitle>
+        </CardHeader>
+        <CardContent className="px-2 sm:px-6">
+          <ClientOperationsHistoryTabs 
+            filteredOperations={filteredOperations} 
+            currency="TND" 
+          />
+        </CardContent>
+      </Card>
+    </div>
   );
 };
