@@ -63,6 +63,11 @@ export const ClientListItem = ({
         
         <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-6 w-full md:w-auto">
           <div className="flex items-center justify-between w-full md:w-auto">
+            {/* Move balance to the left of status on desktop */}
+            <div className="hidden md:block">
+              <ClientBalanceDisplay solde={client.solde} />
+            </div>
+            
             <ClientStatusBadge status={client.status}>
               {getStatusLabel(client.status)}
             </ClientStatusBadge>
@@ -80,7 +85,10 @@ export const ClientListItem = ({
           </div>
           
           <div className="flex items-center justify-between md:gap-8 w-full md:w-auto">
-            <ClientBalanceDisplay solde={client.solde} />
+            {/* Show balance on mobile but not on desktop (moved it above) */}
+            <div className="md:hidden">
+              <ClientBalanceDisplay solde={client.solde} />
+            </div>
             
             <div className="hidden md:flex items-center">
               <TooltipProvider>
