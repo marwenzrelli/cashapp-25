@@ -8,14 +8,12 @@ interface ClientQRCodeProps {
   clientId: number;
   clientName: string;
   size?: number;
-  buttonOnly?: boolean;
 }
 
 export const ClientQRCode = ({
   clientId,
   clientName,
-  size = 256,
-  buttonOnly = false
+  size = 256
 }: ClientQRCodeProps) => {
   const [showQrCode, setShowQrCode] = useState(false);
   const {
@@ -46,13 +44,7 @@ export const ClientQRCode = ({
   }
 
   if (!showQrCode) {
-    return <QRCodeButton onClick={() => setShowQrCode(true)} inline={buttonOnly} />;
-  }
-
-  if (buttonOnly) {
-    // If in button-only mode and QR code is shown, reset to button view
-    // This creates toggle behavior for the QR button when inline with other buttons
-    return <QRCodeButton onClick={() => setShowQrCode(false)} active={true} inline={true} />;
+    return <QRCodeButton onClick={() => setShowQrCode(true)} />;
   }
 
   return (

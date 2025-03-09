@@ -89,17 +89,7 @@ export const ClientPersonalInfo = ({
               {isRefreshing ? 'Actualisation...' : 'Actualiser le solde'}
             </Button>
             
-            <div className="flex items-center gap-2">
-              {client && client.id && (
-                <ClientQRCode 
-                  clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} 
-                  clientName={`${client.prenom} ${client.nom}`} 
-                  size={230}
-                  buttonOnly={true}
-                />
-              )}
-              <ClientActionButtons onDepositClick={() => setDepositDialogOpen(true)} onWithdrawalClick={() => setWithdrawalDialogOpen(true)} />
-            </div>
+            <ClientActionButtons onDepositClick={() => setDepositDialogOpen(true)} onWithdrawalClick={() => setWithdrawalDialogOpen(true)} />
           </div>
         </div>
       </CardHeader>
@@ -114,6 +104,17 @@ export const ClientPersonalInfo = ({
               realTimeBalance={clientBalance}
             />
             
+            {/* QR Code button moved to the middle of personal info space */}
+            {client && client.id && (
+              <div className="flex justify-center w-full my-4">
+                <ClientQRCode 
+                  clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} 
+                  clientName={`${client.prenom} ${client.nom}`} 
+                  size={230} 
+                />
+              </div>
+            )}
+            
             {/* Mobile buttons section with improved spacing */}
             <div className="md:hidden space-y-3">
               <Button 
@@ -127,35 +128,18 @@ export const ClientPersonalInfo = ({
                 {isRefreshing ? 'Actualisation...' : 'Actualiser le solde'}
               </Button>
               
-              <div className="flex items-center gap-2 w-full">
-                {client && client.id && (
-                  <ClientQRCode 
-                    clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} 
-                    clientName={`${client.prenom} ${client.nom}`} 
-                    size={230}
-                    buttonOnly={true}
-                  />
-                )}
-                <ClientActionButtons 
-                  onDepositClick={() => setDepositDialogOpen(true)} 
-                  onWithdrawalClick={() => setWithdrawalDialogOpen(true)} 
-                />
-              </div>
+              <ClientActionButtons 
+                onDepositClick={() => setDepositDialogOpen(true)} 
+                onWithdrawalClick={() => setWithdrawalDialogOpen(true)} 
+                orientation="vertical" 
+              />
             </div>
           </div>
           
-          {/* Right column with QR code on desktop */}
+          {/* Right column - removed QR code from here since it's now in the middle */}
           <div className="flex flex-col items-center space-y-4">
-            {client && client.id && (
-              <div className="hidden md:block w-full max-w-[280px]" ref={qrCodeRef}>
-                <ClientQRCode 
-                  clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} 
-                  clientName={`${client.prenom} ${client.nom}`} 
-                  size={230}
-                  buttonOnly={false}
-                />
-              </div>
-            )}
+            {/* Empty div for reference */}
+            <div className="hidden md:block w-full max-w-[280px]" ref={qrCodeRef}></div>
           </div>
         </div>
       </CardContent>
