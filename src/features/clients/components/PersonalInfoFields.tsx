@@ -1,4 +1,3 @@
-
 import { User, Phone, Mail, Calendar, Wallet } from "lucide-react";
 import { format } from "date-fns";
 import { Client } from "../types";
@@ -33,7 +32,7 @@ export const PersonalInfoFields = ({
         <div className="flex items-center gap-3">
           <Phone className="h-5 w-5 text-primary" />
           <div className="w-full">
-            <p className="text-sm text-muted-foreground">Téléphone</p>
+            <p className="text-sm text-muted-foreground text-left">Téléphone</p>
             <p className="font-medium">{client.telephone}</p>
           </div>
         </div>
@@ -44,14 +43,14 @@ export const PersonalInfoFields = ({
           <Mail className="h-5 w-5 text-primary" />
           <div className="w-full">
             <p className="text-sm text-muted-foreground text-left">Email</p>
-            <p className="font-medium overflow-hidden text-ellipsis">{client.email || "Non renseigné"}</p>
+            <p className="font-medium overflow-hidden text-ellipsis text-left">{client.email || "Non renseigné"}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           <Calendar className="h-5 w-5 text-primary" />
           <div className="w-full">
-            <p className="text-sm text-muted-foreground">Date de création</p>
-            <p className="font-medium">
+            <p className="text-sm text-muted-foreground text-left">Date de création</p>
+            <p className="font-medium text-left">
               {format(new Date(client.date_creation || ""), "dd/MM/yyyy")}
             </p>
           </div>
