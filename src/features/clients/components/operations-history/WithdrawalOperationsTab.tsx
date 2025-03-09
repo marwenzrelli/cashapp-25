@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { OperationsMobileCard } from "./OperationsMobileCard";
 import { EmptyOperations } from "./EmptyOperations";
+import { getAmountColor } from "./utils";
 
 interface WithdrawalOperationsTabProps {
   operations: Operation[];
@@ -48,15 +49,16 @@ export const WithdrawalOperationsTab = ({ operations, currency = "TND" }: Withdr
         </Table>
       </div>
 
-      {/* Mobile version - completely redesigned for better readability */}
-      <div className="md:hidden w-full space-y-3">
+      {/* Mobile version - using the same approach as in AllOperationsTab */}
+      <div className="md:hidden space-y-3 w-full">
         {withdrawals.map((operation) => (
-          <OperationsMobileCard
-            key={operation.id}
+          <OperationsMobileCard 
+            key={operation.id} 
             operation={operation}
+            formatAmount={(amount) => `${Math.round(amount)}`}
             currency={currency}
-            showType={false}
             colorClass="text-red-600 dark:text-red-400"
+            showType={false}
           />
         ))}
       </div>
