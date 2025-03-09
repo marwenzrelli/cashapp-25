@@ -120,8 +120,9 @@ export const ClientPersonalInfo = ({
               realTimeBalance={clientBalance} 
             />
             
-            {/* Refresh button for mobile - centered */}
-            <div className="md:hidden mt-6 w-full max-w-xs mx-auto">
+            {/* Mobile actions container */}
+            <div className="md:hidden mt-6 w-full space-y-3 max-w-md mx-auto">
+              {/* Refresh button for mobile - centered */}
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -132,25 +133,34 @@ export const ClientPersonalInfo = ({
                 <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
                 {isRefreshing ? 'Actualisation...' : 'Actualiser le solde'}
               </Button>
+              
+              {/* QR Code button for mobile - placed directly under the refresh button */}
+              {client && client.id && (
+                <div className="w-full">
+                  <ClientQRCode 
+                    clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} 
+                    clientName={`${client.prenom} ${client.nom}`} 
+                    size={256} 
+                  />
+                </div>
+              )}
+              
+              {/* Action buttons below QR code on mobile - centered with consistent height */}
+              <ClientActionButtons 
+                onDepositClick={() => setDepositDialogOpen(true)} 
+                onWithdrawalClick={() => setWithdrawalDialogOpen(true)} 
+                orientation="vertical" 
+              />
             </div>
           </div>
           
           {client && client.id && (
-            <div className="flex flex-col items-center justify-center space-y-4 w-full">
+            <div className="hidden md:flex flex-col items-center justify-center space-y-4 w-full">
               <div className="flex justify-center w-full p-4 bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 rounded-xl shadow-inner" ref={qrCodeRef}>
                 <ClientQRCode 
                   clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} 
                   clientName={`${client.prenom} ${client.nom}`} 
                   size={256} 
-                />
-              </div>
-              
-              {/* Action buttons below QR code on mobile - centered with consistent height */}
-              <div className="md:hidden w-full max-w-xs mx-auto">
-                <ClientActionButtons 
-                  onDepositClick={() => setDepositDialogOpen(true)} 
-                  onWithdrawalClick={() => setWithdrawalDialogOpen(true)} 
-                  orientation="vertical" 
                 />
               </div>
             </div>
