@@ -65,7 +65,7 @@ export const PersonalInfoFields = ({
             <div className="w-full">
               <p className="text-muted-foreground text-left text-base font-normal">Solde</p>
               <p className={cn(
-                "font-medium text-left px-2 py-1 inline-block border border-gray-200 rounded-md", 
+                "font-medium text-left px-2 py-1 inline-block border border-gray-200 rounded-md w-auto", 
                 effectiveBalance >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
               )}>
                 {formatAmount(effectiveBalance)}
