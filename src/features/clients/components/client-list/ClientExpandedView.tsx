@@ -17,7 +17,7 @@ export const ClientExpandedView = ({ client, onView }: ClientExpandedViewProps) 
         </div>
         <div>
           <p className="text-muted-foreground">Solde</p>
-          <p className={client.solde >= 0 ? 'text-green-600' : 'text-red-600'}>
+          <p className={`text-left px-2 py-1 inline-block border border-gray-200 rounded-md ${client.solde >= 0 ? 'text-green-600' : 'text-red-600'}`}>
             {client.solde.toLocaleString()} TND
           </p>
         </div>

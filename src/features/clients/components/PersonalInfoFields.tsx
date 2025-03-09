@@ -1,7 +1,9 @@
+
 import { User, Phone, Mail, Calendar, Wallet } from "lucide-react";
 import { format } from "date-fns";
 import { Client } from "../types";
 import { cn } from "@/lib/utils";
+
 interface PersonalInfoFieldsProps {
   client: Client;
   formatAmount?: (amount: number) => string;
@@ -9,6 +11,7 @@ interface PersonalInfoFieldsProps {
   showBalance?: boolean;
   realTimeBalance?: number | null;
 }
+
 export const PersonalInfoFields = ({
   client,
   formatAmount = amount => `${amount.toLocaleString()} €`,
@@ -18,6 +21,7 @@ export const PersonalInfoFields = ({
 }: PersonalInfoFieldsProps) => {
   // Use real-time balance if available, otherwise fall back to client.solde
   const effectiveBalance = realTimeBalance !== null ? realTimeBalance : client.solde;
+  
   return <div className="space-y-6 w-full">
       <div className="space-y-4 w-full">
         <div className="flex items-center gap-3">
@@ -33,7 +37,7 @@ export const PersonalInfoFields = ({
           <Phone className="h-5 w-5 text-primary" />
           <div className="w-full">
             <p className="text-sm text-muted-foreground text-left">Téléphone</p>
-            <p className="font-medium">{client.telephone}</p>
+            <p className="font-medium text-left">{client.telephone}</p>
           </div>
         </div>
       </div>
@@ -60,7 +64,10 @@ export const PersonalInfoFields = ({
             <Wallet className="h-5 w-5 text-primary" />
             <div className="w-full">
               <p className="text-muted-foreground text-left text-base font-normal">Solde</p>
-              <p className={cn("font-medium", effectiveBalance >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400")}>
+              <p className={cn(
+                "font-medium text-left px-2 py-1 inline-block border border-gray-200 rounded-md", 
+                effectiveBalance >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
+              )}>
                 {formatAmount(effectiveBalance)}
               </p>
             </div>
