@@ -1,4 +1,3 @@
-
 import React from "react";
 import { ArrowUpCircle, ArrowDownCircle, RefreshCcw, List } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,21 +7,18 @@ import { DepositOperationsTab } from "./DepositOperationsTab";
 import { WithdrawalOperationsTab } from "./WithdrawalOperationsTab";
 import { TransferOperationsTab } from "./TransferOperationsTab";
 import { Card, CardContent } from "@/components/ui/card";
-
 interface ClientOperationsHistoryTabsProps {
   filteredOperations: Operation[];
   currency?: string;
 }
-
-export const ClientOperationsHistoryTabs = ({ 
+export const ClientOperationsHistoryTabs = ({
   filteredOperations,
-  currency = "TND" 
+  currency = "TND"
 }: ClientOperationsHistoryTabsProps) => {
-  return (
-    <Tabs defaultValue="all" className="w-full">
+  return <Tabs defaultValue="all" className="w-full">
       <Card className="mb-4 shadow-sm">
-        <CardContent className="p-1 sm:p-2">
-          <TabsList className="w-full grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
+        <CardContent className="p-1 sm:p-2 px-0 py-0 mx-0">
+          <TabsList className="w-full grid grid-cols-2 sm:flex sm:flex-wrap gap-2 py-[2px] mx-[3px] px-px my-[52px]">
             <TabsTrigger value="all" className="flex items-center gap-2">
               <List className="h-4 w-4" />
               Toutes les opérations
@@ -62,6 +58,5 @@ export const ClientOperationsHistoryTabs = ({
           </TabsContent>
         </CardContent>
       </Card>
-    </Tabs>
-  );
+    </Tabs>;
 };
