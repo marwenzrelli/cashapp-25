@@ -36,7 +36,7 @@ export const DateTimeField = ({ date, setDate, time, setTime }: DateTimeFieldPro
   return (
     <div className="space-y-2">
       <Label htmlFor="date">Date et heure du versement</Label>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2">
         <div>
           <Input
             id="date"

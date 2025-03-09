@@ -110,7 +110,7 @@ export const DateField: React.FC<DateFieldProps> = ({
   return (
     <div className="space-y-2">
       <Label htmlFor={id}>Date et heure du retrait</Label>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2">
         <div>
           <Input
             id={id}
