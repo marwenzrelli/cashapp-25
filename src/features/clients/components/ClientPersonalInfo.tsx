@@ -102,7 +102,7 @@ export const ClientPersonalInfo = ({
             </div>
           </div>
           
-          {client && client.id && <div className="flex flex-col items-center space-y-4 w-full px-[172px] mx-[67px]">
+          {client && client.id && <div className="flex flex-col items-center space-y-4 w-full mx-[65px] my-0 py-0 px-[115px]">
               <div className="flex justify-center w-full" ref={qrCodeRef}>
                 <ClientQRCode clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} clientName={`${client.prenom} ${client.nom}`} size={256} />
               </div>
