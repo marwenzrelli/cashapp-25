@@ -19,7 +19,7 @@ export const EditDateTimeSection: React.FC<EditDateTimeSectionProps> = ({
   return (
     <div className="space-y-2">
       <Label htmlFor="depositDate" className="text-base font-medium">Date et heure d'opération</Label>
-      <div className="grid grid-cols-1 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         <div className="relative">
           <Input
             id="depositDate"
