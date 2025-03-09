@@ -18,7 +18,7 @@ export const ClientOperationsHistoryTabs = ({
   return <Tabs defaultValue="all" className="w-full">
       <Card className="mb-4 shadow-sm my-0 py-0 px-0 mx-0">
         <CardContent className="p-1 sm:p-2 px-0 py-0 mx-0">
-          <TabsList className="w-full grid grid-cols-2 sm:flex sm:flex-wrap gap-2 py-[2px] mx-[3px] px-px my-[52px]">
+          <TabsList className="w-full grid grid-cols-2 sm:flex sm:flex-wrap gap-2 mx-0 px-0 my-[48px] py-0">
             <TabsTrigger value="all" className="flex items-center gap-2">
               <List className="h-4 w-4" />
               Toutes les opérations
