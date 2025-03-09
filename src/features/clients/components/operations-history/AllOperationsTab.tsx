@@ -7,6 +7,7 @@ import { getTypeStyle, getTypeIcon, getTypeLabel } from "@/features/operations/u
 import { OperationsMobileCard } from "./OperationsMobileCard";
 import { EmptyOperations } from "./EmptyOperations";
 import { getAmountColor } from "./utils";
+import { formatId } from "@/utils/formatId";
 
 interface AllOperationsTabProps {
   operations: Operation[];
@@ -26,6 +27,7 @@ export const AllOperationsTab = ({ operations, currency = "TND" }: AllOperations
           <TableHeader>
             <TableRow>
               <TableHead>Type</TableHead>
+              <TableHead>ID</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Description</TableHead>
               <TableHead className="text-center">Montant</TableHead>
@@ -42,6 +44,11 @@ export const AllOperationsTab = ({ operations, currency = "TND" }: AllOperations
               const formattedDate = typeof displayDate === 'string' 
                 ? format(new Date(displayDate), "dd/MM/yyyy HH:mm") 
                 : format(displayDate, "dd/MM/yyyy HH:mm");
+              
+              // Format operation ID
+              const operationId = isNaN(parseInt(operation.id)) 
+                ? operation.id 
+                : formatId(parseInt(operation.id));
                 
               return (
                 <TableRow key={operation.id}>
@@ -52,6 +59,9 @@ export const AllOperationsTab = ({ operations, currency = "TND" }: AllOperations
                       </div>
                       <span>{getTypeLabel(operation.type)}</span>
                     </div>
+                  </TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">
+                    #{operationId}
                   </TableCell>
                   <TableCell>{formattedDate}</TableCell>
                   <TableCell className="max-w-[200px] truncate">{operation.description}</TableCell>
