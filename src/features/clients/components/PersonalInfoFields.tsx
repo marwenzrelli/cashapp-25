@@ -63,13 +63,15 @@ export const PersonalInfoFields = ({
         {showBalance && <div className="flex items-start gap-3">
             <Wallet className="h-5 w-5 text-primary mt-1" />
             <div className="w-full">
-              <p className="text-sm text-muted-foreground text-left">Solde</p>
-              <p className={cn(
-                "font-medium text-left px-2 py-1 inline-block border border-gray-200 rounded-md w-auto", 
-                effectiveBalance >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
-              )}>
-                {formatAmount(effectiveBalance)}
-              </p>
+              <p className="text-sm text-muted-foreground text-left mb-1">Solde</p>
+              <div>
+                <span className={cn(
+                  "font-medium text-left px-2 py-1 inline-block border border-gray-200 rounded-md", 
+                  effectiveBalance >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
+                )}>
+                  {formatAmount(effectiveBalance)}
+                </span>
+              </div>
             </div>
           </div>}
       </div>

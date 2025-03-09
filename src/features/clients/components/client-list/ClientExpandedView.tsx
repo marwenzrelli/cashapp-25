@@ -16,11 +16,11 @@ export const ClientExpandedView = ({ client, onView }: ClientExpandedViewProps) 
           <p className="truncate">{client.email}</p>
         </div>
         <div>
-          <p className="text-muted-foreground">Solde</p>
-          <div className="text-left">
-            <p className={`text-left px-2 py-1 inline-block border border-gray-200 rounded-md ${client.solde >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+          <p className="text-muted-foreground mb-1">Solde</p>
+          <div>
+            <span className={`text-left px-2 py-1 inline-block border border-gray-200 rounded-md ${client.solde >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {client.solde.toLocaleString()} TND
-            </p>
+            </span>
           </div>
         </div>
         <div>
