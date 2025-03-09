@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Client } from "../types";
 import { ClientQRCode } from "./ClientQRCode";
@@ -77,19 +78,35 @@ export const ClientPersonalInfo = ({
   return <Card className="md:col-span-3">
       <CardHeader>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
-          <CardTitle className="flex items-center">
-            Informations personnelles
-          </CardTitle>
-          
-          <div className="flex items-center gap-2">
-            {clientId && <ClientIdBadge clientId={clientId} />}
+          <div className="flex items-center justify-between w-full">
+            <CardTitle className="flex items-center">
+              Informations personnelles
+            </CardTitle>
             
-            <div className="hidden md:flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={handleRefreshBalance} disabled={isRefreshing}>
-                <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-                {isRefreshing ? 'Actualisation...' : 'Actualiser le solde'}
-              </Button>
+            <div className="flex items-center gap-4">
+              {clientId && <ClientIdBadge clientId={clientId} />}
               
+              {client && client.id && 
+                <div className="hidden md:block">
+                  <ClientQRCode 
+                    clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} 
+                    clientName={`${client.prenom} ${client.nom}`} 
+                    size={180} 
+                  />
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex justify-end mt-4">
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={handleRefreshBalance} disabled={isRefreshing}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+              {isRefreshing ? 'Actualisation...' : 'Actualiser le solde'}
+            </Button>
+            
+            <div className="hidden md:flex">
               <ClientActionButtons onDepositClick={() => setDepositDialogOpen(true)} onWithdrawalClick={() => setWithdrawalDialogOpen(true)} />
             </div>
           </div>
@@ -116,11 +133,10 @@ export const ClientPersonalInfo = ({
             </div>}
           </div>
           
-          {client && client.id && <div className="flex flex-col items-center space-y-4 w-full">
-              <div className="flex justify-center w-full max-w-[280px] mx-auto hidden md:flex" ref={qrCodeRef}>
-                <ClientQRCode clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} clientName={`${client.prenom} ${client.nom}`} size={230} />
-              </div>
-            </div>}
+          {/* Remove QR code from the right column on desktop */}
+          <div className="flex-col items-center space-y-4 w-full hidden md:flex">
+            {/* QR code is now shown in the header instead */}
+          </div>
         </div>
       </CardContent>
       
