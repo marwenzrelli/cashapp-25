@@ -130,23 +130,22 @@ export const ClientPersonalInfo = ({
                 {isRefreshing ? 'Actualisation...' : 'Actualiser le solde'}
               </Button>
               
-              <div className="space-y-3">
-                <ClientActionButtons 
-                  onDepositClick={() => setDepositDialogOpen(true)} 
-                  onWithdrawalClick={() => setWithdrawalDialogOpen(true)} 
-                  orientation="vertical" 
-                />
-                
-                {client && client.id && (
-                  <div className="w-full">
-                    <ClientQRCode 
-                      clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} 
-                      clientName={`${client.prenom} ${client.nom}`} 
-                      size={256} 
-                    />
-                  </div>
-                )}
-              </div>
+              <ClientActionButtons 
+                onDepositClick={() => setDepositDialogOpen(true)} 
+                onWithdrawalClick={() => setWithdrawalDialogOpen(true)} 
+                orientation="vertical" 
+              />
+              
+              {/* Bouton QR Code ici, en dessous des boutons de versement et retrait */}
+              {client && client.id && (
+                <div className="w-full mt-2">
+                  <ClientQRCode 
+                    clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} 
+                    clientName={`${client.prenom} ${client.nom}`} 
+                    size={256} 
+                  />
+                </div>
+              )}
             </div>
           </div>
           
