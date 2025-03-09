@@ -95,37 +95,78 @@ export const ClientPersonalInfo = ({
       </CardHeader>
       <CardContent>
         <div className="grid gap-6 md:grid-cols-2">
-          <div>
-            <PersonalInfoFields client={client} formatAmount={formatAmount} showBalance={true} realTimeBalance={clientBalance} />
+          <div className="space-y-6">
+            {/* Personal Information with improved spacing */}
+            <PersonalInfoFields 
+              client={client} 
+              formatAmount={formatAmount} 
+              showBalance={true} 
+              realTimeBalance={clientBalance}
+            />
             
-            <div className="md:hidden mt-4 w-full">
-              <Button variant="outline" size="sm" onClick={handleRefreshBalance} disabled={isRefreshing} className="w-full">
+            {/* Mobile buttons section with improved spacing */}
+            <div className="md:hidden space-y-3">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleRefreshBalance} 
+                disabled={isRefreshing} 
+                className="w-full"
+              >
                 <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
                 {isRefreshing ? 'Actualisation...' : 'Actualiser le solde'}
               </Button>
+              
+              <ClientActionButtons 
+                onDepositClick={() => setDepositDialogOpen(true)} 
+                onWithdrawalClick={() => setWithdrawalDialogOpen(true)} 
+                orientation="vertical" 
+              />
             </div>
-            
-            {/* Mobile Action Buttons - Now placed here instead of inside the QR code section */}
-            <div className="md:hidden w-full mt-4">
-              <ClientActionButtons onDepositClick={() => setDepositDialogOpen(true)} onWithdrawalClick={() => setWithdrawalDialogOpen(true)} orientation="vertical" />
-            </div>
-            
-            {/* QR Code Button - Now placed under the action buttons on mobile */}
-            {client && client.id && <div className="md:hidden mt-4 w-full" ref={qrCodeRef}>
-              <ClientQRCode clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} clientName={`${client.prenom} ${client.nom}`} size={230} />
-            </div>}
           </div>
           
-          {client && client.id && <div className="flex flex-col items-center space-y-4 w-full">
-              <div className="flex justify-center w-full max-w-[280px] mx-auto hidden md:flex" ref={qrCodeRef}>
-                <ClientQRCode clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} clientName={`${client.prenom} ${client.nom}`} size={230} />
+          {/* Right column with QR code on desktop */}
+          <div className="flex flex-col items-center space-y-4">
+            {client && client.id && (
+              <>
+                <div className="hidden md:block w-full max-w-[280px]" ref={qrCodeRef}>
+                  <ClientQRCode 
+                    clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} 
+                    clientName={`${client.prenom} ${client.nom}`} 
+                    size={230} 
+                  />
+                </div>
+              </>
+            )}
+            
+            {/* Mobile QR code placed below action buttons */}
+            {client && client.id && (
+              <div className="md:hidden w-full mt-2" ref={qrCodeRef}>
+                <ClientQRCode 
+                  clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} 
+                  clientName={`${client.prenom} ${client.nom}`} 
+                  size={230} 
+                />
               </div>
-            </div>}
+            )}
+          </div>
         </div>
       </CardContent>
       
-      <DepositDialog client={client} open={depositDialogOpen} onOpenChange={setDepositDialogOpen} onConfirm={handleDeposit} refreshClientBalance={handleDepositRefresh} />
+      <DepositDialog 
+        client={client} 
+        open={depositDialogOpen} 
+        onOpenChange={setDepositDialogOpen} 
+        onConfirm={handleDeposit} 
+        refreshClientBalance={handleDepositRefresh} 
+      />
       
-      <WithdrawalDialog client={client} open={withdrawalDialogOpen} onOpenChange={setWithdrawalDialogOpen} onConfirm={handleWithdrawal} refreshClientBalance={handleWithdrawalRefresh} />
+      <WithdrawalDialog 
+        client={client} 
+        open={withdrawalDialogOpen} 
+        onOpenChange={setWithdrawalDialogOpen} 
+        onConfirm={handleWithdrawal} 
+        refreshClientBalance={handleWithdrawalRefresh} 
+      />
     </Card>;
 };
