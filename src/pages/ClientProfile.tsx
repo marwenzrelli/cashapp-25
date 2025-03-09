@@ -9,6 +9,7 @@ import { PublicClientError } from "@/features/clients/components/PublicClientErr
 import { PublicClientLoading } from "@/features/clients/components/PublicClientLoading";
 import { useEffect } from "react";
 import { toast } from "sonner";
+import { DateRange } from "react-day-picker";
 
 const ClientProfile = () => {
   const {
@@ -87,6 +88,11 @@ const ClientProfile = () => {
   const actualClientId = typeof client.id === 'string' ? parseInt(client.id, 10) : client.id;
   console.log("Utilisation de l'ID client pour le code QR:", actualClientId);
 
+  // Ensure we convert the selectedType to a string when passing to component
+  const handleTypeChange = (type: string) => {
+    setSelectedType(type);
+  };
+
   return (
     <div className="sm:container mx-auto px-0 sm:px-4 py-4 sm:py-8 max-w-7xl overflow-x-hidden">
       <div className="space-y-4 sm:space-y-6 w-full px-2 sm:px-0">
@@ -114,7 +120,7 @@ const ClientProfile = () => {
         <ClientOperationsHistory
           operations={clientOperations}
           selectedType={selectedType}
-          setSelectedType={setSelectedType}
+          setSelectedType={handleTypeChange}
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
           dateRange={dateRange}

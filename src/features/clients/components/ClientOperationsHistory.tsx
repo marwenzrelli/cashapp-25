@@ -2,15 +2,16 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ArrowUpDown, Search, FileSpreadsheet, FilePdf, RefreshCw } from "lucide-react";
+import { ArrowUpDown, Search, FileSpreadsheet, FileText, RefreshCw } from "lucide-react";
 import { Operation } from "@/features/operations/types";
 import { ClientOperationsHistoryTabs } from "./operations-history/ClientOperationsHistoryTabs";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PublicClientPersonalInfo } from "./PublicClientPersonalInfo";
 import { useParams } from "react-router-dom";
 import { useClientData } from "../hooks/clientProfile/useClientData";
+import { DateRange } from "react-day-picker";
 
 interface ClientOperationsHistoryProps {
   operations: Operation[];
@@ -18,8 +19,8 @@ interface ClientOperationsHistoryProps {
   setSelectedType: (type: string) => void;
   searchTerm: string;
   setSearchTerm: (term: string) => void;
-  dateRange: { from: Date | undefined; to: Date | undefined };
-  setDateRange: (range: { from: Date | undefined; to: Date | undefined }) => void;
+  dateRange: DateRange;
+  setDateRange: (range: DateRange) => void;
   isCustomRange: boolean;
   setIsCustomRange: (isCustom: boolean) => void;
   filteredOperations: Operation[];
@@ -94,11 +95,9 @@ export const ClientOperationsHistory = ({
               </div>
               
               <div className="w-full md:w-auto">
-                <DateRangePicker
-                  dateRange={dateRange}
-                  setDateRange={setDateRange}
-                  isCustomRange={isCustomRange}
-                  setIsCustomRange={setIsCustomRange}
+                <DatePickerWithRange
+                  date={dateRange}
+                  onDateChange={setDateRange}
                 />
               </div>
               
