@@ -19,19 +19,19 @@ export const ClientOperationsHistoryTabs = ({
 }: ClientOperationsHistoryTabsProps) => {
   return (
     <Tabs defaultValue="all" className="w-full">
-      <TabsList className="mb-4 flex flex-wrap gap-4">
-        <TabsTrigger value="all" className="flex items-center gap-2 px-4">
+      <TabsList className="w-full mb-6 grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
+        <TabsTrigger value="all" className="flex items-center gap-2">
           Toutes les opérations
         </TabsTrigger>
-        <TabsTrigger value="deposits" className="flex items-center gap-2 px-4">
+        <TabsTrigger value="deposits" className="flex items-center gap-2">
           <ArrowUpCircle className="h-4 w-4" />
           Versements
         </TabsTrigger>
-        <TabsTrigger value="withdrawals" className="flex items-center gap-2 px-4">
+        <TabsTrigger value="withdrawals" className="flex items-center gap-2">
           <ArrowDownCircle className="h-4 w-4" />
           Retraits
         </TabsTrigger>
-        <TabsTrigger value="transfers" className="flex items-center gap-2 px-4">
+        <TabsTrigger value="transfers" className="flex items-center gap-2">
           <RefreshCcw className="h-4 w-4" />
           Virements
         </TabsTrigger>
