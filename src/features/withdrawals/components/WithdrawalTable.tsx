@@ -152,9 +152,8 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
                   </p>}
                 
                 <div className="flex justify-end gap-2 mt-2">
-                  <Button variant="ghost" size="sm" onClick={() => onEdit(withdrawal)} className="h-8 text-blue-600">
-                    <Pencil className="h-4 w-4 mr-1" />
-                    Modifier
+                  <Button variant="ghost" size="icon" onClick={() => onEdit(withdrawal)} className="h-8 w-8 text-blue-600">
+                    <Pencil className="h-4 w-4" />
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => onDelete(withdrawal)} className="h-8 text-red-600">
                     <Trash2 className="h-4 w-4 mr-1" />
