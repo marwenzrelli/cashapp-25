@@ -49,7 +49,7 @@ export const WithdrawalOperationsTab = ({ operations, currency = "TND" }: Withdr
         </Table>
       </div>
 
-      {/* Mobile version - using the same approach as in AllOperationsTab */}
+      {/* Mobile version - using the exact same approach as in AllOperationsTab */}
       <div className="md:hidden space-y-3 w-full">
         {withdrawals.map((operation) => (
           <OperationsMobileCard 
