@@ -90,37 +90,24 @@ export const createISOString = (dateString: string, timeString: string) => {
   if (!dateString) return null;
   
   try {
-    // Extract date components
-    const [yearStr, monthStr, dayStr] = dateString.split('-');
-    const year = parseInt(yearStr);
-    const month = parseInt(monthStr) - 1; // Months are 0-indexed in JS
-    const day = parseInt(dayStr);
+    // Create a date string that combines the date and time
+    // The resulting string will be interpreted in the local timezone
+    const combinedString = `${dateString}T${timeString || '00:00:00'}`;
+    const date = new Date(combinedString);
     
-    // Extract time components (default to 00:00:00 if time not provided)
-    const [hoursStr, minutesStr, secondsStr] = (timeString || '00:00:00').split(':');
-    const hours = parseInt(hoursStr || '0');
-    const minutes = parseInt(minutesStr || '0');
-    const seconds = parseInt(secondsStr || '0');
-    
-    // Create date object with explicit components to avoid timezone issues
-    const date = new Date();
-    date.setFullYear(year);
-    date.setMonth(month);
-    date.setDate(day);
-    date.setHours(hours, minutes, seconds, 0);
-    
-    // Ensure date is valid
+    // Check if date is valid
     if (isNaN(date.getTime())) {
-      console.error("Invalid date created from inputs:", { dateString, timeString });
+      console.error("Invalid date:", combinedString);
       return null;
     }
     
+    // Return the ISO string
     const isoString = date.toISOString();
     
-    console.log("Created ISO string from components:", {
+    console.log("Created ISO string from local inputs:", {
       dateInput: dateString,
       timeInput: timeString,
-      components: { year, month, day, hours, minutes, seconds },
+      combinedLocal: combinedString,
       resultingISO: isoString,
       resultingLocalString: date.toString()
     });

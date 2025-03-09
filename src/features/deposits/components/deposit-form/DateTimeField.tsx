@@ -11,28 +11,6 @@ interface DateTimeFieldProps {
 }
 
 export const DateTimeField = ({ date, setDate, time, setTime }: DateTimeFieldProps) => {
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.value) {
-      // Préserver l'heure actuelle lors du changement de date
-      const newDate = new Date(e.target.value);
-      const currentDate = new Date(date);
-      
-      newDate.setHours(
-        currentDate.getHours(),
-        currentDate.getMinutes(),
-        currentDate.getSeconds()
-      );
-      
-      console.log("DateTimeField: Date change", {
-        input: e.target.value,
-        current: date.toISOString(),
-        newDate: newDate.toISOString()
-      });
-      
-      setDate(newDate);
-    }
-  };
-
   return (
     <div className="space-y-2">
       <Label htmlFor="date">Date et heure du versement</Label>
@@ -42,7 +20,11 @@ export const DateTimeField = ({ date, setDate, time, setTime }: DateTimeFieldPro
             id="date"
             type="date"
             value={format(date, "yyyy-MM-dd")}
-            onChange={handleDateChange}
+            onChange={(e) => {
+              if (e.target.value) {
+                setDate(new Date(e.target.value));
+              }
+            }}
             className="transition-all focus-visible:ring-primary/50"
           />
         </div>

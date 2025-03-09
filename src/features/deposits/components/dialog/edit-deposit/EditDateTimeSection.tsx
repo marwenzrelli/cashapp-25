@@ -14,8 +14,6 @@ export const EditDateTimeSection: React.FC<EditDateTimeSectionProps> = ({
   editForm,
   onEditFormChange
 }) => {
-  console.log("EditDateTimeSection rendered with date:", editForm.date, "and time:", editForm.time);
-  
   return (
     <div className="space-y-2">
       <Label htmlFor="depositDate" className="text-base font-medium">Date et heure d'opération</Label>
@@ -26,10 +24,7 @@ export const EditDateTimeSection: React.FC<EditDateTimeSectionProps> = ({
             type="date"
             className="pl-10 border rounded-lg bg-gray-50"
             value={editForm.date || ""}
-            onChange={(e) => {
-              console.log("Date changed to:", e.target.value);
-              onEditFormChange('date', e.target.value);
-            }}
+            onChange={(e) => onEditFormChange('date', e.target.value)}
           />
           <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
         </div>
@@ -40,10 +35,7 @@ export const EditDateTimeSection: React.FC<EditDateTimeSectionProps> = ({
             step="1"
             className="pl-10 border rounded-lg bg-gray-50"
             value={editForm.time || ""}
-            onChange={(e) => {
-              console.log("Time changed to:", e.target.value);
-              onEditFormChange('time', e.target.value);
-            }}
+            onChange={(e) => onEditFormChange('time', e.target.value)}
           />
           <Clock className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
         </div>
