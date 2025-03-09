@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Client } from "../types";
 import { ClientQRCode } from "./ClientQRCode";
@@ -103,15 +104,21 @@ export const ClientPersonalInfo = ({
                 {isRefreshing ? 'Actualisation...' : 'Actualiser le solde'}
               </Button>
             </div>
+            
+            {/* Mobile Action Buttons - Now placed here instead of inside the QR code section */}
+            <div className="md:hidden w-full mt-4">
+              <ClientActionButtons onDepositClick={() => setDepositDialogOpen(true)} onWithdrawalClick={() => setWithdrawalDialogOpen(true)} orientation="vertical" />
+            </div>
+            
+            {/* QR Code Button - Now placed under the action buttons on mobile */}
+            {client && client.id && <div className="md:hidden mt-4 w-full" ref={qrCodeRef}>
+              <ClientQRCode clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} clientName={`${client.prenom} ${client.nom}`} size={230} />
+            </div>}
           </div>
           
           {client && client.id && <div className="flex flex-col items-center space-y-4 w-full">
-              <div className="flex justify-center w-full max-w-[280px] mx-auto" ref={qrCodeRef}>
+              <div className="flex justify-center w-full max-w-[280px] mx-auto hidden md:flex" ref={qrCodeRef}>
                 <ClientQRCode clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} clientName={`${client.prenom} ${client.nom}`} size={230} />
-              </div>
-              
-              <div className="md:hidden w-full">
-                <ClientActionButtons onDepositClick={() => setDepositDialogOpen(true)} onWithdrawalClick={() => setWithdrawalDialogOpen(true)} orientation="vertical" />
               </div>
             </div>}
         </div>
