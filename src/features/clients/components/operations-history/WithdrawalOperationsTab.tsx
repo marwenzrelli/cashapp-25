@@ -49,17 +49,19 @@ export const WithdrawalOperationsTab = ({ operations, currency = "TND" }: Withdr
       </div>
 
       {/* Mobile version */}
-      <div className="md:hidden space-y-3">
-        {withdrawals.map((operation) => (
-          <OperationsMobileCard 
-            key={operation.id} 
-            operation={operation}
-            formatAmount={(amount) => `${Math.round(amount)}`}
-            currency={currency}
-            showType={false}
-            colorClass="text-red-600 dark:text-red-400"
-          />
-        ))}
+      <div className="md:hidden space-y-3 w-full px-0 overflow-x-hidden">
+        <div className="flex flex-col w-full max-w-full overflow-x-hidden">
+          {withdrawals.map((operation) => (
+            <OperationsMobileCard 
+              key={operation.id} 
+              operation={operation}
+              formatAmount={(amount) => `${Math.round(amount)}`}
+              currency={currency}
+              showType={false}
+              colorClass="text-red-600 dark:text-red-400"
+            />
+          ))}
+        </div>
       </div>
     </>
   );

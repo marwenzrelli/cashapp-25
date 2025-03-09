@@ -50,7 +50,7 @@ export const OperationsMobileCard = ({
   const operationDate = operation.operation_date || operation.date;
   
   return (
-    <div className="flex flex-col p-3 bg-white dark:bg-gray-800 rounded-lg border shadow-sm overflow-hidden w-full px-[9px] mb-3">
+    <div className="flex flex-col p-3 bg-white dark:bg-gray-800 rounded-lg border shadow-sm w-full max-w-full overflow-hidden px-2 mb-2">
       <div className="flex items-start justify-between mb-2">
         {showType && (
           <Badge 
