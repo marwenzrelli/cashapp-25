@@ -8,7 +8,6 @@ import { Client } from "@/features/clients/types";
 import { formatDate } from "../hooks/utils/formatUtils";
 import { useNavigate } from "react-router-dom";
 import { formatId } from "@/utils/formatId";
-
 interface WithdrawalTableProps {
   withdrawals: Withdrawal[];
   onEdit: (withdrawal: Withdrawal) => void;
@@ -17,7 +16,6 @@ interface WithdrawalTableProps {
     dateCreation: string;
   }) | null;
 }
-
 export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
   withdrawals,
   onEdit,
@@ -28,7 +26,6 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
     currency
   } = useCurrency();
   const navigate = useNavigate();
-  
   const handleClientClick = (client: (Client & {
     dateCreation: string;
   }) | null) => {
@@ -36,7 +33,6 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
       navigate(`/clients/${client.id}`);
     }
   };
-  
   return <Card className="w-full mx-0">
       <CardHeader>
         <div className="flex items-center justify-between">
@@ -65,7 +61,6 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
               const client = findClientById(withdrawal.client_name);
               const formattedOperationDate = withdrawal.operation_date ? formatDate(withdrawal.operation_date) : "Date inconnue";
               const operationId = isNaN(parseInt(withdrawal.id)) ? withdrawal.id : formatId(parseInt(withdrawal.id));
-              
               return <tr key={withdrawal.id} className="group border-b hover:bg-muted/50 transition-colors">
                     <td className="p-3 font-mono text-xs">{operationId}</td>
                     <td className="p-3">
@@ -121,7 +116,6 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
           const client = findClientById(withdrawal.client_name);
           const formattedOperationDate = withdrawal.operation_date ? formatDate(withdrawal.operation_date) : "Date inconnue";
           const operationId = isNaN(parseInt(withdrawal.id)) ? withdrawal.id : formatId(parseInt(withdrawal.id));
-          
           return <div key={withdrawal.id} className="bg-white dark:bg-gray-800 rounded-lg border shadow-sm p-3 w-full">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-1">
@@ -138,7 +132,7 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
                 
                 <p className="font-medium text-primary flex items-center cursor-pointer mb-2" onClick={() => handleClientClick(client)}>
                   {withdrawal.client_name}
-                  <ExternalLink className="h-3 w-3 ml-1" />
+                  
                 </p>
                 
                 <div className="flex items-center text-xs text-muted-foreground mb-2">
