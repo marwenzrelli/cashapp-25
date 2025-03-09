@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Client } from "../types";
 import { ClientQRCode } from "./ClientQRCode";
@@ -62,7 +61,6 @@ export const ClientPersonalInfo = ({
     }
   };
 
-  // Helper function to pass client ID to refreshBalance
   const handleDepositRefresh = async (): Promise<boolean> => {
     if (client && client.id) {
       return await refreshBalance(client.id);
@@ -70,7 +68,6 @@ export const ClientPersonalInfo = ({
     return false;
   };
 
-  // Helper function to pass client ID to refreshBalance
   const handleWithdrawalRefresh = async (): Promise<boolean> => {
     if (client && client.id) {
       return await refreshBalance(client.id);
@@ -120,9 +117,7 @@ export const ClientPersonalInfo = ({
               realTimeBalance={clientBalance} 
             />
             
-            {/* Mobile actions container */}
             <div className="md:hidden mt-6 w-full space-y-3 max-w-md mx-auto">
-              {/* Refresh button for mobile - centered */}
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -134,7 +129,12 @@ export const ClientPersonalInfo = ({
                 {isRefreshing ? 'Actualisation...' : 'Actualiser le solde'}
               </Button>
               
-              {/* QR Code button for mobile - placed directly under the refresh button */}
+              <ClientActionButtons 
+                onDepositClick={() => setDepositDialogOpen(true)} 
+                onWithdrawalClick={() => setWithdrawalDialogOpen(true)} 
+                orientation="vertical" 
+              />
+              
               {client && client.id && (
                 <div className="w-full">
                   <ClientQRCode 
@@ -144,13 +144,6 @@ export const ClientPersonalInfo = ({
                   />
                 </div>
               )}
-              
-              {/* Action buttons below QR code on mobile - centered with consistent height */}
-              <ClientActionButtons 
-                onDepositClick={() => setDepositDialogOpen(true)} 
-                onWithdrawalClick={() => setWithdrawalDialogOpen(true)} 
-                orientation="vertical" 
-              />
             </div>
           </div>
           
