@@ -7,13 +7,11 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-
 interface ClientQRCodeProps {
   clientId: number;
   clientName: string;
   size?: number;
 }
-
 export const ClientQRCode = ({
   clientId,
   clientName,
@@ -29,7 +27,6 @@ export const ClientQRCode = ({
   const [hasAccess, setHasAccess] = useState(false);
   const [showQrCode, setShowQrCode] = useState(false);
   const [roleCheckError, setRoleCheckError] = useState(false);
-
   useEffect(() => {
     supabase.auth.getSession().then(({
       data: {
@@ -53,7 +50,6 @@ export const ClientQRCode = ({
     });
     return () => subscription.unsubscribe();
   }, [navigate]);
-
   useEffect(() => {
     const checkUserRole = async () => {
       if (!session) return;
@@ -80,13 +76,11 @@ export const ClientQRCode = ({
     };
     checkUserRole();
   }, [session]);
-
   const generateQRAccess = async () => {
     if (!session || !hasAccess) return;
     try {
       setIsLoading(true);
       console.log("Starting QR code generation for client ID:", clientId);
-
       const {
         data: existingTokens,
         error: fetchError
@@ -99,7 +93,6 @@ export const ClientQRCode = ({
         return;
       }
       console.log("Existing tokens found:", existingTokens?.length || 0);
-
       if (existingTokens && existingTokens.length > 0) {
         tokenToUse = existingTokens[0].access_token;
         console.log("Using existing token:", tokenToUse);
@@ -151,13 +144,11 @@ export const ClientQRCode = ({
       setIsLoading(false);
     }
   };
-
   useEffect(() => {
     if (session && hasAccess && showQrCode) {
       generateQRAccess();
     }
   }, [clientId, session, hasAccess, showQrCode]);
-
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(qrUrl);
@@ -168,7 +159,6 @@ export const ClientQRCode = ({
       toast.error("Impossible de copier le lien.");
     }
   };
-
   const handleOpenLink = () => {
     if (qrUrl) {
       window.open(qrUrl, '_blank');
@@ -176,22 +166,18 @@ export const ClientQRCode = ({
       toast.error("Le lien n'est pas encore disponible.");
     }
   };
-
   const handleRegenerateQR = () => {
     generateQRAccess();
   };
-
   if (!session) {
     return null;
   }
-
   if (!hasAccess && !roleCheckError) {
     return null;
   }
-
   if (!showQrCode) {
     return <Card className="p-4 bg-gradient-to-br from-violet-100 to-purple-50 shadow-lg border-purple-200 hover:shadow-xl transition-all py-0 rounded-lg px-0 w-full">
-        <Button onClick={() => setShowQrCode(true)} className="w-full bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 transition-all">
+        <Button onClick={() => setShowQrCode(true)} className="w-full bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 transition-all px-[110px] py-0 my-[2px] mx-[5px]">
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-2">
               <QrCode className="h-5 w-5" />
@@ -202,7 +188,6 @@ export const ClientQRCode = ({
         </Button>
       </Card>;
   }
-
   return <Card className="p-4 bg-gradient-to-br from-violet-100 to-purple-50 shadow-lg border-purple-200 hover:shadow-xl transition-all w-full">
       <div className="flex flex-col items-center gap-4 w-full">
         <div className="bg-white p-3 rounded-2xl shadow-inner relative w-full max-w-[256px]">
