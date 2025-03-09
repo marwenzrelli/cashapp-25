@@ -48,12 +48,12 @@ export const WithdrawalOperationsTab = ({ operations, currency = "TND" }: Withdr
         </Table>
       </div>
 
-      {/* Mobile version - with improved containment */}
+      {/* Mobile version - redesigned for better fit */}
       <div className="md:hidden w-full">
         <div className="grid grid-cols-1 gap-2">
           {withdrawals.map((operation) => (
-            <div key={operation.id} className="w-full max-w-full overflow-hidden">
-              <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-800 rounded-lg border shadow-sm">
+            <div key={operation.id} className="w-full">
+              <div className="grid grid-cols-3 items-center p-3 bg-white dark:bg-gray-800 rounded-lg border shadow-sm">
                 <div className="flex flex-col">
                   <span className="text-sm font-medium">
                     {format(new Date(operation.operation_date || operation.date), "dd/MM/yyyy")}
@@ -63,12 +63,12 @@ export const WithdrawalOperationsTab = ({ operations, currency = "TND" }: Withdr
                   </span>
                 </div>
                 
-                <div className="max-w-[40%] truncate">
+                <div className="truncate px-1">
                   <span className="text-sm">{operation.description}</span>
                 </div>
                 
                 <div className="text-right">
-                  <span className="text-base font-medium text-red-600 dark:text-red-400">
+                  <span className="text-base font-medium text-red-600 dark:text-red-400 whitespace-nowrap">
                     -{Math.round(operation.amount)} {currency}
                   </span>
                 </div>

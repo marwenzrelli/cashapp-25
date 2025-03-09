@@ -41,7 +41,7 @@ export const ClientOperationsHistoryTabs = ({
       </Card>
 
       <Card className="shadow-sm">
-        <CardContent className="p-4 sm:p-4 px-4 sm:px-4">
+        <CardContent className="p-2 sm:p-4">
           <TabsContent value="all" className="w-full">
             <AllOperationsTab operations={filteredOperations} currency={currency} />
           </TabsContent>
