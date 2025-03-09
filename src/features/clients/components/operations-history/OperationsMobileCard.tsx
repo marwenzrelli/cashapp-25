@@ -3,7 +3,8 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Operation } from "@/features/operations/types";
 import { Badge } from "@/components/ui/badge";
-import { CalendarClock, Clock } from "lucide-react";
+import { CalendarClock, Clock, Hash } from "lucide-react";
+import { formatId } from "@/utils/formatId";
 
 interface OperationsMobileCardProps {
   operation: Operation;
@@ -49,6 +50,9 @@ export const OperationsMobileCard = ({
   // Use operation_date if available, otherwise fall back to date
   const operationDate = operation.operation_date || operation.date;
   
+  // Format the operation ID
+  const operationId = isNaN(parseInt(operation.id)) ? operation.id : formatId(parseInt(operation.id));
+  
   return (
     <div className="flex flex-col p-3 bg-white dark:bg-gray-800 rounded-lg border shadow-sm w-full">
       <div className="flex items-center justify-between mb-2">
@@ -71,7 +75,11 @@ export const OperationsMobileCard = ({
             }
           </Badge>
         )}
-        <div className="flex-1 flex justify-end">
+        <div className="flex-1 flex justify-between items-center">
+          <div className="flex items-center gap-1">
+            <Hash className="h-3 w-3 text-muted-foreground" />
+            <span className="text-xs font-mono text-muted-foreground">{operationId}</span>
+          </div>
           <p className={`text-base font-semibold ${
             colorClass || (
               operation.type === "withdrawal" 
@@ -112,10 +120,6 @@ export const OperationsMobileCard = ({
           <p className="truncate">À: {operation.toClient}</p>
         </div>
       )}
-      
-      <div className="text-right mt-auto">
-        <span className="text-xs text-muted-foreground">#{operation.id}</span>
-      </div>
     </div>
   );
 };

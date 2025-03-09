@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { OperationsMobileCard } from "./OperationsMobileCard";
 import { EmptyOperations } from "./EmptyOperations";
 import { getAmountColor } from "./utils";
+import { formatId } from "@/utils/formatId";
 
 interface WithdrawalOperationsTabProps {
   operations: Operation[];
@@ -26,6 +27,7 @@ export const WithdrawalOperationsTab = ({ operations, currency = "TND" }: Withdr
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>ID</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Description</TableHead>
               <TableHead className="text-center">Montant</TableHead>
@@ -35,8 +37,11 @@ export const WithdrawalOperationsTab = ({ operations, currency = "TND" }: Withdr
             {withdrawals.map((operation) => {
               // Use operation_date if available, otherwise fall back to date
               const displayDate = operation.operation_date || operation.date;
+              const operationId = isNaN(parseInt(operation.id)) ? operation.id : formatId(parseInt(operation.id));
+              
               return (
                 <TableRow key={operation.id}>
+                  <TableCell className="font-mono text-xs">{operationId}</TableCell>
                   <TableCell>{format(new Date(displayDate), "dd/MM/yyyy HH:mm")}</TableCell>
                   <TableCell className="max-w-[200px] truncate">{operation.description}</TableCell>
                   <TableCell className="text-center font-medium text-red-600 dark:text-red-400">
