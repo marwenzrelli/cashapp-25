@@ -1,9 +1,8 @@
-
 import { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Copy, ExternalLink, RefreshCw, Shield, QrCode, ArrowRight } from 'lucide-react';
+import { Copy, ExternalLink, RefreshCw, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
@@ -18,7 +17,7 @@ interface ClientQRCodeProps {
 export const ClientQRCode = ({
   clientId,
   clientName,
-  size = 256
+  size = 200
 }: ClientQRCodeProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
@@ -28,7 +27,6 @@ export const ClientQRCode = ({
   const [session, setSession] = useState<any>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [hasAccess, setHasAccess] = useState(false);
-  const [showQrCode, setShowQrCode] = useState(false);
   const [roleCheckError, setRoleCheckError] = useState(false);
 
   useEffect(() => {
@@ -152,10 +150,10 @@ export const ClientQRCode = ({
   };
 
   useEffect(() => {
-    if (session && hasAccess && showQrCode) {
+    if (session && hasAccess) {
       generateQRAccess();
     }
-  }, [clientId, session, hasAccess, showQrCode]);
+  }, [clientId, session, hasAccess]);
 
   const handleCopyLink = async () => {
     try {
@@ -188,62 +186,44 @@ export const ClientQRCode = ({
     return null;
   }
 
-  if (!showQrCode) {
-    return (
-      <Button 
-        onClick={() => setShowQrCode(true)} 
-        className="w-full h-10 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 transition-all shadow-md text-white"
-        size="sm"
-      >
-        <QrCode className="h-4 w-4 mr-2" />
-        <span>Afficher QR</span>
-        <ArrowRight className="h-3 w-3 ml-2" />
-      </Button>
-    );
-  }
-
   return (
-    <Card className="p-4 bg-gradient-to-br from-violet-100 to-purple-50 shadow-lg border-purple-200 hover:shadow-xl transition-all w-full">
-      <div className="flex flex-col items-center gap-4 w-full">
-        <div className="bg-white p-3 rounded-2xl shadow-inner relative w-full max-w-[230px]">
-          {isLoading ? <div className="absolute inset-0 flex items-center justify-center bg-white/90 backdrop-blur-sm rounded-2xl z-10">
-              <RefreshCw className="h-6 w-6 animate-spin text-violet-500" />
-            </div> : !accessToken ? <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/90 backdrop-blur-sm rounded-2xl z-10">
-              <Shield className="h-8 w-8 text-violet-300 mb-2" />
-              <p className="text-sm text-violet-500 text-center font-medium">
+    <Card className="p-3 bg-gradient-to-br from-violet-100 to-purple-50 shadow-md border-purple-200 hover:shadow-lg transition-all w-full">
+      <div className="flex flex-col items-center gap-3 w-full">
+        <div className="bg-white p-2 rounded-lg shadow-inner relative w-full max-w-[180px]">
+          {isLoading ? <div className="absolute inset-0 flex items-center justify-center bg-white/90 backdrop-blur-sm rounded-lg z-10">
+              <RefreshCw className="h-5 w-5 animate-spin text-violet-500" />
+            </div> : !accessToken ? <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/90 backdrop-blur-sm rounded-lg z-10">
+              <Shield className="h-6 w-6 text-violet-300 mb-1" />
+              <p className="text-xs text-violet-500 text-center font-medium">
                 Chargement du QR code...
               </p>
             </div> : null}
-          <div className="p-2 rounded-xl bg-gradient-to-br from-violet-100 to-purple-50 flex justify-center">
+          <div className="p-1 rounded-lg bg-gradient-to-br from-violet-100 to-purple-50 flex justify-center">
             <canvas ref={canvasRef} className="rounded-lg" />
           </div>
         </div>
         
-        <div className="flex flex-col items-center gap-3 w-full">
-          <p className="text-sm text-center text-violet-700 font-medium">
+        <div className="flex flex-col items-center gap-2 w-full">
+          <p className="text-xs text-center text-violet-700 font-medium">
             Code QR pour {clientName}
           </p>
           
-          <div className="flex gap-2 w-full">
-            <Button variant="outline" size="sm" className="flex-1 border-violet-200 hover:bg-violet-100 hover:text-violet-700 transition-all gap-2" onClick={handleCopyLink} disabled={!accessToken || isLoading}>
-              <Copy className="h-3.5 w-3.5" />
+          <div className="flex gap-1 w-full">
+            <Button variant="outline" size="sm" className="flex-1 h-8 border-violet-200 hover:bg-violet-100 hover:text-violet-700 transition-all gap-1" onClick={handleCopyLink} disabled={!accessToken || isLoading}>
+              <Copy className="h-3 w-3" />
               <span className="text-xs">Copier</span>
             </Button>
             
-            <Button variant="outline" size="sm" className="flex-1 border-violet-200 hover:bg-violet-100 hover:text-violet-700 transition-all gap-2" onClick={handleOpenLink} disabled={!accessToken || isLoading}>
-              <ExternalLink className="h-3.5 w-3.5" />
+            <Button variant="outline" size="sm" className="flex-1 h-8 border-violet-200 hover:bg-violet-100 hover:text-violet-700 transition-all gap-1" onClick={handleOpenLink} disabled={!accessToken || isLoading}>
+              <ExternalLink className="h-3 w-3" />
               <span className="text-xs">Ouvrir</span>
             </Button>
             
-            <Button variant="outline" size="sm" className={cn("flex-1 border-violet-200 hover:bg-violet-100 hover:text-violet-700 transition-all gap-2", isLoading && "animate-pulse")} onClick={handleRegenerateQR} disabled={isLoading}>
-              <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+            <Button variant="outline" size="sm" className={cn("flex-1 h-8 border-violet-200 hover:bg-violet-100 hover:text-violet-700 transition-all gap-1", isLoading && "animate-pulse")} onClick={handleRegenerateQR} disabled={isLoading}>
+              <RefreshCw className={`h-3 w-3 ${isLoading ? 'animate-spin' : ''}`} />
               <span className="text-xs">Refresh</span>
             </Button>
           </div>
-          
-          <Button variant="ghost" size="sm" className="w-full text-violet-500 hover:text-violet-700 hover:bg-violet-100" onClick={() => setShowQrCode(false)}>
-            Masquer le code QR
-          </Button>
         </div>
       </div>
     </Card>

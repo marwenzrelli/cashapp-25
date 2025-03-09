@@ -136,13 +136,13 @@ export const ClientPersonalInfo = ({
                 orientation="vertical" 
               />
               
-              {/* Bouton QR Code ici, en dessous des boutons de versement et retrait */}
+              {/* QR Code always displayed below the buttons */}
               {client && client.id && (
                 <div className="w-full mt-2">
                   <ClientQRCode 
                     clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} 
                     clientName={`${client.prenom} ${client.nom}`} 
-                    size={256} 
+                    size={200} 
                   />
                 </div>
               )}
@@ -155,7 +155,7 @@ export const ClientPersonalInfo = ({
                 <ClientQRCode 
                   clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} 
                   clientName={`${client.prenom} ${client.nom}`} 
-                  size={256} 
+                  size={200} 
                 />
               </div>
             </div>
