@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Client } from "../types";
 import { ClientQRCode } from "./ClientQRCode";
@@ -135,8 +136,9 @@ export const ClientPersonalInfo = ({
                 orientation="vertical" 
               />
               
+              {/* Bouton QR Code ici, en dessous des boutons de versement et retrait */}
               {client && client.id && (
-                <div className="w-full">
+                <div className="w-full mt-2">
                   <ClientQRCode 
                     clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} 
                     clientName={`${client.prenom} ${client.nom}`} 

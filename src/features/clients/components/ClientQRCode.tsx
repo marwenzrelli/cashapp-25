@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import { Card } from '@/components/ui/card';
@@ -191,16 +192,12 @@ export const ClientQRCode = ({
     return (
       <Button 
         onClick={() => setShowQrCode(true)} 
-        className="w-full h-10 bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 transition-all shadow-md mt-2"
+        className="w-full h-10 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 transition-all shadow-md text-white"
         size="sm"
       >
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center gap-2">
-            <QrCode className="h-4 w-4" />
-            <span className="text-sm">Afficher QR</span>
-          </div>
-          <ArrowRight className="h-3 w-3" />
-        </div>
+        <QrCode className="h-4 w-4 mr-2" />
+        <span>Afficher QR</span>
+        <ArrowRight className="h-3 w-3 ml-2" />
       </Button>
     );
   }
