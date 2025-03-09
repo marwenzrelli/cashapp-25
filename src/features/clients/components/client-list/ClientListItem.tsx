@@ -40,6 +40,11 @@ export const ClientListItem = ({
     <div className={`p-3 md:p-4 transition-colors w-full ${isExpanded ? 'bg-muted/50' : 'hover:bg-muted/30'}`}>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-0">
         <div className="flex items-center gap-3 md:gap-4">
+          {/* Client balance on desktop - now moved to the far left */}
+          <div className="hidden md:block">
+            <ClientBalanceDisplay solde={client.solde} />
+          </div>
+          
           <div className="flex-shrink-0 h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
             {client.prenom.charAt(0)}{client.nom.charAt(0)}
           </div>
@@ -63,11 +68,6 @@ export const ClientListItem = ({
         
         <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-6 w-full md:w-auto">
           <div className="flex items-center justify-between w-full md:w-auto">
-            {/* Move balance to the left of status on desktop */}
-            <div className="hidden md:block">
-              <ClientBalanceDisplay solde={client.solde} />
-            </div>
-            
             <ClientStatusBadge status={client.status}>
               {getStatusLabel(client.status)}
             </ClientStatusBadge>
@@ -85,7 +85,7 @@ export const ClientListItem = ({
           </div>
           
           <div className="flex items-center justify-between md:gap-8 w-full md:w-auto">
-            {/* Show balance on mobile but not on desktop (moved it above) */}
+            {/* Show balance on mobile but not on desktop (moved it to the far left) */}
             <div className="md:hidden">
               <ClientBalanceDisplay solde={client.solde} />
             </div>
