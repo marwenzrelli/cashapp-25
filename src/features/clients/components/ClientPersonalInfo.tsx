@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Client } from "../types";
 import { ClientQRCode } from "./ClientQRCode";
@@ -80,7 +79,7 @@ export const ClientPersonalInfo = ({
           </CardTitle>
           
           <div className="hidden md:flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleRefreshBalance} disabled={isRefreshing}>
+            <Button variant="outline" size="sm" onClick={handleRefreshBalance} disabled={isRefreshing} className="px-[23px]">
               <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
               {isRefreshing ? 'Actualisation...' : 'Actualiser le solde'}
             </Button>
