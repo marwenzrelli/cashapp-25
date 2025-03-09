@@ -1,10 +1,11 @@
 
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Client } from "../types";
 import { useNavigate } from "react-router-dom";
 import { ClientListItem } from "./client-list/ClientListItem";
 import { toast } from "sonner";
+import { TransferPagination } from "@/features/transfers/components/TransferPagination";
 
 interface ClientListProps {
   clients: Client[];
@@ -15,6 +16,10 @@ interface ClientListProps {
 export const ClientList = ({ clients, onEdit, onDelete }: ClientListProps) => {
   const navigate = useNavigate();
   const [expandedClientId, setExpandedClientId] = useState<number | null>(null);
+  
+  // Add pagination state
+  const [itemsPerPage, setItemsPerPage] = useState("10");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const toggleExpand = (clientId: number) => {
     if (expandedClientId === clientId) {
@@ -35,11 +40,19 @@ export const ClientList = ({ clients, onEdit, onDelete }: ClientListProps) => {
     navigate(`/clients/${clientId}`);
   };
 
+  // Calculate pagination
+  const indexOfLastClient = currentPage * parseInt(itemsPerPage);
+  const indexOfFirstClient = indexOfLastClient - parseInt(itemsPerPage);
+  const currentClients = clients.slice(indexOfFirstClient, indexOfLastClient);
+
   return (
     <Card className="w-full">
+      <CardHeader className="pb-3">
+        <CardTitle>Liste des clients</CardTitle>
+      </CardHeader>
       <CardContent className="p-0">
         <div className="divide-y">
-          {clients.map((client) => (
+          {currentClients.map((client) => (
             <ClientListItem
               key={client.id}
               client={client}
@@ -50,7 +63,26 @@ export const ClientList = ({ clients, onEdit, onDelete }: ClientListProps) => {
               onDelete={onDelete}
             />
           ))}
+          
+          {clients.length === 0 && (
+            <div className="py-8 text-center text-muted-foreground">
+              Aucun client à afficher
+            </div>
+          )}
         </div>
+        
+        {clients.length > 0 && (
+          <div className="p-4">
+            <TransferPagination
+              itemsPerPage={itemsPerPage}
+              setItemsPerPage={setItemsPerPage}
+              totalItems={clients.length}
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage}
+              label="clients"
+            />
+          </div>
+        )}
       </CardContent>
     </Card>
   );
