@@ -89,7 +89,17 @@ export const ClientPersonalInfo = ({
               {isRefreshing ? 'Actualisation...' : 'Actualiser le solde'}
             </Button>
             
-            <ClientActionButtons onDepositClick={() => setDepositDialogOpen(true)} onWithdrawalClick={() => setWithdrawalDialogOpen(true)} />
+            <div className="flex items-center gap-2">
+              {client && client.id && (
+                <ClientQRCode 
+                  clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} 
+                  clientName={`${client.prenom} ${client.nom}`} 
+                  size={230}
+                  buttonOnly={true}
+                />
+              )}
+              <ClientActionButtons onDepositClick={() => setDepositDialogOpen(true)} onWithdrawalClick={() => setWithdrawalDialogOpen(true)} />
+            </div>
           </div>
         </div>
       </CardHeader>
@@ -117,35 +127,32 @@ export const ClientPersonalInfo = ({
                 {isRefreshing ? 'Actualisation...' : 'Actualiser le solde'}
               </Button>
               
-              <ClientActionButtons 
-                onDepositClick={() => setDepositDialogOpen(true)} 
-                onWithdrawalClick={() => setWithdrawalDialogOpen(true)} 
-                orientation="vertical" 
-              />
+              <div className="flex items-center gap-2 w-full">
+                {client && client.id && (
+                  <ClientQRCode 
+                    clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} 
+                    clientName={`${client.prenom} ${client.nom}`} 
+                    size={230}
+                    buttonOnly={true}
+                  />
+                )}
+                <ClientActionButtons 
+                  onDepositClick={() => setDepositDialogOpen(true)} 
+                  onWithdrawalClick={() => setWithdrawalDialogOpen(true)} 
+                />
+              </div>
             </div>
           </div>
           
           {/* Right column with QR code on desktop */}
           <div className="flex flex-col items-center space-y-4">
             {client && client.id && (
-              <>
-                <div className="hidden md:block w-full max-w-[280px]" ref={qrCodeRef}>
-                  <ClientQRCode 
-                    clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} 
-                    clientName={`${client.prenom} ${client.nom}`} 
-                    size={230} 
-                  />
-                </div>
-              </>
-            )}
-            
-            {/* Mobile QR code placed below action buttons */}
-            {client && client.id && (
-              <div className="md:hidden w-full mt-2" ref={qrCodeRef}>
+              <div className="hidden md:block w-full max-w-[280px]" ref={qrCodeRef}>
                 <ClientQRCode 
                   clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} 
                   clientName={`${client.prenom} ${client.nom}`} 
-                  size={230} 
+                  size={230}
+                  buttonOnly={false}
                 />
               </div>
             )}
