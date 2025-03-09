@@ -12,6 +12,8 @@ import { useClientOperations } from "../hooks/useClientOperations";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+
 interface ClientPersonalInfoProps {
   client: Client;
   clientId?: number;
@@ -21,6 +23,7 @@ interface ClientPersonalInfoProps {
   refreshClientBalance?: () => Promise<void>;
   clientBalance?: number | null;
 }
+
 export const ClientPersonalInfo = ({
   client,
   clientId,
@@ -33,12 +36,15 @@ export const ClientPersonalInfo = ({
   const [depositDialogOpen, setDepositDialogOpen] = useState(false);
   const [withdrawalDialogOpen, setWithdrawalDialogOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  
   console.log("ClientPersonalInfo - clientId:", clientId, "client:", client?.id, "realTimeBalance:", clientBalance);
+  
   const {
     handleDeposit,
     handleWithdrawal,
     refreshClientBalance: refreshBalance
   } = useClientOperations(client, clientId, refetchClient);
+  
   const handleRefreshBalance = async () => {
     if (!refreshClientBalance) {
       toast.error("Balance refresh function not available");
@@ -71,16 +77,19 @@ export const ClientPersonalInfo = ({
     }
     return false;
   };
-  return <Card className="md:col-span-3">
+  
+  return (
+    <Card className="md:col-span-3">
       <CardHeader>
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-2">
           <CardTitle className="flex items-center">
             Informations personnelles
             {clientId && <ClientIdBadge clientId={clientId} />}
           </CardTitle>
           
           <div className="hidden md:flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleRefreshBalance} disabled={isRefreshing}>
+            <Button variant="outline" size="sm" onClick={handleRefreshBalance} disabled={isRefreshing}
+              className={cn("transition-all", isRefreshing && "opacity-70")}>
               <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
               {isRefreshing ? 'Actualisation...' : 'Actualiser le solde'}
             </Button>
@@ -89,35 +98,70 @@ export const ClientPersonalInfo = ({
           </div>
         </div>
       </CardHeader>
+      
       <CardContent>
         <div className="grid gap-6 md:grid-cols-2">
-          <div>
-            <PersonalInfoFields client={client} formatAmount={formatAmount} showBalance={true} realTimeBalance={clientBalance} />
+          <div className="flex flex-col items-center md:items-start">
+            <PersonalInfoFields 
+              client={client} 
+              formatAmount={formatAmount} 
+              showBalance={true} 
+              realTimeBalance={clientBalance} 
+            />
             
-            {/* Refresh button for mobile */}
-            <div className="md:hidden mt-4 w-full">
-              <Button variant="outline" size="sm" onClick={handleRefreshBalance} disabled={isRefreshing} className="w-full">
+            {/* Refresh button for mobile - centered */}
+            <div className="md:hidden mt-6 w-full max-w-xs mx-auto">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleRefreshBalance} 
+                disabled={isRefreshing} 
+                className="w-full"
+              >
                 <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
                 {isRefreshing ? 'Actualisation...' : 'Actualiser le solde'}
               </Button>
             </div>
           </div>
           
-          {client && client.id && <div className="flex flex-col items-center space-y-4 w-full">
+          {client && client.id && (
+            <div className="flex flex-col items-center justify-center space-y-4 w-full">
               <div className="flex justify-center w-full" ref={qrCodeRef}>
-                <ClientQRCode clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} clientName={`${client.prenom} ${client.nom}`} size={256} />
+                <ClientQRCode 
+                  clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} 
+                  clientName={`${client.prenom} ${client.nom}`} 
+                  size={256} 
+                />
               </div>
               
-              {/* Action buttons below QR code on mobile */}
-              <div className="md:hidden w-full">
-                <ClientActionButtons onDepositClick={() => setDepositDialogOpen(true)} onWithdrawalClick={() => setWithdrawalDialogOpen(true)} orientation="vertical" />
+              {/* Action buttons below QR code on mobile - centered */}
+              <div className="md:hidden w-full max-w-xs mx-auto">
+                <ClientActionButtons 
+                  onDepositClick={() => setDepositDialogOpen(true)} 
+                  onWithdrawalClick={() => setWithdrawalDialogOpen(true)} 
+                  orientation="vertical" 
+                />
               </div>
-            </div>}
+            </div>
+          )}
         </div>
       </CardContent>
       
-      <DepositDialog client={client} open={depositDialogOpen} onOpenChange={setDepositDialogOpen} onConfirm={handleDeposit} refreshClientBalance={handleDepositRefresh} />
+      <DepositDialog 
+        client={client} 
+        open={depositDialogOpen} 
+        onOpenChange={setDepositDialogOpen} 
+        onConfirm={handleDeposit} 
+        refreshClientBalance={handleDepositRefresh} 
+      />
       
-      <WithdrawalDialog client={client} open={withdrawalDialogOpen} onOpenChange={setWithdrawalDialogOpen} onConfirm={handleWithdrawal} refreshClientBalance={handleWithdrawalRefresh} />
-    </Card>;
+      <WithdrawalDialog 
+        client={client} 
+        open={withdrawalDialogOpen} 
+        onOpenChange={setWithdrawalDialogOpen} 
+        onConfirm={handleWithdrawal} 
+        refreshClientBalance={handleWithdrawalRefresh} 
+      />
+    </Card>
+  );
 };
