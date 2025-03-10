@@ -26,6 +26,15 @@ interface ChartSectionProps {
 }
 
 export const ChartSection = ({ last30DaysData, topClients }: ChartSectionProps) => {
+  // Format data for the top clients chart to ensure it displays correctly
+  const topClientsData = topClients.map(([name, stats]) => ({
+    name,
+    montant: parseFloat(stats.totalAmount.toFixed(2)),
+    transactions: stats.transactionCount
+  }));
+
+  console.log("Top Clients Data:", topClientsData);
+
   return (
     <div className="grid gap-6 md:grid-cols-2">
       <Card>
@@ -97,23 +106,31 @@ export const ChartSection = ({ last30DaysData, topClients }: ChartSectionProps) 
         </CardHeader>
         <CardContent>
           <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={topClients.map(([name, stats]) => ({
-                  name,
-                  montant: stats.totalAmount,
-                  transactions: stats.transactionCount
-                }))}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="montant" fill="#8884d8" />
-                <Bar dataKey="transactions" fill="#82ca9d" />
-              </BarChart>
-            </ResponsiveContainer>
+            {topClientsData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={topClientsData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip formatter={(value) => value.toLocaleString()} />
+                  <Legend />
+                  <Bar 
+                    dataKey="montant" 
+                    name="Montant Total" 
+                    fill="#8884d8" 
+                  />
+                  <Bar 
+                    dataKey="transactions" 
+                    name="Nombre de Transactions" 
+                    fill="#82ca9d" 
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex h-full items-center justify-center text-muted-foreground">
+                Aucune donnée client disponible
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

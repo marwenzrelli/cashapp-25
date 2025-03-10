@@ -28,15 +28,20 @@ export const generateClientStats = (deposits: any[]) => {
       clientStats[dep.client_name].totalAmount / clientStats[dep.client_name].transactionCount;
   });
 
+  console.log("Generated client stats for", Object.keys(clientStats).length, "clients");
   return clientStats;
 };
 
 export const getTopClients = (clientStats: Record<string, ClientStats>, limit: number = 5) => {
   if (!clientStats || typeof clientStats !== 'object' || Object.keys(clientStats).length === 0) {
+    console.warn("No client stats available for top clients");
     return [];
   }
   
-  return Object.entries(clientStats)
+  const sorted = Object.entries(clientStats)
     .sort((a, b) => b[1].totalAmount - a[1].totalAmount)
     .slice(0, limit);
+    
+  console.log("Top clients:", sorted.map(([name]) => name));
+  return sorted;
 };

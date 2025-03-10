@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from "react";
 import { filterData } from "../utils/dataFilters";
 import { getMonthBoundaries, generateLast30DaysData } from "../utils/dateHelpers";
@@ -35,10 +34,8 @@ export const useStatisticsData = () => {
     setTransactionType,
   } = useStatisticsFilters();
 
-  // Track if we've attempted to show data
   const [attempted, setAttempted] = useState(false);
   
-  // Force end loading state after 5 seconds (reduced from 8)
   useEffect(() => {
     if (isLoading) {
       const timeout = setTimeout(() => {
@@ -50,16 +47,13 @@ export const useStatisticsData = () => {
   }, [isLoading]);
   
   useEffect(() => {
-    // If we were loading and now we're not, mark as attempted
     if (!isLoading && !attempted) {
       setAttempted(true);
     }
   }, [isLoading, attempted]);
 
-  // Always consider data valid to show UI even with partial data
   const hasValidData = true;
 
-  // Memoize filtered data to avoid recalculations on each render
   const filteredDeposits = useMemo(() => filterData(
     Array.isArray(deposits) ? deposits : [], 
     "deposits",
@@ -89,22 +83,18 @@ export const useStatisticsData = () => {
     transactionType
   ), [transfersArray, dateRange, clientFilter, transactionType]);
 
-  // Memoize calculated totals
   const { totalDeposits, totalWithdrawals, totalTransfers } = useMemo(() => 
     calculateTotals(filteredDeposits, filteredWithdrawals, filteredTransfers),
     [filteredDeposits, filteredWithdrawals, filteredTransfers]
   );
   
-  // Make sure we have access to stats, even if it's empty
   const safeStats = useMemo(() => ensureSafeStats(stats), [stats]);
   const netFlow = safeStats.total_deposits - safeStats.total_withdrawals;
 
-  // Memoize percentage change and daily average calculations
   const { percentageChange, averageTransactionsPerDay } = useMemo(() => {
     try {
       const monthBoundaries = getMonthBoundaries();
       
-      // Get percentage change from monthly comparison
       const monthlyComparison = calculateMonthlyComparison(
         filteredDeposits,
         filteredWithdrawals, 
@@ -112,7 +102,6 @@ export const useStatisticsData = () => {
         monthBoundaries
       );
       
-      // Get average transactions per day
       const dailyStats = calculateDailyTransactions(
         filteredDeposits,
         filteredWithdrawals,
@@ -129,7 +118,6 @@ export const useStatisticsData = () => {
     }
   }, [filteredDeposits, filteredWithdrawals, filteredTransfers]);
 
-  // Memoize chart data generation
   const last30DaysData = useMemo(() => {
     try {
       return generateLast30DaysData(filteredDeposits, filteredWithdrawals, filteredTransfers);
@@ -139,14 +127,22 @@ export const useStatisticsData = () => {
     }
   }, [filteredDeposits, filteredWithdrawals, filteredTransfers]);
 
-  // Memoize top clients calculations
   const topClients = useMemo(() => {
     try {
-      // Client statistics - generate if we have deposits
-      if (filteredDeposits.length > 0) {
-        const clientStats = generateClientStats(filteredDeposits);
+      console.log("Calculating top clients from", filteredDeposits?.length || 0, "deposits");
+      
+      if (Array.isArray(filteredDeposits) && filteredDeposits.length > 0) {
+        const validDeposits = filteredDeposits.filter(dep => dep && dep.client_name);
+        
+        if (validDeposits.length === 0) {
+          console.warn("No valid deposits with client names found");
+          return [];
+        }
+        
+        const clientStats = generateClientStats(validDeposits);
         return getTopClients(clientStats);
       }
+      console.warn("No filtered deposits available for top clients calculation");
       return [];
     } catch (err) {
       console.error("Error generating top clients:", err);
@@ -155,18 +151,15 @@ export const useStatisticsData = () => {
   }, [filteredDeposits]);
 
   return {
-    // Original data
     stats: safeStats,
     deposits,
     withdrawals,
     transfersArray,
     
-    // Filtered data
     filteredDeposits,
     filteredWithdrawals,
     filteredTransfers,
     
-    // Calculated statistics
     totalDeposits,
     totalWithdrawals,
     totalTransfers,
@@ -174,11 +167,9 @@ export const useStatisticsData = () => {
     percentageChange,
     averageTransactionsPerDay,
     
-    // Chart data
     last30DaysData,
     topClients,
     
-    // State and filters
     dateRange,
     setDateRange,
     clientFilter,
@@ -186,8 +177,7 @@ export const useStatisticsData = () => {
     transactionType,
     setTransactionType,
     
-    // Loading and error states
-    isLoading: isLoading && !attempted, // Force loading to end after timeout
+    isLoading: isLoading && !attempted,
     isSyncing,
     error,
     timeoutExceeded,
@@ -197,7 +187,6 @@ export const useStatisticsData = () => {
     setAttempted,
     usingCachedData,
     
-    // Actions
     refreshData
   };
 };
