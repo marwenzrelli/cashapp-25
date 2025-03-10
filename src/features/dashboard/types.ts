@@ -29,4 +29,5 @@ export type SortOption =
   | 'amount-asc' 
   | 'type'
   | 'type-desc'
-  | 'client';
+  | 'client'
+  | 'category'; // New sorting option for operation category

@@ -19,6 +19,12 @@ export const sortActivities = (activities: RecentActivity[], option: SortOption)
       return activitiesToSort.sort((a, b) => b.type.localeCompare(a.type));
     case 'client':
       return activitiesToSort.sort((a, b) => a.client_name.localeCompare(b.client_name));
+    case 'category':
+      // Custom sorting order: deposits first, then withdrawals, then transfers
+      return activitiesToSort.sort((a, b) => {
+        const typeOrder = { deposit: 1, withdrawal: 2, transfer: 3 };
+        return typeOrder[a.type] - typeOrder[b.type];
+      });
     default:
       return activitiesToSort;
   }
