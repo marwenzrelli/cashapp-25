@@ -6,7 +6,7 @@ import { OperationsMobileCard } from "@/features/clients/components/operations-h
 import { RecentActivity } from "../types";
 import { formatDateTime } from "@/features/operations/types";
 import { formatOperationId } from "@/features/operations/utils/display-helpers";
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { OperationFilters } from "@/features/operations/components/OperationFilters";
 import { DateRange } from "react-day-picker";
 import { isWithinInterval, parseISO } from "date-fns";
@@ -38,19 +38,19 @@ export const RecentActivityCard = ({ activities, currency }: RecentActivityProps
     }
   };
 
+  // Initialize temporary filters when component mounts or when actual filters change
+  useEffect(() => {
+    setTempSearchTerm(searchTerm);
+    setTempOperationType(operationType);
+    setTempDateRange(dateRange);
+  }, [searchTerm, operationType, dateRange]);
+
   // Apply filters when OK button is clicked
   const applyFilters = () => {
     setSearchTerm(tempSearchTerm);
     setOperationType(tempOperationType);
     setDateRange(tempDateRange);
   };
-
-  // Initialize temporary filters
-  useMemo(() => {
-    setTempSearchTerm(searchTerm);
-    setTempOperationType(operationType);
-    setTempDateRange(dateRange);
-  }, [searchTerm, operationType, dateRange]);
 
   // Filter activities based on search and filters
   const filteredActivities = useMemo(() => {
@@ -114,8 +114,8 @@ export const RecentActivityCard = ({ activities, currency }: RecentActivityProps
           </div>
           
           {filteredActivities && filteredActivities.length > 0 ? (
-            filteredActivities.map((activity) => (
-              <div key={activity.id}>
+            filteredActivities.map((activity, index) => (
+              <div key={`${activity.id}-${index}`}>
                 {/* Desktop version */}
                 <div className="hidden md:flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/10 transition-colors">
                   <div className="flex items-center gap-4">
