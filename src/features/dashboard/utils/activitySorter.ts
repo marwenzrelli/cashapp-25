@@ -15,8 +15,6 @@ export const sortActivities = (activities: RecentActivity[], option: SortOption)
       return activitiesToSort.sort((a, b) => b.amount - a.amount);
     case 'type':
       return activitiesToSort.sort((a, b) => a.type.localeCompare(b.type));
-    case 'type-desc':
-      return activitiesToSort.sort((a, b) => b.type.localeCompare(a.type));
     case 'client':
       return activitiesToSort.sort((a, b) => a.client_name.localeCompare(b.client_name));
     default:
