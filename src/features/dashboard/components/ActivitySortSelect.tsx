@@ -7,7 +7,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { SortOption } from "../types";
-import { ArrowDownAZ, ArrowDownWideNarrow, ArrowUpAZ, ArrowUpWideNarrow, Calendar, Clock, CreditCard, Users, Wallet } from "lucide-react";
+import { ArrowDownAZ, ArrowDownWideNarrow, ArrowUpAZ, ArrowUpWideNarrow, Calendar, Clock, CreditCard, Upload, Download, ArrowLeftRight, Users, Wallet } from "lucide-react";
 
 interface ActivitySortSelectProps {
   value: SortOption;
@@ -57,6 +57,16 @@ export const ActivitySortSelect = ({ value, onValueChange }: ActivitySortSelectP
             <div className="flex items-center gap-2">
               <Wallet className="h-4 w-4" />
               <span>Type (Z-A)</span>
+            </div>
+          </SelectItem>
+          <SelectItem value="category">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center h-4 w-4">
+                <Upload className="h-3 w-3 text-green-600" />
+                <Download className="h-3 w-3 text-red-600 -ml-1" />
+                <ArrowLeftRight className="h-3 w-3 text-blue-600 -ml-1" />
+              </div>
+              <span>Par catégorie</span>
             </div>
           </SelectItem>
           <SelectItem value="client">
