@@ -6,6 +6,10 @@ import { OperationsMobileCard } from "@/features/clients/components/operations-h
 import { RecentActivity } from "../types";
 import { formatDateTime } from "@/features/operations/types";
 import { formatOperationId } from "@/features/operations/utils/display-helpers";
+import { useState, useMemo } from "react";
+import { OperationFilters } from "@/features/operations/components/OperationFilters";
+import { DateRange } from "react-day-picker";
+import { isWithinInterval, parseISO } from "date-fns";
 
 interface RecentActivityProps {
   activities: RecentActivity[];
@@ -13,6 +17,11 @@ interface RecentActivityProps {
 }
 
 export const RecentActivityCard = ({ activities, currency }: RecentActivityProps) => {
+  // Search and filter states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [operationType, setOperationType] = useState<string | null>(null);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+
   // Function to safely format operation ID
   const safeFormatId = (id: string) => {
     try {
@@ -23,6 +32,38 @@ export const RecentActivityCard = ({ activities, currency }: RecentActivityProps
     }
   };
 
+  // Filter activities based on search and filters
+  const filteredActivities = useMemo(() => {
+    if (!activities) return [];
+
+    return activities.filter(activity => {
+      // Filter by search term
+      const searchMatch = !searchTerm || 
+        activity.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (activity.description && activity.description.toLowerCase().includes(searchTerm.toLowerCase()));
+
+      // Filter by operation type
+      const typeMatch = !operationType || activity.type === operationType;
+
+      // Filter by date range
+      let dateMatch = true;
+      if (dateRange?.from && dateRange?.to) {
+        try {
+          const activityDate = parseISO(activity.date);
+          dateMatch = isWithinInterval(activityDate, { 
+            start: dateRange.from, 
+            end: dateRange.to 
+          });
+        } catch (error) {
+          console.error("Error parsing date:", error);
+          dateMatch = false;
+        }
+      }
+
+      return searchMatch && typeMatch && dateMatch;
+    });
+  }, [activities, searchTerm, operationType, dateRange]);
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -30,8 +71,18 @@ export const RecentActivityCard = ({ activities, currency }: RecentActivityProps
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {activities && activities.length > 0 ? (
-            activities.map((activity) => (
+          {/* Search and filters */}
+          <OperationFilters
+            type={operationType}
+            setType={setOperationType}
+            client={searchTerm}
+            setClient={setSearchTerm}
+            date={dateRange}
+            setDate={setDateRange}
+          />
+          
+          {filteredActivities && filteredActivities.length > 0 ? (
+            filteredActivities.map((activity) => (
               <div key={activity.id}>
                 {/* Desktop version */}
                 <div className="hidden md:flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/10 transition-colors">
