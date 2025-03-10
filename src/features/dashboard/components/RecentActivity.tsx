@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowUpCircle, ArrowDownCircle, ArrowLeftRight, Hash } from "lucide-react";
+import { ArrowUpCircle, ArrowDownCircle, ArrowLeftRight, Hash, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { OperationsMobileCard } from "@/features/clients/components/operations-history/OperationsMobileCard";
 import { RecentActivity } from "../types";
@@ -10,6 +10,7 @@ import { useState, useMemo } from "react";
 import { OperationFilters } from "@/features/operations/components/OperationFilters";
 import { DateRange } from "react-day-picker";
 import { isWithinInterval, parseISO } from "date-fns";
+import { Button } from "@/components/ui/button";
 
 interface RecentActivityProps {
   activities: RecentActivity[];
@@ -21,6 +22,11 @@ export const RecentActivityCard = ({ activities, currency }: RecentActivityProps
   const [searchTerm, setSearchTerm] = useState("");
   const [operationType, setOperationType] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  
+  // Temporary states for filters before validation
+  const [tempSearchTerm, setTempSearchTerm] = useState("");
+  const [tempOperationType, setTempOperationType] = useState<string | null>(null);
+  const [tempDateRange, setTempDateRange] = useState<DateRange | undefined>(undefined);
 
   // Function to safely format operation ID
   const safeFormatId = (id: string) => {
@@ -31,6 +37,20 @@ export const RecentActivityCard = ({ activities, currency }: RecentActivityProps
       return id.slice(0, 6); // Fallback to first 6 chars
     }
   };
+
+  // Apply filters when OK button is clicked
+  const applyFilters = () => {
+    setSearchTerm(tempSearchTerm);
+    setOperationType(tempOperationType);
+    setDateRange(tempDateRange);
+  };
+
+  // Initialize temporary filters
+  useMemo(() => {
+    setTempSearchTerm(searchTerm);
+    setTempOperationType(operationType);
+    setTempDateRange(dateRange);
+  }, [searchTerm, operationType, dateRange]);
 
   // Filter activities based on search and filters
   const filteredActivities = useMemo(() => {
@@ -71,15 +91,27 @@ export const RecentActivityCard = ({ activities, currency }: RecentActivityProps
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {/* Search and filters */}
-          <OperationFilters
-            type={operationType}
-            setType={setOperationType}
-            client={searchTerm}
-            setClient={setSearchTerm}
-            date={dateRange}
-            setDate={setDateRange}
-          />
+          {/* Search and filters section */}
+          <div className="space-y-3">
+            <OperationFilters
+              type={tempOperationType}
+              setType={setTempOperationType}
+              client={tempSearchTerm}
+              setClient={setTempSearchTerm}
+              date={tempDateRange}
+              setDate={setTempDateRange}
+            />
+            
+            {/* OK button to apply filters */}
+            <Button 
+              onClick={applyFilters}
+              variant="outline" 
+              className="w-full bg-primary/5 hover:bg-primary/10 transition-colors"
+            >
+              <Check className="mr-2 h-4 w-4 text-primary" />
+              Valider les filtres
+            </Button>
+          </div>
           
           {filteredActivities && filteredActivities.length > 0 ? (
             filteredActivities.map((activity) => (
