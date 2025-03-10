@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { SystemUser } from "@/types/admin";
@@ -30,15 +29,12 @@ const Dashboard = () => {
   } = useDashboardData();
   const [isRecalculating, setIsRecalculating] = useState(false);
 
-  // Pagination state for recent activity
   const [activitiesPerPage, setActivitiesPerPage] = useState("5");
   const [currentActivityPage, setCurrentActivityPage] = useState(1);
 
-  // Get the current page of activities
   const indexOfLastActivity = currentActivityPage * parseInt(activitiesPerPage);
   const indexOfFirstActivity = indexOfLastActivity - parseInt(activitiesPerPage);
   
-  // Make sure recentActivity is an array before slicing
   const safeRecentActivity = Array.isArray(recentActivity) ? recentActivity : [];
   const currentActivities = safeRecentActivity.slice(indexOfFirstActivity, indexOfLastActivity);
 
