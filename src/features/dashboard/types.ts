@@ -21,13 +21,3 @@ export interface RecentActivity {
   fromClient?: string;
   toClient?: string;
 }
-
-export type SortOption = 
-  | 'date-desc' 
-  | 'date-asc' 
-  | 'amount-desc' 
-  | 'amount-asc' 
-  | 'type'
-  | 'type-desc'
-  | 'client'
-  | 'category'; // New sorting option for operation category

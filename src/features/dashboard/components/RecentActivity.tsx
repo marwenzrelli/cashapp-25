@@ -3,24 +3,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowUpCircle, ArrowDownCircle, ArrowLeftRight, Hash } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { OperationsMobileCard } from "@/features/clients/components/operations-history/OperationsMobileCard";
-import { RecentActivity, SortOption } from "../types";
+import { RecentActivity } from "../types";
 import { formatDateTime } from "@/features/operations/types";
 import { formatOperationId } from "@/features/operations/utils/display-helpers";
-import { ActivitySortSelect } from "./ActivitySortSelect";
 
 interface RecentActivityProps {
   activities: RecentActivity[];
   currency: string;
-  sortOption: SortOption;
-  onSortChange: (option: SortOption) => void;
 }
 
-export const RecentActivityCard = ({ 
-  activities, 
-  currency, 
-  sortOption, 
-  onSortChange 
-}: RecentActivityProps) => {
+export const RecentActivityCard = ({ activities, currency }: RecentActivityProps) => {
   // Function to safely format operation ID
   const safeFormatId = (id: string) => {
     try {
@@ -33,12 +25,8 @@ export const RecentActivityCard = ({
 
   return (
     <Card className="w-full">
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader>
         <CardTitle>Activité Récente</CardTitle>
-        <ActivitySortSelect 
-          value={sortOption} 
-          onValueChange={onSortChange} 
-        />
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
