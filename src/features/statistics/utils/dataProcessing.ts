@@ -6,3 +6,5 @@ export { calculateTotals } from './totalCalculations';
 export { calculateMonthlyComparison } from './monthlyComparison';
 export { calculateDailyTransactions } from './dailyTransactions';
 export { validateStatisticsData, ensureSafeStats } from './dataValidation';
+export { generateClientStats } from './clientStatistics';
+export { getTopClients } from './topClients';
