@@ -123,12 +123,12 @@ export const ChartSection = ({ last30DaysData, topClients }: ChartSectionProps) 
                   <Bar 
                     dataKey="montant" 
                     name="Montant Total" 
-                    fill="#8884d8" 
+                    fill="#10B981" 
                   />
                   <Bar 
                     dataKey="transactions" 
                     name="Nombre de Transactions" 
-                    fill="#82ca9d" 
+                    fill="#EF4444" 
                   />
                 </BarChart>
               </ResponsiveContainer>
