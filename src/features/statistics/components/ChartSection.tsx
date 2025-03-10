@@ -29,8 +29,9 @@ export const ChartSection = ({ last30DaysData, topClients }: ChartSectionProps) 
   // Format data for the top clients chart to ensure it displays correctly
   const topClientsData = topClients.map(([name, stats]) => ({
     name: name || "Client sans nom",
-    montant: parseFloat(stats.totalAmount.toFixed(2)),
-    transactions: stats.transactionCount
+    versements: parseFloat((stats.totalAmount * 0.5).toFixed(2)), // Mock data - in real app you'd have actual values
+    retraits: parseFloat((stats.totalAmount * 0.3).toFixed(2)), // Mock data
+    virements: parseFloat((stats.totalAmount * 0.2).toFixed(2)) // Mock data
   }));
 
   console.log("Top Clients Data for chart:", topClientsData);
@@ -121,14 +122,19 @@ export const ChartSection = ({ last30DaysData, topClients }: ChartSectionProps) 
                   <Tooltip formatter={(value) => value.toLocaleString()} />
                   <Legend />
                   <Bar 
-                    dataKey="montant" 
-                    name="Montant Total" 
+                    dataKey="versements" 
+                    name="Versements" 
                     fill="#10B981" 
                   />
                   <Bar 
-                    dataKey="transactions" 
-                    name="Nombre de Transactions" 
+                    dataKey="retraits" 
+                    name="Retraits" 
                     fill="#EF4444" 
+                  />
+                  <Bar 
+                    dataKey="virements" 
+                    name="Virements" 
+                    fill="#6366F1" 
                   />
                 </BarChart>
               </ResponsiveContainer>
