@@ -22,9 +22,12 @@ export interface RecentActivity {
   toClient?: string;
 }
 
-export type ActivitySortOption = 'newest' | 'oldest' | 'amount-asc' | 'amount-desc' | 'type' | 'client';
-
-export interface ActivitySortConfig {
-  option: ActivitySortOption;
-  label: string;
-}
+export type SortOption = 
+  | 'date-desc' 
+  | 'date-asc' 
+  | 'amount-desc' 
+  | 'amount-asc' 
+  | 'type'
+  | 'type-desc'
+  | 'client'
+  | 'category'; // New sorting option for operation category

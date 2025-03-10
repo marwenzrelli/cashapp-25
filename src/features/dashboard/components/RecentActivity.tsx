@@ -1,24 +1,26 @@
 
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowUpCircle, ArrowDownCircle, ArrowLeftRight, Hash } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { OperationsMobileCard } from "@/features/clients/components/operations-history/OperationsMobileCard";
-import { RecentActivity, ActivitySortOption } from "../types";
+import { RecentActivity, SortOption } from "../types";
 import { formatDateTime } from "@/features/operations/types";
 import { formatOperationId } from "@/features/operations/utils/display-helpers";
 import { ActivitySortSelect } from "./ActivitySortSelect";
-import { sortActivities } from "../utils/activitySorter";
 
 interface RecentActivityProps {
   activities: RecentActivity[];
   currency: string;
+  sortOption: SortOption;
+  onSortChange: (option: SortOption) => void;
 }
 
-export const RecentActivityCard = ({ activities, currency }: RecentActivityProps) => {
-  // State for sorting activities
-  const [sortOption, setSortOption] = useState<ActivitySortOption>("newest");
-  
+export const RecentActivityCard = ({ 
+  activities, 
+  currency, 
+  sortOption, 
+  onSortChange 
+}: RecentActivityProps) => {
   // Function to safely format operation ID
   const safeFormatId = (id: string) => {
     try {
@@ -29,21 +31,19 @@ export const RecentActivityCard = ({ activities, currency }: RecentActivityProps
     }
   };
 
-  // Sort activities based on current sort option
-  const sortedActivities = sortActivities(activities, sortOption);
-
   return (
     <Card className="w-full">
-      <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Activité Récente</CardTitle>
-        <div className="mt-2 sm:mt-0">
-          <ActivitySortSelect value={sortOption} onChange={setSortOption} />
-        </div>
+        <ActivitySortSelect 
+          value={sortOption} 
+          onValueChange={onSortChange} 
+        />
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {sortedActivities && sortedActivities.length > 0 ? (
-            sortedActivities.map((activity) => (
+          {activities && activities.length > 0 ? (
+            activities.map((activity) => (
               <div key={activity.id}>
                 {/* Desktop version */}
                 <div className="hidden md:flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/10 transition-colors">
