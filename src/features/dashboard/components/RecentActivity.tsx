@@ -1,10 +1,11 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowUpCircle, ArrowDownCircle, ArrowLeftRight } from "lucide-react";
+import { ArrowUpCircle, ArrowDownCircle, ArrowLeftRight, Hash } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { OperationsMobileCard } from "@/features/clients/components/operations-history/OperationsMobileCard";
 import { RecentActivity } from "../types";
 import { formatDateTime } from "@/features/operations/types";
+import { formatOperationId } from "@/features/operations/utils/display-helpers";
 
 interface RecentActivityProps {
   activities: RecentActivity[];
@@ -40,11 +41,17 @@ export const RecentActivityCard = ({ activities, currency }: RecentActivityProps
                     </div>
                   )}
                   <div>
-                    <p className="font-medium">
-                      {activity.type === 'deposit' && 'Versement'}
-                      {activity.type === 'withdrawal' && 'Retrait'}
-                      {activity.type === 'transfer' && 'Virement'}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium">
+                        {activity.type === 'deposit' && 'Versement'}
+                        {activity.type === 'withdrawal' && 'Retrait'}
+                        {activity.type === 'transfer' && 'Virement'}
+                      </p>
+                      <span className="text-xs font-mono text-muted-foreground flex items-center">
+                        <Hash className="h-3 w-3 mr-1" />
+                        #{formatOperationId(activity.id)}
+                      </span>
+                    </div>
                     <p className="text-sm text-muted-foreground">{activity.client_name}</p>
                   </div>
                 </div>
@@ -82,6 +89,7 @@ export const RecentActivityCard = ({ activities, currency }: RecentActivityProps
                     activity.type === 'withdrawal' ? "text-red-600 dark:text-red-400" :
                     "text-blue-600 dark:text-blue-400"
                   }
+                  showId={true}
                 />
               </div>
             </div>
