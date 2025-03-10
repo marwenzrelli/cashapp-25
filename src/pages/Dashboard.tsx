@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { SystemUser } from "@/types/admin";
@@ -30,7 +29,10 @@ const Dashboard = () => {
   // Get the current page of activities
   const indexOfLastActivity = currentActivityPage * parseInt(activitiesPerPage);
   const indexOfFirstActivity = indexOfLastActivity - parseInt(activitiesPerPage);
-  const currentActivities = recentActivity.slice(indexOfFirstActivity, indexOfLastActivity);
+  
+  // Make sure recentActivity is an array before slicing
+  const safeRecentActivity = Array.isArray(recentActivity) ? recentActivity : [];
+  const currentActivities = safeRecentActivity.slice(indexOfFirstActivity, indexOfLastActivity);
 
   const handleUpdateProfile = async (updatedUser: Partial<SystemUser>) => {
     try {
@@ -97,7 +99,7 @@ const Dashboard = () => {
         <TransferPagination
           itemsPerPage={activitiesPerPage}
           setItemsPerPage={setActivitiesPerPage}
-          totalItems={recentActivity.length}
+          totalItems={safeRecentActivity.length}
           currentPage={currentActivityPage}
           setCurrentPage={setCurrentActivityPage}
           label="activités"

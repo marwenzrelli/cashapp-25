@@ -29,7 +29,6 @@ export const useDashboardData = () => {
       if (!isRetry) setIsLoading(true);
       setError(null);
       
-      // Fetch deposits
       const { data: deposits, error: depositsError } = await supabase
         .from('deposits')
         .select('amount')
@@ -37,7 +36,6 @@ export const useDashboardData = () => {
 
       if (depositsError) throw depositsError;
 
-      // Fetch withdrawals
       const { data: withdrawals, error: withdrawalsError } = await supabase
         .from('withdrawals')
         .select('amount')
@@ -45,7 +43,6 @@ export const useDashboardData = () => {
 
       if (withdrawalsError) throw withdrawalsError;
 
-      // Fetch client count
       const { count: clientCount, error: clientsError } = await supabase
         .from('clients')
         .select('*', { count: 'exact' })
@@ -53,17 +50,14 @@ export const useDashboardData = () => {
 
       if (clientsError) throw clientsError;
 
-      // Generate mock monthly stats since the operation_statistics table doesn't exist
       const monthlyStats = generateMockMonthlyStats();
 
-      // Fetch all clients to calculate the total balance from client soldes
       const { data: clientsData, error: clientsDataError } = await supabase
         .from('clients')
         .select('id, solde, status');
 
       if (clientsDataError) throw clientsDataError;
 
-      // CORRECTION: Calculer précisément la somme des soldes en convertissant en nombre
       const total_balance = clientsData
         ?.filter(client => client.status === 'active')
         ?.reduce((sum, client) => {
@@ -71,7 +65,6 @@ export const useDashboardData = () => {
           return sum + clientBalance;
         }, 0) || 0;
 
-      // Fetch transfers
       const { data: transfers, error: transfersError } = await supabase
         .from('transfers')
         .select('amount, from_client, to_client')
@@ -79,14 +72,12 @@ export const useDashboardData = () => {
 
       if (transfersError) throw transfersError;
 
-      // Calculate statistics with enhanced numeric conversion
       const total_deposits = deposits?.reduce((sum, d) => sum + parseFloat(d.amount.toString()), 0) || 0;
       const total_withdrawals = withdrawals?.reduce((sum, w) => sum + parseFloat(w.amount.toString()), 0) || 0;
       const sent_transfers = transfers?.reduce((sum, t) => sum + parseFloat(t.amount.toString()), 0) || 0;
       const received_transfers = transfers?.reduce((sum, t) => sum + parseFloat(t.amount.toString()), 0) || 0;
       const transfer_count = transfers?.length || 0;
 
-      // Log calculation for debugging
       console.log(`Dashboard balance calculation:
         Total deposits: ${total_deposits}
         Total withdrawals: ${total_withdrawals}
@@ -106,18 +97,16 @@ export const useDashboardData = () => {
       });
       
       setDataFetched(true);
-      setRetryCount(0); // Reset retry count on success
+      setRetryCount(0);
     } catch (error: any) {
       console.error('Error fetching stats:', error);
       setError(error.message || "Erreur lors du chargement des statistiques");
       
       if (retryCount < 3 && !isRetry) {
-        // Attempt auto-retry if this is not already a retry attempt
         console.log(`Auto-retrying fetch attempt ${retryCount + 1}/3`);
         setTimeout(() => fetchStats(true), 3000);
       } else {
         toast.error("Erreur lors du chargement des statistiques");
-        // Set default values to ensure the UI can render properly
         setStats({
           total_deposits: 0,
           total_withdrawals: 0,
@@ -128,7 +117,7 @@ export const useDashboardData = () => {
           received_transfers: 0,
           monthly_stats: generateMockMonthlyStats()
         });
-        setDataFetched(true); // Mark as fetched even on error to prevent infinite retries
+        setDataFetched(true);
       }
     } finally {
       setIsLoading(false);
@@ -148,7 +137,7 @@ export const useDashboardData = () => {
 
   const fetchRecentActivity = useCallback(async () => {
     try {
-      // Increased the limit to show more activities with pagination (20 instead of 5)
+      console.log("Fetching recent activity...");
       const { data: recentDeposits, error: depositsError } = await supabase
         .from('deposits')
         .select('id, amount, created_at, client_name, status, notes')
@@ -173,9 +162,18 @@ export const useDashboardData = () => {
 
       if (transfersError) throw transfersError;
 
-      // Combiner et formater les résultats
+      console.log("Raw data fetched:", { 
+        deposits: recentDeposits?.length, 
+        withdrawals: recentWithdrawals?.length, 
+        transfers: recentTransfers?.length 
+      });
+
+      const deposits = recentDeposits || [];
+      const withdrawals = recentWithdrawals || [];
+      const transfers = recentTransfers || [];
+
       const allActivity = [
-        ...(recentDeposits?.map(d => ({
+        ...deposits.map(d => ({
           id: d.id.toString(),
           type: 'deposit' as const,
           amount: d.amount,
@@ -184,8 +182,8 @@ export const useDashboardData = () => {
           fromClient: d.client_name,
           status: d.status,
           description: d.notes || `Versement pour ${d.client_name}`
-        })) || []),
-        ...(recentWithdrawals?.map(w => ({
+        })),
+        ...withdrawals.map(w => ({
           id: w.id.toString(),
           type: 'withdrawal' as const,
           amount: w.amount,
@@ -194,8 +192,8 @@ export const useDashboardData = () => {
           fromClient: w.client_name,
           status: w.status,
           description: w.notes || `Retrait par ${w.client_name}`
-        })) || []),
-        ...(recentTransfers?.map(t => ({
+        })),
+        ...transfers.map(t => ({
           id: t.id.toString(),
           type: 'transfer' as const,
           amount: t.amount,
@@ -205,15 +203,15 @@ export const useDashboardData = () => {
           toClient: t.to_client,
           status: t.status,
           description: t.reason || `Virement de ${t.from_client} vers ${t.to_client}`
-        })) || [])
+        }))
       ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-       .slice(0, 30); // Increased to 30 activities total
+       .slice(0, 30);
 
+      console.log("Formatted activities:", allActivity.length);
       setRecentActivity(allActivity);
     } catch (error: any) {
       console.error('Error fetching recent activity:', error);
       toast.error("Erreur lors du chargement de l'activité récente");
-      // Set an empty array to ensure UI can render
       setRecentActivity([]);
     }
   }, []);
@@ -227,18 +225,18 @@ export const useDashboardData = () => {
   };
 
   useEffect(() => {
-    // Only fetch data if it hasn't been fetched already
     if (!dataFetched) {
+      console.log("Initial data fetch");
       fetchStats();
       fetchRecentActivity();
+      setDataFetched(true);
     }
     
-    // Setup refresh interval - reduced frequency to avoid overwhelming the server
     const interval = setInterval(() => {
       console.log("Auto-refreshing dashboard data");
       fetchStats();
       fetchRecentActivity();
-    }, 10 * 60 * 1000); // Changed to 10 minutes to reduce server load
+    }, 10 * 60 * 1000);
     
     return () => clearInterval(interval);
   }, [dataFetched, fetchStats, fetchRecentActivity]);
