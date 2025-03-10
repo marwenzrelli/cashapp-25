@@ -4,7 +4,10 @@ import {
   SelectContent, 
   SelectItem, 
   SelectTrigger, 
-  SelectValue 
+  SelectValue,
+  SelectSeparator,
+  SelectGroup,
+  SelectLabel
 } from "@/components/ui/select";
 import { SortOption } from "../types";
 import { ArrowDownAZ, ArrowDownWideNarrow, ArrowUpAZ, ArrowUpWideNarrow, Calendar, Clock, CreditCard, Users, Wallet, Filter } from "lucide-react";
@@ -19,58 +22,83 @@ export const ActivitySortSelect = ({ value, onValueChange }: ActivitySortSelectP
     <div className="flex items-center gap-2">
       <span className="text-sm text-muted-foreground">Trier par:</span>
       <Select value={value} onValueChange={(val) => onValueChange(val as SortOption)}>
-        <SelectTrigger className="w-[160px] h-8">
+        <SelectTrigger className="w-[180px] h-8">
           <SelectValue placeholder="Trier par" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="date-desc" className="flex items-center">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              <span>Plus récent</span>
-            </div>
-          </SelectItem>
-          <SelectItem value="date-asc">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              <span>Plus ancien</span>
-            </div>
-          </SelectItem>
-          <SelectItem value="amount-desc">
-            <div className="flex items-center gap-2">
-              <ArrowDownWideNarrow className="h-4 w-4" />
-              <span>Montant (↓)</span>
-            </div>
-          </SelectItem>
-          <SelectItem value="amount-asc">
-            <div className="flex items-center gap-2">
-              <ArrowUpWideNarrow className="h-4 w-4" />
-              <span>Montant (↑)</span>
-            </div>
-          </SelectItem>
-          <SelectItem value="type">
-            <div className="flex items-center gap-2">
-              <CreditCard className="h-4 w-4" />
-              <span>Type (A-Z)</span>
-            </div>
-          </SelectItem>
-          <SelectItem value="type-desc">
-            <div className="flex items-center gap-2">
-              <Wallet className="h-4 w-4" />
-              <span>Type (Z-A)</span>
-            </div>
-          </SelectItem>
-          <SelectItem value="client">
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              <span>Client</span>
-            </div>
-          </SelectItem>
-          <SelectItem value="category">
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4" />
-              <span>Par catégorie</span>
-            </div>
-          </SelectItem>
+          {/* Date/Period group */}
+          <SelectGroup>
+            <SelectLabel className="px-2 text-xs font-semibold">Période</SelectLabel>
+            <SelectItem value="date-desc" className="flex items-center">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                <span>Plus récent</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="date-asc">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                <span>Plus ancien</span>
+              </div>
+            </SelectItem>
+          </SelectGroup>
+          
+          <SelectSeparator />
+          
+          {/* Amount group */}
+          <SelectGroup>
+            <SelectLabel className="px-2 text-xs font-semibold">Montant</SelectLabel>
+            <SelectItem value="amount-desc">
+              <div className="flex items-center gap-2">
+                <ArrowDownWideNarrow className="h-4 w-4" />
+                <span>Montant (↓)</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="amount-asc">
+              <div className="flex items-center gap-2">
+                <ArrowUpWideNarrow className="h-4 w-4" />
+                <span>Montant (↑)</span>
+              </div>
+            </SelectItem>
+          </SelectGroup>
+          
+          <SelectSeparator />
+          
+          {/* Type group */}
+          <SelectGroup>
+            <SelectLabel className="px-2 text-xs font-semibold">Type d'opération</SelectLabel>
+            <SelectItem value="type">
+              <div className="flex items-center gap-2">
+                <CreditCard className="h-4 w-4" />
+                <span>Type (A-Z)</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="type-desc">
+              <div className="flex items-center gap-2">
+                <Wallet className="h-4 w-4" />
+                <span>Type (Z-A)</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="category">
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4" />
+                <span>Par catégorie</span>
+              </div>
+            </SelectItem>
+          </SelectGroup>
+          
+          <SelectSeparator />
+          
+          {/* Client group */}
+          <SelectGroup>
+            <SelectLabel className="px-2 text-xs font-semibold">Client</SelectLabel>
+            <SelectItem value="client">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                <span>Nom du client</span>
+              </div>
+            </SelectItem>
+          </SelectGroup>
         </SelectContent>
       </Select>
     </div>
