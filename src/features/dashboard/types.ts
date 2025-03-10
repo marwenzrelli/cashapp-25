@@ -21,3 +21,11 @@ export interface RecentActivity {
   fromClient?: string;
   toClient?: string;
 }
+
+export type SortOption = 
+  | 'date-desc' 
+  | 'date-asc' 
+  | 'amount-desc' 
+  | 'amount-asc' 
+  | 'type'
+  | 'client';

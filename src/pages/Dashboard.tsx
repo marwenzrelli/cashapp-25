@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { SystemUser } from "@/types/admin";
@@ -19,7 +20,14 @@ const Dashboard = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { currency } = useCurrency();
   const [currentUser, setCurrentUser] = useState<SystemUser | null>(null);
-  const { stats, isLoading, recentActivity, handleRefresh } = useDashboardData();
+  const { 
+    stats, 
+    isLoading, 
+    recentActivity, 
+    handleRefresh, 
+    sortOption, 
+    handleSortChange 
+  } = useDashboardData();
   const [isRecalculating, setIsRecalculating] = useState(false);
 
   // Pagination state for recent activity
@@ -94,7 +102,12 @@ const Dashboard = () => {
       </div>
 
       <div className="space-y-2">
-        <RecentActivityCard activities={currentActivities} currency={currency} />
+        <RecentActivityCard 
+          activities={currentActivities} 
+          currency={currency} 
+          sortOption={sortOption}
+          onSortChange={handleSortChange}
+        />
         
         <TransferPagination
           itemsPerPage={activitiesPerPage}

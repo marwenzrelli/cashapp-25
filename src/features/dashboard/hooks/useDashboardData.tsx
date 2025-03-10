@@ -1,8 +1,7 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { DashboardStats, RecentActivity } from "../types";
+import { DashboardStats, RecentActivity, SortOption } from "../types";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
 
 export const useDashboardData = () => {
@@ -21,6 +20,7 @@ export const useDashboardData = () => {
   const [error, setError] = useState<string | null>(null);
   const [dataFetched, setDataFetched] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [sortOption, setSortOption] = useState<SortOption>("date-desc");
 
   const generateMonthlyStats = async () => {
     try {
@@ -32,8 +32,6 @@ export const useDashboardData = () => {
         const monthStart = startOfMonth(month);
         const monthEnd = endOfMonth(month);
         
-        // Use simple 3-letter month abbreviations instead of dates
-        // This prevents "Invalid Date" issues in the chart
         const monthLabel = format(month, 'MMM');
         const startStr = monthStart.toISOString();
         const endStr = monthEnd.toISOString();
@@ -248,17 +246,44 @@ export const useDashboardData = () => {
           status: t.status,
           description: t.reason || `Virement de ${t.from_client} vers ${t.to_client}`
         }))
-      ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-       .slice(0, 30);
+      ];
 
-      console.log("Formatted activities:", allActivity.length);
-      setRecentActivity(allActivity);
+      const sortedActivities = sortActivities(allActivity, sortOption);
+      
+      console.log("Formatted activities:", sortedActivities.length);
+      setRecentActivity(sortedActivities);
     } catch (error: any) {
       console.error('Error fetching recent activity:', error);
       toast.error("Erreur lors du chargement de l'activité récente");
       setRecentActivity([]);
     }
-  }, []);
+  }, [sortOption]);
+
+  const sortActivities = (activities: RecentActivity[], option: SortOption): RecentActivity[] => {
+    const activitiesToSort = [...activities];
+
+    switch (option) {
+      case 'date-asc':
+        return activitiesToSort.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      case 'date-desc':
+        return activitiesToSort.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      case 'amount-asc':
+        return activitiesToSort.sort((a, b) => a.amount - b.amount);
+      case 'amount-desc':
+        return activitiesToSort.sort((a, b) => b.amount - a.amount);
+      case 'type':
+        return activitiesToSort.sort((a, b) => a.type.localeCompare(b.type));
+      case 'client':
+        return activitiesToSort.sort((a, b) => a.client_name.localeCompare(b.client_name));
+      default:
+        return activitiesToSort;
+    }
+  };
+
+  const handleSortChange = (newSortOption: SortOption) => {
+    setSortOption(newSortOption);
+    setRecentActivity(prevActivities => sortActivities([...prevActivities], newSortOption));
+  };
 
   const handleRefresh = () => {
     setIsLoading(true);
@@ -290,6 +315,8 @@ export const useDashboardData = () => {
     isLoading,
     error,
     recentActivity,
-    handleRefresh
+    handleRefresh,
+    sortOption,
+    handleSortChange
   };
 };
