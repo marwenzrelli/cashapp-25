@@ -129,26 +129,28 @@ export const useStatisticsData = () => {
 
   const topClients = useMemo(() => {
     try {
-      console.log("Calculating top clients from", filteredDeposits?.length || 0, "deposits");
+      console.log("Calculating top clients from all operations");
       
-      if (Array.isArray(filteredDeposits) && filteredDeposits.length > 0) {
-        const validDeposits = filteredDeposits.filter(dep => dep && dep.client_name);
-        
-        if (validDeposits.length === 0) {
-          console.warn("No valid deposits with client names found");
-          return [];
-        }
-        
-        const clientStats = generateClientStats(validDeposits);
-        return getTopClients(clientStats);
+      // Combine all operations into a single array for client statistics
+      const allOperations = [
+        ...(Array.isArray(filteredDeposits) ? filteredDeposits : []),
+        ...(Array.isArray(filteredWithdrawals) ? filteredWithdrawals : []),
+        ...(Array.isArray(filteredTransfers) ? filteredTransfers : [])
+      ];
+      
+      if (allOperations.length === 0) {
+        console.warn("No operations available for top clients calculation");
+        return [];
       }
-      console.warn("No filtered deposits available for top clients calculation");
-      return [];
+      
+      console.log(`Found ${allOperations.length} total operations for client statistics`);
+      const clientStats = generateClientStats(allOperations);
+      return getTopClients(clientStats);
     } catch (err) {
       console.error("Error generating top clients:", err);
       return [];
     }
-  }, [filteredDeposits]);
+  }, [filteredDeposits, filteredWithdrawals, filteredTransfers]);
 
   return {
     stats: safeStats,

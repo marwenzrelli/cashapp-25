@@ -2,14 +2,14 @@
 import { ClientStats } from "@/features/operations/types";
 
 /**
- * Generates statistics for each client based on deposit data
+ * Generates statistics for each client based on operation data
  */
-export const generateClientStats = (deposits: any[]) => {
+export const generateClientStats = (operations: any[]) => {
   const clientStats: Record<string, ClientStats> = {};
   
-  // Check if we have valid deposit data
-  if (!Array.isArray(deposits) || deposits.length === 0) {
-    console.warn("No valid deposits data available for client stats");
+  // Check if we have valid operations data
+  if (!Array.isArray(operations) || operations.length === 0) {
+    console.warn("No valid operations data available for client stats");
     
     // Demo data for testing when no real data is available
     if (process.env.NODE_ENV === 'development') {
@@ -25,13 +25,18 @@ export const generateClientStats = (deposits: any[]) => {
     return clientStats;
   }
   
-  console.log(`Processing ${deposits.length} deposits for client statistics`);
+  console.log(`Processing ${operations.length} operations for client statistics`);
   
-  deposits.forEach(dep => {
-    if (!dep || !dep.client_name) return;
+  operations.forEach(op => {
+    // Skip invalid operations
+    if (!op) return;
     
-    if (!clientStats[dep.client_name]) {
-      clientStats[dep.client_name] = {
+    // Handle different operation types
+    const clientName = op.client_name || op.fromClient;
+    if (!clientName) return;
+    
+    if (!clientStats[clientName]) {
+      clientStats[clientName] = {
         totalAmount: 0,
         transactionCount: 0,
         averageAmount: 0
@@ -39,11 +44,11 @@ export const generateClientStats = (deposits: any[]) => {
     }
     
     // Safely add to total amount
-    const amount = Number(dep.amount) || 0;
-    clientStats[dep.client_name].totalAmount += amount;
-    clientStats[dep.client_name].transactionCount += 1;
-    clientStats[dep.client_name].averageAmount = 
-      clientStats[dep.client_name].totalAmount / clientStats[dep.client_name].transactionCount;
+    const amount = Number(op.amount) || 0;
+    clientStats[clientName].totalAmount += amount;
+    clientStats[clientName].transactionCount += 1;
+    clientStats[clientName].averageAmount = 
+      clientStats[clientName].totalAmount / clientStats[clientName].transactionCount;
   });
 
   console.log("Generated client stats for", Object.keys(clientStats).length, "clients");

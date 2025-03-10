@@ -33,7 +33,7 @@ export const ChartSection = ({ last30DaysData, topClients }: ChartSectionProps) 
     transactions: stats.transactionCount
   }));
 
-  console.log("Top Clients Data:", topClientsData);
+  console.log("Top Clients Data for chart:", topClientsData);
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
@@ -135,7 +135,7 @@ export const ChartSection = ({ last30DaysData, topClients }: ChartSectionProps) 
             ) : (
               <div className="flex h-full flex-col items-center justify-center gap-2 text-muted-foreground">
                 <p>Aucune donnée client disponible</p>
-                <p className="text-sm">Ajoutez des transactions pour voir les statistiques clients</p>
+                <p className="text-sm">Rafraîchissez la page ou vérifiez les filtres appliqués</p>
               </div>
             )}
           </div>
