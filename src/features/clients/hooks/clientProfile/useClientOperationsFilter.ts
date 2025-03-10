@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from 'react';
 import { Client } from '@/features/clients/types';
 import { Operation } from '@/features/operations/types';
@@ -9,8 +8,11 @@ export const useClientOperationsFilter = (
   operations: Operation[],
   client: Client | null
 ) => {
+  // Define the union type for selectedType
+  type OperationType = "all" | "deposit" | "withdrawal" | "transfer";
+  
   // State for filters
-  const [selectedType, setSelectedType] = useState<"all" | "deposit" | "withdrawal" | "transfer">('all');
+  const [selectedType, setSelectedType] = useState<OperationType>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [dateRange, setDateRange] = useState<DateRange>({
     from: subDays(new Date(), 30),

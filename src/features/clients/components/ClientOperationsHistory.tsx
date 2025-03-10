@@ -16,7 +16,7 @@ import { DateRange } from "react-day-picker";
 interface ClientOperationsHistoryProps {
   operations: Operation[];
   selectedType: string;
-  setSelectedType: (type: string) => void;
+  setSelectedType: (type: string) => void; // Accept any string, parent component will validate
   searchTerm: string;
   setSearchTerm: (term: string) => void;
   dateRange: DateRange;

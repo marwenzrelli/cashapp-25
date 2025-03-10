@@ -88,9 +88,16 @@ const ClientProfile = () => {
   const actualClientId = typeof client.id === 'string' ? parseInt(client.id, 10) : client.id;
   console.log("Utilisation de l'ID client pour le code QR:", actualClientId);
 
-  // Ensure we convert the selectedType to a string when passing to component
+  // Updated handleTypeChange to ensure we only pass valid union types
   const handleTypeChange = (type: string) => {
-    setSelectedType(type);
+    // Validate that the type is one of the allowed values before setting
+    if (type === "deposit" || type === "withdrawal" || type === "transfer" || type === "all") {
+      setSelectedType(type as "deposit" | "withdrawal" | "transfer" | "all");
+    } else {
+      console.error(`Invalid operation type: ${type}`);
+      // Default to "all" if an invalid type is provided
+      setSelectedType("all");
+    }
   };
 
   return (
