@@ -5,6 +5,7 @@ import { Operation } from "@/features/operations/types";
 import { Badge } from "@/components/ui/badge";
 import { CalendarClock, Clock, Hash } from "lucide-react";
 import { formatId } from "@/utils/formatId";
+import { formatOperationId } from "@/features/operations/utils/display-helpers";
 
 interface OperationsMobileCardProps {
   operation: Operation;
@@ -12,6 +13,7 @@ interface OperationsMobileCardProps {
   currency?: string;
   showType?: boolean;
   colorClass?: string;
+  showId?: boolean;
 }
 
 export const OperationsMobileCard = ({
@@ -19,7 +21,8 @@ export const OperationsMobileCard = ({
   formatAmount = amount => `${Math.round(amount).toLocaleString()}`,
   currency = "",
   showType = true,
-  colorClass
+  colorClass,
+  showId = false
 }: OperationsMobileCardProps) => {
   // Fonction sécurisée pour parser les dates
   const parseDate = (dateValue: string | Date): Date => {
@@ -51,7 +54,7 @@ export const OperationsMobileCard = ({
   const operationDate = operation.operation_date || operation.date;
   
   // Format the operation ID
-  const operationId = isNaN(parseInt(operation.id)) ? operation.id : formatId(parseInt(operation.id));
+  const operationId = showId ? formatOperationId(operation.id) : null;
   
   return (
     <div className="flex flex-col p-3 bg-white dark:bg-gray-800 rounded-lg border shadow-sm w-full">
@@ -78,7 +81,9 @@ export const OperationsMobileCard = ({
         <div className="flex-1 flex justify-between items-center">
           <div className="flex items-center gap-1">
             <Hash className="h-3 w-3 text-muted-foreground" />
-            <span className="text-xs font-mono text-muted-foreground">{operationId}</span>
+            <span className="text-xs font-mono text-muted-foreground">
+              {showId ? `#${operationId}` : formatId(parseInt(operation.id))}
+            </span>
           </div>
           <p className={`text-base font-semibold ${
             colorClass || (

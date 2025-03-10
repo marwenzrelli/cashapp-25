@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { OperationsMobileCard } from "./OperationsMobileCard";
 import { getTypeStyle, getTypeIcon, getTypeLabel } from "@/features/operations/utils/operation-helpers";
 import { getAmountColor } from "@/features/operations/utils/display-helpers";
+import { formatOperationId } from "@/features/operations/utils/display-helpers";
 
 interface PublicOperationsTableProps {
   operations: Operation[];
@@ -27,6 +28,7 @@ export const PublicOperationsTable = ({ operations, currency }: PublicOperations
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="whitespace-nowrap">ID</TableHead>
               <TableHead className="whitespace-nowrap">Type</TableHead>
               <TableHead className="whitespace-nowrap">Date</TableHead>
               <TableHead>Description</TableHead>
@@ -37,6 +39,9 @@ export const PublicOperationsTable = ({ operations, currency }: PublicOperations
           <TableBody>
             {operations.map((operation) => (
               <TableRow key={operation.id}>
+                <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap">
+                  #{formatOperationId(operation.id)}
+                </TableCell>
                 <TableCell className="whitespace-nowrap">
                   <div className="flex items-center gap-2">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getTypeStyle(operation.type)}`}>
@@ -69,7 +74,7 @@ export const PublicOperationsTable = ({ operations, currency }: PublicOperations
       </div>
       
       {/* Enhanced cards for mobile */}
-      <div className="md:hidden space-y-4 px-0 w-full">
+      <div className="md:hidden space-y-4 px-0 py-2 sm:py-4 w-full">
         {operations.map((operation) => (
           <OperationsMobileCard 
             key={operation.id} 
@@ -78,6 +83,7 @@ export const PublicOperationsTable = ({ operations, currency }: PublicOperations
             currency={currency}
             showType={true}
             colorClass={getAmountColor(operation.type)}
+            showId={true}
           />
         ))}
       </div>
