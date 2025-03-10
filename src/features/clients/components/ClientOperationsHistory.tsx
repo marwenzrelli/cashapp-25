@@ -12,6 +12,7 @@ import { PublicClientPersonalInfo } from "./PublicClientPersonalInfo";
 import { useParams } from "react-router-dom";
 import { useClientData } from "../hooks/clientProfile/useClientData";
 import { DateRange } from "react-day-picker";
+import { PublicClientOperationsHistory } from "./PublicClientOperationsHistory";
 
 interface ClientOperationsHistoryProps {
   operations: Operation[];
@@ -122,7 +123,12 @@ export const ClientOperationsHistory = ({
       </TabsContent>
       
       <TabsContent value="public">
-        {client && <PublicClientPersonalInfo client={client} />}
+        <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background p-4">
+          <div className="container mx-auto max-w-6xl space-y-6">
+            {client && <PublicClientPersonalInfo client={client} />}
+            <PublicClientOperationsHistory operations={operations} />
+          </div>
+        </div>
       </TabsContent>
     </Tabs>
   );
