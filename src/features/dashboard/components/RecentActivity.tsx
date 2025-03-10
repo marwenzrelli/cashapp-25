@@ -1,11 +1,14 @@
 
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowUpCircle, ArrowDownCircle, ArrowLeftRight, Hash } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { OperationsMobileCard } from "@/features/clients/components/operations-history/OperationsMobileCard";
-import { RecentActivity } from "../types";
+import { RecentActivity, ActivitySortOption } from "../types";
 import { formatDateTime } from "@/features/operations/types";
 import { formatOperationId } from "@/features/operations/utils/display-helpers";
+import { ActivitySortSelect } from "./ActivitySortSelect";
+import { sortActivities } from "../utils/activitySorter";
 
 interface RecentActivityProps {
   activities: RecentActivity[];
@@ -13,6 +16,9 @@ interface RecentActivityProps {
 }
 
 export const RecentActivityCard = ({ activities, currency }: RecentActivityProps) => {
+  // State for sorting activities
+  const [sortOption, setSortOption] = useState<ActivitySortOption>("newest");
+  
   // Function to safely format operation ID
   const safeFormatId = (id: string) => {
     try {
@@ -23,15 +29,21 @@ export const RecentActivityCard = ({ activities, currency }: RecentActivityProps
     }
   };
 
+  // Sort activities based on current sort option
+  const sortedActivities = sortActivities(activities, sortOption);
+
   return (
     <Card className="w-full">
-      <CardHeader>
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <CardTitle>Activité Récente</CardTitle>
+        <div className="mt-2 sm:mt-0">
+          <ActivitySortSelect value={sortOption} onChange={setSortOption} />
+        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {activities && activities.length > 0 ? (
-            activities.map((activity) => (
+          {sortedActivities && sortedActivities.length > 0 ? (
+            sortedActivities.map((activity) => (
               <div key={activity.id}>
                 {/* Desktop version */}
                 <div className="hidden md:flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/10 transition-colors">

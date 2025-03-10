@@ -21,3 +21,10 @@ export interface RecentActivity {
   fromClient?: string;
   toClient?: string;
 }
+
+export type ActivitySortOption = 'newest' | 'oldest' | 'amount-asc' | 'amount-desc' | 'type' | 'client';
+
+export interface ActivitySortConfig {
+  option: ActivitySortOption;
+  label: string;
+}
