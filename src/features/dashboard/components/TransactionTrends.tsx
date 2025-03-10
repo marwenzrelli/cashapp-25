@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from "recharts";
@@ -22,7 +21,7 @@ export const TransactionTrends = ({ data, currency }: TransactionTrendsProps) =>
   // Ensure we have data to display
   const safeData = Array.isArray(data) ? data : [];
   
-  // Format data for chart display
+  // Format data for chart display, ensuring all required properties exist
   const formattedData = safeData.map(item => ({
     ...item,
     day: item.day || '',
@@ -50,21 +49,23 @@ export const TransactionTrends = ({ data, currency }: TransactionTrendsProps) =>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
                   dataKey="day" 
-                  tickFormatter={(value) => {
-                    // Handle various date formats or use the value as is if it's not a date
-                    try {
-                      return new Date(value).toLocaleDateString('fr-FR', { month: 'short' });
-                    } catch (e) {
-                      return value;
-                    }
-                  }} 
+                  // Don't try to format day if it's already a simple string
+                  // This prevents "Invalid Date" errors
                 />
                 <YAxis />
                 <Tooltip 
                   formatter={(value: number) => [`${value.toLocaleString()} ${currency}`, '']}
+                  // Only format the label if it's a valid date string
                   labelFormatter={(label) => {
+                    // If label is already a month abbreviation, just return it
+                    if (typeof label === 'string' && label.length <= 3) {
+                      return label;
+                    }
+                    
+                    // Otherwise try to parse it as a date
                     try {
-                      return new Date(label).toLocaleDateString('fr-FR');
+                      const date = new Date(label);
+                      return isNaN(date.getTime()) ? label : date.toLocaleDateString('fr-FR');
                     } catch (e) {
                       return label;
                     }

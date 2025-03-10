@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -31,6 +32,8 @@ export const useDashboardData = () => {
         const monthStart = startOfMonth(month);
         const monthEnd = endOfMonth(month);
         
+        // Use simple 3-letter month abbreviations instead of dates
+        // This prevents "Invalid Date" issues in the chart
         const monthLabel = format(month, 'MMM');
         const startStr = monthStart.toISOString();
         const endStr = monthEnd.toISOString();
