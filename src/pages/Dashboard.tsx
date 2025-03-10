@@ -19,22 +19,18 @@ const Dashboard = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { currency } = useCurrency();
   const [currentUser, setCurrentUser] = useState<SystemUser | null>(null);
-  const { 
-    stats, 
-    isLoading, 
-    recentActivity, 
-    handleRefresh, 
-    sortOption, 
-    handleSortChange 
-  } = useDashboardData();
+  const { stats, isLoading, recentActivity, handleRefresh } = useDashboardData();
   const [isRecalculating, setIsRecalculating] = useState(false);
 
+  // Pagination state for recent activity
   const [activitiesPerPage, setActivitiesPerPage] = useState("5");
   const [currentActivityPage, setCurrentActivityPage] = useState(1);
 
+  // Get the current page of activities
   const indexOfLastActivity = currentActivityPage * parseInt(activitiesPerPage);
   const indexOfFirstActivity = indexOfLastActivity - parseInt(activitiesPerPage);
   
+  // Make sure recentActivity is an array before slicing
   const safeRecentActivity = Array.isArray(recentActivity) ? recentActivity : [];
   const currentActivities = safeRecentActivity.slice(indexOfFirstActivity, indexOfLastActivity);
 
@@ -98,12 +94,7 @@ const Dashboard = () => {
       </div>
 
       <div className="space-y-2">
-        <RecentActivityCard 
-          activities={currentActivities} 
-          currency={currency} 
-          sortOption={sortOption}
-          onSortChange={handleSortChange}
-        />
+        <RecentActivityCard activities={currentActivities} currency={currency} />
         
         <TransferPagination
           itemsPerPage={activitiesPerPage}
