@@ -28,5 +28,4 @@ export type SortOption =
   | 'amount-desc' 
   | 'amount-asc' 
   | 'type'
-  | 'type-desc'
   | 'client';
