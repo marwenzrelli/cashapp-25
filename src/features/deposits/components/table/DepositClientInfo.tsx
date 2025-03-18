@@ -13,7 +13,7 @@ interface DepositClientInfoProps {
 export const DepositClientInfo = ({ clientName, depositId }: DepositClientInfoProps) => {
   const navigate = useNavigate();
   
-  const handleClientClick = async (clientName: string) => {
+  const handleClientClick = async () => {
     try {
       console.log("Looking up client:", clientName);
       
@@ -80,7 +80,7 @@ export const DepositClientInfo = ({ clientName, depositId }: DepositClientInfoPr
       <div>
         <p 
           className="font-medium cursor-pointer hover:text-primary transition-colors"
-          onClick={() => handleClientClick(clientName)}
+          onClick={handleClientClick}
         >
           {clientName}
         </p>
