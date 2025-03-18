@@ -13,7 +13,6 @@ interface DepositClientInfoProps {
 export const DepositClientInfo = ({ clientName, depositId }: DepositClientInfoProps) => {
   const navigate = useNavigate();
   
-  // Refactored navigation function with improved visual feedback
   const navigateToProfile = async () => {
     try {
       console.log("Navigation vers le profil client:", clientName);
@@ -28,17 +27,18 @@ export const DepositClientInfo = ({ clientName, depositId }: DepositClientInfoPr
         return;
       }
       
-      // Parse name into components
+      // Parse name into components - in French format, first name comes first
       const nameParts = clientName.split(' ');
       
       if (nameParts.length < 2) {
         console.warn("Format de nom invalide:", clientName);
         toast.dismiss();
+        toast.error("Format de nom invalide");
         navigate(`/clients?search=${encodeURIComponent(clientName)}`);
         return;
       }
       
-      // Extract first and last name
+      // Extract first and last name - correctly formatted for French names
       const firstName = nameParts[0];
       const lastName = nameParts.slice(1).join(' ');
       
@@ -48,8 +48,8 @@ export const DepositClientInfo = ({ clientName, depositId }: DepositClientInfoPr
       const { data, error } = await supabase
         .from('clients')
         .select('id')
-        .eq('prenom', firstName)
-        .eq('nom', lastName)
+        .ilike('prenom', firstName) // Using case-insensitive search
+        .ilike('nom', lastName)     // Using case-insensitive search
         .maybeSingle();
       
       // Dismiss loading toast
@@ -66,10 +66,28 @@ export const DepositClientInfo = ({ clientName, depositId }: DepositClientInfoPr
       
       if (!data) {
         console.warn("Aucun client trouvé avec le nom:", clientName);
-        toast.info("Client non trouvé", {
-          description: "Redirection vers la recherche de clients."
+        
+        // Try a broader search using just one of the name parts
+        const { data: broadSearchData, error: broadSearchError } = await supabase
+          .from('clients')
+          .select('id')
+          .or(`prenom.ilike.%${firstName}%,nom.ilike.%${lastName}%`)
+          .limit(1);
+          
+        if (broadSearchError || !broadSearchData || broadSearchData.length === 0) {
+          toast.info("Client non trouvé", {
+            description: "Redirection vers la recherche de clients."
+          });
+          navigate(`/clients?search=${encodeURIComponent(clientName)}`);
+          return;
+        }
+        
+        // Use the first match from broad search
+        console.log("Client trouvé avec recherche élargie:", broadSearchData[0].id);
+        toast.success("Client trouvé", {
+          description: "Redirection vers le profil..."
         });
-        navigate(`/clients?search=${encodeURIComponent(clientName)}`);
+        navigate(`/clients/${broadSearchData[0].id}`);
         return;
       }
       
@@ -80,6 +98,7 @@ export const DepositClientInfo = ({ clientName, depositId }: DepositClientInfoPr
       navigate(`/clients/${data.id}`);
     } catch (error) {
       console.error("Erreur lors de la recherche du client:", error);
+      toast.dismiss();
       toast.error("Impossible de trouver le profil du client");
       navigate(`/clients?search=${encodeURIComponent(clientName)}`);
     }
