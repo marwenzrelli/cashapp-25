@@ -13,13 +13,17 @@ interface DepositClientInfoProps {
 export const DepositClientInfo = ({ clientName, depositId }: DepositClientInfoProps) => {
   const navigate = useNavigate();
   
-  // Completely refactored function with new implementation approach
-  const handleProfileNavigation = async () => {
+  // Refactored navigation function with improved visual feedback
+  const navigateToProfile = async () => {
     try {
-      console.log("Attempting to navigate to profile for client:", clientName);
+      console.log("Navigation vers le profil client:", clientName);
+      
+      // Show feedback toast
+      toast.loading(`Recherche du client ${clientName}...`);
       
       // Validate client name
       if (!clientName || clientName.trim() === "") {
+        toast.dismiss();
         toast.error("Nom du client manquant");
         return;
       }
@@ -29,6 +33,7 @@ export const DepositClientInfo = ({ clientName, depositId }: DepositClientInfoPr
       
       if (nameParts.length < 2) {
         console.warn("Format de nom invalide:", clientName);
+        toast.dismiss();
         navigate(`/clients?search=${encodeURIComponent(clientName)}`);
         return;
       }
@@ -46,6 +51,9 @@ export const DepositClientInfo = ({ clientName, depositId }: DepositClientInfoPr
         .eq('prenom', firstName)
         .eq('nom', lastName)
         .maybeSingle();
+      
+      // Dismiss loading toast
+      toast.dismiss();
       
       if (error) {
         console.error("Erreur de base de données lors de la recherche du client:", error);
@@ -66,6 +74,9 @@ export const DepositClientInfo = ({ clientName, depositId }: DepositClientInfoPr
       }
       
       console.log("ID client trouvé:", data.id);
+      toast.success("Client trouvé", {
+        description: "Redirection vers le profil..."
+      });
       navigate(`/clients/${data.id}`);
     } catch (error) {
       console.error("Erreur lors de la recherche du client:", error);
@@ -82,8 +93,8 @@ export const DepositClientInfo = ({ clientName, depositId }: DepositClientInfoPr
       </div>
       <div>
         <p 
-          className="font-medium cursor-pointer hover:text-primary transition-colors"
-          onClick={handleProfileNavigation}
+          className="font-medium cursor-pointer hover:text-primary hover:underline transition-colors flex items-center gap-1"
+          onClick={navigateToProfile}
         >
           {clientName}
         </p>
