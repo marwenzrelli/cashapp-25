@@ -13,9 +13,10 @@ interface DepositClientInfoProps {
 export const DepositClientInfo = ({ clientName, depositId }: DepositClientInfoProps) => {
   const navigate = useNavigate();
   
-  const handleClientClick = async () => {
+  // Renamed function to be more descriptive and removed redundant parameter
+  const navigateToClientProfile = async () => {
     try {
-      console.log("Looking up client:", clientName);
+      console.log("Navigating to client profile for:", clientName);
       
       if (!clientName || clientName.trim() === "") {
         toast.error("Nom du client manquant");
@@ -80,7 +81,7 @@ export const DepositClientInfo = ({ clientName, depositId }: DepositClientInfoPr
       <div>
         <p 
           className="font-medium cursor-pointer hover:text-primary transition-colors"
-          onClick={handleClientClick}
+          onClick={navigateToClientProfile}
         >
           {clientName}
         </p>
