@@ -13,31 +13,33 @@ interface DepositClientInfoProps {
 export const DepositClientInfo = ({ clientName, depositId }: DepositClientInfoProps) => {
   const navigate = useNavigate();
   
-  // Renamed function to be more descriptive and removed redundant parameter
-  const navigateToClientProfile = async () => {
+  // Completely refactored function with new implementation approach
+  const handleProfileNavigation = async () => {
     try {
-      console.log("Navigating to client profile for:", clientName);
+      console.log("Attempting to navigate to profile for client:", clientName);
       
+      // Validate client name
       if (!clientName || clientName.trim() === "") {
         toast.error("Nom du client manquant");
         return;
       }
       
-      // Split the full name into first name and last name
+      // Parse name into components
       const nameParts = clientName.split(' ');
       
       if (nameParts.length < 2) {
-        console.warn("Client name format invalid:", clientName);
+        console.warn("Format de nom invalide:", clientName);
         navigate(`/clients?search=${encodeURIComponent(clientName)}`);
         return;
       }
       
-      // The first part is the first name, the rest combined is the last name
+      // Extract first and last name
       const firstName = nameParts[0];
       const lastName = nameParts.slice(1).join(' ');
       
-      console.log(`Searching for client with first name "${firstName}" and last name "${lastName}"`);
+      console.log(`Recherche du client avec prénom "${firstName}" et nom "${lastName}"`);
       
+      // Query the database
       const { data, error } = await supabase
         .from('clients')
         .select('id')
@@ -46,7 +48,7 @@ export const DepositClientInfo = ({ clientName, depositId }: DepositClientInfoPr
         .maybeSingle();
       
       if (error) {
-        console.error("Database error while looking up client:", error);
+        console.error("Erreur de base de données lors de la recherche du client:", error);
         toast.error("Erreur de recherche", {
           description: "Impossible de trouver le client dans la base de données."
         });
@@ -55,7 +57,7 @@ export const DepositClientInfo = ({ clientName, depositId }: DepositClientInfoPr
       }
       
       if (!data) {
-        console.warn("No client found with name:", clientName);
+        console.warn("Aucun client trouvé avec le nom:", clientName);
         toast.info("Client non trouvé", {
           description: "Redirection vers la recherche de clients."
         });
@@ -63,10 +65,10 @@ export const DepositClientInfo = ({ clientName, depositId }: DepositClientInfoPr
         return;
       }
       
-      console.log("Found client ID:", data.id);
+      console.log("ID client trouvé:", data.id);
       navigate(`/clients/${data.id}`);
     } catch (error) {
-      console.error("Error during client lookup:", error);
+      console.error("Erreur lors de la recherche du client:", error);
       toast.error("Impossible de trouver le profil du client");
       navigate(`/clients?search=${encodeURIComponent(clientName)}`);
     }
@@ -81,7 +83,7 @@ export const DepositClientInfo = ({ clientName, depositId }: DepositClientInfoPr
       <div>
         <p 
           className="font-medium cursor-pointer hover:text-primary transition-colors"
-          onClick={navigateToClientProfile}
+          onClick={handleProfileNavigation}
         >
           {clientName}
         </p>
