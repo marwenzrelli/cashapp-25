@@ -21,7 +21,7 @@ export const handleDepositDeletion = async (depositId: string | number, userId: 
       .from('deposits')
       .select('*')
       .eq('id', numericId)
-      .single();
+      .maybeSingle();
     
     if (fetchError) {
       console.error("Error fetching deposit for archiving:", fetchError);
@@ -44,9 +44,9 @@ export const handleDepositDeletion = async (depositId: string | number, userId: 
         amount: depositData.amount,
         client_name: depositData.client_name,
         notes: depositData.notes || '',
-        operation_date: depositData.operation_date,
-        status: depositData.status,
-        deleted_by: userId
+        operation_date: depositData.operation_date || depositData.created_at,
+        status: depositData.status || 'deleted',
+        deleted_by: userId || null
       });
     
     if (archiveError) {

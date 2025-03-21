@@ -29,8 +29,12 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
     setIsDeleting(true);
     
     try {
+      // Force a fresh copy of the deposit object to avoid reference issues
+      const depositToDelete = {...selectedDeposit};
+      console.log("Using deposit for deletion:", depositToDelete);
+      
       // Call onConfirm directly and wait for result
-      console.log("Calling onConfirm handler with deposit ID:", selectedDeposit.id);
+      console.log("Calling onConfirm handler with deposit ID:", depositToDelete.id);
       const success = await onConfirm();
       
       console.log("Deletion result:", success);

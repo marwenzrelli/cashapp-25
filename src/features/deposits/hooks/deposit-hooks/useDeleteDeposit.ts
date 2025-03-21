@@ -40,7 +40,9 @@ export const useDeleteDeposit = (
           console.log("Current deposits before filter:", prevDeposits.length);
           const newDeposits = prevDeposits.filter(deposit => {
             const currentId = typeof deposit.id === 'string' ? parseInt(deposit.id, 10) : deposit.id;
-            return currentId !== depositId;
+            const result = currentId !== depositId;
+            console.log(`Comparing deposit ID ${currentId} (${typeof currentId}) with ${depositId} (${typeof depositId}): keep = ${result}`);
+            return result;
           });
           console.log("New deposits after filter:", newDeposits.length);
           return newDeposits;
