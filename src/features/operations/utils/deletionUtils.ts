@@ -1,4 +1,6 @@
+
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 // Helper function to handle deposit deletion
 export const handleDepositDeletion = async (depositId: string | number, userId: string | undefined): Promise<boolean> => {
@@ -70,7 +72,10 @@ export const handleDepositDeletion = async (depositId: string | number, userId: 
     return true;
   } catch (error) {
     console.error("Complete error during deposit deletion:", error);
-    throw error; // Re-throw the error to be handled by the caller
+    toast.error("Erreur de suppression", {
+      description: error.message || "Une erreur est survenue lors de la suppression"
+    });
+    return false;
   }
 };
 
