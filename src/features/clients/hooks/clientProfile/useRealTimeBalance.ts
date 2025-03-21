@@ -1,10 +1,11 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export const useRealTimeBalance = (clientId: number | null) => {
   const [realTimeBalance, setRealTimeBalance] = useState<number | null>(null);
+  const previousBalanceRef = useRef<number | null>(null);
   
   // Set up a real-time subscription for client balance
   useEffect(() => {
@@ -21,8 +22,14 @@ export const useRealTimeBalance = (clientId: number | null) => {
         filter: `id=eq.${clientId}`
       }, (payload) => {
         if (payload.new && typeof payload.new === 'object' && 'solde' in payload.new) {
-          console.log("Real-time balance update received:", payload.new.solde);
-          setRealTimeBalance(Number(payload.new.solde));
+          const newBalance = Number(payload.new.solde);
+          
+          // Only update state if the balance has actually changed
+          if (previousBalanceRef.current !== newBalance) {
+            console.log("Real-time balance update received:", newBalance);
+            setRealTimeBalance(newBalance);
+            previousBalanceRef.current = newBalance;
+          }
         }
       })
       .subscribe((status) => {

@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Label } from "@/components/ui/label";
 import { UserCircle } from "lucide-react";
 import {
@@ -36,6 +36,7 @@ export const ClientSelectField: React.FC<ClientSelectFieldProps> = ({
 }) => {
   const { currency } = useCurrency();
   const [realTimeBalances, setRealTimeBalances] = useState<Record<string, number>>({});
+  const prevBalancesRef = useRef<Record<string, number>>({});
   
   // Subscribe to real-time updates for client balances
   useEffect(() => {
@@ -45,6 +46,7 @@ export const ClientSelectField: React.FC<ClientSelectFieldProps> = ({
       initialBalances[client.id.toString()] = client.solde;
     });
     setRealTimeBalances(initialBalances);
+    prevBalancesRef.current = initialBalances;
     
     // Set up real-time subscription for balance updates
     const channel = supabase
@@ -60,10 +62,20 @@ export const ClientSelectField: React.FC<ClientSelectFieldProps> = ({
             payload.new.id !== null &&
             payload.new.solde !== null
           ) {
-            setRealTimeBalances(prev => ({
-              ...prev,
-              [payload.new.id]: payload.new.solde
-            }));
+            const clientId = payload.new.id.toString();
+            const newBalance = Number(payload.new.solde);
+            
+            // Only update if balance has changed
+            if (prevBalancesRef.current[clientId] !== newBalance) {
+              setRealTimeBalances(prev => {
+                const updated = {
+                  ...prev,
+                  [clientId]: newBalance
+                };
+                prevBalancesRef.current = updated;
+                return updated;
+              });
+            }
           }
         }
       )

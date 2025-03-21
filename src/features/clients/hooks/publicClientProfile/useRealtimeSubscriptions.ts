@@ -7,6 +7,7 @@ export const useRealtimeSubscriptions = (
   refreshData: () => void
 ) => {
   const isSubscribedRef = useRef(false);
+  const lastUpdateTimeRef = useRef(0);
   
   useEffect(() => {
     // Skip subscription setup if no client ID or already subscribed
@@ -26,6 +27,14 @@ export const useRealtimeSubscriptions = (
         table: 'clients',
         filter: `id=eq.${clientId}`
       }, (payload) => {
+        // Implement debouncing to prevent rapid updates
+        const now = Date.now();
+        if (now - lastUpdateTimeRef.current < 500) {
+          console.log("Skipping too frequent client update");
+          return;
+        }
+        
+        lastUpdateTimeRef.current = now;
         console.log("Client data changed:", payload);
         // Only refresh data when there's an actual database change
         refreshData();
