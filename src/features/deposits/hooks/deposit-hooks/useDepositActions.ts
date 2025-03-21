@@ -32,14 +32,21 @@ export const useDepositActions = ({
   const handleDelete = (deposit: Deposit) => {
     console.log("Demande de suppression pour le versement:", deposit);
     console.log("Deposit ID:", deposit.id, "type:", typeof deposit.id);
+    
+    // Ensure we store the full deposit object
     setDepositToDelete(deposit);
-    console.log("Opening delete dialog for deposit:", deposit);
+    
+    // Log deposit data to ensure it's properly set
+    console.log("Setting depositToDelete:", deposit);
+    
+    // First open the dialog, then show it
     setIsDeleteDialogOpen(true);
     setShowDeleteDialog(true);
   };
 
   const confirmDelete = async (): Promise<boolean> => {
-    console.log("confirmDelete called in useDepositActions, selectedDeposit:", selectedDeposit);
+    console.log("confirmDelete called in useDepositActions");
+    console.log("Current selectedDeposit:", selectedDeposit);
     
     if (!selectedDeposit) {
       console.error("No deposit selected for deletion");
@@ -60,13 +67,17 @@ export const useDepositActions = ({
       console.log("Delete operation result:", success);
       
       if (success === true) {
-        console.log("Delete operation successful");
+        console.log("Delete operation successful, closing dialog");
+        setIsDeleteDialogOpen(false);
         toast.success("Succès", {
           description: "Le versement a été supprimé avec succès"
         });
         return true;
       } else {
         console.error("La suppression a échoué");
+        toast.error("Échec de la suppression", {
+          description: "Une erreur est survenue lors de la suppression du versement"
+        });
         return false;
       }
     } catch (error) {
