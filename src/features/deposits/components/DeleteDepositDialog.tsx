@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Trash2 } from "lucide-react";
 import { DeleteDepositDialogProps } from "@/features/deposits/types";
+import { toast } from "sonner";
 
 export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
   isOpen,
@@ -20,6 +21,7 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
     
     if (!selectedDeposit) {
       console.error("No deposit selected for deletion");
+      toast.error("Aucun versement sélectionné");
       return;
     }
     
@@ -37,9 +39,13 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
       if (success === true) {
         console.log("Deletion successful, closing dialog");
         onOpenChange(false);
+      } else {
+        console.error("Deletion failed, keeping dialog open");
+        toast.error("La suppression a échoué");
       }
     } catch (error) {
       console.error("Error occurred during deletion:", error);
+      toast.error("Erreur lors de la suppression");
     } finally {
       setIsDeleting(false);
     }

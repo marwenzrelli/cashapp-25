@@ -4,14 +4,15 @@ import { toast } from "sonner";
 
 // Helper function to handle deposit deletion
 export const handleDepositDeletion = async (depositId: string | number, userId: string | undefined): Promise<boolean> => {
-  console.log(`Attempting to delete deposit with ID: ${depositId}`);
+  console.log(`Attempting to delete deposit with ID: ${depositId} (type: ${typeof depositId})`);
   
   try {
     // Convert string ID to number for database operation if needed
     const numericId = typeof depositId === 'string' ? parseInt(depositId, 10) : depositId;
     
     if (isNaN(numericId)) {
-      throw new Error("Invalid deposit ID format");
+      console.error("Invalid deposit ID format:", depositId);
+      throw new Error("Format d'ID invalide");
     }
     
     // First, fetch the deposit to be deleted
@@ -28,6 +29,7 @@ export const handleDepositDeletion = async (depositId: string | number, userId: 
     }
     
     if (!depositData) {
+      console.error("No deposit found with ID:", numericId);
       throw new Error("Versement introuvable");
     }
     

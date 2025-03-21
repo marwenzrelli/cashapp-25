@@ -93,6 +93,7 @@ export const useDeleteDeposit = (
         console.log("Successful deletion, clearing state");
         // Clear the depositToDelete state after a successful deletion
         setDepositToDelete(null);
+        setShowDeleteDialog(false);
         return true;
       } else {
         console.error("Deletion returned false");
@@ -101,7 +102,7 @@ export const useDeleteDeposit = (
       }
     } catch (error) {
       console.error("Error in confirmDeleteDeposit:", error);
-      showErrorToast("Erreur lors de la suppression du versement", error);
+      showErrorToast("Échec de la suppression du versement", error);
       return false;
     }
   };

@@ -34,10 +34,10 @@ export const useDepositActions = ({
     console.log("Deposit ID:", deposit.id, "type:", typeof deposit.id);
     
     // Make a deep copy of the deposit object to avoid reference issues
-    setDepositToDelete(JSON.parse(JSON.stringify(deposit)));
+    const depositCopy = JSON.parse(JSON.stringify(deposit));
+    console.log("Setting depositToDelete with copy:", depositCopy);
     
-    // Log deposit data to ensure it's properly set
-    console.log("Setting depositToDelete:", deposit);
+    setDepositToDelete(depositCopy);
     
     // Open the dialog
     setIsDeleteDialogOpen(true);
@@ -69,6 +69,7 @@ export const useDepositActions = ({
       if (success === true) {
         console.log("Delete operation successful");
         setIsDeleteDialogOpen(false);
+        setShowDeleteDialog(false);
         toast.success("Succès", {
           description: "Le versement a été supprimé avec succès"
         });
