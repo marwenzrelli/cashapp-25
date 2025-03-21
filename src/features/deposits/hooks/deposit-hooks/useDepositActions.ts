@@ -1,4 +1,3 @@
-
 import { Deposit, EditFormData } from "@/components/deposits/types";
 import { toast } from "sonner";
 
@@ -57,19 +56,10 @@ export const useDepositActions = ({
       console.log("Delete operation result:", success);
       
       if (success === true) {
-        console.log("Delete operation successful, showing success message");
-        toast.success("Versement supprimé", {
-          description: `Le versement de ${selectedDeposit.amount} TND a été supprimé avec succès.`
-        });
-        
-        console.log("Delete operation successful, closing dialog");
-        setIsDeleteDialogOpen(false);
+        console.log("Delete operation successful");
         return true;
       } else {
-        console.error("La suppression a échoué mais sans erreur lancée");
-        toast.error("Échec de la suppression", {
-          description: "La suppression n'a pas pu être effectuée. Veuillez réessayer."
-        });
+        console.error("La suppression a échoué");
         return false;
       }
     } catch (error: any) {

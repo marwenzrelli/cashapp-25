@@ -2,7 +2,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Deposit } from "@/features/deposits/types";
-import { handleDepositDeletion } from "@/features/operations/utils/deletionUtils";
 
 export const useDeleteDeposit = (
   deposits: Deposit[],
@@ -23,32 +22,80 @@ export const useDeleteDeposit = (
       const userId = session?.user?.id;
       console.log("Got user ID from session:", userId);
 
-      // Use the utility function to handle deletion
-      console.log("Calling handleDepositDeletion utility function");
-      const result = await handleDepositDeletion(depositId, userId);
-      console.log("Deposit deletion result:", result);
+      // First, fetch the deposit to be deleted
+      console.log(`Fetching deposit with ID ${depositId} for archiving`);
+      const { data: depositData, error: fetchError } = await supabase
+        .from('deposits')
+        .select('*')
+        .eq('id', depositId)
+        .single();
       
-      if (result === true) {
-        console.log("Deletion was successful, updating UI state");
-        // Convert the ID to a number for filtering if it's a string
-        const numericId = typeof depositId === 'string' ? parseInt(depositId, 10) : depositId;
-        
-        // Update the deposits state by filtering out the deleted deposit
-        setDeposits(prevDeposits => {
-          console.log("Current deposits before filter:", prevDeposits.length);
-          const newDeposits = prevDeposits.filter(deposit => deposit.id !== numericId);
-          console.log("New deposits after filter:", newDeposits.length);
-          return newDeposits;
-        });
-        
-        return true;
-      } else {
-        console.error("Deletion failed but no error was thrown");
+      if (fetchError) {
+        console.error("Error fetching deposit for archiving:", fetchError);
+        toast.error(`Erreur lors de la récupération du versement: ${fetchError.message}`);
         return false;
       }
+      
+      if (!depositData) {
+        console.error("Deposit not found");
+        toast.error("Versement introuvable");
+        return false;
+      }
+      
+      console.log("Found deposit to archive:", depositData);
+      
+      // Archive the deposit in the deleted_deposits table
+      console.log("Archiving deposit to deleted_deposits table");
+      const { error: archiveError } = await supabase
+        .from('deleted_deposits')
+        .insert({
+          original_id: depositData.id,
+          amount: depositData.amount,
+          client_name: depositData.client_name,
+          notes: depositData.notes || '',
+          operation_date: depositData.operation_date,
+          status: depositData.status,
+          deleted_by: userId
+        });
+      
+      if (archiveError) {
+        console.error("Error archiving deposit:", archiveError);
+        toast.error(`Erreur lors de l'archivage du versement: ${archiveError.message}`);
+        return false;
+      }
+      
+      console.log("Successfully archived deposit to deleted_deposits");
+      
+      // Now delete the deposit record
+      console.log(`Deleting deposit with ID ${depositId}`);
+      const { error: deleteError } = await supabase
+        .from('deposits')
+        .delete()
+        .eq('id', depositId);
+      
+      if (deleteError) {
+        console.error("Error deleting deposit:", deleteError);
+        toast.error(`Erreur lors de la suppression: ${deleteError.message}`);
+        return false;
+      }
+      
+      // Update the local state
+      console.log("Updating local state after successful deletion");
+      setDeposits(prevDeposits => {
+        console.log("Current deposits before filter:", prevDeposits.length);
+        const newDeposits = prevDeposits.filter(deposit => deposit.id !== depositId);
+        console.log("New deposits after filter:", newDeposits.length);
+        return newDeposits;
+      });
+      
+      toast.success("Versement supprimé avec succès");
+      return true;
     } catch (error) {
       console.error("Error during deleteDeposit function:", error);
-      throw error; // Re-throw to be handled by caller
+      toast.error("Erreur lors de la suppression du versement", {
+        description: error instanceof Error ? error.message : "Une erreur inconnue est survenue"
+      });
+      return false;
     } finally {
       console.log("Setting isLoading to false");
       setIsLoading(false);
@@ -79,7 +126,7 @@ export const useDeleteDeposit = (
         setShowDeleteDialog(false);
         return true;
       } else {
-        console.error("Deletion returned false without throwing an error");
+        console.error("Deletion returned false");
         toast.error("La suppression n'a pas pu être effectuée");
         return false;
       }

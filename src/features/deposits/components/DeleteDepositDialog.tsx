@@ -1,9 +1,7 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { DeleteDepositDialogProps } from "@/features/deposits/types";
-import { useState, useEffect } from "react";
-import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 
 export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
@@ -14,23 +12,14 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
 }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   
-  // Add effect to log when the component receives a new selected deposit
-  useEffect(() => {
-    if (selectedDeposit) {
-      console.log("DeleteDepositDialog received deposit:", selectedDeposit);
-    }
-  }, [selectedDeposit]);
-
   const handleConfirm = async () => {
     if (!onConfirm) {
       console.error("No onConfirm handler provided");
-      toast.error("Erreur de configuration: Aucun gestionnaire de suppression n'a été fourni");
       return;
     }
     
     if (!selectedDeposit) {
       console.error("No deposit selected for deletion");
-      toast.error("Aucun versement sélectionné: Veuillez sélectionner un versement à supprimer");
       return;
     }
     
@@ -43,21 +32,12 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
       const result = await onConfirm();
       console.log("Deletion result:", result);
       
-      // Check the result and show appropriate toast
       if (result === true) {
-        // Close the dialog after successful deletion
-        toast.success("Versement supprimé avec succès", {
-          description: `Le versement de ${selectedDeposit.amount} TND a été supprimé et archivé.`
-        });
-        onOpenChange(false);
-      } else {
-        throw new Error("La suppression n'a pas pu être effectuée");
+        // Dialog will be closed by the parent component
+        console.log("Deletion successful");
       }
     } catch (error) {
       console.error("Error occurred during deletion:", error);
-      toast.error("Erreur lors de la suppression", {
-        description: error instanceof Error ? error.message : "Une erreur inconnue est survenue"
-      });
     } finally {
       setIsDeleting(false);
     }

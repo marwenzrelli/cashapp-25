@@ -1,3 +1,4 @@
+
 import React from "react";
 import { DepositsTable } from "./DepositsTable";
 import { DepositsHeader } from "./DepositsHeader";
@@ -80,7 +81,8 @@ export const DepositsContent = ({
     depositsLength: deposits?.length,
     filteredDepositsLength: filteredDeposits?.length,
     paginatedDepositsLength: paginatedDeposits?.length,
-    isLoading
+    isLoading,
+    selectedDepositForDeletion: selectedDeposit?.id
   });
 
   const handleRefreshClientBalance = async (clientId: string): Promise<boolean> => {
