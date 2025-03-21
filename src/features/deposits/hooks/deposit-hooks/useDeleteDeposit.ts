@@ -14,6 +14,15 @@ export const useDeleteDeposit = (
   const deleteDeposit = async (depositId: number | string): Promise<boolean> => {
     console.log(`Calling deleteDeposit function with ID: ${depositId}`);
     
+    // Ensure depositId is a number
+    const numericDepositId = typeof depositId === 'string' ? parseInt(depositId, 10) : depositId;
+    
+    if (isNaN(numericDepositId)) {
+      console.error("Invalid deposit ID:", depositId);
+      toast.error("ID de versement invalide");
+      return false;
+    }
+    
     try {
       setIsLoading(true);
       console.log("Setting isLoading to true");
@@ -23,11 +32,11 @@ export const useDeleteDeposit = (
       console.log("Got user ID from session:", userId);
 
       // First, fetch the deposit to be deleted
-      console.log(`Fetching deposit with ID ${depositId} for archiving`);
+      console.log(`Fetching deposit with ID ${numericDepositId} for archiving`);
       const { data: depositData, error: fetchError } = await supabase
         .from('deposits')
         .select('*')
-        .eq('id', depositId)
+        .eq('id', numericDepositId)
         .single();
       
       if (fetchError) {
@@ -67,11 +76,11 @@ export const useDeleteDeposit = (
       console.log("Successfully archived deposit to deleted_deposits");
       
       // Now delete the deposit record
-      console.log(`Deleting deposit with ID ${depositId}`);
+      console.log(`Deleting deposit with ID ${numericDepositId}`);
       const { error: deleteError } = await supabase
         .from('deposits')
         .delete()
-        .eq('id', depositId);
+        .eq('id', numericDepositId);
       
       if (deleteError) {
         console.error("Error deleting deposit:", deleteError);
@@ -83,7 +92,7 @@ export const useDeleteDeposit = (
       console.log("Updating local state after successful deletion");
       setDeposits(prevDeposits => {
         console.log("Current deposits before filter:", prevDeposits.length);
-        const newDeposits = prevDeposits.filter(deposit => deposit.id !== depositId);
+        const newDeposits = prevDeposits.filter(deposit => deposit.id !== numericDepositId);
         console.log("New deposits after filter:", newDeposits.length);
         return newDeposits;
       });
