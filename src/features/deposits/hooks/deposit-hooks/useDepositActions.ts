@@ -1,3 +1,4 @@
+
 import { Deposit, EditFormData } from "@/components/deposits/types";
 import { toast } from "sonner";
 
@@ -36,9 +37,10 @@ export const useDepositActions = ({
   };
 
   const confirmDelete = async (): Promise<boolean> => {
-    console.log("confirmDelete called, selectedDeposit:", selectedDeposit);
+    console.log("confirmDelete called in useDepositActions, selectedDeposit:", selectedDeposit);
     
     if (!selectedDeposit) {
+      console.error("No deposit selected for deletion");
       toast.error("Erreur", {
         description: "Aucun versement sélectionné"
       });
@@ -55,6 +57,11 @@ export const useDepositActions = ({
       console.log("Delete operation result:", success);
       
       if (success === true) {
+        console.log("Delete operation successful, showing success message");
+        toast.success("Versement supprimé", {
+          description: `Le versement de ${selectedDeposit.amount} TND a été supprimé avec succès.`
+        });
+        
         console.log("Delete operation successful, closing dialog");
         setIsDeleteDialogOpen(false);
         return true;

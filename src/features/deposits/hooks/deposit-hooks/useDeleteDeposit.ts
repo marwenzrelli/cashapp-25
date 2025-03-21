@@ -28,11 +28,19 @@ export const useDeleteDeposit = (
       const result = await handleDepositDeletion(depositId, userId);
       console.log("Deposit deletion result:", result);
       
-      // Update UI state after successful deletion
       if (result === true) {
         console.log("Deletion was successful, updating UI state");
+        // Convert the ID to a number for filtering if it's a string
         const numericId = typeof depositId === 'string' ? parseInt(depositId, 10) : depositId;
-        setDeposits(prevDeposits => prevDeposits.filter(deposit => deposit.id !== numericId));
+        
+        // Update the deposits state by filtering out the deleted deposit
+        setDeposits(prevDeposits => {
+          console.log("Current deposits before filter:", prevDeposits.length);
+          const newDeposits = prevDeposits.filter(deposit => deposit.id !== numericId);
+          console.log("New deposits after filter:", newDeposits.length);
+          return newDeposits;
+        });
+        
         return true;
       } else {
         console.error("Deletion failed but no error was thrown");

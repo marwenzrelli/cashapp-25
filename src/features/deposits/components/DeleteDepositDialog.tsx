@@ -4,6 +4,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { DeleteDepositDialogProps } from "@/features/deposits/types";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { Trash2 } from "lucide-react";
 
 export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
   isOpen,
@@ -45,10 +46,10 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
       // Check the result and show appropriate toast
       if (result === true) {
         // Close the dialog after successful deletion
-        onOpenChange(false);
         toast.success("Versement supprimé avec succès", {
           description: `Le versement de ${selectedDeposit.amount} TND a été supprimé et archivé.`
         });
+        onOpenChange(false);
       } else {
         throw new Error("La suppression n'a pas pu être effectuée");
       }
@@ -64,12 +65,30 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
 
   return (
     <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
+      <AlertDialogContent className="sm:max-w-md">
         <AlertDialogHeader>
-          <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
-          <AlertDialogDescription>
-            Êtes-vous sûr de vouloir supprimer ce versement {selectedDeposit ? `de ${selectedDeposit.amount} TND pour ${selectedDeposit.client_name}` : ''}? 
-            Cette action ne peut pas être annulée, mais le versement sera archivé pour référence.
+          <AlertDialogTitle className="flex items-center gap-2">
+            <div className="rounded-lg bg-red-50 dark:bg-red-950/50 p-2 text-red-600">
+              <Trash2 className="h-5 w-5" />
+            </div>
+            Confirmer la suppression
+          </AlertDialogTitle>
+          <AlertDialogDescription className="space-y-2">
+            <p>Êtes-vous sûr de vouloir supprimer ce versement ?</p>
+            {selectedDeposit && (
+              <div className="rounded-lg border bg-muted/50 p-4 space-y-2">
+                <div className="font-medium text-foreground">
+                  Client : {selectedDeposit.client_name}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Montant : {selectedDeposit.amount.toLocaleString()} TND
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Date : {selectedDeposit.date}
+                </div>
+              </div>
+            )}
+            <p className="text-destructive font-medium">Cette action est irréversible.</p>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -77,7 +96,7 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
           <AlertDialogAction 
             onClick={handleConfirm} 
             disabled={isDeleting}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
           >
             {isDeleting ? "Suppression en cours..." : "Supprimer"}
           </AlertDialogAction>
