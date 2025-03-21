@@ -46,7 +46,7 @@ export const PublicOperationsTable = ({ operations, currency }: PublicOperations
             {sortedOperations.map((operation) => (
               <TableRow key={operation.id}>
                 <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap">
-                  #{formatOperationId(operation.id)}
+                  {formatOperationId(operation.id)}
                 </TableCell>
                 <TableCell className="whitespace-nowrap">
                   <div className="flex items-center gap-2">
