@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Deposit } from "@/features/deposits/types";
+import { Deposit } from "@/components/deposits/types";
 import { showErrorToast } from "@/features/clients/hooks/utils/errorUtils";
 
 export const useDeleteDeposit = (

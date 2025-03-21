@@ -27,12 +27,17 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
     setIsDeleting(true);
     
     try {
-      // Call the onConfirm handler and await its result
-      console.log("Calling onConfirm handler directly...");
-      await onConfirm();
+      // Appel direct de la fonction onConfirm
+      console.log("Calling onConfirm handler for deposit ID:", selectedDeposit.id);
+      const success = await onConfirm();
       
-      // Let the parent component control dialog closing
-      // The dialog will be closed by the parent component when deletion is successful
+      console.log("Deletion result:", success);
+      
+      // Explicitement fermer le dialogue si la suppression a réussi
+      if (success === true) {
+        console.log("Deletion successful, closing dialog");
+        onOpenChange(false);
+      }
     } catch (error) {
       console.error("Error occurred during deletion:", error);
     } finally {

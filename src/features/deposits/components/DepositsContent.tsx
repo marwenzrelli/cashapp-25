@@ -160,7 +160,7 @@ export const DepositsContent = ({
         )}
       </div>
 
-      {/* Make sure to use our component from features/deposits/components, not the old one */}
+      {/* Utilisation de notre composant DeleteDepositDialog des features/deposits/components */}
       <DeleteDepositDialog 
         isOpen={isDeleteDialogOpen} 
         onOpenChange={setIsDeleteDialogOpen} 
