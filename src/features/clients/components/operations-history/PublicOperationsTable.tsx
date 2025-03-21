@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { cn } from "@/lib/utils";
 import { OperationsMobileCard } from "./OperationsMobileCard";
 import { getTypeStyle, getTypeIcon, getTypeLabel } from "@/features/operations/utils/operation-helpers";
-import { getAmountColor, formatOperationId } from "@/features/operations/utils/display-helpers";
+import { getAmountColor } from "@/features/operations/utils/display-helpers";
 
 interface PublicOperationsTableProps {
   operations: Operation[];
@@ -18,6 +18,14 @@ export const PublicOperationsTable = ({ operations, currency }: PublicOperations
     const dateB = new Date(b.operation_date || b.date).getTime();
     return dateB - dateA; // DESC order (newest first)
   });
+
+  // Function to format the operation ID as a 6-digit number
+  const formatOperationId = (id: string): string => {
+    // Extract numeric part from the operation ID
+    const numericId = id.split('-').pop() || '';
+    // Pad with leading zeros to get 6 digits
+    return numericId.padStart(6, '0');
+  };
 
   if (sortedOperations.length === 0) {
     return (
@@ -86,7 +94,10 @@ export const PublicOperationsTable = ({ operations, currency }: PublicOperations
         {sortedOperations.map((operation) => (
           <OperationsMobileCard 
             key={operation.id} 
-            operation={operation}
+            operation={{
+              ...operation,
+              id: formatOperationId(operation.id) // Pass formatted ID to mobile card
+            }}
             formatAmount={(amount) => `${amount < 0 ? "-" : "+"}${Math.abs(amount).toLocaleString()}`}
             currency={currency}
             showType={true}
