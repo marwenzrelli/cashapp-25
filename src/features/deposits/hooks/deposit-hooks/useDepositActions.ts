@@ -1,4 +1,3 @@
-
 import { Deposit, EditFormData } from "@/components/deposits/types";
 import { toast } from "sonner";
 
@@ -30,7 +29,6 @@ export const useDepositActions = ({
   
   const handleDelete = (deposit: Deposit) => {
     console.log("Demande de suppression pour le versement:", deposit);
-    // Définir le dépôt à supprimer et ouvrir immédiatement le dialogue sans délai
     setDepositToDelete(deposit);
     console.log("Opening delete dialog for deposit:", deposit);
     setIsDeleteDialogOpen(true);

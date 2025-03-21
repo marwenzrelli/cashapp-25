@@ -30,12 +30,13 @@ export const useDeleteDeposit = (
       
       // Update UI state after successful deletion
       if (result === true) {
-        console.log("Updating deposits state after successful deletion");
+        console.log("Deletion was successful, updating UI state");
         const numericId = typeof depositId === 'string' ? parseInt(depositId, 10) : depositId;
         setDeposits(prevDeposits => prevDeposits.filter(deposit => deposit.id !== numericId));
         return true;
       } else {
-        throw new Error("Échec de la suppression du dépôt");
+        console.error("Deletion failed but no error was thrown");
+        return false;
       }
     } catch (error) {
       console.error("Error during deleteDeposit function:", error);
@@ -63,13 +64,17 @@ export const useDeleteDeposit = (
       const result = await deleteDeposit(depositId);
       console.log("Delete operation completed with result:", result);
       
-      // Clear the depositToDelete state and close the dialog after a successful deletion
       if (result) {
+        console.log("Successful deletion, clearing state and closing dialog");
+        // Clear the depositToDelete state and close the dialog after a successful deletion
         setDepositToDelete(null);
         setShowDeleteDialog(false);
+        return true;
+      } else {
+        console.error("Deletion returned false without throwing an error");
+        toast.error("La suppression n'a pas pu être effectuée");
+        return false;
       }
-      
-      return result;
     } catch (error) {
       console.error("Error in confirmDeleteDeposit:", error);
       toast.error("Erreur lors de la suppression du versement", {

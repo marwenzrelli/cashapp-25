@@ -3,7 +3,7 @@ import React from "react";
 import { DepositsTable } from "./DepositsTable";
 import { DepositsHeader } from "./DepositsHeader";
 import { SearchBar } from "./SearchBar";
-import { DeleteDepositDialog } from "./DeleteDepositDialog";
+import { DeleteDepositDialog } from "../components/DeleteDepositDialog";
 import { Deposit } from "../types";
 import { useClients } from "@/features/clients/hooks/useClients";
 import { StandaloneDepositForm } from "./DepositForm";
