@@ -1,8 +1,8 @@
 
 import React, { useState } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { DeleteDepositDialogProps } from "@/features/deposits/types";
 import { Trash2 } from "lucide-react";
+import { DeleteDepositDialogProps } from "@/features/deposits/types";
 
 export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
   isOpen,
@@ -31,11 +31,6 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
       console.log("Calling onConfirm handler...");
       const result = await onConfirm();
       console.log("Deletion result:", result);
-      
-      if (result === true) {
-        // Dialog will be closed by the parent component
-        console.log("Deletion successful");
-      }
     } catch (error) {
       console.error("Error occurred during deletion:", error);
     } finally {

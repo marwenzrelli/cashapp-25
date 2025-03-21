@@ -1,4 +1,5 @@
-import { Deposit, EditFormData } from "@/components/deposits/types";
+
+import { Deposit, EditFormData } from "@/features/deposits/types";
 import { toast } from "sonner";
 
 interface UseDepositActionsProps {
@@ -57,6 +58,9 @@ export const useDepositActions = ({
       
       if (success === true) {
         console.log("Delete operation successful");
+        toast.success("Succès", {
+          description: "Le versement a été supprimé avec succès"
+        });
         return true;
       } else {
         console.error("La suppression a échoué");
