@@ -3,7 +3,7 @@ import React from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { DeleteDepositDialogProps } from "@/features/deposits/types";
 import { useState, useEffect } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/use-toast";
 
 export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
   isOpen,
@@ -23,13 +23,21 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
   const handleConfirm = async () => {
     if (!onConfirm) {
       console.error("No onConfirm handler provided");
-      toast.error("Erreur de configuration", { description: "Aucun gestionnaire de suppression n'a été fourni" });
+      toast({
+        variant: "destructive",
+        title: "Erreur de configuration",
+        description: "Aucun gestionnaire de suppression n'a été fourni"
+      });
       return;
     }
     
     if (!selectedDeposit) {
       console.error("No deposit selected for deletion");
-      toast.error("Aucun versement sélectionné", { description: "Veuillez sélectionner un versement à supprimer" });
+      toast({
+        variant: "destructive",
+        title: "Aucun versement sélectionné",
+        description: "Veuillez sélectionner un versement à supprimer"
+      });
       return;
     }
     
@@ -43,7 +51,8 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
       if (result === true) {
         // Close the dialog after successful deletion
         onOpenChange(false);
-        toast.success("Versement supprimé avec succès", {
+        toast({
+          title: "Versement supprimé avec succès",
           description: `Le versement de ${selectedDeposit.amount} TND a été supprimé et archivé.`
         });
       } else {
@@ -51,7 +60,9 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
       }
     } catch (error) {
       console.error("Error occurred during deletion:", error);
-      toast.error("Erreur lors de la suppression", {
+      toast({
+        variant: "destructive",
+        title: "Erreur lors de la suppression",
         description: error instanceof Error ? error.message : "Une erreur inconnue est survenue"
       });
     } finally {

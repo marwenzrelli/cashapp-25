@@ -1,5 +1,6 @@
+
 import { Deposit, EditFormData } from "@/components/deposits/types";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/use-toast";
 
 interface UseDepositActionsProps {
   createDeposit: (deposit: Deposit) => Promise<boolean | void>;
@@ -40,7 +41,11 @@ export const useDepositActions = ({
     console.log("confirmDelete called, selectedDeposit:", selectedDeposit);
     
     if (!selectedDeposit) {
-      toast.error("Aucun versement sélectionné");
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Aucun versement sélectionné"
+      });
       return false;
     }
     
@@ -55,7 +60,9 @@ export const useDepositActions = ({
         return true;
       } else {
         console.error("La suppression a échoué mais sans erreur lancée");
-        toast.error("Échec de la suppression du versement", {
+        toast({
+          variant: "destructive",
+          title: "Échec de la suppression",
           description: "La suppression n'a pas pu être effectuée. Veuillez réessayer."
         });
         return false;
@@ -67,7 +74,9 @@ export const useDepositActions = ({
         error: error
       });
       
-      toast.error("Échec de la suppression du versement", {
+      toast({
+        variant: "destructive",
+        title: "Échec de la suppression",
         description: error.message || "Une erreur est survenue lors de la suppression"
       });
       return false;
@@ -103,15 +112,20 @@ export const useDepositActions = ({
       const result = await updateDeposit(selectedDeposit.id, updates);
       if (result === true) {
         setIsEditDialogOpen(false);
-        toast.success("Versement mis à jour", {
-          description: `Le versement a été modifié avec succ��s.`
+        toast({
+          title: "Succès",
+          description: "Le versement a été modifié avec succès."
         });
         return true;
       }
       return false;
     } catch (error) {
       console.error("Error during deposit update:", error);
-      toast.error("Échec de la mise à jour du versement");
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Échec de la mise à jour du versement"
+      });
       return false;
     }
   };
@@ -126,7 +140,11 @@ export const useDepositActions = ({
       return false;
     } catch (error) {
       console.error("Error creating deposit:", error);
-      toast.error("Échec de la création du versement");
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Échec de la création du versement"
+      });
       return false;
     }
   };
