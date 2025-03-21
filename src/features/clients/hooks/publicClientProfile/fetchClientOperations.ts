@@ -30,7 +30,7 @@ export const fetchClientOperations = async (clientFullName: string, token?: stri
       .from('deposits')
       .select('*')
       .ilike('client_name', `%${clientFullName}%`)
-      .order('created_at', { ascending: false });
+      .order('operation_date', { ascending: false });
 
     if (depositsError) {
       console.error("Error fetching deposits:", depositsError);
@@ -44,7 +44,7 @@ export const fetchClientOperations = async (clientFullName: string, token?: stri
       .from('withdrawals')
       .select('*')
       .ilike('client_name', `%${clientFullName}%`)
-      .order('created_at', { ascending: false });
+      .order('operation_date', { ascending: false });
 
     if (withdrawalsError) {
       console.error("Error fetching withdrawals:", withdrawalsError);
@@ -58,7 +58,7 @@ export const fetchClientOperations = async (clientFullName: string, token?: stri
       .from('transfers')
       .select('*')
       .ilike('from_client', `%${clientFullName}%`)
-      .order('created_at', { ascending: false });
+      .order('operation_date', { ascending: false });
 
     if (senderError) {
       console.error("Error fetching transfers as sender:", senderError);
@@ -72,7 +72,7 @@ export const fetchClientOperations = async (clientFullName: string, token?: stri
       .from('transfers')
       .select('*')
       .ilike('to_client', `%${clientFullName}%`)
-      .order('created_at', { ascending: false });
+      .order('operation_date', { ascending: false });
 
     if (receiverError) {
       console.error("Error fetching transfers as receiver:", receiverError);
@@ -87,6 +87,7 @@ export const fetchClientOperations = async (clientFullName: string, token?: stri
         id: `deposit-${d.id}`,
         type: "deposit" as const,
         date: new Date(d.created_at).toLocaleDateString(),
+        operation_date: d.operation_date || d.created_at,
         amount: Number(d.amount),
         description: d.notes || "Versement",
         fromClient: clientFullName
@@ -95,6 +96,7 @@ export const fetchClientOperations = async (clientFullName: string, token?: stri
         id: `withdrawal-${w.id}`,
         type: "withdrawal" as const,
         date: new Date(w.created_at).toLocaleDateString(),
+        operation_date: w.operation_date || w.created_at,
         amount: Number(w.amount),
         description: w.notes || "Retrait",
         fromClient: clientFullName
@@ -103,6 +105,7 @@ export const fetchClientOperations = async (clientFullName: string, token?: stri
         id: `transfer-out-${t.id}`,
         type: "transfer" as const,
         date: new Date(t.created_at).toLocaleDateString(),
+        operation_date: t.operation_date || t.created_at,
         amount: -Number(t.amount), // Negative amount for outgoing transfers
         description: t.reason || `Virement vers ${t.to_client}`,
         fromClient: t.from_client,
@@ -112,12 +115,18 @@ export const fetchClientOperations = async (clientFullName: string, token?: stri
         id: `transfer-in-${t.id}`,
         type: "transfer" as const,
         date: new Date(t.created_at).toLocaleDateString(),
+        operation_date: t.operation_date || t.created_at,
         amount: Number(t.amount), // Positive amount for incoming transfers
         description: t.reason || `Virement reçu de ${t.from_client}`,
         fromClient: t.from_client,
         toClient: t.to_client
       }))
-    ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    ].sort((a, b) => {
+      // Sort by operation_date if available
+      const dateA = new Date(a.operation_date || a.date).getTime();
+      const dateB = new Date(b.operation_date || b.date).getTime();
+      return dateB - dateA; // Sort by most recent first
+    });
 
     console.log(`Retrieved ${allOperations.length} operations for client ${clientFullName}`);
     return allOperations;

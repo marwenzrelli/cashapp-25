@@ -13,7 +13,14 @@ interface PublicOperationsTableProps {
 }
 
 export const PublicOperationsTable = ({ operations, currency }: PublicOperationsTableProps) => {
-  if (operations.length === 0) {
+  // Sort operations by operation_date if available, otherwise by date
+  const sortedOperations = [...operations].sort((a, b) => {
+    const dateA = new Date(a.operation_date || a.date).getTime();
+    const dateB = new Date(b.operation_date || b.date).getTime();
+    return dateB - dateA; // DESC order (newest first)
+  });
+
+  if (sortedOperations.length === 0) {
     return (
       <div className="text-center py-8">
         <p className="text-muted-foreground">Aucune opération trouvée</p>
@@ -37,7 +44,7 @@ export const PublicOperationsTable = ({ operations, currency }: PublicOperations
             </TableRow>
           </TableHeader>
           <TableBody>
-            {operations.map((operation) => (
+            {sortedOperations.map((operation) => (
               <TableRow key={operation.id}>
                 <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap">
                   #{formatOperationId(operation.id)}
@@ -51,7 +58,7 @@ export const PublicOperationsTable = ({ operations, currency }: PublicOperations
                   </div>
                 </TableCell>
                 <TableCell className="text-muted-foreground whitespace-nowrap">
-                  {operation.formattedDate || operation.date}
+                  {operation.formattedDate || new Date(operation.operation_date || operation.date).toLocaleDateString()}
                 </TableCell>
                 <TableCell className="max-w-[150px] truncate">{operation.description}</TableCell>
                 <TableCell className={cn("font-medium whitespace-nowrap", getAmountColor(operation.type))}>
@@ -75,7 +82,7 @@ export const PublicOperationsTable = ({ operations, currency }: PublicOperations
       
       {/* Enhanced cards for mobile */}
       <div className="md:hidden space-y-4 px-0 py-2 sm:py-4 w-full">
-        {operations.map((operation) => (
+        {sortedOperations.map((operation) => (
           <OperationsMobileCard 
             key={operation.id} 
             operation={operation}
