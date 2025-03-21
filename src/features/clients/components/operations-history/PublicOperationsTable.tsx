@@ -4,8 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { cn } from "@/lib/utils";
 import { OperationsMobileCard } from "./OperationsMobileCard";
 import { getTypeStyle, getTypeIcon, getTypeLabel } from "@/features/operations/utils/operation-helpers";
-import { getAmountColor } from "@/features/operations/utils/display-helpers";
-import { formatOperationId } from "@/features/operations/utils/display-helpers";
+import { getAmountColor, formatOperationId } from "@/features/operations/utils/display-helpers";
 
 interface PublicOperationsTableProps {
   operations: Operation[];
@@ -39,7 +38,7 @@ export const PublicOperationsTable = ({ operations, currency }: PublicOperations
               <TableHead className="whitespace-nowrap">Type</TableHead>
               <TableHead className="whitespace-nowrap">Date</TableHead>
               <TableHead>Description</TableHead>
-              <TableHead className="whitespace-nowrap">Montant</TableHead>
+              <TableHead className="whitespace-nowrap text-right">Montant</TableHead>
               <TableHead className="whitespace-nowrap">Client</TableHead>
             </TableRow>
           </TableHeader>
@@ -60,9 +59,11 @@ export const PublicOperationsTable = ({ operations, currency }: PublicOperations
                 <TableCell className="text-muted-foreground whitespace-nowrap">
                   {operation.formattedDate || new Date(operation.operation_date || operation.date).toLocaleDateString()}
                 </TableCell>
-                <TableCell className="max-w-[150px] truncate">{operation.description}</TableCell>
-                <TableCell className={cn("font-medium whitespace-nowrap", getAmountColor(operation.type))}>
-                  {operation.type === "withdrawal" ? "-" : ""}{operation.amount.toLocaleString()} {currency}
+                <TableCell className="max-w-[250px] truncate">{operation.description}</TableCell>
+                <TableCell className={cn("font-medium whitespace-nowrap text-right", getAmountColor(operation.type))}>
+                  {operation.type === "withdrawal" || (operation.type === "transfer" && operation.amount < 0) 
+                    ? "-" 
+                    : "+"}{Math.abs(operation.amount).toLocaleString()} {currency}
                 </TableCell>
                 <TableCell className="max-w-[150px]">
                   {operation.type === "transfer" ? (
@@ -86,7 +87,7 @@ export const PublicOperationsTable = ({ operations, currency }: PublicOperations
           <OperationsMobileCard 
             key={operation.id} 
             operation={operation}
-            formatAmount={(amount) => `${amount.toLocaleString()}`}
+            formatAmount={(amount) => `${amount < 0 ? "-" : "+"}${Math.abs(amount).toLocaleString()}`}
             currency={currency}
             showType={true}
             colorClass={getAmountColor(operation.type)}
