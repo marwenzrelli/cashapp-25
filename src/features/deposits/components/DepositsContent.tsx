@@ -1,3 +1,4 @@
+
 import React from "react";
 import { DepositsTable } from "./DepositsTable";
 import { DepositsHeader } from "./DepositsHeader";
@@ -159,6 +160,7 @@ export const DepositsContent = ({
         )}
       </div>
 
+      {/* Make sure to use our component from features/deposits/components, not the old one */}
       <DeleteDepositDialog 
         isOpen={isDeleteDialogOpen} 
         onOpenChange={setIsDeleteDialogOpen} 

@@ -1,6 +1,7 @@
 
 import { Deposit, EditFormData } from "@/features/deposits/types";
 import { toast } from "sonner";
+import { showErrorToast } from "@/features/clients/hooks/utils/errorUtils";
 
 interface UseDepositActionsProps {
   createDeposit: (deposit: Deposit) => Promise<boolean | void>;
@@ -63,22 +64,19 @@ export const useDepositActions = ({
         toast.success("Succès", {
           description: "Le versement a été supprimé avec succès"
         });
-        setIsDeleteDialogOpen(false);
         return true;
       } else {
         console.error("La suppression a échoué");
         return false;
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Erreur détaillée lors de la suppression:", {
         message: error.message,
         stack: error.stack,
         error: error
       });
       
-      toast.error("Échec de la suppression", {
-        description: error.message || "Une erreur est survenue lors de la suppression"
-      });
+      showErrorToast("Échec de la suppression", error);
       return false;
     } finally {
       setIsDeleting(false);
@@ -109,7 +107,18 @@ export const useDepositActions = ({
     console.log("Final updates being sent:", updates);
 
     try {
-      const result = await updateDeposit(selectedDeposit.id, updates);
+      // Ensure the ID is properly converted to a number
+      const depositId = typeof selectedDeposit.id === 'string' 
+        ? parseInt(selectedDeposit.id, 10) 
+        : selectedDeposit.id;
+      
+      if (isNaN(depositId)) {
+        console.error("Invalid deposit ID format:", selectedDeposit.id);
+        toast.error("Format d'ID invalide");
+        return false;
+      }
+      
+      const result = await updateDeposit(depositId, updates);
       if (result === true) {
         setIsEditDialogOpen(false);
         toast.success("Succès", {
@@ -120,9 +129,7 @@ export const useDepositActions = ({
       return false;
     } catch (error) {
       console.error("Error during deposit update:", error);
-      toast.error("Erreur", {
-        description: "Échec de la mise à jour du versement"
-      });
+      showErrorToast("Erreur", error);
       return false;
     }
   };
@@ -137,9 +144,7 @@ export const useDepositActions = ({
       return false;
     } catch (error) {
       console.error("Error creating deposit:", error);
-      toast.error("Erreur", {
-        description: "Échec de la création du versement"
-      });
+      showErrorToast("Erreur", error);
       return false;
     }
   };

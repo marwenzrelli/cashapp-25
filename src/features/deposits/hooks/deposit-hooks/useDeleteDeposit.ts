@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Deposit } from "@/features/deposits/types";
+import { showErrorToast } from "@/features/clients/hooks/utils/errorUtils";
 
 export const useDeleteDeposit = (
   deposits: Deposit[],
@@ -14,7 +15,7 @@ export const useDeleteDeposit = (
   const deleteDeposit = async (depositId: number): Promise<boolean> => {
     console.log(`Calling deleteDeposit function with ID: ${depositId} (type: ${typeof depositId})`);
     
-    if (isNaN(depositId) || depositId <= 0) {
+    if (!depositId || isNaN(depositId) || depositId <= 0) {
       console.error("Invalid deposit ID:", depositId);
       toast.error("ID de versement invalide");
       return false;
@@ -98,9 +99,7 @@ export const useDeleteDeposit = (
       return true;
     } catch (error) {
       console.error("Error during deleteDeposit function:", error);
-      toast.error("Erreur lors de la suppression du versement", {
-        description: error instanceof Error ? error.message : "Une erreur inconnue est survenue"
-      });
+      showErrorToast("Erreur lors de la suppression du versement", error);
       return false;
     } finally {
       console.log("Setting isLoading to false");
@@ -118,8 +117,17 @@ export const useDeleteDeposit = (
     }
     
     try {
-      // Make sure we're working with a valid deposit ID
-      const depositId = depositToDelete.id;
+      // Ensure we're working with a number type ID
+      const depositId = typeof depositToDelete.id === 'string' 
+        ? parseInt(depositToDelete.id, 10) 
+        : depositToDelete.id;
+      
+      if (isNaN(depositId)) {
+        console.error("Invalid deposit ID format:", depositToDelete.id);
+        toast.error("Format d'ID invalide");
+        return false;
+      }
+      
       console.log("Attempting to delete deposit with ID:", depositId, "type:", typeof depositId);
       
       const result = await deleteDeposit(depositId);
@@ -138,9 +146,7 @@ export const useDeleteDeposit = (
       }
     } catch (error) {
       console.error("Error in confirmDeleteDeposit:", error);
-      toast.error("Erreur lors de la suppression du versement", {
-        description: error instanceof Error ? error.message : "Une erreur inconnue est survenue"
-      });
+      showErrorToast("Erreur lors de la suppression du versement", error);
       return false;
     }
   };
