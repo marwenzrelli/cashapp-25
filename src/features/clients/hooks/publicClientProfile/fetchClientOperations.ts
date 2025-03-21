@@ -1,137 +1,131 @@
 
+import { Operation } from "@/features/operations/types";
 import { supabase } from "@/integrations/supabase/client";
 import { ClientOperation } from "./types";
-import { showErrorToast } from "../utils/errorUtils";
 
-export const fetchClientOperations = async (clientFullName: string, token?: string): Promise<ClientOperation[]> => {
+/**
+ * Fetches all operations for a client based on their ID
+ * @param clientId The client ID to fetch operations for
+ * @param clientFullName The full name of the client (for display purposes)
+ * @returns A promise that resolves to an array of operations
+ */
+export const fetchClientOperations = async (
+  clientId: number,
+  clientFullName: string
+): Promise<ClientOperation[]> => {
   try {
-    console.log("Fetching operations for client:", clientFullName, "with token:", token ? `${token.substring(0, 8)}...` : "none");
-    
-    // Validate client name
-    if (!clientFullName || clientFullName.trim() === '') {
-      console.error("Invalid client full name:", clientFullName);
+    if (!clientId) {
+      console.error("Client ID is required to fetch operations");
       return [];
     }
-    
-    // If we have a token, set it in the Supabase client auth header
-    let authHeader = {};
-    if (token) {
-      authHeader = {
-        global: {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      };
-    }
 
-    // Fetch deposits
+    console.log(`Fetching operations for client ID: ${clientId}, name: ${clientFullName}`);
+
+    // Fetch deposits where this client is the depositor
     const { data: deposits, error: depositsError } = await supabase
-      .from('deposits')
-      .select('*')
-      .ilike('client_name', `%${clientFullName}%`)
-      .order('operation_date', { ascending: false });
+      .from("deposits")
+      .select("*")
+      .eq("client_id", clientId)
+      .order("created_at", { ascending: false });
 
     if (depositsError) {
       console.error("Error fetching deposits:", depositsError);
-      showErrorToast("Erreur de données", { message: "Erreur lors de la récupération des dépôts" });
+      throw new Error(`Error fetching deposits: ${depositsError.message}`);
     }
-    
-    console.log(`Found ${deposits?.length || 0} deposits for client:`, clientFullName);
 
-    // Fetch withdrawals
+    // Fetch withdrawals where this client is the withdrawer
     const { data: withdrawals, error: withdrawalsError } = await supabase
-      .from('withdrawals')
-      .select('*')
-      .ilike('client_name', `%${clientFullName}%`)
-      .order('operation_date', { ascending: false });
+      .from("withdrawals")
+      .select("*")
+      .eq("client_id", clientId)
+      .order("created_at", { ascending: false });
 
     if (withdrawalsError) {
       console.error("Error fetching withdrawals:", withdrawalsError);
-      showErrorToast("Erreur de données", { message: "Erreur lors de la récupération des retraits" });
+      throw new Error(`Error fetching withdrawals: ${withdrawalsError.message}`);
     }
-    
-    console.log(`Found ${withdrawals?.length || 0} withdrawals for client:`, clientFullName);
 
-    // Fetch transfers (as sender)
-    const { data: transfersAsSender, error: senderError } = await supabase
-      .from('transfers')
-      .select('*')
-      .ilike('from_client', `%${clientFullName}%`)
-      .order('operation_date', { ascending: false });
+    // Fetch transfers where this client is the sender
+    const { data: transfersAsSender, error: transfersAsSenderError } = await supabase
+      .from("transfers")
+      .select("*")
+      .eq("from_client_id", clientId)
+      .order("created_at", { ascending: false });
 
-    if (senderError) {
-      console.error("Error fetching transfers as sender:", senderError);
-      showErrorToast("Erreur de données", { message: "Erreur lors de la récupération des virements envoyés" });
+    if (transfersAsSenderError) {
+      console.error("Error fetching transfers as sender:", transfersAsSenderError);
+      throw new Error(`Error fetching transfers as sender: ${transfersAsSenderError.message}`);
     }
-    
-    console.log(`Found ${transfersAsSender?.length || 0} transfers as sender for client:`, clientFullName);
 
-    // Fetch transfers (as receiver)
-    const { data: transfersAsReceiver, error: receiverError } = await supabase
-      .from('transfers')
-      .select('*')
-      .ilike('to_client', `%${clientFullName}%`)
-      .order('operation_date', { ascending: false });
+    // Fetch transfers where this client is the receiver
+    const { data: transfersAsReceiver, error: transfersAsReceiverError } = await supabase
+      .from("transfers")
+      .select("*")
+      .eq("to_client_id", clientId)
+      .order("created_at", { ascending: false });
 
-    if (receiverError) {
-      console.error("Error fetching transfers as receiver:", receiverError);
-      showErrorToast("Erreur de données", { message: "Erreur lors de la récupération des virements reçus" });
+    if (transfersAsReceiverError) {
+      console.error("Error fetching transfers as receiver:", transfersAsReceiverError);
+      throw new Error(`Error fetching transfers as receiver: ${transfersAsReceiverError.message}`);
     }
-    
-    console.log(`Found ${transfersAsReceiver?.length || 0} transfers as receiver for client:`, clientFullName);
+
+    console.log("Operations fetched:", {
+      deposits: deposits?.length || 0,
+      withdrawals: withdrawals?.length || 0,
+      transfersAsSender: transfersAsSender?.length || 0,
+      transfersAsReceiver: transfersAsReceiver?.length || 0,
+    });
 
     // Format and combine all operations
     const allOperations: ClientOperation[] = [
       ...(deposits || []).map(d => ({
-        id: `#deposi`,
+        id: d.id.toString(),
         type: "deposit" as const,
         date: new Date(d.created_at).toLocaleDateString(),
         operation_date: d.operation_date || d.created_at,
-        amount: Number(d.amount),
-        description: d.notes || "Versement",
+        description: d.notes || `Versement de ${clientFullName}`,
+        amount: d.amount,
         fromClient: clientFullName
       })),
       ...(withdrawals || []).map(w => ({
-        id: `#withdr`,
+        id: w.id.toString(),
         type: "withdrawal" as const,
         date: new Date(w.created_at).toLocaleDateString(),
         operation_date: w.operation_date || w.created_at,
-        amount: Number(w.amount),
-        description: w.notes || "Retrait",
+        description: w.notes || `Retrait par ${clientFullName}`,
+        amount: w.amount,
         fromClient: clientFullName
       })),
       ...(transfersAsSender || []).map(t => ({
-        id: `#transf`,
+        id: t.id.toString(),
         type: "transfer" as const,
         date: new Date(t.created_at).toLocaleDateString(),
         operation_date: t.operation_date || t.created_at,
-        amount: -Number(t.amount), // Negative amount for outgoing transfers
         description: t.reason || `Virement vers ${t.to_client}`,
-        fromClient: t.from_client,
+        amount: -t.amount, // Negative amount for outgoing transfers
+        fromClient: clientFullName,
         toClient: t.to_client
       })),
       ...(transfersAsReceiver || []).map(t => ({
-        id: `#transf`,
+        id: t.id.toString(),
         type: "transfer" as const,
         date: new Date(t.created_at).toLocaleDateString(),
         operation_date: t.operation_date || t.created_at,
-        amount: Number(t.amount), // Positive amount for incoming transfers
-        description: t.reason || `Virement reçu de ${t.from_client}`,
+        description: t.reason || `Virement de ${t.from_client}`,
+        amount: t.amount, // Positive amount for incoming transfers
         fromClient: t.from_client,
-        toClient: t.to_client
+        toClient: clientFullName
       }))
     ].sort((a, b) => {
-      // Sort by operation_date if available
-      const dateA = new Date(a.operation_date || a.date).getTime();
-      const dateB = new Date(b.operation_date || b.date).getTime();
-      return dateB - dateA; // Sort by most recent first
+      const dateA = new Date(a.operation_date).getTime();
+      const dateB = new Date(b.operation_date).getTime();
+      return dateB - dateA; // Sort by date, newest first
     });
 
-    console.log(`Retrieved ${allOperations.length} operations for client ${clientFullName}`);
+    console.log(`Total combined operations: ${allOperations.length}`);
     return allOperations;
   } catch (error) {
     console.error("Error in fetchClientOperations:", error);
-    return [];
+    throw error;
   }
 };
