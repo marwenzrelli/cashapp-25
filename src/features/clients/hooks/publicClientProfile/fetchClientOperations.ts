@@ -84,7 +84,7 @@ export const fetchClientOperations = async (clientFullName: string, token?: stri
     // Format and combine all operations
     const allOperations: ClientOperation[] = [
       ...(deposits || []).map(d => ({
-        id: `deposit-${d.id}`,
+        id: `#deposi`,
         type: "deposit" as const,
         date: new Date(d.created_at).toLocaleDateString(),
         operation_date: d.operation_date || d.created_at,
@@ -93,7 +93,7 @@ export const fetchClientOperations = async (clientFullName: string, token?: stri
         fromClient: clientFullName
       })),
       ...(withdrawals || []).map(w => ({
-        id: `withdrawal-${w.id}`,
+        id: `#withdr`,
         type: "withdrawal" as const,
         date: new Date(w.created_at).toLocaleDateString(),
         operation_date: w.operation_date || w.created_at,
@@ -102,7 +102,7 @@ export const fetchClientOperations = async (clientFullName: string, token?: stri
         fromClient: clientFullName
       })),
       ...(transfersAsSender || []).map(t => ({
-        id: `transfer-out-${t.id}`,
+        id: `#transf`,
         type: "transfer" as const,
         date: new Date(t.created_at).toLocaleDateString(),
         operation_date: t.operation_date || t.created_at,
@@ -112,7 +112,7 @@ export const fetchClientOperations = async (clientFullName: string, token?: stri
         toClient: t.to_client
       })),
       ...(transfersAsReceiver || []).map(t => ({
-        id: `transfer-in-${t.id}`,
+        id: `#transf`,
         type: "transfer" as const,
         date: new Date(t.created_at).toLocaleDateString(),
         operation_date: t.operation_date || t.created_at,
