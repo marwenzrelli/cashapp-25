@@ -24,6 +24,7 @@ export const useDeleteDeposit = (
       console.log("Got user ID from session:", userId);
 
       // Use the utility function to handle deletion
+      console.log("Calling handleDepositDeletion utility function");
       const result = await handleDepositDeletion(depositId, userId);
       console.log("Deposit deletion result:", result);
       

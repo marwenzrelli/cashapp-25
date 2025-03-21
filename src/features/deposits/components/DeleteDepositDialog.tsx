@@ -37,9 +37,12 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
     setIsDeleting(true);
     
     try {
+      // Call the onConfirm handler and await its result
+      console.log("Calling onConfirm handler...");
       const result = await onConfirm();
       console.log("Deletion result:", result);
       
+      // Check the result and show appropriate toast
       if (result === true) {
         // Close the dialog after successful deletion
         onOpenChange(false);

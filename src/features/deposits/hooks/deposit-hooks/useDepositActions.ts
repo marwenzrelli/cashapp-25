@@ -51,9 +51,13 @@ export const useDepositActions = ({
     console.log("Confirmation de suppression pour:", selectedDeposit);
     
     try {
+      // Call the actual delete function and await its result
+      console.log("Calling confirmDeleteDeposit function...");
       const success = await confirmDeleteDeposit();
+      console.log("Delete operation result:", success);
       
       if (success === true) {
+        console.log("Delete operation successful, closing dialog");
         setIsDeleteDialogOpen(false);
         return true;
       } else {
