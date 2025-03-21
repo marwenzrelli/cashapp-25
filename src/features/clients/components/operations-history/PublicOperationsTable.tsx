@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { cn } from "@/lib/utils";
 import { OperationsMobileCard } from "./OperationsMobileCard";
 import { getTypeStyle, getTypeIcon, getTypeLabel } from "@/features/operations/utils/operation-helpers";
-import { getAmountColor } from "@/features/operations/utils/display-helpers";
+import { getAmountColor, formatOperationId } from "@/features/operations/utils/display-helpers";
 
 interface PublicOperationsTableProps {
   operations: Operation[];
@@ -27,22 +27,6 @@ export const PublicOperationsTable = ({ operations, currency }: PublicOperations
     );
   }
 
-  // Function to get operation prefix based on type
-  const getOperationIdPrefix = (operationType: string, id: string) => {
-    if (id.startsWith("#")) return id; // If ID already has prefix, return as is
-    
-    switch (operationType) {
-      case "deposit":
-        return `#deposi`;
-      case "withdrawal":
-        return `#withdr`;
-      case "transfer":
-        return `#transf`;
-      default:
-        return `#${operationType.substring(0, 6)}`;
-    }
-  };
-
   return (
     <>
       {/* Table for desktop */}
@@ -62,7 +46,7 @@ export const PublicOperationsTable = ({ operations, currency }: PublicOperations
             {sortedOperations.map((operation) => (
               <TableRow key={operation.id}>
                 <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap">
-                  {getOperationIdPrefix(operation.type, operation.id)}
+                  {formatOperationId(operation.id)}
                 </TableCell>
                 <TableCell className="whitespace-nowrap">
                   <div className="flex items-center gap-2">
@@ -102,10 +86,7 @@ export const PublicOperationsTable = ({ operations, currency }: PublicOperations
         {sortedOperations.map((operation) => (
           <OperationsMobileCard 
             key={operation.id} 
-            operation={{
-              ...operation,
-              id: getOperationIdPrefix(operation.type, operation.id)
-            }}
+            operation={operation}
             formatAmount={(amount) => `${amount < 0 ? "-" : "+"}${Math.abs(amount).toLocaleString()}`}
             currency={currency}
             showType={true}
