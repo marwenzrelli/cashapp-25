@@ -23,14 +23,14 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
       return;
     }
     
-    console.log("Starting deposit deletion process for ID:", selectedDeposit.id);
+    console.log("Starting deposit deletion process for ID:", selectedDeposit.id, "of type:", typeof selectedDeposit.id);
     setIsDeleting(true);
     
     try {
       // Call the onConfirm handler and await its result
       console.log("Calling onConfirm handler...");
-      const result = await onConfirm();
-      console.log("Deletion result:", result);
+      await onConfirm();
+      // The dialog will be closed by the parent component
     } catch (error) {
       console.error("Error occurred during deletion:", error);
     } finally {

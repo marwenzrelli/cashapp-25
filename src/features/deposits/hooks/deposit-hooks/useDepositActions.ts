@@ -30,6 +30,7 @@ export const useDepositActions = ({
   
   const handleDelete = (deposit: Deposit) => {
     console.log("Demande de suppression pour le versement:", deposit);
+    console.log("Deposit ID:", deposit.id, "type:", typeof deposit.id);
     setDepositToDelete(deposit);
     console.log("Opening delete dialog for deposit:", deposit);
     setIsDeleteDialogOpen(true);
@@ -49,6 +50,7 @@ export const useDepositActions = ({
     
     setIsDeleting(true);
     console.log("Confirmation de suppression pour:", selectedDeposit);
+    console.log("Deposit ID to delete:", selectedDeposit.id, "type:", typeof selectedDeposit.id);
     
     try {
       // Call the actual delete function and await its result
@@ -61,6 +63,7 @@ export const useDepositActions = ({
         toast.success("Succès", {
           description: "Le versement a été supprimé avec succès"
         });
+        setIsDeleteDialogOpen(false);
         return true;
       } else {
         console.error("La suppression a échoué");
