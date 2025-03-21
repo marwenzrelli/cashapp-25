@@ -29,8 +29,7 @@ export const fetchClientOperations = async (clientFullName: string, token?: stri
     const { data: deposits, error: depositsError } = await supabase
       .from('deposits')
       .select('*')
-      .ilike('client_name', `%${clientFullName}%`)
-      .order('operation_date', { ascending: false });
+      .ilike('client_name', `%${clientFullName}%`);
 
     if (depositsError) {
       console.error("Error fetching deposits:", depositsError);
@@ -43,8 +42,7 @@ export const fetchClientOperations = async (clientFullName: string, token?: stri
     const { data: withdrawals, error: withdrawalsError } = await supabase
       .from('withdrawals')
       .select('*')
-      .ilike('client_name', `%${clientFullName}%`)
-      .order('operation_date', { ascending: false });
+      .ilike('client_name', `%${clientFullName}%`);
 
     if (withdrawalsError) {
       console.error("Error fetching withdrawals:", withdrawalsError);
@@ -57,8 +55,7 @@ export const fetchClientOperations = async (clientFullName: string, token?: stri
     const { data: transfersAsSender, error: senderError } = await supabase
       .from('transfers')
       .select('*')
-      .ilike('from_client', `%${clientFullName}%`)
-      .order('operation_date', { ascending: false });
+      .ilike('from_client', `%${clientFullName}%`);
 
     if (senderError) {
       console.error("Error fetching transfers as sender:", senderError);
@@ -71,8 +68,7 @@ export const fetchClientOperations = async (clientFullName: string, token?: stri
     const { data: transfersAsReceiver, error: receiverError } = await supabase
       .from('transfers')
       .select('*')
-      .ilike('to_client', `%${clientFullName}%`)
-      .order('operation_date', { ascending: false });
+      .ilike('to_client', `%${clientFullName}%`);
 
     if (receiverError) {
       console.error("Error fetching transfers as receiver:", receiverError);
