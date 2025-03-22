@@ -64,14 +64,14 @@ export const MobileDepositsTable = ({
               />
             </div>
             
-            <div className="text-sm text-muted-foreground mb-3 px-2">
-              <div className="flex items-center gap-1 mb-1.5">
+            <div className="text-sm text-muted-foreground mb-1">
+              <div className="flex items-center gap-1 mb-1">
                 <DepositDateInfo deposit={deposit} />
               </div>
-              <p className="mt-1.5 line-clamp-2 text-muted-foreground/80 bg-gray-50/50 dark:bg-gray-800/30 px-3 py-2 rounded-lg">{deposit.description}</p>
+              <p className="mt-1 line-clamp-2 text-muted-foreground/80 bg-gray-50/50 dark:bg-gray-800/30 px-3 py-1.5 rounded-lg">{deposit.description}</p>
             </div>
             
-            <div className="flex justify-end">
+            <div className="flex justify-end mt-1">
               <DepositActions 
                 deposit={deposit} 
                 onEdit={onEdit} 
