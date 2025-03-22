@@ -61,11 +61,15 @@ export const ClientListItem = ({
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <UserCircle className="h-7 w-7 text-primary/80 flex-shrink-0" />
-          <span className="font-extrabold text-sm tracking-tight">
+          <span className="font-extrabold text-sm tracking-tight px-2 py-1 rounded-md bg-purple-50 dark:bg-purple-900/20">
             {client.prenom} {client.nom}
           </span>
         </div>
-        <span className={`font-mono text-sm font-semibold ${client.solde >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+        <span className={`font-mono text-sm font-semibold px-2 py-1 rounded-md ${
+          client.solde >= 0 
+            ? 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20' 
+            : 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20'
+        }`}>
           {client.solde.toLocaleString()} {currency}
         </span>
       </div>

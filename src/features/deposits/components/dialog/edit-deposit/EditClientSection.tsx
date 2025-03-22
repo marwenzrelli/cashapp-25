@@ -27,7 +27,7 @@ export const EditClientSection: React.FC<EditClientSectionProps> = ({
         value={editForm.clientName} 
         onValueChange={(value) => onEditFormChange('clientName', value)}
       >
-        <SelectTrigger id="clientSelect" className="relative pl-10 border rounded-lg bg-gray-50">
+        <SelectTrigger id="clientSelect" className="relative pl-10 border rounded-lg bg-purple-50 dark:bg-purple-900/20">
           <User className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
           <SelectValue placeholder="Sélectionner un client" />
         </SelectTrigger>
@@ -36,6 +36,7 @@ export const EditClientSection: React.FC<EditClientSectionProps> = ({
             <SelectItem 
               key={client.id} 
               value={`${client.prenom} ${client.nom}`}
+              className="bg-purple-50 dark:bg-purple-900/20 my-1 rounded-md"
             >
               {client.prenom} {client.nom}
               {client.solde < 0 && (

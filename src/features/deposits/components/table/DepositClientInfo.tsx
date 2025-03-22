@@ -112,7 +112,7 @@ export const DepositClientInfo = ({ clientName, depositId }: DepositClientInfoPr
       </div>
       <div>
         <p 
-          className="font-medium cursor-pointer hover:text-primary hover:underline transition-colors flex items-center gap-1"
+          className="font-medium cursor-pointer hover:text-primary hover:underline transition-colors flex items-center gap-1 px-2 py-1 rounded-md bg-purple-50 dark:bg-purple-900/20"
           onClick={navigateToProfile}
         >
           {clientName}
