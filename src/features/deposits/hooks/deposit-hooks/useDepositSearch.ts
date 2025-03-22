@@ -1,104 +1,75 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Deposit } from "@/components/deposits/types";
+import { isWithinInterval } from "date-fns";
+import { DateRange } from "react-day-picker";
 
 export const useDepositSearch = (deposits: Deposit[]) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState("10");
-  const [filteredDeposits, setFilteredDeposits] = useState<Deposit[]>([]);
-  const [paginatedDeposits, setPaginatedDeposits] = useState<Deposit[]>([]);
-  const [totalItems, setTotalItems] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
-  // Update filtered deposits whenever deposits or search term changes
-  useEffect(() => {
-    console.log("Filter effect running with deposits:", deposits?.length);
+  // Filter deposits based on search term and date range
+  const filteredDeposits = useMemo(() => {
+    if (!deposits) return [];
     
-    if (!deposits || deposits.length === 0) {
-      console.log("No deposits to filter");
-      setFilteredDeposits([]);
-      return;
-    }
-
-    const filtered = deposits.filter(deposit => {
-      // If search term is empty, return all deposits
-      if (!searchTerm.trim()) return true;
+    return deposits.filter((deposit) => {
+      // Search term filter
+      const searchMatch = 
+        !searchTerm || 
+        deposit.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        deposit.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        deposit.amount.toString().includes(searchTerm) ||
+        deposit.id.toString().includes(searchTerm);
       
-      const lowerSearchTerm = searchTerm.toLowerCase();
-      
-      // Check if the client name includes the search term
-      if (deposit.client_name.toLowerCase().includes(lowerSearchTerm)) {
-        return true;
+      // Date range filter
+      let dateMatch = true;
+      if (dateRange?.from && dateRange?.to) {
+        const depositDate = new Date(deposit.operation_date || deposit.created_at);
+        try {
+          dateMatch = isWithinInterval(depositDate, {
+            start: dateRange.from,
+            end: dateRange.to
+          });
+        } catch (error) {
+          console.error("Error checking date interval:", error);
+          dateMatch = false;
+        }
       }
       
-      // Check if the description includes the search term
-      if (deposit.description && deposit.description.toLowerCase().includes(lowerSearchTerm)) {
-        return true;
-      }
-      
-      // Check if the ID includes the search term
-      if (deposit.id.toString().includes(lowerSearchTerm)) {
-        return true;
-      }
-      
-      return false;
+      return searchMatch && dateMatch;
     });
+  }, [deposits, searchTerm, dateRange]);
 
-    console.log("Filtered deposits:", filtered.length);
-    setFilteredDeposits(filtered);
-    setTotalItems(filtered.length);
-    
-    // Reset to first page when filters change
-    setCurrentPage(1);
-  }, [deposits, searchTerm]);
-
-  // Update paginated deposits whenever filtered deposits or pagination settings change
+  // Reset to first page when filters change
   useEffect(() => {
-    console.log("Pagination effect running with filtered deposits:", filteredDeposits?.length);
-    
-    if (!filteredDeposits || filteredDeposits.length === 0) {
-      console.log("No filtered deposits to paginate");
-      setPaginatedDeposits([]);
-      return;
-    }
+    setCurrentPage(1);
+  }, [searchTerm, itemsPerPage, dateRange]);
 
-    // Calculate pagination correctly
-    const totalPages = Math.ceil(filteredDeposits.length / parseInt(itemsPerPage));
-    
-    // Ensure current page is valid
-    const validCurrentPage = Math.max(1, Math.min(currentPage, totalPages || 1));
-    if (validCurrentPage !== currentPage) {
-      setCurrentPage(validCurrentPage);
-    }
-
-    const startIndex = (validCurrentPage - 1) * parseInt(itemsPerPage);
-    const endIndex = validCurrentPage * parseInt(itemsPerPage);
-    
-    const paginated = filteredDeposits.slice(startIndex, endIndex);
-    console.log("Paginated deposits:", paginated.length);
-    setPaginatedDeposits(paginated);
+  // Calculate paginated deposits
+  const paginatedDeposits = useMemo(() => {
+    const startIndex = (currentPage - 1) * parseInt(itemsPerPage);
+    return filteredDeposits.slice(
+      startIndex,
+      startIndex + parseInt(itemsPerPage)
+    );
   }, [filteredDeposits, currentPage, itemsPerPage]);
 
-  const handleSearchChange = (term: string) => {
-    console.log("Search term changed:", term);
-    setSearchTerm(term);
-  };
-
-  const handleItemsPerPageChange = (value: string) => {
-    console.log("Items per page changed:", value);
-    setItemsPerPage(value);
-    setCurrentPage(1); // Reset to first page when items per page changes
-  };
+  // Calculate total number of items for pagination
+  const totalItems = filteredDeposits.length;
 
   return {
     searchTerm,
-    setSearchTerm: handleSearchChange,
+    setSearchTerm,
     itemsPerPage,
-    setItemsPerPage: handleItemsPerPageChange,
+    setItemsPerPage,
     currentPage,
     setCurrentPage,
+    dateRange,
+    setDateRange,
     filteredDeposits,
     paginatedDeposits,
-    totalItems
+    totalItems,
   };
 };

@@ -19,6 +19,8 @@ const Deposits = () => {
     setItemsPerPage,
     currentPage,
     setCurrentPage,
+    dateRange,
+    setDateRange,
     editForm,
     deposits,
     paginatedDeposits,
@@ -59,6 +61,7 @@ const Deposits = () => {
   console.log("Deposits page render - filtered deposits count:", filteredDeposits?.length);
   console.log("Deposits page render - paginated deposits count:", paginatedDeposits?.length);
   console.log("Deposits page render - isLoading:", isLoading);
+  console.log("Deposits page render - dateRange:", dateRange);
   
   return (
     <DepositsContent
@@ -78,6 +81,8 @@ const Deposits = () => {
       setItemsPerPage={setItemsPerPage}
       currentPage={currentPage}
       setCurrentPage={setCurrentPage}
+      dateRange={dateRange}
+      setDateRange={setDateRange}
       editForm={editForm}
       handleDelete={handleDelete}
       confirmDelete={confirmDelete}

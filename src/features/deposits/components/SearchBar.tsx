@@ -1,54 +1,73 @@
 
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
+import React from "react";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { type SearchBarProps } from "../types";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { DateRange } from "react-day-picker";
+
+interface SearchBarProps {
+  searchTerm: string;
+  onSearchChange: (term: string) => void;
+  itemsPerPage: string;
+  onItemsPerPageChange: (value: string) => void;
+  totalDeposits: number;
+  dateRange?: DateRange;
+  onDateRangeChange?: (range: DateRange | undefined) => void;
+}
 
 export const SearchBar = ({
   searchTerm,
   onSearchChange,
   itemsPerPage,
   onItemsPerPageChange,
-  totalDeposits
+  totalDeposits,
+  dateRange,
+  onDateRangeChange,
 }: SearchBarProps) => {
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base">Rechercher un versement</CardTitle>
-        <CardDescription>
-          {totalDeposits} versement(s) trouvé(s)
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center space-x-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Rechercher par nom de client..."
-              value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="pl-8"
-            />
-          </div>
-        </div>
-        <div className="flex items-center">
-          <Select 
-            value={itemsPerPage.toString()} 
+    <div className="flex flex-col gap-4 md:flex-row md:items-center w-full">
+      <div className="w-full md:w-1/3">
+        <Input
+          placeholder="Rechercher un versement..."
+          value={searchTerm}
+          onChange={(e) => onSearchChange(e.target.value)}
+          className="w-full"
+        />
+      </div>
+      
+      <div className="w-full md:w-1/3">
+        <DatePickerWithRange 
+          date={dateRange} 
+          onDateChange={onDateRangeChange} 
+        />
+      </div>
+      
+      <div className="flex items-center justify-between w-full md:w-1/3 md:justify-end gap-2">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground whitespace-nowrap">
+            Versements par page:
+          </span>
+          <Select
+            value={itemsPerPage}
             onValueChange={onItemsPerPageChange}
           >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Nombre par page" />
+            <SelectTrigger className="w-16">
+              <SelectValue placeholder={itemsPerPage} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="5">5 par page</SelectItem>
-              <SelectItem value="10">10 par page</SelectItem>
-              <SelectItem value="20">20 par page</SelectItem>
-              <SelectItem value="50">50 par page</SelectItem>
+              <SelectItem value="5">5</SelectItem>
+              <SelectItem value="10">10</SelectItem>
+              <SelectItem value="25">25</SelectItem>
+              <SelectItem value="50">50</SelectItem>
+              <SelectItem value="100">100</SelectItem>
             </SelectContent>
           </Select>
         </div>
-      </CardContent>
-    </Card>
+        
+        <span className="text-sm text-muted-foreground whitespace-nowrap">
+          Total: {totalDeposits}
+        </span>
+      </div>
+    </div>
   );
 };

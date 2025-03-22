@@ -11,6 +11,7 @@ import { TransferPagination } from "@/features/transfers/components/TransferPagi
 import { EditDepositDialog } from "./dialog/EditDepositDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ExtendedClient } from "@/features/withdrawals/hooks/form/withdrawalFormTypes";
+import { DateRange } from "react-day-picker";
 
 interface DepositsContentProps {
   deposits: Deposit[];
@@ -38,6 +39,8 @@ interface DepositsContentProps {
   handleCreateDeposit: (deposit: Deposit) => Promise<boolean>;
   isLoading?: boolean;
   totalItems?: number;
+  dateRange?: DateRange;
+  setDateRange?: (range: DateRange | undefined) => void;
 }
 
 export const DepositsContent = ({
@@ -65,7 +68,9 @@ export const DepositsContent = ({
   handleConfirmEdit,
   handleCreateDeposit,
   isLoading = false,
-  totalItems = 0
+  totalItems = 0,
+  dateRange,
+  setDateRange
 }: DepositsContentProps) => {
   const {
     clients,
@@ -82,7 +87,8 @@ export const DepositsContent = ({
     filteredDepositsLength: filteredDeposits?.length,
     paginatedDepositsLength: paginatedDeposits?.length,
     isLoading,
-    selectedDepositForDeletion: selectedDeposit?.id
+    selectedDepositForDeletion: selectedDeposit?.id,
+    dateRange
   });
 
   const handleRefreshClientBalance = async (clientId: string): Promise<boolean> => {
@@ -123,6 +129,8 @@ export const DepositsContent = ({
           itemsPerPage={itemsPerPage}
           onItemsPerPageChange={setItemsPerPage}
           totalDeposits={totalItems}
+          dateRange={dateRange}
+          onDateRangeChange={setDateRange}
         />
         
         <TransferPagination

@@ -3,6 +3,7 @@ import { useDeposits } from "@/features/deposits/hooks/useDeposits";
 import { useDepositSearch } from "./deposit-hooks/useDepositSearch";
 import { useDepositDialogs } from "./deposit-hooks/useDepositDialogs";
 import { useDepositActions } from "./deposit-hooks/useDepositActions";
+import { DateRange } from "react-day-picker";
 
 export const useDepositsPage = () => {
   const { 
@@ -24,6 +25,8 @@ export const useDepositsPage = () => {
     setItemsPerPage,
     currentPage,
     setCurrentPage,
+    dateRange,
+    setDateRange,
     filteredDeposits,
     paginatedDeposits,
     totalItems
@@ -79,6 +82,8 @@ export const useDepositsPage = () => {
     setItemsPerPage,
     currentPage,
     setCurrentPage,
+    dateRange,
+    setDateRange,
     editForm,
     deposits,
     filteredDeposits,
