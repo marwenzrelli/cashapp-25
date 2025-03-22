@@ -90,7 +90,7 @@ export const OperationsMobileCard = ({
               {showId && operation.id}
             </span>
           </div>
-          <p className={`text-base font-semibold ${
+          <p className={`text-base font-bold ${
             colorClass || (
               operation.type === "withdrawal" 
                 ? "text-red-500" 
@@ -106,10 +106,10 @@ export const OperationsMobileCard = ({
         </div>
       </div>
       
-      {/* Add client name display with icon */}
-      <div className="flex items-center gap-1 mb-2 text-sm">
-        <User className="h-3.5 w-3.5 text-muted-foreground" />
-        <span className="font-medium">{clientName}</span>
+      {/* Client name displayed with enhanced styling */}
+      <div className="flex items-center gap-1 mb-2">
+        <User className="h-3.5 w-3.5 text-purple-500" />
+        <span className="font-medium text-purple-700 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 px-2 py-0.5 rounded">{clientName}</span>
       </div>
       
       <div className="flex justify-between text-xs text-muted-foreground mb-2">
@@ -132,8 +132,8 @@ export const OperationsMobileCard = ({
       
       {operation.type === "transfer" && (
         <div className="text-xs text-muted-foreground border-t pt-1 mt-1">
-          <p className="truncate">De: {operation.fromClient}</p>
-          <p className="truncate">À: {operation.toClient}</p>
+          <p className="truncate">De: <span className="text-orange-600 dark:text-orange-400">{operation.fromClient}</span></p>
+          <p className="truncate">À: <span className="text-blue-600 dark:text-blue-400">{operation.toClient}</span></p>
         </div>
       )}
     </div>
