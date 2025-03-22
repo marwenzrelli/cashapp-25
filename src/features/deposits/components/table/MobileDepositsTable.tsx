@@ -35,7 +35,7 @@ export const MobileDepositsTable = ({
     : "pour toute la période";
 
   return (
-    <div className="space-y-2 w-full">
+    <div className="space-y-3 w-full">
       {deposits.map((deposit) => {
         const operationId = typeof deposit.id === 'number' 
           ? formatId(deposit.id) 
@@ -44,31 +44,31 @@ export const MobileDepositsTable = ({
         return (
           <div 
             key={deposit.id.toString()} 
-            className="bg-white dark:bg-gray-800 p-3 border rounded-lg shadow-sm w-full"
+            className="bg-white dark:bg-gray-800/90 p-4 border-0 rounded-xl shadow-md w-full transition-all duration-200 hover:shadow-lg hover:translate-y-[-2px] backdrop-blur-sm"
           >
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-1">
-                <Hash className="h-3 w-3 text-muted-foreground" />
-                <span className="text-xs font-mono text-muted-foreground">{operationId}</span>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-1.5">
+                <Hash className="h-3.5 w-3.5 text-muted-foreground/70" />
+                <span className="text-xs font-mono text-muted-foreground/70 tracking-wide">{operationId}</span>
               </div>
               <div className="flex items-center">
                 <DepositAmount amount={deposit.amount} />
               </div>
             </div>
             
-            <div className="mb-2">
+            <div className="mb-3">
               <DepositClientInfo 
                 clientName={deposit.client_name} 
-                depositId={deposit.id} // No need for toString here, updated interface accepts number
-                clientId={deposit.client_id} // No need for toString here, updated interface accepts number
+                depositId={deposit.id}
+                clientId={deposit.client_id}
               />
             </div>
             
-            <div className="text-sm text-muted-foreground mb-3">
-              <div className="flex items-center gap-1 mb-1">
+            <div className="text-sm text-muted-foreground mb-3 px-2">
+              <div className="flex items-center gap-1 mb-1.5">
                 <DepositDateInfo deposit={deposit} />
               </div>
-              <p className="mt-1 line-clamp-2">{deposit.description}</p>
+              <p className="mt-1.5 line-clamp-2 text-muted-foreground/80">{deposit.description}</p>
             </div>
             
             <div className="flex justify-end">
@@ -85,10 +85,10 @@ export const MobileDepositsTable = ({
       
       {/* Total section for mobile */}
       {deposits.length > 0 && (
-        <div className="mt-4 border-t-2 border-primary/20 pt-4 bg-white dark:bg-gray-800 p-3 rounded-lg shadow-sm">
+        <div className="mt-5 border-t border-primary/10 pt-4 bg-gradient-to-br from-white to-purple-50 dark:from-gray-800 dark:to-gray-800/80 p-4 rounded-xl shadow-sm">
           <div className="flex justify-between items-center">
-            <span className="font-medium">Total des versements {dateRangeText}:</span>
-            <span className="font-medium text-green-600 dark:text-green-400">
+            <span className="font-medium text-sm">Total des versements {dateRangeText}:</span>
+            <span className="font-semibold text-green-600 dark:text-green-400">
               {totalDeposits.toLocaleString()} {currency}
             </span>
           </div>
@@ -96,7 +96,7 @@ export const MobileDepositsTable = ({
       )}
       
       {deposits.length === 0 && (
-        <div className="text-center py-4 text-muted-foreground">
+        <div className="text-center py-6 text-muted-foreground bg-white/50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700/30 backdrop-blur-sm">
           Aucun versement trouvé
         </div>
       )}

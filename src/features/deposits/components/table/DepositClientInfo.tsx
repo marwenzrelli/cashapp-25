@@ -36,17 +36,19 @@ export const DepositClientInfo = ({
   return (
     <div className="flex items-center gap-3">
       <div className="relative">
-        <UserCircle className="h-8 w-8 text-primary/20 transition-colors group-hover:text-primary/40" />
+        <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary/10 to-purple-300/30 flex items-center justify-center shadow-sm">
+          <UserCircle className="h-7 w-7 text-primary/70 transition-colors group-hover:text-primary" />
+        </div>
         <div className="absolute inset-0 animate-pulse rounded-full bg-primary/5" />
       </div>
       <div>
         <p 
-          className="font-medium cursor-pointer hover:text-primary hover:underline transition-colors flex items-center gap-1 px-2 py-1 rounded-md bg-purple-50 dark:bg-purple-900/20"
+          className="font-medium cursor-pointer hover:text-primary hover:underline transition-colors flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-purple-50/80 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30"
           onClick={handleClientClick}
         >
           {clientName}
         </p>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-xs text-muted-foreground mt-0.5 pl-1">
           ID: {displayClientId}
         </p>
       </div>
