@@ -68,7 +68,7 @@ export const MobileDepositsTable = ({
         <div className="mt-4 border-t-2 border-primary/20 pt-4 bg-white dark:bg-gray-800 p-3 rounded-lg shadow-sm">
           <div className="flex justify-between items-center">
             <span className="font-medium">Total des versements {dateRangeText}:</span>
-            <span className="font-medium text-green-600 dark:text-green-400">
+            <span className="font-bold text-green-600 dark:text-green-400">
               {totalDeposits.toLocaleString()} {currency}
             </span>
           </div>

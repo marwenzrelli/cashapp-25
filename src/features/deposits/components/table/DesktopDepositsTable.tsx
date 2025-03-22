@@ -75,7 +75,7 @@ export const DesktopDepositsTable = ({
             <td colSpan={1} className="p-3">
               Total des versements {dateRangeText}:
             </td>
-            <td className="p-3 text-green-600 dark:text-green-400">
+            <td className="p-3 text-green-600 dark:text-green-400 font-bold">
               {totalDeposits.toLocaleString()} {currency}
             </td>
             <td colSpan={3}></td>
