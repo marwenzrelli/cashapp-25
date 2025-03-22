@@ -26,7 +26,7 @@ export const useFetchDeposits = (
       
       const { data, error } = await supabase
         .from('deposits')
-        .select('*')
+        .select('*, clients(id)')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -53,13 +53,17 @@ export const useFetchDeposits = (
         // Always use operation_date for the main display date if available
         const displayDate = d.operation_date ? formatDateTime(d.operation_date) : formatDateTime(d.created_at);
         
+        // Extract client_id either from the joined table or use null
+        // This handles both the case where we got joined data and where we didn't
+        const clientId = d.clients?.id || null;
+        
         return {
           id: d.id,
           amount: Number(d.amount),
           date: displayDate,
           description: d.notes || '',
           client_name: d.client_name,
-          client_id: d.client_id || null, // Ensure client_id is included
+          client_id: clientId, // Use the extracted client ID
           status: d.status,
           created_at: d.created_at,
           created_by: d.created_by || null,
