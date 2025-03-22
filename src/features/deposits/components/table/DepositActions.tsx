@@ -22,20 +22,20 @@ export const DepositActions = ({
         <Button
           variant="ghost"
           size="sm"
-          className="relative hover:bg-blue-50 dark:hover:bg-blue-950/50 text-blue-600 hover:text-blue-600 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-sm"
+          className="relative hover:bg-gray-100 dark:hover:bg-gray-800/70 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-sm"
           onClick={() => onEdit(deposit)}
         >
           <Pencil className="h-4 w-4" />
-          <span className="absolute inset-0 rounded-full bg-blue-100/70 dark:bg-blue-900/30 opacity-0 hover:opacity-100 transition-opacity duration-300" />
+          <span className="absolute inset-0 rounded-full bg-gray-200/40 dark:bg-gray-700/40 opacity-0 hover:opacity-100 transition-opacity duration-300" />
         </Button>
         <Button
           variant="ghost"
           size="sm"
-          className="relative hover:bg-red-50 dark:hover:bg-red-950/50 text-red-600 hover:text-red-600 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-sm"
+          className="relative hover:bg-gray-100 dark:hover:bg-gray-800/70 text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-sm"
           onClick={() => onDelete(deposit)}
         >
           <Trash2 className="h-4 w-4" />
-          <span className="absolute inset-0 rounded-full bg-red-100/70 dark:bg-red-900/30 opacity-0 hover:opacity-100 transition-opacity duration-300" />
+          <span className="absolute inset-0 rounded-full bg-gray-200/40 dark:bg-gray-700/40 opacity-0 hover:opacity-100 transition-opacity duration-300" />
         </Button>
       </div>
     );
@@ -46,20 +46,20 @@ export const DepositActions = ({
       <Button
         variant="ghost"
         size="icon"
-        className="relative hover:bg-blue-50 dark:hover:bg-blue-950/50 text-blue-600 hover:text-blue-600 rounded-lg transition-all duration-300 hover:shadow-sm"
+        className="relative hover:bg-gray-100 dark:hover:bg-gray-800/70 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg transition-all duration-300 hover:shadow-sm"
         onClick={() => onEdit(deposit)}
       >
         <Pencil className="h-4 w-4 transition-transform duration-200 hover:scale-110" />
-        <span className="absolute inset-0 rounded-lg bg-blue-100/70 dark:bg-blue-900/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <span className="absolute inset-0 rounded-lg bg-gray-200/40 dark:bg-gray-700/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </Button>
       <Button
         variant="ghost"
         size="icon"
-        className="relative hover:bg-red-50 dark:hover:bg-red-950/50 text-red-600 hover:text-red-600 rounded-lg transition-all duration-300 hover:shadow-sm"
+        className="relative hover:bg-gray-100 dark:hover:bg-gray-800/70 text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 rounded-lg transition-all duration-300 hover:shadow-sm"
         onClick={() => onDelete(deposit)}
       >
         <Trash2 className="h-4 w-4 transition-transform duration-200 hover:scale-110" />
-        <span className="absolute inset-0 rounded-lg bg-red-100/70 dark:bg-red-900/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <span className="absolute inset-0 rounded-lg bg-gray-200/40 dark:bg-gray-700/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </Button>
     </div>
   );
