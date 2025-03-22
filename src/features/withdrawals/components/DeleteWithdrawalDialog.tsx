@@ -39,7 +39,7 @@ export const DeleteWithdrawalDialog: React.FC<DeleteWithdrawalDialogProps> = ({
             Êtes-vous sûr de vouloir supprimer ce retrait?
             <div className="my-4 p-4 border rounded-lg bg-muted">
               <p>
-                <strong>ID:</strong> {formatId(withdrawal.id)}
+                <strong>ID:</strong> {formatId(withdrawal.id, 4)}
               </p>
               <p>
                 <strong>Client:</strong> {withdrawal.client_name}

@@ -25,7 +25,7 @@ export const useDeleteWithdrawal = (fetchWithdrawals: () => Promise<void>) => {
     setLoading(true);
     
     try {
-      console.log("Début de la suppression du retrait avec ID:", formatId(withdrawalToDelete.id));
+      console.log("Début de la suppression du retrait avec ID:", formatId(withdrawalToDelete.id, 4));
       
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id;

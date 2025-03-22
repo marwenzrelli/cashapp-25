@@ -83,7 +83,7 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
               {withdrawals.map(withdrawal => {
               const client = findClientById(withdrawal.client_name);
               const formattedOperationDate = withdrawal.operation_date ? formatDate(withdrawal.operation_date) : "Date inconnue";
-              const operationId = isNaN(parseInt(withdrawal.id)) ? withdrawal.id : formatId(parseInt(withdrawal.id));
+              const operationId = formatId(withdrawal.id, 4);
               return <tr key={withdrawal.id} className="group border-b hover:bg-muted/50 transition-colors">
                     <td className="p-3 font-mono text-xs">{operationId}</td>
                     <td className="p-3">
@@ -101,7 +101,7 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
                             
                           </p>
                           <p className="text-sm text-muted-foreground">
-                            ID: {client ? formatId(client.id) : "Non trouvé"}
+                            ID: {client ? formatId(client.id, 4) : "Non trouvé"}
                           </p>
                         </div>
                       </div>
@@ -150,7 +150,7 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
           {withdrawals.map(withdrawal => {
             const client = findClientById(withdrawal.client_name);
             const formattedOperationDate = withdrawal.operation_date ? formatDate(withdrawal.operation_date) : "Date inconnue";
-            const operationId = isNaN(parseInt(withdrawal.id)) ? withdrawal.id : formatId(parseInt(withdrawal.id));
+            const operationId = formatId(withdrawal.id, 4);
             const isExpanded = expandedId === withdrawal.id;
             
             return (
@@ -249,4 +249,3 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
       </CardContent>
     </Card>;
 };
-
