@@ -28,7 +28,7 @@ export const EditClientSection: React.FC<EditClientSectionProps> = ({
         onValueChange={(value) => onEditFormChange('clientName', value)}
       >
         <SelectTrigger id="clientSelect" className="relative pl-10 border rounded-lg bg-gray-50">
-          <User className="absolute left-3 top-3 h-4 w-4 text-purple-500" />
+          <User className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
           <SelectValue placeholder="Sélectionner un client" />
         </SelectTrigger>
         <SelectContent className="max-h-[300px]">
@@ -36,13 +36,10 @@ export const EditClientSection: React.FC<EditClientSectionProps> = ({
             <SelectItem 
               key={client.id} 
               value={`${client.prenom} ${client.nom}`}
-              className="flex items-center justify-between"
             >
-              <span className="font-medium text-purple-700 dark:text-purple-400">
-                {client.prenom} {client.nom}
-              </span>
+              {client.prenom} {client.nom}
               {client.solde < 0 && (
-                <span className="ml-2 text-red-500 font-medium">
+                <span className="ml-2 text-red-500">
                   {client.solde.toLocaleString()} {currency}
                 </span>
               )}
@@ -51,7 +48,7 @@ export const EditClientSection: React.FC<EditClientSectionProps> = ({
         </SelectContent>
       </Select>
       {editForm.clientBalance && (
-        <p className="text-sm text-red-500 font-medium">{editForm.clientBalance} {currency}</p>
+        <p className="text-sm text-red-500">{editForm.clientBalance} {currency}</p>
       )}
     </div>
   );
