@@ -88,7 +88,10 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
                           <div className="absolute inset-0 animate-pulse rounded-full bg-primary/5" />
                         </div>
                         <div>
-                          <p className="font-medium flex items-center cursor-pointer hover:text-primary hover:underline transition-colors" onClick={() => handleClientClick(client)}>
+                          <p 
+                            className="font-medium cursor-pointer hover:text-primary hover:underline transition-colors flex items-center gap-1 px-2 py-1 rounded-md bg-purple-50 dark:bg-purple-900/20"
+                            onClick={() => handleClientClick(client)}
+                          >
                             {withdrawal.client_name}
                             
                           </p>
@@ -101,7 +104,7 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
                     <td className="p-3 text-center">
                       <div className="flex items-center justify-center gap-2 text-danger">
                         <ArrowDownCircle className="h-4 w-4" />
-                        <span className="font-medium">
+                        <span className="font-medium px-3 py-1 rounded-md text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20">
                           {withdrawal.amount.toLocaleString()} {currency}
                         </span>
                       </div>
@@ -151,15 +154,17 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
                   </div>
                   <div className="flex items-center text-danger">
                     <ArrowDownCircle className="h-4 w-4 mr-1" />
-                    <span className="font-medium">
+                    <span className="font-medium px-2 py-0.5 rounded-md text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20">
                       {withdrawal.amount.toLocaleString()} {currency}
                     </span>
                   </div>
                 </div>
                 
-                <p className="font-medium text-primary flex items-center cursor-pointer mb-2" onClick={() => handleClientClick(client)}>
+                <p 
+                  className="font-medium text-primary flex items-center cursor-pointer mb-2 px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-900/20" 
+                  onClick={() => handleClientClick(client)}
+                >
                   {withdrawal.client_name}
-                  
                 </p>
                 
                 <div className="flex items-center text-xs text-muted-foreground mb-2">
@@ -191,7 +196,7 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
             <div className="bg-muted/50 p-4 rounded-lg border mt-4">
               <div className="flex justify-between items-center">
                 <span className="font-semibold">Total {dateRangeText}:</span>
-                <span className="text-danger font-bold">
+                <span className="text-danger font-bold px-2 py-0.5 rounded-md text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20">
                   {totalAmount.toLocaleString()} {currency}
                 </span>
               </div>

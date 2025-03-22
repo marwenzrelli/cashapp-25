@@ -31,6 +31,12 @@ export const TransferList = ({
     return "text-gray-600 dark:text-gray-400";
   };
 
+  const getAmountBgColor = (amount: number) => {
+    if (amount > 0) return "bg-green-50 dark:bg-green-900/20";
+    if (amount < 0) return "bg-red-50 dark:bg-red-900/20";
+    return "bg-gray-50 dark:bg-gray-800/40";
+  };
+
   const formatTransferId = (id: string) => {
     if (!isNaN(Number(id))) {
       return id.padStart(6, '0');
@@ -109,9 +115,11 @@ export const TransferList = ({
                   
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 font-medium">
-                      <span className="text-muted-foreground">De:</span> {transfer.fromClient}
+                      <span className="text-muted-foreground">De:</span> 
+                      <span className="px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-900/20">{transfer.fromClient}</span>
                       <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">À:</span> {transfer.toClient}
+                      <span className="text-muted-foreground">À:</span> 
+                      <span className="px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-900/20">{transfer.toClient}</span>
                     </div>
                     <p className="text-sm text-muted-foreground">{transfer.reason}</p>
                   </div>
@@ -120,8 +128,9 @@ export const TransferList = ({
                 <div className="flex items-center gap-4">
                   <div className="flex flex-col items-end gap-1">
                     <div className={cn(
-                      "text-lg font-semibold",
-                      getAmountColor(transfer.amount)
+                      "text-lg font-semibold px-2 py-0.5 rounded-md",
+                      getAmountColor(transfer.amount),
+                      getAmountBgColor(transfer.amount)
                     )}>
                       {transfer.amount.toLocaleString()} {currency}
                     </div>

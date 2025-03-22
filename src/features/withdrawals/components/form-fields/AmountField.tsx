@@ -29,7 +29,7 @@ export const AmountField: React.FC<AmountFieldProps> = ({
           placeholder="0.00"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="pl-9 transition-all focus-visible:ring-primary/50"
+          className="pl-9 transition-all focus-visible:ring-primary/50 border rounded-lg bg-red-50 dark:bg-red-900/10"
         />
         <span className="absolute right-3 top-3 text-muted-foreground">
           {currency}

@@ -90,7 +90,7 @@ export const ClientSelectField: React.FC<ClientSelectFieldProps> = ({
     <div className="space-y-2">
       <Label htmlFor={id}>Client</Label>
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className="w-full" id={id}>
+        <SelectTrigger className="w-full border rounded-lg bg-purple-50 dark:bg-purple-900/20" id={id}>
           <SelectValue placeholder="Sélectionner un client" />
         </SelectTrigger>
         <SelectContent>
@@ -98,7 +98,7 @@ export const ClientSelectField: React.FC<ClientSelectFieldProps> = ({
             <SelectItem
               key={client.id}
               value={client.id.toString()}
-              className="flex items-center justify-between gap-2"
+              className="flex items-center justify-between gap-2 bg-purple-50 dark:bg-purple-900/20 my-1 rounded-md"
             >
               <div className="flex items-center gap-2">
                 <UserCircle className="h-4 w-4 text-primary/50" />
