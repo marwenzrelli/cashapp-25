@@ -9,6 +9,8 @@ import { formatDate } from "@/features/withdrawals/hooks/utils/formatUtils";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatId } from "@/utils/formatId";
 import { Hash } from "lucide-react";
+import { useState } from "react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface MobileDepositsTableProps {
   deposits: Deposit[];
@@ -26,6 +28,9 @@ export const MobileDepositsTable = ({
   // Get currency formatting from context
   const { currency } = useCurrency();
   
+  // Track which deposit is expanded
+  const [expandedId, setExpandedId] = useState<string | number | null>(null);
+  
   // Calculate total deposit amount
   const totalDeposits = deposits.reduce((total, deposit) => total + deposit.amount, 0);
 
@@ -34,52 +39,69 @@ export const MobileDepositsTable = ({
     ? `du ${formatDate(dateRange.from.toISOString())} au ${formatDate(dateRange.to.toISOString())}`
     : "pour toute la période";
 
+  // Toggle expanded deposit
+  const toggleExpanded = (id: string | number) => {
+    setExpandedId(expandedId === id ? null : id);
+  };
+
   return (
     <div className="space-y-4 w-full">
       {deposits.map((deposit) => {
         const operationId = typeof deposit.id === 'number' 
           ? formatId(deposit.id) 
           : deposit.id;
+        
+        const isExpanded = expandedId === deposit.id;
           
         return (
-          <div 
+          <Collapsible 
             key={deposit.id.toString()} 
-            className="bg-gradient-to-br from-white to-purple-50/30 dark:from-gray-800/95 dark:to-purple-900/10 p-4 border border-purple-100/40 dark:border-purple-800/20 rounded-xl shadow-sm hover:shadow-md w-full transition-all duration-300 hover:translate-y-[-3px] backdrop-blur-sm animate-in"
+            open={isExpanded}
+            onOpenChange={() => toggleExpanded(deposit.id)}
+            className="bg-gradient-to-br from-white to-purple-50/30 dark:from-gray-800/95 dark:to-purple-900/10 p-4 border border-purple-100/40 dark:border-purple-800/20 rounded-xl shadow-sm hover:shadow-md w-full transition-all duration-300 hover:translate-y-[-2px] backdrop-blur-sm animate-in"
           >
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-1.5 bg-purple-50/80 dark:bg-purple-900/30 px-2 py-1 rounded-md">
-                <Hash className="h-3.5 w-3.5 text-primary/60" />
-                <span className="text-xs font-mono text-primary/70 tracking-wide">{operationId}</span>
+            <CollapsibleTrigger className="w-full text-left">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-1.5 bg-purple-50/80 dark:bg-purple-900/30 px-2 py-1 rounded-md">
+                    <Hash className="h-3.5 w-3.5 text-primary/60" />
+                    <span className="text-xs font-mono text-primary/70 tracking-wide">{operationId}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <DepositAmount amount={deposit.amount} />
+                  </div>
+                </div>
+                
+                <div className="mb-2">
+                  <DepositClientInfo 
+                    clientName={deposit.client_name} 
+                    depositId={deposit.id}
+                    clientId={deposit.client_id}
+                  />
+                </div>
+                
+                <div className="text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <DepositDateInfo deposit={deposit} />
+                  </div>
+                  <p className={`line-clamp-2 text-muted-foreground/80 bg-gray-50/50 dark:bg-gray-800/30 px-3 py-1.5 rounded-lg mt-1 ${isExpanded ? 'line-clamp-none' : ''}`}>
+                    {deposit.description}
+                  </p>
+                </div>
               </div>
-              <div className="flex items-center">
-                <DepositAmount amount={deposit.amount} />
+            </CollapsibleTrigger>
+            
+            <CollapsibleContent className="pt-2 animate-accordion-down">
+              <div className="flex justify-end">
+                <DepositActions 
+                  deposit={deposit} 
+                  onEdit={onEdit} 
+                  onDelete={onDelete} 
+                  isMobile={true} 
+                />
               </div>
-            </div>
-            
-            <div className="mb-3">
-              <DepositClientInfo 
-                clientName={deposit.client_name} 
-                depositId={deposit.id}
-                clientId={deposit.client_id}
-              />
-            </div>
-            
-            <div className="text-sm text-muted-foreground mb-1">
-              <div className="flex items-center gap-1 mb-1">
-                <DepositDateInfo deposit={deposit} />
-              </div>
-              <p className="mt-1 line-clamp-2 text-muted-foreground/80 bg-gray-50/50 dark:bg-gray-800/30 px-3 py-1.5 rounded-lg">{deposit.description}</p>
-            </div>
-            
-            <div className="flex justify-end mt-1">
-              <DepositActions 
-                deposit={deposit} 
-                onEdit={onEdit} 
-                onDelete={onDelete} 
-                isMobile={true} 
-              />
-            </div>
-          </div>
+            </CollapsibleContent>
+          </Collapsible>
         );
       })}
       
