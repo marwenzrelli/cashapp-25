@@ -7,6 +7,8 @@ import { DepositActions } from "./DepositActions";
 import { DateRange } from "react-day-picker";
 import { formatDate } from "@/features/withdrawals/hooks/utils/formatUtils";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { formatId } from "@/utils/formatId";
+import { Hash } from "lucide-react";
 
 interface MobileDepositsTableProps {
   deposits: Deposit[];
@@ -34,34 +36,48 @@ export const MobileDepositsTable = ({
 
   return (
     <div className="space-y-2 w-full">
-      {deposits.map((deposit) => (
-        <div 
-          key={deposit.id} 
-          className="bg-white dark:bg-gray-800 p-3 border rounded-lg shadow-sm w-full"
-        >
-          <div className="flex flex-col gap-2 mb-2">
-            <DepositClientInfo 
-              clientName={deposit.client_name} 
-              depositId={deposit.id} 
-            />
-            <DepositAmount amount={deposit.amount} />
-          </div>
-          <div className="text-sm text-muted-foreground mb-3">
-            <div className="flex items-center gap-1">
-              <DepositDateInfo deposit={deposit} />
+      {deposits.map((deposit) => {
+        const operationId = isNaN(parseInt(deposit.id)) ? deposit.id : formatId(parseInt(deposit.id));
+        return (
+          <div 
+            key={deposit.id} 
+            className="bg-white dark:bg-gray-800 p-3 border rounded-lg shadow-sm w-full"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-1">
+                <Hash className="h-3 w-3 text-muted-foreground" />
+                <span className="text-xs font-mono text-muted-foreground">{operationId}</span>
+              </div>
+              <div className="flex items-center">
+                <DepositAmount amount={deposit.amount} />
+              </div>
             </div>
-            <p className="mt-1 line-clamp-2">{deposit.description}</p>
+            
+            <div className="mb-2">
+              <DepositClientInfo 
+                clientName={deposit.client_name} 
+                depositId={deposit.id} 
+              />
+            </div>
+            
+            <div className="text-sm text-muted-foreground mb-3">
+              <div className="flex items-center gap-1 mb-1">
+                <DepositDateInfo deposit={deposit} />
+              </div>
+              <p className="mt-1 line-clamp-2">{deposit.description}</p>
+            </div>
+            
+            <div className="flex justify-end">
+              <DepositActions 
+                deposit={deposit} 
+                onEdit={onEdit} 
+                onDelete={onDelete} 
+                isMobile={true} 
+              />
+            </div>
           </div>
-          <div className="flex justify-end">
-            <DepositActions 
-              deposit={deposit} 
-              onEdit={onEdit} 
-              onDelete={onDelete} 
-              isMobile={true} 
-            />
-          </div>
-        </div>
-      ))}
+        );
+      })}
       
       {/* Total section for mobile */}
       {deposits.length > 0 && (

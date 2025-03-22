@@ -7,6 +7,7 @@ import { DepositActions } from "./DepositActions";
 import { DateRange } from "react-day-picker";
 import { formatDate } from "@/features/withdrawals/hooks/utils/formatUtils";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { formatId } from "@/utils/formatId";
 
 interface DesktopDepositsTableProps {
   deposits: Deposit[];
@@ -36,46 +37,51 @@ export const DesktopDepositsTable = ({
     <table className="w-full text-sm">
       <thead className="bg-muted/50">
         <tr className="text-left">
+          <th className="p-3 font-medium">ID</th>
           <th className="p-3 font-medium">Client</th>
-          <th className="p-3 font-medium">Montant</th>
-          <th className="p-3 font-medium">Date</th>
-          <th className="p-3 font-medium">Description</th>
-          <th className="p-3 font-medium">Actions</th>
+          <th className="p-3 font-medium text-center">Montant</th>
+          <th className="p-3 font-medium">Date d'opération</th>
+          <th className="p-3 font-medium">Notes</th>
+          <th className="p-3 font-medium text-center">Actions</th>
         </tr>
       </thead>
       <tbody>
-        {deposits.map((deposit) => (
-          <tr key={deposit.id} className="group border-b transition-colors hover:bg-muted/50">
-            <td className="p-3">
-              <DepositClientInfo 
-                clientName={deposit.client_name} 
-                depositId={deposit.id} 
-              />
-            </td>
-            <td className="p-3">
-              <DepositAmount amount={deposit.amount} />
-            </td>
-            <td className="p-3 text-muted-foreground">
-              <DepositDateInfo deposit={deposit} />
-            </td>
-            <td className="p-3 text-muted-foreground">{deposit.description}</td>
-            <td className="p-3">
-              <DepositActions 
-                deposit={deposit} 
-                onEdit={onEdit} 
-                onDelete={onDelete} 
-              />
-            </td>
-          </tr>
-        ))}
+        {deposits.map((deposit) => {
+          const operationId = isNaN(parseInt(deposit.id)) ? deposit.id : formatId(parseInt(deposit.id));
+          return (
+            <tr key={deposit.id} className="group border-b transition-colors hover:bg-muted/50">
+              <td className="p-3 font-mono text-xs">{operationId}</td>
+              <td className="p-3">
+                <DepositClientInfo 
+                  clientName={deposit.client_name} 
+                  depositId={deposit.id} 
+                />
+              </td>
+              <td className="p-3 text-center">
+                <DepositAmount amount={deposit.amount} />
+              </td>
+              <td className="p-3 text-muted-foreground">
+                <DepositDateInfo deposit={deposit} />
+              </td>
+              <td className="p-3 text-muted-foreground">{deposit.description}</td>
+              <td className="p-3 text-center">
+                <DepositActions 
+                  deposit={deposit} 
+                  onEdit={onEdit} 
+                  onDelete={onDelete} 
+                />
+              </td>
+            </tr>
+          );
+        })}
 
         {/* Total row */}
         {deposits.length > 0 && (
           <tr className="border-t-2 border-primary/20 font-medium">
-            <td colSpan={1} className="p-3">
+            <td colSpan={2} className="p-3 text-right">
               Total des versements {dateRangeText}:
             </td>
-            <td className="p-3 text-green-600 dark:text-green-400">
+            <td className="p-3 text-center text-green-600 dark:text-green-400">
               {totalDeposits.toLocaleString()} {currency}
             </td>
             <td colSpan={3}></td>
