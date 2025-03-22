@@ -1,4 +1,3 @@
-
 import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { type Deposit } from "@/components/deposits/types";
@@ -33,8 +32,7 @@ export const DepositActions = ({
           className="relative hover:bg-red-50 dark:hover:bg-red-950/50 text-red-600 hover:text-red-600"
           onClick={() => onDelete(deposit)}
         >
-          <Trash2 className="h-4 w-4 mr-2" />
-          Supprimer
+          <Trash2 className="h-4 w-4" />
         </Button>
       </div>
     );
