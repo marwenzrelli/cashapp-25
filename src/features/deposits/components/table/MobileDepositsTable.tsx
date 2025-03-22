@@ -37,10 +37,13 @@ export const MobileDepositsTable = ({
   return (
     <div className="space-y-2 w-full">
       {deposits.map((deposit) => {
-        const operationId = isNaN(parseInt(deposit.id)) ? deposit.id : formatId(parseInt(deposit.id));
+        const operationId = typeof deposit.id === 'number' 
+          ? formatId(deposit.id) 
+          : deposit.id;
+          
         return (
           <div 
-            key={deposit.id} 
+            key={deposit.id.toString()} 
             className="bg-white dark:bg-gray-800 p-3 border rounded-lg shadow-sm w-full"
           >
             <div className="flex items-center justify-between mb-2">
@@ -56,7 +59,8 @@ export const MobileDepositsTable = ({
             <div className="mb-2">
               <DepositClientInfo 
                 clientName={deposit.client_name} 
-                depositId={deposit.id} 
+                depositId={deposit.id.toString()} 
+                clientId={deposit.client_id?.toString() || "N/A"} // Pass client ID
               />
             </div>
             

@@ -5,11 +5,13 @@ import { useNavigate } from "react-router-dom";
 interface DepositClientInfoProps {
   clientName: string;
   depositId: string;
+  clientId?: string; // Add clientId as an optional prop
 }
 
 export const DepositClientInfo = ({ 
   clientName,
-  depositId 
+  depositId,
+  clientId = "N/A" // Default to "N/A" if not provided
 }: DepositClientInfoProps) => {
   const navigate = useNavigate();
   
@@ -34,7 +36,7 @@ export const DepositClientInfo = ({
           {clientName}
         </p>
         <p className="text-sm text-muted-foreground">
-          ID: {depositId}
+          ID: {clientId}
         </p>
       </div>
     </div>

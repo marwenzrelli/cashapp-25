@@ -1,15 +1,15 @@
-
 export interface Deposit {
   id: number;
   amount: number;
   date: string;
   description: string;
   client_name: string;
+  client_id?: string | number;
   status: string;
   created_at: string;
   created_by: string | null;
   operation_date?: string;
-  last_modified_at?: string; // New field to track modifications
+  last_modified_at?: string;
 }
 
 export interface AISuggestion {
@@ -35,7 +35,6 @@ export interface DeleteDepositDialogProps {
   onConfirm: () => Promise<boolean | void>;
 }
 
-// Add the missing types that were referenced in the error messages
 export interface DepositDialogProps {
   client: any;
   open: boolean;
