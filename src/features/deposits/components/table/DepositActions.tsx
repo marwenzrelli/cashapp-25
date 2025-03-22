@@ -18,7 +18,7 @@ export const DepositActions = ({
 }: DepositActionsProps) => {
   if (isMobile) {
     return (
-      <div className="flex gap-2 justify-end opacity-0 group-hover:opacity-100 touch-action:opacity-100 transition-all duration-300">
+      <div className="flex gap-2 justify-end">
         <Button
           variant="ghost"
           size="sm"
