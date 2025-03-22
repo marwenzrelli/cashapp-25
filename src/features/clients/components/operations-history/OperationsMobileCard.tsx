@@ -3,7 +3,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Operation } from "@/features/operations/types";
 import { Badge } from "@/components/ui/badge";
-import { CalendarClock, Clock, Hash } from "lucide-react";
+import { CalendarClock, Clock, Hash, User } from "lucide-react";
 import { formatId } from "@/utils/formatId";
 
 interface OperationsMobileCardProps {
@@ -52,6 +52,11 @@ export const OperationsMobileCard = ({
   // Use operation_date if available, otherwise fall back to date
   const operationDate = operation.operation_date || operation.date;
   
+  // Determine which client name to show based on operation type
+  const clientName = operation.type === "transfer" 
+    ? `${operation.fromClient || ''} → ${operation.toClient || ''}`
+    : operation.fromClient || '';
+  
   return (
     <div className="flex flex-col p-3 bg-white dark:bg-gray-800 rounded-lg border shadow-sm w-full">
       <div className="flex items-center justify-between mb-2">
@@ -95,6 +100,12 @@ export const OperationsMobileCard = ({
             {currency && ` ${currency}`}
           </p>
         </div>
+      </div>
+      
+      {/* Add client name display with icon */}
+      <div className="flex items-center gap-1 mb-2 text-sm">
+        <User className="h-3.5 w-3.5 text-muted-foreground" />
+        <span className="font-medium">{clientName}</span>
       </div>
       
       <div className="flex justify-between text-xs text-muted-foreground mb-2">
