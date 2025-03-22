@@ -16,6 +16,9 @@ export const useWithdrawalPagination = (withdrawals: Withdrawal[]) => {
     setCurrentPage(1);
   }, [searchTerm, dateRange]);
 
+  // Define searchTerms before using it in filteredWithdrawals
+  const searchTerms = searchTerm.toLowerCase().split(',').map(term => term.trim());
+
   const filteredWithdrawals = withdrawals.filter(withdrawal => {
     // Search term filter
     const searchMatch = !searchTerm.trim() || searchTerms.some(term => {
@@ -51,8 +54,6 @@ export const useWithdrawalPagination = (withdrawals: Withdrawal[]) => {
     
     return searchMatch && dateMatch;
   });
-
-  const searchTerms = searchTerm.toLowerCase().split(',').map(term => term.trim());
 
   // Pagination des retraits
   const paginatedWithdrawals = filteredWithdrawals.slice(
