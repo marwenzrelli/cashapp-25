@@ -1,15 +1,16 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Withdrawal } from "../types";
-import { UserCircle, ArrowDownCircle, Pencil, Trash2, ExternalLink, CalendarIcon, Hash } from "lucide-react";
+import { UserCircle, ArrowDownCircle, Pencil, Trash2, CalendarIcon, Hash } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { Client } from "@/features/clients/types";
 import { formatDate } from "../hooks/utils/formatUtils";
 import { useNavigate } from "react-router-dom";
 import { formatId } from "@/utils/formatId";
 import { DateRange } from "react-day-picker";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface WithdrawalTableProps {
   withdrawals: Withdrawal[];
@@ -28,12 +29,11 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
   findClientById,
   dateRange
 }) => {
-  const {
-    currency,
-    formatCurrency
-  } = useCurrency();
-  
+  const { currency } = useCurrency();
   const navigate = useNavigate();
+  
+  // État pour suivre quel retrait est développé
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   
   const handleClientClick = (client: (Client & {
     dateCreation: string;
@@ -41,6 +41,11 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
     if (client) {
       navigate(`/clients/${client.id}`);
     }
+  };
+  
+  // Toggle expanded withdrawal
+  const toggleExpanded = (id: string) => {
+    setExpandedId(expandedId === id ? null : id);
   };
   
   // Calculate the total amount for the displayed withdrawals
@@ -140,56 +145,94 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
           </table>
         </div>
 
-        {/* Mobile Card View */}
+        {/* Mobile Card View - Mise à jour avec Collapsible */}
         <div className="md:hidden space-y-3 w-full px-0">
           {withdrawals.map(withdrawal => {
-          const client = findClientById(withdrawal.client_name);
-          const formattedOperationDate = withdrawal.operation_date ? formatDate(withdrawal.operation_date) : "Date inconnue";
-          const operationId = isNaN(parseInt(withdrawal.id)) ? withdrawal.id : formatId(parseInt(withdrawal.id));
-          return <div key={withdrawal.id} className="bg-white dark:bg-gray-800 rounded-lg border shadow-sm p-3 w-full">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-1">
-                    <Hash className="h-3 w-3 text-muted-foreground" />
-                    <span className="text-xs font-mono text-muted-foreground">{operationId}</span>
+            const client = findClientById(withdrawal.client_name);
+            const formattedOperationDate = withdrawal.operation_date ? formatDate(withdrawal.operation_date) : "Date inconnue";
+            const operationId = isNaN(parseInt(withdrawal.id)) ? withdrawal.id : formatId(parseInt(withdrawal.id));
+            const isExpanded = expandedId === withdrawal.id;
+            
+            return (
+              <Collapsible 
+                key={withdrawal.id} 
+                open={isExpanded}
+                onOpenChange={() => toggleExpanded(withdrawal.id)}
+                className="bg-gradient-to-br from-white to-red-50/30 dark:from-gray-800/95 dark:to-red-900/10 p-4 border border-red-100/40 dark:border-red-800/20 rounded-xl shadow-sm hover:shadow-md w-full transition-all duration-300 hover:translate-y-[-2px] backdrop-blur-sm animate-in"
+              >
+                <CollapsibleTrigger className="w-full text-left">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-1">
+                        <Hash className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-xs font-mono text-muted-foreground">{operationId}</span>
+                      </div>
+                      <div className="flex items-center text-danger">
+                        <ArrowDownCircle className="h-4 w-4 mr-1" />
+                        <span className="font-medium px-2 py-0.5 rounded-md text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20">
+                          {withdrawal.amount.toLocaleString()} {currency}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <p 
+                      className="font-medium text-primary flex items-center cursor-pointer mb-2 px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-900/20" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleClientClick(client);
+                      }}
+                    >
+                      {withdrawal.client_name}
+                    </p>
+                    
+                    <div className="flex items-center text-xs text-muted-foreground mb-1">
+                      <CalendarIcon className="h-3 w-3 mr-1" />
+                      {formattedOperationDate}
+                    </div>
+                    
+                    {withdrawal.notes && (
+                      <p className="text-sm text-muted-foreground line-clamp-2 bg-gray-50/50 dark:bg-gray-800/30 px-3 py-1.5 rounded-lg">
+                        {withdrawal.notes}
+                      </p>
+                    )}
                   </div>
-                  <div className="flex items-center text-danger">
-                    <ArrowDownCircle className="h-4 w-4 mr-1" />
-                    <span className="font-medium px-2 py-0.5 rounded-md text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20">
-                      {withdrawal.amount.toLocaleString()} {currency}
-                    </span>
+                </CollapsibleTrigger>
+                
+                <CollapsibleContent className="pt-2 animate-accordion-down">
+                  <div className="flex justify-end gap-2 mt-1">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit(withdrawal);
+                      }} 
+                      className="h-8 w-8 text-blue-600"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(withdrawal);
+                      }} 
+                      className="h-8 w-8 text-red-600"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
-                </div>
-                
-                <p 
-                  className="font-medium text-primary flex items-center cursor-pointer mb-2 px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-900/20" 
-                  onClick={() => handleClientClick(client)}
-                >
-                  {withdrawal.client_name}
-                </p>
-                
-                <div className="flex items-center text-xs text-muted-foreground mb-2">
-                  <CalendarIcon className="h-3 w-3 mr-1" />
-                  {formattedOperationDate}
-                </div>
-                
-                {withdrawal.notes && <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                    {withdrawal.notes}
-                  </p>}
-                
-                <div className="flex justify-end gap-2 mt-2">
-                  <Button variant="ghost" size="icon" onClick={() => onEdit(withdrawal)} className="h-8 w-8 text-blue-600">
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => onDelete(withdrawal)} className="h-8 w-8 text-red-600">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>;
-        })}
+                </CollapsibleContent>
+              </Collapsible>
+            );
+          })}
           
-          {withdrawals.length === 0 && <div className="text-center py-4 text-muted-foreground">
+          {withdrawals.length === 0 && (
+            <div className="text-center py-4 text-muted-foreground">
               Aucun retrait trouvé
-            </div>}
+            </div>
+          )}
             
           {/* Mobile Total Section */}
           {withdrawals.length > 0 && (
