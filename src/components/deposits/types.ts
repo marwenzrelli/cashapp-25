@@ -5,6 +5,7 @@ export interface Deposit {
   date: string;
   description: string;
   client_name: string;
+  client_id?: string | number; // Added client_id as optional property
   status: string;
   created_at: string;
   created_by: string | null;
