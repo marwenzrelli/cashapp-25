@@ -101,7 +101,7 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
                             
                           </p>
                           <p className="text-sm text-muted-foreground">
-                            ID: {client ? client.id : "Non trouvé"}
+                            ID: {client ? formatId(client.id) : "Non trouvé"}
                           </p>
                         </div>
                       </div>
@@ -249,3 +249,4 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
       </CardContent>
     </Card>;
 };
+
