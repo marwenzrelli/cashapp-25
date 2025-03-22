@@ -2,23 +2,23 @@
 import { useState, useEffect } from "react";
 import { Withdrawal } from "../types";
 import { containsPartialText } from "@/features/operations/utils/display-helpers";
+import { DateRange } from "react-day-picker";
+import { isWithinInterval } from "date-fns";
 
 export const useWithdrawalPagination = (withdrawals: Withdrawal[]) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [itemsPerPage, setItemsPerPage] = useState("10");
   const [currentPage, setCurrentPage] = useState(1);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   
   useEffect(() => {
-    // Reset current page when search term changes
+    // Reset current page when search term or date range changes
     setCurrentPage(1);
-  }, [searchTerm]);
+  }, [searchTerm, dateRange]);
 
   const filteredWithdrawals = withdrawals.filter(withdrawal => {
-    if (!searchTerm.trim()) return true;
-    
-    const searchTerms = searchTerm.toLowerCase().split(',').map(term => term.trim());
-    
-    return searchTerms.some(term => {
+    // Search term filter
+    const searchMatch = !searchTerm.trim() || searchTerms.some(term => {
       // Recherche sur le nom du client
       if (containsPartialText(withdrawal.client_name, term)) return true;
       
@@ -33,7 +33,26 @@ export const useWithdrawalPagination = (withdrawals: Withdrawal[]) => {
       
       return false;
     });
+    
+    // Date range filter
+    let dateMatch = true;
+    if (dateRange?.from && dateRange?.to) {
+      const withdrawalDate = new Date(withdrawal.operation_date || withdrawal.created_at);
+      try {
+        dateMatch = isWithinInterval(withdrawalDate, {
+          start: dateRange.from,
+          end: dateRange.to
+        });
+      } catch (error) {
+        console.error("Error checking date interval:", error);
+        dateMatch = false;
+      }
+    }
+    
+    return searchMatch && dateMatch;
   });
+
+  const searchTerms = searchTerm.toLowerCase().split(',').map(term => term.trim());
 
   // Pagination des retraits
   const paginatedWithdrawals = filteredWithdrawals.slice(
@@ -48,6 +67,8 @@ export const useWithdrawalPagination = (withdrawals: Withdrawal[]) => {
     setItemsPerPage,
     currentPage,
     setCurrentPage,
+    dateRange,
+    setDateRange,
     filteredWithdrawals,
     paginatedWithdrawals
   };

@@ -3,17 +3,16 @@ import React, { useState } from "react";
 import { StandaloneWithdrawalForm } from "./standalone/StandaloneWithdrawalForm";
 import { WithdrawalTable } from "./WithdrawalTable";
 import { WithdrawalHeader } from "./WithdrawalHeader";
-import { QuickActions } from "./QuickActions";
+import { SearchBar } from "./SearchBar";
 import { DeleteWithdrawalDialog } from "./DeleteWithdrawalDialog";
 import { WithdrawalDialogContainer } from "./WithdrawalDialogContainer";
 import { Withdrawal } from "../types";
 import { Client } from "@/features/clients/types";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { TransferPagination } from "@/features/transfers/components/TransferPagination";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { DateRange } from "react-day-picker";
 
 import { ExtendedClient } from "../hooks/form/withdrawalFormTypes";
 
@@ -34,6 +33,8 @@ interface WithdrawalsContentProps {
   setItemsPerPage: (value: string) => void;
   currentPage: number;
   setCurrentPage: (page: number) => void;
+  dateRange?: DateRange;
+  setDateRange?: (range: DateRange | undefined) => void;
 }
 
 export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
@@ -52,7 +53,9 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
   itemsPerPage,
   setItemsPerPage,
   currentPage,
-  setCurrentPage
+  setCurrentPage,
+  dateRange,
+  setDateRange = () => {}
 }) => {
   const [showDialog, setShowDialog] = useState(false);
   const [selectedClient, setSelectedClient] = useState<string>("");
@@ -143,15 +146,15 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-4 items-center">
-            <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Rechercher par nom, notes, ou ID..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9" />
-            </div>
-            <div className="text-sm text-muted-foreground">
-              {withdrawals.length} résultats trouvés
-            </div>
-          </div>
+          <SearchBar
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            itemsPerPage={itemsPerPage}
+            onItemsPerPageChange={setItemsPerPage}
+            totalWithdrawals={withdrawals.length}
+            dateRange={dateRange}
+            onDateRangeChange={setDateRange}
+          />
         </CardContent>
       </Card>
 
