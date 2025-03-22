@@ -1,11 +1,12 @@
 
 import { UserCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { formatId } from "@/utils/formatId";
 
 interface DepositClientInfoProps {
   clientName: string;
   depositId: string | number; // Update to accept both string and number
-  clientId?: string | number; // Update to accept both string and number
+  clientId?: string | number | null; // Update to accept both string and number and null
 }
 
 export const DepositClientInfo = ({ 
@@ -21,6 +22,11 @@ export const DepositClientInfo = ({
     // For now, we just prevent the default action
     console.log("Would navigate to client: ", clientName);
   };
+
+  // Format the client ID for display
+  const displayClientId = clientId && clientId !== "N/A" 
+    ? (typeof clientId === 'number' ? formatId(clientId) : clientId) 
+    : "N/A";
   
   return (
     <div className="flex items-center gap-3">
@@ -36,7 +42,7 @@ export const DepositClientInfo = ({
           {clientName}
         </p>
         <p className="text-sm text-muted-foreground">
-          ID: {clientId?.toString() || "N/A"}
+          ID: {displayClientId}
         </p>
       </div>
     </div>
