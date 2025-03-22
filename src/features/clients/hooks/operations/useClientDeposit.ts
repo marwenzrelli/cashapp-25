@@ -42,13 +42,18 @@ export function useClientDeposit(clientId?: number, refetchClient?: () => void) 
         }
       }
       
+      // Ensure client_id is a number or null
+      const parsedClientId = depositClientId 
+        ? (typeof depositClientId === 'string' ? parseInt(depositClientId, 10) : depositClientId) 
+        : null;
+      
       // Insert deposit into database with client_id
       const {
         data: insertedDeposit,
         error
       } = await supabase.from('deposits').insert({
         client_name: deposit.client_name,
-        client_id: depositClientId, // Include the client_id in the deposit
+        client_id: parsedClientId, // Now properly typed as number or null
         amount: deposit.amount,
         operation_date: new Date(deposit.date).toISOString(),
         notes: deposit.description,
