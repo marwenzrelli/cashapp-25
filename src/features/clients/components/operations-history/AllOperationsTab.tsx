@@ -19,6 +19,33 @@ export const AllOperationsTab = ({ operations, currency = "TND" }: AllOperations
     return <EmptyOperations />;
   }
 
+  // Calculate totals for each operation type
+  const calculateTotals = () => {
+    const totals = {
+      deposit: 0,
+      withdrawal: 0,
+      transfer: 0
+    };
+
+    operations.forEach(operation => {
+      switch (operation.type) {
+        case "deposit":
+          totals.deposit += operation.amount;
+          break;
+        case "withdrawal":
+          totals.withdrawal += operation.amount;
+          break;
+        case "transfer":
+          totals.transfer += operation.amount;
+          break;
+      }
+    });
+
+    return totals;
+  };
+
+  const totals = calculateTotals();
+
   return (
     <>
       {/* Desktop version */}
@@ -81,6 +108,44 @@ export const AllOperationsTab = ({ operations, currency = "TND" }: AllOperations
                 </TableRow>
               );
             })}
+            
+            {/* Totals section for desktop */}
+            <TableRow className="border-t-2 border-primary/20">
+              <TableCell colSpan={operations.some(op => op.type === "transfer") ? 4 : 3} className="font-medium">
+                Totaux par type d'opération:
+              </TableCell>
+              <TableCell colSpan={operations.some(op => op.type === "transfer") ? 2 : 2}></TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell colSpan={2}></TableCell>
+              <TableCell colSpan={operations.some(op => op.type === "transfer") ? 2 : 1} className="font-medium">
+                Dépôts:
+              </TableCell>
+              <TableCell className="text-center font-medium text-green-600 dark:text-green-400">
+                +{totals.deposit.toLocaleString()} {currency}
+              </TableCell>
+              {operations.some(op => op.type === "transfer") && <TableCell></TableCell>}
+            </TableRow>
+            <TableRow>
+              <TableCell colSpan={2}></TableCell>
+              <TableCell colSpan={operations.some(op => op.type === "transfer") ? 2 : 1} className="font-medium">
+                Retraits:
+              </TableCell>
+              <TableCell className="text-center font-medium text-red-600 dark:text-red-400">
+                -{totals.withdrawal.toLocaleString()} {currency}
+              </TableCell>
+              {operations.some(op => op.type === "transfer") && <TableCell></TableCell>}
+            </TableRow>
+            <TableRow>
+              <TableCell colSpan={2}></TableCell>
+              <TableCell colSpan={operations.some(op => op.type === "transfer") ? 2 : 1} className="font-medium">
+                Transferts:
+              </TableCell>
+              <TableCell className="text-center font-medium text-blue-600 dark:text-blue-400">
+                {totals.transfer.toLocaleString()} {currency}
+              </TableCell>
+              {operations.some(op => op.type === "transfer") && <TableCell></TableCell>}
+            </TableRow>
           </TableBody>
         </Table>
       </div>
@@ -97,6 +162,31 @@ export const AllOperationsTab = ({ operations, currency = "TND" }: AllOperations
             showType={true}
           />
         ))}
+        
+        {/* Totals section for mobile */}
+        <div className="mt-8 border-t-2 border-primary/20 pt-4">
+          <h3 className="font-medium text-base mb-3">Totaux par type d'opération:</h3>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="font-medium">Dépôts:</span>
+              <span className="font-medium text-green-600 dark:text-green-400">
+                +{totals.deposit.toLocaleString()} {currency}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="font-medium">Retraits:</span>
+              <span className="font-medium text-red-600 dark:text-red-400">
+                -{totals.withdrawal.toLocaleString()} {currency}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="font-medium">Transferts:</span>
+              <span className="font-medium text-blue-600 dark:text-blue-400">
+                {totals.transfer.toLocaleString()} {currency}
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
     </>
   );
