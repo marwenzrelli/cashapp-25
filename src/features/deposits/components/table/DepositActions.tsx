@@ -25,8 +25,7 @@ export const DepositActions = ({
           className="relative hover:bg-blue-50 dark:hover:bg-blue-950/50 text-blue-600 hover:text-blue-600"
           onClick={() => onEdit(deposit)}
         >
-          <Pencil className="h-4 w-4 mr-2" />
-          Modifier
+          <Pencil className="h-4 w-4" />
         </Button>
         <Button
           variant="ghost"
