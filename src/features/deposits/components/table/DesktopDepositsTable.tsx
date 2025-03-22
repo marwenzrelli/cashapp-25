@@ -16,6 +16,9 @@ export const DesktopDepositsTable = ({
   onEdit, 
   onDelete 
 }: DesktopDepositsTableProps) => {
+  // Calculate total deposit amount
+  const totalDeposits = deposits.reduce((total, deposit) => total + deposit.amount, 0);
+
   return (
     <table className="w-full text-sm">
       <thead className="bg-muted/50">
@@ -52,6 +55,17 @@ export const DesktopDepositsTable = ({
             </td>
           </tr>
         ))}
+
+        {/* Total row */}
+        {deposits.length > 0 && (
+          <tr className="border-t-2 border-primary/20 font-medium">
+            <td colSpan={1} className="p-3">Total des versements:</td>
+            <td className="p-3 text-green-600 dark:text-green-400">
+              {totalDeposits.toLocaleString()} €
+            </td>
+            <td colSpan={3}></td>
+          </tr>
+        )}
       </tbody>
     </table>
   );

@@ -16,6 +16,9 @@ export const MobileDepositsTable = ({
   onEdit, 
   onDelete 
 }: MobileDepositsTableProps) => {
+  // Calculate total deposit amount
+  const totalDeposits = deposits.reduce((total, deposit) => total + deposit.amount, 0);
+
   return (
     <div className="space-y-2 w-full">
       {deposits.map((deposit) => (
@@ -46,6 +49,18 @@ export const MobileDepositsTable = ({
           </div>
         </div>
       ))}
+      
+      {/* Total section for mobile */}
+      {deposits.length > 0 && (
+        <div className="mt-4 border-t-2 border-primary/20 pt-4 bg-white dark:bg-gray-800 p-3 rounded-lg shadow-sm">
+          <div className="flex justify-between items-center">
+            <span className="font-medium">Total des versements:</span>
+            <span className="font-medium text-green-600 dark:text-green-400">
+              {totalDeposits.toLocaleString()} €
+            </span>
+          </div>
+        </div>
+      )}
       
       {deposits.length === 0 && (
         <div className="text-center py-4 text-muted-foreground">
