@@ -59,7 +59,7 @@ export const useFetchDeposits = (
           date: displayDate,
           description: d.notes || '',
           client_name: d.client_name,
-          client_id: d.client_id || null, // Add client_id here
+          client_id: d.client_id || null, // Ensure client_id is included
           status: d.status,
           created_at: d.created_at,
           created_by: d.created_by || null,

@@ -59,8 +59,8 @@ export const MobileDepositsTable = ({
             <div className="mb-2">
               <DepositClientInfo 
                 clientName={deposit.client_name} 
-                depositId={deposit.id.toString()} 
-                clientId={deposit.client_id?.toString() || "N/A"} // Pass client ID
+                depositId={deposit.id} // No need for toString here, updated interface accepts number
+                clientId={deposit.client_id} // No need for toString here, updated interface accepts number
               />
             </div>
             
