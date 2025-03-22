@@ -46,9 +46,9 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
   // Calculate the total amount for the displayed withdrawals
   const totalAmount = withdrawals.reduce((total, withdrawal) => total + withdrawal.amount, 0);
   
-  // Format date range for display
+  // Format date range for display - convert Date objects to ISO strings first
   const dateRangeText = dateRange?.from && dateRange?.to 
-    ? `du ${formatDate(dateRange.from)} au ${formatDate(dateRange.to)}`
+    ? `du ${formatDate(dateRange.from.toISOString())} au ${formatDate(dateRange.to.toISOString())}`
     : "pour toute la période";
   
   return <Card className="w-full mx-0">
