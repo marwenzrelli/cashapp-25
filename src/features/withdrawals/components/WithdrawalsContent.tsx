@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { StandaloneWithdrawalForm } from "./standalone/StandaloneWithdrawalForm";
 import { WithdrawalTable } from "./WithdrawalTable";
@@ -171,7 +170,8 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
         withdrawals={paginatedWithdrawals} 
         onEdit={handleEdit} 
         onDelete={handleDeleteWithdrawal} 
-        findClientById={findClientById} 
+        findClientById={findClientById}
+        dateRange={dateRange}
       />
 
       {showDialog && (

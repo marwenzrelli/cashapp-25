@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,8 @@ import { Client } from "@/features/clients/types";
 import { formatDate } from "../hooks/utils/formatUtils";
 import { useNavigate } from "react-router-dom";
 import { formatId } from "@/utils/formatId";
+import { DateRange } from "react-day-picker";
+
 interface WithdrawalTableProps {
   withdrawals: Withdrawal[];
   onEdit: (withdrawal: Withdrawal) => void;
@@ -15,17 +18,23 @@ interface WithdrawalTableProps {
   findClientById: (clientFullName: string) => (Client & {
     dateCreation: string;
   }) | null;
+  dateRange?: DateRange;
 }
+
 export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
   withdrawals,
   onEdit,
   onDelete,
-  findClientById
+  findClientById,
+  dateRange
 }) => {
   const {
-    currency
+    currency,
+    formatCurrency
   } = useCurrency();
+  
   const navigate = useNavigate();
+  
   const handleClientClick = (client: (Client & {
     dateCreation: string;
   }) | null) => {
@@ -33,6 +42,15 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
       navigate(`/clients/${client.id}`);
     }
   };
+  
+  // Calculate the total amount for the displayed withdrawals
+  const totalAmount = withdrawals.reduce((total, withdrawal) => total + withdrawal.amount, 0);
+  
+  // Format date range for display
+  const dateRangeText = dateRange?.from && dateRange?.to 
+    ? `du ${formatDate(dateRange.from)} au ${formatDate(dateRange.to)}`
+    : "pour toute la période";
+  
   return <Card className="w-full mx-0">
       <CardHeader>
         <div className="flex items-center justify-between">
@@ -107,6 +125,15 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
                   </tr>;
             })}
             </tbody>
+            <tfoot className="bg-muted/50 font-medium">
+              <tr>
+                <td colSpan={2} className="p-3 text-right font-semibold">Total {dateRangeText}:</td>
+                <td className="p-3 text-center text-danger font-bold">
+                  {totalAmount.toLocaleString()} {currency}
+                </td>
+                <td colSpan={3}></td>
+              </tr>
+            </tfoot>
           </table>
         </div>
 
@@ -158,6 +185,18 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
           {withdrawals.length === 0 && <div className="text-center py-4 text-muted-foreground">
               Aucun retrait trouvé
             </div>}
+            
+          {/* Mobile Total Section */}
+          {withdrawals.length > 0 && (
+            <div className="bg-muted/50 p-4 rounded-lg border mt-4">
+              <div className="flex justify-between items-center">
+                <span className="font-semibold">Total {dateRangeText}:</span>
+                <span className="text-danger font-bold">
+                  {totalAmount.toLocaleString()} {currency}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>;
