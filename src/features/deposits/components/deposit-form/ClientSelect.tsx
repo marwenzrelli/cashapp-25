@@ -1,11 +1,8 @@
 
-// Since this file isn't provided, I'll have to create a basic implementation 
-// that assumes it's similar to other components in the codebase.
 import React from 'react';
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UserCircle } from "lucide-react";
-import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface Client {
   id: string | number;
@@ -19,16 +16,16 @@ interface ClientSelectProps {
   selectedClient: string;
   onClientChange: (value: string) => void;
   label?: string;
+  currency: string;
 }
 
 export const ClientSelect = ({
   clients,
   selectedClient,
   onClientChange,
-  label = "Client"
+  label = "Client",
+  currency
 }: ClientSelectProps) => {
-  const { currency } = useCurrency();
-
   return (
     <div className="space-y-2">
       <Label htmlFor="client">{label}</Label>
