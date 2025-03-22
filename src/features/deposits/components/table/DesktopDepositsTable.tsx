@@ -61,7 +61,7 @@ export const DesktopDepositsTable = ({
           <tr className="border-t-2 border-primary/20 font-medium">
             <td colSpan={1} className="p-3">Total des versements:</td>
             <td className="p-3 text-green-600 dark:text-green-400">
-              {totalDeposits.toLocaleString()} €
+              {totalDeposits.toLocaleString()} TND
             </td>
             <td colSpan={3}></td>
           </tr>

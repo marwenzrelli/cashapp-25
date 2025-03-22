@@ -56,7 +56,7 @@ export const MobileDepositsTable = ({
           <div className="flex justify-between items-center">
             <span className="font-medium">Total des versements:</span>
             <span className="font-medium text-green-600 dark:text-green-400">
-              {totalDeposits.toLocaleString()} €
+              {totalDeposits.toLocaleString()} TND
             </span>
           </div>
         </div>
