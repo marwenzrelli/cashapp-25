@@ -69,7 +69,11 @@ export const OperationsMobileCard = ({
                   ? "destructive" 
                   : "outline"
             } 
-            className="text-xs mr-2"
+            className={
+              operation.type === "deposit"
+                ? "text-xs mr-2 bg-green-500 hover:bg-green-600"
+                : "text-xs mr-2"
+            }
           >
             {operation.type === "deposit" 
               ? "Dépôt" 
