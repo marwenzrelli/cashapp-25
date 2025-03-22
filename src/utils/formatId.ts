@@ -1,9 +1,10 @@
 
 /**
- * Formats an ID as a 4-digit string with leading zeros
- * @param id The ID to format
- * @returns A string with the ID padded to 4 digits
+ * Format un ID en chaîne de caractères avec des zéros de remplissage
+ * @param id L'ID à formater
+ * @param length Le nombre de chiffres souhaités (par défaut 6)
+ * @returns L'ID formaté
  */
-export const formatId = (id: number | string): string => {
-  return id.toString().padStart(4, '0');
+export const formatId = (id: number, length: number = 6): string => {
+  return id.toString().padStart(length, '0');
 };

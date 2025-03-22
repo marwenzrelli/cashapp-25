@@ -19,18 +19,17 @@ export const DepositClientInfo = ({
   // Handle click to navigate to client profile
   const handleClientClick = () => {
     if (clientId) {
-      // If we have a client ID, we could navigate to the client profile
-      console.log("Would navigate to client profile with ID:", clientId);
-      // Uncomment the below line to enable navigation when ready
-      // navigate(`/clients/${clientId}`);
+      navigate(`/clients/${clientId}`);
     } else {
-      console.log("Would navigate to client: ", clientName);
+      console.log("No client ID available for navigation:", clientName);
     }
   };
 
-  // Format the client ID for display
+  // Format the client ID for display as 4 digits
   const displayClientId = clientId 
-    ? (typeof clientId === 'number' ? formatId(clientId) : clientId) 
+    ? (typeof clientId === 'number' 
+        ? formatId(clientId, 4) // Format to 4 digits
+        : formatId(parseInt(clientId), 4)) // Parse string to int and format
     : "N/A";
   
   return (
