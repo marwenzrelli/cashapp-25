@@ -4,20 +4,33 @@ import { DepositClientInfo } from "./DepositClientInfo";
 import { DepositAmount } from "./DepositAmount";
 import { DepositDateInfo } from "./DepositDateInfo";
 import { DepositActions } from "./DepositActions";
+import { DateRange } from "react-day-picker";
+import { formatDate } from "@/features/withdrawals/hooks/utils/formatUtils";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface DesktopDepositsTableProps {
   deposits: Deposit[];
   onEdit: (deposit: Deposit) => void;
   onDelete: (deposit: Deposit) => void;
+  dateRange?: DateRange;
 }
 
 export const DesktopDepositsTable = ({ 
   deposits, 
   onEdit, 
-  onDelete 
+  onDelete,
+  dateRange
 }: DesktopDepositsTableProps) => {
+  // Get currency formatting from context
+  const { currency } = useCurrency();
+  
   // Calculate total deposit amount
   const totalDeposits = deposits.reduce((total, deposit) => total + deposit.amount, 0);
+  
+  // Format date range for display - convert Date objects to ISO strings first
+  const dateRangeText = dateRange?.from && dateRange?.to 
+    ? `du ${formatDate(dateRange.from.toISOString())} au ${formatDate(dateRange.to.toISOString())}`
+    : "pour toute la période";
 
   return (
     <table className="w-full text-sm">
@@ -59,9 +72,11 @@ export const DesktopDepositsTable = ({
         {/* Total row */}
         {deposits.length > 0 && (
           <tr className="border-t-2 border-primary/20 font-medium">
-            <td colSpan={1} className="p-3">Total des versements:</td>
+            <td colSpan={1} className="p-3">
+              Total des versements {dateRangeText}:
+            </td>
             <td className="p-3 text-green-600 dark:text-green-400">
-              {totalDeposits.toLocaleString()} TND
+              {totalDeposits.toLocaleString()} {currency}
             </td>
             <td colSpan={3}></td>
           </tr>

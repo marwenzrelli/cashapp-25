@@ -1,4 +1,3 @@
-
 import React from "react";
 import { DepositsTable } from "./DepositsTable";
 import { DepositsHeader } from "./DepositsHeader";
@@ -153,7 +152,8 @@ export const DepositsContent = ({
             <DepositsTable 
               deposits={paginatedDeposits} 
               onEdit={handleEdit} 
-              onDelete={handleDelete} 
+              onDelete={handleDelete}
+              dateRange={dateRange}
             />
           ) : (
             <div className="text-center py-8 bg-gray-50 rounded-lg border border-gray-200 w-full">

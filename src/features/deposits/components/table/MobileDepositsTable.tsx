@@ -4,20 +4,33 @@ import { DepositClientInfo } from "./DepositClientInfo";
 import { DepositAmount } from "./DepositAmount";
 import { DepositDateInfo } from "./DepositDateInfo";
 import { DepositActions } from "./DepositActions";
+import { DateRange } from "react-day-picker";
+import { formatDate } from "@/features/withdrawals/hooks/utils/formatUtils";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface MobileDepositsTableProps {
   deposits: Deposit[];
   onEdit: (deposit: Deposit) => void;
   onDelete: (deposit: Deposit) => void;
+  dateRange?: DateRange;
 }
 
 export const MobileDepositsTable = ({ 
   deposits, 
   onEdit, 
-  onDelete 
+  onDelete,
+  dateRange
 }: MobileDepositsTableProps) => {
+  // Get currency formatting from context
+  const { currency } = useCurrency();
+  
   // Calculate total deposit amount
   const totalDeposits = deposits.reduce((total, deposit) => total + deposit.amount, 0);
+
+  // Format date range for display - convert Date objects to ISO strings first
+  const dateRangeText = dateRange?.from && dateRange?.to 
+    ? `du ${formatDate(dateRange.from.toISOString())} au ${formatDate(dateRange.to.toISOString())}`
+    : "pour toute la période";
 
   return (
     <div className="space-y-2 w-full">
@@ -54,9 +67,9 @@ export const MobileDepositsTable = ({
       {deposits.length > 0 && (
         <div className="mt-4 border-t-2 border-primary/20 pt-4 bg-white dark:bg-gray-800 p-3 rounded-lg shadow-sm">
           <div className="flex justify-between items-center">
-            <span className="font-medium">Total des versements:</span>
+            <span className="font-medium">Total des versements {dateRangeText}:</span>
             <span className="font-medium text-green-600 dark:text-green-400">
-              {totalDeposits.toLocaleString()} TND
+              {totalDeposits.toLocaleString()} {currency}
             </span>
           </div>
         </div>
