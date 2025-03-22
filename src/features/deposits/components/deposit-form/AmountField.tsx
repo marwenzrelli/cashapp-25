@@ -21,7 +21,7 @@ export const AmountField = ({ amount, setAmount, currency }: AmountFieldProps) =
           placeholder="0.00"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          className="pl-14 md:pl-9 transition-all focus-visible:ring-primary/50"
+          className="pl-14 md:pl-9 transition-all focus-visible:ring-primary/50 border rounded-lg bg-green-50 dark:bg-green-900/20"
         />
         <span className="absolute right-3 top-3 text-muted-foreground">
           {currency}

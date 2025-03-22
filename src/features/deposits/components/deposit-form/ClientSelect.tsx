@@ -33,13 +33,9 @@ export const ClientSelect = ({
             <SelectItem key={client.id} value={client.id.toString()} className="flex items-center justify-between py-2">
               <div className="flex items-center gap-2">
                 <UserCircle className="h-4 w-4 text-primary/50" />
-                <span>{client.prenom} {client.nom}</span>
+                <span className="px-2 py-1 rounded-md bg-purple-50 dark:bg-purple-900/20">{client.prenom} {client.nom}</span>
               </div>
-              <div className={`font-mono text-sm ${
-                client.solde >= 0
-                  ? "text-green-600 dark:text-green-400"
-                  : "text-red-600 dark:text-red-400"
-              }`}>
+              <div className="font-mono text-sm px-2 py-1 rounded-md text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20">
                 {client.solde.toLocaleString()} {currency}
               </div>
             </SelectItem>

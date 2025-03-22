@@ -22,7 +22,7 @@ export const AmountInput = ({
         pattern="[0-9]*"
         value={amount} 
         onChange={e => onAmountChange(e.target.value)} 
-        className="text-lg py-6" 
+        className="text-lg py-6 border rounded-lg bg-green-50 dark:bg-green-900/20" 
       />
     </div>
   );
