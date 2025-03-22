@@ -41,6 +41,7 @@ export const useDepositForm = ({ clients, onConfirm, refreshClientBalance }: Use
 
       const newDeposit: Partial<Deposit> = {
         client_name: `${client.prenom} ${client.nom}`,
+        client_id: client.id, // Include the client ID in the deposit
         amount: parseFloat(amount),
         date: format(depositDateTime, "yyyy-MM-dd'T'HH:mm:ss"), // Include seconds
         description

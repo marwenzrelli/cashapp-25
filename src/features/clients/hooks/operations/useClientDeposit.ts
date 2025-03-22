@@ -18,12 +18,37 @@ export function useClientDeposit(clientId?: number, refetchClient?: () => void) 
         }
       } = await supabase.auth.getSession();
       
-      // Insert deposit into database
+      // Find the client ID from the name if not provided directly
+      let depositClientId = deposit.client_id;
+      
+      if (!depositClientId && deposit.client_name) {
+        // Parse first and last name from client name
+        const nameParts = deposit.client_name.split(' ');
+        if (nameParts.length >= 2) {
+          const firstName = nameParts[0];
+          const lastName = nameParts.slice(1).join(' ');
+          
+          // Look up client ID from the database
+          const { data: clientData, error: clientError } = await supabase
+            .from('clients')
+            .select('id')
+            .eq('prenom', firstName)
+            .eq('nom', lastName)
+            .single();
+            
+          if (clientData && !clientError) {
+            depositClientId = clientData.id;
+          }
+        }
+      }
+      
+      // Insert deposit into database with client_id
       const {
         data: insertedDeposit,
         error
       } = await supabase.from('deposits').insert({
         client_name: deposit.client_name,
+        client_id: depositClientId, // Include the client_id in the deposit
         amount: deposit.amount,
         operation_date: new Date(deposit.date).toISOString(),
         notes: deposit.description,

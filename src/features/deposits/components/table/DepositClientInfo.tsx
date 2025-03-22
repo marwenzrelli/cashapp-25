@@ -5,26 +5,31 @@ import { formatId } from "@/utils/formatId";
 
 interface DepositClientInfoProps {
   clientName: string;
-  depositId: string | number; // Update to accept both string and number
-  clientId?: string | number | null; // Update to accept both string and number and null
+  depositId: string | number; 
+  clientId?: string | number | null;
 }
 
 export const DepositClientInfo = ({ 
   clientName,
   depositId,
-  clientId = "N/A" // Default to "N/A" if not provided
+  clientId = null // Default to null if not provided
 }: DepositClientInfoProps) => {
   const navigate = useNavigate();
   
   // Handle click to navigate to client profile
   const handleClientClick = () => {
-    // This is a placeholder - we would need to get the actual client ID
-    // For now, we just prevent the default action
-    console.log("Would navigate to client: ", clientName);
+    if (clientId) {
+      // If we have a client ID, we could navigate to the client profile
+      console.log("Would navigate to client profile with ID:", clientId);
+      // Uncomment the below line to enable navigation when ready
+      // navigate(`/clients/${clientId}`);
+    } else {
+      console.log("Would navigate to client: ", clientName);
+    }
   };
 
   // Format the client ID for display
-  const displayClientId = clientId && clientId !== "N/A" 
+  const displayClientId = clientId 
     ? (typeof clientId === 'number' ? formatId(clientId) : clientId) 
     : "N/A";
   

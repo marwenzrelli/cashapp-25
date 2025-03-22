@@ -24,7 +24,7 @@ export const useFetchDeposits = (
         console.log("Fetching deposits with authenticated session:", session.user.id);
       }
       
-      // Get deposits data without trying to join with clients
+      // Get deposits data with client_id included
       const { data, error } = await supabase
         .from('deposits')
         .select('*')
@@ -54,14 +54,13 @@ export const useFetchDeposits = (
         // Always use operation_date for the main display date if available
         const displayDate = d.operation_date ? formatDateTime(d.operation_date) : formatDateTime(d.created_at);
         
-        // Since the deposits table doesn't have a client_id field, we'll set it to null
         return {
           id: d.id,
           amount: Number(d.amount),
           date: displayDate,
           description: d.notes || '',
           client_name: d.client_name,
-          client_id: null, // Set to null since it's not in the deposits table
+          client_id: d.client_id, // Now we're using the actual client_id from the database
           status: d.status,
           created_at: d.created_at,
           created_by: d.created_by || null,
