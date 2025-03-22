@@ -24,14 +24,14 @@ export const useFetchDeposits = (
       }
 
       const formattedDeposits: Deposit[] = data.map(d => {
-        // Since we don't have a direct join, assume client_id might not be available
+        // Since the deposits table doesn't have a client_id field, we'll set it to null
         return {
           id: d.id,
           amount: Number(d.amount),
           date: formatDateTime(d.created_at),
           description: d.notes || '',
           client_name: d.client_name,
-          client_id: d.client_id || null, // This will be null if not present
+          client_id: null, // Set to null since it's not in the deposits table
           status: d.status,
           created_at: d.created_at,
           created_by: d.created_by || null,

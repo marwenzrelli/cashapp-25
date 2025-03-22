@@ -54,15 +54,14 @@ export const useFetchDeposits = (
         // Always use operation_date for the main display date if available
         const displayDate = d.operation_date ? formatDateTime(d.operation_date) : formatDateTime(d.created_at);
         
-        // Since we don't have a direct join, we can use another property or null
-        // In this case we're using the client_name as a fallback identifier
+        // Since the deposits table doesn't have a client_id field, we'll set it to null
         return {
           id: d.id,
           amount: Number(d.amount),
           date: displayDate,
           description: d.notes || '',
           client_name: d.client_name,
-          client_id: d.client_id || null, // This will be null since we don't have a direct relation
+          client_id: null, // Set to null since it's not in the deposits table
           status: d.status,
           created_at: d.created_at,
           created_by: d.created_by || null,
