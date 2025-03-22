@@ -105,23 +105,23 @@ export const DepositClientInfo = ({ clientName, depositId }: DepositClientInfoPr
   };
   
   return (
-    <div className="flex items-center gap-3">
-      <div className="relative">
-        <User className="h-10 w-10 text-primary/20 transition-colors group-hover:text-primary/40" />
-        <div className="absolute inset-0 animate-pulse rounded-full bg-primary/5" />
-      </div>
-      <div>
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-3">
+        <div className="relative">
+          <User className="h-10 w-10 text-primary/20 transition-colors group-hover:text-primary/40" />
+          <div className="absolute inset-0 animate-pulse rounded-full bg-primary/5" />
+        </div>
         <p 
           className="font-medium cursor-pointer hover:text-primary hover:underline transition-colors flex items-center gap-1 px-2 py-1 rounded-md bg-purple-50 dark:bg-purple-900/20"
           onClick={navigateToProfile}
         >
           {clientName}
         </p>
-        <p className="text-sm text-muted-foreground flex items-center gap-1">
-          <Hash className="h-3 w-3" />
-          {formatId(depositId)}
-        </p>
       </div>
+      <p className="text-sm text-muted-foreground flex items-center gap-1 ml-12">
+        <Hash className="h-3 w-3" />
+        {formatId(depositId)}
+      </p>
     </div>
   );
 };

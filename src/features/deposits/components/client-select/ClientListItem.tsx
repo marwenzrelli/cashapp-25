@@ -58,16 +58,18 @@ export const ClientListItem = ({
         cursor: 'pointer'
       }}
     >
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
           <UserCircle className="h-7 w-7 text-primary/80 flex-shrink-0" />
           <span className="font-extrabold text-sm tracking-tight px-2 py-1 rounded-md bg-purple-50 dark:bg-purple-900/20">
             {client.prenom} {client.nom}
           </span>
         </div>
-        <span className="font-mono text-sm font-semibold px-2 py-1 rounded-md text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20">
-          {client.solde.toLocaleString()} {currency}
-        </span>
+        <div className="pl-9">
+          <span className="font-mono text-sm font-semibold px-2 py-1 rounded-md text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20">
+            {client.solde.toLocaleString()} {currency}
+          </span>
+        </div>
       </div>
       
       {isSelected && (

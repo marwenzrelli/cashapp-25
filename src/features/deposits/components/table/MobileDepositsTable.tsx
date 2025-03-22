@@ -39,7 +39,7 @@ export const MobileDepositsTable = ({
           key={deposit.id} 
           className="bg-white dark:bg-gray-800 p-3 border rounded-lg shadow-sm w-full"
         >
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex flex-col gap-2 mb-2">
             <DepositClientInfo 
               clientName={deposit.client_name} 
               depositId={deposit.id} 
