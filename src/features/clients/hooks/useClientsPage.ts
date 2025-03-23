@@ -55,7 +55,19 @@ export const useClientsPage = () => {
     };
     
     loadClients();
-  }, [fetchClients]);
+    
+    // Set up a periodic refresh every 30 seconds
+    const refreshInterval = setInterval(() => {
+      if (!loading) {  // Only refresh if not already loading
+        console.log("Periodic refresh of clients data");
+        fetchClients(0, false);  // Pass false to avoid showing repeated toasts
+      }
+    }, 30000);
+    
+    return () => {
+      clearInterval(refreshInterval);
+    };
+  }, [fetchClients, loading]);
 
   // Memoize filtered clients to avoid unnecessary recalculations
   const filteredClients = useMemo(() => {
@@ -148,8 +160,8 @@ export const useClientsPage = () => {
     setIsDialogOpen,
     setIsEditDialogOpen,
     setIsDeleteDialogOpen,
-    setEditForm,     // Export the missing state setter
-    setNewClient,    // Export the missing state setter
+    setEditForm,     
+    setNewClient,   
     
     // Client actions
     handleRetry,

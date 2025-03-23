@@ -9,6 +9,7 @@ import { LoadingIndicator } from "@/components/ui/loading-indicator";
 const Clients = () => {
   const [initialLoading, setInitialLoading] = useState(true);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const [loadingShown, setLoadingShown] = useState(false);
 
   const {
     // State
@@ -45,30 +46,34 @@ const Clients = () => {
 
   // Handle initial loading state and timeout
   useEffect(() => {
-    // Show loading indicator for at least 1 second
-    const initialTimer = setTimeout(() => {
+    if (loading && !loadingShown) {
+      setLoadingShown(true);
+      
+      // Show loading indicator for at least 1 second
+      const initialTimer = setTimeout(() => {
+        setInitialLoading(false);
+      }, 1000);
+      
+      // Show timeout message after 15 seconds if still loading
+      const timeoutTimer = setTimeout(() => {
+        if (loading && !error) {
+          setLoadingTimeout(true);
+        }
+      }, 15000);
+      
+      return () => {
+        clearTimeout(initialTimer);
+        clearTimeout(timeoutTimer);
+      };
+    }
+    
+    // Reset loading state when loading finishes
+    if (!loading) {
+      setLoadingShown(false);
       setInitialLoading(false);
-    }, 1000);
-    
-    // Show timeout message after 15 seconds if still loading
-    const timeoutTimer = setTimeout(() => {
-      if (loading && !error) {
-        setLoadingTimeout(true);
-      }
-    }, 15000);
-    
-    return () => {
-      clearTimeout(initialTimer);
-      clearTimeout(timeoutTimer);
-    };
-  }, [loading, error]);
-
-  // Handle loading timeout reset when loading or error state changes
-  useEffect(() => {
-    if (!loading || error) {
       setLoadingTimeout(false);
     }
-  }, [loading, error]);
+  }, [loading, error, loadingShown]);
 
   // Display fullscreen loading for initial load
   if (initialLoading && loading && !clients.length) {

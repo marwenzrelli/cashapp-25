@@ -19,8 +19,34 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
     timestamp: number;
   } | null>(null);
   
+  // Prevent multiple rapid fetches
+  const throttleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const subscribedRef = useRef(false);
+  
   // Configure a single global real-time listener to avoid multiple listeners
   useEffect(() => {
+    // Only set up the subscription once
+    if (subscribedRef.current) {
+      return () => {};
+    }
+    
+    subscribedRef.current = true;
+    
+    // Throttled fetch function to prevent multiple rapid fetches
+    const throttledFetch = () => {
+      if (throttleTimeoutRef.current) {
+        clearTimeout(throttleTimeoutRef.current);
+      }
+      
+      throttleTimeoutRef.current = setTimeout(() => {
+        console.log("Throttled fetchClients triggered by realtime update");
+        fetchClients(0, false).catch(err => {
+          console.error("Error in throttled fetchClients:", err);
+        });
+        throttleTimeoutRef.current = null;
+      }, 1000); // 1 second throttle
+    };
+    
     // Setup a single listener for all tables
     const setupRealtimeListener = async () => {
       try {
@@ -34,11 +60,11 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
               const currentTime = Date.now();
               const payloadId = payload.new?.id || payload.old?.id;
               
-              // Check if this is a duplicate event (same table+id within 500ms)
+              // Check if this is a duplicate event (same table+id within 1000ms)
               if (lastProcessedRef.current && 
                   lastProcessedRef.current.table === 'clients' &&
                   lastProcessedRef.current.id === payloadId &&
-                  currentTime - lastProcessedRef.current.timestamp < 500) {
+                  currentTime - lastProcessedRef.current.timestamp < 1000) {
                 return;
               }
               
@@ -50,10 +76,7 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
               };
               
               console.log("Changement détecté dans la table clients:", payload);
-              // Use showToast=false to avoid showing repeated error toasts
-              fetchClients(0, false).catch(err => {
-                console.error("Error fetching clients after realtime update:", err);
-              });
+              throttledFetch();
               // Invalidate related queries
               queryClient.invalidateQueries({ queryKey: ['clients'] });
               if (payload.new && 'id' in payload.new) {
@@ -69,11 +92,11 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
               const currentTime = Date.now();
               const payloadId = payload.new?.id || payload.old?.id;
               
-              // Check if this is a duplicate event (same table+id within 500ms)
+              // Check if this is a duplicate event (same table+id within 1000ms)
               if (lastProcessedRef.current && 
                   lastProcessedRef.current.table === 'deposits' &&
                   lastProcessedRef.current.id === payloadId &&
-                  currentTime - lastProcessedRef.current.timestamp < 500) {
+                  currentTime - lastProcessedRef.current.timestamp < 1000) {
                 return;
               }
               
@@ -85,9 +108,7 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
               };
               
               console.log("Changement détecté dans la table deposits:", payload);
-              fetchClients(0, false).catch(err => {
-                console.error("Error fetching clients after deposits update:", err);
-              });
+              throttledFetch();
               // Invalidate deposits and operations queries
               queryClient.invalidateQueries({ queryKey: ['deposits'] });
               queryClient.invalidateQueries({ queryKey: ['operations'] });
@@ -104,11 +125,11 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
               const currentTime = Date.now();
               const payloadId = payload.new?.id || payload.old?.id;
               
-              // Check if this is a duplicate event (same table+id within 500ms)
+              // Check if this is a duplicate event (same table+id within 1000ms)
               if (lastProcessedRef.current && 
                   lastProcessedRef.current.table === 'withdrawals' &&
                   lastProcessedRef.current.id === payloadId &&
-                  currentTime - lastProcessedRef.current.timestamp < 500) {
+                  currentTime - lastProcessedRef.current.timestamp < 1000) {
                 return;
               }
               
@@ -120,9 +141,7 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
               };
               
               console.log("Changement détecté dans la table withdrawals:", payload);
-              fetchClients(0, false).catch(err => {
-                console.error("Error fetching clients after withdrawals update:", err);
-              });
+              throttledFetch();
               // Invalidate withdrawals and operations queries
               queryClient.invalidateQueries({ queryKey: ['withdrawals'] });
               queryClient.invalidateQueries({ queryKey: ['operations'] });
@@ -139,11 +158,11 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
               const currentTime = Date.now();
               const payloadId = payload.new?.id || payload.old?.id;
               
-              // Check if this is a duplicate event (same table+id within 500ms)
+              // Check if this is a duplicate event (same table+id within 1000ms)
               if (lastProcessedRef.current && 
                   lastProcessedRef.current.table === 'transfers' &&
                   lastProcessedRef.current.id === payloadId &&
-                  currentTime - lastProcessedRef.current.timestamp < 500) {
+                  currentTime - lastProcessedRef.current.timestamp < 1000) {
                 return;
               }
               
@@ -155,9 +174,7 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
               };
               
               console.log("Changement détecté dans la table transfers:", payload);
-              fetchClients(0, false).catch(err => {
-                console.error("Error fetching clients after transfers update:", err);
-              });
+              throttledFetch();
               // Invalidate transfers and operations queries
               queryClient.invalidateQueries({ queryKey: ['transfers'] });
               queryClient.invalidateQueries({ queryKey: ['operations'] });
@@ -173,10 +190,17 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
 
         // Clean up the channel when the component unmounts
         return () => {
+          console.log("Cleaning up realtime subscription");
+          if (throttleTimeoutRef.current) {
+            clearTimeout(throttleTimeoutRef.current);
+            throttleTimeoutRef.current = null;
+          }
           supabase.removeChannel(channel);
+          subscribedRef.current = false;
         };
       } catch (error) {
         console.error("Erreur lors de la configuration de l'écouteur en temps réel:", error);
+        subscribedRef.current = false;
         return () => {}; // Return empty function if setup fails
       }
     };
@@ -191,6 +215,12 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
           console.error("Error during cleanup:", err);
         });
       }
+      
+      if (throttleTimeoutRef.current) {
+        clearTimeout(throttleTimeoutRef.current);
+      }
+      
+      subscribedRef.current = false;
     };
   }, [fetchClients, queryClient]);
 };

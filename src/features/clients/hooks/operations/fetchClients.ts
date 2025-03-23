@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useRef } from "react";
 import { Client } from "../../types";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +17,8 @@ export const useFetchClients = (
   const errorNotifiedRef = useRef(false);
   // Use a reference to track ongoing operations
   const fetchingRef = useRef(false);
+  // Use a reference to track timeout
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Function to update client balances
   const updateClientBalances = async (clientsList: Client[]) => {
@@ -92,6 +93,12 @@ export const useFetchClients = (
 
   // Function to fetch clients
   const fetchClients = useCallback(async (retry = 0, showToast = true) => {
+    // Clear previous timeout if exists
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    
     // If a fetch is already in progress, don't start another one
     if (fetchingRef.current) {
       console.log("A fetch operation is already in progress, skipping...");
@@ -115,28 +122,28 @@ export const useFetchClients = (
         throw new Error("La connexion à la base de données n'est pas disponible");
       }
       
-      // Fetch clients with a safety timeout
-      const fetchWithTimeout = async () => {
-        const abortController = new AbortController();
-        const timeoutId = setTimeout(() => {
-          abortController.abort();
-        }, 10000);
-        
-        try {
-          const response = await supabase
-            .from('clients')
-            .select('*')
-            .order('date_creation', { ascending: false });
-            
-          clearTimeout(timeoutId);
-          return response;
-        } catch (error) {
-          clearTimeout(timeoutId);
-          throw error;
-        }
-      };
+      // Set a safety timeout to ensure loading state doesn't get stuck
+      timeoutRef.current = setTimeout(() => {
+        console.log("Fetch clients timeout reached, resetting loading state");
+        setLoading(false);
+        fetchingRef.current = false;
+        timeoutRef.current = null;
+      }, 20000);
       
-      const { data: clientsData, error: clientsError } = await fetchWithTimeout();
+      // Fetch clients with a safety timeout
+      const response = await supabase
+        .from('clients')
+        .select('*')
+        .order('date_creation', { ascending: false });
+            
+      // Clear the safety timeout since we got a response
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+
+      const clientsError = response.error;
+      const clientsData = response.data;
 
       if (clientsError) {
         console.error("Erreur lors de la récupération des clients:", clientsError);
@@ -148,13 +155,15 @@ export const useFetchClients = (
           return;
         }
         
-        // Sinon, lancer une erreur
+        // Otherwise, throw an error
         throw new Error(handleSupabaseError(clientsError));
       }
 
       if (!clientsData) {
         console.log("Aucune donnée reçue de la base de données");
         setClients([]);
+        setLoading(false);
+        fetchingRef.current = false;
         return;
       }
 
@@ -173,6 +182,9 @@ export const useFetchClients = (
         }, 200);
       }
       
+      // Important: Reset loading state
+      setLoading(false);
+      
     } catch (error) {
       console.error("Erreur critique lors du chargement des clients:", error);
       
@@ -189,10 +201,11 @@ export const useFetchClients = (
         showErrorToast("Erreur de connexion", error);
         errorNotifiedRef.current = true;
       }
+      
+      // Make sure loading state is reset
+      setLoading(false);
     } finally {
-      if (retry === 0 || retry === MAX_RETRIES) {
-        setLoading(false);
-      }
+      // Reset fetchingRef always in finally block
       fetchingRef.current = false;
     }
   }, [setClients, setLoading, setError]);
