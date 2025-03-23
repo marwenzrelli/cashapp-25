@@ -1,5 +1,6 @@
 
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { RealtimeState } from "./types";
 import { createRealtimeChannel } from "./useRealtimeChannel";
 

@@ -8,7 +8,7 @@ import { useCreateClient } from "./operations/createClient";
 import { useUpdateClient } from "./operations/updateClient";
 import { useDeleteClient } from "./operations/deleteClient";
 import { useRefreshClientBalance } from "./operations/refreshBalance";
-import { useRealtimeSubscription } from "./operations/realtimeSubscription";
+import { useRealtimeSubscription } from "./operations/realtime";
 import { toast } from "sonner";
 
 export const useClients = () => {
