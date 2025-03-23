@@ -9,9 +9,12 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 
 const Clients = () => {
+  // Display state management
   const [initialLoading, setInitialLoading] = useState(true);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const [loadingIndicatorShown, setLoadingIndicatorShown] = useState(true);
   const timeoutTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const loadingTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const {
     // State
@@ -48,10 +51,15 @@ const Clients = () => {
 
   // Handle loading state and timeout
   useEffect(() => {
-    // Clear previous timer if it exists
+    // Clear previous timers if they exist
     if (timeoutTimerRef.current) {
       clearTimeout(timeoutTimerRef.current);
       timeoutTimerRef.current = null;
+    }
+    
+    if (loadingTimerRef.current) {
+      clearTimeout(loadingTimerRef.current);
+      loadingTimerRef.current = null;
     }
     
     // Only set up timers if we're in a loading state
@@ -63,10 +71,22 @@ const Clients = () => {
         }
         timeoutTimerRef.current = null;
       }, 8000);
+      
+      // Only show loading indicator if loading persists for more than 300ms
+      // This prevents flickering for quick operations
+      if (!loadingIndicatorShown) {
+        loadingTimerRef.current = setTimeout(() => {
+          if (loading) {
+            setLoadingIndicatorShown(true);
+          }
+          loadingTimerRef.current = null;
+        }, 300);
+      }
     } else {
       // When loading finishes, reset states
       setInitialLoading(false);
       setLoadingTimeout(false);
+      setLoadingIndicatorShown(false);
     }
     
     // Clean up on unmount
@@ -75,11 +95,19 @@ const Clients = () => {
         clearTimeout(timeoutTimerRef.current);
         timeoutTimerRef.current = null;
       }
+      if (loadingTimerRef.current) {
+        clearTimeout(loadingTimerRef.current);
+        loadingTimerRef.current = null;
+      }
     };
   }, [loading]);
 
-  // Display fullscreen loading for initial load
-  if ((initialLoading || loading) && !clients.length) {
+  // Display fullscreen loading only for initial load when we don't have cached data
+  const shouldShowFullscreenLoading = (initialLoading || loading) && 
+                                      loadingIndicatorShown && 
+                                      !clients.length;
+  
+  if (shouldShowFullscreenLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[80vh]">
         <LoadingIndicator 
@@ -105,7 +133,7 @@ const Clients = () => {
         <ClientsPageContent
           clients={clients}
           filteredClients={filteredClients}
-          loading={loading}
+          loading={loading && loadingIndicatorShown}
           error={error}
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}

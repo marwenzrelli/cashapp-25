@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Client } from "../types";
 
 // Import all the sub-modules
@@ -16,6 +16,11 @@ export const useClients = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cachedClients, setCachedClients] = useState<{data: Client[], timestamp: number} | null>(null);
+  
+  // Référence pour suivre si une actualisation est en cours
+  const isRefreshingRef = useRef(false);
+  // Référence pour éviter de montrer plusieurs toasts d'actualisation
+  const toastShownRef = useRef(false);
   
   // Fetch clients functionality
   const { fetchClients: fetchClientsImpl } = useFetchClients(
@@ -64,24 +69,51 @@ export const useClients = () => {
     }
   }, []);
   
+  // Reset toast flag when loading completes
+  useEffect(() => {
+    if (!loading && toastShownRef.current) {
+      toastShownRef.current = false;
+    }
+  }, [loading]);
+  
   // Memoize the fetch function to avoid infinite loops
   const fetchClients = useCallback(
     (retry = 0, showToast = true) => {
       try {
+        // If already refreshing, don't start another refresh
+        if (isRefreshingRef.current) {
+          console.log("Already refreshing clients, skipping duplicate request");
+          return Promise.resolve();
+        }
+        
+        isRefreshingRef.current = true;
+        
         // If we're loading and have cached data, use the cache first to prevent blank screen
         if (loading && cachedClients && cachedClients.data.length > 0) {
           console.log("Using cached clients while loading fresh data");
           setClients(cachedClients.data);
         }
         
-        return fetchClientsImpl(retry, showToast);
+        // Show toast only once per refresh session if requested
+        if (showToast && !toastShownRef.current) {
+          toastShownRef.current = true;
+        }
+        
+        return fetchClientsImpl(retry, showToast)
+          .finally(() => {
+            isRefreshingRef.current = false;
+          });
       } catch (err) {
         console.error("Critical error in fetchClients:", err);
-        if (showToast) {
+        isRefreshingRef.current = false;
+        
+        if (showToast && !toastShownRef.current) {
           toast.error("Erreur de chargement", {
             description: "Impossible de charger les clients. Veuillez réessayer."
           });
+          toastShownRef.current = true;
         }
+        
         setError("Erreur de connexion au serveur");
         setLoading(false);
         return Promise.resolve();

@@ -7,6 +7,7 @@ import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AISuggestion } from "../types";
 import { LoadingIndicator } from "@/components/ui/loading-indicator";
+import { useRef, useEffect, useState } from "react";
 
 interface ClientsPageContentProps {
   clients: Client[];
@@ -38,15 +39,44 @@ export const ClientsPageContent = ({
     id: "1",
     message: "Nouveau client potentiel détecté",
     type: "success",
-    // Changed from string to specific union type value
     clientId: "1"
   }, {
     id: "2",
     message: "Mise à jour des informations recommandée",
     type: "info",
-    // Changed from string to specific union type value
     clientId: "3"
   }];
+
+  // Gestion de l'affichage de l'indicateur de chargement
+  const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
+  const loadingTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Afficher l'indicateur de chargement seulement après un délai pour éviter le clignotement
+  useEffect(() => {
+    if (loading) {
+      if (loadingTimerRef.current) {
+        clearTimeout(loadingTimerRef.current);
+      }
+      
+      loadingTimerRef.current = setTimeout(() => {
+        setShowLoadingIndicator(true);
+        loadingTimerRef.current = null;
+      }, 500); // 500ms delay before showing loading indicator
+    } else {
+      if (loadingTimerRef.current) {
+        clearTimeout(loadingTimerRef.current);
+        loadingTimerRef.current = null;
+      }
+      setShowLoadingIndicator(false);
+    }
+    
+    return () => {
+      if (loadingTimerRef.current) {
+        clearTimeout(loadingTimerRef.current);
+        loadingTimerRef.current = null;
+      }
+    };
+  }, [loading]);
 
   // Render content based on loading state and errors
   const renderContent = () => {
@@ -90,7 +120,7 @@ export const ClientsPageContent = ({
     return (
       <div className={loading ? "opacity-70 pointer-events-none" : ""}>
         <ClientList clients={filteredClients} onEdit={handleEdit} onDelete={handleDelete} />
-        {loading && (
+        {showLoadingIndicator && loading && (
           <div className="fixed bottom-4 right-4 bg-primary text-white px-4 py-2 rounded-md shadow-md flex items-center gap-2">
             <LoadingIndicator size="sm" />
             <span>Actualisation...</span>
