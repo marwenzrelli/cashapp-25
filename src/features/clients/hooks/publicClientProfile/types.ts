@@ -7,6 +7,7 @@ export interface ClientOperation {
   date: string;
   amount: number;
   description: string;
+  status?: string;
   fromClient?: string;
   toClient?: string;
 }
