@@ -3,9 +3,10 @@ import { Client } from "@/features/clients/types";
 import { ClientList } from "./ClientList";
 import { ClientInsights } from "./ClientInsights";
 import { ClientSearch } from "./ClientSearch";
-import { Loader2, AlertTriangle, RefreshCw } from "lucide-react";
+import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AISuggestion } from "../types";
+import { LoadingIndicator } from "@/components/ui/loading-indicator";
 
 interface ClientsPageContentProps {
   clients: Client[];
@@ -50,13 +51,16 @@ export const ClientsPageContent = ({
   // Render content based on loading state and errors
   const renderContent = () => {
     if (loading && clients.length === 0) {
-      return <div className="flex flex-col items-center justify-center py-16 space-y-4">
-          <Loader2 className="h-12 w-12 text-primary animate-spin" />
-          <p className="text-muted-foreground">Chargement des clients...</p>
-        </div>;
+      return (
+        <div className="flex flex-col items-center justify-center py-12 space-y-4">
+          <LoadingIndicator size="lg" text="Chargement des clients..." />
+        </div>
+      );
     }
+    
     if (error) {
-      return <div className="flex flex-col items-center justify-center py-16 space-y-6 text-center">
+      return (
+        <div className="flex flex-col items-center justify-center py-16 space-y-6 text-center">
           <div className="rounded-full bg-red-100 dark:bg-red-900/20 p-3">
             <AlertTriangle className="h-10 w-10 text-red-600" />
           </div>
@@ -68,17 +72,32 @@ export const ClientsPageContent = ({
             <RefreshCw className="h-4 w-4" />
             Réessayer
           </Button>
-        </div>;
+        </div>
+      );
     }
+    
     if (clients.length === 0) {
-      return <div className="flex flex-col items-center justify-center py-16 space-y-4">
+      return (
+        <div className="flex flex-col items-center justify-center py-16 space-y-4">
           <p className="text-muted-foreground">Aucun client trouvé.</p>
           <Button onClick={openNewClientDialog} variant="default">
             Ajouter un client
           </Button>
-        </div>;
+        </div>
+      );
     }
-    return <ClientList clients={filteredClients} onEdit={handleEdit} onDelete={handleDelete} />;
+    
+    return (
+      <div className={loading ? "opacity-70 pointer-events-none" : ""}>
+        <ClientList clients={filteredClients} onEdit={handleEdit} onDelete={handleDelete} />
+        {loading && (
+          <div className="fixed bottom-4 right-4 bg-primary text-white px-4 py-2 rounded-md shadow-md flex items-center gap-2">
+            <LoadingIndicator size="sm" />
+            <span>Actualisation...</span>
+          </div>
+        )}
+      </div>
+    );
   };
   
   return (

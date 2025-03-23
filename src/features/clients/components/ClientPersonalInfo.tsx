@@ -2,7 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Client } from "../types";
 import { ClientQRCode } from "./ClientQRCode";
-import { RefObject, useState } from "react";
+import { RefObject, useState, useEffect } from "react";
 import { PersonalInfoFields } from "./PersonalInfoFields";
 import { ClientIdBadge } from "./ClientIdBadge";
 import { ClientActionButtons } from "./ClientActionButtons";
@@ -35,6 +35,7 @@ export const ClientPersonalInfo = ({
   const [depositDialogOpen, setDepositDialogOpen] = useState(false);
   const [withdrawalDialogOpen, setWithdrawalDialogOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [didInitialRefresh, setDidInitialRefresh] = useState(false);
   
   console.log("ClientPersonalInfo - clientId:", clientId, "client:", client?.id, "realTimeBalance:", clientBalance);
 
@@ -43,6 +44,24 @@ export const ClientPersonalInfo = ({
     handleWithdrawal,
     refreshClientBalance: refreshBalance
   } = useClientOperations(client, clientId, refetchClient);
+
+  // Automatically refresh balance once when component mounts
+  useEffect(() => {
+    if (client && client.id && refreshClientBalance && !didInitialRefresh) {
+      const doInitialRefresh = async () => {
+        try {
+          await refreshClientBalance();
+          setDidInitialRefresh(true);
+        } catch (error) {
+          console.error("Error during initial balance refresh:", error);
+        }
+      };
+      
+      // Use a small timeout to avoid blocking the UI render
+      const timer = setTimeout(doInitialRefresh, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [client, refreshClientBalance, didInitialRefresh]);
 
   const handleRefreshBalance = async () => {
     if (!refreshClientBalance) {

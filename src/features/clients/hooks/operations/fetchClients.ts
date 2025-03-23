@@ -11,8 +11,8 @@ export const useFetchClients = (
   setError: React.Dispatch<React.SetStateAction<string | null>>
 ) => {
   // Configuration constants
-  const MAX_RETRIES = 3;
-  const RETRY_DELAY = 3000; // 3 secondes
+  const MAX_RETRIES = 2; // Reduced from 3
+  const RETRY_DELAY = 2000; // Reduced from 3000
   
   // Utiliser une référence pour suivre si une notification d'erreur a déjà été affichée
   const errorNotifiedRef = useRef(false);
@@ -24,54 +24,65 @@ export const useFetchClients = (
     if (!supabase || !clientsList.length) return;
     
     try {
-      // Traiter les clients par lots pour éviter de surcharger l'API
-      const batchSize = 3;
+      // Prioritize recent clients for balance updates
+      const sortedClients = [...clientsList].sort((a, b) => {
+        const dateA = new Date(a.date_creation).getTime();
+        const dateB = new Date(b.date_creation).getTime();
+        return dateB - dateA;
+      });
       
-      for (let i = 0; i < clientsList.length; i += batchSize) {
-        const batch = clientsList.slice(i, i + batchSize);
+      // Process 5 clients at a time, prioritizing recently created clients
+      const batchSize = 5;
+      
+      for (let i = 0; i < sortedClients.length; i += batchSize) {
+        const batch = sortedClients.slice(i, i + batchSize);
         
-        for (const client of batch) {
+        // Use Promise.all to process the batch in parallel
+        await Promise.all(batch.map(async (client) => {
           try {
-            // Attempt to calculate balance directly since RPC may not exist yet
-            const { data: deposits } = await supabase
-              .from('deposits')
-              .select('amount')
-              .eq('client_name', `${client.prenom} ${client.nom}`);
-              
-            const { data: withdrawals } = await supabase
-              .from('withdrawals')
-              .select('amount')
-              .eq('client_name', `${client.prenom} ${client.nom}`);
+            const clientName = `${client.prenom} ${client.nom}`;
             
-            const depositsTotal = deposits?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
-            const withdrawalsTotal = withdrawals?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
+            // Fetch deposits and withdrawals in parallel
+            const [depositsResult, withdrawalsResult] = await Promise.all([
+              supabase.from('deposits').select('amount').eq('client_name', clientName),
+              supabase.from('withdrawals').select('amount').eq('client_name', clientName)
+            ]);
+            
+            const deposits = depositsResult.data || [];
+            const withdrawals = withdrawalsResult.data || [];
+            
+            const depositsTotal = deposits.reduce((sum, d) => sum + Number(d.amount), 0);
+            const withdrawalsTotal = withdrawals.reduce((sum, w) => sum + Number(w.amount), 0);
             const balance = depositsTotal - withdrawalsTotal;
 
-            // Mettre à jour le solde dans la base de données
-            const { error: updateError } = await supabase
-              .from('clients')
-              .update({ solde: balance || 0 })
-              .eq('id', client.id);
+            // Only update if balance has changed
+            if (client.solde !== balance) {
+              // Update database
+              const { error: updateError } = await supabase
+                .from('clients')
+                .update({ solde: balance || 0 })
+                .eq('id', client.id);
 
-            if (updateError) {
-              console.warn(`Impossible de mettre à jour le solde pour ${client.prenom} ${client.nom}:`, updateError);
-              continue;
+              if (updateError) {
+                console.warn(`Impossible de mettre à jour le solde pour ${clientName}:`, updateError);
+                return;
+              }
+
+              // Update local state
+              setClients(prevClients => 
+                prevClients.map(c => 
+                  c.id === client.id ? { ...c, solde: balance || 0 } : c
+                )
+              );
             }
-
-            // Mettre à jour le client dans l'état local
-            setClients(prevClients => 
-              prevClients.map(c => 
-                c.id === client.id ? { ...c, solde: balance || 0 } : c
-              )
-            );
           } catch (error) {
             console.error(`Erreur pour le client ${client.id}:`, error);
           }
-        }
+        }));
         
-        // Pause entre les lots pour éviter de surcharger l'API
-        if (i + batchSize < clientsList.length) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
+        // Pause between batches
+        if (i + batchSize < sortedClients.length) {
+          await new Promise(resolve => setTimeout(resolve, 500));
         }
       }
     } catch (error) {
@@ -98,9 +109,6 @@ export const useFetchClients = (
       
       console.log(`Chargement des clients... (tentative ${retry + 1}/${MAX_RETRIES + 1})`);
       
-      // Données de test pour simuler un succès en cas d'erreur persistante
-      const mockData: Client[] = [];
-      
       // Vérifier que la connexion à Supabase est établie
       if (!supabase) {
         throw new Error("La connexion à la base de données n'est pas disponible");
@@ -109,7 +117,7 @@ export const useFetchClients = (
       // Récupérer les clients avec un timeout de sécurité
       const fetchWithTimeout = async () => {
         const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error("La requête a expiré")), 10000);
+          setTimeout(() => reject(new Error("La requête a expiré")), 8000); // Reduced from 10000
         });
         
         const fetchPromise = supabase
@@ -132,13 +140,6 @@ export const useFetchClients = (
           return;
         }
         
-        // Si toutes les tentatives ont échoué et que nous sommes en développement, utiliser des données de test
-        if (process.env.NODE_ENV === 'development' && mockData.length > 0) {
-          console.warn("Utilisation de données de test après échec de connexion");
-          setClients(mockData);
-          return;
-        }
-        
         // Sinon, lancer une erreur
         throw new Error(handleSupabaseError(clientsError));
       }
@@ -154,15 +155,12 @@ export const useFetchClients = (
       // Mettre à jour l'état avec les clients récupérés
       setClients(clientsData);
       
-      // Pour éviter les problèmes de performance, limiter les appels à updateClientBalances
-      if (clientsData.length > 0 && retry === 0) {
+      // Update balances in background after loading clients
+      if (clientsData.length > 0) {
+        // Update balances in the background
         setTimeout(() => {
-          try {
-            updateClientBalances(clientsData);
-          } catch (balanceError) {
-            console.error("Erreur lors de la mise à jour des soldes:", balanceError);
-          }
-        }, 1000);
+          updateClientBalances(clientsData);
+        }, 200);
       }
       
     } catch (error) {
