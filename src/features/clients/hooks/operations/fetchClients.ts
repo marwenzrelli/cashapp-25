@@ -11,15 +11,15 @@ export const useFetchClients = (
   setError: React.Dispatch<React.SetStateAction<string | null>>
 ) => {
   // Configuration constants
-  const MAX_RETRIES = 2; // Reduced from 3
-  const RETRY_DELAY = 2000; // Reduced from 3000
+  const MAX_RETRIES = 3;
+  const RETRY_DELAY = 2000; 
   
-  // Utiliser une référence pour suivre si une notification d'erreur a déjà été affichée
+  // Use a reference to track if an error notification has already been shown
   const errorNotifiedRef = useRef(false);
-  // Utiliser une référence pour les opérations en cours
+  // Use a reference to track ongoing operations
   const fetchingRef = useRef(false);
 
-  // Fonction pour mettre à jour les soldes des clients
+  // Function to update client balances
   const updateClientBalances = async (clientsList: Client[]) => {
     if (!supabase || !clientsList.length) return;
     
@@ -90,10 +90,11 @@ export const useFetchClients = (
     }
   };
 
-  // Fonction de récupération des clients
+  // Function to fetch clients
   const fetchClients = useCallback(async (retry = 0, showToast = true) => {
-    // Si une récupération est déjà en cours, ne pas en démarrer une autre
+    // If a fetch is already in progress, don't start another one
     if (fetchingRef.current) {
+      console.log("A fetch operation is already in progress, skipping...");
       return;
     }
     
@@ -103,37 +104,44 @@ export const useFetchClients = (
       if (retry === 0) {
         setLoading(true);
         setError(null);
-        // Réinitialiser le drapeau de notification d'erreur lors d'une nouvelle tentative
+        // Reset the error notification flag when starting a new retry
         errorNotifiedRef.current = false;
       }
       
       console.log(`Chargement des clients... (tentative ${retry + 1}/${MAX_RETRIES + 1})`);
       
-      // Vérifier que la connexion à Supabase est établie
+      // Check that the Supabase connection is established
       if (!supabase) {
         throw new Error("La connexion à la base de données n'est pas disponible");
       }
       
-      // Récupérer les clients avec un timeout de sécurité
+      // Fetch clients with a safety timeout
       const fetchWithTimeout = async () => {
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error("La requête a expiré")), 8000); // Reduced from 10000
-        });
+        const abortController = new AbortController();
+        const timeoutId = setTimeout(() => {
+          abortController.abort();
+        }, 10000);
         
-        const fetchPromise = supabase
-          .from('clients')
-          .select('*')
-          .order('date_creation', { ascending: false });
-        
-        return Promise.race([fetchPromise, timeoutPromise]);
+        try {
+          const response = await supabase
+            .from('clients')
+            .select('*')
+            .order('date_creation', { ascending: false });
+            
+          clearTimeout(timeoutId);
+          return response;
+        } catch (error) {
+          clearTimeout(timeoutId);
+          throw error;
+        }
       };
       
-      const { data: clientsData, error: clientsError } = await fetchWithTimeout() as any;
+      const { data: clientsData, error: clientsError } = await fetchWithTimeout();
 
       if (clientsError) {
         console.error("Erreur lors de la récupération des clients:", clientsError);
         
-        // Si nous n'avons pas atteint le nombre maximal de tentatives, réessayer
+        // If we haven't reached the maximum number of retries, try again
         if (retry < MAX_RETRIES) {
           console.log(`Nouvelle tentative dans ${RETRY_DELAY/1000} secondes...`);
           setTimeout(() => fetchClients(retry + 1, false), RETRY_DELAY);
@@ -152,14 +160,16 @@ export const useFetchClients = (
 
       console.log(`${clientsData.length} clients récupérés avec succès:`, clientsData);
       
-      // Mettre à jour l'état avec les clients récupérés
+      // Update the state with retrieved clients
       setClients(clientsData);
       
       // Update balances in background after loading clients
       if (clientsData.length > 0) {
         // Update balances in the background
         setTimeout(() => {
-          updateClientBalances(clientsData);
+          updateClientBalances(clientsData).catch(err => {
+            console.error("Error updating client balances:", err);
+          });
         }, 200);
       }
       
@@ -174,7 +184,7 @@ export const useFetchClients = (
       
       setError(handleSupabaseError(error));
       
-      // Afficher la notification d'erreur seulement si nous n'en avons pas encore affiché et si showToast est true
+      // Show the error notification only if we haven't already shown one and if showToast is true
       if (showToast && !errorNotifiedRef.current) {
         showErrorToast("Erreur de connexion", error);
         errorNotifiedRef.current = true;

@@ -19,12 +19,12 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
     timestamp: number;
   } | null>(null);
   
-  // Configurer un écouteur de changements en temps réel unique et global pour éviter les multiples écouteurs
+  // Configure a single global real-time listener to avoid multiple listeners
   useEffect(() => {
-    // Configurer un seul écouteur pour toutes les tables
+    // Setup a single listener for all tables
     const setupRealtimeListener = async () => {
       try {
-        // Créer un seul canal pour toutes les tables
+        // Create a single channel for all tables
         const channel = supabase
           .channel('table-changes')
           .on('postgres_changes', 
@@ -50,8 +50,10 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
               };
               
               console.log("Changement détecté dans la table clients:", payload);
-              // Utiliser showToast=false pour éviter de montrer des toasts d'erreur répétés
-              fetchClients(0, false);
+              // Use showToast=false to avoid showing repeated error toasts
+              fetchClients(0, false).catch(err => {
+                console.error("Error fetching clients after realtime update:", err);
+              });
               // Invalidate related queries
               queryClient.invalidateQueries({ queryKey: ['clients'] });
               if (payload.new && 'id' in payload.new) {
@@ -83,7 +85,9 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
               };
               
               console.log("Changement détecté dans la table deposits:", payload);
-              fetchClients(0, false);
+              fetchClients(0, false).catch(err => {
+                console.error("Error fetching clients after deposits update:", err);
+              });
               // Invalidate deposits and operations queries
               queryClient.invalidateQueries({ queryKey: ['deposits'] });
               queryClient.invalidateQueries({ queryKey: ['operations'] });
@@ -116,7 +120,9 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
               };
               
               console.log("Changement détecté dans la table withdrawals:", payload);
-              fetchClients(0, false);
+              fetchClients(0, false).catch(err => {
+                console.error("Error fetching clients after withdrawals update:", err);
+              });
               // Invalidate withdrawals and operations queries
               queryClient.invalidateQueries({ queryKey: ['withdrawals'] });
               queryClient.invalidateQueries({ queryKey: ['operations'] });
@@ -149,7 +155,9 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
               };
               
               console.log("Changement détecté dans la table transfers:", payload);
-              fetchClients(0, false);
+              fetchClients(0, false).catch(err => {
+                console.error("Error fetching clients after transfers update:", err);
+              });
               // Invalidate transfers and operations queries
               queryClient.invalidateQueries({ queryKey: ['transfers'] });
               queryClient.invalidateQueries({ queryKey: ['operations'] });
@@ -163,20 +171,24 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
             console.log("Statut de l'abonnement réel-time:", status);
           });
 
-        // Nettoyer le canal au démontage du composant
+        // Clean up the channel when the component unmounts
         return () => {
           supabase.removeChannel(channel);
         };
       } catch (error) {
         console.error("Erreur lors de la configuration de l'écouteur en temps réel:", error);
+        return () => {}; // Return empty function if setup fails
       }
     };
 
-    const cleanup = setupRealtimeListener();
+    const cleanupPromise = setupRealtimeListener();
+    
     return () => {
-      if (cleanup) {
-        cleanup.then(cleanupFn => {
+      if (cleanupPromise) {
+        cleanupPromise.then(cleanupFn => {
           if (cleanupFn) cleanupFn();
+        }).catch(err => {
+          console.error("Error during cleanup:", err);
         });
       }
     };

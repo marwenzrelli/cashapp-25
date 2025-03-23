@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useClients } from "./useClients";
 import { useClientDialogs } from "./useClientDialogs";
 import { toast } from "sonner";
@@ -15,7 +15,8 @@ export const useClientsPage = () => {
     fetchClients,
     updateClient,
     deleteClient,
-    createClient
+    createClient,
+    cachedClients
   } = useClients();
 
   const {
@@ -35,13 +36,41 @@ export const useClientsPage = () => {
     resetNewClient
   } = useClientDialogs();
 
+  // Initial fetch with retry logic
   useEffect(() => {
     console.log("Chargement initial des clients...");
-    fetchClients();
+    
+    // Try to load clients, with retry timer if it fails
+    const loadClients = async () => {
+      try {
+        await fetchClients();
+      } catch (error) {
+        console.error("Failed to load clients:", error);
+        // Auto-retry after 3 seconds if initial load fails
+        setTimeout(() => {
+          console.log("Retrying client load automatically...");
+          fetchClients();
+        }, 3000);
+      }
+    };
+    
+    loadClients();
   }, [fetchClients]);
+
+  // Memoize filtered clients to avoid unnecessary recalculations
+  const filteredClients = useMemo(() => {
+    return clients.filter((client) =>
+      `${client.prenom} ${client.nom}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client.telephone.includes(searchTerm)
+    );
+  }, [clients, searchTerm]);
 
   const handleRetry = () => {
     console.log("Tentative de rechargement des clients...");
+    toast.info("Renouvellement de la connexion", {
+      description: "Tentative de connexion à la base de données..."
+    });
     fetchClients();
   };
 
@@ -97,12 +126,6 @@ export const useClientsPage = () => {
       resetNewClient();
     }
   };
-
-  const filteredClients = clients.filter((client) =>
-    `${client.prenom} ${client.nom}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.telephone.includes(searchTerm)
-  );
 
   return {
     // State
