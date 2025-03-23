@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Client } from "../types";
 import { ClientQRCode } from "./ClientQRCode";
@@ -11,6 +12,7 @@ import { useClientOperations } from "../hooks/useClientOperations";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+
 interface ClientPersonalInfoProps {
   client: Client;
   clientId?: number;
@@ -20,6 +22,7 @@ interface ClientPersonalInfoProps {
   refreshClientBalance?: () => Promise<void>;
   clientBalance?: number | null;
 }
+
 export const ClientPersonalInfo = ({
   client,
   clientId,
@@ -32,17 +35,21 @@ export const ClientPersonalInfo = ({
   const [depositDialogOpen, setDepositDialogOpen] = useState(false);
   const [withdrawalDialogOpen, setWithdrawalDialogOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  
   console.log("ClientPersonalInfo - clientId:", clientId, "client:", client?.id, "realTimeBalance:", clientBalance);
+
   const {
     handleDeposit,
     handleWithdrawal,
     refreshClientBalance: refreshBalance
   } = useClientOperations(client, clientId, refetchClient);
+
   const handleRefreshBalance = async () => {
     if (!refreshClientBalance) {
       toast.error("Balance refresh function not available");
       return;
     }
+    
     setIsRefreshing(true);
     try {
       await refreshClientBalance();
@@ -70,7 +77,9 @@ export const ClientPersonalInfo = ({
     }
     return false;
   };
-  return <Card className="md:col-span-3">
+
+  return (
+    <Card className="md:col-span-3">
       <CardHeader>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
           <CardTitle className="flex items-center">
@@ -102,7 +111,8 @@ export const ClientPersonalInfo = ({
             </div>
           </div>
           
-          {client && client.id && <div className="flex flex-col items-center space-y-4 w-full">
+          {client && client.id && (
+            <div className="flex flex-col items-center space-y-4 w-full">
               <div className="flex justify-center w-full" ref={qrCodeRef}>
                 <ClientQRCode clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} clientName={`${client.prenom} ${client.nom}`} size={256} />
               </div>
@@ -111,12 +121,14 @@ export const ClientPersonalInfo = ({
               <div className="md:hidden w-full">
                 <ClientActionButtons onDepositClick={() => setDepositDialogOpen(true)} onWithdrawalClick={() => setWithdrawalDialogOpen(true)} orientation="vertical" />
               </div>
-            </div>}
+            </div>
+          )}
         </div>
       </CardContent>
       
       <DepositDialog client={client} open={depositDialogOpen} onOpenChange={setDepositDialogOpen} onConfirm={handleDeposit} refreshClientBalance={handleDepositRefresh} />
       
       <WithdrawalDialog client={client} open={withdrawalDialogOpen} onOpenChange={setWithdrawalDialogOpen} onConfirm={handleWithdrawal} refreshClientBalance={handleWithdrawalRefresh} />
-    </Card>;
+    </Card>
+  );
 };
