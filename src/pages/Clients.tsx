@@ -72,7 +72,7 @@ const Clients = () => {
     
     // Safety timeout - if after 5 seconds we still don't have data, try again
     const timeoutId = setTimeout(() => {
-      if (!initialLoadComplete && loadAttempts < 2 && !fetchInProgressRef.current) {
+      if (!initialLoadComplete && loadAttempts < 3 && !fetchInProgressRef.current) {
         console.log("Load timeout reached, retrying...");
         setLoadAttempts(prev => prev + 1);
         initialLoadRef.current = false; // Reset to allow another attempt
@@ -86,13 +86,14 @@ const Clients = () => {
   }, [handleRetry, initialLoadComplete, loadAttempts]);
 
   // If page is completely stuck, show fallback
-  if (loading && !clients.length && loadAttempts >= 2) {
+  if (loading && !clients.length && loadAttempts >= 3) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh]">
         <LoadingIndicator size="lg" text="Chargement prolongé... Veuillez patienter" />
         <button 
           onClick={() => {
             initialLoadRef.current = false;
+            fetchInProgressRef.current = false;
             setLoadAttempts(0);
             window.location.reload();
           }}

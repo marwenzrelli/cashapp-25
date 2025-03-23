@@ -43,7 +43,7 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
               const currentTime = Date.now();
               const payloadId = payload.new?.id || payload.old?.id;
               
-              // Check if this is a duplicate event (same table+id within 500ms)
+              // Check if this is a duplicate event (same table+id within 1000ms)
               if (lastProcessedRef.current && 
                   lastProcessedRef.current.table === 'clients' &&
                   lastProcessedRef.current.id === payloadId &&
@@ -72,9 +72,11 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
                   isProcessingRef.current = true;
                   
                   // Don't show error toasts for background updates
-                  fetchClients(0, false).finally(() => {
-                    isProcessingRef.current = false;
-                  });
+                  fetchClients(0, false)
+                    .catch(err => console.error("Error fetching clients after realtime update:", err))
+                    .finally(() => {
+                      isProcessingRef.current = false;
+                    });
                   
                   // Invalidate related queries with minimal scope
                   queryClient.invalidateQueries({ queryKey: ['clients'] });
@@ -94,7 +96,6 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
         // Save the channel reference
         channelRef.current = channel;
         
-        // Ensure the channel is properly cleaned up when the component unmounts
         return () => {
           console.log("Removing realtime channel subscription");
           if (debounceTimerRef.current) {
@@ -114,14 +115,17 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
           supabase.removeChannel(channelRef.current);
           channelRef.current = null;
         }
+        return () => {};
       }
     };
 
-    const cleanup = setupRealtimeListener();
+    const cleanupFn = setupRealtimeListener();
     return () => {
-      if (cleanup) {
-        cleanup.then(cleanupFn => {
-          if (cleanupFn && typeof cleanupFn === 'function') cleanupFn();
+      if (typeof cleanupFn === 'function') {
+        cleanupFn();
+      } else if (cleanupFn instanceof Promise) {
+        cleanupFn.then(fn => {
+          if (fn && typeof fn === 'function') fn();
         });
       }
     };

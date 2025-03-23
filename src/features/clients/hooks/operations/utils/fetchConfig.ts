@@ -27,14 +27,17 @@ export interface SupabaseQueryResult<T> {
 }
 
 /**
- * Wraps a promise with a timeout to prevent hanging requests
- * Properly handles Supabase query objects and preserves their structure
+ * Wraps a query with a timeout to prevent hanging requests
+ * Properly handles Supabase query objects by executing them as promises
  */
-export const withTimeout = async <T>(query: Promise<any>, timeout = FETCH_CONFIG.TIMEOUT): Promise<SupabaseQueryResult<T>> => {
+export const withTimeout = async <T>(query: any, timeout = FETCH_CONFIG.TIMEOUT): Promise<SupabaseQueryResult<T>> => {
   try {
+    // Execute the query first to convert it to a promise if it's a Supabase query builder
+    const queryPromise = typeof query.then === 'function' ? query : query.then((res: any) => res);
+    
     // Create a promise that resolves when the query completes or rejects on timeout
     const result = await Promise.race([
-      query,
+      queryPromise,
       createTimeoutPromise(timeout)
     ]);
     

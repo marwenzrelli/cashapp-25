@@ -65,13 +65,13 @@ export const useFetchClients = (
         throw new Error("Database connection unavailable");
       }
       
-      // Build the query
+      // Build the query but don't execute it yet
       const clientsQuery = supabase
         .from('clients')
         .select('*')
         .order('date_creation', { ascending: false });
       
-      // Execute the query with explicit typing
+      // Execute the query with explicit typing - withTimeout will now handle the query builder properly
       const response = await withTimeout<Client[]>(clientsQuery, FETCH_CONFIG.TIMEOUT + (retry * 1000));
 
       // Properly check for error
