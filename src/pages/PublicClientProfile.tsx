@@ -1,3 +1,4 @@
+
 import { useParams, useNavigate } from "react-router-dom";
 import { PublicClientLoading } from "@/features/clients/components/PublicClientLoading";
 import { PublicClientError } from "@/features/clients/components/PublicClientError";
@@ -122,7 +123,11 @@ const PublicClientProfile = () => {
 
   // Show loading state
   if (isLoading) {
-    return <PublicClientLoading onRetry={retryFetch} loadingTime={loadingTime} />;
+    return <PublicClientLoading 
+      onRetry={retryFetch} 
+      loadingTime={loadingTime}
+      timeout={loadingTime > 10} // Automatically set timeout to true after 10 seconds
+    />;
   }
 
   // Show error state with more specific error handling
