@@ -49,8 +49,18 @@ export const ClientsPageContent = ({
 
   // Gestion de l'affichage de l'indicateur de chargement
   const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
+  const [contentReady, setContentReady] = useState(false);
   const loadingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastShowTime = useRef<number>(0);
+
+  // Effect pour transition de contenu
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setContentReady(true);
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   // Afficher l'indicateur de chargement seulement après un délai pour éviter le clignotement
   // Et ne pas afficher les indicateurs si le dernier a été affiché il y a moins de 3 secondes
@@ -74,7 +84,10 @@ export const ClientsPageContent = ({
         clearTimeout(loadingTimerRef.current);
         loadingTimerRef.current = null;
       }
-      setShowLoadingIndicator(false);
+      // Ajouter un léger délai avant de cacher l'indicateur pour une transition plus douce
+      setTimeout(() => {
+        setShowLoadingIndicator(false);
+      }, 300);
     }
     
     return () => {
@@ -89,15 +102,15 @@ export const ClientsPageContent = ({
   const renderContent = () => {
     if (loading && clients.length === 0) {
       return (
-        <div className="flex flex-col items-center justify-center py-12 space-y-4">
-          <LoadingIndicator size="lg" text="Chargement des clients..." />
+        <div className="flex flex-col items-center justify-center py-12 space-y-4 animate-in fade-in duration-500">
+          <LoadingIndicator size="lg" text="Chargement des clients..." fadeIn={true} />
         </div>
       );
     }
     
     if (error) {
       return (
-        <div className="flex flex-col items-center justify-center py-16 space-y-6 text-center">
+        <div className="flex flex-col items-center justify-center py-16 space-y-6 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="rounded-full bg-red-100 dark:bg-red-900/20 p-3">
             <AlertTriangle className="h-10 w-10 text-red-600" />
           </div>
@@ -115,7 +128,7 @@ export const ClientsPageContent = ({
     
     if (clients.length === 0) {
       return (
-        <div className="flex flex-col items-center justify-center py-16 space-y-4">
+        <div className="flex flex-col items-center justify-center py-16 space-y-4 animate-in fade-in duration-300">
           <p className="text-muted-foreground">Aucun client trouvé.</p>
           <Button onClick={openNewClientDialog} variant="default">
             Ajouter un client
@@ -125,11 +138,11 @@ export const ClientsPageContent = ({
     }
     
     return (
-      <div className={loading ? "opacity-70 pointer-events-none" : ""}>
+      <div className={`transition-opacity duration-300 ${loading ? "opacity-70 pointer-events-none" : "opacity-100"}`}>
         <ClientList clients={filteredClients} onEdit={handleEdit} onDelete={handleDelete} />
         {showLoadingIndicator && loading && (
-          <div className="fixed bottom-4 right-4 bg-primary text-white px-4 py-2 rounded-md shadow-md flex items-center gap-2 animate-in fade-in slide-in-from-right-5">
-            <LoadingIndicator size="sm" />
+          <div className="fixed bottom-4 right-4 bg-primary text-white px-4 py-2 rounded-md shadow-md flex items-center gap-2 animate-in fade-in slide-in-from-right-5 duration-300">
+            <LoadingIndicator size="sm" fadeIn={false} />
             <span>Actualisation...</span>
           </div>
         )}
@@ -138,7 +151,7 @@ export const ClientsPageContent = ({
   };
   
   return (
-    <div className="space-y-6 animate-in px-2 sm:px-4 md:px-6 max-w-full">
+    <div className={`space-y-6 px-2 sm:px-4 md:px-6 max-w-full transition-all duration-500 ${contentReady ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}`}>
       <div>
         <h1 className="text-2xl md:text-3xl font-bold">Gestion des clients</h1>
         <p className="text-sm md:text-base text-muted-foreground">

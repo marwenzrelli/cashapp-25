@@ -12,12 +12,14 @@ const Clients = () => {
   // Display state management
   const [initialLoading, setInitialLoading] = useState(true);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
-  const [loadingIndicatorShown, setLoadingIndicatorShown] = useState(true);
+  const [loadingIndicatorShown, setLoadingIndicatorShown] = useState(false); // Démarrer sans montrer le loading
+  const [pageReady, setPageReady] = useState(false); // État pour la transition de la page
   const timeoutTimerRef = useRef<NodeJS.Timeout | null>(null);
   const loadingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const pageTransitionTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const {
-    // State
+    // État
     clients,
     filteredClients,
     loading,
@@ -49,6 +51,20 @@ const Clients = () => {
     handleCreateClient,
   } = useClientsPage();
 
+  // Animation de transition de la page
+  useEffect(() => {
+    // Permettre un court délai pour la transition de la page
+    pageTransitionTimerRef.current = setTimeout(() => {
+      setPageReady(true);
+    }, 150);
+
+    return () => {
+      if (pageTransitionTimerRef.current) {
+        clearTimeout(pageTransitionTimerRef.current);
+      }
+    };
+  }, []);
+
   // Handle loading state and timeout
   useEffect(() => {
     // Clear previous timers if they exist
@@ -72,7 +88,7 @@ const Clients = () => {
         timeoutTimerRef.current = null;
       }, 8000);
       
-      // Only show loading indicator if loading persists for more than 300ms
+      // Only show loading indicator if loading persists for more than 500ms
       // This prevents flickering for quick operations
       if (!loadingIndicatorShown) {
         loadingTimerRef.current = setTimeout(() => {
@@ -80,13 +96,20 @@ const Clients = () => {
             setLoadingIndicatorShown(true);
           }
           loadingTimerRef.current = null;
-        }, 300);
+        }, 500); // Augmenté de 300ms à 500ms pour éviter les flashs
       }
     } else {
-      // When loading finishes, reset states
-      setInitialLoading(false);
-      setLoadingTimeout(false);
-      setLoadingIndicatorShown(false);
+      // When loading finishes, reset states with a small delay
+      const resetTimer = setTimeout(() => {
+        setInitialLoading(false);
+        setLoadingTimeout(false);
+        // Garde l'indicateur de chargement un peu plus longtemps pour une transition plus douce
+        setTimeout(() => {
+          setLoadingIndicatorShown(false);
+        }, 300);
+      }, 150);
+      
+      return () => clearTimeout(resetTimer);
     }
     
     // Clean up on unmount
@@ -109,14 +132,15 @@ const Clients = () => {
   
   if (shouldShowFullscreenLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[80vh]">
+      <div className="flex flex-col items-center justify-center min-h-[80vh] transition-opacity duration-300">
         <LoadingIndicator 
           fullscreen={true} 
           size="lg" 
           text={loadingTimeout ? "Le chargement prend plus de temps que prévu..." : "Chargement des clients..."} 
+          fadeIn={true}
         />
         {loadingTimeout && (
-          <div className="mt-6">
+          <div className="mt-6 animate-in fade-in-50 slide-in-from-bottom-4 duration-300">
             <Button variant="outline" onClick={handleRetry} className="gap-2">
               <RefreshCw className="h-4 w-4" />
               Réessayer
@@ -129,7 +153,7 @@ const Clients = () => {
 
   return (
     <TooltipProvider>
-      <div className="w-full max-w-[100vw] pb-8 px-0">
+      <div className={`w-full max-w-[100vw] pb-8 px-0 transition-opacity duration-500 ${pageReady ? 'opacity-100' : 'opacity-0'}`}>
         <ClientsPageContent
           clients={clients}
           filteredClients={filteredClients}

@@ -5,7 +5,7 @@ import { PublicClientError } from "@/features/clients/components/PublicClientErr
 import { PublicClientPersonalInfo } from "@/features/clients/components/PublicClientPersonalInfo";
 import { PublicClientOperationsHistory } from "@/features/clients/components/PublicClientOperationsHistory";
 import { usePublicClientProfile } from "@/features/clients/hooks/usePublicClientProfile";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { showErrorToast } from "@/features/clients/hooks/utils/errorUtils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +14,8 @@ const PublicClientProfile = () => {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
   const initialCheckDone = useRef(false);
+  const [pageReady, setPageReady] = useState(false);
+  
   const { 
     client, 
     operations, 
@@ -23,6 +25,16 @@ const PublicClientProfile = () => {
     fetchClientData, 
     retryFetch 
   } = usePublicClientProfile(token);
+
+  // Effet pour l'animation d'entrée progressive
+  useEffect(() => {
+    // Retarder l'animation pour une transition plus douce
+    const timer = setTimeout(() => {
+      setPageReady(true);
+    }, 150);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   // Set JWT token for Supabase RLS policies - run only once
   useEffect(() => {
@@ -139,7 +151,7 @@ const PublicClientProfile = () => {
 
   // Show client profile when data is available
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background p-4">
+    <div className={`min-h-screen bg-gradient-to-b from-primary/10 to-background p-4 transition-opacity duration-500 ${pageReady ? 'opacity-100' : 'opacity-0'}`}>
       <div className="container mx-auto max-w-6xl space-y-6">
         <PublicClientPersonalInfo client={client} />
         <PublicClientOperationsHistory operations={operations} />
