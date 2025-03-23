@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useRef } from "react";
 import { Client } from "../../types";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +20,8 @@ export const useFetchClients = (
   const fetchingRef = useRef(false);
   // Use a reference to track timeout
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // Use a counter for fetch attempts
+  const fetchAttemptsRef = useRef(0);
 
   // Function to update client balances
   const updateClientBalances = async (clientsList: Client[]) => {
@@ -106,6 +109,7 @@ export const useFetchClients = (
     }
     
     fetchingRef.current = true;
+    fetchAttemptsRef.current += 1;
     
     try {
       if (retry === 0) {
@@ -123,18 +127,39 @@ export const useFetchClients = (
       }
       
       // Set a safety timeout to ensure loading state doesn't get stuck
+      // Reduced from 20s to 8s for faster feedback
       timeoutRef.current = setTimeout(() => {
         console.log("Fetch clients timeout reached, resetting loading state");
         setLoading(false);
         fetchingRef.current = false;
         timeoutRef.current = null;
-      }, 20000);
+        if (fetchAttemptsRef.current > 2 && !errorNotifiedRef.current) {
+          setError("Délai de connexion dépassé, veuillez réessayer");
+          errorNotifiedRef.current = true;
+          if (showToast) {
+            showErrorToast("Problème de connexion", "Le délai d'attente pour la connexion a été dépassé");
+          }
+        }
+      }, 8000);
       
-      // Fetch clients with a safety timeout
-      const response = await supabase
+      // Fetch clients with a timeout
+      const fetchPromise = supabase
         .from('clients')
         .select('*')
         .order('date_creation', { ascending: false });
+        
+      // Manual timeout for the fetch operation
+      const timeoutPromise = new Promise<{data: null, error: Error}>((resolve) => {
+        setTimeout(() => {
+          resolve({
+            data: null,
+            error: new Error("Délai d'attente dépassé pour la requête")
+          });
+        }, 5000); // 5 second timeout for fetch
+      });
+      
+      // Race between fetch and timeout
+      const response = await Promise.race([fetchPromise, timeoutPromise]);
             
       // Clear the safety timeout since we got a response
       if (timeoutRef.current) {
@@ -171,6 +196,7 @@ export const useFetchClients = (
       
       // Update the state with retrieved clients
       setClients(clientsData);
+      fetchAttemptsRef.current = 0;
       
       // Update balances in background after loading clients
       if (clientsData.length > 0) {

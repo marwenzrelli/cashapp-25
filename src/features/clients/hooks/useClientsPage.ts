@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useClients } from "./useClients";
 import { useClientDialogs } from "./useClientDialogs";
 import { toast } from "sonner";
@@ -7,6 +7,7 @@ import { Client } from "../types";
 
 export const useClientsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [retryAttempt, setRetryAttempt] = useState(0);
   
   const { 
     clients,
@@ -36,29 +37,24 @@ export const useClientsPage = () => {
     resetNewClient
   } = useClientDialogs();
 
-  // Initial fetch with retry logic
+  // Initial fetch with automatic retry logic
   useEffect(() => {
     console.log("Chargement initial des clients...");
     
-    // Try to load clients, with retry timer if it fails
     const loadClients = async () => {
       try {
         await fetchClients();
       } catch (error) {
         console.error("Failed to load clients:", error);
-        // Auto-retry after 3 seconds if initial load fails
-        setTimeout(() => {
-          console.log("Retrying client load automatically...");
-          fetchClients();
-        }, 3000);
+        // Don't auto-retry here, we'll let the user trigger retry manually
       }
     };
     
     loadClients();
     
-    // Set up a periodic refresh every 30 seconds
+    // Set up a periodic refresh every 30 seconds only if there's no error
     const refreshInterval = setInterval(() => {
-      if (!loading) {  // Only refresh if not already loading
+      if (!loading && !error) {
         console.log("Periodic refresh of clients data");
         fetchClients(0, false);  // Pass false to avoid showing repeated toasts
       }
@@ -67,7 +63,7 @@ export const useClientsPage = () => {
     return () => {
       clearInterval(refreshInterval);
     };
-  }, [fetchClients, loading]);
+  }, [fetchClients, loading, error, retryAttempt]);
 
   // Memoize filtered clients to avoid unnecessary recalculations
   const filteredClients = useMemo(() => {
@@ -78,13 +74,14 @@ export const useClientsPage = () => {
     );
   }, [clients, searchTerm]);
 
-  const handleRetry = () => {
+  const handleRetry = useCallback(() => {
     console.log("Tentative de rechargement des clients...");
     toast.info("Renouvellement de la connexion", {
       description: "Tentative de connexion à la base de données..."
     });
+    setRetryAttempt(prev => prev + 1);
     fetchClients();
-  };
+  }, [fetchClients]);
 
   const confirmEdit = async () => {
     if (!selectedClient) return;

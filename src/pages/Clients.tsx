@@ -3,13 +3,17 @@ import { ClientsPageContent } from "@/features/clients/components/ClientsPageCon
 import { ClientDialogs } from "@/features/clients/components/ClientDialogs";
 import { useClientsPage } from "@/features/clients/hooks/useClientsPage";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { LoadingIndicator } from "@/components/ui/loading-indicator";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 
 const Clients = () => {
   const [initialLoading, setInitialLoading] = useState(true);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const [loadingShown, setLoadingShown] = useState(false);
+  const timeoutTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const initialTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const {
     // State
@@ -46,29 +50,50 @@ const Clients = () => {
 
   // Handle initial loading state and timeout
   useEffect(() => {
+    // Clear any existing timers when component unmounts or dependencies change
+    return () => {
+      if (initialTimerRef.current) {
+        clearTimeout(initialTimerRef.current);
+        initialTimerRef.current = null;
+      }
+      if (timeoutTimerRef.current) {
+        clearTimeout(timeoutTimerRef.current);
+        timeoutTimerRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    // Clear previous timers
+    if (initialTimerRef.current) {
+      clearTimeout(initialTimerRef.current);
+      initialTimerRef.current = null;
+    }
+    if (timeoutTimerRef.current) {
+      clearTimeout(timeoutTimerRef.current);
+      timeoutTimerRef.current = null;
+    }
+    
     if (loading && !loadingShown) {
       setLoadingShown(true);
       
       // Show loading indicator for at least 1 second
-      const initialTimer = setTimeout(() => {
+      initialTimerRef.current = setTimeout(() => {
         setInitialLoading(false);
+        initialTimerRef.current = null;
       }, 1000);
       
-      // Show timeout message after 15 seconds if still loading
-      const timeoutTimer = setTimeout(() => {
+      // Show timeout message after 10 seconds if still loading
+      timeoutTimerRef.current = setTimeout(() => {
         if (loading && !error) {
           setLoadingTimeout(true);
         }
-      }, 15000);
-      
-      return () => {
-        clearTimeout(initialTimer);
-        clearTimeout(timeoutTimer);
-      };
+        timeoutTimerRef.current = null;
+      }, 10000);
     }
     
-    // Reset loading state when loading finishes
-    if (!loading) {
+    // Reset loading state when loading finishes or errors occur
+    if (!loading || error) {
       setLoadingShown(false);
       setInitialLoading(false);
       setLoadingTimeout(false);
@@ -78,11 +103,21 @@ const Clients = () => {
   // Display fullscreen loading for initial load
   if (initialLoading && loading && !clients.length) {
     return (
-      <LoadingIndicator 
-        fullscreen={true} 
-        size="lg" 
-        text={loadingTimeout ? "Le chargement prend plus de temps que prévu..." : "Chargement des clients..."} 
-      />
+      <div className="flex flex-col items-center justify-center min-h-[80vh]">
+        <LoadingIndicator 
+          fullscreen={true} 
+          size="lg" 
+          text={loadingTimeout ? "Le chargement prend plus de temps que prévu..." : "Chargement des clients..."} 
+        />
+        {loadingTimeout && (
+          <div className="mt-6">
+            <Button variant="outline" onClick={handleRetry} className="gap-2">
+              <RefreshCw className="h-4 w-4" />
+              Réessayer
+            </Button>
+          </div>
+        )}
+      </div>
     );
   }
 
