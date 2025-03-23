@@ -8,9 +8,10 @@ interface ClientSearchProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
   onNewClient: () => void;
+  isLoading?: boolean;
 }
 
-export const ClientSearch = ({ searchTerm, onSearchChange, onNewClient }: ClientSearchProps) => {
+export const ClientSearch = ({ searchTerm, onSearchChange, onNewClient, isLoading }: ClientSearchProps) => {
   return (
     <Card>
       <CardHeader>
@@ -28,11 +29,13 @@ export const ClientSearch = ({ searchTerm, onSearchChange, onNewClient }: Client
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
               className="pl-9"
+              disabled={isLoading}
             />
           </div>
           <Button 
             className="w-full" 
             onClick={onNewClient}
+            disabled={isLoading}
           >
             <Plus className="h-4 w-4 mr-2" />
             Nouveau client
