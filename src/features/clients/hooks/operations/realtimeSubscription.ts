@@ -13,11 +13,6 @@ interface RealtimePayload {
 
 export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast?: boolean) => Promise<void>) => {
   const queryClient = useQueryClient();
-  const lastProcessedRef = useRef<{
-    table: string;
-    id: string | number | null;
-    timestamp: number;
-  } | null>(null);
   
   // Prevent multiple rapid fetches
   const throttleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -28,10 +23,11 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
   useEffect(() => {
     // Only set up the subscription once
     if (subscribedRef.current) {
-      return () => {};
+      return;
     }
     
     subscribedRef.current = true;
+    console.log("Setting up realtime subscription...");
     
     // Throttled fetch function to prevent multiple rapid fetches
     const throttledFetch = () => {
@@ -49,89 +45,50 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
     };
     
     // Handler for real-time updates
-    const handleRealtimeUpdate = (payload: RealtimePayload, tableName: string) => {
-      // Prevent duplicate events
-      const currentTime = Date.now();
-      const payloadId = payload.new?.id || payload.old?.id;
-      
-      // Check if this is a duplicate event (same table+id within 1000ms)
-      if (lastProcessedRef.current && 
-          lastProcessedRef.current.table === tableName &&
-          lastProcessedRef.current.id === payloadId &&
-          currentTime - lastProcessedRef.current.timestamp < 1000) {
-        return;
-      }
-      
-      // Update last processed
-      lastProcessedRef.current = {
-        table: tableName,
-        id: payloadId,
-        timestamp: currentTime
-      };
-      
-      console.log(`Changement détecté dans la table ${tableName}:`, payload);
+    const handleRealtimeUpdate = (payload: RealtimePayload) => {
+      console.log(`Changement détecté:`, payload);
       throttledFetch();
       
       // Invalidate related queries
-      queryClient.invalidateQueries({ queryKey: [tableName] });
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
       
-      if (tableName === 'clients' && payload.new && 'id' in payload.new) {
+      if (payload.new && 'id' in payload.new) {
         queryClient.invalidateQueries({ queryKey: ['client', payload.new.id] });
-        queryClient.invalidateQueries({ queryKey: ['clientOperations', payload.new.id] });
-      }
-      
-      // For operations that affect client balances, invalidate clients queries too
-      if (['deposits', 'withdrawals', 'transfers'].includes(tableName)) {
-        queryClient.invalidateQueries({ queryKey: ['clients'] });
-        queryClient.invalidateQueries({ queryKey: ['operations'] });
       }
     };
     
     // Setup a single listener for all tables
     const setupRealtimeListener = async () => {
       try {
-        if (channelRef.current) {
-          console.log("Cleaning up existing channel before creating a new one");
-          await supabase.removeChannel(channelRef.current);
-          channelRef.current = null;
-        }
-        
         // Create a single channel for all tables
         const channel = supabase
-          .channel('table-changes')
+          .channel('db-changes')
           .on('postgres_changes', 
             { event: '*', schema: 'public', table: 'clients' },
-            (payload: RealtimePayload) => handleRealtimeUpdate(payload, 'clients')
+            handleRealtimeUpdate
           )
           .on('postgres_changes',
             { event: '*', schema: 'public', table: 'deposits' },
-            (payload: RealtimePayload) => handleRealtimeUpdate(payload, 'deposits')
+            handleRealtimeUpdate
           )
           .on('postgres_changes',
             { event: '*', schema: 'public', table: 'withdrawals' },
-            (payload: RealtimePayload) => handleRealtimeUpdate(payload, 'withdrawals')
+            handleRealtimeUpdate
           )
           .on('postgres_changes',
             { event: '*', schema: 'public', table: 'transfers' },
-            (payload: RealtimePayload) => handleRealtimeUpdate(payload, 'transfers')
+            handleRealtimeUpdate
           )
           .subscribe((status) => {
             console.log("Statut de l'abonnement réel-time:", status);
             
-            // If subscription fails, try to set up again after a delay
             if (status === 'CHANNEL_ERROR' || status === 'CLOSED' || status === 'TIMED_OUT') {
               subscribedRef.current = false;
-              setTimeout(() => {
-                console.log("Retrying subscription setup after failure");
-                setupRealtimeListener().catch(err => {
-                  console.error("Error in retry subscription setup:", err);
-                });
-              }, 5000);
+              console.log("Subscription failed, will retry on next render");
             }
           });
 
         channelRef.current = channel;
-        
         return true;
       } catch (error) {
         console.error("Erreur lors de la configuration de l'écouteur en temps réel:", error);
@@ -141,9 +98,7 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
     };
 
     // Set up listener
-    setupRealtimeListener().catch(err => {
-      console.error("Error in initial subscription setup:", err);
-    });
+    setupRealtimeListener();
     
     // Clean up on unmount
     return () => {
@@ -156,13 +111,7 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
       // Clean up the subscription
       if (channelRef.current) {
         console.log("Cleaning up realtime subscription on unmount");
-        supabase.removeChannel(channelRef.current)
-          .then(() => {
-            console.log("Channel removed successfully");
-          })
-          .catch(err => {
-            console.error("Error removing channel:", err);
-          });
+        supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }
       

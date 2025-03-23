@@ -68,8 +68,9 @@ export const useClients = () => {
   const fetchClients = useCallback(
     (retry = 0, showToast = true) => {
       try {
-        // If we're loading and have cached data, use the cache first
+        // If we're loading and have cached data, use the cache first to prevent blank screen
         if (loading && cachedClients && cachedClients.data.length > 0) {
+          console.log("Using cached clients while loading fresh data");
           setClients(cachedClients.data);
         }
         

@@ -37,20 +37,10 @@ export const useClientsPage = () => {
     resetNewClient
   } = useClientDialogs();
 
-  // Initial fetch with automatic retry logic
+  // Initial fetch with limited automatic retry
   useEffect(() => {
     console.log("Chargement initial des clients...");
-    
-    const loadClients = async () => {
-      try {
-        await fetchClients();
-      } catch (error) {
-        console.error("Failed to load clients:", error);
-        // Don't auto-retry here, we'll let the user trigger retry manually
-      }
-    };
-    
-    loadClients();
+    fetchClients();
     
     // Set up a periodic refresh every 30 seconds only if there's no error
     const refreshInterval = setInterval(() => {
@@ -63,7 +53,7 @@ export const useClientsPage = () => {
     return () => {
       clearInterval(refreshInterval);
     };
-  }, [fetchClients, loading, error, retryAttempt]);
+  }, [fetchClients, retryAttempt]);
 
   // Memoize filtered clients to avoid unnecessary recalculations
   const filteredClients = useMemo(() => {

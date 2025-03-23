@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useRef } from "react";
 import { Client } from "../../types";
 import { supabase } from "@/integrations/supabase/client";

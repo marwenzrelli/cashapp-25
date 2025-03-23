@@ -11,9 +11,7 @@ import { RefreshCw } from "lucide-react";
 const Clients = () => {
   const [initialLoading, setInitialLoading] = useState(true);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
-  const [loadingShown, setLoadingShown] = useState(false);
   const timeoutTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const initialTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const {
     // State
@@ -48,60 +46,40 @@ const Clients = () => {
     handleCreateClient,
   } = useClientsPage();
 
-  // Handle initial loading state and timeout
+  // Handle loading state and timeout
   useEffect(() => {
-    // Clear any existing timers when component unmounts or dependencies change
-    return () => {
-      if (initialTimerRef.current) {
-        clearTimeout(initialTimerRef.current);
-        initialTimerRef.current = null;
-      }
-      if (timeoutTimerRef.current) {
-        clearTimeout(timeoutTimerRef.current);
-        timeoutTimerRef.current = null;
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    // Clear previous timers
-    if (initialTimerRef.current) {
-      clearTimeout(initialTimerRef.current);
-      initialTimerRef.current = null;
-    }
+    // Clear previous timer if it exists
     if (timeoutTimerRef.current) {
       clearTimeout(timeoutTimerRef.current);
       timeoutTimerRef.current = null;
     }
     
-    if (loading && !loadingShown) {
-      setLoadingShown(true);
-      
-      // Show loading indicator for at least 1 second
-      initialTimerRef.current = setTimeout(() => {
-        setInitialLoading(false);
-        initialTimerRef.current = null;
-      }, 1000);
-      
-      // Show timeout message after 10 seconds if still loading
+    // Only set up timers if we're in a loading state
+    if (loading) {
+      // Show timeout message after 8 seconds if still loading
       timeoutTimerRef.current = setTimeout(() => {
-        if (loading && !error) {
+        if (loading) {
           setLoadingTimeout(true);
         }
         timeoutTimerRef.current = null;
-      }, 10000);
-    }
-    
-    // Reset loading state when loading finishes or errors occur
-    if (!loading || error) {
-      setLoadingShown(false);
+      }, 8000);
+    } else {
+      // When loading finishes, reset states
       setInitialLoading(false);
       setLoadingTimeout(false);
     }
-  }, [loading, error, loadingShown]);
+    
+    // Clean up on unmount
+    return () => {
+      if (timeoutTimerRef.current) {
+        clearTimeout(timeoutTimerRef.current);
+        timeoutTimerRef.current = null;
+      }
+    };
+  }, [loading]);
 
   // Display fullscreen loading for initial load
-  if (initialLoading && loading && !clients.length) {
+  if ((initialLoading || loading) && !clients.length) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[80vh]">
         <LoadingIndicator 
