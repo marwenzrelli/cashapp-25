@@ -14,24 +14,35 @@ export const useFetchClients = (
   // Use references to track state between renders
   const errorNotifiedRef = useRef(false);
   const fetchingRef = useRef(false);
+  const lastFetchTimeRef = useRef<number>(0);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Optimized fetch function
   const fetchClients = useCallback(async (retry = 0, showToast = true) => {
+    // Prevent fetch if another is in progress or throttle requests (300ms minimum between fetches)
+    const now = Date.now();
+    if (fetchingRef.current || (now - lastFetchTimeRef.current < 300 && retry === 0)) {
+      console.log("Fetch skipped: too soon or already fetching");
+      return Promise.resolve();
+    }
+    
     // Cancel any existing fetch operation
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
     
+    // Cancel any pending debounce timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+    
     // Create a new abort controller for this request
     abortControllerRef.current = new AbortController();
     
-    // If a fetch is already in progress, don't start another
-    if (fetchingRef.current) {
-      return;
-    }
-    
     fetchingRef.current = true;
+    lastFetchTimeRef.current = now;
     
     try {
       if (retry === 0) {
@@ -62,7 +73,7 @@ export const useFetchClients = (
         if (retry < FETCH_CONFIG.MAX_RETRIES) {
           console.log(`Retrying in ${FETCH_CONFIG.RETRY_DELAY/1000} seconds...`);
           setTimeout(() => fetchClients(retry + 1, false), FETCH_CONFIG.RETRY_DELAY);
-          return;
+          return Promise.resolve();
         }
         
         throw new Error(handleSupabaseError(clientsError));
@@ -71,7 +82,7 @@ export const useFetchClients = (
       if (!clientsData) {
         console.log("No data received from database");
         setClients([]);
-        return;
+        return Promise.resolve();
       }
 
       console.log(`${clientsData.length} clients retrieved successfully`);
@@ -87,13 +98,15 @@ export const useFetchClients = (
         }, 100);
       }
       
+      return Promise.resolve();
+      
     } catch (error) {
       console.error("Critical error loading clients:", error);
       
       if (retry < FETCH_CONFIG.MAX_RETRIES) {
         console.log(`Retrying in ${FETCH_CONFIG.RETRY_DELAY/1000} seconds...`);
         setTimeout(() => fetchClients(retry + 1, false), FETCH_CONFIG.RETRY_DELAY);
-        return;
+        return Promise.resolve();
       }
       
       setError(handleSupabaseError(error));
@@ -103,12 +116,19 @@ export const useFetchClients = (
         showErrorToast("Connection error", error);
         errorNotifiedRef.current = true;
       }
+      
+      return Promise.resolve();
+      
     } finally {
-      if (retry === 0 || retry === FETCH_CONFIG.MAX_RETRIES) {
-        setLoading(false);
-      }
-      fetchingRef.current = false;
-      abortControllerRef.current = null;
+      // Delay clearing the loading state to prevent flicker
+      debounceTimerRef.current = setTimeout(() => {
+        if (retry === 0 || retry === FETCH_CONFIG.MAX_RETRIES) {
+          setLoading(false);
+        }
+        fetchingRef.current = false;
+        abortControllerRef.current = null;
+        debounceTimerRef.current = null;
+      }, 300); // Debounce for 300ms
     }
   }, [setClients, setLoading, setError]);
 

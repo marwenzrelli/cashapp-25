@@ -5,7 +5,7 @@
 export const FETCH_CONFIG = {
   MAX_RETRIES: 1,
   RETRY_DELAY: 1000,
-  TIMEOUT: 5000
+  TIMEOUT: 8000 // Increased timeout to give more time for operations
 };
 
 /**
@@ -39,8 +39,13 @@ export const withTimeout = async <T>(query: any, timeout = FETCH_CONFIG.TIMEOUT)
     ]);
     
     // Ensure the result has the expected structure
-    if (result && typeof result === 'object' && ('data' in result || 'error' in result)) {
-      return result as SupabaseQueryResult<T>;
+    if (result && typeof result === 'object') {
+      // Make sure data and error properties exist, even if null
+      return {
+        data: 'data' in result ? result.data : null,
+        error: 'error' in result ? result.error : null,
+        ...result
+      } as SupabaseQueryResult<T>;
     }
     
     // Handle unexpected result structure - safely transform it

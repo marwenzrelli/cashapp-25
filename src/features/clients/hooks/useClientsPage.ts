@@ -1,9 +1,8 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useClients } from "./useClients";
 import { useClientDialogs } from "./useClientDialogs";
 import { toast } from "sonner";
-import { Client } from "../types";
 
 export const useClientsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -38,7 +37,7 @@ export const useClientsPage = () => {
   // Optimized retry handler with optional toast suppression
   const handleRetry = useCallback((showToast = true) => {
     console.log("Attempting to reload clients...");
-    fetchClients(0, showToast);
+    return fetchClients(0, showToast);
   }, [fetchClients]);
 
   // Optimized edit confirmation
@@ -98,7 +97,7 @@ export const useClientsPage = () => {
   };
 
   // Optimize filtering by memoizing the filter operation
-  const filteredClients = useCallback(() => {
+  const filteredClients = useMemo(() => {
     if (!searchTerm.trim()) return clients;
     
     const lowerSearchTerm = searchTerm.toLowerCase();
@@ -107,7 +106,7 @@ export const useClientsPage = () => {
       (client.email && client.email.toLowerCase().includes(lowerSearchTerm)) ||
       (client.telephone && client.telephone.includes(lowerSearchTerm))
     );
-  }, [clients, searchTerm])();
+  }, [clients, searchTerm]);
 
   return {
     // State

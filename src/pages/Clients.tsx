@@ -41,19 +41,24 @@ const Clients = () => {
 
   // Prevent multiple fetch calls on initial load
   const initialLoadRef = useRef(false);
+  const fetchInProgressRef = useRef(false);
 
-  // Preload clients data when component mounts
+  // Preload clients data when component mounts - with improved debouncing
   useEffect(() => {
     // Only load once to prevent repeated calls
-    if (!initialLoadRef.current) {
+    if (!initialLoadRef.current && !fetchInProgressRef.current) {
       initialLoadRef.current = true;
+      fetchInProgressRef.current = true;
+      
       // Add prefetch flag to skip toast notifications on initial load
-      handleRetry(false); 
+      handleRetry(false).finally(() => {
+        fetchInProgressRef.current = false;
+      });
     }
     
     // Clean up any pending operations on unmount
     return () => {
-      // Nothing to clean up at the moment
+      initialLoadRef.current = false;
     };
   }, [handleRetry]);
 

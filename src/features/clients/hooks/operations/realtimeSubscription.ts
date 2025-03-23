@@ -18,6 +18,8 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
     id: string | number | null;
     timestamp: number;
   } | null>(null);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isProcessingRef = useRef(false);
   
   // Optimized realtime listener setup with improved deduplication
   useEffect(() => {
@@ -34,11 +36,12 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
               const currentTime = Date.now();
               const payloadId = payload.new?.id || payload.old?.id;
               
-              // Check if this is a duplicate event (same table+id within 300ms)
+              // Check if this is a duplicate event (same table+id within 500ms)
               if (lastProcessedRef.current && 
                   lastProcessedRef.current.table === 'clients' &&
                   lastProcessedRef.current.id === payloadId &&
-                  currentTime - lastProcessedRef.current.timestamp < 300) {
+                  currentTime - lastProcessedRef.current.timestamp < 500) {
+                console.log("Skipping duplicate event");
                 return;
               }
               
@@ -51,14 +54,29 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
               
               console.log("Change detected in clients table:", payload);
               
-              // Use a more efficient approach by only refreshing data when needed
-              // Don't show error toasts for background updates
-              setTimeout(() => fetchClients(0, false), 100);
+              // Clear any existing debounce timer
+              if (debounceTimerRef.current) {
+                clearTimeout(debounceTimerRef.current);
+              }
               
-              // Invalidate related queries with minimal scope
-              queryClient.invalidateQueries({ queryKey: ['clients'] });
-              if (payload.new && 'id' in payload.new) {
-                queryClient.invalidateQueries({ queryKey: ['client', payload.new.id] });
+              // Debounce the fetch operation to avoid multiple fetches in quick succession
+              if (!isProcessingRef.current) {
+                debounceTimerRef.current = setTimeout(() => {
+                  isProcessingRef.current = true;
+                  
+                  // Don't show error toasts for background updates
+                  fetchClients(0, false).finally(() => {
+                    isProcessingRef.current = false;
+                  });
+                  
+                  // Invalidate related queries with minimal scope
+                  queryClient.invalidateQueries({ queryKey: ['clients'] });
+                  if (payload.new && 'id' in payload.new) {
+                    queryClient.invalidateQueries({ queryKey: ['client', payload.new.id] });
+                  }
+                  
+                  debounceTimerRef.current = null;
+                }, 500); // Wait for a bit to catch multiple rapid changes
               }
             }
           )
@@ -69,6 +87,10 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
         // Ensure the channel is properly cleaned up when the component unmounts
         return () => {
           console.log("Removing realtime channel subscription");
+          if (debounceTimerRef.current) {
+            clearTimeout(debounceTimerRef.current);
+            debounceTimerRef.current = null;
+          }
           supabase.removeChannel(channel);
         };
       } catch (error) {
