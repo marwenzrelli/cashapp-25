@@ -4,7 +4,7 @@ import { Client } from "../../types";
 import { supabase } from "@/integrations/supabase/client";
 import { showErrorToast, handleSupabaseError } from "../utils/errorUtils";
 import { updateClientBalances } from "./utils/balanceUtils";
-import { FETCH_CONFIG, withTimeout } from "./utils/fetchConfig";
+import { FETCH_CONFIG, withTimeout, SupabaseQueryResult } from "./utils/fetchConfig";
 
 export const useFetchClients = (
   setClients: React.Dispatch<React.SetStateAction<Client[]>>,
@@ -53,8 +53,8 @@ export const useFetchClients = (
         .select('*')
         .order('date_creation', { ascending: false });
       
-      // Execute the query with timeout
-      const result = await withTimeout(fetchClientsQuery);
+      // Execute the query with explicit typing
+      const result = await withTimeout<Client[]>(fetchClientsQuery);
       const { data: clientsData, error: clientsError } = result;
 
       if (clientsError) {
