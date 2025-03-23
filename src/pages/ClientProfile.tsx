@@ -7,9 +7,8 @@ import { ClientOperationsHistory } from "@/features/clients/components/ClientOpe
 import { OperationsDetailCards } from "@/features/clients/components/OperationsDetailCards";
 import { PublicClientError } from "@/features/clients/components/PublicClientError";
 import { PublicClientLoading } from "@/features/clients/components/PublicClientLoading";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { DateRange } from "react-day-picker";
 
 const ClientProfile = () => {
   const {
@@ -38,6 +37,11 @@ const ClientProfile = () => {
     clientBalance
   } = useClientProfile();
 
+  // Track if we've shown the initial loading state
+  const [initialLoadingShown, setInitialLoadingShown] = useState(true);
+  // Track if we're in a loading timeout state
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+
   useEffect(() => {
     console.log(`ClientProfile - Paramètres de la route: clientId=${clientId}, chemin=${window.location.pathname}`);
     
@@ -47,13 +51,28 @@ const ClientProfile = () => {
         description: error
       });
     }
-  }, [clientId, error]);
+    
+    // Set a timeout for long-running loading states
+    let timer: NodeJS.Timeout | null = null;
+    if (isLoading && initialLoadingShown) {
+      timer = setTimeout(() => {
+        setLoadingTimeout(true);
+      }, 10000); // Show timeout message after 10 seconds
+    } else {
+      setInitialLoadingShown(false);
+      setLoadingTimeout(false);
+    }
+    
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [clientId, error, isLoading, initialLoadingShown]);
 
   useEffect(() => {
     if (client && clientOperations?.length === 0) {
       console.log("Client chargé mais aucune opération trouvée. Cela pourrait indiquer un problème de récupération de données.");
       
-      const clientFullName = client ? `${client.prenom} ${client.nom}` : null;
+      const clientFullName = client ? `${client.prenom} ${client.nom}`.trim() : null;
       console.log(`Nom complet du client utilisé pour le filtrage des opérations: "${clientFullName}"`);
     }
   }, [client, clientOperations]);
@@ -70,8 +89,15 @@ const ClientProfile = () => {
     currentBalance: clientBalance
   });
 
-  if (isLoading) {
-    return <PublicClientLoading onRetry={refetchClient} />;
+  // Extended loading state with retry option for timeouts
+  if (isLoading && initialLoadingShown) {
+    return (
+      <PublicClientLoading 
+        onRetry={refetchClient} 
+        timeout={loadingTimeout}
+        timeoutMessage="Le chargement prend plus de temps que prévu. Vous pouvez réessayer ou revenir plus tard."
+      />
+    );
   }
 
   if (error) {

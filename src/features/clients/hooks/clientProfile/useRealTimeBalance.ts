@@ -6,11 +6,20 @@ import { toast } from "sonner";
 export const useRealTimeBalance = (clientId: number | null) => {
   const [realTimeBalance, setRealTimeBalance] = useState<number | null>(null);
   const previousBalanceRef = useRef<number | null>(null);
+  const channelRef = useRef<any>(null);
+  const connectionAttemptRef = useRef(0);
   
   // Set up a real-time subscription for client balance
   useEffect(() => {
     if (!clientId) return;
     
+    // Limit connection attempts
+    if (connectionAttemptRef.current >= 2) {
+      console.log("Max connection attempts reached for balance updates");
+      return;
+    }
+    
+    connectionAttemptRef.current++;
     console.log("Setting up real-time subscription for client balance ID:", clientId);
     
     const channel = supabase
@@ -34,11 +43,19 @@ export const useRealTimeBalance = (clientId: number | null) => {
       })
       .subscribe((status) => {
         console.log(`Real-time subscription status for client ${clientId}:`, status);
+        if (status === 'CHANNEL_ERROR') {
+          console.error("Error subscribing to balance updates");
+        }
       });
+      
+    channelRef.current = channel;
       
     return () => {
       console.log("Cleaning up real-time subscription for balance");
-      supabase.removeChannel(channel);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
   }, [clientId]);
 

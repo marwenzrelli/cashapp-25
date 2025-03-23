@@ -36,6 +36,7 @@ export const ClientPersonalInfo = ({
   const [withdrawalDialogOpen, setWithdrawalDialogOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [didInitialRefresh, setDidInitialRefresh] = useState(false);
+  const [refreshDisabled, setRefreshDisabled] = useState(false);
   
   console.log("ClientPersonalInfo - clientId:", clientId, "client:", client?.id, "realTimeBalance:", clientBalance);
 
@@ -58,26 +59,33 @@ export const ClientPersonalInfo = ({
       };
       
       // Use a small timeout to avoid blocking the UI render
-      const timer = setTimeout(doInitialRefresh, 500);
+      const timer = setTimeout(doInitialRefresh, 1000);
       return () => clearTimeout(timer);
     }
   }, [client, refreshClientBalance, didInitialRefresh]);
 
   const handleRefreshBalance = async () => {
     if (!refreshClientBalance) {
-      toast.error("Balance refresh function not available");
+      toast.error("La fonction d'actualisation du solde n'est pas disponible");
       return;
     }
     
     setIsRefreshing(true);
+    setRefreshDisabled(true);
+    
     try {
       await refreshClientBalance();
-      toast.success("Client balance refreshed successfully");
+      toast.success("Solde du client actualisé avec succès");
     } catch (error) {
       console.error("Error refreshing client balance:", error);
-      toast.error("Error refreshing client balance");
+      toast.error("Erreur lors de l'actualisation du solde");
     } finally {
       setIsRefreshing(false);
+      
+      // Disable the refresh button for 5 seconds to prevent spam
+      setTimeout(() => {
+        setRefreshDisabled(false);
+      }, 5000);
     }
   };
 
@@ -107,7 +115,13 @@ export const ClientPersonalInfo = ({
           </CardTitle>
           
           <div className="hidden md:flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleRefreshBalance} disabled={isRefreshing} className="px-[23px]">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleRefreshBalance} 
+              disabled={isRefreshing || refreshDisabled} 
+              className="px-[23px]"
+            >
               <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
               {isRefreshing ? 'Actualisation...' : 'Actualiser le solde'}
             </Button>
@@ -123,7 +137,13 @@ export const ClientPersonalInfo = ({
             
             {/* Refresh button for mobile */}
             <div className="md:hidden mt-4 w-full">
-              <Button variant="outline" size="sm" onClick={handleRefreshBalance} disabled={isRefreshing} className="w-full">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleRefreshBalance} 
+                disabled={isRefreshing || refreshDisabled} 
+                className="w-full"
+              >
                 <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
                 {isRefreshing ? 'Actualisation...' : 'Actualiser le solde'}
               </Button>
