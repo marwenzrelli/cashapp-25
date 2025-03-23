@@ -20,12 +20,19 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
   } | null>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isProcessingRef = useRef(false);
+  const channelRef = useRef<any>(null);
   
   // Optimized realtime listener setup with improved deduplication
   useEffect(() => {
+    if (channelRef.current) {
+      // If we already have a channel, don't create another one
+      return () => {};
+    }
+    
     // Set up a single listener for all tables to avoid multiple listeners
     const setupRealtimeListener = async () => {
       try {
+        console.log("Setting up realtime subscription");
         // Create a single channel for all tables with optimized event handling
         const channel = supabase
           .channel('table-changes')
@@ -40,7 +47,7 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
               if (lastProcessedRef.current && 
                   lastProcessedRef.current.table === 'clients' &&
                   lastProcessedRef.current.id === payloadId &&
-                  currentTime - lastProcessedRef.current.timestamp < 500) {
+                  currentTime - lastProcessedRef.current.timestamp < 1000) {
                 console.log("Skipping duplicate event");
                 return;
               }
@@ -52,7 +59,7 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
                 timestamp: currentTime
               };
               
-              console.log("Change detected in clients table:", payload);
+              console.log("Change detected in clients table:", payload.eventType);
               
               // Clear any existing debounce timer
               if (debounceTimerRef.current) {
@@ -76,7 +83,7 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
                   }
                   
                   debounceTimerRef.current = null;
-                }, 500); // Wait for a bit to catch multiple rapid changes
+                }, 1000); // Increase to 1000ms to catch multiple rapid changes
               }
             }
           )
@@ -84,6 +91,9 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
             console.log("Realtime subscription status:", status);
           });
 
+        // Save the channel reference
+        channelRef.current = channel;
+        
         // Ensure the channel is properly cleaned up when the component unmounts
         return () => {
           console.log("Removing realtime channel subscription");
@@ -91,10 +101,19 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
             clearTimeout(debounceTimerRef.current);
             debounceTimerRef.current = null;
           }
-          supabase.removeChannel(channel);
+          
+          if (channelRef.current) {
+            supabase.removeChannel(channelRef.current);
+            channelRef.current = null;
+          }
         };
       } catch (error) {
         console.error("Error setting up realtime listener:", error);
+        // Clean up failed channel attempt
+        if (channelRef.current) {
+          supabase.removeChannel(channelRef.current);
+          channelRef.current = null;
+        }
       }
     };
 
@@ -102,7 +121,7 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
     return () => {
       if (cleanup) {
         cleanup.then(cleanupFn => {
-          if (cleanupFn) cleanupFn();
+          if (cleanupFn && typeof cleanupFn === 'function') cleanupFn();
         });
       }
     };

@@ -5,7 +5,7 @@
 export const FETCH_CONFIG = {
   MAX_RETRIES: 1,
   RETRY_DELAY: 1000,
-  TIMEOUT: 8000 // Increased timeout to give more time for operations
+  TIMEOUT: 10000 // Increased timeout to give more time for operations
 };
 
 /**
@@ -30,7 +30,7 @@ export interface SupabaseQueryResult<T> {
  * Wraps a promise with a timeout to prevent hanging requests
  * Properly handles Supabase query objects and preserves their structure
  */
-export const withTimeout = async <T>(query: any, timeout = FETCH_CONFIG.TIMEOUT): Promise<SupabaseQueryResult<T>> => {
+export const withTimeout = async <T>(query: Promise<any>, timeout = FETCH_CONFIG.TIMEOUT): Promise<SupabaseQueryResult<T>> => {
   try {
     // Create a promise that resolves when the query completes or rejects on timeout
     const result = await Promise.race([

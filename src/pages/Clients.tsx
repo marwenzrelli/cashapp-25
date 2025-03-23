@@ -3,7 +3,8 @@ import { ClientsPageContent } from "@/features/clients/components/ClientsPageCon
 import { ClientDialogs } from "@/features/clients/components/ClientDialogs";
 import { useClientsPage } from "@/features/clients/hooks/useClientsPage";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { LoadingIndicator } from "@/components/ui/loading-indicator";
 
 const Clients = () => {
   const {
@@ -39,28 +40,69 @@ const Clients = () => {
     handleCreateClient,
   } = useClientsPage();
 
-  // Prevent multiple fetch calls on initial load
+  // For handling page load states
   const initialLoadRef = useRef(false);
   const fetchInProgressRef = useRef(false);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  const [loadAttempts, setLoadAttempts] = useState(0);
 
-  // Preload clients data when component mounts - with improved debouncing
+  // Improved initial load handling with fallback
   useEffect(() => {
     // Only load once to prevent repeated calls
     if (!initialLoadRef.current && !fetchInProgressRef.current) {
+      console.log("Starting initial clients data load");
       initialLoadRef.current = true;
       fetchInProgressRef.current = true;
       
       // Add prefetch flag to skip toast notifications on initial load
-      handleRetry(false).finally(() => {
-        fetchInProgressRef.current = false;
-      });
+      handleRetry(false)
+        .then(() => {
+          console.log("Initial load complete");
+          setInitialLoadComplete(true);
+        })
+        .catch(err => {
+          console.error("Initial load failed:", err);
+          // Reset flags to allow retry
+          initialLoadRef.current = false;
+        })
+        .finally(() => {
+          fetchInProgressRef.current = false;
+        });
     }
+    
+    // Safety timeout - if after 5 seconds we still don't have data, try again
+    const timeoutId = setTimeout(() => {
+      if (!initialLoadComplete && loadAttempts < 2 && !fetchInProgressRef.current) {
+        console.log("Load timeout reached, retrying...");
+        setLoadAttempts(prev => prev + 1);
+        initialLoadRef.current = false; // Reset to allow another attempt
+      }
+    }, 5000);
     
     // Clean up any pending operations on unmount
     return () => {
-      initialLoadRef.current = false;
+      clearTimeout(timeoutId);
     };
-  }, [handleRetry]);
+  }, [handleRetry, initialLoadComplete, loadAttempts]);
+
+  // If page is completely stuck, show fallback
+  if (loading && !clients.length && loadAttempts >= 2) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[70vh]">
+        <LoadingIndicator size="lg" text="Chargement prolongé... Veuillez patienter" />
+        <button 
+          onClick={() => {
+            initialLoadRef.current = false;
+            setLoadAttempts(0);
+            window.location.reload();
+          }}
+          className="mt-8 px-4 py-2 bg-primary text-white rounded-md"
+        >
+          Rafraîchir la page
+        </button>
+      </div>
+    );
+  }
 
   return (
     <TooltipProvider>
