@@ -3,6 +3,7 @@ import { ClientsPageContent } from "@/features/clients/components/ClientsPageCon
 import { ClientDialogs } from "@/features/clients/components/ClientDialogs";
 import { useClientsPage } from "@/features/clients/hooks/useClientsPage";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useEffect } from "react";
 
 const Clients = () => {
   const {
@@ -37,6 +38,17 @@ const Clients = () => {
     confirmDelete,
     handleCreateClient,
   } = useClientsPage();
+
+  // Preload clients data when component mounts
+  useEffect(() => {
+    // Add prefetch flag to skip toast notifications on initial load
+    handleRetry(false); 
+    
+    // Clean up any pending operations on unmount
+    return () => {
+      // Nothing to clean up at the moment
+    };
+  }, [handleRetry]);
 
   return (
     <TooltipProvider>

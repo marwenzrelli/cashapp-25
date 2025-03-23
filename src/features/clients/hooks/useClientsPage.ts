@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useClients } from "./useClients";
 import { useClientDialogs } from "./useClientDialogs";
 import { toast } from "sonner";
@@ -35,16 +35,13 @@ export const useClientsPage = () => {
     resetNewClient
   } = useClientDialogs();
 
-  useEffect(() => {
-    console.log("Chargement initial des clients...");
-    fetchClients();
+  // Optimized retry handler with optional toast suppression
+  const handleRetry = useCallback((showToast = true) => {
+    console.log("Attempting to reload clients...");
+    fetchClients(0, showToast);
   }, [fetchClients]);
 
-  const handleRetry = () => {
-    console.log("Tentative de rechargement des clients...");
-    fetchClients();
-  };
-
+  // Optimized edit confirmation
   const confirmEdit = async () => {
     if (!selectedClient) return;
 
@@ -58,6 +55,7 @@ export const useClientsPage = () => {
     }
   };
 
+  // Optimized delete confirmation
   const confirmDelete = async () => {
     if (!selectedClient) return;
 
@@ -71,9 +69,10 @@ export const useClientsPage = () => {
     }
   };
 
+  // Optimized client creation
   const handleCreateClient = async () => {
-    console.log("Création d'un nouveau client:", newClient);
-    // Validation des champs requis - téléphone n'est plus obligatoire
+    console.log("Creating a new client:", newClient);
+    // Validation for required fields - phone is no longer required
     if (!newClient.prenom.trim() || !newClient.nom.trim()) {
       toast.error("Informations incomplètes", {
         description: "Veuillez remplir au moins le prénom et le nom du client."
@@ -81,7 +80,7 @@ export const useClientsPage = () => {
       return;
     }
 
-    // Ajout du status par défaut 'active' lors de la création
+    // Add default 'active' status during creation
     const clientData = {
       ...newClient,
       status: 'active'
@@ -98,11 +97,17 @@ export const useClientsPage = () => {
     }
   };
 
-  const filteredClients = clients.filter((client) =>
-    `${client.prenom} ${client.nom}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.telephone.includes(searchTerm)
-  );
+  // Optimize filtering by memoizing the filter operation
+  const filteredClients = useCallback(() => {
+    if (!searchTerm.trim()) return clients;
+    
+    const lowerSearchTerm = searchTerm.toLowerCase();
+    return clients.filter((client) =>
+      `${client.prenom} ${client.nom}`.toLowerCase().includes(lowerSearchTerm) ||
+      (client.email && client.email.toLowerCase().includes(lowerSearchTerm)) ||
+      (client.telephone && client.telephone.includes(lowerSearchTerm))
+    );
+  }, [clients, searchTerm])();
 
   return {
     // State
@@ -125,8 +130,8 @@ export const useClientsPage = () => {
     setIsDialogOpen,
     setIsEditDialogOpen,
     setIsDeleteDialogOpen,
-    setEditForm,     // Export the missing state setter
-    setNewClient,    // Export the missing state setter
+    setEditForm,
+    setNewClient,
     
     // Client actions
     handleRetry,

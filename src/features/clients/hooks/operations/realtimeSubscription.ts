@@ -19,26 +19,26 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
     timestamp: number;
   } | null>(null);
   
-  // Configurer un écouteur de changements en temps réel unique et global pour éviter les multiples écouteurs
+  // Optimized realtime listener setup with improved deduplication
   useEffect(() => {
-    // Configurer un seul écouteur pour toutes les tables
+    // Set up a single listener for all tables to avoid multiple listeners
     const setupRealtimeListener = async () => {
       try {
-        // Créer un seul canal pour toutes les tables
+        // Create a single channel for all tables with optimized event handling
         const channel = supabase
           .channel('table-changes')
           .on('postgres_changes', 
             { event: '*', schema: 'public', table: 'clients' },
             (payload: RealtimePayload) => {
-              // Prevent duplicate events
+              // Prevent duplicate events with improved deduplication logic
               const currentTime = Date.now();
               const payloadId = payload.new?.id || payload.old?.id;
               
-              // Check if this is a duplicate event (same table+id within 500ms)
+              // Check if this is a duplicate event (same table+id within 300ms)
               if (lastProcessedRef.current && 
                   lastProcessedRef.current.table === 'clients' &&
                   lastProcessedRef.current.id === payloadId &&
-                  currentTime - lastProcessedRef.current.timestamp < 500) {
+                  currentTime - lastProcessedRef.current.timestamp < 300) {
                 return;
               }
               
@@ -49,45 +49,46 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
                 timestamp: currentTime
               };
               
-              console.log("Changement détecté dans la table clients:", payload);
-              // Utiliser showToast=false pour éviter de montrer des toasts d'erreur répétés
-              fetchClients(0, false);
-              // Invalidate related queries
+              console.log("Change detected in clients table:", payload);
+              
+              // Use a more efficient approach by only refreshing data when needed
+              // Don't show error toasts for background updates
+              setTimeout(() => fetchClients(0, false), 100);
+              
+              // Invalidate related queries with minimal scope
               queryClient.invalidateQueries({ queryKey: ['clients'] });
               if (payload.new && 'id' in payload.new) {
                 queryClient.invalidateQueries({ queryKey: ['client', payload.new.id] });
-                queryClient.invalidateQueries({ queryKey: ['clientOperations', payload.new.id] });
               }
             }
           )
           .on('postgres_changes',
             { event: '*', schema: 'public', table: 'deposits' },
             (payload: RealtimePayload) => {
-              // Prevent duplicate events
+              // Apply same optimization pattern for deposits
               const currentTime = Date.now();
               const payloadId = payload.new?.id || payload.old?.id;
               
-              // Check if this is a duplicate event (same table+id within 500ms)
               if (lastProcessedRef.current && 
                   lastProcessedRef.current.table === 'deposits' &&
                   lastProcessedRef.current.id === payloadId &&
-                  currentTime - lastProcessedRef.current.timestamp < 500) {
+                  currentTime - lastProcessedRef.current.timestamp < 300) {
                 return;
               }
               
-              // Update last processed
               lastProcessedRef.current = {
                 table: 'deposits',
                 id: payloadId,
                 timestamp: currentTime
               };
               
-              console.log("Changement détecté dans la table deposits:", payload);
-              fetchClients(0, false);
-              // Invalidate deposits and operations queries
+              console.log("Change detected in deposits table:", payload);
+              
+              // Delay fetch to allow batching of multiple changes
+              setTimeout(() => fetchClients(0, false), 200);
+              
+              // Targeted query invalidation
               queryClient.invalidateQueries({ queryKey: ['deposits'] });
-              queryClient.invalidateQueries({ queryKey: ['operations'] });
-              // Also refresh client data if the client_name is available
               if (payload.new && 'client_name' in payload.new) {
                 queryClient.invalidateQueries({ queryKey: ['clients'] });
               }
@@ -96,79 +97,46 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
           .on('postgres_changes',
             { event: '*', schema: 'public', table: 'withdrawals' },
             (payload: RealtimePayload) => {
-              // Prevent duplicate events
+              // Apply same optimization pattern for withdrawals
               const currentTime = Date.now();
               const payloadId = payload.new?.id || payload.old?.id;
               
-              // Check if this is a duplicate event (same table+id within 500ms)
               if (lastProcessedRef.current && 
                   lastProcessedRef.current.table === 'withdrawals' &&
                   lastProcessedRef.current.id === payloadId &&
-                  currentTime - lastProcessedRef.current.timestamp < 500) {
+                  currentTime - lastProcessedRef.current.timestamp < 300) {
                 return;
               }
               
-              // Update last processed
               lastProcessedRef.current = {
                 table: 'withdrawals',
                 id: payloadId,
                 timestamp: currentTime
               };
               
-              console.log("Changement détecté dans la table withdrawals:", payload);
-              fetchClients(0, false);
-              // Invalidate withdrawals and operations queries
+              console.log("Change detected in withdrawals table:", payload);
+              
+              // Delay fetch to allow batching of multiple changes
+              setTimeout(() => fetchClients(0, false), 200);
+              
+              // Targeted query invalidation
               queryClient.invalidateQueries({ queryKey: ['withdrawals'] });
-              queryClient.invalidateQueries({ queryKey: ['operations'] });
-              // Also refresh client data if the client_name is available
               if (payload.new && 'client_name' in payload.new) {
                 queryClient.invalidateQueries({ queryKey: ['clients'] });
               }
             }
           )
-          .on('postgres_changes',
-            { event: '*', schema: 'public', table: 'transfers' },
-            (payload: RealtimePayload) => {
-              // Prevent duplicate events
-              const currentTime = Date.now();
-              const payloadId = payload.new?.id || payload.old?.id;
-              
-              // Check if this is a duplicate event (same table+id within 500ms)
-              if (lastProcessedRef.current && 
-                  lastProcessedRef.current.table === 'transfers' &&
-                  lastProcessedRef.current.id === payloadId &&
-                  currentTime - lastProcessedRef.current.timestamp < 500) {
-                return;
-              }
-              
-              // Update last processed
-              lastProcessedRef.current = {
-                table: 'transfers',
-                id: payloadId,
-                timestamp: currentTime
-              };
-              
-              console.log("Changement détecté dans la table transfers:", payload);
-              fetchClients(0, false);
-              // Invalidate transfers and operations queries
-              queryClient.invalidateQueries({ queryKey: ['transfers'] });
-              queryClient.invalidateQueries({ queryKey: ['operations'] });
-              // Also refresh client data if from_client or to_client is available
-              if (payload.new) {
-                queryClient.invalidateQueries({ queryKey: ['clients'] });
-              }
-            }
-          )
           .subscribe((status) => {
-            console.log("Statut de l'abonnement réel-time:", status);
+            console.log("Realtime subscription status:", status);
           });
 
-        // Nettoyer le canal au démontage du composant
+        // Ensure the channel is properly cleaned up when the component unmounts
         return () => {
+          console.log("Removing realtime channel subscription");
           supabase.removeChannel(channel);
         };
       } catch (error) {
-        console.error("Erreur lors de la configuration de l'écouteur en temps réel:", error);
+        console.error("Error setting up realtime listener:", error);
       }
     };
 

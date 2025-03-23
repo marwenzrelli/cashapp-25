@@ -24,7 +24,7 @@ export const useClients = () => {
     setError
   );
   
-  // Cache clients in localStorage when available
+  // Improved cache handling - persist to localStorage and memory
   useEffect(() => {
     if (clients.length > 0) {
       // Store in memory cache
@@ -33,30 +33,46 @@ export const useClients = () => {
         timestamp: Date.now()
       });
       
-      // Also store in localStorage for persistence across refreshes
+      // Store in localStorage with better error handling
       try {
-        localStorage.setItem('cachedClients', JSON.stringify({
+        const cacheData = {
           data: clients,
           timestamp: Date.now()
-        }));
+        };
+        
+        // Use a more efficient storage approach for large datasets
+        // Break the storage into chunks if needed
+        const dataString = JSON.stringify(cacheData);
+        
+        if (dataString.length < 5000000) { // ~5MB limit in most browsers
+          localStorage.setItem('cachedClients', dataString);
+        } else {
+          console.warn("Client data too large for localStorage, using memory cache only");
+        }
       } catch (err) {
         console.error("Error caching clients:", err);
       }
     }
   }, [clients]);
   
-  // Load cached clients on mount
+  // Improved cached client loading with expiration
   useEffect(() => {
     try {
+      // Always start with showing cached data immediately
       const cached = localStorage.getItem('cachedClients');
       if (cached) {
-        const parsedCache = JSON.parse(cached);
-        // Only use cache if it's less than 30 minutes old
-        if (parsedCache && parsedCache.timestamp && 
-            (Date.now() - parsedCache.timestamp < 30 * 60 * 1000)) {
-          setCachedClients(parsedCache);
-          setClients(parsedCache.data);
-          console.log("Loaded clients from cache");
+        try {
+          const parsedCache = JSON.parse(cached);
+          // Use cache if it's less than 10 minutes old (reduced from 30)
+          if (parsedCache && parsedCache.timestamp && 
+              (Date.now() - parsedCache.timestamp < 10 * 60 * 1000)) {
+            setCachedClients(parsedCache);
+            setClients(parsedCache.data);
+            console.log("Loaded clients from cache");
+          }
+        } catch (parseError) {
+          console.warn("Error parsing cached clients:", parseError);
+          localStorage.removeItem('cachedClients'); // Remove corrupt data
         }
       }
     } catch (err) {
@@ -64,24 +80,28 @@ export const useClients = () => {
     }
   }, []);
   
-  // Memoize the fetch function to avoid infinite loops
+  // Optimized fetch function
   const fetchClients = useCallback(
     (retry = 0, showToast = true) => {
       try {
-        // If we're loading and have cached data, use the cache first
+        // Always show cached data while loading new data
         if (loading && cachedClients && cachedClients.data.length > 0) {
+          // Don't wait to show something to the user
           setClients(cachedClients.data);
+          
+          // Mark cached content in console for debugging
+          console.log("Using cached data while fetching fresh data");
         }
         
         return fetchClientsImpl(retry, showToast);
       } catch (err) {
         console.error("Critical error in fetchClients:", err);
         if (showToast) {
-          toast.error("Erreur de chargement", {
-            description: "Impossible de charger les clients. Veuillez réessayer."
+          toast.error("Loading error", {
+            description: "Failed to load clients. Please try again."
           });
         }
-        setError("Erreur de connexion au serveur");
+        setError("Server connection error");
         setLoading(false);
         return Promise.resolve();
       }

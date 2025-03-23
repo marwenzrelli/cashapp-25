@@ -7,6 +7,7 @@ import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AISuggestion } from "../types";
 import { LoadingIndicator } from "@/components/ui/loading-indicator";
+import { useEffect, useState } from "react";
 
 interface ClientsPageContentProps {
   clients: Client[];
@@ -33,27 +34,60 @@ export const ClientsPageContent = ({
   handleRetry,
   openNewClientDialog
 }: ClientsPageContentProps) => {
+  // Track loading time to give better feedback to users during long operations
+  const [loadingTime, setLoadingTime] = useState(0);
+  
+  // Update loading time counter
+  useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
+    
+    if (loading && !error) {
+      timer = setInterval(() => {
+        setLoadingTime(prev => prev + 1);
+      }, 1000);
+    } else {
+      setLoadingTime(0);
+    }
+    
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [loading, error]);
+
   // Fixed the type issue by explicitly setting the type properties to valid values
   const aiSuggestions: AISuggestion[] = [{
     id: "1",
     message: "Nouveau client potentiel détecté",
     type: "success",
-    // Changed from string to specific union type value
     clientId: "1"
   }, {
     id: "2",
     message: "Mise à jour des informations recommandée",
     type: "info",
-    // Changed from string to specific union type value
     clientId: "3"
   }];
 
-  // Render content based on loading state and errors
+  // Optimized content rendering based on loading state and errors
   const renderContent = () => {
     if (loading && clients.length === 0) {
       return (
         <div className="flex flex-col items-center justify-center py-12 space-y-4">
-          <LoadingIndicator size="lg" text="Chargement des clients..." />
+          <LoadingIndicator size="lg" text={
+            loadingTime > 2 
+              ? `Chargement des clients... (${loadingTime}s)` 
+              : "Chargement des clients..."
+          } />
+          {loadingTime > 5 && (
+            <p className="text-sm text-muted-foreground">
+              Le chargement prend plus de temps que prévu...
+            </p>
+          )}
+          {loadingTime > 10 && (
+            <Button onClick={handleRetry} variant="outline" size="sm" className="mt-2">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Recharger la page
+            </Button>
+          )}
         </div>
       );
     }
@@ -91,9 +125,9 @@ export const ClientsPageContent = ({
       <div className={loading ? "opacity-70 pointer-events-none" : ""}>
         <ClientList clients={filteredClients} onEdit={handleEdit} onDelete={handleDelete} />
         {loading && (
-          <div className="fixed bottom-4 right-4 bg-primary text-white px-4 py-2 rounded-md shadow-md flex items-center gap-2">
+          <div className="fixed bottom-4 right-4 bg-primary text-white px-4 py-2 rounded-md shadow-md flex items-center gap-2 z-10">
             <LoadingIndicator size="sm" />
-            <span>Actualisation...</span>
+            <span>Actualisation en cours...</span>
           </div>
         )}
       </div>
@@ -111,7 +145,12 @@ export const ClientsPageContent = ({
 
       <div className="grid gap-4 md:gap-6 md:grid-cols-2">
         <ClientInsights suggestions={aiSuggestions} />
-        <ClientSearch searchTerm={searchTerm} onSearchChange={setSearchTerm} onNewClient={openNewClientDialog} />
+        <ClientSearch 
+          searchTerm={searchTerm} 
+          onSearchChange={setSearchTerm} 
+          onNewClient={openNewClientDialog}
+          isLoading={loading && clients.length === 0}
+        />
       </div>
 
       {renderContent()}
