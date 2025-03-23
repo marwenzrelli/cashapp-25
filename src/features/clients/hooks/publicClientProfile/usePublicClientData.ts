@@ -16,6 +16,7 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
   const fetchingRef = useRef(false);
   const initialLoadCompletedRef = useRef(false);
   const dataFetchedRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Timer pour suivre le temps de chargement
   useEffect(() => {
@@ -40,6 +41,13 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
       return;
     }
 
+    // Annuler toute requête précédente
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
+
     fetchingRef.current = true;
     const attemptCount = fetchCount + 1;
     setFetchCount(attemptCount);
@@ -48,6 +56,16 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
     setIsLoading(true);
     setError(null);
     setLoadingTime(0);
+
+    // Ajouter un timeout global pour toute la fonction
+    const timeout = setTimeout(() => {
+      if (fetchingRef.current && abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        setError("Le délai d'attente a été dépassé. Veuillez réessayer.");
+        setIsLoading(false);
+        fetchingRef.current = false;
+      }
+    }, 15000); // 15 secondes maximum pour la requête complète
 
     try {
       // Step 1: Get client ID from token
@@ -65,6 +83,12 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
       // Step 2: Get client details
       const clientData = await fetchClientDetails(accessData.client_id);
       console.log(`Step 3: Retrieved client data:`, clientData);
+      
+      // Vérifier si l'opération a été annulée
+      if (signal.aborted) {
+        throw new Error("Opération annulée");
+      }
+      
       setClient(clientData);
       
       // Step 3: Get client operations using the token for authentication
@@ -72,6 +96,12 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
       const fullName = `${clientData.prenom} ${clientData.nom}`;
       console.log(`Step 4: Fetching operations for ${fullName} with token for auth`);
       const operationsData = await fetchClientOperations(fullName, token);
+      
+      // Vérifier à nouveau si l'opération a été annulée
+      if (signal.aborted) {
+        throw new Error("Opération annulée");
+      }
+      
       setOperations(operationsData);
       
       console.log(`Step 5: Retrieved ${operationsData.length} client operations`);
@@ -79,15 +109,21 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
       setIsLoading(false);
       initialLoadCompletedRef.current = true;
     } catch (err: any) {
-      console.error("Error in fetchClientData:", err);
-      setClient(null);
-      setOperations([]);
-      const errorMessage = err.message || "Erreur lors de la récupération des données client";
-      setError(errorMessage);
-      showErrorToast("Erreur d'accès", { message: errorMessage });
+      if (err.name === 'AbortError' || err.message === "Opération annulée") {
+        console.log("Requête annulée");
+        setError("La requête a été interrompue. Veuillez réessayer.");
+      } else {
+        console.error("Error in fetchClientData:", err);
+        setClient(null);
+        setOperations([]);
+        const errorMessage = err.message || "Erreur lors de la récupération des données client";
+        setError(errorMessage);
+        showErrorToast("Erreur d'accès", { message: errorMessage });
+      }
       setIsLoading(false);
     } finally {
       fetchingRef.current = false;
+      clearTimeout(timeout);
     }
   }, [token, fetchCount, client]);
 
@@ -103,6 +139,13 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
       console.log("Initial data load with token:", token);
       fetchClientData();
     }
+    
+    return () => {
+      // Nettoyer les requêtes en cours lors du démontage
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [token, fetchClientData]);
 
   return {

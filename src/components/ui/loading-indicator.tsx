@@ -9,7 +9,8 @@ interface LoadingIndicatorProps {
   text?: string;
   textClassName?: string;
   fullscreen?: boolean;
-  fadeIn?: boolean; // Ajout d'une option de transition en fondu
+  fadeIn?: boolean;
+  showImmediately?: boolean;
 }
 
 export const LoadingIndicator = ({
@@ -18,19 +19,20 @@ export const LoadingIndicator = ({
   text,
   textClassName,
   fullscreen = false,
-  fadeIn = true
+  fadeIn = true,
+  showImmediately = false
 }: LoadingIndicatorProps) => {
-  const [visible, setVisible] = useState(!fadeIn);
+  const [visible, setVisible] = useState(!fadeIn || showImmediately);
 
   // Effet de transition en fondu
   useEffect(() => {
-    if (fadeIn) {
+    if (fadeIn && !showImmediately) {
       const timer = setTimeout(() => {
         setVisible(true);
-      }, 200); // Délai de 200ms avant d'afficher le loader
+      }, 150); // Réduit à 150ms pour une réponse plus rapide
       return () => clearTimeout(timer);
     }
-  }, [fadeIn]);
+  }, [fadeIn, showImmediately]);
 
   const sizeClasses = {
     sm: "h-4 w-4",
@@ -42,9 +44,9 @@ export const LoadingIndicator = ({
     ? "fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50" 
     : "flex flex-col items-center justify-center";
 
-  // Applique une transition de fondu
+  // Applique une transition de fondu plus rapide
   const opacityClass = fadeIn 
-    ? `transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-0'}` 
+    ? `transition-opacity duration-200 ${visible ? 'opacity-100' : 'opacity-0'}` 
     : '';
 
   return (

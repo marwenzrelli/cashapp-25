@@ -1,133 +1,71 @@
 
-import { supabase } from "@/integrations/supabase/client";
 import { ClientOperation } from "./types";
-import { showErrorToast } from "../utils/errorUtils";
+import { supabase } from "@/integrations/supabase/client";
 
-export const fetchClientOperations = async (clientFullName: string, token?: string): Promise<ClientOperation[]> => {
+export const fetchClientOperations = async (clientName: string, token: string): Promise<ClientOperation[]> => {
   try {
-    console.log("Fetching operations for client:", clientFullName, "with token:", token ? `${token.substring(0, 8)}...` : "none");
-    
-    // Validate client name
-    if (!clientFullName || clientFullName.trim() === '') {
-      console.error("Invalid client full name:", clientFullName);
-      return [];
-    }
-    
-    // If we have a token, set it in the Supabase client auth header
-    let authHeader = {};
-    if (token) {
-      authHeader = {
-        global: {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      };
-    }
-
     // Fetch deposits
     const { data: deposits, error: depositsError } = await supabase
       .from('deposits')
       .select('*')
-      .ilike('client_name', `%${clientFullName}%`);
+      .eq('client_name', clientName)
+      .order('created_at', { ascending: false });
 
     if (depositsError) {
       console.error("Error fetching deposits:", depositsError);
-      showErrorToast("Erreur de données", { message: "Erreur lors de la récupération des dépôts" });
+      // Continue execution to at least try to get withdrawals
     }
-    
-    console.log(`Found ${deposits?.length || 0} deposits for client:`, clientFullName);
 
     // Fetch withdrawals
     const { data: withdrawals, error: withdrawalsError } = await supabase
       .from('withdrawals')
       .select('*')
-      .ilike('client_name', `%${clientFullName}%`);
+      .eq('client_name', clientName)
+      .order('created_at', { ascending: false });
 
     if (withdrawalsError) {
       console.error("Error fetching withdrawals:", withdrawalsError);
-      showErrorToast("Erreur de données", { message: "Erreur lors de la récupération des retraits" });
+      // Continue execution to return at least deposits if available
     }
-    
-    console.log(`Found ${withdrawals?.length || 0} withdrawals for client:`, clientFullName);
 
-    // Fetch transfers (as sender)
-    const { data: transfersAsSender, error: senderError } = await supabase
-      .from('transfers')
-      .select('*')
-      .ilike('from_client', `%${clientFullName}%`);
+    // Combine and format the operations
+    const operations: ClientOperation[] = [];
 
-    if (senderError) {
-      console.error("Error fetching transfers as sender:", senderError);
-      showErrorToast("Erreur de données", { message: "Erreur lors de la récupération des virements envoyés" });
+    // Add deposits
+    if (deposits) {
+      deposits.forEach(deposit => {
+        operations.push({
+          id: `deposit-${deposit.id}`,
+          type: 'deposit',
+          amount: deposit.amount,
+          date: deposit.created_at,
+          description: deposit.notes || 'Versement',
+          status: deposit.status
+        });
+      });
     }
-    
-    console.log(`Found ${transfersAsSender?.length || 0} transfers as sender for client:`, clientFullName);
 
-    // Fetch transfers (as receiver)
-    const { data: transfersAsReceiver, error: receiverError } = await supabase
-      .from('transfers')
-      .select('*')
-      .ilike('to_client', `%${clientFullName}%`);
-
-    if (receiverError) {
-      console.error("Error fetching transfers as receiver:", receiverError);
-      showErrorToast("Erreur de données", { message: "Erreur lors de la récupération des virements reçus" });
+    // Add withdrawals
+    if (withdrawals) {
+      withdrawals.forEach(withdrawal => {
+        operations.push({
+          id: `withdrawal-${withdrawal.id}`,
+          type: 'withdrawal',
+          amount: withdrawal.amount,
+          date: withdrawal.created_at,
+          description: withdrawal.notes || 'Retrait',
+          status: withdrawal.status
+        });
+      });
     }
-    
-    console.log(`Found ${transfersAsReceiver?.length || 0} transfers as receiver for client:`, clientFullName);
 
-    // Format and combine all operations
-    const allOperations: ClientOperation[] = [
-      ...(deposits || []).map(d => ({
-        id: `deposit-${d.id}`,
-        type: "deposit" as const,
-        date: new Date(d.created_at).toLocaleDateString(),
-        operation_date: d.operation_date || d.created_at,
-        amount: Number(d.amount),
-        description: d.notes || "Versement",
-        fromClient: clientFullName
-      })),
-      ...(withdrawals || []).map(w => ({
-        id: `withdrawal-${w.id}`,
-        type: "withdrawal" as const,
-        date: new Date(w.created_at).toLocaleDateString(),
-        operation_date: w.operation_date || w.created_at,
-        amount: Number(w.amount),
-        description: w.notes || "Retrait",
-        fromClient: clientFullName
-      })),
-      ...(transfersAsSender || []).map(t => ({
-        id: `transfer-out-${t.id}`,
-        type: "transfer" as const,
-        date: new Date(t.created_at).toLocaleDateString(),
-        operation_date: t.operation_date || t.created_at,
-        amount: -Number(t.amount), // Negative amount for outgoing transfers
-        description: t.reason || `Virement vers ${t.to_client}`,
-        fromClient: t.from_client,
-        toClient: t.to_client
-      })),
-      ...(transfersAsReceiver || []).map(t => ({
-        id: `transfer-in-${t.id}`,
-        type: "transfer" as const,
-        date: new Date(t.created_at).toLocaleDateString(),
-        operation_date: t.operation_date || t.created_at,
-        amount: Number(t.amount), // Positive amount for incoming transfers
-        description: t.reason || `Virement reçu de ${t.from_client}`,
-        fromClient: t.from_client,
-        toClient: t.to_client
-      }))
-    ].sort((a, b) => {
-      // Sort by operation_date if available
-      const dateA = new Date(a.operation_date || a.date).getTime();
-      const dateB = new Date(b.operation_date || b.date).getTime();
-      return dateB - dateA; // Sort by most recent first
-    });
+    // Sort by date, newest first
+    operations.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-    console.log(`Retrieved ${allOperations.length} operations for client ${clientFullName}`);
-    return allOperations;
-  } catch (error) {
-    console.error("Error in fetchClientOperations:", error);
+    return operations;
+  } catch (error: any) {
+    console.error("Error fetching client operations:", error);
+    // Return empty array instead of throwing to avoid blocking the UI
     return [];
   }
 };

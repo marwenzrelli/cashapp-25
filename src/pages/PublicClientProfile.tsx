@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { PublicClientLoading } from "@/features/clients/components/PublicClientLoading";
 import { PublicClientError } from "@/features/clients/components/PublicClientError";
@@ -26,14 +25,12 @@ const PublicClientProfile = () => {
     retryFetch 
   } = usePublicClientProfile(token);
 
-  // Effet pour l'animation d'entrée progressive
+  // Effet pour l'animation d'entrée progressive - plus rapide
   useEffect(() => {
-    // Retarder l'animation pour une transition plus douce
-    const timer = setTimeout(() => {
+    // Animation immédiate pour éviter les retards
+    requestAnimationFrame(() => {
       setPageReady(true);
-    }, 150);
-    
-    return () => clearTimeout(timer);
+    });
   }, []);
 
   // Set JWT token for Supabase RLS policies - run only once
@@ -138,7 +135,7 @@ const PublicClientProfile = () => {
     return <PublicClientLoading 
       onRetry={retryFetch} 
       loadingTime={loadingTime}
-      timeout={loadingTime > 10} // Automatically set timeout to true after 10 seconds
+      timeout={loadingTime > 8} // Automatiquement afficher le timeout après 8 secondes
     />;
   }
 
@@ -151,7 +148,7 @@ const PublicClientProfile = () => {
 
   // Show client profile when data is available
   return (
-    <div className={`min-h-screen bg-gradient-to-b from-primary/10 to-background p-4 transition-opacity duration-500 ${pageReady ? 'opacity-100' : 'opacity-0'}`}>
+    <div className={`min-h-screen bg-gradient-to-b from-primary/10 to-background p-4 transition-all duration-300 ${pageReady ? 'opacity-100 scale-100' : 'opacity-0 scale-[0.98]'}`}>
       <div className="container mx-auto max-w-6xl space-y-6">
         <PublicClientPersonalInfo client={client} />
         <PublicClientOperationsHistory operations={operations} />
