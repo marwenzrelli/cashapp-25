@@ -1,8 +1,9 @@
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useClients } from "./useClients";
 import { useClientDialogs } from "./useClientDialogs";
 import { toast } from "sonner";
+import { Client } from "../types";
 
 export const useClientsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -34,13 +35,16 @@ export const useClientsPage = () => {
     resetNewClient
   } = useClientDialogs();
 
-  // Optimized retry handler with optional toast suppression
-  const handleRetry = useCallback((showToast = true) => {
-    console.log("Attempting to reload clients...");
-    return fetchClients(0, showToast);
+  useEffect(() => {
+    console.log("Chargement initial des clients...");
+    fetchClients();
   }, [fetchClients]);
 
-  // Optimized edit confirmation
+  const handleRetry = () => {
+    console.log("Tentative de rechargement des clients...");
+    fetchClients();
+  };
+
   const confirmEdit = async () => {
     if (!selectedClient) return;
 
@@ -54,7 +58,6 @@ export const useClientsPage = () => {
     }
   };
 
-  // Optimized delete confirmation
   const confirmDelete = async () => {
     if (!selectedClient) return;
 
@@ -68,10 +71,9 @@ export const useClientsPage = () => {
     }
   };
 
-  // Optimized client creation
   const handleCreateClient = async () => {
-    console.log("Creating a new client:", newClient);
-    // Validation for required fields - phone is no longer required
+    console.log("Création d'un nouveau client:", newClient);
+    // Validation des champs requis - téléphone n'est plus obligatoire
     if (!newClient.prenom.trim() || !newClient.nom.trim()) {
       toast.error("Informations incomplètes", {
         description: "Veuillez remplir au moins le prénom et le nom du client."
@@ -79,7 +81,7 @@ export const useClientsPage = () => {
       return;
     }
 
-    // Add default 'active' status during creation
+    // Ajout du status par défaut 'active' lors de la création
     const clientData = {
       ...newClient,
       status: 'active'
@@ -96,17 +98,11 @@ export const useClientsPage = () => {
     }
   };
 
-  // Optimize filtering by memoizing the filter operation
-  const filteredClients = useMemo(() => {
-    if (!searchTerm.trim()) return clients;
-    
-    const lowerSearchTerm = searchTerm.toLowerCase();
-    return clients.filter((client) =>
-      `${client.prenom} ${client.nom}`.toLowerCase().includes(lowerSearchTerm) ||
-      (client.email && client.email.toLowerCase().includes(lowerSearchTerm)) ||
-      (client.telephone && client.telephone.includes(lowerSearchTerm))
-    );
-  }, [clients, searchTerm]);
+  const filteredClients = clients.filter((client) =>
+    `${client.prenom} ${client.nom}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.telephone.includes(searchTerm)
+  );
 
   return {
     // State
@@ -129,8 +125,8 @@ export const useClientsPage = () => {
     setIsDialogOpen,
     setIsEditDialogOpen,
     setIsDeleteDialogOpen,
-    setEditForm,
-    setNewClient,
+    setEditForm,     // Export the missing state setter
+    setNewClient,    // Export the missing state setter
     
     // Client actions
     handleRetry,

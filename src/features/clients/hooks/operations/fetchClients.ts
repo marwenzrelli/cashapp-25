@@ -2,151 +2,188 @@
 import { useState, useCallback, useRef } from "react";
 import { Client } from "../../types";
 import { supabase } from "@/integrations/supabase/client";
-import { showErrorToast, handleSupabaseError } from "../utils/errorUtils";
-import { updateClientBalances } from "./utils/balanceUtils";
-import { FETCH_CONFIG, withTimeout, SupabaseQueryResult } from "./utils/fetchConfig";
+import { showErrorToast } from "../utils/errorUtils";
+import { handleSupabaseError } from "../utils/errorUtils";
 
 export const useFetchClients = (
   setClients: React.Dispatch<React.SetStateAction<Client[]>>,
   setLoading: React.Dispatch<React.SetStateAction<boolean>>,
   setError: React.Dispatch<React.SetStateAction<string | null>>
 ) => {
-  // Use references to track state between renders
+  // Configuration constants
+  const MAX_RETRIES = 2; // Reduced from 3
+  const RETRY_DELAY = 2000; // Reduced from 3000
+  
+  // Utiliser une référence pour suivre si une notification d'erreur a déjà été affichée
   const errorNotifiedRef = useRef(false);
+  // Utiliser une référence pour les opérations en cours
   const fetchingRef = useRef(false);
-  const lastFetchTimeRef = useRef<number>(0);
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const maxRetriesRef = useRef<number>(FETCH_CONFIG.MAX_RETRIES);
 
-  // Optimized fetch function
+  // Fonction pour mettre à jour les soldes des clients
+  const updateClientBalances = async (clientsList: Client[]) => {
+    if (!supabase || !clientsList.length) return;
+    
+    try {
+      // Prioritize recent clients for balance updates
+      const sortedClients = [...clientsList].sort((a, b) => {
+        const dateA = new Date(a.date_creation).getTime();
+        const dateB = new Date(b.date_creation).getTime();
+        return dateB - dateA;
+      });
+      
+      // Process 5 clients at a time, prioritizing recently created clients
+      const batchSize = 5;
+      
+      for (let i = 0; i < sortedClients.length; i += batchSize) {
+        const batch = sortedClients.slice(i, i + batchSize);
+        
+        // Use Promise.all to process the batch in parallel
+        await Promise.all(batch.map(async (client) => {
+          try {
+            const clientName = `${client.prenom} ${client.nom}`;
+            
+            // Fetch deposits and withdrawals in parallel
+            const [depositsResult, withdrawalsResult] = await Promise.all([
+              supabase.from('deposits').select('amount').eq('client_name', clientName),
+              supabase.from('withdrawals').select('amount').eq('client_name', clientName)
+            ]);
+            
+            const deposits = depositsResult.data || [];
+            const withdrawals = withdrawalsResult.data || [];
+            
+            const depositsTotal = deposits.reduce((sum, d) => sum + Number(d.amount), 0);
+            const withdrawalsTotal = withdrawals.reduce((sum, w) => sum + Number(w.amount), 0);
+            const balance = depositsTotal - withdrawalsTotal;
+
+            // Only update if balance has changed
+            if (client.solde !== balance) {
+              // Update database
+              const { error: updateError } = await supabase
+                .from('clients')
+                .update({ solde: balance || 0 })
+                .eq('id', client.id);
+
+              if (updateError) {
+                console.warn(`Impossible de mettre à jour le solde pour ${clientName}:`, updateError);
+                return;
+              }
+
+              // Update local state
+              setClients(prevClients => 
+                prevClients.map(c => 
+                  c.id === client.id ? { ...c, solde: balance || 0 } : c
+                )
+              );
+            }
+          } catch (error) {
+            console.error(`Erreur pour le client ${client.id}:`, error);
+          }
+        }));
+        
+        // Pause between batches
+        if (i + batchSize < sortedClients.length) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      }
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour des soldes:", error);
+    }
+  };
+
+  // Fonction de récupération des clients
   const fetchClients = useCallback(async (retry = 0, showToast = true) => {
-    // Prevent fetch if another is in progress 
-    const now = Date.now();
+    // Si une récupération est déjà en cours, ne pas en démarrer une autre
     if (fetchingRef.current) {
-      console.log("Fetch skipped: already fetching");
-      return Promise.resolve();
+      return;
     }
-    
-    // If throttling too many requests, allow after 2 seconds regardless
-    if (now - lastFetchTimeRef.current < 300 && retry === 0 && (now - lastFetchTimeRef.current) < 2000) {
-      console.log("Fetch skipped: too soon");
-      return Promise.resolve();
-    }
-    
-    // Cancel any existing fetch operation
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    
-    // Cancel any pending debounce timer
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-      debounceTimerRef.current = null;
-    }
-    
-    // Create a new abort controller for this request
-    abortControllerRef.current = new AbortController();
     
     fetchingRef.current = true;
-    lastFetchTimeRef.current = now;
     
     try {
       if (retry === 0) {
         setLoading(true);
         setError(null);
+        // Réinitialiser le drapeau de notification d'erreur lors d'une nouvelle tentative
         errorNotifiedRef.current = false;
       }
       
-      console.log(`Loading clients... (attempt ${retry + 1}/${maxRetriesRef.current + 1})`);
+      console.log(`Chargement des clients... (tentative ${retry + 1}/${MAX_RETRIES + 1})`);
       
-      // Check for Supabase connection
+      // Vérifier que la connexion à Supabase est établie
       if (!supabase) {
-        throw new Error("Database connection unavailable");
+        throw new Error("La connexion à la base de données n'est pas disponible");
       }
       
-      // Build the query but don't execute it yet
-      const clientsQuery = supabase
-        .from('clients')
-        .select('*')
-        .order('date_creation', { ascending: false });
-      
-      // Execute the query with explicit typing - withTimeout will now handle the query builder properly
-      const response = await withTimeout<Client[]>(clientsQuery, FETCH_CONFIG.TIMEOUT + (retry * 1000));
-
-      // Properly check for error
-      if (response.error) {
-        console.error("Error fetching clients:", response.error);
+      // Récupérer les clients avec un timeout de sécurité
+      const fetchWithTimeout = async () => {
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error("La requête a expiré")), 8000); // Reduced from 10000
+        });
         
-        if (retry < maxRetriesRef.current) {
-          console.log(`Retrying in ${FETCH_CONFIG.RETRY_DELAY/1000} seconds...`);
-          
-          // Clear the fetching flag to allow retry
-          fetchingRef.current = false;
-          
-          // Increasing delay for each retry
-          setTimeout(() => fetchClients(retry + 1, false), FETCH_CONFIG.RETRY_DELAY + (retry * 500));
-          return Promise.resolve();
+        const fetchPromise = supabase
+          .from('clients')
+          .select('*')
+          .order('date_creation', { ascending: false });
+        
+        return Promise.race([fetchPromise, timeoutPromise]);
+      };
+      
+      const { data: clientsData, error: clientsError } = await fetchWithTimeout() as any;
+
+      if (clientsError) {
+        console.error("Erreur lors de la récupération des clients:", clientsError);
+        
+        // Si nous n'avons pas atteint le nombre maximal de tentatives, réessayer
+        if (retry < MAX_RETRIES) {
+          console.log(`Nouvelle tentative dans ${RETRY_DELAY/1000} secondes...`);
+          setTimeout(() => fetchClients(retry + 1, false), RETRY_DELAY);
+          return;
         }
         
-        throw response.error;
+        // Sinon, lancer une erreur
+        throw new Error(handleSupabaseError(clientsError));
       }
 
-      // Properly check for missing data
-      if (!response.data || !Array.isArray(response.data)) {
-        console.log("No valid data received from database");
+      if (!clientsData) {
+        console.log("Aucune donnée reçue de la base de données");
         setClients([]);
-        return Promise.resolve();
+        return;
       }
 
-      console.log(`${response.data.length} clients retrieved successfully`);
+      console.log(`${clientsData.length} clients récupérés avec succès:`, clientsData);
       
-      // Update state with retrieved clients
-      setClients(response.data);
+      // Mettre à jour l'état avec les clients récupérés
+      setClients(clientsData);
       
       // Update balances in background after loading clients
-      if (response.data.length > 0) {
-        // Process only the most recent clients immediately, defer others
+      if (clientsData.length > 0) {
+        // Update balances in the background
         setTimeout(() => {
-          updateClientBalances(response.data, setClients);
-        }, 100);
+          updateClientBalances(clientsData);
+        }, 200);
       }
       
-      return Promise.resolve();
-      
     } catch (error) {
-      console.error("Critical error loading clients:", error);
+      console.error("Erreur critique lors du chargement des clients:", error);
       
-      if (retry < maxRetriesRef.current) {
-        console.log(`Retrying in ${FETCH_CONFIG.RETRY_DELAY/1000} seconds...`);
-        
-        // Clear the fetching flag to allow retry
-        fetchingRef.current = false;
-        
-        setTimeout(() => fetchClients(retry + 1, false), FETCH_CONFIG.RETRY_DELAY + (retry * 500));
-        return Promise.resolve();
+      if (retry < MAX_RETRIES) {
+        console.log(`Nouvelle tentative dans ${RETRY_DELAY/1000} secondes...`);
+        setTimeout(() => fetchClients(retry + 1, false), RETRY_DELAY);
+        return;
       }
       
       setError(handleSupabaseError(error));
       
-      // Show error toast only once
+      // Afficher la notification d'erreur seulement si nous n'en avons pas encore affiché et si showToast est true
       if (showToast && !errorNotifiedRef.current) {
-        showErrorToast("Connection error", error);
+        showErrorToast("Erreur de connexion", error);
         errorNotifiedRef.current = true;
       }
-      
-      return Promise.resolve();
-      
     } finally {
-      // Delay clearing the loading state to prevent flicker
-      debounceTimerRef.current = setTimeout(() => {
-        if (retry === 0 || retry >= maxRetriesRef.current) {
-          setLoading(false);
-        }
-        fetchingRef.current = false;
-        abortControllerRef.current = null;
-        debounceTimerRef.current = null;
-      }, 300); // Debounce for 300ms
+      if (retry === 0 || retry === MAX_RETRIES) {
+        setLoading(false);
+      }
+      fetchingRef.current = false;
     }
   }, [setClients, setLoading, setError]);
 

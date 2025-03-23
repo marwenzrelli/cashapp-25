@@ -18,37 +18,27 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
     id: string | number | null;
     timestamp: number;
   } | null>(null);
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const isProcessingRef = useRef(false);
-  const channelRef = useRef<any>(null);
   
-  // Optimized realtime listener setup with improved deduplication
+  // Configurer un écouteur de changements en temps réel unique et global pour éviter les multiples écouteurs
   useEffect(() => {
-    if (channelRef.current) {
-      // If we already have a channel, don't create another one
-      return () => {};
-    }
-    
-    // Set up a single listener for all tables to avoid multiple listeners
+    // Configurer un seul écouteur pour toutes les tables
     const setupRealtimeListener = async () => {
       try {
-        console.log("Setting up realtime subscription");
-        // Create a single channel for all tables with optimized event handling
+        // Créer un seul canal pour toutes les tables
         const channel = supabase
           .channel('table-changes')
           .on('postgres_changes', 
             { event: '*', schema: 'public', table: 'clients' },
             (payload: RealtimePayload) => {
-              // Prevent duplicate events with improved deduplication logic
+              // Prevent duplicate events
               const currentTime = Date.now();
               const payloadId = payload.new?.id || payload.old?.id;
               
-              // Check if this is a duplicate event (same table+id within 1000ms)
+              // Check if this is a duplicate event (same table+id within 500ms)
               if (lastProcessedRef.current && 
                   lastProcessedRef.current.table === 'clients' &&
                   lastProcessedRef.current.id === payloadId &&
-                  currentTime - lastProcessedRef.current.timestamp < 1000) {
-                console.log("Skipping duplicate event");
+                  currentTime - lastProcessedRef.current.timestamp < 500) {
                 return;
               }
               
@@ -59,73 +49,134 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
                 timestamp: currentTime
               };
               
-              console.log("Change detected in clients table:", payload.eventType);
+              console.log("Changement détecté dans la table clients:", payload);
+              // Utiliser showToast=false pour éviter de montrer des toasts d'erreur répétés
+              fetchClients(0, false);
+              // Invalidate related queries
+              queryClient.invalidateQueries({ queryKey: ['clients'] });
+              if (payload.new && 'id' in payload.new) {
+                queryClient.invalidateQueries({ queryKey: ['client', payload.new.id] });
+                queryClient.invalidateQueries({ queryKey: ['clientOperations', payload.new.id] });
+              }
+            }
+          )
+          .on('postgres_changes',
+            { event: '*', schema: 'public', table: 'deposits' },
+            (payload: RealtimePayload) => {
+              // Prevent duplicate events
+              const currentTime = Date.now();
+              const payloadId = payload.new?.id || payload.old?.id;
               
-              // Clear any existing debounce timer
-              if (debounceTimerRef.current) {
-                clearTimeout(debounceTimerRef.current);
+              // Check if this is a duplicate event (same table+id within 500ms)
+              if (lastProcessedRef.current && 
+                  lastProcessedRef.current.table === 'deposits' &&
+                  lastProcessedRef.current.id === payloadId &&
+                  currentTime - lastProcessedRef.current.timestamp < 500) {
+                return;
               }
               
-              // Debounce the fetch operation to avoid multiple fetches in quick succession
-              if (!isProcessingRef.current) {
-                debounceTimerRef.current = setTimeout(() => {
-                  isProcessingRef.current = true;
-                  
-                  // Don't show error toasts for background updates
-                  fetchClients(0, false)
-                    .catch(err => console.error("Error fetching clients after realtime update:", err))
-                    .finally(() => {
-                      isProcessingRef.current = false;
-                    });
-                  
-                  // Invalidate related queries with minimal scope
-                  queryClient.invalidateQueries({ queryKey: ['clients'] });
-                  if (payload.new && 'id' in payload.new) {
-                    queryClient.invalidateQueries({ queryKey: ['client', payload.new.id] });
-                  }
-                  
-                  debounceTimerRef.current = null;
-                }, 1000); // Increase to 1000ms to catch multiple rapid changes
+              // Update last processed
+              lastProcessedRef.current = {
+                table: 'deposits',
+                id: payloadId,
+                timestamp: currentTime
+              };
+              
+              console.log("Changement détecté dans la table deposits:", payload);
+              fetchClients(0, false);
+              // Invalidate deposits and operations queries
+              queryClient.invalidateQueries({ queryKey: ['deposits'] });
+              queryClient.invalidateQueries({ queryKey: ['operations'] });
+              // Also refresh client data if the client_name is available
+              if (payload.new && 'client_name' in payload.new) {
+                queryClient.invalidateQueries({ queryKey: ['clients'] });
+              }
+            }
+          )
+          .on('postgres_changes',
+            { event: '*', schema: 'public', table: 'withdrawals' },
+            (payload: RealtimePayload) => {
+              // Prevent duplicate events
+              const currentTime = Date.now();
+              const payloadId = payload.new?.id || payload.old?.id;
+              
+              // Check if this is a duplicate event (same table+id within 500ms)
+              if (lastProcessedRef.current && 
+                  lastProcessedRef.current.table === 'withdrawals' &&
+                  lastProcessedRef.current.id === payloadId &&
+                  currentTime - lastProcessedRef.current.timestamp < 500) {
+                return;
+              }
+              
+              // Update last processed
+              lastProcessedRef.current = {
+                table: 'withdrawals',
+                id: payloadId,
+                timestamp: currentTime
+              };
+              
+              console.log("Changement détecté dans la table withdrawals:", payload);
+              fetchClients(0, false);
+              // Invalidate withdrawals and operations queries
+              queryClient.invalidateQueries({ queryKey: ['withdrawals'] });
+              queryClient.invalidateQueries({ queryKey: ['operations'] });
+              // Also refresh client data if the client_name is available
+              if (payload.new && 'client_name' in payload.new) {
+                queryClient.invalidateQueries({ queryKey: ['clients'] });
+              }
+            }
+          )
+          .on('postgres_changes',
+            { event: '*', schema: 'public', table: 'transfers' },
+            (payload: RealtimePayload) => {
+              // Prevent duplicate events
+              const currentTime = Date.now();
+              const payloadId = payload.new?.id || payload.old?.id;
+              
+              // Check if this is a duplicate event (same table+id within 500ms)
+              if (lastProcessedRef.current && 
+                  lastProcessedRef.current.table === 'transfers' &&
+                  lastProcessedRef.current.id === payloadId &&
+                  currentTime - lastProcessedRef.current.timestamp < 500) {
+                return;
+              }
+              
+              // Update last processed
+              lastProcessedRef.current = {
+                table: 'transfers',
+                id: payloadId,
+                timestamp: currentTime
+              };
+              
+              console.log("Changement détecté dans la table transfers:", payload);
+              fetchClients(0, false);
+              // Invalidate transfers and operations queries
+              queryClient.invalidateQueries({ queryKey: ['transfers'] });
+              queryClient.invalidateQueries({ queryKey: ['operations'] });
+              // Also refresh client data if from_client or to_client is available
+              if (payload.new) {
+                queryClient.invalidateQueries({ queryKey: ['clients'] });
               }
             }
           )
           .subscribe((status) => {
-            console.log("Realtime subscription status:", status);
+            console.log("Statut de l'abonnement réel-time:", status);
           });
 
-        // Save the channel reference
-        channelRef.current = channel;
-        
+        // Nettoyer le canal au démontage du composant
         return () => {
-          console.log("Removing realtime channel subscription");
-          if (debounceTimerRef.current) {
-            clearTimeout(debounceTimerRef.current);
-            debounceTimerRef.current = null;
-          }
-          
-          if (channelRef.current) {
-            supabase.removeChannel(channelRef.current);
-            channelRef.current = null;
-          }
+          supabase.removeChannel(channel);
         };
       } catch (error) {
-        console.error("Error setting up realtime listener:", error);
-        // Clean up failed channel attempt
-        if (channelRef.current) {
-          supabase.removeChannel(channelRef.current);
-          channelRef.current = null;
-        }
-        return () => {};
+        console.error("Erreur lors de la configuration de l'écouteur en temps réel:", error);
       }
     };
 
-    const cleanupFn = setupRealtimeListener();
+    const cleanup = setupRealtimeListener();
     return () => {
-      if (typeof cleanupFn === 'function') {
-        cleanupFn();
-      } else if (cleanupFn instanceof Promise) {
-        cleanupFn.then(fn => {
-          if (fn && typeof fn === 'function') fn();
+      if (cleanup) {
+        cleanup.then(cleanupFn => {
+          if (cleanupFn) cleanupFn();
         });
       }
     };
