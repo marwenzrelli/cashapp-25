@@ -2,16 +2,24 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search } from "lucide-react";
+import { Loader2, Plus, RefreshCw, Search } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ClientSearchProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
   onNewClient: () => void;
+  onRefresh?: () => void;
   isLoading?: boolean;
 }
 
-export const ClientSearch = ({ searchTerm, onSearchChange, onNewClient, isLoading }: ClientSearchProps) => {
+export const ClientSearch = ({ 
+  searchTerm, 
+  onSearchChange, 
+  onNewClient, 
+  onRefresh, 
+  isLoading 
+}: ClientSearchProps) => {
   return (
     <Card>
       <CardHeader>
@@ -22,15 +30,42 @@ export const ClientSearch = ({ searchTerm, onSearchChange, onNewClient, isLoadin
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Rechercher par nom, email ou téléphone..."
-              value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="pl-9"
-              disabled={isLoading}
-            />
+          <div className="relative flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Rechercher par nom, email ou téléphone..."
+                value={searchTerm}
+                onChange={(e) => onSearchChange(e.target.value)}
+                className="pl-9"
+                disabled={isLoading}
+              />
+              {isLoading && (
+                <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground animate-spin" />
+              )}
+            </div>
+            {onRefresh && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    onClick={onRefresh} 
+                    disabled={isLoading}
+                    className="flex-shrink-0"
+                  >
+                    {isLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="h-4 w-4" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Actualiser la liste</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
           </div>
           <Button 
             className="w-full" 

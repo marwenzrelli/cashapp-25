@@ -149,7 +149,8 @@ export const ClientsPageContent = ({
           searchTerm={searchTerm} 
           onSearchChange={setSearchTerm} 
           onNewClient={openNewClientDialog}
-          isLoading={loading && clients.length === 0}
+          onRefresh={handleRetry}
+          isLoading={loading}
         />
       </div>
 
