@@ -3,7 +3,7 @@ import { ClientsPageContent } from "@/features/clients/components/ClientsPageCon
 import { ClientDialogs } from "@/features/clients/components/ClientDialogs";
 import { useClientsPage } from "@/features/clients/hooks/useClientsPage";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 const Clients = () => {
   const {
@@ -39,10 +39,17 @@ const Clients = () => {
     handleCreateClient,
   } = useClientsPage();
 
+  // Prevent multiple fetch calls on initial load
+  const initialLoadRef = useRef(false);
+
   // Preload clients data when component mounts
   useEffect(() => {
-    // Add prefetch flag to skip toast notifications on initial load
-    handleRetry(false); 
+    // Only load once to prevent repeated calls
+    if (!initialLoadRef.current) {
+      initialLoadRef.current = true;
+      // Add prefetch flag to skip toast notifications on initial load
+      handleRetry(false); 
+    }
     
     // Clean up any pending operations on unmount
     return () => {

@@ -43,12 +43,12 @@ export const withTimeout = async <T>(query: any, timeout = FETCH_CONFIG.TIMEOUT)
       return result as SupabaseQueryResult<T>;
     }
     
-    // Handle unexpected result structure
-    return { data: result as T, error: null };
+    // Handle unexpected result structure - safely transform it
+    return { data: null, error: new Error("Invalid response format") };
   } catch (error) {
     if (error instanceof Error && error.message === "Request timeout") {
-      throw new Error("Database request timed out. Please try again.");
+      return { data: null, error: new Error("Database request timed out. Please try again.") };
     }
-    throw error;
+    return { data: null, error };
   }
 };
