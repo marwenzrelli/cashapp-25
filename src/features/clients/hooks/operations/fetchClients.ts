@@ -53,7 +53,9 @@ export const useFetchClients = (
         .select('*')
         .order('date_creation', { ascending: false });
       
-      const { data: clientsData, error: clientsError } = await withTimeout(fetchClientsQuery);
+      // Execute the query with timeout
+      const result = await withTimeout(fetchClientsQuery);
+      const { data: clientsData, error: clientsError } = result;
 
       if (clientsError) {
         console.error("Error fetching clients:", clientsError);

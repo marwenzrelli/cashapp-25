@@ -19,10 +19,20 @@ export const createTimeoutPromise = (timeout = FETCH_CONFIG.TIMEOUT) => {
 
 /**
  * Wraps a promise with a timeout to prevent hanging requests
+ * Modified to properly handle Supabase query objects
  */
-export const withTimeout = <T>(promise: Promise<T>, timeout = FETCH_CONFIG.TIMEOUT): Promise<T> => {
-  return Promise.race([
-    promise,
-    createTimeoutPromise(timeout)
-  ]) as Promise<T>;
+export const withTimeout = async <T>(query: any, timeout = FETCH_CONFIG.TIMEOUT): Promise<T> => {
+  try {
+    // Create a promise that resolves when the query completes or rejects on timeout
+    const result = await Promise.race([
+      query,
+      createTimeoutPromise(timeout)
+    ]);
+    return result as T;
+  } catch (error) {
+    if (error instanceof Error && error.message === "Request timeout") {
+      throw new Error("Database request timed out. Please try again.");
+    }
+    throw error;
+  }
 };
