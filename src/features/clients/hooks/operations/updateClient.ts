@@ -17,6 +17,17 @@ export const useUpdateClient = (
         throw new Error("La connexion à la base de données n'est pas disponible");
       }
       
+      // Validation for name fields
+      if (client.nom !== undefined && client.nom.trim() === '') {
+        showErrorToast("Validation échouée", "Le nom du client ne peut pas être vide");
+        return false;
+      }
+      
+      if (client.prenom !== undefined && client.prenom.trim() === '') {
+        showErrorToast("Validation échouée", "Le prénom du client ne peut pas être vide");
+        return false;
+      }
+      
       // Mettre à jour le client
       const { error } = await supabase
         .from('clients')

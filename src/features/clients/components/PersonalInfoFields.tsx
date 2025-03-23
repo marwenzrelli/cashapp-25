@@ -30,10 +30,12 @@ export const PersonalInfoFields = ({
           <div className="bg-primary/10 p-3 rounded-full">
             <User className="h-6 w-6 text-primary" />
           </div>
-          <div>
-            <h3 className="text-xl font-semibold tracking-tight">
-              {client.prenom} {client.nom}
-            </h3>
+          <div className="w-full">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-semibold tracking-tight">
+                {client.prenom} {client.nom}
+              </h3>
+            </div>
             <p className="text-sm text-muted-foreground flex items-center gap-1">
               <BadgeCheck className="h-3.5 w-3.5 text-primary/70" />
               Client vérifié
