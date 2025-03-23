@@ -50,18 +50,25 @@ export const ClientsPageContent = ({
   // Gestion de l'affichage de l'indicateur de chargement
   const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
   const loadingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const lastShowTime = useRef<number>(0);
 
   // Afficher l'indicateur de chargement seulement après un délai pour éviter le clignotement
+  // Et ne pas afficher les indicateurs si le dernier a été affiché il y a moins de 3 secondes
   useEffect(() => {
     if (loading) {
-      if (loadingTimerRef.current) {
-        clearTimeout(loadingTimerRef.current);
+      const now = Date.now();
+      // Seulement montrer l'indicateur si le dernier indicateur a été affiché il y a plus de 3 secondes
+      if (now - lastShowTime.current > 3000) {
+        if (loadingTimerRef.current) {
+          clearTimeout(loadingTimerRef.current);
+        }
+        
+        loadingTimerRef.current = setTimeout(() => {
+          setShowLoadingIndicator(true);
+          lastShowTime.current = Date.now();
+          loadingTimerRef.current = null;
+        }, 800); // 800ms delay before showing loading indicator (increased from 500ms)
       }
-      
-      loadingTimerRef.current = setTimeout(() => {
-        setShowLoadingIndicator(true);
-        loadingTimerRef.current = null;
-      }, 500); // 500ms delay before showing loading indicator
     } else {
       if (loadingTimerRef.current) {
         clearTimeout(loadingTimerRef.current);
@@ -121,7 +128,7 @@ export const ClientsPageContent = ({
       <div className={loading ? "opacity-70 pointer-events-none" : ""}>
         <ClientList clients={filteredClients} onEdit={handleEdit} onDelete={handleDelete} />
         {showLoadingIndicator && loading && (
-          <div className="fixed bottom-4 right-4 bg-primary text-white px-4 py-2 rounded-md shadow-md flex items-center gap-2">
+          <div className="fixed bottom-4 right-4 bg-primary text-white px-4 py-2 rounded-md shadow-md flex items-center gap-2 animate-in fade-in slide-in-from-right-5">
             <LoadingIndicator size="sm" />
             <span>Actualisation...</span>
           </div>

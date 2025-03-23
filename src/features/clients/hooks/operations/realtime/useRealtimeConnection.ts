@@ -32,9 +32,22 @@ export const useRealtimeConnection = (
     }
     
     try {
-      // If we've exceeded max reconnect attempts, stop trying
+      // If we've exceeded max reconnect attempts, stop trying and don't retry for a longer period
       if (state.reconnectAttempts >= maxReconnectAttempts) {
-        console.log(`Maximum reconnect attempts (${maxReconnectAttempts}) reached. Stopping reconnect attempts.`);
+        console.log(`Maximum reconnect attempts (${maxReconnectAttempts}) reached. Pausing for 30 seconds.`);
+        
+        // Show a toast only once when we reach max attempts
+        toast.error("Problème de connexion en temps réel", {
+          description: "Les mises à jour en temps réel sont temporairement indisponibles."
+        });
+        
+        // Try one final time after a much longer cooldown (30 seconds)
+        setTimeout(() => {
+          console.log("Attempting connection after extended cooldown");
+          updateState({ reconnectAttempts: 0 }); // Reset counter after extended cooldown
+          setupRealtimeListener();
+        }, 30000);
+        
         return;
       }
       
@@ -61,10 +74,14 @@ export const useRealtimeConnection = (
             const newAttempts = state.reconnectAttempts + 1;
             updateState({ reconnectAttempts: newAttempts });
             
-            console.log(`Subscription failed (attempt ${newAttempts}/${maxReconnectAttempts}), will retry in ${reconnectBackoffMs}ms`);
+            // Use a longer delay when nearing max attempts
+            const attemptRatio = newAttempts / maxReconnectAttempts;
+            const extraDelay = attemptRatio > 0.7 ? 5000 : 0;
             
-            // Exponential backoff for reconnection attempts
-            const backoffDelay = reconnectBackoffMs * Math.pow(1.5, newAttempts - 1);
+            console.log(`Subscription failed (attempt ${newAttempts}/${maxReconnectAttempts}), will retry in ${reconnectBackoffMs + extraDelay}ms`);
+            
+            // Exponential backoff for reconnection attempts + additional delay when nearing max attempts
+            const backoffDelay = reconnectBackoffMs * Math.pow(2, newAttempts - 1) + extraDelay;
             
             // Schedule reconnection attempt with backoff
             setTimeout(() => {
@@ -85,17 +102,13 @@ export const useRealtimeConnection = (
       
       // Schedule reconnection attempt with backoff if we haven't hit the limit
       if (newAttempts < maxReconnectAttempts) {
-        const backoffDelay = reconnectBackoffMs * Math.pow(1.5, newAttempts - 1);
+        const backoffDelay = reconnectBackoffMs * Math.pow(2, newAttempts - 1);
         setTimeout(() => {
           console.log("Retrying subscription setup after error");
           setupRealtimeListener();
         }, backoffDelay);
       } else {
         console.log("Maximum reconnect attempts reached. Giving up on realtime subscription.");
-        // Show a toast only once when we give up
-        toast.error("Problème de connexion en temps réel", {
-          description: "Les mises à jour en temps réel sont temporairement indisponibles."
-        });
       }
     }
   };

@@ -6,9 +6,9 @@ import { useRef } from "react";
  */
 export const useRealtimeConfig = () => {
   // Configuration constants
-  const maxReconnectAttempts = 5;
-  const reconnectBackoffMs = 2000; // Start with 2s
-  const throttleTimeMs = 2000;
+  const maxReconnectAttempts = 3; // Reduced from 5 to 3
+  const reconnectBackoffMs = 5000; // Increased from 2s to 5s
+  const throttleTimeMs = 3000; // Increased from 2s to 3s
 
   // Reference to throttle timeout
   const throttleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
