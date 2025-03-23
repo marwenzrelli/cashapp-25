@@ -1,10 +1,15 @@
 
-import { ClientOperation } from "./types";
 import { supabase } from "@/integrations/supabase/client";
+import { ClientOperation } from "./types";
 
-export const fetchClientOperations = async (clientName: string, token: string): Promise<ClientOperation[]> => {
+export const fetchClientOperations = async (
+  clientName: string,
+  token: string
+): Promise<ClientOperation[]> => {
   try {
-    // Fetch deposits
+    console.log(`Fetching operations for client: ${clientName}`);
+    
+    // Récupérer les dépôts du client
     const { data: deposits, error: depositsError } = await supabase
       .from('deposits')
       .select('*')
@@ -13,10 +18,10 @@ export const fetchClientOperations = async (clientName: string, token: string): 
 
     if (depositsError) {
       console.error("Error fetching deposits:", depositsError);
-      // Continue execution to at least try to get withdrawals
+      throw new Error(`Erreur lors de la récupération des dépôts: ${depositsError.message}`);
     }
 
-    // Fetch withdrawals
+    // Récupérer les retraits du client
     const { data: withdrawals, error: withdrawalsError } = await supabase
       .from('withdrawals')
       .select('*')
@@ -25,47 +30,38 @@ export const fetchClientOperations = async (clientName: string, token: string): 
 
     if (withdrawalsError) {
       console.error("Error fetching withdrawals:", withdrawalsError);
-      // Continue execution to return at least deposits if available
+      throw new Error(`Erreur lors de la récupération des retraits: ${withdrawalsError.message}`);
     }
 
-    // Combine and format the operations
-    const operations: ClientOperation[] = [];
+    // Combiner et formater les opérations
+    const operations: ClientOperation[] = [
+      ...deposits.map((deposit): ClientOperation => ({
+        id: `deposit-${deposit.id}`,
+        type: "deposit",
+        date: deposit.operation_date || deposit.created_at,
+        amount: deposit.amount,
+        description: deposit.notes || `Versement`,
+        status: deposit.status,
+        fromClient: deposit.client_name
+      })),
+      ...withdrawals.map((withdrawal): ClientOperation => ({
+        id: `withdrawal-${withdrawal.id}`,
+        type: "withdrawal",
+        date: withdrawal.operation_date || withdrawal.created_at,
+        amount: withdrawal.amount,
+        description: withdrawal.notes || `Retrait`,
+        status: withdrawal.status,
+        fromClient: withdrawal.client_name
+      }))
+    ];
 
-    // Add deposits
-    if (deposits) {
-      deposits.forEach(deposit => {
-        operations.push({
-          id: `deposit-${deposit.id}`,
-          type: 'deposit',
-          amount: deposit.amount,
-          date: deposit.created_at,
-          description: deposit.notes || 'Versement',
-          status: deposit.status
-        });
-      });
-    }
-
-    // Add withdrawals
-    if (withdrawals) {
-      withdrawals.forEach(withdrawal => {
-        operations.push({
-          id: `withdrawal-${withdrawal.id}`,
-          type: 'withdrawal',
-          amount: withdrawal.amount,
-          date: withdrawal.created_at,
-          description: withdrawal.notes || 'Retrait',
-          status: withdrawal.status
-        });
-      });
-    }
-
-    // Sort by date, newest first
+    // Trier par date (plus récentes en premier)
     operations.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
+    console.log(`Retrieved ${operations.length} operations for client ${clientName}`);
     return operations;
   } catch (error: any) {
-    console.error("Error fetching client operations:", error);
-    // Return empty array instead of throwing to avoid blocking the UI
-    return [];
+    console.error("Error in fetchClientOperations:", error);
+    throw new Error(error.message || "Erreur lors de la récupération des opérations");
   }
 };
