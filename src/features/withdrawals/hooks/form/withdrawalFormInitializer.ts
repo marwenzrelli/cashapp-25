@@ -50,48 +50,41 @@ export const initializeFormFromWithdrawal = (
       ? selectedWithdrawal.amount.toString()
       : "";
     
-    // Parse date from the formatted string back to ISO format if needed
-    let dateValue = new Date().toISOString();
+    // Use the appropriate date field from the withdrawal, prioritize operation_date
+    let dateValue = selectedWithdrawal.operation_date || 
+                   selectedWithdrawal.date || 
+                   selectedWithdrawal.created_at ||
+                   new Date().toISOString();
     
-    // First check operation_date, then date, then created_at
-    const sourceDate = selectedWithdrawal.operation_date || selectedWithdrawal.date || selectedWithdrawal.created_at;
-    
-    if (sourceDate) {
-      // Handle formatting differences - the date might come formatted or as ISO string
-      if (sourceDate.includes('T')) {
-        // Already in ISO format
-        dateValue = sourceDate;
-      } else {
-        try {
-          // Try to parse formatted date back to ISO
-          const parts = sourceDate.split(' ');
-          if (parts.length >= 2) {
-            const dateParts = parts[0].split('/');
-            const timeParts = parts[1].split(':');
+    // If we received a formatted date string (not ISO), try to convert it to ISO
+    if (dateValue && !dateValue.includes('T')) {
+      try {
+        // Try to parse French formatted date (DD/MM/YYYY HH:MM)
+        const parts = dateValue.split(' ');
+        if (parts.length >= 2) {
+          const dateParts = parts[0].split('/').map(Number);
+          const timeParts = parts[1].split(':').map(Number);
+          
+          if (dateParts.length === 3 && timeParts.length >= 2) {
+            const date = new Date();
+            date.setFullYear(dateParts[2], dateParts[1] - 1, dateParts[0]);
+            date.setHours(timeParts[0], timeParts[1], timeParts[2] || 0);
             
-            if (dateParts.length === 3 && timeParts.length >= 2) {
-              const day = parseInt(dateParts[0]);
-              const month = parseInt(dateParts[1]) - 1; // JS months are 0-indexed
-              const year = parseInt(dateParts[2]);
-              const hours = parseInt(timeParts[0]);
-              const minutes = parseInt(timeParts[1]);
-              
-              const date = new Date(year, month, day, hours, minutes);
-              if (!isNaN(date.getTime())) {
-                dateValue = date.toISOString();
-              }
+            if (!isNaN(date.getTime())) {
+              dateValue = date.toISOString();
+              console.log("Converted formatted date to ISO:", dateValue);
             }
           }
-        } catch (error) {
-          console.error("Error parsing date:", error);
-          // Fallback to current date
-          dateValue = new Date().toISOString();
         }
+      } catch (error) {
+        console.error("Error parsing formatted date:", error);
       }
     }
     
+    console.log("Form initialized with date:", dateValue);
+    
     return {
-      clientId: clientId,
+      clientId,
       amount: amountStr,
       notes: selectedWithdrawal.notes || "",
       date: dateValue,

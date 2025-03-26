@@ -17,6 +17,29 @@ export function useClientWithdrawal(clientId?: number, refetchClient?: () => voi
         }
       } = await supabase.auth.getSession();
       
+      // Create a proper date object from the input
+      let operationDate: string;
+      
+      if (withdrawal.date) {
+        // Ensure we're using a proper ISO string for the date
+        if (typeof withdrawal.date === 'string' && withdrawal.date.includes('T')) {
+          // Already an ISO string
+          operationDate = withdrawal.date;
+        } else {
+          // Create a new Date object
+          const dateObj = new Date(withdrawal.date);
+          operationDate = dateObj.toISOString();
+        }
+        
+        console.log("Using withdrawal date:", {
+          input: withdrawal.date,
+          processed: operationDate
+        });
+      } else {
+        operationDate = new Date().toISOString();
+        console.log("No date provided, using current date");
+      }
+      
       if (isEditing && withdrawalId) {
         // Convert ID to number if it's a string
         const numericId = typeof withdrawalId === 'string' ? parseInt(withdrawalId, 10) : withdrawalId;
@@ -28,7 +51,7 @@ export function useClientWithdrawal(clientId?: number, refetchClient?: () => voi
         } = await supabase.from('withdrawals').update({
           client_name: withdrawal.client_name,
           amount: withdrawal.amount,
-          operation_date: new Date(withdrawal.date).toISOString(),
+          operation_date: operationDate,
           notes: withdrawal.notes,
           last_modified_at: new Date().toISOString()
         }).eq('id', numericId).select();
@@ -52,7 +75,7 @@ export function useClientWithdrawal(clientId?: number, refetchClient?: () => voi
         } = await supabase.from('withdrawals').insert({
           client_name: withdrawal.client_name,
           amount: withdrawal.amount,
-          operation_date: new Date(withdrawal.date).toISOString(),
+          operation_date: operationDate,
           notes: withdrawal.notes,
           created_by: session?.user?.id
         }).select();

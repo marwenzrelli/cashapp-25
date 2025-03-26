@@ -20,7 +20,7 @@ export const formatDateTime = (dateString: string) => {
       return '';
     }
     
-    // Format using local time zone
+    // Format using local time zone (French style)
     return date.toLocaleString('fr-FR', {
       year: 'numeric',
       month: '2-digit',
@@ -90,29 +90,26 @@ export const createISOString = (dateString: string, timeString: string) => {
   if (!dateString) return null;
   
   try {
-    // Create a date string that combines the date and time
-    // The resulting string will be interpreted in the local timezone
-    const combinedString = `${dateString}T${timeString || '00:00:00'}`;
-    const date = new Date(combinedString);
+    // Parse date components
+    const [year, month, day] = dateString.split('-').map(Number);
     
-    // Check if date is valid
-    if (isNaN(date.getTime())) {
-      console.error("Invalid date:", combinedString);
-      return null;
-    }
+    // Parse time components (using defaults if not provided)
+    const [hours, minutes, seconds] = (timeString || '00:00:00').split(':').map(Number);
     
-    // Return the ISO string
-    const isoString = date.toISOString();
+    // Create a date in local time zone
+    const localDate = new Date();
+    localDate.setFullYear(year, month - 1, day);
+    localDate.setHours(hours, minutes, seconds || 0);
     
-    console.log("Created ISO string from local inputs:", {
+    console.log("Created date from local inputs:", {
       dateInput: dateString,
       timeInput: timeString,
-      combinedLocal: combinedString,
-      resultingISO: isoString,
-      resultingLocalString: date.toString()
+      localDate: localDate.toString(),
+      resultingISO: localDate.toISOString()
     });
     
-    return isoString;
+    // Convert to ISO string
+    return localDate.toISOString();
   } catch (error) {
     console.error("Error creating ISO string:", error);
     return null;

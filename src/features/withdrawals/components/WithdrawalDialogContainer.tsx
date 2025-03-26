@@ -57,6 +57,13 @@ export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps>
       // Convert string amount to number
       const amountNumber = parseFloat(data.amount);
       
+      // Ensure we have a valid operation_date
+      let operationDate = data.operation_date;
+      if (!operationDate) {
+        operationDate = new Date().toISOString();
+        console.log("No operation_date provided, using current date:", operationDate);
+      }
+      
       // Handle editing vs creating
       if (isEditing && selectedWithdrawal) {
         console.log("Updating withdrawal with ID:", selectedWithdrawal.id);
@@ -84,7 +91,7 @@ export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps>
             client_name: data.client_name,
             amount: amountNumber,
             notes: data.notes || null,
-            operation_date: data.operation_date || new Date().toISOString(),
+            operation_date: operationDate,
             last_modified_at: new Date().toISOString()
           })
           .eq('id', withdrawalId);
@@ -105,7 +112,7 @@ export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps>
             client_name: data.client_name,
             amount: amountNumber,
             notes: data.notes || null,
-            operation_date: data.operation_date || new Date().toISOString()
+            operation_date: operationDate
           });
           
         if (error) {

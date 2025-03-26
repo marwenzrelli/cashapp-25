@@ -20,18 +20,27 @@ export const DateField: React.FC<DateFieldProps> = ({
   
   if (value) {
     try {
+      // Create date object from the ISO string - will be converted to local time
       const date = new Date(value);
       
-      // Format date as YYYY-MM-DD
-      dateValue = date.toISOString().split('T')[0];
+      // Format date as YYYY-MM-DD in local time
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      dateValue = `${year}-${month}-${day}`;
       
-      // Format time as HH:MM:SS
+      // Format time as HH:MM:SS in local time
       const hours = String(date.getHours()).padStart(2, '0');
       const minutes = String(date.getMinutes()).padStart(2, '0');
       const seconds = String(date.getSeconds()).padStart(2, '0');
       timeValue = `${hours}:${minutes}:${seconds}`;
       
-      console.log("Parsed date/time values:", { original: value, dateValue, timeValue });
+      console.log("Parsed local date/time values:", { 
+        original: value, 
+        localDate: date.toString(),
+        dateValue, 
+        timeValue 
+      });
     } catch (error) {
       console.error("Error parsing date:", error);
     }
@@ -39,17 +48,25 @@ export const DateField: React.FC<DateFieldProps> = ({
   
   const handleDateChange = (newDate: string) => {
     try {
-      // Create date object from the date input
-      const dateParts = newDate.split('-').map(Number);
-      const newDateObj = new Date();
-      newDateObj.setFullYear(dateParts[0], dateParts[1] - 1, dateParts[2]);
+      if (!newDate) return;
       
-      // Extract time parts from existing value
-      const currentTime = timeValue.split(':').map(Number);
-      if (currentTime.length >= 2) {
-        newDateObj.setHours(currentTime[0], currentTime[1], currentTime[2] || 0);
-      }
+      // Get current date components from existing value
+      const currentDate = new Date(value || new Date());
       
+      // Parse the new date string
+      const [year, month, day] = newDate.split('-').map(Number);
+      
+      // Create a new date object with the new date but current time
+      const newDateObj = new Date(currentDate);
+      newDateObj.setFullYear(year, month - 1, day);
+      
+      console.log("Date change:", {
+        newDate,
+        newDateObj: newDateObj.toString(),
+        newISO: newDateObj.toISOString()
+      });
+      
+      // Preserve the time from the current value
       onChange(newDateObj.toISOString());
     } catch (error) {
       console.error("Error handling date change:", error);
@@ -58,16 +75,23 @@ export const DateField: React.FC<DateFieldProps> = ({
 
   const handleTimeChange = (newTime: string) => {
     try {
-      // Create date object from the current date value
-      const dateParts = dateValue.split('-').map(Number);
-      const newDateObj = new Date();
-      newDateObj.setFullYear(dateParts[0], dateParts[1] - 1, dateParts[2]);
+      if (!newTime) return;
       
-      // Set time parts
-      const timeParts = newTime.split(':').map(Number);
-      if (timeParts.length >= 2) {
-        newDateObj.setHours(timeParts[0], timeParts[1], timeParts[2] || 0);
-      }
+      // Get current date components from existing value
+      const currentDate = new Date(value || new Date());
+      
+      // Parse the time string
+      const [hours, minutes, seconds = '0'] = newTime.split(':').map(Number);
+      
+      // Set the time components on the current date
+      const newDateObj = new Date(currentDate);
+      newDateObj.setHours(hours, minutes, parseInt(seconds as unknown as string));
+      
+      console.log("Time change:", {
+        newTime,
+        newDateObj: newDateObj.toString(),
+        newISO: newDateObj.toISOString()
+      });
       
       onChange(newDateObj.toISOString());
     } catch (error) {
