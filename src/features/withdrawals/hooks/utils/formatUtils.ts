@@ -30,3 +30,28 @@ export const formatDate = (dateString?: string | null) => {
     return "Erreur de date";
   }
 };
+
+/**
+ * Parses a date string to ensure it's a valid ISO format
+ * @param dateString - Date string to parse
+ * @returns Valid ISO date string or current date if invalid
+ */
+export const ensureValidISODate = (dateString?: string | null): string => {
+  if (!dateString) return new Date().toISOString();
+  
+  try {
+    // Try to create a valid date object
+    const date = new Date(dateString);
+    
+    if (isNaN(date.getTime())) {
+      console.error("Invalid date during ISO conversion:", dateString);
+      return new Date().toISOString();
+    }
+    
+    // Return as ISO string
+    return date.toISOString();
+  } catch (error) {
+    console.error("Error parsing date for ISO format:", error);
+    return new Date().toISOString();
+  }
+};

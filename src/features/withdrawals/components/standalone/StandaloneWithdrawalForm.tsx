@@ -8,6 +8,7 @@ import { DateField } from "../form-fields/DateField";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { ExtendedClient } from "../../hooks/form/withdrawalFormTypes";
 import { toast } from "sonner";
+import { ensureValidISODate } from "../../hooks/utils/formatUtils";
 
 interface StandaloneWithdrawalFormProps {
   clients: ExtendedClient[];
@@ -43,19 +44,26 @@ export const StandaloneWithdrawalForm: React.FC<StandaloneWithdrawalFormProps> =
       }
 
       const clientName = `${client.prenom} ${client.nom}`;
+      const operationDate = ensureValidISODate(date);
+      const amountValue = parseFloat(amount.replace(',', '.'));
+      
+      if (isNaN(amountValue) || amountValue <= 0) {
+        toast.error("Le montant doit être un nombre positif valide");
+        return;
+      }
       
       console.log("Submitting withdrawal form with:", {
         clientName,
-        amount,
+        amount: amountValue,
         notes,
-        date
+        date: operationDate
       });
       
       const withdrawalResult = await onConfirm({
         client_name: clientName,
-        amount,
+        amount: amountValue.toString(),
         notes,
-        date
+        date: operationDate
       });
       
       if (withdrawalResult !== false) {

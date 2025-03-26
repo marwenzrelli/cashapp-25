@@ -59,11 +59,6 @@ export const WithdrawalFormContent: React.FC<WithdrawalFormContentProps> = ({
         <div className="relative overflow-hidden rounded-lg border bg-gradient-to-b from-background to-muted/50 p-6">
           <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))]" />
           <div className="relative grid gap-4">
-            <DateField 
-              value={formState.date}
-              onChange={(value) => onInputChange("date", value)}
-            />
-
             <ClientSelectField
               value={formState.clientId}
               onChange={(value) => {
@@ -76,6 +71,11 @@ export const WithdrawalFormContent: React.FC<WithdrawalFormContentProps> = ({
             <AmountField
               value={formState.amount}
               onChange={(value) => onInputChange("amount", value)}
+            />
+            
+            <DateField 
+              value={formState.date}
+              onChange={(value) => onInputChange("date", value)}
             />
 
             <NotesField

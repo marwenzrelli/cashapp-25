@@ -6,6 +6,7 @@ import { Withdrawal } from "@/features/withdrawals/types";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ExtendedClient } from "../hooks/form/withdrawalFormTypes";
+import { ensureValidISODate } from "../hooks/utils/formatUtils";
 
 interface WithdrawalDialogContainerProps {
   showDialog: boolean;
@@ -55,13 +56,21 @@ export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps>
       console.log("Is editing mode:", isEditing);
       
       // Convert string amount to number
-      const amountNumber = parseFloat(data.amount);
+      const amountString = data.amount.replace(',', '.');
+      const amountNumber = parseFloat(amountString);
+      
+      if (isNaN(amountNumber) || amountNumber <= 0) {
+        toast.error("Le montant doit être un nombre positif valide");
+        return false;
+      }
       
       // Ensure we have a valid operation_date
       let operationDate = data.operation_date;
       if (!operationDate) {
         operationDate = new Date().toISOString();
         console.log("No operation_date provided, using current date:", operationDate);
+      } else {
+        operationDate = ensureValidISODate(operationDate);
       }
       
       // Handle editing vs creating
@@ -106,21 +115,22 @@ export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps>
         console.log("Creating new withdrawal");
         
         // Create new withdrawal
-        const { error } = await supabase
+        const { data: insertedData, error } = await supabase
           .from('withdrawals')
           .insert({
             client_name: data.client_name,
             amount: amountNumber,
             notes: data.notes || null,
             operation_date: operationDate
-          });
+          })
+          .select();
           
         if (error) {
           console.error("Error creating withdrawal:", error);
           throw error;
         }
         
-        console.log("New withdrawal created successfully");
+        console.log("New withdrawal created successfully:", insertedData);
       }
       
       await fetchWithdrawals();

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { ensureValidISODate } from "@/features/withdrawals/hooks/utils/formatUtils";
 
 export function useClientWithdrawal(clientId?: number, refetchClient?: () => void) {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -22,14 +23,7 @@ export function useClientWithdrawal(clientId?: number, refetchClient?: () => voi
       
       if (withdrawal.date) {
         // Ensure we're using a proper ISO string for the date
-        if (typeof withdrawal.date === 'string' && withdrawal.date.includes('T')) {
-          // Already an ISO string
-          operationDate = withdrawal.date;
-        } else {
-          // Create a new Date object
-          const dateObj = new Date(withdrawal.date);
-          operationDate = dateObj.toISOString();
-        }
+        operationDate = ensureValidISODate(withdrawal.date);
         
         console.log("Using withdrawal date:", {
           input: withdrawal.date,
@@ -38,6 +32,15 @@ export function useClientWithdrawal(clientId?: number, refetchClient?: () => voi
       } else {
         operationDate = new Date().toISOString();
         console.log("No date provided, using current date");
+      }
+      
+      // Parse amount to ensure it's a number
+      const amount = parseFloat(withdrawal.amount);
+      if (isNaN(amount)) {
+        console.error("Invalid amount:", withdrawal.amount);
+        toast.error("Montant invalide");
+        setIsProcessing(false);
+        return false;
       }
       
       if (isEditing && withdrawalId) {
@@ -50,7 +53,7 @@ export function useClientWithdrawal(clientId?: number, refetchClient?: () => voi
           error
         } = await supabase.from('withdrawals').update({
           client_name: withdrawal.client_name,
-          amount: withdrawal.amount,
+          amount: amount,
           operation_date: operationDate,
           notes: withdrawal.notes,
           last_modified_at: new Date().toISOString()
@@ -74,7 +77,7 @@ export function useClientWithdrawal(clientId?: number, refetchClient?: () => voi
           error
         } = await supabase.from('withdrawals').insert({
           client_name: withdrawal.client_name,
-          amount: withdrawal.amount,
+          amount: amount,
           operation_date: operationDate,
           notes: withdrawal.notes,
           created_by: session?.user?.id

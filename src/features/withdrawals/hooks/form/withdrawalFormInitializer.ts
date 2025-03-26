@@ -1,6 +1,7 @@
 
 import { WithdrawalFormState, ExtendedClient } from "./withdrawalFormTypes";
 import { Withdrawal } from "@/features/withdrawals/types";
+import { ensureValidISODate } from "../utils/formatUtils";
 
 export const initializeNewForm = (): WithdrawalFormState => {
   return {
@@ -80,6 +81,9 @@ export const initializeFormFromWithdrawal = (
         console.error("Error parsing formatted date:", error);
       }
     }
+    
+    // Ensure we have a valid ISO date string
+    dateValue = ensureValidISODate(dateValue);
     
     console.log("Form initialized with date:", dateValue);
     

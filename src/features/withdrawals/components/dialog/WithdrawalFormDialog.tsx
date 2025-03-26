@@ -6,6 +6,7 @@ import { WithdrawalFormContent } from "./WithdrawalFormContent";
 import { useWithdrawalFormState } from "../../hooks/useWithdrawalFormState";
 import { Withdrawal } from "@/features/withdrawals/types";
 import { ExtendedClient } from "../../hooks/form/withdrawalFormTypes";
+import { ensureValidISODate } from "../../hooks/utils/formatUtils";
 
 export interface WithdrawalFormDialogProps {
   isOpen: boolean;
@@ -66,18 +67,21 @@ export const WithdrawalFormDialog: React.FC<WithdrawalFormDialogProps> = ({
 
       const clientName = `${client.prenom} ${client.nom}`;
       
+      // Ensure we have a valid date
+      const operationDate = ensureValidISODate(formState.date);
+      
       console.log("Submitting withdrawal form with:", {
         clientName,
         amount: formState.amount,
         notes: formState.notes,
-        date: formState.date
+        date: operationDate
       });
       
       const success = await onCreateWithdrawal({
         client_name: clientName,
         amount: formState.amount,
         notes: formState.notes,
-        operation_date: formState.date, // Map the date to operation_date for the API call
+        operation_date: operationDate, // Make sure to provide a valid ISO date
       });
 
       if (success) {
