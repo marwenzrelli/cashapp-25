@@ -79,7 +79,8 @@ export const recalculateAllClientBalances = async (): Promise<boolean> => {
           return sum + amount;
         }, 0) || 0;
         
-        const balance = totalDeposits - totalWithdrawals;
+        // Fix floating point precision by rounding to 2 decimal places
+        const balance = parseFloat((totalDeposits - totalWithdrawals).toFixed(2));
         
         // Log le calcul pour debugging
         console.log(`${clientFullName}: Deposits=${totalDeposits}, Withdrawals=${totalWithdrawals}, Balance=${balance}`);

@@ -61,7 +61,8 @@ export const useClientBalanceRefresh = (
         return acc + amount;
       }, 0) || 0;
       
-      const balance = totalDeposits - totalWithdrawals;
+      // Fix floating point precision issues by rounding to 2 decimal places
+      const balance = parseFloat((totalDeposits - totalWithdrawals).toFixed(2));
       
       console.log(`Balance calculated for ${clientFullName}: 
         Deposits: ${totalDeposits}, 
