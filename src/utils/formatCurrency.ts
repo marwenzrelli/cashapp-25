@@ -6,5 +6,10 @@ export const getCurrencySymbol = (currency: Currency): string => {
 };
 
 export const formatAmount = (amount: number, currency: Currency): string => {
-  return `${amount} ${getCurrencySymbol(currency)}`;
+  // Format with 2 decimal places and use a comma as decimal separator (French style)
+  const formattedNumber = amount.toLocaleString('fr-FR', { 
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+  return `${formattedNumber} ${getCurrencySymbol(currency)}`;
 };

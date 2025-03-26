@@ -26,6 +26,14 @@ export const TransferOperationsTab = ({ operations, currency = "TND" }: Transfer
   // Calculate total for transfers
   const totalTransfers = transferOperations.reduce((total, op) => total + op.amount, 0);
 
+  // Format number with 2 decimal places and comma separator
+  const formatNumber = (num: number): string => {
+    return num.toLocaleString('fr-FR', { 
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2 
+    });
+  };
+
   return (
     <>
       {/* Desktop version */}
@@ -68,7 +76,7 @@ export const TransferOperationsTab = ({ operations, currency = "TND" }: Transfer
                   <TableCell className="max-w-[150px] truncate">{operation.toClient}</TableCell>
                   <TableCell className="max-w-[200px] truncate">{operation.description}</TableCell>
                   <TableCell className="text-right font-medium text-blue-600 dark:text-blue-400">
-                    {Math.round(operation.amount).toLocaleString()} {currency}
+                    {formatNumber(operation.amount)} {currency}
                   </TableCell>
                 </TableRow>
               );
@@ -79,7 +87,7 @@ export const TransferOperationsTab = ({ operations, currency = "TND" }: Transfer
               <TableCell colSpan={5} className="font-medium">Total des virements:</TableCell>
               <TableCell colSpan={1}></TableCell>
               <TableCell className="text-right font-medium text-blue-600 dark:text-blue-400">
-                {totalTransfers.toLocaleString()} {currency}
+                {formatNumber(totalTransfers)} {currency}
               </TableCell>
             </TableRow>
           </TableBody>
@@ -92,7 +100,7 @@ export const TransferOperationsTab = ({ operations, currency = "TND" }: Transfer
           <OperationsMobileCard 
             key={operation.id} 
             operation={operation}
-            formatAmount={(amount) => `${Math.round(amount)}`}
+            formatAmount={(amount) => `${formatNumber(amount)}`}
             currency={currency}
             colorClass="text-blue-600 dark:text-blue-400"
             showType={false}
@@ -104,7 +112,7 @@ export const TransferOperationsTab = ({ operations, currency = "TND" }: Transfer
           <div className="flex justify-between items-center">
             <span className="font-medium">Total des virements:</span>
             <span className="font-medium text-blue-600 dark:text-blue-400">
-              {totalTransfers.toLocaleString()} {currency}
+              {formatNumber(totalTransfers)} {currency}
             </span>
           </div>
         </div>

@@ -46,6 +46,14 @@ export const AllOperationsTab = ({ operations, currency = "TND" }: AllOperations
 
   const totals = calculateTotals();
 
+  // Format number with 2 decimal places and comma separator
+  const formatNumber = (num: number): string => {
+    return num.toLocaleString('fr-FR', { 
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2 
+    });
+  };
+
   return (
     <>
       {/* Desktop version */}
@@ -93,7 +101,7 @@ export const AllOperationsTab = ({ operations, currency = "TND" }: AllOperations
                   <TableCell>{formattedDate}</TableCell>
                   <TableCell className="max-w-[200px] truncate">{operation.description}</TableCell>
                   <TableCell className={`text-center font-medium ${getAmountColor(operation.type)}`}>
-                    {operation.type === "withdrawal" ? "-" : ""}{Math.round(operation.amount)} {currency}
+                    {operation.type === "withdrawal" ? "-" : ""}{formatNumber(operation.amount)} {currency}
                   </TableCell>
                   {/* Show transfer details only for transfers and if there are any transfers in the list */}
                   {operations.some(op => op.type === "transfer") && operation.type === "transfer" && (
@@ -122,7 +130,7 @@ export const AllOperationsTab = ({ operations, currency = "TND" }: AllOperations
                 Dépôts:
               </TableCell>
               <TableCell className="text-center font-medium text-green-600 dark:text-green-400">
-                +{totals.deposit.toLocaleString()} {currency}
+                +{formatNumber(totals.deposit)} {currency}
               </TableCell>
               {operations.some(op => op.type === "transfer") && <TableCell></TableCell>}
             </TableRow>
@@ -132,7 +140,7 @@ export const AllOperationsTab = ({ operations, currency = "TND" }: AllOperations
                 Retraits:
               </TableCell>
               <TableCell className="text-center font-medium text-red-600 dark:text-red-400">
-                -{totals.withdrawal.toLocaleString()} {currency}
+                -{formatNumber(totals.withdrawal)} {currency}
               </TableCell>
               {operations.some(op => op.type === "transfer") && <TableCell></TableCell>}
             </TableRow>
@@ -142,7 +150,7 @@ export const AllOperationsTab = ({ operations, currency = "TND" }: AllOperations
                 Transferts:
               </TableCell>
               <TableCell className="text-center font-medium text-blue-600 dark:text-blue-400">
-                {totals.transfer.toLocaleString()} {currency}
+                {formatNumber(totals.transfer)} {currency}
               </TableCell>
               {operations.some(op => op.type === "transfer") && <TableCell></TableCell>}
             </TableRow>
@@ -156,7 +164,7 @@ export const AllOperationsTab = ({ operations, currency = "TND" }: AllOperations
           <OperationsMobileCard 
             key={operation.id} 
             operation={operation}
-            formatAmount={(amount) => `${Math.round(amount)}`}
+            formatAmount={(amount) => `${formatNumber(amount)}`}
             currency={currency}
             colorClass={getAmountColor(operation.type)}
             showType={true}
@@ -170,19 +178,19 @@ export const AllOperationsTab = ({ operations, currency = "TND" }: AllOperations
             <div className="flex justify-between items-center">
               <span className="font-medium">Dépôts:</span>
               <span className="font-medium text-green-600 dark:text-green-400">
-                +{totals.deposit.toLocaleString()} {currency}
+                +{formatNumber(totals.deposit)} {currency}
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="font-medium">Retraits:</span>
               <span className="font-medium text-red-600 dark:text-red-400">
-                -{totals.withdrawal.toLocaleString()} {currency}
+                -{formatNumber(totals.withdrawal)} {currency}
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="font-medium">Transferts:</span>
               <span className="font-medium text-blue-600 dark:text-blue-400">
-                {totals.transfer.toLocaleString()} {currency}
+                {formatNumber(totals.transfer)} {currency}
               </span>
             </div>
           </div>

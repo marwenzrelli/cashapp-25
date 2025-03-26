@@ -25,6 +25,14 @@ export const WithdrawalOperationsTab = ({ operations, currency = "TND" }: Withdr
   // Calculate total for withdrawals
   const totalWithdrawals = withdrawalOperations.reduce((total, op) => total + op.amount, 0);
 
+  // Format number with 2 decimal places and comma separator
+  const formatNumber = (num: number): string => {
+    return num.toLocaleString('fr-FR', { 
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2 
+    });
+  };
+
   return (
     <>
       {/* Desktop version */}
@@ -61,7 +69,7 @@ export const WithdrawalOperationsTab = ({ operations, currency = "TND" }: Withdr
                   <TableCell className="max-w-[200px] truncate">{operation.fromClient}</TableCell>
                   <TableCell className="max-w-[300px] truncate">{operation.description}</TableCell>
                   <TableCell className="text-right font-medium text-red-600 dark:text-red-400">
-                    -{Math.round(operation.amount).toLocaleString()} {currency}
+                    -{formatNumber(operation.amount)} {currency}
                   </TableCell>
                 </TableRow>
               );
@@ -72,7 +80,7 @@ export const WithdrawalOperationsTab = ({ operations, currency = "TND" }: Withdr
               <TableCell colSpan={3} className="font-medium">Total des retraits:</TableCell>
               <TableCell colSpan={1}></TableCell>
               <TableCell className="text-right font-medium text-red-600 dark:text-red-400">
-                -{totalWithdrawals.toLocaleString()} {currency}
+                -{formatNumber(totalWithdrawals)} {currency}
               </TableCell>
             </TableRow>
           </TableBody>
@@ -85,7 +93,7 @@ export const WithdrawalOperationsTab = ({ operations, currency = "TND" }: Withdr
           <OperationsMobileCard 
             key={operation.id} 
             operation={operation}
-            formatAmount={(amount) => `-${Math.round(amount)}`}
+            formatAmount={(amount) => `-${formatNumber(amount)}`}
             currency={currency}
             colorClass="text-red-600 dark:text-red-400"
             showType={false}
@@ -97,7 +105,7 @@ export const WithdrawalOperationsTab = ({ operations, currency = "TND" }: Withdr
           <div className="flex justify-between items-center">
             <span className="font-medium">Total des retraits:</span>
             <span className="font-medium text-red-600 dark:text-red-400">
-              -{totalWithdrawals.toLocaleString()} {currency}
+              -{formatNumber(totalWithdrawals)} {currency}
             </span>
           </div>
         </div>

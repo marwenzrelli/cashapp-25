@@ -10,7 +10,7 @@ interface CurrencyContextType {
 
 const CurrencyContext = createContext<CurrencyContextType>({
   currency: "TND",
-  formatCurrency: (amount) => `${amount.toLocaleString()} TND`
+  formatCurrency: (amount) => `${amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TND`
 });
 
 export function CurrencyProvider({ children }: { children: ReactNode }) {
@@ -18,7 +18,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   
   // Create a formatter function for currency display
   const formatCurrency = (amount: number): string => {
-    return `${amount.toLocaleString()} ${currency}`;
+    return `${amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`;
   };
 
   return (

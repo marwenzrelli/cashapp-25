@@ -17,6 +17,14 @@ export const OperationsList = ({ operations, isLoading, onDelete }: OperationsLi
   // Format transactions with formatted dates
   const operationsWithFormattedDates = operations;
 
+  // Format number with 2 decimal places and comma separator
+  const formatNumber = (num: number): string => {
+    return num.toLocaleString('fr-FR', { 
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2 
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center py-10">
@@ -84,7 +92,7 @@ export const OperationsList = ({ operations, isLoading, onDelete }: OperationsLi
                     )}
                   </TableCell>
                   <TableCell className={`text-center font-medium whitespace-nowrap ${getAmountColor(operation.type)}`}>
-                    {operation.type === "withdrawal" ? "-" : ""}{Math.round(operation.amount).toLocaleString()} TND
+                    {operation.type === "withdrawal" ? "-" : ""}{formatNumber(operation.amount)} TND
                   </TableCell>
                   <TableCell className="text-center whitespace-nowrap">
                     <Button
@@ -119,7 +127,7 @@ export const OperationsList = ({ operations, isLoading, onDelete }: OperationsLi
                 </div>
                 
                 <span className={`font-semibold ${getAmountColor(operation.type)}`}>
-                  {operation.type === "withdrawal" ? "-" : ""}{Math.round(operation.amount).toLocaleString()} TND
+                  {operation.type === "withdrawal" ? "-" : ""}{formatNumber(operation.amount)} TND
                 </span>
               </div>
               
