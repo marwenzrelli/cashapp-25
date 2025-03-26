@@ -1,10 +1,11 @@
 
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { Operation } from "../types";
 import { useOperationsState } from "./useOperationsState";
 import { useFetchOperations } from "./useFetchOperations";
 import { useDeleteOperation } from "./useDeleteOperation";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export const useOperations = () => {
   const {
@@ -25,6 +26,41 @@ export const useOperations = () => {
   useEffect(() => {
     fetchAllOperations();
   }, []);
+
+  // Set up real-time subscription to operations
+  useEffect(() => {
+    const channel = supabase
+      .channel('operations-realtime')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'deposits'
+      }, () => {
+        console.log('Deposit change detected, refreshing operations');
+        fetchAllOperations();
+      })
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'withdrawals'
+      }, () => {
+        console.log('Withdrawal change detected, refreshing operations');
+        fetchAllOperations();
+      })
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'transfers'
+      }, () => {
+        console.log('Transfer change detected, refreshing operations');
+        fetchAllOperations();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchAllOperations]);
 
   // Wrapper for delete operation to update state
   const deleteOperation = async (operation: Operation) => {

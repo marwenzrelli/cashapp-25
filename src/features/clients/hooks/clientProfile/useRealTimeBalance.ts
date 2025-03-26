@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -7,7 +7,16 @@ export const useRealTimeBalance = (clientId: number | null) => {
   const [realTimeBalance, setRealTimeBalance] = useState<number | null>(null);
   const previousBalanceRef = useRef<number | null>(null);
   const channelRef = useRef<any>(null);
+  const operationsChannelRef = useRef<any>(null);
   const connectionAttemptRef = useRef(0);
+
+  // Function to refresh operations when we detect changes
+  const refreshOperations = useCallback(() => {
+    // We'll dispatch a custom event that other components can listen to
+    window.dispatchEvent(new CustomEvent('operations-update', {
+      detail: { clientId }
+    }));
+  }, [clientId]);
   
   // Set up a real-time subscription for client balance
   useEffect(() => {
@@ -49,15 +58,50 @@ export const useRealTimeBalance = (clientId: number | null) => {
       });
       
     channelRef.current = channel;
+
+    // Set up a subscription for operations affecting this client
+    const operationsChannel = supabase
+      .channel(`client-operations-${clientId}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'deposits'
+      }, (payload) => {
+        console.log("Deposit operation detected:", payload);
+        refreshOperations();
+      })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'withdrawals'
+      }, (payload) => {
+        console.log("Withdrawal operation detected:", payload);
+        refreshOperations();
+      })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'transfers'
+      }, (payload) => {
+        console.log("Transfer operation detected:", payload);
+        refreshOperations();
+      })
+      .subscribe();
+
+    operationsChannelRef.current = operationsChannel;
       
     return () => {
-      console.log("Cleaning up real-time subscription for balance");
+      console.log("Cleaning up real-time subscriptions");
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }
+      if (operationsChannelRef.current) {
+        supabase.removeChannel(operationsChannelRef.current);
+        operationsChannelRef.current = null;
+      }
     };
-  }, [clientId]);
+  }, [clientId, refreshOperations]);
 
   return { realTimeBalance, setRealTimeBalance };
 };

@@ -81,11 +81,10 @@ export const WithdrawalFormDialog: React.FC<WithdrawalFormDialogProps> = ({
         client_name: clientName,
         amount: formState.amount,
         notes: formState.notes,
-        operation_date: operationDate, // Make sure to provide a valid ISO date
+        operation_date: operationDate,
       });
 
       if (success) {
-        // Form will be reset by the useEffect when dialog closes
         onClose();
       }
     } catch (error) {

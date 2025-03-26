@@ -77,6 +77,26 @@ const ClientProfile = () => {
     }
   }, [client, clientOperations]);
 
+  // Listen for operation updates from real-time subscriptions
+  useEffect(() => {
+    const handleOperationUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const updateClientId = customEvent.detail?.clientId;
+      
+      // Only refresh if this client is affected
+      if (updateClientId === clientId || !updateClientId) {
+        console.log("Auto-refreshing operations after update detection");
+        refreshClientOperations();
+      }
+    };
+    
+    window.addEventListener('operations-update', handleOperationUpdate);
+    
+    return () => {
+      window.removeEventListener('operations-update', handleOperationUpdate);
+    };
+  }, [clientId, refreshClientOperations]);
+
   console.log("ClientProfile - État complet:", { 
     client, 
     isLoading, 

@@ -57,11 +57,9 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
   
   // Configure a single global real-time listener to avoid multiple listeners
   useEffect(() => {
-    // Skip realtime subscription on client profile pages to prevent refresh loops
-    if (isClientProfileRef.current) {
-      console.log("Skipping realtime subscription on client profile page");
-      return;
-    }
+    // On client profile pages, we still want realtime updates
+    // but we'll let the profile page handle its own specific updates
+    const shouldSetupGlobalListener = true;
     
     // Only try to set up the subscription if not already subscribed
     if (subscribedRef.current) {
@@ -71,7 +69,9 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
     // Add initial delay before setting up realtime subscription
     const timer = setTimeout(() => {
       // Initial setup
-      setupRealtimeListener();
+      if (shouldSetupGlobalListener) {
+        setupRealtimeListener();
+      }
     }, initialConnectionDelay);
     
     // Clean up on unmount
@@ -79,5 +79,5 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
       clearTimeout(timer);
       cleanup();
     };
-  }, [fetchClients]);
+  }, [fetchClients, setupRealtimeListener, cleanup, initialConnectionDelay, subscribedRef]);
 };

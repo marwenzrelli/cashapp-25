@@ -40,6 +40,9 @@ export const useRealtimeEventHandler = (
         .finally(() => {
           throttleTimeoutRef.current = null;
         });
+        
+      // Additionally trigger our custom event for client profile pages
+      window.dispatchEvent(new CustomEvent('operations-update'));
     }, 2000);
   };
 
@@ -59,6 +62,25 @@ export const useRealtimeEventHandler = (
     
     if (payload.new && 'id' in payload.new) {
       queryClient.invalidateQueries({ queryKey: ['client', payload.new.id] });
+      
+      // When a specific client is affected, dispatch a targeted event
+      if (payload.table === 'clients' || payload.table === 'deposits' || 
+          payload.table === 'withdrawals' || payload.table === 'transfers') {
+        
+        // For client-specific operations, include the client ID
+        const clientId = 'client_id' in payload.new ? payload.new.client_id : 
+                        ('id' in payload.new && payload.table === 'clients') ? payload.new.id : null;
+                        
+        if (clientId) {
+          window.dispatchEvent(new CustomEvent('operations-update', {
+            detail: { 
+              clientId,
+              table: payload.table,
+              operationType: payload.eventType
+            }
+          }));
+        }
+      }
     }
   };
 
