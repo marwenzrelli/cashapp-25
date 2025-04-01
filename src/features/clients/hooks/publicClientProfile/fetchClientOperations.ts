@@ -2,6 +2,38 @@
 import { supabase } from "@/integrations/supabase/client";
 import { ClientOperation } from "./types";
 
+interface DepositRecord {
+  id: number;
+  amount: number;
+  created_at: string;
+  notes: string | null;
+  status: string;
+  client_id: number;
+  client_name: string;
+  operation_date: string | null;
+}
+
+interface WithdrawalRecord {
+  id: number;
+  amount: number;
+  created_at: string;
+  notes: string | null;
+  status: string;
+  client_name: string;
+  operation_date: string | null;
+}
+
+interface TransferRecord {
+  id: number;
+  amount: number;
+  created_at: string;
+  reason: string | null;
+  status: string;
+  from_client: string;
+  to_client: string;
+  operation_date: string | null;
+}
+
 export const fetchClientOperations = async (clientName: string, token: string): Promise<ClientOperation[]> => {
   // Create abort controller for timeout handling
   const controller = new AbortController();
@@ -31,37 +63,26 @@ export const fetchClientOperations = async (clientName: string, token: string): 
       throw new Error("Token d'accès invalide");
     }
     
-    // Simplified query approach with explicit type declarations
-    
-    // Fetch deposits
-    const depositsResponse = await supabase
+    // Fetch deposits with explicit type annotation
+    const { data: deposits = [], error: depositsError } = await supabase
       .from('deposits')
       .select('id, amount, created_at, notes, status, client_id, client_name, operation_date')
       .eq('client_id', accessData.client_id)
       .order('created_at', { ascending: false });
-      
-    const deposits = depositsResponse.data || [];
-    const depositsError = depositsResponse.error;
-      
-    // Fetch withdrawals
-    const withdrawalsResponse = await supabase
+    
+    // Fetch withdrawals with explicit type annotation
+    const { data: withdrawals = [], error: withdrawalsError } = await supabase
       .from('withdrawals')
       .select('id, amount, created_at, notes, status, client_name, operation_date')
       .eq('client_id', accessData.client_id)
       .order('created_at', { ascending: false });
-      
-    const withdrawals = withdrawalsResponse.data || [];
-    const withdrawalsError = withdrawalsResponse.error;
-      
-    // Fetch transfers
-    const transfersResponse = await supabase
+    
+    // Fetch transfers with explicit type annotation
+    const { data: transfers = [], error: transfersError } = await supabase
       .from('transfers')
       .select('id, amount, created_at, reason, status, from_client, to_client, operation_date')
       .or(`from_client.eq.${clientName},to_client.eq.${clientName}`)
       .order('created_at', { ascending: false });
-    
-    const transfers = transfersResponse.data || [];
-    const transfersError = transfersResponse.error;
     
     // Log any errors
     if (depositsError) console.error("Error fetching deposits:", depositsError);
@@ -71,46 +92,52 @@ export const fetchClientOperations = async (clientName: string, token: string): 
     const combinedOperations: ClientOperation[] = [];
     
     // Format deposits
-    deposits.forEach(deposit => {
-      combinedOperations.push({
-        id: deposit.id.toString(),
-        type: 'deposit' as const,
-        date: deposit.created_at,
-        amount: deposit.amount,
-        description: deposit.notes || 'Dépôt',
-        status: deposit.status
-      });
-    });
+    if (deposits && deposits.length > 0) {
+      for (const deposit of deposits) {
+        combinedOperations.push({
+          id: deposit.id.toString(),
+          type: 'deposit' as const,
+          date: deposit.created_at,
+          amount: deposit.amount,
+          description: deposit.notes || 'Dépôt',
+          status: deposit.status
+        });
+      }
+    }
     
     // Format withdrawals
-    withdrawals.forEach(withdrawal => {
-      combinedOperations.push({
-        id: withdrawal.id.toString(),
-        type: 'withdrawal' as const,
-        date: withdrawal.created_at,
-        amount: withdrawal.amount,
-        description: withdrawal.notes || 'Retrait',
-        status: withdrawal.status
-      });
-    });
+    if (withdrawals && withdrawals.length > 0) {
+      for (const withdrawal of withdrawals) {
+        combinedOperations.push({
+          id: withdrawal.id.toString(),
+          type: 'withdrawal' as const,
+          date: withdrawal.created_at,
+          amount: withdrawal.amount,
+          description: withdrawal.notes || 'Retrait',
+          status: withdrawal.status
+        });
+      }
+    }
     
     // Format transfers
-    transfers.forEach(transfer => {
-      // Determine if this is an outgoing transfer for the current client
-      const isOutgoing = transfer.from_client === clientName;
-      const otherClient = isOutgoing ? transfer.to_client : transfer.from_client;
-      
-      combinedOperations.push({
-        id: transfer.id.toString(),
-        type: 'transfer' as const,
-        date: transfer.created_at,
-        amount: transfer.amount,
-        description: transfer.reason || (isOutgoing ? `Transfert vers ${otherClient}` : `Transfert de ${otherClient}`),
-        status: transfer.status,
-        fromClient: isOutgoing ? clientName : otherClient,
-        toClient: isOutgoing ? otherClient : clientName
-      });
-    });
+    if (transfers && transfers.length > 0) {
+      for (const transfer of transfers) {
+        // Determine if this is an outgoing transfer for the current client
+        const isOutgoing = transfer.from_client === clientName;
+        const otherClient = isOutgoing ? transfer.to_client : transfer.from_client;
+        
+        combinedOperations.push({
+          id: transfer.id.toString(),
+          type: 'transfer' as const,
+          date: transfer.created_at,
+          amount: transfer.amount,
+          description: transfer.reason || (isOutgoing ? `Transfert vers ${otherClient}` : `Transfert de ${otherClient}`),
+          status: transfer.status,
+          fromClient: isOutgoing ? clientName : otherClient,
+          toClient: isOutgoing ? otherClient : clientName
+        });
+      }
+    }
     
     // Sort all operations by date (newest first)
     combinedOperations.sort((a, b) => {
