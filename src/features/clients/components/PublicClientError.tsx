@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { AlertCircle, RefreshCcw, Home, Network, Wifi, WifiOff } from "lucide-react";
+import { AlertCircle, RefreshCcw, Home, Network, Wifi, WifiOff, Server } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -15,6 +15,7 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
   const [isOnline, setIsOnline] = useState(true);
   const [retryCount, setRetryCount] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [retryDisabled, setRetryDisabled] = useState(false);
   
   // Check network status on mount and when it changes
   useEffect(() => {
@@ -44,7 +45,7 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
         });
         setTimeout(() => {
           handleRetry();
-        }, 1000);
+        }, 1500); // Increased delay to allow network to stabilize
       }
     };
     
@@ -65,9 +66,10 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
   }, [error]);
   
   const handleRetry = () => {
-    if (onRetry && !isRetrying) {
+    if (onRetry && !isRetrying && !retryDisabled) {
       setIsRetrying(true);
       setRetryCount(prev => prev + 1);
+      setRetryDisabled(true);
       
       console.log("Retrying client fetch...");
       toast.info("Nouvelle tentative", {
@@ -78,7 +80,12 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
       setTimeout(() => {
         onRetry();
         setIsRetrying(false);
-      }, retryCount * 500); // Délai progressif entre les tentatives
+        
+        // Disable retry button temporarily to prevent spam
+        setTimeout(() => {
+          setRetryDisabled(false);
+        }, retryCount > 2 ? 5000 : 2000); // Longer cooldown after multiple retries
+      }, retryCount * 800); // Increased delay between retries
     }
   };
 
@@ -94,8 +101,15 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
     error.includes("délai d'attente") ||
     error.includes("connexion") ||
     error.includes("timeout") ||
+    error.includes("inaccessible") ||
     error.includes("réseau") ||
     !isOnline
+  );
+  
+  // Check if it's a server error
+  const isServerError = error && (
+    error.includes("serveur") ||
+    error.includes("temporairement")
   );
   
   // Check if it's an access error
@@ -113,7 +127,9 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
           <div className="h-16 w-16 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center">
             {isConnectionError ? (
               !isOnline ? <WifiOff className="h-8 w-8 text-red-600 dark:text-red-500" /> : 
-                         <Network className="h-8 w-8 text-red-600 dark:text-red-500" />
+                          <Network className="h-8 w-8 text-red-600 dark:text-red-500" />
+            ) : isServerError ? (
+              <Server className="h-8 w-8 text-red-600 dark:text-red-500" />
             ) : (
               <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-500" />
             )}
@@ -122,6 +138,7 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
         
         <h2 className="mt-6 text-2xl font-semibold text-gray-900 dark:text-white">
           {isClientNotFoundError ? "Client introuvable" : 
+           isServerError ? "Serveur indisponible" :
            isConnectionError ? "Erreur de connexion" : 
            isAccessError ? "Erreur d'accès" : "Erreur d'accès"}
         </h2>
@@ -134,6 +151,17 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
           <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
             Veuillez vérifier l'URL ou contacter le support si vous pensez qu'il s'agit d'une erreur.
           </p>
+        )}
+        
+        {isServerError && (
+          <>
+            <div className="mt-4 bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg">
+              <p className="text-sm text-amber-700 dark:text-amber-400 flex items-center gap-2 justify-center">
+                <Server className="h-4 w-4" />
+                Le serveur est temporairement indisponible. Cela peut être dû à une maintenance ou à une charge élevée.
+              </p>
+            </div>
+          </>
         )}
         
         {isConnectionError && (
@@ -150,7 +178,7 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
             <div className="mt-2 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
               <p className="text-sm text-blue-700 dark:text-blue-400">
                 {isOnline 
-                  ? "Le serveur semble temporairement inaccessible. Cela peut être dû à une maintenance ou à une charge élevée." 
+                  ? "La connexion au serveur a été interrompue. Cela peut être dû à un problème de réseau intermédiaire." 
                   : "Veuillez activer votre connexion internet et réessayer."}
               </p>
             </div>
@@ -168,18 +196,18 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
             <Button 
               onClick={handleRetry}
               className="w-full gap-2"
-              variant={isConnectionError ? "default" : "outline"}
-              disabled={!isOnline || isRetrying}
+              variant={isConnectionError || isServerError ? "default" : "outline"}
+              disabled={!isOnline || isRetrying || retryDisabled}
             >
               <RefreshCcw className={`h-4 w-4 ${isRetrying ? 'animate-spin' : ''}`} />
-              {isRetrying ? 'Tentative en cours...' : 'Réessayer'}
+              {isRetrying ? 'Tentative en cours...' : retryDisabled ? 'Patientez...' : 'Réessayer'}
             </Button>
           )}
           
           <Button 
             onClick={() => navigate('/clients')}
             className="w-full gap-2"
-            variant={isConnectionError ? "outline" : "default"}
+            variant={isConnectionError || isServerError ? "outline" : "default"}
           >
             <Home className="h-4 w-4" />
             Retourner à la liste des clients

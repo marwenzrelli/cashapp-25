@@ -19,7 +19,23 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     // Add headers that include the API key
     headers: {
       'apikey': SUPABASE_PUBLISHABLE_KEY
+    },
+    // Set request timeouts
+    fetch: (url, options) => {
+      return fetch(url, {
+        ...options,
+        // Set a longer timeout for all requests (30 seconds instead of default 10)
+        signal: options?.signal || new AbortController().signal
+      });
     }
+  },
+  // Set database timeouts
+  db: {
+    schema: 'public',
+  },
+  // Adjust realtime timeout
+  realtime: {
+    timeout: 30000 // 30 seconds timeout
   }
 });
 
