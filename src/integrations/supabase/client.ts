@@ -19,16 +19,17 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     headers: {
       'apikey': SUPABASE_PUBLISHABLE_KEY,
       // Add Cache-Control header to reduce caching issues
-      'Cache-Control': 'no-cache'
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache' // Additional header for older HTTP/1.0 caches
     },
     // Enhanced fetch with improved timeout and abort handling
     fetch: (url, options) => {
-      // Create abort controller with longer timeout (45 seconds)
+      // Create abort controller with longer timeout (60 seconds)
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort('Timeout exceeded'), 45000);
+      const timeoutId = setTimeout(() => controller.abort('Timeout exceeded'), 60000);
       
       // Add retry capability for network errors
-      const attemptFetch = async (retries = 2) => {
+      const attemptFetch = async (retries = 3) => {
         try {
           // Use the controller's signal
           const response = await fetch(url, {
@@ -37,7 +38,9 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
             // Ensure we don't cache responses that might be stale
             cache: 'no-store',
             // Set keep-alive for better connection reuse
-            keepalive: true
+            keepalive: true,
+            // Add credentials mode for better cookie handling
+            credentials: 'include'
           });
           
           // Clear the timeout if successful
@@ -46,9 +49,9 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
         } catch (error: any) {
           // Only retry on network errors, not on aborts or other issues
           if (retries > 0 && (error.name === 'TypeError' || error.message?.includes('network'))) {
-            console.log(`Retrying fetch due to network error (${retries} retries left)`);
+            console.log(`Retrying fetch due to network error (${retries} retries left): ${error.message}`);
             // Exponential backoff: wait longer with each retry
-            await new Promise(r => setTimeout(r, (3 - retries) * 1000));
+            await new Promise(r => setTimeout(r, (4 - retries) * 2000));
             return attemptFetch(retries - 1);
           }
           
@@ -67,7 +70,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   },
   // Adjust realtime timeout and auto-reconnection
   realtime: {
-    timeout: 45000, // 45 seconds timeout
+    timeout: 60000, // 60 seconds timeout
     params: {
       eventsPerSecond: 10
     }

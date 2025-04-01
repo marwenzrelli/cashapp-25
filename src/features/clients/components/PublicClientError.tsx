@@ -8,6 +8,7 @@ import { ErrorIcon } from "./error/ErrorIcon";
 import { ErrorMessages } from "./error/ErrorMessages";
 import { ConnectionStatusIndicator } from "./error/ConnectionStatusIndicator";
 import { RetryButton } from "./error/RetryButton";
+import { isOnline, isNetworkError } from "@/utils/network";
 
 interface PublicClientErrorProps {
   error: string | null;
@@ -16,13 +17,14 @@ interface PublicClientErrorProps {
 
 export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) => {
   const navigate = useNavigate();
-  const [isOnline, setIsOnline] = useState(true);
+  const [connected, setConnected] = useState(isOnline());
   const [retryCount, setRetryCount] = useState(0);
+  const [errorType, setErrorType] = useState<"client" | "connection" | "server" | "access" | "unknown">("unknown");
   
   // Check network status on mount and when it changes
   useEffect(() => {
     const checkOnlineStatus = () => {
-      setIsOnline(navigator.onLine);
+      setConnected(isOnline());
     };
     
     // Initial check
@@ -47,7 +49,7 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
         });
         setTimeout(() => {
           if (onRetry) onRetry();
-        }, 1500); // Increased delay to allow network to stabilize
+        }, 1500); // Delay to allow network to stabilize
       }
     };
     
@@ -68,51 +70,47 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
   }, [error]);
   
   // Determine error type
-  const determineErrorType = () => {
-    if (!error) return "unknown";
+  useEffect(() => {
+    if (!error) {
+      setErrorType("unknown");
+      return;
+    }
     
     if (error.includes("Client introuvable") || error.includes("n'existe pas")) {
-      return "client";
-    }
-    
-    if (error.includes("interrompue") || 
-        error.includes("délai d'attente") ||
-        error.includes("connexion") ||
-        error.includes("timeout") ||
-        error.includes("inaccessible") ||
-        error.includes("réseau") ||
-        !isOnline) {
-      return "connection";
-    }
-    
-    if (error.includes("serveur") || error.includes("temporairement")) {
-      return "server";
-    }
-    
-    if (error.includes("Token") ||
+      setErrorType("client");
+    } else if (isNetworkError(error) || !connected) {
+      setErrorType("connection");
+    } else if (error.includes("serveur") || error.includes("temporairement")) {
+      setErrorType("server");
+    } else if (error.includes("Token") ||
         error.includes("accès") ||
         error.includes("invalide") ||
         error.includes("expiré")) {
-      return "access";
+      setErrorType("access");
+    } else {
+      setErrorType("unknown");
     }
-    
-    return "unknown";
-  };
+  }, [error, connected]);
   
-  const errorType = determineErrorType();
+  const getErrorTitle = () => {
+    switch (errorType) {
+      case "client": return "Client introuvable";
+      case "server": return "Serveur indisponible";
+      case "connection": return "Erreur de connexion";
+      case "access": return "Erreur d'accès";
+      default: return "Erreur d'accès";
+    }
+  };
   
   return (
     <div className="min-h-screen bg-gradient-to-b from-red-100/30 to-background flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white dark:bg-gray-950 shadow-xl rounded-xl p-8 text-center">
         <div className="flex justify-center">
-          <ErrorIcon errorType={errorType as any} isOnline={isOnline} />
+          <ErrorIcon errorType={errorType} isOnline={connected} />
         </div>
         
         <h2 className="mt-6 text-2xl font-semibold text-gray-900 dark:text-white">
-          {errorType === "client" ? "Client introuvable" : 
-           errorType === "server" ? "Serveur indisponible" :
-           errorType === "connection" ? "Erreur de connexion" : 
-           errorType === "access" ? "Erreur d'accès" : "Erreur d'accès"}
+          {getErrorTitle()}
         </h2>
         
         <p className="mt-3 text-gray-600 dark:text-gray-400">
@@ -137,7 +135,7 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
           {onRetry && (
             <RetryButton 
               onRetry={onRetry}
-              isOnline={isOnline}
+              isOnline={connected}
               retryCount={retryCount}
               setRetryCount={setRetryCount}
             />

@@ -4,6 +4,7 @@ import { Client } from "@/features/clients/types";
 import { ClientOperation, TokenData } from "./types";
 import { fetchAccessData, fetchClientDetails, fetchClientOperations } from "./fetchClientData";
 import { showErrorToast } from "../utils/errorUtils";
+import { isNetworkError, isOnline, waitForNetwork } from "@/utils/network";
 
 /**
  * Core hook for fetching client data with token
@@ -27,6 +28,20 @@ export const useFetchClientData = (token: string | undefined) => {
       return;
     }
 
+    // Check if we're online before attempting fetch
+    if (!isOnline()) {
+      console.log("Device is offline. Waiting for connection...");
+      setError("Vous êtes actuellement hors ligne. Connexion en attente...");
+      
+      // Wait for network to become available (with timeout)
+      const networkAvailable = await waitForNetwork(20000);
+      if (!networkAvailable) {
+        setError("Impossible de récupérer une connexion internet. Veuillez vérifier votre réseau.");
+        setIsLoading(false);
+        return;
+      }
+    }
+
     // Cancel any previous request
     if (abortControllerRef.current) {
       console.log("Aborting previous request...");
@@ -46,7 +61,7 @@ export const useFetchClientData = (token: string | undefined) => {
     setError(null);
     setLoadingTime(0);
 
-    // Global timeout - 15 seconds
+    // Global timeout - 20 seconds (increased from 15)
     const timeout = setTimeout(() => {
       if (fetchingRef.current && abortControllerRef.current) {
         console.log("Request timeout reached, aborting...");
@@ -55,19 +70,9 @@ export const useFetchClientData = (token: string | undefined) => {
         setIsLoading(false);
         fetchingRef.current = false;
       }
-    }, 15000); 
+    }, 20000); 
 
     try {
-      // Check online status
-      try {
-        const online = navigator.onLine;
-        if (!online) {
-          throw new Error("Vous semblez être hors ligne. Vérifiez votre connexion internet.");
-        }
-      } catch (e) {
-        console.log("Navigator.onLine check failed, continuing anyway");
-      }
-
       // Check if request was already aborted
       if (signal.aborted) {
         throw new Error(`Opération annulée: ${signal.reason || "raison inconnue"}`);
@@ -129,13 +134,9 @@ export const useFetchClientData = (token: string | undefined) => {
         setError(errorMessage);
         
         // Track network errors for more aggressive retry handling
-        const isNetworkError = err.message.includes("network") || 
-                             err.message.includes("connexion") ||
-                             err.message.includes("Failed to fetch") ||
-                             err.message.includes("interrompue");
-                             
-        if (isNetworkError) {
+        if (isNetworkError(err)) {
           networkErrorCountRef.current++;
+          console.log(`Network error detected (count: ${networkErrorCountRef.current})`);
         }
         
         // Only show error toast for non-abort errors
