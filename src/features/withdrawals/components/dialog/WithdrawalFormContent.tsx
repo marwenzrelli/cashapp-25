@@ -110,4 +110,4 @@ export const WithdrawalFormContent: React.FC<WithdrawalFormContentProps> = ({
       </DialogFooter>
     </DialogContent>
   );
-};
+}
