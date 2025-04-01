@@ -1,5 +1,5 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, checkSupabaseAvailability } from "@/integrations/supabase/client";
 import { ClientOperation } from "./types";
 
 export const fetchClientOperations = async (
@@ -9,14 +9,20 @@ export const fetchClientOperations = async (
   try {
     console.log(`Fetching operations for client: ${clientName}`);
     
-    // Check our network connectivity
-    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    // Check our network connectivity with the improved utility
+    const { online, serverAvailable, errorMessage } = await checkSupabaseAvailability();
+    
+    if (!online) {
       throw new Error("Vous êtes hors ligne. Veuillez vérifier votre connexion internet.");
     }
     
+    if (!serverAvailable && errorMessage) {
+      throw new Error(errorMessage);
+    }
+    
     // Configuration des timeouts et réessais
-    const maxRetries = 3; // Increased from 2 to 3
-    const baseTimeout = 10000; // Increased from 8000 to 10000 milliseconds
+    const maxRetries = 3; // Kept at 3
+    const baseTimeout = 12000; // Increased from 10000 to 12000 milliseconds
     let currentRetry = 0;
     
     // Fonction pour tenter une requête avec réessais
@@ -57,10 +63,10 @@ export const fetchClientOperations = async (
             error.name === "AbortError" || 
             error.message?.includes("interrompue") ||
             error.message?.includes("Failed to fetch")) {
-          console.log(`Attempt ${retryCount + 1} failed, retrying in ${800 * (retryCount + 1)}ms...`);
+          console.log(`Attempt ${retryCount + 1} failed, retrying in ${1000 * (retryCount + 1)}ms...`);
           
-          // Attendre avant de réessayer (backoff exponentiel)
-          await new Promise(resolve => setTimeout(resolve, 800 * (retryCount + 1)));
+          // Attendre avant de réessayer (backoff exponentiel) - Increased wait time
+          await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
           
           // Réessayer la requête avec un compteur incrémenté
           return attemptRequest(requestFn, retryCount + 1);
