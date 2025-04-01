@@ -16,6 +16,7 @@ export const usePublicClientProfile = (token: string | undefined) => {
   const maxConnectionRetries = 3;
   const autoRetryEnabledRef = useRef(true);
   
+  // Use our refactored hook for client data
   const { 
     client, 
     operations, 
@@ -90,7 +91,7 @@ export const usePublicClientProfile = (token: string | undefined) => {
         return () => clearTimeout(timer);
       }
     }
-  }, [error, isLoading, retryFetch]);
+  }, [error, isLoading, retryFetch, connectionErrorRef]);
   
   // Verify operations if we have client but no operations - run only once
   useEffect(() => {

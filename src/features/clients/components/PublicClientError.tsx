@@ -1,9 +1,13 @@
 
 import { Button } from "@/components/ui/button";
-import { AlertCircle, RefreshCcw, Home, Network, Wifi, WifiOff, Server } from "lucide-react";
+import { Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { ErrorIcon } from "./error/ErrorIcon";
+import { ErrorMessages } from "./error/ErrorMessages";
+import { ConnectionStatusIndicator } from "./error/ConnectionStatusIndicator";
+import { RetryButton } from "./error/RetryButton";
 
 interface PublicClientErrorProps {
   error: string | null;
@@ -14,8 +18,6 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
   const navigate = useNavigate();
   const [isOnline, setIsOnline] = useState(true);
   const [retryCount, setRetryCount] = useState(0);
-  const [isRetrying, setIsRetrying] = useState(false);
-  const [retryDisabled, setRetryDisabled] = useState(false);
   
   // Check network status on mount and when it changes
   useEffect(() => {
@@ -44,7 +46,7 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
           description: "Tentative de reconnexion automatique..."
         });
         setTimeout(() => {
-          handleRetry();
+          if (onRetry) onRetry();
         }, 1500); // Increased delay to allow network to stabilize
       }
     };
@@ -65,149 +67,86 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
     }
   }, [error]);
   
-  const handleRetry = () => {
-    if (onRetry && !isRetrying && !retryDisabled) {
-      setIsRetrying(true);
-      setRetryCount(prev => prev + 1);
-      setRetryDisabled(true);
-      
-      console.log("Retrying client fetch...");
-      toast.info("Nouvelle tentative", {
-        description: "Tentative de reconnexion au serveur..."
-      });
-      
-      // Tentative de réessai avec délai progressif
-      setTimeout(() => {
-        onRetry();
-        setIsRetrying(false);
-        
-        // Disable retry button temporarily to prevent spam
-        setTimeout(() => {
-          setRetryDisabled(false);
-        }, retryCount > 2 ? 5000 : 2000); // Longer cooldown after multiple retries
-      }, retryCount * 800); // Increased delay between retries
+  // Determine error type
+  const determineErrorType = () => {
+    if (!error) return "unknown";
+    
+    if (error.includes("Client introuvable") || error.includes("n'existe pas")) {
+      return "client";
     }
+    
+    if (error.includes("interrompue") || 
+        error.includes("délai d'attente") ||
+        error.includes("connexion") ||
+        error.includes("timeout") ||
+        error.includes("inaccessible") ||
+        error.includes("réseau") ||
+        !isOnline) {
+      return "connection";
+    }
+    
+    if (error.includes("serveur") || error.includes("temporairement")) {
+      return "server";
+    }
+    
+    if (error.includes("Token") ||
+        error.includes("accès") ||
+        error.includes("invalide") ||
+        error.includes("expiré")) {
+      return "access";
+    }
+    
+    return "unknown";
   };
-
-  // Determine if this is a client not found error
-  const isClientNotFoundError = error && (
-    error.includes("Client introuvable") || 
-    error.includes("n'existe pas")
-  );
   
-  // Check if it's a connection error
-  const isConnectionError = error && (
-    error.includes("interrompue") || 
-    error.includes("délai d'attente") ||
-    error.includes("connexion") ||
-    error.includes("timeout") ||
-    error.includes("inaccessible") ||
-    error.includes("réseau") ||
-    !isOnline
-  );
-  
-  // Check if it's a server error
-  const isServerError = error && (
-    error.includes("serveur") ||
-    error.includes("temporairement")
-  );
-  
-  // Check if it's an access error
-  const isAccessError = error && (
-    error.includes("Token") ||
-    error.includes("accès") ||
-    error.includes("invalide") ||
-    error.includes("expiré")
-  );
+  const errorType = determineErrorType();
   
   return (
     <div className="min-h-screen bg-gradient-to-b from-red-100/30 to-background flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white dark:bg-gray-950 shadow-xl rounded-xl p-8 text-center">
         <div className="flex justify-center">
-          <div className="h-16 w-16 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center">
-            {isConnectionError ? (
-              !isOnline ? <WifiOff className="h-8 w-8 text-red-600 dark:text-red-500" /> : 
-                          <Network className="h-8 w-8 text-red-600 dark:text-red-500" />
-            ) : isServerError ? (
-              <Server className="h-8 w-8 text-red-600 dark:text-red-500" />
-            ) : (
-              <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-500" />
-            )}
-          </div>
+          <ErrorIcon errorType={errorType as any} isOnline={isOnline} />
         </div>
         
         <h2 className="mt-6 text-2xl font-semibold text-gray-900 dark:text-white">
-          {isClientNotFoundError ? "Client introuvable" : 
-           isServerError ? "Serveur indisponible" :
-           isConnectionError ? "Erreur de connexion" : 
-           isAccessError ? "Erreur d'accès" : "Erreur d'accès"}
+          {errorType === "client" ? "Client introuvable" : 
+           errorType === "server" ? "Serveur indisponible" :
+           errorType === "connection" ? "Erreur de connexion" : 
+           errorType === "access" ? "Erreur d'accès" : "Erreur d'accès"}
         </h2>
         
         <p className="mt-3 text-gray-600 dark:text-gray-400">
           {error || "Impossible d'accéder au profil client. Le lien pourrait être invalide ou expiré."}
         </p>
         
-        {isClientNotFoundError && (
-          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            Veuillez vérifier l'URL ou contacter le support si vous pensez qu'il s'agit d'une erreur.
-          </p>
-        )}
+        {errorType === "client" && <ErrorMessages errorType="client" errorMessage={error} />}
+        {errorType === "server" && <ErrorMessages errorType="server" errorMessage={error} />}
         
-        {isServerError && (
-          <>
-            <div className="mt-4 bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg">
-              <p className="text-sm text-amber-700 dark:text-amber-400 flex items-center gap-2 justify-center">
-                <Server className="h-4 w-4" />
-                Le serveur est temporairement indisponible. Cela peut être dû à une maintenance ou à une charge élevée.
-              </p>
-            </div>
-          </>
-        )}
-        
-        {isConnectionError && (
+        {errorType === "connection" && (
           <>
             <div className="mt-4 mb-2">
-              <div className="flex items-center justify-center">
-                <div className={`h-3 w-3 rounded-full mr-2 ${isOnline ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {isOnline ? "Vous êtes connecté à Internet" : "Vous êtes actuellement hors ligne"}
-                </p>
-              </div>
+              <ConnectionStatusIndicator />
             </div>
-            
-            <div className="mt-2 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-              <p className="text-sm text-blue-700 dark:text-blue-400">
-                {isOnline 
-                  ? "La connexion au serveur a été interrompue. Cela peut être dû à un problème de réseau intermédiaire." 
-                  : "Veuillez activer votre connexion internet et réessayer."}
-              </p>
-            </div>
+            <ErrorMessages errorType="connection" errorMessage={error} />
           </>
         )}
 
-        {isAccessError && (
-          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            Le lien d'accès utilisé n'est pas valide ou a expiré. Veuillez demander un nouveau lien d'accès.
-          </p>
-        )}
+        {errorType === "access" && <ErrorMessages errorType="access" errorMessage={error} />}
         
         <div className="mt-8 space-y-3">
           {onRetry && (
-            <Button 
-              onClick={handleRetry}
-              className="w-full gap-2"
-              variant={isConnectionError || isServerError ? "default" : "outline"}
-              disabled={!isOnline || isRetrying || retryDisabled}
-            >
-              <RefreshCcw className={`h-4 w-4 ${isRetrying ? 'animate-spin' : ''}`} />
-              {isRetrying ? 'Tentative en cours...' : retryDisabled ? 'Patientez...' : 'Réessayer'}
-            </Button>
+            <RetryButton 
+              onRetry={onRetry}
+              isOnline={isOnline}
+              retryCount={retryCount}
+              setRetryCount={setRetryCount}
+            />
           )}
           
           <Button 
             onClick={() => navigate('/clients')}
             className="w-full gap-2"
-            variant={isConnectionError || isServerError ? "outline" : "default"}
+            variant={errorType === "connection" || errorType === "server" ? "outline" : "default"}
           >
             <Home className="h-4 w-4" />
             Retourner à la liste des clients
