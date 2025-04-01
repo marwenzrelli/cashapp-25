@@ -64,51 +64,46 @@ export const fetchClientOperations = async (clientName: string, token: string): 
       throw new Error("Token d'accès invalide");
     }
     
-    // Use type annotations to help TypeScript
-    type DepositsResponse = { data: DepositRecord[] | null; error: any };
-    type WithdrawalsResponse = { data: WithdrawalRecord[] | null; error: any };
-    type TransfersResponse = { data: TransferRecord[] | null; error: any };
-    
-    // Execute queries separately with explicit typing
-    const depositsQuery: DepositsResponse = await supabase
+    // Explicitly type all query responses to avoid deep type instantiation
+    const depositsResult = await supabase
       .from('deposits')
       .select('id, amount, created_at, notes, status, client_id, client_name, operation_date')
       .eq('client_id', accessData.client_id)
       .order('created_at', { ascending: false });
-    
-    const withdrawalsQuery: WithdrawalsResponse = await supabase
+      
+    const withdrawalsResult = await supabase
       .from('withdrawals')
       .select('id, amount, created_at, notes, status, client_name, operation_date')
       .eq('client_id', accessData.client_id)
       .order('created_at', { ascending: false });
-    
-    // Query transfers for this client - split into two simple queries
-    const fromClientQuery: TransfersResponse = await supabase
+      
+    // Split transfer queries to simplify type handling
+    const fromClientResult = await supabase
       .from('transfers')
       .select('id, amount, created_at, reason, status, from_client, to_client, operation_date')
       .eq('from_client', clientName)
       .order('created_at', { ascending: false });
-    
-    const toClientQuery: TransfersResponse = await supabase
+      
+    const toClientResult = await supabase
       .from('transfers')
       .select('id, amount, created_at, reason, status, from_client, to_client, operation_date')
       .eq('to_client', clientName)
       .order('created_at', { ascending: false });
     
-    // Extract data with explicit type annotations to help TypeScript
-    const deposits: DepositRecord[] = depositsQuery.data || [];
-    const withdrawals: WithdrawalRecord[] = withdrawalsQuery.data || [];
+    // Manually type the query results to break complex type inference
+    const deposits: DepositRecord[] = depositsResult.data || [];
+    const withdrawals: WithdrawalRecord[] = withdrawalsResult.data || [];
+    const fromTransfers: TransferRecord[] = fromClientResult.data || [];
+    const toTransfers: TransferRecord[] = toClientResult.data || [];
     
     // Merge transfer results
-    const fromTransfers: TransferRecord[] = fromClientQuery.data || [];
-    const toTransfers: TransferRecord[] = toClientQuery.data || [];
-    const transfers: TransferRecord[] = [...fromTransfers, ...toTransfers];
+    const transfers = [...fromTransfers, ...toTransfers];
     
     // Log any errors
-    if (depositsQuery.error) console.error("Error fetching deposits:", depositsQuery.error);
-    if (withdrawalsQuery.error) console.error("Error fetching withdrawals:", withdrawalsQuery.error);
-    if (fromClientQuery.error) console.error("Error fetching from_client transfers:", fromClientQuery.error);
-    if (toClientQuery.error) console.error("Error fetching to_client transfers:", toClientQuery.error);
+    if (depositsResult.error) console.error("Error fetching deposits:", depositsResult.error);
+    if (withdrawalsResult.error) console.error("Error fetching withdrawals:", withdrawalsResult.error);
+    if (fromClientResult.error) console.error("Error fetching from_client transfers:", fromClientResult.error);
+    if (toClientResult.error) console.error("Error fetching to_client transfers:", toClientResult.error);
     
     const combinedOperations: ClientOperation[] = [];
     
