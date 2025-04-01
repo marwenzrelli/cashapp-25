@@ -31,35 +31,26 @@ export const fetchClientOperations = async (clientName: string, token: string): 
       throw new Error("Token d'accès invalide");
     }
     
-    // Use simple function to fetch data to avoid complex type issues
-    async function fetchDeposits() {
-      return await supabase
-        .from('deposits')
-        .select('id, amount, created_at, notes, status, client_id, client_name, operation_date')
-        .eq('client_id', accessData.client_id)
-        .order('created_at', { ascending: false });
-    }
-    
-    async function fetchWithdrawals() {
-      return await supabase
-        .from('withdrawals')
-        .select('id, amount, created_at, notes, status, client_name, operation_date')
-        .eq('client_id', accessData.client_id)
-        .order('created_at', { ascending: false });
-    }
-    
-    async function fetchTransfers() {
-      return await supabase
-        .from('transfers')
-        .select('id, amount, created_at, reason, status, from_client, to_client, operation_date')
-        .or(`from_client.eq.${clientName},to_client.eq.${clientName}`)
-        .order('created_at', { ascending: false });
-    }
-    
-    // Execute queries
-    const depositsResult = await fetchDeposits();
-    const withdrawalsResult = await fetchWithdrawals();
-    const transfersResult = await fetchTransfers();
+    // Fetch deposits with minimal fields to avoid type complexity
+    const depositsResult = await supabase
+      .from('deposits')
+      .select('id, amount, created_at, notes, status, client_id, client_name, operation_date')
+      .eq('client_id', accessData.client_id)
+      .order('created_at', { ascending: false });
+      
+    // Fetch withdrawals with minimal fields to avoid type complexity
+    const withdrawalsResult = await supabase
+      .from('withdrawals')
+      .select('id, amount, created_at, notes, status, client_name, operation_date')
+      .eq('client_id', accessData.client_id)
+      .order('created_at', { ascending: false });
+      
+    // Fetch transfers with minimal fields to avoid type complexity
+    const transfersResult = await supabase
+      .from('transfers')
+      .select('id, amount, created_at, reason, status, from_client, to_client, operation_date')
+      .or(`from_client.eq.${clientName},to_client.eq.${clientName}`)
+      .order('created_at', { ascending: false });
     
     // Handle results
     const deposits = depositsResult.data || [];
