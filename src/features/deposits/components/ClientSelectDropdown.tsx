@@ -50,23 +50,22 @@ export const ClientSelectDropdown = ({
   };
 
   const handleClientSelect = (clientId: string) => {
-    // Check if this is a real selection vs a clear operation
     if (clientId) {
+      // Apply client selection immediately
       onClientSelect(clientId);
-      // On iOS, we need a slight delay to ensure UI updates properly
-      setTimeout(() => {
-        setOpenState(false);
-      }, 100);
+      // Close dropdown after selection with slight delay for iOS
+      setTimeout(() => setOpenState(false), 50);
     } else if (clientId === "") {
       onClientSelect("");
       setOpenState(false);
     }
   };
 
-  // Handle iOS-specific touchend issues
+  // Handle touch events specifically for iOS devices
   const handleTriggerTouch = (e: React.TouchEvent) => {
-    // This helps iOS recognize the dropdown should open on touch
-    e.preventDefault(); // Empêcher le comportement par défaut
+    e.preventDefault();
+    e.stopPropagation();
+    
     if (!openState) {
       setOpenState(true);
     }
@@ -85,6 +84,8 @@ export const ClientSelectDropdown = ({
         style={{
           WebkitTapHighlightColor: 'transparent',
           WebkitTouchCallout: 'none',
+          touchAction: 'manipulation',
+          userSelect: 'none',
         }}
       >
         <SelectValue placeholder="Sélectionner un client">
