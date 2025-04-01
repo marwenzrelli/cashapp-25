@@ -77,23 +77,34 @@ export const fetchClientOperations = async (clientName: string, token: string): 
       .eq('client_id', accessData.client_id)
       .order('created_at', { ascending: false });
     
-    // Fix for the deep type instantiation issue - use separate filter conditions
-    // instead of a complex template string in the or() method
-    const transfersQuery = await supabase
+    // Modified query approach to avoid deep type instantiation
+    // Instead of using .or() with a complex string, split into two separate queries
+    const fromClientQuery = await supabase
       .from('transfers')
       .select('id, amount, created_at, reason, status, from_client, to_client, operation_date')
-      .or(`from_client.eq.${clientName},to_client.eq.${clientName}`)
+      .eq('from_client', clientName)
+      .order('created_at', { ascending: false });
+    
+    const toClientQuery = await supabase
+      .from('transfers')
+      .select('id, amount, created_at, reason, status, from_client, to_client, operation_date')
+      .eq('to_client', clientName)
       .order('created_at', { ascending: false });
     
     // Extract data with proper typing
     const deposits: DepositRecord[] = depositsQuery.data || [];
     const withdrawals: WithdrawalRecord[] = withdrawalsQuery.data || [];
-    const transfers: TransferRecord[] = transfersQuery.data || [];
+    
+    // Combine the results of the two transfer queries
+    const fromTransfers: TransferRecord[] = fromClientQuery.data || [];
+    const toTransfers: TransferRecord[] = toClientQuery.data || [];
+    const transfers: TransferRecord[] = [...fromTransfers, ...toTransfers];
     
     // Log any errors
     if (depositsQuery.error) console.error("Error fetching deposits:", depositsQuery.error);
     if (withdrawalsQuery.error) console.error("Error fetching withdrawals:", withdrawalsQuery.error);
-    if (transfersQuery.error) console.error("Error fetching transfers:", transfersQuery.error);
+    if (fromClientQuery.error) console.error("Error fetching from_client transfers:", fromClientQuery.error);
+    if (toClientQuery.error) console.error("Error fetching to_client transfers:", toClientQuery.error);
     
     const combinedOperations: ClientOperation[] = [];
     
