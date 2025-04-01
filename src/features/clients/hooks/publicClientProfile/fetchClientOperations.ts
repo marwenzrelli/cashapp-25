@@ -64,27 +64,32 @@ export const fetchClientOperations = async (clientName: string, token: string): 
       throw new Error("Token d'accès invalide");
     }
     
-    // Execute all three queries separately to avoid type inference issues
-    const depositsQuery = await supabase
+    // Use type annotations to help TypeScript
+    type DepositsResponse = { data: DepositRecord[] | null; error: any };
+    type WithdrawalsResponse = { data: WithdrawalRecord[] | null; error: any };
+    type TransfersResponse = { data: TransferRecord[] | null; error: any };
+    
+    // Execute queries separately with explicit typing
+    const depositsQuery: DepositsResponse = await supabase
       .from('deposits')
       .select('id, amount, created_at, notes, status, client_id, client_name, operation_date')
       .eq('client_id', accessData.client_id)
       .order('created_at', { ascending: false });
     
-    const withdrawalsQuery = await supabase
+    const withdrawalsQuery: WithdrawalsResponse = await supabase
       .from('withdrawals')
       .select('id, amount, created_at, notes, status, client_name, operation_date')
       .eq('client_id', accessData.client_id)
       .order('created_at', { ascending: false });
     
-    // Query transfers for this client - split into two queries to avoid complex type issues
-    const fromClientQuery = await supabase
+    // Query transfers for this client - split into two simple queries
+    const fromClientQuery: TransfersResponse = await supabase
       .from('transfers')
       .select('id, amount, created_at, reason, status, from_client, to_client, operation_date')
       .eq('from_client', clientName)
       .order('created_at', { ascending: false });
     
-    const toClientQuery = await supabase
+    const toClientQuery: TransfersResponse = await supabase
       .from('transfers')
       .select('id, amount, created_at, reason, status, from_client, to_client, operation_date')
       .eq('to_client', clientName)
