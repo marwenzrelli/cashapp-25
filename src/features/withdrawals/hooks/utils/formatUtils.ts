@@ -16,14 +16,14 @@ export const formatDate = (dateString?: string | null) => {
       return "Date invalide";
     }
     
-    // Format using local time (French style)
+    // Format using local time (French style with 24-hour format)
     return date.toLocaleDateString('fr-FR', {
       day: '2-digit',
       month: '2-digit', 
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-      hour12: false
+      hour12: false // Ensure 24-hour format
     });
   } catch (error) {
     console.error("Error formatting date:", error);
