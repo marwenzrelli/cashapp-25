@@ -46,8 +46,8 @@ export const fetchClientOperations = async (clientName: string, token: string): 
         
       supabase
         .from('transfers')
-        .select('*, to_clients(*), from_clients(*)')
-        .or(`from_client_id.eq.${accessData.client_id},to_client_id.eq.${accessData.client_id}`)
+        .select('*')
+        .or(`from_client.eq.${clientName},to_client.eq.${clientName}`)
         .order('created_at', { ascending: false })
     ];
     
@@ -73,7 +73,7 @@ export const fetchClientOperations = async (clientName: string, token: string): 
           type: 'deposit' as const,
           date: deposit.created_at,
           amount: deposit.amount,
-          description: deposit.description || 'Dépôt',
+          description: deposit.notes || 'Dépôt', // Using notes field instead of description
           status: deposit.status
         }))
       );
@@ -87,31 +87,26 @@ export const fetchClientOperations = async (clientName: string, token: string): 
           type: 'withdrawal' as const,
           date: withdrawal.created_at,
           amount: withdrawal.amount,
-          description: withdrawal.description || 'Retrait',
+          description: withdrawal.notes || 'Retrait', // Using notes field instead of description
           status: withdrawal.status
         }))
       );
     }
     
-    // Format transfers - more complex as we need to handle both incoming and outgoing
+    // Format transfers - simplified to avoid relation issues
     if (transfers) {
       combinedOperations.push(
         ...transfers.map(transfer => {
-          const isOutgoing = transfer.from_client_id === accessData.client_id;
-          const otherClient = isOutgoing 
-            ? transfer.to_clients?.nom && transfer.to_clients?.prenom 
-              ? `${transfer.to_clients.prenom} ${transfer.to_clients.nom}` 
-              : 'Client'
-            : transfer.from_clients?.nom && transfer.from_clients?.prenom 
-              ? `${transfer.from_clients.prenom} ${transfer.from_clients.nom}`
-              : 'Client';
+          // Determine if this is an outgoing transfer for the current client
+          const isOutgoing = transfer.from_client === clientName;
+          const otherClient = isOutgoing ? transfer.to_client : transfer.from_client;
               
           return {
             id: transfer.id.toString(),
             type: 'transfer' as const,
             date: transfer.created_at,
             amount: transfer.amount,
-            description: transfer.description || (isOutgoing ? `Transfert vers ${otherClient}` : `Transfert de ${otherClient}`),
+            description: transfer.reason || (isOutgoing ? `Transfert vers ${otherClient}` : `Transfert de ${otherClient}`),
             status: transfer.status,
             fromClient: isOutgoing ? clientName : otherClient,
             toClient: isOutgoing ? otherClient : clientName
