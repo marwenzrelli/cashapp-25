@@ -16,61 +16,60 @@ export const fetchClientOperations = async (clientName: string, token: string): 
     }
     
     // First, retrieve client ID from the token for security check
-    const { data: accessData, error: accessError } = await supabase
+    const accessResult = await supabase
       .from('qr_access')
       .select('client_id')
       .eq('access_token', token)
       .single();
       
-    if (accessError) {
-      throw new Error(`Erreur d'authentification: ${accessError.message}`);
+    if (accessResult.error) {
+      throw new Error(`Erreur d'authentification: ${accessResult.error.message}`);
     }
     
+    const accessData = accessResult.data;
     if (!accessData || !accessData.client_id) {
       throw new Error("Token d'accès invalide");
     }
     
-    // Fetch deposits - use explicit type to avoid deep type instantiation
-    const depositsQuery = await supabase
-      .from('deposits')
-      .select('*')
-      .eq('client_id', accessData.client_id)
-      .order('created_at', { ascending: false });
-      
-    const deposits = depositsQuery.data || [];
-    const depositsError = depositsQuery.error;
-    
-    if (depositsError) {
-      console.error("Error fetching deposits:", depositsError);
+    // Use simple function to fetch data to avoid complex type issues
+    async function fetchDeposits() {
+      return await supabase
+        .from('deposits')
+        .select('id, amount, created_at, notes, status, client_id, client_name, operation_date')
+        .eq('client_id', accessData.client_id)
+        .order('created_at', { ascending: false });
     }
     
-    // Fetch withdrawals - use explicit type to avoid deep type instantiation
-    const withdrawalsQuery = await supabase
-      .from('withdrawals')
-      .select('*')
-      .eq('client_id', accessData.client_id)
-      .order('created_at', { ascending: false });
-      
-    const withdrawals = withdrawalsQuery.data || [];
-    const withdrawalsError = withdrawalsQuery.error;
-    
-    if (withdrawalsError) {
-      console.error("Error fetching withdrawals:", withdrawalsError);
+    async function fetchWithdrawals() {
+      return await supabase
+        .from('withdrawals')
+        .select('id, amount, created_at, notes, status, client_name, operation_date')
+        .eq('client_id', accessData.client_id)
+        .order('created_at', { ascending: false });
     }
     
-    // Fetch transfers - use explicit type to avoid deep type instantiation
-    const transfersQuery = await supabase
-      .from('transfers')
-      .select('*')
-      .or(`from_client.eq.${clientName},to_client.eq.${clientName}`)
-      .order('created_at', { ascending: false });
-      
-    const transfers = transfersQuery.data || [];
-    const transfersError = transfersQuery.error;
-    
-    if (transfersError) {
-      console.error("Error fetching transfers:", transfersError);
+    async function fetchTransfers() {
+      return await supabase
+        .from('transfers')
+        .select('id, amount, created_at, reason, status, from_client, to_client, operation_date')
+        .or(`from_client.eq.${clientName},to_client.eq.${clientName}`)
+        .order('created_at', { ascending: false });
     }
+    
+    // Execute queries
+    const depositsResult = await fetchDeposits();
+    const withdrawalsResult = await fetchWithdrawals();
+    const transfersResult = await fetchTransfers();
+    
+    // Handle results
+    const deposits = depositsResult.data || [];
+    const withdrawals = withdrawalsResult.data || [];
+    const transfers = transfersResult.data || [];
+    
+    // Log any errors
+    if (depositsResult.error) console.error("Error fetching deposits:", depositsResult.error);
+    if (withdrawalsResult.error) console.error("Error fetching withdrawals:", withdrawalsResult.error);
+    if (transfersResult.error) console.error("Error fetching transfers:", transfersResult.error);
     
     const combinedOperations: ClientOperation[] = [];
     
