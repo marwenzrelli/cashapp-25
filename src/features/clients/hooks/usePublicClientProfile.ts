@@ -14,6 +14,7 @@ export const usePublicClientProfile = (token: string | undefined) => {
   const errorNotifiedRef = useRef(false);
   const connectionErrorRef = useRef(0);
   const maxConnectionRetries = 3;
+  const autoRetryEnabledRef = useRef(true);
   
   const { 
     client, 
@@ -28,10 +29,10 @@ export const usePublicClientProfile = (token: string | undefined) => {
   // Extract the client ID from the client object for subscriptions
   const clientId = client?.id;
 
-  // Set up realtime subscriptions - but limit refreshes
+  // Refresh data function that respects auto-retry settings
   const refreshData = useCallback(() => {
     console.log("Refreshing client data due to realtime update");
-    if (token && tokenValidation.isValid && !isLoading) {
+    if (token && tokenValidation.isValid && !isLoading && autoRetryEnabledRef.current) {
       fetchClientData();
     }
   }, [fetchClientData, token, isLoading, tokenValidation.isValid]);
@@ -43,15 +44,17 @@ export const usePublicClientProfile = (token: string | undefined) => {
   useEffect(() => {
     // Handle network connectivity changes
     const handleOnline = () => {
-      console.log("Network connection restored, retrying fetch");
+      console.log("Network connection restored, attempting auto-retry");
       connectionErrorRef.current = 0;
       if (error && (error.includes("connexion") || error.includes("interrompue") || error.includes("réseau"))) {
-        toast.info("Connexion internet rétablie", {
-          description: "Tentative de récupération des données..."
-        });
-        setTimeout(() => {
-          retryFetch();
-        }, 1000);
+        if (autoRetryEnabledRef.current) {
+          toast.info("Connexion internet rétablie", {
+            description: "Tentative de récupération des données..."
+          });
+          setTimeout(() => {
+            retryFetch();
+          }, 1000);
+        }
       }
     };
     
@@ -62,9 +65,9 @@ export const usePublicClientProfile = (token: string | undefined) => {
     };
   }, [error, retryFetch]);
   
-  // Auto retry for specific types of errors
+  // Auto retry for specific types of errors with backoff
   useEffect(() => {
-    if (error && !isLoading && connectionErrorRef.current < maxConnectionRetries) {
+    if (error && !isLoading && connectionErrorRef.current < maxConnectionRetries && autoRetryEnabledRef.current) {
       // Only auto-retry for specific connection errors
       if (error.includes("interrompue") || error.includes("réseau") || error.includes("connexion")) {
         connectionErrorRef.current++;
@@ -124,20 +127,38 @@ export const usePublicClientProfile = (token: string | undefined) => {
     }
   }, [client, operations, isLoading, error, token, retryFetch]);
 
-  // Show toast for serious errors
+  // Disable auto-retry after too many attempts
   useEffect(() => {
-    if (error && !isLoading && !errorNotifiedRef.current) {
-      if (error.includes("Token") || error.includes("accès") || error.includes("invalide") || error.includes("expiré")) {
-        // Don't show toast for expected errors like invalid token, these will be displayed in the UI
-      } else if (error.includes("délai") || error.includes("interrompue") || error.includes("connexion")) {
-        // For network-related errors, show toast once
-        toast.error("Problème de connexion", {
-          description: "Problème lors de la récupération des données du client."
+    if (connectionErrorRef.current >= maxConnectionRetries) {
+      if (autoRetryEnabledRef.current) {
+        console.log("Maximum auto-retry attempts reached, disabling auto-retry");
+        autoRetryEnabledRef.current = false;
+        
+        // Show toast to inform user
+        toast.error("Problème de connexion persistant", {
+          description: "Veuillez réessayer manuellement ou revenir plus tard."
         });
-        errorNotifiedRef.current = true;
+        
+        // Re-enable after 30 seconds
+        setTimeout(() => {
+          console.log("Re-enabling auto-retry after cooldown");
+          autoRetryEnabledRef.current = true;
+          connectionErrorRef.current = 0;
+        }, 30000);
       }
     }
-  }, [error, isLoading]);
+  }, [connectionErrorRef.current]);
+  
+  // Manual retry function that users can call
+  const manualRetryFetch = useCallback(() => {
+    // Reset error tracking on manual retry
+    connectionErrorRef.current = 0;
+    errorNotifiedRef.current = false;
+    autoRetryEnabledRef.current = true;
+    
+    // Perform the retry
+    return retryFetch();
+  }, [retryFetch]);
   
   // Return appropriate error depending on validation result
   const finalError = tokenValidation.isValid ? error : tokenValidation.error;
@@ -156,6 +177,6 @@ export const usePublicClientProfile = (token: string | undefined) => {
     error: finalError,
     loadingTime,
     fetchClientData,
-    retryFetch
+    retryFetch: manualRetryFetch
   };
 };

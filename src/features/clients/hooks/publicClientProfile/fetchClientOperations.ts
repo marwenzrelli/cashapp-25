@@ -14,24 +14,81 @@ export const fetchClientOperations = async (
       throw new Error("Vous êtes hors ligne. Veuillez vérifier votre connexion internet.");
     }
     
-    // Récupérer les dépôts du client avec un délai d'attente plus long
-    const depositsPromise = supabase
-      .from('deposits')
-      .select('*')
-      .eq('client_name', clientName)
-      .order('created_at', { ascending: false });
-
-    // Récupérer les retraits du client
-    const withdrawalsPromise = supabase
-      .from('withdrawals')
-      .select('*')
-      .eq('client_name', clientName)
-      .order('created_at', { ascending: false });
-      
-    // Run both queries in parallel for better performance
+    // Configuration des timeouts et réessais
+    const maxRetries = 2;
+    const baseTimeout = 8000; // 8 secondes pour le timeout initial
+    let currentRetry = 0;
+    
+    // Fonction pour tenter une requête avec réessais
+    const attemptRequest = async (requestFn: () => Promise<any>, retryCount: number): Promise<any> => {
+      try {
+        // Créer un contrôleur d'abandon pour définir un délai d'expiration
+        const controller = new AbortController();
+        const { signal } = controller;
+        
+        // Augmenter le timeout exponentiellement avec chaque tentative
+        const timeout = baseTimeout * Math.pow(1.5, retryCount);
+        
+        // Définir un délai d'expiration pour cette tentative
+        const timeoutId = setTimeout(() => {
+          controller.abort(`Timeout of ${timeout}ms exceeded`);
+        }, timeout);
+        
+        // Exécuter la requête avec le signal d'abandon
+        const result = await requestFn();
+        
+        // Annuler le délai d'expiration s'il est toujours actif
+        clearTimeout(timeoutId);
+        
+        return result;
+      } catch (error: any) {
+        // Si nous avons atteint le nombre maximal de tentatives, relancer l'erreur
+        if (retryCount >= maxRetries) {
+          throw error;
+        }
+        
+        // Pour les erreurs réseau ou les délais d'expiration, réessayer
+        if (error.message?.includes("network") || 
+            error.message?.includes("timeout") || 
+            error.message?.includes("abort") || 
+            error.name === "AbortError" || 
+            error.message?.includes("interrompue")) {
+          console.log(`Tentative ${retryCount + 1} échouée, réessai dans ${500 * (retryCount + 1)}ms...`);
+          
+          // Attendre avant de réessayer (backoff exponentiel)
+          await new Promise(resolve => setTimeout(resolve, 500 * (retryCount + 1)));
+          
+          // Réessayer la requête avec un compteur incrémenté
+          return attemptRequest(requestFn, retryCount + 1);
+        }
+        
+        // Pour les autres types d'erreurs, les relancer immédiatement
+        throw error;
+      }
+    };
+    
+    // Fonction pour récupérer les dépôts avec réessai
+    const fetchDeposits = () => {
+      return supabase
+        .from('deposits')
+        .select('*')
+        .eq('client_name', clientName)
+        .order('created_at', { ascending: false });
+    };
+    
+    // Fonction pour récupérer les retraits avec réessai
+    const fetchWithdrawals = () => {
+      return supabase
+        .from('withdrawals')
+        .select('*')
+        .eq('client_name', clientName)
+        .order('created_at', { ascending: false });
+    };
+    
+    // Effectuer les deux requêtes en parallèle avec réessai automatique
     const [depositsResult, withdrawalsResult] = await Promise.all([
-      depositsPromise,
-      withdrawalsPromise
+      attemptRequest(fetchDeposits, currentRetry),
+      attemptRequest(fetchWithdrawals, currentRetry)
     ]);
     
     const { data: deposits, error: depositsError } = depositsResult;
@@ -81,6 +138,20 @@ export const fetchClientOperations = async (
     return operations;
   } catch (error: any) {
     console.error("Error in fetchClientOperations:", error);
+    
+    // Améliorer les messages d'erreur réseau
+    if (error.message?.includes("network") || 
+        error.message?.includes("Failed to fetch") || 
+        error.message?.includes("timeout") || 
+        error.name === "AbortError") {
+      throw new Error("Problème de connexion au serveur. Veuillez réessayer plus tard.");
+    }
+    
+    if (error.message?.includes("interrompue")) {
+      throw new Error("La requête a été interrompue. Veuillez réessayer.");
+    }
+    
+    // Erreur par défaut
     throw new Error(error.message || "Erreur lors de la récupération des opérations");
   }
 };

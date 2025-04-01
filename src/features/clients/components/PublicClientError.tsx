@@ -13,6 +13,8 @@ interface PublicClientErrorProps {
 export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) => {
   const navigate = useNavigate();
   const [isOnline, setIsOnline] = useState(true);
+  const [retryCount, setRetryCount] = useState(0);
+  const [isRetrying, setIsRetrying] = useState(false);
   
   // Check network status on mount and when it changes
   useEffect(() => {
@@ -32,6 +34,26 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
       window.removeEventListener('offline', checkOnlineStatus);
     };
   }, []);
+
+  // Listen for online event to auto-retry
+  useEffect(() => {
+    const handleOnline = () => {
+      if (error && onRetry && retryCount === 0) {
+        toast.info("Connexion internet rétablie", {
+          description: "Tentative de reconnexion automatique..."
+        });
+        setTimeout(() => {
+          handleRetry();
+        }, 1000);
+      }
+    };
+    
+    window.addEventListener('online', handleOnline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+    };
+  }, [error, onRetry, retryCount]);
   
   // Show a toast when an error occurs
   useEffect(() => {
@@ -43,12 +65,20 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
   }, [error]);
   
   const handleRetry = () => {
-    if (onRetry) {
+    if (onRetry && !isRetrying) {
+      setIsRetrying(true);
+      setRetryCount(prev => prev + 1);
+      
       console.log("Retrying client fetch...");
       toast.info("Nouvelle tentative", {
         description: "Tentative de reconnexion au serveur..."
       });
-      onRetry();
+      
+      // Tentative de réessai avec délai progressif
+      setTimeout(() => {
+        onRetry();
+        setIsRetrying(false);
+      }, retryCount * 500); // Délai progressif entre les tentatives
     }
   };
 
@@ -108,17 +138,22 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
         
         {isConnectionError && (
           <>
-            <div className="mt-2 flex items-center justify-center">
-              <div className={`h-3 w-3 rounded-full mr-2 ${isOnline ? 'bg-green-500' : 'bg-red-500'}`}></div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {isOnline ? "Vous êtes connecté à Internet" : "Vous êtes actuellement hors ligne"}
+            <div className="mt-4 mb-2">
+              <div className="flex items-center justify-center">
+                <div className={`h-3 w-3 rounded-full mr-2 ${isOnline ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {isOnline ? "Vous êtes connecté à Internet" : "Vous êtes actuellement hors ligne"}
+                </p>
+              </div>
+            </div>
+            
+            <div className="mt-2 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+              <p className="text-sm text-blue-700 dark:text-blue-400">
+                {isOnline 
+                  ? "Le serveur semble temporairement inaccessible. Cela peut être dû à une maintenance ou à une charge élevée." 
+                  : "Veuillez activer votre connexion internet et réessayer."}
               </p>
             </div>
-            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-              {isOnline 
-                ? "Problème de connexion au serveur. Le serveur ne répond pas ou la requête a été interrompue." 
-                : "Veuillez vérifier votre connexion internet et réessayer quand vous serez connecté."}
-            </p>
           </>
         )}
 
@@ -134,10 +169,10 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
               onClick={handleRetry}
               className="w-full gap-2"
               variant={isConnectionError ? "default" : "outline"}
-              disabled={!isOnline}
+              disabled={!isOnline || isRetrying}
             >
-              <RefreshCcw className="h-4 w-4" />
-              Réessayer
+              <RefreshCcw className={`h-4 w-4 ${isRetrying ? 'animate-spin' : ''}`} />
+              {isRetrying ? 'Tentative en cours...' : 'Réessayer'}
             </Button>
           )}
           
