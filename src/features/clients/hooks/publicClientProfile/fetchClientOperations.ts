@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { ClientOperation } from "./types";
 
+// Define explicit interfaces for each record type
 interface DepositRecord {
   id: number;
   amount: number;
@@ -63,28 +64,26 @@ export const fetchClientOperations = async (clientName: string, token: string): 
       throw new Error("Token d'accès invalide");
     }
     
-    // Fetch deposits using explicit typed queries
+    // Execute all three queries separately to avoid type inference issues
     const depositsQuery = await supabase
       .from('deposits')
       .select('id, amount, created_at, notes, status, client_id, client_name, operation_date')
       .eq('client_id', accessData.client_id)
       .order('created_at', { ascending: false });
     
-    // Fetch withdrawals using explicit typed queries
     const withdrawalsQuery = await supabase
       .from('withdrawals')
       .select('id, amount, created_at, notes, status, client_name, operation_date')
       .eq('client_id', accessData.client_id)
       .order('created_at', { ascending: false });
     
-    // Fetch transfers using explicit typed queries
     const transfersQuery = await supabase
       .from('transfers')
       .select('id, amount, created_at, reason, status, from_client, to_client, operation_date')
       .or(`from_client.eq.${clientName},to_client.eq.${clientName}`)
       .order('created_at', { ascending: false });
     
-    // Extract data and error from query results
+    // Extract data with proper typing
     const deposits: DepositRecord[] = depositsQuery.data || [];
     const withdrawals: WithdrawalRecord[] = withdrawalsQuery.data || [];
     const transfers: TransferRecord[] = transfersQuery.data || [];
@@ -96,7 +95,7 @@ export const fetchClientOperations = async (clientName: string, token: string): 
     
     const combinedOperations: ClientOperation[] = [];
     
-    // Format deposits
+    // Process deposits
     for (const deposit of deposits) {
       combinedOperations.push({
         id: deposit.id.toString(),
@@ -108,7 +107,7 @@ export const fetchClientOperations = async (clientName: string, token: string): 
       });
     }
     
-    // Format withdrawals
+    // Process withdrawals
     for (const withdrawal of withdrawals) {
       combinedOperations.push({
         id: withdrawal.id.toString(),
@@ -120,7 +119,7 @@ export const fetchClientOperations = async (clientName: string, token: string): 
       });
     }
     
-    // Format transfers
+    // Process transfers
     for (const transfer of transfers) {
       // Determine if this is an outgoing transfer for the current client
       const isOutgoing = transfer.from_client === clientName;
