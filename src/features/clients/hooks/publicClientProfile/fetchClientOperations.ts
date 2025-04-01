@@ -30,38 +30,38 @@ export const fetchClientOperations = async (clientName: string, token: string): 
       throw new Error("Token d'accès invalide");
     }
     
-    // Use Promise.all to fetch all operations in parallel
-    const [depositsPromise, withdrawalsPromise, transfersPromise] = [
-      supabase
-        .from('deposits')
-        .select('*')
-        .eq('client_id', accessData.client_id)
-        .order('created_at', { ascending: false }),
-        
-      supabase
-        .from('withdrawals')
-        .select('*')
-        .eq('client_id', accessData.client_id)
-        .order('created_at', { ascending: false }),
-        
-      supabase
-        .from('transfers')
-        .select('*')
-        .or(`from_client.eq.${clientName},to_client.eq.${clientName}`)
-        .order('created_at', { ascending: false })
-    ];
+    // Fetch deposits
+    const { data: deposits, error: depositsError } = await supabase
+      .from('deposits')
+      .select('*')
+      .eq('client_id', accessData.client_id)
+      .order('created_at', { ascending: false });
+      
+    if (depositsError) {
+      console.error("Error fetching deposits:", depositsError);
+    }
     
-    // Execute all requests in parallel
-    const [
-      { data: deposits, error: depositsError },
-      { data: withdrawals, error: withdrawalsError },
-      { data: transfers, error: transfersError }
-    ] = await Promise.all([depositsPromise, withdrawalsPromise, transfersPromise]);
+    // Fetch withdrawals
+    const { data: withdrawals, error: withdrawalsError } = await supabase
+      .from('withdrawals')
+      .select('*')
+      .eq('client_id', accessData.client_id)
+      .order('created_at', { ascending: false });
+      
+    if (withdrawalsError) {
+      console.error("Error fetching withdrawals:", withdrawalsError);
+    }
     
-    // Handle errors
-    if (depositsError) console.error("Error fetching deposits:", depositsError);
-    if (withdrawalsError) console.error("Error fetching withdrawals:", withdrawalsError);
-    if (transfersError) console.error("Error fetching transfers:", transfersError);
+    // Fetch transfers
+    const { data: transfers, error: transfersError } = await supabase
+      .from('transfers')
+      .select('*')
+      .or(`from_client.eq.${clientName},to_client.eq.${clientName}`)
+      .order('created_at', { ascending: false });
+      
+    if (transfersError) {
+      console.error("Error fetching transfers:", transfersError);
+    }
     
     const combinedOperations: ClientOperation[] = [];
     
