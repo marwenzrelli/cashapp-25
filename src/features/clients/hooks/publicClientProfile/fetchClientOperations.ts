@@ -64,7 +64,8 @@ export const fetchClientOperations = async (clientName: string, token: string): 
       throw new Error("Token d'accès invalide");
     }
     
-    // Explicitly type all query responses to avoid deep type instantiation
+    // Avoid complex type inference by using any for intermediate results
+    // We'll explicitly type the extracted data instead
     const depositsResult = await supabase
       .from('deposits')
       .select('id, amount, created_at, notes, status, client_id, client_name, operation_date')
