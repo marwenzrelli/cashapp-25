@@ -4,12 +4,14 @@ import { usePublicClientData } from "./publicClientProfile/usePublicClientData";
 import { useRealtimeSubscriptions } from "./publicClientProfile/useRealtimeSubscriptions";
 import { validateToken } from "./publicClientProfile/validation";
 import { checkClientOperations } from "./utils/checkClientOperations";
+import { toast } from "sonner";
 
 export const usePublicClientProfile = (token: string | undefined) => {
   // Validate token format before proceeding
   const tokenValidation = token ? validateToken(token) : { isValid: false, error: "Token d'accès manquant" };
   const verificationCompletedRef = useRef(false);
   const operationsCheckedRef = useRef(false);
+  const errorNotifiedRef = useRef(false);
   
   const { 
     client, 
@@ -69,9 +71,31 @@ export const usePublicClientProfile = (token: string | undefined) => {
       verifyOperationsExist();
     }
   }, [client, operations, isLoading, error, token, retryFetch]);
+
+  // Show toast for serious errors
+  useEffect(() => {
+    if (error && !isLoading && !errorNotifiedRef.current) {
+      if (error.includes("Token") || error.includes("accès") || error.includes("invalide") || error.includes("expiré")) {
+        // Don't show toast for expected errors like invalid token, these will be displayed in the UI
+      } else if (error.includes("délai") || error.includes("interrompue") || error.includes("connexion")) {
+        // For network-related errors, show toast once
+        toast.error("Problème de connexion", {
+          description: "Problème lors de la récupération des données du client."
+        });
+        errorNotifiedRef.current = true;
+      }
+    }
+  }, [error, isLoading]);
   
   // Return appropriate error depending on validation result
   const finalError = tokenValidation.isValid ? error : tokenValidation.error;
+
+  // Reset error notification ref when error or loading state changes
+  useEffect(() => {
+    if (!error || isLoading) {
+      errorNotifiedRef.current = false;
+    }
+  }, [error, isLoading]);
 
   return {
     client,

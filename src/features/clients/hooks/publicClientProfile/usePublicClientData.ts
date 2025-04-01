@@ -17,8 +17,10 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
   const initialLoadCompletedRef = useRef(false);
   const dataFetchedRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const maxRetryAttempts = 2;
+  const retryDelayMs = 1500;
 
-  // Timer pour suivre le temps de chargement
+  // Timer to track loading time
   useEffect(() => {
     if (isLoading && !error) {
       timerRef.current = setInterval(() => {
@@ -36,12 +38,12 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
   }, [isLoading, error]);
 
   const fetchClientData = useCallback(async () => {
-    // Skip if no token or already fetching or already fetched
+    // Skip if no token or already fetching
     if (!token || fetchingRef.current) {
       return;
     }
 
-    // Annuler toute requête précédente
+    // Cancel any previous request
     if (abortControllerRef.current) {
       console.log("Aborting previous request...");
       abortControllerRef.current.abort();
@@ -60,21 +62,21 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
     setError(null);
     setLoadingTime(0);
 
-    // Ajouter un timeout global pour toute la fonction
+    // Global timeout for the entire function
     const timeout = setTimeout(() => {
       if (fetchingRef.current && abortControllerRef.current) {
         console.log("Request timeout reached, aborting...");
-        abortControllerRef.current.abort();
+        abortControllerRef.current.abort("timeout");
         setError("Le délai d'attente a été dépassé. Veuillez réessayer.");
         setIsLoading(false);
         fetchingRef.current = false;
       }
-    }, 15000); // 15 secondes maximum pour la requête complète
+    }, 12000); // 12 seconds maximum for the complete request
 
     try {
       // Check if request was already aborted
       if (signal.aborted) {
-        throw new Error("Opération annulée");
+        throw new Error(`Opération annulée: ${signal.reason || "raison inconnue"}`);
       }
 
       // Step 1: Get client ID from token
@@ -91,7 +93,7 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
       
       // Check if request was aborted during token fetch
       if (signal.aborted) {
-        throw new Error("Opération annulée");
+        throw new Error(`Opération annulée: ${signal.reason || "raison inconnue"}`);
       }
       
       // Step 2: Get client details
@@ -100,7 +102,7 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
       
       // Check if request was aborted during client fetch
       if (signal.aborted) {
-        throw new Error("Opération annulée");
+        throw new Error(`Opération annulée: ${signal.reason || "raison inconnue"}`);
       }
       
       setClient(clientData);
@@ -112,7 +114,7 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
       
       // Check if request was aborted during operations fetch
       if (signal.aborted) {
-        throw new Error("Opération annulée");
+        throw new Error(`Opération annulée: ${signal.reason || "raison inconnue"}`);
       }
       
       setOperations(operationsData);
@@ -122,8 +124,8 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
       initialLoadCompletedRef.current = true;
       setIsLoading(false);
     } catch (err: any) {
-      if (err.name === 'AbortError' || err.message === "Opération annulée") {
-        console.log("Request was cancelled");
+      if (err.name === 'AbortError' || err.message.includes("Opération annulée")) {
+        console.log("Request was cancelled:", err.message);
         setError("La requête a été interrompue. Veuillez réessayer.");
       } else {
         console.error("Error in fetchClientData:", err);
@@ -131,9 +133,21 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
         setOperations([]);
         const errorMessage = err.message || "Erreur lors de la récupération des données client";
         setError(errorMessage);
+        
         // Only show error toast for non-abort errors
-        if (err.name !== 'AbortError' && err.message !== "Opération annulée") {
+        if (err.name !== 'AbortError' && !err.message.includes("Opération annulée")) {
           showErrorToast("Erreur d'accès", { message: errorMessage });
+        }
+        
+        // Auto-retry for network errors but limit attempts
+        if ((err.message.includes("network") || err.message.includes("connexion")) && 
+            attemptCount <= maxRetryAttempts) {
+          console.log(`Auto-retrying in ${retryDelayMs}ms (attempt ${attemptCount}/${maxRetryAttempts})...`);
+          setTimeout(() => {
+            if (!dataFetchedRef.current) {
+              fetchClientData();
+            }
+          }, retryDelayMs);
         }
       }
       setIsLoading(false);
@@ -144,7 +158,7 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
   }, [token, fetchCount]);
 
   const retryFetch = useCallback(() => {
-    console.log("Retrying client data fetch with token:", token);
+    console.log("Manually retrying client data fetch with token:", token);
     dataFetchedRef.current = false; // Reset the data fetched flag to allow a new fetch
     fetchClientData();
   }, [fetchClientData, token]);
@@ -160,7 +174,7 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
       // Clean up any pending requests on unmount
       if (abortControllerRef.current) {
         console.log("Cleaning up - aborting any pending requests");
-        abortControllerRef.current.abort();
+        abortControllerRef.current.abort("component unmounted");
         abortControllerRef.current = null;
       }
     };
