@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { ClientOperation } from "./types";
 
-// Define explicit interfaces for each record type
+// Define explicit interfaces for each record type with all needed properties
 interface DepositRecord {
   id: number;
   amount: number;
@@ -53,87 +53,90 @@ export const fetchClientOperations = async (clientName: string, token: string): 
       .from('qr_access')
       .select('client_id')
       .eq('access_token', token)
-      .single();
+      .maybeSingle();
       
     if (accessResult.error) {
       throw new Error(`Erreur d'authentification: ${accessResult.error.message}`);
     }
     
-    const accessData = accessResult.data as { client_id: number } | null;
-    if (!accessData || !accessData.client_id) {
-      throw new Error("Token d'accès invalide");
+    if (!accessResult.data) {
+      throw new Error("Token d'accès invalide ou expiré");
+    }
+
+    const clientId = accessResult.data.client_id;
+    if (!clientId) {
+      throw new Error("ID client manquant dans le token d'accès");
     }
     
-    // Process deposits with explicit type handling
+    // Process deposits
     let depositsData: DepositRecord[] = [];
-    try {
-      const { data, error } = await supabase
-        .from('deposits')
-        .select('id, amount, created_at, notes, status, client_id, client_name, operation_date')
-        .eq('client_id', accessData.client_id)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      depositsData = data ? data as DepositRecord[] : [];
-    } catch (err) {
-      console.error("Error in deposits query:", err);
-    }
-    
-    // Process withdrawals with explicit type handling
     let withdrawalsData: WithdrawalRecord[] = [];
-    try {
-      const { data, error } = await supabase
-        .from('withdrawals')
-        .select('id, amount, created_at, notes, status, client_name, operation_date')
-        .eq('client_id', accessData.client_id)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      withdrawalsData = data ? data as WithdrawalRecord[] : [];
-    } catch (err) {
-      console.error("Error in withdrawals query:", err);
-    }
-    
-    // Process from-client transfers with explicit type handling
     let fromClientData: TransferRecord[] = [];
-    try {
-      const { data, error } = await supabase
-        .from('transfers')
-        .select('id, amount, created_at, reason, status, from_client, to_client, operation_date')
-        .eq('from_client', clientName)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      fromClientData = data ? data as TransferRecord[] : [];
-    } catch (err) {
-      console.error("Error in from-client transfers query:", err);
-    }
-    
-    // Process to-client transfers with explicit type handling
     let toClientData: TransferRecord[] = [];
-    try {
-      const { data, error } = await supabase
-        .from('transfers')
-        .select('id, amount, created_at, reason, status, from_client, to_client, operation_date')
-        .eq('to_client', clientName)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      toClientData = data ? data as TransferRecord[] : [];
-    } catch (err) {
-      console.error("Error in to-client transfers query:", err);
+
+    // Get deposits
+    const depositsResult = await supabase
+      .from('deposits')
+      .select('id, amount, created_at, notes, status, client_id, client_name, operation_date')
+      .eq('client_id', clientId)
+      .order('created_at', { ascending: false });
+    
+    if (depositsResult.error) {
+      console.error("Error in deposits query:", depositsResult.error);
+    } else {
+      depositsData = (depositsResult.data || []) as DepositRecord[];
     }
     
-    // Combine transfers
+    // Get withdrawals
+    const withdrawalsResult = await supabase
+      .from('withdrawals')
+      .select('id, amount, created_at, notes, status, client_name, operation_date')
+      .eq('client_id', clientId)
+      .order('created_at', { ascending: false });
+    
+    if (withdrawalsResult.error) {
+      console.error("Error in withdrawals query:", withdrawalsResult.error);
+    } else {
+      withdrawalsData = (withdrawalsResult.data || []) as WithdrawalRecord[];
+    }
+    
+    // Get outgoing transfers
+    const fromClientResult = await supabase
+      .from('transfers')
+      .select('id, amount, created_at, reason, status, from_client, to_client, operation_date')
+      .eq('from_client', clientName)
+      .order('created_at', { ascending: false });
+    
+    if (fromClientResult.error) {
+      console.error("Error in from-client transfers query:", fromClientResult.error);
+    } else {
+      fromClientData = (fromClientResult.data || []) as TransferRecord[];
+    }
+    
+    // Get incoming transfers
+    const toClientResult = await supabase
+      .from('transfers')
+      .select('id, amount, created_at, reason, status, from_client, to_client, operation_date')
+      .eq('to_client', clientName)
+      .order('created_at', { ascending: false });
+    
+    if (toClientResult.error) {
+      console.error("Error in to-client transfers query:", toClientResult.error);
+    } else {
+      toClientData = (toClientResult.data || []) as TransferRecord[];
+    }
+    
+    // Explicitly type the transfers array
     const transfers: TransferRecord[] = [...fromClientData, ...toClientData];
     
+    // Map operations to a unified format
     const combinedOperations: ClientOperation[] = [];
     
     // Map deposits to ClientOperation
     depositsData.forEach(deposit => {
       combinedOperations.push({
         id: deposit.id.toString(),
-        type: 'deposit' as const,
+        type: 'deposit',
         date: deposit.created_at,
         amount: deposit.amount,
         description: deposit.notes || 'Dépôt',
@@ -145,7 +148,7 @@ export const fetchClientOperations = async (clientName: string, token: string): 
     withdrawalsData.forEach(withdrawal => {
       combinedOperations.push({
         id: withdrawal.id.toString(),
-        type: 'withdrawal' as const,
+        type: 'withdrawal',
         date: withdrawal.created_at,
         amount: withdrawal.amount,
         description: withdrawal.notes || 'Retrait',
@@ -160,7 +163,7 @@ export const fetchClientOperations = async (clientName: string, token: string): 
       
       combinedOperations.push({
         id: transfer.id.toString(),
-        type: 'transfer' as const,
+        type: 'transfer',
         date: transfer.created_at,
         amount: transfer.amount,
         description: transfer.reason || (isOutgoing ? `Transfert vers ${otherClient}` : `Transfert de ${otherClient}`),
