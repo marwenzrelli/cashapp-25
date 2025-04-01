@@ -69,13 +69,14 @@ export const fetchClientOperations = async (clientName: string, token: string): 
     let depositsData: DepositRecord[] = [];
     let depositsError = null;
     try {
-      const depositsResult = await supabase
+      const { data, error } = await supabase
         .from('deposits')
         .select('id, amount, created_at, notes, status, client_id, client_name, operation_date')
         .eq('client_id', accessData.client_id)
         .order('created_at', { ascending: false });
-      depositsData = (depositsResult.data || []) as DepositRecord[];
-      depositsError = depositsResult.error;
+      
+      depositsData = (data || []) as DepositRecord[];
+      depositsError = error;
     } catch (err) {
       console.error("Error in deposits query:", err);
     }
@@ -84,13 +85,14 @@ export const fetchClientOperations = async (clientName: string, token: string): 
     let withdrawalsData: WithdrawalRecord[] = [];
     let withdrawalsError = null;
     try {
-      const withdrawalsResult = await supabase
+      const { data, error } = await supabase
         .from('withdrawals')
         .select('id, amount, created_at, notes, status, client_name, operation_date')
         .eq('client_id', accessData.client_id)
         .order('created_at', { ascending: false });
-      withdrawalsData = (withdrawalsResult.data || []) as WithdrawalRecord[];
-      withdrawalsError = withdrawalsResult.error;
+      
+      withdrawalsData = (data || []) as WithdrawalRecord[];
+      withdrawalsError = error;
     } catch (err) {
       console.error("Error in withdrawals query:", err);
     }
@@ -99,13 +101,14 @@ export const fetchClientOperations = async (clientName: string, token: string): 
     let fromClientData: TransferRecord[] = [];
     let fromClientError = null;
     try {
-      const fromClientResult = await supabase
+      const { data, error } = await supabase
         .from('transfers')
         .select('id, amount, created_at, reason, status, from_client, to_client, operation_date')
         .eq('from_client', clientName)
         .order('created_at', { ascending: false });
-      fromClientData = (fromClientResult.data || []) as TransferRecord[];
-      fromClientError = fromClientResult.error;
+      
+      fromClientData = (data || []) as TransferRecord[];
+      fromClientError = error;
     } catch (err) {
       console.error("Error in from-client transfers query:", err);
     }
@@ -114,13 +117,14 @@ export const fetchClientOperations = async (clientName: string, token: string): 
     let toClientData: TransferRecord[] = [];
     let toClientError = null;
     try {
-      const toClientResult = await supabase
+      const { data, error } = await supabase
         .from('transfers')
         .select('id, amount, created_at, reason, status, from_client, to_client, operation_date')
         .eq('to_client', clientName)
         .order('created_at', { ascending: false });
-      toClientData = (toClientResult.data || []) as TransferRecord[];
-      toClientError = toClientResult.error;
+      
+      toClientData = (data || []) as TransferRecord[];
+      toClientError = error;
     } catch (err) {
       console.error("Error in to-client transfers query:", err);
     }
