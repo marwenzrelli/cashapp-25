@@ -1,4 +1,3 @@
-
 import { useEffect, useCallback, useRef } from "react";
 import { usePublicClientData } from "./publicClientProfile/usePublicClientData";
 import { useRealtimeSubscriptions } from "./publicClientProfile/useRealtimeSubscriptions";

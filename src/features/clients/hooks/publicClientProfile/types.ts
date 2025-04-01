@@ -1,6 +1,4 @@
 
-import { Client } from "@/features/clients/types";
-
 export interface ClientOperation {
   id: string;
   type: "deposit" | "withdrawal" | "transfer";
@@ -18,6 +16,7 @@ export interface PublicClientData {
   isLoading: boolean;
   error: string | null;
   loadingTime: number;
+  isConnected: boolean; // Added this property
   fetchClientData: () => Promise<void>;
   retryFetch: () => void;
 }
