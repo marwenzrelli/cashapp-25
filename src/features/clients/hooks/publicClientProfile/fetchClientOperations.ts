@@ -68,8 +68,8 @@ export const fetchClientOperations = async (
     };
     
     // Fonction pour récupérer les dépôts avec réessai
-    const fetchDeposits = () => {
-      return supabase
+    const fetchDeposits = async () => {
+      return await supabase
         .from('deposits')
         .select('*')
         .eq('client_name', clientName)
@@ -77,8 +77,8 @@ export const fetchClientOperations = async (
     };
     
     // Fonction pour récupérer les retraits avec réessai
-    const fetchWithdrawals = () => {
-      return supabase
+    const fetchWithdrawals = async () => {
+      return await supabase
         .from('withdrawals')
         .select('*')
         .eq('client_name', clientName)
