@@ -69,7 +69,7 @@ export const fetchClientOperations = async (clientName: string, token: string): 
       throw new Error("ID client manquant dans le token d'accès");
     }
     
-    // Process deposits
+    // Initialize empty arrays with explicit types
     const depositsData: DepositRecord[] = [];
     const withdrawalsData: WithdrawalRecord[] = [];
     const fromClientData: TransferRecord[] = [];
@@ -84,8 +84,11 @@ export const fetchClientOperations = async (clientName: string, token: string): 
     
     if (depositsResult.error) {
       console.error("Error in deposits query:", depositsResult.error);
-    } else {
-      depositsData.push(...(depositsResult.data as DepositRecord[]));
+    } else if (depositsResult.data) {
+      // Manually add each item instead of using spread
+      for (const deposit of depositsResult.data as DepositRecord[]) {
+        depositsData.push(deposit);
+      }
     }
     
     // Get withdrawals
@@ -97,8 +100,11 @@ export const fetchClientOperations = async (clientName: string, token: string): 
     
     if (withdrawalsResult.error) {
       console.error("Error in withdrawals query:", withdrawalsResult.error);
-    } else {
-      withdrawalsData.push(...(withdrawalsResult.data as WithdrawalRecord[]));
+    } else if (withdrawalsResult.data) {
+      // Manually add each item instead of using spread
+      for (const withdrawal of withdrawalsResult.data as WithdrawalRecord[]) {
+        withdrawalsData.push(withdrawal);
+      }
     }
     
     // Get outgoing transfers
@@ -110,8 +116,11 @@ export const fetchClientOperations = async (clientName: string, token: string): 
     
     if (fromClientResult.error) {
       console.error("Error in from-client transfers query:", fromClientResult.error);
-    } else {
-      fromClientData.push(...(fromClientResult.data as TransferRecord[]));
+    } else if (fromClientResult.data) {
+      // Manually add each item instead of using spread
+      for (const transfer of fromClientResult.data as TransferRecord[]) {
+        fromClientData.push(transfer);
+      }
     }
     
     // Get incoming transfers
@@ -123,20 +132,29 @@ export const fetchClientOperations = async (clientName: string, token: string): 
     
     if (toClientResult.error) {
       console.error("Error in to-client transfers query:", toClientResult.error);
-    } else {
-      toClientData.push(...(toClientResult.data as TransferRecord[]));
+    } else if (toClientResult.data) {
+      // Manually add each item instead of using spread
+      for (const transfer of toClientResult.data as TransferRecord[]) {
+        toClientData.push(transfer);
+      }
     }
     
-    // Create a simple array for transfers instead of using spread operator
+    // Create a new transfers array by manually adding items
     const transfers: TransferRecord[] = [];
-    transfers.push(...fromClientData);
-    transfers.push(...toClientData);
+    // Add from-client transfers
+    for (const transfer of fromClientData) {
+      transfers.push(transfer);
+    }
+    // Add to-client transfers  
+    for (const transfer of toClientData) {
+      transfers.push(transfer);
+    }
     
     // Map operations to a unified format
     const combinedOperations: ClientOperation[] = [];
     
     // Map deposits to ClientOperation
-    depositsData.forEach(deposit => {
+    for (const deposit of depositsData) {
       combinedOperations.push({
         id: deposit.id.toString(),
         type: 'deposit',
@@ -145,10 +163,10 @@ export const fetchClientOperations = async (clientName: string, token: string): 
         description: deposit.notes || 'Dépôt',
         status: deposit.status
       });
-    });
+    }
     
     // Map withdrawals to ClientOperation
-    withdrawalsData.forEach(withdrawal => {
+    for (const withdrawal of withdrawalsData) {
       combinedOperations.push({
         id: withdrawal.id.toString(),
         type: 'withdrawal',
@@ -157,10 +175,10 @@ export const fetchClientOperations = async (clientName: string, token: string): 
         description: withdrawal.notes || 'Retrait',
         status: withdrawal.status
       });
-    });
+    }
     
     // Map transfers to ClientOperation
-    transfers.forEach(transfer => {
+    for (const transfer of transfers) {
       const isOutgoing = transfer.from_client === clientName;
       const otherClient = isOutgoing ? transfer.to_client : transfer.from_client;
       
@@ -174,7 +192,7 @@ export const fetchClientOperations = async (clientName: string, token: string): 
         fromClient: isOutgoing ? clientName : otherClient,
         toClient: isOutgoing ? otherClient : clientName
       });
-    });
+    }
     
     // Sort all operations by date (newest first)
     combinedOperations.sort((a, b) => {
