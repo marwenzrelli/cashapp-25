@@ -59,15 +59,13 @@ export const fetchClientOperations = async (clientName: string, token: string): 
       throw new Error(`Erreur d'authentification: ${accessResult.error.message}`);
     }
     
-    const accessData = accessResult.data;
+    const accessData = accessResult.data as { client_id: number } | null;
     if (!accessData || !accessData.client_id) {
       throw new Error("Token d'accès invalide");
     }
     
-    // Avoid complex Supabase type inference by separating queries and responses
-    // Deposits query
+    // Process deposits with explicit type handling
     let depositsData: DepositRecord[] = [];
-    let depositsError = null;
     try {
       const { data, error } = await supabase
         .from('deposits')
@@ -75,15 +73,14 @@ export const fetchClientOperations = async (clientName: string, token: string): 
         .eq('client_id', accessData.client_id)
         .order('created_at', { ascending: false });
       
+      if (error) throw error;
       depositsData = (data || []) as DepositRecord[];
-      depositsError = error;
     } catch (err) {
       console.error("Error in deposits query:", err);
     }
     
-    // Withdrawals query
+    // Process withdrawals with explicit type handling
     let withdrawalsData: WithdrawalRecord[] = [];
-    let withdrawalsError = null;
     try {
       const { data, error } = await supabase
         .from('withdrawals')
@@ -91,15 +88,14 @@ export const fetchClientOperations = async (clientName: string, token: string): 
         .eq('client_id', accessData.client_id)
         .order('created_at', { ascending: false });
       
+      if (error) throw error;
       withdrawalsData = (data || []) as WithdrawalRecord[];
-      withdrawalsError = error;
     } catch (err) {
       console.error("Error in withdrawals query:", err);
     }
     
-    // From-client transfers query
+    // Process from-client transfers with explicit type handling
     let fromClientData: TransferRecord[] = [];
-    let fromClientError = null;
     try {
       const { data, error } = await supabase
         .from('transfers')
@@ -107,15 +103,14 @@ export const fetchClientOperations = async (clientName: string, token: string): 
         .eq('from_client', clientName)
         .order('created_at', { ascending: false });
       
+      if (error) throw error;
       fromClientData = (data || []) as TransferRecord[];
-      fromClientError = error;
     } catch (err) {
       console.error("Error in from-client transfers query:", err);
     }
     
-    // To-client transfers query
+    // Process to-client transfers with explicit type handling
     let toClientData: TransferRecord[] = [];
-    let toClientError = null;
     try {
       const { data, error } = await supabase
         .from('transfers')
@@ -123,25 +118,19 @@ export const fetchClientOperations = async (clientName: string, token: string): 
         .eq('to_client', clientName)
         .order('created_at', { ascending: false });
       
+      if (error) throw error;
       toClientData = (data || []) as TransferRecord[];
-      toClientError = error;
     } catch (err) {
       console.error("Error in to-client transfers query:", err);
     }
     
-    // Merge transfer results
+    // Combine transfers
     const transfers = [...fromClientData, ...toClientData];
-    
-    // Log any errors
-    if (depositsError) console.error("Error fetching deposits:", depositsError);
-    if (withdrawalsError) console.error("Error fetching withdrawals:", withdrawalsError);
-    if (fromClientError) console.error("Error fetching from_client transfers:", fromClientError);
-    if (toClientError) console.error("Error fetching to_client transfers:", toClientError);
     
     const combinedOperations: ClientOperation[] = [];
     
-    // Process deposits
-    for (const deposit of depositsData) {
+    // Map deposits to ClientOperation
+    depositsData.forEach(deposit => {
       combinedOperations.push({
         id: deposit.id.toString(),
         type: 'deposit' as const,
@@ -150,10 +139,10 @@ export const fetchClientOperations = async (clientName: string, token: string): 
         description: deposit.notes || 'Dépôt',
         status: deposit.status
       });
-    }
+    });
     
-    // Process withdrawals
-    for (const withdrawal of withdrawalsData) {
+    // Map withdrawals to ClientOperation
+    withdrawalsData.forEach(withdrawal => {
       combinedOperations.push({
         id: withdrawal.id.toString(),
         type: 'withdrawal' as const,
@@ -162,11 +151,10 @@ export const fetchClientOperations = async (clientName: string, token: string): 
         description: withdrawal.notes || 'Retrait',
         status: withdrawal.status
       });
-    }
+    });
     
-    // Process transfers
-    for (const transfer of transfers) {
-      // Determine if this is an outgoing transfer for the current client
+    // Map transfers to ClientOperation
+    transfers.forEach(transfer => {
       const isOutgoing = transfer.from_client === clientName;
       const otherClient = isOutgoing ? transfer.to_client : transfer.from_client;
       
@@ -180,7 +168,7 @@ export const fetchClientOperations = async (clientName: string, token: string): 
         fromClient: isOutgoing ? clientName : otherClient,
         toClient: isOutgoing ? otherClient : clientName
       });
-    }
+    });
     
     // Sort all operations by date (newest first)
     combinedOperations.sort((a, b) => {
