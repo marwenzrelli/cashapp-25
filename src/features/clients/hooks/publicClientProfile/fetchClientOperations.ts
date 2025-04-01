@@ -31,87 +31,82 @@ export const fetchClientOperations = async (clientName: string, token: string): 
       throw new Error("Token d'accès invalide");
     }
     
-    // Fetch deposits with minimal fields to avoid type complexity
-    const depositsResult = await supabase
+    // Use type annotations and simpler query approach
+    
+    // Fetch deposits
+    const { data: deposits, error: depositsError } = await supabase
       .from('deposits')
       .select('id, amount, created_at, notes, status, client_id, client_name, operation_date')
       .eq('client_id', accessData.client_id)
       .order('created_at', { ascending: false });
       
-    // Fetch withdrawals with minimal fields to avoid type complexity
-    const withdrawalsResult = await supabase
+    // Fetch withdrawals  
+    const { data: withdrawals, error: withdrawalsError } = await supabase
       .from('withdrawals')
       .select('id, amount, created_at, notes, status, client_name, operation_date')
       .eq('client_id', accessData.client_id)
       .order('created_at', { ascending: false });
       
-    // Fetch transfers with minimal fields to avoid type complexity
-    const transfersResult = await supabase
+    // Fetch transfers
+    const { data: transfers, error: transfersError } = await supabase
       .from('transfers')
       .select('id, amount, created_at, reason, status, from_client, to_client, operation_date')
       .or(`from_client.eq.${clientName},to_client.eq.${clientName}`)
       .order('created_at', { ascending: false });
     
-    // Handle results
-    const deposits = depositsResult.data || [];
-    const withdrawals = withdrawalsResult.data || [];
-    const transfers = transfersResult.data || [];
-    
     // Log any errors
-    if (depositsResult.error) console.error("Error fetching deposits:", depositsResult.error);
-    if (withdrawalsResult.error) console.error("Error fetching withdrawals:", withdrawalsResult.error);
-    if (transfersResult.error) console.error("Error fetching transfers:", transfersResult.error);
+    if (depositsError) console.error("Error fetching deposits:", depositsError);
+    if (withdrawalsError) console.error("Error fetching withdrawals:", withdrawalsError);
+    if (transfersError) console.error("Error fetching transfers:", transfersError);
     
     const combinedOperations: ClientOperation[] = [];
     
     // Format deposits
-    if (deposits) {
-      combinedOperations.push(
-        ...deposits.map(deposit => ({
+    if (deposits && deposits.length > 0) {
+      deposits.forEach(deposit => {
+        combinedOperations.push({
           id: deposit.id.toString(),
           type: 'deposit' as const,
           date: deposit.created_at,
           amount: deposit.amount,
-          description: deposit.notes || 'Dépôt', // Using notes field instead of description
+          description: deposit.notes || 'Dépôt',
           status: deposit.status
-        }))
-      );
+        });
+      });
     }
     
     // Format withdrawals
-    if (withdrawals) {
-      combinedOperations.push(
-        ...withdrawals.map(withdrawal => ({
+    if (withdrawals && withdrawals.length > 0) {
+      withdrawals.forEach(withdrawal => {
+        combinedOperations.push({
           id: withdrawal.id.toString(),
           type: 'withdrawal' as const,
           date: withdrawal.created_at,
           amount: withdrawal.amount,
-          description: withdrawal.notes || 'Retrait', // Using notes field instead of description
+          description: withdrawal.notes || 'Retrait',
           status: withdrawal.status
-        }))
-      );
+        });
+      });
     }
     
-    // Format transfers - simplified to avoid relation issues
-    if (transfers) {
-      combinedOperations.push(
-        ...transfers.map(transfer => {
-          // Determine if this is an outgoing transfer for the current client
-          const isOutgoing = transfer.from_client === clientName;
-          const otherClient = isOutgoing ? transfer.to_client : transfer.from_client;
-              
-          return {
-            id: transfer.id.toString(),
-            type: 'transfer' as const,
-            date: transfer.created_at,
-            amount: transfer.amount,
-            description: transfer.reason || (isOutgoing ? `Transfert vers ${otherClient}` : `Transfert de ${otherClient}`),
-            status: transfer.status,
-            fromClient: isOutgoing ? clientName : otherClient,
-            toClient: isOutgoing ? otherClient : clientName
-          };
-        })
-      );
+    // Format transfers
+    if (transfers && transfers.length > 0) {
+      transfers.forEach(transfer => {
+        // Determine if this is an outgoing transfer for the current client
+        const isOutgoing = transfer.from_client === clientName;
+        const otherClient = isOutgoing ? transfer.to_client : transfer.from_client;
+        
+        combinedOperations.push({
+          id: transfer.id.toString(),
+          type: 'transfer' as const,
+          date: transfer.created_at,
+          amount: transfer.amount,
+          description: transfer.reason || (isOutgoing ? `Transfert vers ${otherClient}` : `Transfert de ${otherClient}`),
+          status: transfer.status,
+          fromClient: isOutgoing ? clientName : otherClient,
+          toClient: isOutgoing ? otherClient : clientName
+        });
+      });
     }
     
     // Sort all operations by date (newest first)
