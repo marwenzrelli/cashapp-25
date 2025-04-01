@@ -85,8 +85,9 @@ export const fetchClientOperations = async (clientName: string, token: string): 
     if (depositsResult.error) {
       console.error("Error in deposits query:", depositsResult.error);
     } else if (depositsResult.data) {
-      // Manually add each item instead of using spread
-      for (const deposit of depositsResult.data as DepositRecord[]) {
+      // Type cast and add each item individually
+      for (let i = 0; i < depositsResult.data.length; i++) {
+        const deposit = depositsResult.data[i] as DepositRecord;
         depositsData.push(deposit);
       }
     }
@@ -101,8 +102,9 @@ export const fetchClientOperations = async (clientName: string, token: string): 
     if (withdrawalsResult.error) {
       console.error("Error in withdrawals query:", withdrawalsResult.error);
     } else if (withdrawalsResult.data) {
-      // Manually add each item instead of using spread
-      for (const withdrawal of withdrawalsResult.data as WithdrawalRecord[]) {
+      // Type cast and add each item individually
+      for (let i = 0; i < withdrawalsResult.data.length; i++) {
+        const withdrawal = withdrawalsResult.data[i] as WithdrawalRecord;
         withdrawalsData.push(withdrawal);
       }
     }
@@ -117,8 +119,9 @@ export const fetchClientOperations = async (clientName: string, token: string): 
     if (fromClientResult.error) {
       console.error("Error in from-client transfers query:", fromClientResult.error);
     } else if (fromClientResult.data) {
-      // Manually add each item instead of using spread
-      for (const transfer of fromClientResult.data as TransferRecord[]) {
+      // Type cast and add each item individually
+      for (let i = 0; i < fromClientResult.data.length; i++) {
+        const transfer = fromClientResult.data[i] as TransferRecord;
         fromClientData.push(transfer);
       }
     }
@@ -133,28 +136,30 @@ export const fetchClientOperations = async (clientName: string, token: string): 
     if (toClientResult.error) {
       console.error("Error in to-client transfers query:", toClientResult.error);
     } else if (toClientResult.data) {
-      // Manually add each item instead of using spread
-      for (const transfer of toClientResult.data as TransferRecord[]) {
+      // Type cast and add each item individually
+      for (let i = 0; i < toClientResult.data.length; i++) {
+        const transfer = toClientResult.data[i] as TransferRecord;
         toClientData.push(transfer);
       }
     }
     
-    // Create a new transfers array by manually adding items
+    // Create a new transfers array by concatenating without spread operators
     const transfers: TransferRecord[] = [];
     // Add from-client transfers
-    for (const transfer of fromClientData) {
-      transfers.push(transfer);
+    for (let i = 0; i < fromClientData.length; i++) {
+      transfers.push(fromClientData[i]);
     }
     // Add to-client transfers  
-    for (const transfer of toClientData) {
-      transfers.push(transfer);
+    for (let i = 0; i < toClientData.length; i++) {
+      transfers.push(toClientData[i]);
     }
     
     // Map operations to a unified format
     const combinedOperations: ClientOperation[] = [];
     
     // Map deposits to ClientOperation
-    for (const deposit of depositsData) {
+    for (let i = 0; i < depositsData.length; i++) {
+      const deposit = depositsData[i];
       combinedOperations.push({
         id: deposit.id.toString(),
         type: 'deposit',
@@ -166,7 +171,8 @@ export const fetchClientOperations = async (clientName: string, token: string): 
     }
     
     // Map withdrawals to ClientOperation
-    for (const withdrawal of withdrawalsData) {
+    for (let i = 0; i < withdrawalsData.length; i++) {
+      const withdrawal = withdrawalsData[i];
       combinedOperations.push({
         id: withdrawal.id.toString(),
         type: 'withdrawal',
@@ -178,7 +184,8 @@ export const fetchClientOperations = async (clientName: string, token: string): 
     }
     
     // Map transfers to ClientOperation
-    for (const transfer of transfers) {
+    for (let i = 0; i < transfers.length; i++) {
+      const transfer = transfers[i];
       const isOutgoing = transfer.from_client === clientName;
       const otherClient = isOutgoing ? transfer.to_client : transfer.from_client;
       
