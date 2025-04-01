@@ -1,4 +1,6 @@
 
+import { Client } from "@/features/clients/types";
+
 export interface ClientOperation {
   id: string;
   type: "deposit" | "withdrawal" | "transfer";
