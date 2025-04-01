@@ -21,6 +21,7 @@ interface WithdrawalRecord {
   notes: string | null;
   status: string;
   client_name: string;
+  client_id?: number; // Optional as it might not be present in all records
   operation_date: string | null;
 }
 
@@ -84,7 +85,7 @@ export const fetchClientOperations = async (clientName: string, token: string): 
     if (depositsResult.error) {
       console.error("Error in deposits query:", depositsResult.error);
     } else {
-      depositsData = (depositsResult.data || []) as DepositRecord[];
+      depositsData = depositsResult.data as DepositRecord[];
     }
     
     // Get withdrawals
@@ -97,7 +98,7 @@ export const fetchClientOperations = async (clientName: string, token: string): 
     if (withdrawalsResult.error) {
       console.error("Error in withdrawals query:", withdrawalsResult.error);
     } else {
-      withdrawalsData = (withdrawalsResult.data || []) as WithdrawalRecord[];
+      withdrawalsData = withdrawalsResult.data as WithdrawalRecord[];
     }
     
     // Get outgoing transfers
@@ -110,7 +111,7 @@ export const fetchClientOperations = async (clientName: string, token: string): 
     if (fromClientResult.error) {
       console.error("Error in from-client transfers query:", fromClientResult.error);
     } else {
-      fromClientData = (fromClientResult.data || []) as TransferRecord[];
+      fromClientData = fromClientResult.data as TransferRecord[];
     }
     
     // Get incoming transfers
@@ -123,7 +124,7 @@ export const fetchClientOperations = async (clientName: string, token: string): 
     if (toClientResult.error) {
       console.error("Error in to-client transfers query:", toClientResult.error);
     } else {
-      toClientData = (toClientResult.data || []) as TransferRecord[];
+      toClientData = toClientResult.data as TransferRecord[];
     }
     
     // Explicitly type the transfers array
