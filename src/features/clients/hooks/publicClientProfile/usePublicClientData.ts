@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+
+import { useEffect, useState, useRef } from "react";
 import { PublicClientData } from "./types";
 import { useFetchClientData } from "./useFetchClientData";
 import { useLoadingTimer } from "./useLoadingTimer";
