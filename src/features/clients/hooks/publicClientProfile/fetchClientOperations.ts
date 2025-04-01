@@ -9,28 +9,47 @@ export const fetchClientOperations = async (
   try {
     console.log(`Fetching operations for client: ${clientName}`);
     
-    // Récupérer les dépôts du client
-    const { data: deposits, error: depositsError } = await supabase
+    // Check our network connectivity
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      throw new Error("Vous êtes hors ligne. Veuillez vérifier votre connexion internet.");
+    }
+    
+    // Récupérer les dépôts du client avec un délai d'attente plus long
+    const depositsPromise = supabase
       .from('deposits')
       .select('*')
       .eq('client_name', clientName)
       .order('created_at', { ascending: false });
+
+    // Récupérer les retraits du client
+    const withdrawalsPromise = supabase
+      .from('withdrawals')
+      .select('*')
+      .eq('client_name', clientName)
+      .order('created_at', { ascending: false });
+      
+    // Run both queries in parallel for better performance
+    const [depositsResult, withdrawalsResult] = await Promise.all([
+      depositsPromise,
+      withdrawalsPromise
+    ]);
+    
+    const { data: deposits, error: depositsError } = depositsResult;
+    const { data: withdrawals, error: withdrawalsError } = withdrawalsResult;
 
     if (depositsError) {
       console.error("Error fetching deposits:", depositsError);
       throw new Error(`Erreur lors de la récupération des dépôts: ${depositsError.message}`);
     }
 
-    // Récupérer les retraits du client
-    const { data: withdrawals, error: withdrawalsError } = await supabase
-      .from('withdrawals')
-      .select('*')
-      .eq('client_name', clientName)
-      .order('created_at', { ascending: false });
-
     if (withdrawalsError) {
       console.error("Error fetching withdrawals:", withdrawalsError);
       throw new Error(`Erreur lors de la récupération des retraits: ${withdrawalsError.message}`);
+    }
+
+    // Check for null data
+    if (!deposits || !withdrawals) {
+      throw new Error("Données des opérations non disponibles");
     }
 
     // Combiner et formater les opérations

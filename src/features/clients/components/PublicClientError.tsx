@@ -1,8 +1,8 @@
 
 import { Button } from "@/components/ui/button";
-import { AlertCircle, RefreshCcw, Home, Network } from "lucide-react";
+import { AlertCircle, RefreshCcw, Home, Network, Wifi, WifiOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 interface PublicClientErrorProps {
@@ -12,6 +12,26 @@ interface PublicClientErrorProps {
 
 export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) => {
   const navigate = useNavigate();
+  const [isOnline, setIsOnline] = useState(true);
+  
+  // Check network status on mount and when it changes
+  useEffect(() => {
+    const checkOnlineStatus = () => {
+      setIsOnline(navigator.onLine);
+    };
+    
+    // Initial check
+    checkOnlineStatus();
+    
+    // Listen for online/offline events
+    window.addEventListener('online', checkOnlineStatus);
+    window.addEventListener('offline', checkOnlineStatus);
+    
+    return () => {
+      window.removeEventListener('online', checkOnlineStatus);
+      window.removeEventListener('offline', checkOnlineStatus);
+    };
+  }, []);
   
   // Show a toast when an error occurs
   useEffect(() => {
@@ -43,7 +63,9 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
     error.includes("interrompue") || 
     error.includes("délai d'attente") ||
     error.includes("connexion") ||
-    error.includes("timeout")
+    error.includes("timeout") ||
+    error.includes("réseau") ||
+    !isOnline
   );
   
   // Check if it's an access error
@@ -60,7 +82,8 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
         <div className="flex justify-center">
           <div className="h-16 w-16 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center">
             {isConnectionError ? (
-              <Network className="h-8 w-8 text-red-600 dark:text-red-500" />
+              !isOnline ? <WifiOff className="h-8 w-8 text-red-600 dark:text-red-500" /> : 
+                         <Network className="h-8 w-8 text-red-600 dark:text-red-500" />
             ) : (
               <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-500" />
             )}
@@ -84,9 +107,19 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
         )}
         
         {isConnectionError && (
-          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            Problème de connexion au serveur. Veuillez vérifier votre connexion internet et réessayer.
-          </p>
+          <>
+            <div className="mt-2 flex items-center justify-center">
+              <div className={`h-3 w-3 rounded-full mr-2 ${isOnline ? 'bg-green-500' : 'bg-red-500'}`}></div>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {isOnline ? "Vous êtes connecté à Internet" : "Vous êtes actuellement hors ligne"}
+              </p>
+            </div>
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+              {isOnline 
+                ? "Problème de connexion au serveur. Le serveur ne répond pas ou la requête a été interrompue." 
+                : "Veuillez vérifier votre connexion internet et réessayer quand vous serez connecté."}
+            </p>
+          </>
         )}
 
         {isAccessError && (
@@ -101,6 +134,7 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
               onClick={handleRetry}
               className="w-full gap-2"
               variant={isConnectionError ? "default" : "outline"}
+              disabled={!isOnline}
             >
               <RefreshCcw className="h-4 w-4" />
               Réessayer

@@ -12,6 +12,8 @@ export const usePublicClientProfile = (token: string | undefined) => {
   const verificationCompletedRef = useRef(false);
   const operationsCheckedRef = useRef(false);
   const errorNotifiedRef = useRef(false);
+  const connectionErrorRef = useRef(0);
+  const maxConnectionRetries = 3;
   
   const { 
     client, 
@@ -36,6 +38,56 @@ export const usePublicClientProfile = (token: string | undefined) => {
 
   // Pass clientId and refreshData to useRealtimeSubscriptions
   useRealtimeSubscriptions(clientId, refreshData);
+  
+  // Network error retry logic
+  useEffect(() => {
+    // Handle network connectivity changes
+    const handleOnline = () => {
+      console.log("Network connection restored, retrying fetch");
+      connectionErrorRef.current = 0;
+      if (error && (error.includes("connexion") || error.includes("interrompue") || error.includes("réseau"))) {
+        toast.info("Connexion internet rétablie", {
+          description: "Tentative de récupération des données..."
+        });
+        setTimeout(() => {
+          retryFetch();
+        }, 1000);
+      }
+    };
+    
+    window.addEventListener('online', handleOnline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+    };
+  }, [error, retryFetch]);
+  
+  // Auto retry for specific types of errors
+  useEffect(() => {
+    if (error && !isLoading && connectionErrorRef.current < maxConnectionRetries) {
+      // Only auto-retry for specific connection errors
+      if (error.includes("interrompue") || error.includes("réseau") || error.includes("connexion")) {
+        connectionErrorRef.current++;
+        const retryDelay = 3000 * connectionErrorRef.current; // Increasing delay with each retry
+        
+        console.log(`Auto-retrying connection error in ${retryDelay}ms (attempt ${connectionErrorRef.current}/${maxConnectionRetries})`);
+        
+        const timer = setTimeout(() => {
+          // Check if we're online before attempting retry
+          if (navigator.onLine !== false) {
+            toast.info("Tentative de reconnexion", {
+              description: `Tentative ${connectionErrorRef.current}/${maxConnectionRetries}`
+            });
+            retryFetch();
+          } else {
+            console.log("Skipping auto-retry because device is offline");
+          }
+        }, retryDelay);
+        
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [error, isLoading, retryFetch]);
   
   // Verify operations if we have client but no operations - run only once
   useEffect(() => {

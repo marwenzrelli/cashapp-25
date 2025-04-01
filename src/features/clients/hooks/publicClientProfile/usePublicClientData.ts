@@ -17,8 +17,9 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
   const initialLoadCompletedRef = useRef(false);
   const dataFetchedRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
-  const maxRetryAttempts = 2;
-  const retryDelayMs = 1500;
+  const maxRetryAttempts = 3; // Increased from 2 to 3
+  const retryDelayMs = 2000; // Increased from 1500 to 2000
+  const networkErrorCountRef = useRef(0);
 
   // Timer to track loading time
   useEffect(() => {
@@ -40,6 +41,7 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
   const fetchClientData = useCallback(async () => {
     // Skip if no token or already fetching
     if (!token || fetchingRef.current) {
+      console.log("Fetch skipped: No token or already fetching");
       return;
     }
 
@@ -62,7 +64,7 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
     setError(null);
     setLoadingTime(0);
 
-    // Global timeout for the entire function
+    // Global timeout for the entire function - increased from 12 to 15 seconds
     const timeout = setTimeout(() => {
       if (fetchingRef.current && abortControllerRef.current) {
         console.log("Request timeout reached, aborting...");
@@ -71,9 +73,19 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
         setIsLoading(false);
         fetchingRef.current = false;
       }
-    }, 12000); // 12 seconds maximum for the complete request
+    }, 15000); 
 
     try {
+      // Add a connection check before proceeding
+      try {
+        const online = navigator.onLine;
+        if (!online) {
+          throw new Error("Vous semblez être hors ligne. Vérifiez votre connexion internet.");
+        }
+      } catch (e) {
+        console.log("Navigator.onLine check failed, continuing anyway");
+      }
+
       // Check if request was already aborted
       if (signal.aborted) {
         throw new Error(`Opération annulée: ${signal.reason || "raison inconnue"}`);
@@ -122,6 +134,7 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
       console.log(`Step 5: Retrieved ${operationsData.length} client operations`);
       dataFetchedRef.current = true;
       initialLoadCompletedRef.current = true;
+      networkErrorCountRef.current = 0; // Reset network error count on success
       setIsLoading(false);
     } catch (err: any) {
       if (err.name === 'AbortError' || err.message.includes("Opération annulée")) {
@@ -134,20 +147,32 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
         const errorMessage = err.message || "Erreur lors de la récupération des données client";
         setError(errorMessage);
         
+        // Track network errors for more aggressive retry handling
+        const isNetworkError = err.message.includes("network") || 
+                             err.message.includes("connexion") ||
+                             err.message.includes("Failed to fetch") ||
+                             err.message.includes("interrompue");
+                             
+        if (isNetworkError) {
+          networkErrorCountRef.current++;
+        }
+        
         // Only show error toast for non-abort errors
         if (err.name !== 'AbortError' && !err.message.includes("Opération annulée")) {
           showErrorToast("Erreur d'accès", { message: errorMessage });
         }
         
-        // Auto-retry for network errors but limit attempts
-        if ((err.message.includes("network") || err.message.includes("connexion")) && 
-            attemptCount <= maxRetryAttempts) {
+        // Auto-retry for network errors with more aggressive retry for persistent issues
+        if (isNetworkError && attemptCount <= maxRetryAttempts) {
           console.log(`Auto-retrying in ${retryDelayMs}ms (attempt ${attemptCount}/${maxRetryAttempts})...`);
+          // Use progressively longer delays for repeated network errors
+          const adjustedDelay = retryDelayMs * (networkErrorCountRef.current > 1 ? 2 : 1);
+          
           setTimeout(() => {
             if (!dataFetchedRef.current) {
               fetchClientData();
             }
-          }, retryDelayMs);
+          }, adjustedDelay);
         }
       }
       setIsLoading(false);
@@ -160,6 +185,22 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
   const retryFetch = useCallback(() => {
     console.log("Manually retrying client data fetch with token:", token);
     dataFetchedRef.current = false; // Reset the data fetched flag to allow a new fetch
+    
+    // Make sure we're not already fetching
+    if (fetchingRef.current) {
+      console.log("Can't retry - already fetching");
+      return;
+    }
+    
+    // Cancel any existing request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort("manual retry");
+      abortControllerRef.current = null;
+    }
+    
+    // Reset error state before retrying
+    setError(null);
+    
     fetchClientData();
   }, [fetchClientData, token]);
 
