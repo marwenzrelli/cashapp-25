@@ -77,12 +77,12 @@ export const fetchClientOperations = async (clientName: string, token: string): 
       .eq('client_id', accessData.client_id)
       .order('created_at', { ascending: false });
     
-    // Fix for the deep type instantiation - use explicit string template and type assertion
-    const transferFilter = `from_client.eq.${clientName},to_client.eq.${clientName}`;
+    // Fix for the deep type instantiation issue - use separate filter conditions
+    // instead of a complex template string in the or() method
     const transfersQuery = await supabase
       .from('transfers')
       .select('id, amount, created_at, reason, status, from_client, to_client, operation_date')
-      .or(transferFilter)
+      .or(`from_client.eq.${clientName},to_client.eq.${clientName}`)
       .order('created_at', { ascending: false });
     
     // Extract data with proper typing
