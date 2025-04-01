@@ -108,10 +108,7 @@ const Clients = () => {
       const resetTimer = setTimeout(() => {
         setInitialLoading(false);
         setLoadingTimeout(false);
-        // Garde l'indicateur de chargement un peu plus longtemps pour une transition plus douce
-        setTimeout(() => {
-          setLoadingIndicatorShown(false);
-        }, 300);
+        setLoadingIndicatorShown(false);
       }, 150);
       
       return () => clearTimeout(resetTimer);
@@ -162,7 +159,7 @@ const Clients = () => {
         <ClientsPageContent
           clients={clients}
           filteredClients={filteredClients}
-          loading={loading && loadingIndicatorShown}
+          loading={loading}
           error={error}
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}

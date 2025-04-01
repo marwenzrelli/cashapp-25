@@ -91,10 +91,8 @@ export const ClientsPageContent = ({
         clearTimeout(loadingTimerRef.current);
         loadingTimerRef.current = null;
       }
-      // Ajouter un léger délai avant de cacher l'indicateur pour une transition plus douce
-      setTimeout(() => {
-        setShowLoadingIndicator(false);
-      }, 200);
+      // Cacher immédiatement l'indicateur quand le chargement est terminé
+      setShowLoadingIndicator(false);
     }
     
     return () => {
@@ -150,10 +148,12 @@ export const ClientsPageContent = ({
     }
     
     return (
-      <div className={`transition-opacity duration-200 ${loading ? "opacity-70 pointer-events-none" : "opacity-100"}`}>
+      <div className="transition-opacity duration-200 relative">
         <ClientList clients={filteredClients} onEdit={handleEdit} onDelete={handleDelete} />
+        
+        {/* Afficher l'indicateur de chargement comme un élément séparé flottant */}
         {showLoadingIndicator && loading && (
-          <div className="fixed bottom-4 right-4 bg-primary text-white px-4 py-2 rounded-md shadow-md flex items-center gap-2 animate-in fade-in slide-in-from-right-5 duration-200">
+          <div className="fixed bottom-4 right-4 bg-primary text-white px-4 py-2 rounded-md shadow-md flex items-center gap-2 z-50 animate-in fade-in slide-in-from-right-5 duration-200">
             <LoadingIndicator size="sm" fadeIn={false} showImmediately={true} />
             <span>Actualisation...</span>
           </div>
