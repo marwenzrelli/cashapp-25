@@ -1,175 +1,142 @@
 
-import { supabase, checkSupabaseAvailability } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { ClientOperation } from "./types";
 
-export const fetchClientOperations = async (
-  clientName: string,
-  token: string
-): Promise<ClientOperation[]> => {
+export const fetchClientOperations = async (clientName: string, token: string): Promise<ClientOperation[]> => {
+  // Create abort controller for timeout handling
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => {
+    controller.abort('Timeout');
+  }, 15000);
+
   try {
-    console.log(`Fetching operations for client: ${clientName}`);
-    
-    // Check our network connectivity with the improved utility
-    const { online, serverAvailable, errorMessage } = await checkSupabaseAvailability();
-    
-    if (!online) {
-      throw new Error("Vous êtes hors ligne. Veuillez vérifier votre connexion internet.");
+    // For better error messages
+    if (!navigator.onLine) {
+      throw new Error("Vous êtes hors ligne. Vérifiez votre connexion internet.");
     }
     
-    if (!serverAvailable && errorMessage) {
-      throw new Error(errorMessage);
+    // First, retrieve client ID from the token for security check
+    const { data: accessData, error: accessError } = await supabase
+      .from('qr_access')
+      .select('client_id')
+      .eq('access_token', token)
+      .single();
+      
+    if (accessError) {
+      throw new Error(`Erreur d'authentification: ${accessError.message}`);
     }
     
-    // Configuration des timeouts et réessais
-    const maxRetries = 3; // Kept at 3
-    const baseTimeout = 12000; // Increased from 10000 to 12000 milliseconds
-    let currentRetry = 0;
+    if (!accessData || !accessData.client_id) {
+      throw new Error("Token d'accès invalide");
+    }
     
-    // Fonction pour tenter une requête avec réessais
-    const attemptRequest = async (requestFn: () => Promise<any>, retryCount: number): Promise<any> => {
-      try {
-        // Créer un contrôleur d'abandon pour définir un délai d'expiration
-        const controller = new AbortController();
-        const { signal } = controller;
-        
-        // Augmenter le timeout exponentiellement avec chaque tentative
-        const timeout = baseTimeout * Math.pow(2, retryCount); // Use power of 2 for more aggressive backoff
-        
-        // Définir un délai d'expiration pour cette tentative
-        const timeoutId = setTimeout(() => {
-          controller.abort(`Timeout of ${timeout}ms exceeded`);
-        }, timeout);
-        
-        console.log(`Attempt ${retryCount + 1} with timeout: ${timeout}ms`);
-        
-        // Exécuter la requête avec le signal d'abandon
-        const result = await requestFn();
-        
-        // Annuler le délai d'expiration s'il est toujours actif
-        clearTimeout(timeoutId);
-        
-        return result;
-      } catch (error: any) {
-        // Si nous avons atteint le nombre maximal de tentatives, relancer l'erreur
-        if (retryCount >= maxRetries) {
-          console.error(`Max retries (${maxRetries}) reached for request. Last error:`, error);
-          throw error;
-        }
-        
-        // Pour les erreurs réseau ou les délais d'expiration, réessayer
-        if (error.message?.includes("network") || 
-            error.message?.includes("timeout") || 
-            error.message?.includes("abort") || 
-            error.name === "AbortError" || 
-            error.message?.includes("interrompue") ||
-            error.message?.includes("Failed to fetch")) {
-          console.log(`Attempt ${retryCount + 1} failed, retrying in ${1000 * (retryCount + 1)}ms...`);
-          
-          // Attendre avant de réessayer (backoff exponentiel) - Increased wait time
-          await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
-          
-          // Réessayer la requête avec un compteur incrémenté
-          return attemptRequest(requestFn, retryCount + 1);
-        }
-        
-        // Pour les autres types d'erreurs, les relancer immédiatement
-        throw error;
-      }
-    };
-    
-    // Fonction pour récupérer les dépôts avec réessai
-    const fetchDeposits = async () => {
-      const response = await supabase
+    // Use Promise.all to fetch all operations in parallel
+    const [depositsPromise, withdrawalsPromise, transfersPromise] = [
+      supabase
         .from('deposits')
         .select('*')
-        .eq('client_name', clientName)
-        .order('created_at', { ascending: false });
-      return response;
-    };
-    
-    // Fonction pour récupérer les retraits avec réessai
-    const fetchWithdrawals = async () => {
-      const response = await supabase
+        .eq('client_id', accessData.client_id)
+        .order('created_at', { ascending: false }),
+        
+      supabase
         .from('withdrawals')
         .select('*')
-        .eq('client_name', clientName)
-        .order('created_at', { ascending: false });
-      return response;
-    };
+        .eq('client_id', accessData.client_id)
+        .order('created_at', { ascending: false }),
+        
+      supabase
+        .from('transfers')
+        .select('*, to_clients(*), from_clients(*)')
+        .or(`from_client_id.eq.${accessData.client_id},to_client_id.eq.${accessData.client_id}`)
+        .order('created_at', { ascending: false })
+    ];
     
-    try {
-      console.log("Starting parallel requests with retry mechanism");
-      // Effectuer les deux requêtes en parallèle avec réessai automatique
-      const [depositsResult, withdrawalsResult] = await Promise.all([
-        attemptRequest(fetchDeposits, currentRetry),
-        attemptRequest(fetchWithdrawals, currentRetry)
-      ]);
-      
-      const { data: deposits, error: depositsError } = depositsResult;
-      const { data: withdrawals, error: withdrawalsError } = withdrawalsResult;
-
-      if (depositsError) {
-        console.error("Error fetching deposits:", depositsError);
-        throw new Error(`Erreur lors de la récupération des dépôts: ${depositsError.message}`);
-      }
-
-      if (withdrawalsError) {
-        console.error("Error fetching withdrawals:", withdrawalsError);
-        throw new Error(`Erreur lors de la récupération des retraits: ${withdrawalsError.message}`);
-      }
-
-      // Check for null data
-      if (!deposits || !withdrawals) {
-        throw new Error("Données des opérations non disponibles");
-      }
-
-      // Combiner et formater les opérations
-      const operations: ClientOperation[] = [
-        ...deposits.map((deposit): ClientOperation => ({
-          id: `deposit-${deposit.id}`,
-          type: "deposit",
-          date: deposit.operation_date || deposit.created_at,
+    // Execute all requests in parallel
+    const [
+      { data: deposits, error: depositsError },
+      { data: withdrawals, error: withdrawalsError },
+      { data: transfers, error: transfersError }
+    ] = await Promise.all([depositsPromise, withdrawalsPromise, transfersPromise]);
+    
+    // Handle errors
+    if (depositsError) console.error("Error fetching deposits:", depositsError);
+    if (withdrawalsError) console.error("Error fetching withdrawals:", withdrawalsError);
+    if (transfersError) console.error("Error fetching transfers:", transfersError);
+    
+    const combinedOperations: ClientOperation[] = [];
+    
+    // Format deposits
+    if (deposits) {
+      combinedOperations.push(
+        ...deposits.map(deposit => ({
+          id: deposit.id.toString(),
+          type: 'deposit' as const,
+          date: deposit.created_at,
           amount: deposit.amount,
-          description: deposit.notes || `Versement`,
-          status: deposit.status,
-          fromClient: deposit.client_name
-        })),
-        ...withdrawals.map((withdrawal): ClientOperation => ({
-          id: `withdrawal-${withdrawal.id}`,
-          type: "withdrawal",
-          date: withdrawal.operation_date || withdrawal.created_at,
-          amount: withdrawal.amount,
-          description: withdrawal.notes || `Retrait`,
-          status: withdrawal.status,
-          fromClient: withdrawal.client_name
+          description: deposit.description || 'Dépôt',
+          status: deposit.status
         }))
-      ];
-
-      // Trier par date (plus récentes en premier)
-      operations.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-      console.log(`Retrieved ${operations.length} operations for client ${clientName}`);
-      return operations;
-    } catch (error) {
-      console.error("Error during Promise.all for operations:", error);
-      throw error; // Re-throw to be caught by the outer try-catch
+      );
     }
+    
+    // Format withdrawals
+    if (withdrawals) {
+      combinedOperations.push(
+        ...withdrawals.map(withdrawal => ({
+          id: withdrawal.id.toString(),
+          type: 'withdrawal' as const,
+          date: withdrawal.created_at,
+          amount: withdrawal.amount,
+          description: withdrawal.description || 'Retrait',
+          status: withdrawal.status
+        }))
+      );
+    }
+    
+    // Format transfers - more complex as we need to handle both incoming and outgoing
+    if (transfers) {
+      combinedOperations.push(
+        ...transfers.map(transfer => {
+          const isOutgoing = transfer.from_client_id === accessData.client_id;
+          const otherClient = isOutgoing 
+            ? transfer.to_clients?.nom && transfer.to_clients?.prenom 
+              ? `${transfer.to_clients.prenom} ${transfer.to_clients.nom}` 
+              : 'Client'
+            : transfer.from_clients?.nom && transfer.from_clients?.prenom 
+              ? `${transfer.from_clients.prenom} ${transfer.from_clients.nom}`
+              : 'Client';
+              
+          return {
+            id: transfer.id.toString(),
+            type: 'transfer' as const,
+            date: transfer.created_at,
+            amount: transfer.amount,
+            description: transfer.description || (isOutgoing ? `Transfert vers ${otherClient}` : `Transfert de ${otherClient}`),
+            status: transfer.status,
+            fromClient: isOutgoing ? clientName : otherClient,
+            toClient: isOutgoing ? otherClient : clientName
+          };
+        })
+      );
+    }
+    
+    // Sort all operations by date (newest first)
+    combinedOperations.sort((a, b) => {
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+      return dateB - dateA;
+    });
+    
+    return combinedOperations;
   } catch (error: any) {
-    console.error("Error in fetchClientOperations:", error);
+    console.error("Error fetching client operations:", error);
     
-    // Améliorer les messages d'erreur réseau
-    if (error.message?.includes("network") || 
-        error.message?.includes("Failed to fetch") || 
-        error.message?.includes("timeout") || 
-        error.name === "AbortError") {
-      throw new Error("Le serveur semble temporairement inaccessible. Veuillez réessayer dans quelques instants.");
+    if (error.message?.includes('AbortError') || error.name === 'AbortError') {
+      throw new Error("Le délai d'attente pour charger les opérations a été dépassé. Vérifiez votre connexion internet.");
     }
     
-    if (error.message?.includes("interrompue")) {
-      throw new Error("La connexion au serveur a été interrompue. Veuillez réessayer.");
-    }
-    
-    // Erreur par défaut
-    throw new Error(error.message || "Erreur lors de la récupération des opérations");
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
   }
 };
