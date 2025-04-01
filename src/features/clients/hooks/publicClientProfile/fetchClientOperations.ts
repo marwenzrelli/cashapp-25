@@ -70,10 +70,10 @@ export const fetchClientOperations = async (clientName: string, token: string): 
     }
     
     // Process deposits
-    let depositsData: DepositRecord[] = [];
-    let withdrawalsData: WithdrawalRecord[] = [];
-    let fromClientData: TransferRecord[] = [];
-    let toClientData: TransferRecord[] = [];
+    const depositsData: DepositRecord[] = [];
+    const withdrawalsData: WithdrawalRecord[] = [];
+    const fromClientData: TransferRecord[] = [];
+    const toClientData: TransferRecord[] = [];
 
     // Get deposits
     const depositsResult = await supabase
@@ -85,7 +85,7 @@ export const fetchClientOperations = async (clientName: string, token: string): 
     if (depositsResult.error) {
       console.error("Error in deposits query:", depositsResult.error);
     } else {
-      depositsData = depositsResult.data as DepositRecord[];
+      depositsData.push(...(depositsResult.data as DepositRecord[]));
     }
     
     // Get withdrawals
@@ -98,7 +98,7 @@ export const fetchClientOperations = async (clientName: string, token: string): 
     if (withdrawalsResult.error) {
       console.error("Error in withdrawals query:", withdrawalsResult.error);
     } else {
-      withdrawalsData = withdrawalsResult.data as WithdrawalRecord[];
+      withdrawalsData.push(...(withdrawalsResult.data as WithdrawalRecord[]));
     }
     
     // Get outgoing transfers
@@ -111,7 +111,7 @@ export const fetchClientOperations = async (clientName: string, token: string): 
     if (fromClientResult.error) {
       console.error("Error in from-client transfers query:", fromClientResult.error);
     } else {
-      fromClientData = fromClientResult.data as TransferRecord[];
+      fromClientData.push(...(fromClientResult.data as TransferRecord[]));
     }
     
     // Get incoming transfers
@@ -124,11 +124,13 @@ export const fetchClientOperations = async (clientName: string, token: string): 
     if (toClientResult.error) {
       console.error("Error in to-client transfers query:", toClientResult.error);
     } else {
-      toClientData = toClientResult.data as TransferRecord[];
+      toClientData.push(...(toClientResult.data as TransferRecord[]));
     }
     
-    // Explicitly type the transfers array
-    const transfers: TransferRecord[] = [...fromClientData, ...toClientData];
+    // Create a simple array for transfers instead of using spread operator
+    const transfers: TransferRecord[] = [];
+    transfers.push(...fromClientData);
+    transfers.push(...toClientData);
     
     // Map operations to a unified format
     const combinedOperations: ClientOperation[] = [];
