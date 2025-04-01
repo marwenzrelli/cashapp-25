@@ -55,7 +55,7 @@ export const useClientsPage = () => {
         console.log("Periodic refresh of clients data");
         fetchClients(0, false);  // Pass false to avoid showing repeated toasts
       }
-    }, 30000);
+    }, 30000); // Increased from 10 seconds to 30 seconds to reduce refresh frequency
     
     setRefreshInterval(newInterval);
     

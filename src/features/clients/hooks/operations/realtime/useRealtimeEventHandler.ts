@@ -13,11 +13,14 @@ export const useRealtimeEventHandler = (
   throttleTimeoutRef: React.MutableRefObject<NodeJS.Timeout | null>
 ) => {
   const queryClient = useQueryClient();
+  const pendingUpdatesRef = useRef(0);
 
   // Throttled fetch function to prevent multiple rapid fetches
   const throttledFetch = () => {
     // Prevent fetching if another fetch is already scheduled
     if (throttleTimeoutRef.current) {
+      pendingUpdatesRef.current += 1;
+      console.log(`Throttled fetch already scheduled. Pending updates: ${pendingUpdatesRef.current}`);
       return;
     }
     
@@ -29,16 +32,26 @@ export const useRealtimeEventHandler = (
     }
     
     setLastEventTime(now);
+    pendingUpdatesRef.current = 0;
     
     // Schedule a fetch with a delay
     throttleTimeoutRef.current = setTimeout(() => {
       console.log("Executing throttled fetchClients");
+      
       fetchClients(0, false)
         .catch(err => {
           console.error("Error in throttled fetchClients:", err);
         })
         .finally(() => {
           throttleTimeoutRef.current = null;
+          
+          // If more updates arrived during this fetch, schedule another one
+          if (pendingUpdatesRef.current > 0) {
+            console.log(`Processing ${pendingUpdatesRef.current} pending updates`);
+            setTimeout(() => {
+              throttledFetch();
+            }, 1000);
+          }
         });
         
       // Additionally trigger our custom event for client profile pages

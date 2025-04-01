@@ -17,10 +17,12 @@ export const useClients = () => {
   const [error, setError] = useState<string | null>(null);
   const [cachedClients, setCachedClients] = useState<{data: Client[], timestamp: number} | null>(null);
   
-  // Référence pour suivre si une actualisation est en cours
+  // Reference to track if a refresh is in progress
   const isRefreshingRef = useRef(false);
-  // Référence pour éviter de montrer plusieurs toasts d'actualisation
+  // Reference to avoid showing multiple refresh toasts
   const toastShownRef = useRef(false);
+  // Reference to track if component is mounted
+  const isMountedRef = useRef(true);
   
   // Fetch clients functionality
   const { fetchClients: fetchClientsImpl } = useFetchClients(
@@ -28,6 +30,15 @@ export const useClients = () => {
     setLoading,
     setError
   );
+  
+  // Effect to set isMounted on mount/unmount
+  useEffect(() => {
+    isMountedRef.current = true;
+    
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
   
   // Cache clients in localStorage when available
   useEffect(() => {
@@ -91,7 +102,10 @@ export const useClients = () => {
         // If we're loading and have cached data, use the cache first to prevent blank screen
         if (loading && cachedClients && cachedClients.data.length > 0) {
           console.log("Using cached clients while loading fresh data");
-          setClients(cachedClients.data);
+          // Only update if component is still mounted
+          if (isMountedRef.current) {
+            setClients(cachedClients.data);
+          }
         }
         
         // Show toast only once per refresh session if requested
@@ -101,21 +115,29 @@ export const useClients = () => {
         
         return fetchClientsImpl(retry, showToast)
           .finally(() => {
-            isRefreshingRef.current = false;
+            // Only update if component is still mounted
+            if (isMountedRef.current) {
+              isRefreshingRef.current = false;
+            }
           });
       } catch (err) {
         console.error("Critical error in fetchClients:", err);
-        isRefreshingRef.current = false;
         
-        if (showToast && !toastShownRef.current) {
-          toast.error("Erreur de chargement", {
-            description: "Impossible de charger les clients. Veuillez réessayer."
-          });
-          toastShownRef.current = true;
+        // Only update if component is still mounted
+        if (isMountedRef.current) {
+          isRefreshingRef.current = false;
+          
+          if (showToast && !toastShownRef.current) {
+            toast.error("Erreur de chargement", {
+              description: "Impossible de charger les clients. Veuillez réessayer."
+            });
+            toastShownRef.current = true;
+          }
+          
+          setError("Erreur de connexion au serveur");
+          setLoading(false);
         }
         
-        setError("Erreur de connexion au serveur");
-        setLoading(false);
         return Promise.resolve();
       }
     },
@@ -134,7 +156,7 @@ export const useClients = () => {
   // Refresh client balance functionality
   const { refreshClientBalance } = useRefreshClientBalance(setClients);
   
-  // Set up realtime subscription
+  // Set up realtime subscription with debounce to avoid too many UI updates
   useRealtimeSubscription(fetchClients);
 
   return {
