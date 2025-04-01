@@ -16,7 +16,7 @@ export const formatDate = (dateString?: string | null) => {
       return "Date invalide";
     }
     
-    // Format using local time with 24-hour format (French style)
+    // Format using local time (French style)
     return date.toLocaleDateString('fr-FR', {
       day: '2-digit',
       month: '2-digit', 

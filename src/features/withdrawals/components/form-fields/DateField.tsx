@@ -29,7 +29,7 @@ export const DateField: React.FC<DateFieldProps> = ({
       const day = String(date.getDate()).padStart(2, '0');
       dateValue = `${year}-${month}-${day}`;
       
-      // Format time as HH:MM:SS in local time (24-hour format)
+      // Format time as HH:MM:SS in local time
       const hours = String(date.getHours()).padStart(2, '0');
       const minutes = String(date.getMinutes()).padStart(2, '0');
       const seconds = String(date.getSeconds()).padStart(2, '0');
@@ -37,7 +37,7 @@ export const DateField: React.FC<DateFieldProps> = ({
       
       console.log("Parsed local date/time values:", { 
         original: value, 
-        localDate: date.toLocaleString('fr-FR', { hour12: false }),
+        localDate: date.toString(),
         dateValue, 
         timeValue 
       });
@@ -62,7 +62,7 @@ export const DateField: React.FC<DateFieldProps> = ({
       
       console.log("Date change:", {
         newDate,
-        newDateObj: newDateObj.toLocaleString('fr-FR', { hour12: false }),
+        newDateObj: newDateObj.toString(),
         newISO: newDateObj.toISOString()
       });
       
@@ -89,7 +89,7 @@ export const DateField: React.FC<DateFieldProps> = ({
       
       console.log("Time change:", {
         newTime,
-        newDateObj: newDateObj.toLocaleString('fr-FR', { hour12: false }),
+        newDateObj: newDateObj.toString(),
         newISO: newDateObj.toISOString()
       });
       
