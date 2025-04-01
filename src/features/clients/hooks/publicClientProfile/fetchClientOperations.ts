@@ -77,8 +77,7 @@ export const fetchClientOperations = async (clientName: string, token: string): 
       .eq('client_id', accessData.client_id)
       .order('created_at', { ascending: false });
     
-    // Modified query approach to avoid deep type instantiation
-    // Instead of using .or() with a complex string, split into two separate queries
+    // Query transfers for this client - split into two queries to avoid complex type issues
     const fromClientQuery = await supabase
       .from('transfers')
       .select('id, amount, created_at, reason, status, from_client, to_client, operation_date')
@@ -91,11 +90,11 @@ export const fetchClientOperations = async (clientName: string, token: string): 
       .eq('to_client', clientName)
       .order('created_at', { ascending: false });
     
-    // Extract data with proper typing
+    // Extract data with explicit type annotations to help TypeScript
     const deposits: DepositRecord[] = depositsQuery.data || [];
     const withdrawals: WithdrawalRecord[] = withdrawalsQuery.data || [];
     
-    // Combine the results of the two transfer queries
+    // Merge transfer results
     const fromTransfers: TransferRecord[] = fromClientQuery.data || [];
     const toTransfers: TransferRecord[] = toClientQuery.data || [];
     const transfers: TransferRecord[] = [...fromTransfers, ...toTransfers];
