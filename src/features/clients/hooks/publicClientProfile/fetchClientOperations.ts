@@ -64,47 +64,46 @@ export const fetchClientOperations = async (clientName: string, token: string): 
       throw new Error("Token d'accès invalide");
     }
     
-    // Avoid complex type inference by using any for intermediate results
-    // We'll explicitly type the extracted data instead
-    const depositsResult = await supabase
+    // Use type annotations for all query results to avoid deep type inference
+    const { data: depositsData, error: depositsError } = await supabase
       .from('deposits')
       .select('id, amount, created_at, notes, status, client_id, client_name, operation_date')
       .eq('client_id', accessData.client_id)
       .order('created_at', { ascending: false });
       
-    const withdrawalsResult = await supabase
+    const { data: withdrawalsData, error: withdrawalsError } = await supabase
       .from('withdrawals')
       .select('id, amount, created_at, notes, status, client_name, operation_date')
       .eq('client_id', accessData.client_id)
       .order('created_at', { ascending: false });
       
     // Split transfer queries to simplify type handling
-    const fromClientResult = await supabase
+    const { data: fromClientData, error: fromClientError } = await supabase
       .from('transfers')
       .select('id, amount, created_at, reason, status, from_client, to_client, operation_date')
       .eq('from_client', clientName)
       .order('created_at', { ascending: false });
       
-    const toClientResult = await supabase
+    const { data: toClientData, error: toClientError } = await supabase
       .from('transfers')
       .select('id, amount, created_at, reason, status, from_client, to_client, operation_date')
       .eq('to_client', clientName)
       .order('created_at', { ascending: false });
     
     // Manually type the query results to break complex type inference
-    const deposits: DepositRecord[] = depositsResult.data || [];
-    const withdrawals: WithdrawalRecord[] = withdrawalsResult.data || [];
-    const fromTransfers: TransferRecord[] = fromClientResult.data || [];
-    const toTransfers: TransferRecord[] = toClientResult.data || [];
+    const deposits: DepositRecord[] = depositsData || [];
+    const withdrawals: WithdrawalRecord[] = withdrawalsData || [];
+    const fromTransfers: TransferRecord[] = fromClientData || [];
+    const toTransfers: TransferRecord[] = toClientData || [];
     
     // Merge transfer results
     const transfers = [...fromTransfers, ...toTransfers];
     
     // Log any errors
-    if (depositsResult.error) console.error("Error fetching deposits:", depositsResult.error);
-    if (withdrawalsResult.error) console.error("Error fetching withdrawals:", withdrawalsResult.error);
-    if (fromClientResult.error) console.error("Error fetching from_client transfers:", fromClientResult.error);
-    if (toClientResult.error) console.error("Error fetching to_client transfers:", toClientResult.error);
+    if (depositsError) console.error("Error fetching deposits:", depositsError);
+    if (withdrawalsError) console.error("Error fetching withdrawals:", withdrawalsError);
+    if (fromClientError) console.error("Error fetching from_client transfers:", fromClientError);
+    if (toClientError) console.error("Error fetching to_client transfers:", toClientError);
     
     const combinedOperations: ClientOperation[] = [];
     
