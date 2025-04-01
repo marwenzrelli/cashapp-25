@@ -21,7 +21,7 @@ interface WithdrawalRecord {
   notes: string | null;
   status: string;
   client_name: string;
-  client_id?: number; // Optional as it might not be present in all records
+  client_id: number;
   operation_date: string | null;
 }
 
