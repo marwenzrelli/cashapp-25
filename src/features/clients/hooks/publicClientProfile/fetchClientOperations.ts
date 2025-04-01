@@ -74,7 +74,7 @@ export const fetchClientOperations = async (clientName: string, token: string): 
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      depositsData = (data || []) as DepositRecord[];
+      depositsData = data ? data as DepositRecord[] : [];
     } catch (err) {
       console.error("Error in deposits query:", err);
     }
@@ -89,7 +89,7 @@ export const fetchClientOperations = async (clientName: string, token: string): 
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      withdrawalsData = (data || []) as WithdrawalRecord[];
+      withdrawalsData = data ? data as WithdrawalRecord[] : [];
     } catch (err) {
       console.error("Error in withdrawals query:", err);
     }
@@ -104,7 +104,7 @@ export const fetchClientOperations = async (clientName: string, token: string): 
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      fromClientData = (data || []) as TransferRecord[];
+      fromClientData = data ? data as TransferRecord[] : [];
     } catch (err) {
       console.error("Error in from-client transfers query:", err);
     }
@@ -119,13 +119,13 @@ export const fetchClientOperations = async (clientName: string, token: string): 
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      toClientData = (data || []) as TransferRecord[];
+      toClientData = data ? data as TransferRecord[] : [];
     } catch (err) {
       console.error("Error in to-client transfers query:", err);
     }
     
     // Combine transfers
-    const transfers = [...fromClientData, ...toClientData];
+    const transfers: TransferRecord[] = [...fromClientData, ...toClientData];
     
     const combinedOperations: ClientOperation[] = [];
     
