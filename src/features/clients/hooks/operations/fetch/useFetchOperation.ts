@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useRef } from "react";
 import { Client } from "../../../types";
 import { supabase } from "@/integrations/supabase/client";
@@ -5,7 +6,7 @@ import { fetchClientsData } from "./fetchHandler";
 import { handleFetchError } from "./errorHandler";
 import { updateClientState } from "./stateUpdater";
 import { MAX_RETRIES, RETRY_DELAY, SAFETY_TIMEOUT } from "./constants";
-import { showErrorToast } from "../../utils/errorUtils";
+import { showErrorToast, handleSupabaseError } from "../../utils/errorUtils";
 
 /**
  * Hook that manages the fetch operation for clients
