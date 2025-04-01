@@ -27,10 +27,10 @@ export const usePublicClientProfile = (token: string | undefined) => {
   // Set up realtime subscriptions - but limit refreshes
   const refreshData = useCallback(() => {
     console.log("Refreshing client data due to realtime update");
-    if (token && !isLoading) {
+    if (token && tokenValidation.isValid && !isLoading) {
       fetchClientData();
     }
-  }, [fetchClientData, token, isLoading]);
+  }, [fetchClientData, token, isLoading, tokenValidation.isValid]);
 
   // Pass clientId and refreshData to useRealtimeSubscriptions
   useRealtimeSubscriptions(clientId, refreshData);
@@ -46,15 +46,20 @@ export const usePublicClientProfile = (token: string | undefined) => {
         
         const clientFullName = `${client.prenom} ${client.nom}`.trim();
         
-        // Check database operations with token authentication
-        const opsCheck = await checkClientOperations(clientFullName, client.id, token);
-        
-        if (opsCheck.totalCount > 0) {
-          console.log(`Found ${opsCheck.totalCount} operations in database, but none retrieved. Retrying fetch...`);
-          // If operations exist but weren't retrieved, retry the fetch
-          retryFetch();
-        } else {
-          console.log("No operations found for this client in the database.");
+        try {
+          // Check database operations with token authentication
+          const opsCheck = await checkClientOperations(clientFullName, client.id, token);
+          
+          if (opsCheck.totalCount > 0) {
+            console.log(`Found ${opsCheck.totalCount} operations in database, but none retrieved. Retrying fetch...`);
+            // If operations exist but weren't retrieved, retry the fetch
+            retryFetch();
+          } else {
+            console.log("No operations found for this client in the database.");
+          }
+        } catch (err) {
+          console.error("Error during operations verification:", err);
+          // Don't retry here as it might cause a loop
         }
       }
     };
@@ -65,26 +70,14 @@ export const usePublicClientProfile = (token: string | undefined) => {
     }
   }, [client, operations, isLoading, error, token, retryFetch]);
   
-  // Log detailed information for debugging - only when state changes
-  useEffect(() => {
-    console.log("PublicClientProfile hook state:", {
-      token: token ? `${token.substring(0, 8)}...` : undefined,
-      tokenValid: tokenValidation.isValid,
-      tokenError: tokenValidation.error,
-      clientId,
-      hasClient: !!client,
-      hasOperations: operations?.length > 0,
-      isLoading,
-      loadingTime,
-      error
-    });
-  }, [token, tokenValidation, client, clientId, operations, isLoading, loadingTime, error]);
+  // Return appropriate error depending on validation result
+  const finalError = tokenValidation.isValid ? error : tokenValidation.error;
 
   return {
     client,
     operations: operations || [],
     isLoading,
-    error: tokenValidation.isValid ? error : tokenValidation.error,
+    error: finalError,
     loadingTime,
     fetchClientData,
     retryFetch

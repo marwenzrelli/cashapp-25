@@ -37,14 +37,17 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
 
   const fetchClientData = useCallback(async () => {
     // Skip if no token or already fetching or already fetched
-    if (!token || fetchingRef.current || (dataFetchedRef.current && client)) {
+    if (!token || fetchingRef.current) {
       return;
     }
 
     // Annuler toute requête précédente
     if (abortControllerRef.current) {
+      console.log("Aborting previous request...");
       abortControllerRef.current.abort();
     }
+    
+    // Create a new abort controller for this request
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
 
@@ -60,6 +63,7 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
     // Ajouter un timeout global pour toute la fonction
     const timeout = setTimeout(() => {
       if (fetchingRef.current && abortControllerRef.current) {
+        console.log("Request timeout reached, aborting...");
         abortControllerRef.current.abort();
         setError("Le délai d'attente a été dépassé. Veuillez réessayer.");
         setIsLoading(false);
@@ -68,6 +72,11 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
     }, 15000); // 15 secondes maximum pour la requête complète
 
     try {
+      // Check if request was already aborted
+      if (signal.aborted) {
+        throw new Error("Opération annulée");
+      }
+
       // Step 1: Get client ID from token
       console.log(`Step 1: Fetching access data with token: ${token}`);
       const accessData: TokenData = await fetchAccessData(token);
@@ -80,11 +89,16 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
       
       console.log(`Step 2: Retrieved client ID ${accessData.client_id} from token`);
       
+      // Check if request was aborted during token fetch
+      if (signal.aborted) {
+        throw new Error("Opération annulée");
+      }
+      
       // Step 2: Get client details
       const clientData = await fetchClientDetails(accessData.client_id);
       console.log(`Step 3: Retrieved client data:`, clientData);
       
-      // Vérifier si l'opération a été annulée
+      // Check if request was aborted during client fetch
       if (signal.aborted) {
         throw new Error("Opération annulée");
       }
@@ -92,12 +106,11 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
       setClient(clientData);
       
       // Step 3: Get client operations using the token for authentication
-      // Convert clientId to number to ensure type compatibility
       const fullName = `${clientData.prenom} ${clientData.nom}`;
       console.log(`Step 4: Fetching operations for ${fullName} with token for auth`);
       const operationsData = await fetchClientOperations(fullName, token);
       
-      // Vérifier à nouveau si l'opération a été annulée
+      // Check if request was aborted during operations fetch
       if (signal.aborted) {
         throw new Error("Opération annulée");
       }
@@ -106,11 +119,11 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
       
       console.log(`Step 5: Retrieved ${operationsData.length} client operations`);
       dataFetchedRef.current = true;
-      setIsLoading(false);
       initialLoadCompletedRef.current = true;
+      setIsLoading(false);
     } catch (err: any) {
       if (err.name === 'AbortError' || err.message === "Opération annulée") {
-        console.log("Requête annulée");
+        console.log("Request was cancelled");
         setError("La requête a été interrompue. Veuillez réessayer.");
       } else {
         console.error("Error in fetchClientData:", err);
@@ -118,14 +131,17 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
         setOperations([]);
         const errorMessage = err.message || "Erreur lors de la récupération des données client";
         setError(errorMessage);
-        showErrorToast("Erreur d'accès", { message: errorMessage });
+        // Only show error toast for non-abort errors
+        if (err.name !== 'AbortError' && err.message !== "Opération annulée") {
+          showErrorToast("Erreur d'accès", { message: errorMessage });
+        }
       }
       setIsLoading(false);
     } finally {
       fetchingRef.current = false;
       clearTimeout(timeout);
     }
-  }, [token, fetchCount, client]);
+  }, [token, fetchCount]);
 
   const retryFetch = useCallback(() => {
     console.log("Retrying client data fetch with token:", token);
@@ -141,9 +157,11 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
     }
     
     return () => {
-      // Nettoyer les requêtes en cours lors du démontage
+      // Clean up any pending requests on unmount
       if (abortControllerRef.current) {
+        console.log("Cleaning up - aborting any pending requests");
         abortControllerRef.current.abort();
+        abortControllerRef.current = null;
       }
     };
   }, [token, fetchClientData]);

@@ -25,6 +25,9 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
   const handleRetry = () => {
     if (onRetry) {
       console.log("Retrying client fetch...");
+      toast.info("Nouvelle tentative", {
+        description: "Tentative de reconnexion au serveur..."
+      });
       onRetry();
     }
   };
@@ -33,6 +36,13 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
   const isClientNotFoundError = error && (
     error.includes("Client introuvable") || 
     error.includes("n'existe pas")
+  );
+  
+  // Check if it's a connection error
+  const isConnectionError = error && (
+    error.includes("interrompue") || 
+    error.includes("délai d'attente") ||
+    error.includes("connexion")
   );
   
   return (
@@ -45,7 +55,8 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
         </div>
         
         <h2 className="mt-6 text-2xl font-semibold text-gray-900 dark:text-white">
-          {isClientNotFoundError ? "Client introuvable" : "Erreur d'accès"}
+          {isClientNotFoundError ? "Client introuvable" : 
+           isConnectionError ? "Erreur de connexion" : "Erreur d'accès"}
         </h2>
         
         <p className="mt-3 text-gray-600 dark:text-gray-400">
@@ -58,12 +69,18 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
           </p>
         )}
         
+        {isConnectionError && (
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+            Problème de connexion au serveur. Veuillez vérifier votre connexion internet et réessayer.
+          </p>
+        )}
+        
         <div className="mt-8 space-y-3">
           {onRetry && (
             <Button 
               onClick={handleRetry}
               className="w-full gap-2"
-              variant="outline"
+              variant={isConnectionError ? "default" : "outline"}
             >
               <RefreshCcw className="h-4 w-4" />
               Réessayer
@@ -73,6 +90,7 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
           <Button 
             onClick={() => navigate('/clients')}
             className="w-full gap-2"
+            variant={isConnectionError ? "outline" : "default"}
           >
             <Home className="h-4 w-4" />
             Retourner à la liste des clients
