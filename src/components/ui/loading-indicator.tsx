@@ -50,7 +50,10 @@ export const LoadingIndicator = ({
     : '';
 
   return (
-    <div className={cn(containerClasses, opacityClass, className)}>
+    <div 
+      className={cn(containerClasses, opacityClass, className)} 
+      style={{ pointerEvents: 'none' }} // Garantit que l'indicateur n'intercepte jamais les clics
+    >
       <Loader2 className={cn("text-primary animate-spin", sizeClasses[size])} />
       {text && (
         <p className={cn("mt-2 text-sm text-muted-foreground", textClassName)}>

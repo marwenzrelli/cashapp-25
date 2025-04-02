@@ -55,11 +55,8 @@ export const SelectDropdownContent = ({
   }, [contentRef, openState]);
 
   const handlePointerDownOutside = (e: any) => {
-    // If we're scrolling, prevent closing
-    if (isScrolling) {
-      e.preventDefault();
-      return;
-    }
+    // Never prevent pointer events to improve interaction
+    return false;
   };
 
   const hasNoResults = clientSearch.length > 0 && filteredClients.length === 0;
@@ -99,7 +96,7 @@ export const SelectDropdownContent = ({
           clients={filteredClients}
           selectedClient={selectedClient}
           onClientSelect={onClientSelect}
-          isScrolling={isScrolling}
+          isScrolling={false} // Toujours permettre les interactions, ne jamais bloquer
           setOpenState={setOpenState}
         />
       )}

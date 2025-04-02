@@ -47,21 +47,16 @@ export const ClientsPageContent = ({
     clientId: "3"
   }];
 
-  // Gestion de l'affichage de l'indicateur de chargement - amélioré
-  const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
   const [contentReady, setContentReady] = useState(false);
-  const loadingTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const lastShowTime = useRef<number>(0);
   const [initialContentShown, setInitialContentShown] = useState(false);
 
-  // Effect pour transition de contenu - plus rapide
+  // Effect pour transition de contenu
   useEffect(() => {
     // Montrer le contenu plus rapidement
     requestAnimationFrame(() => {
       setContentReady(true);
     });
     
-    // S'assurer que l'état initial est affiché correctement
     const timer = setTimeout(() => {
       setInitialContentShown(true);
     }, 200);
@@ -69,57 +64,8 @@ export const ClientsPageContent = ({
     return () => clearTimeout(timer);
   }, []);
 
-  // Afficher l'indicateur de chargement seulement après un délai pour éviter le clignotement
-  // Et ne pas afficher les indicateurs si le dernier a été affiché il y a moins de 2 secondes
-  useEffect(() => {
-    if (loading) {
-      const now = Date.now();
-      // Seulement montrer l'indicateur si le dernier indicateur a été affiché il y a plus de 2 secondes
-      if (now - lastShowTime.current > 2000) {
-        if (loadingTimerRef.current) {
-          clearTimeout(loadingTimerRef.current);
-        }
-        
-        loadingTimerRef.current = setTimeout(() => {
-          setShowLoadingIndicator(true);
-          lastShowTime.current = Date.now();
-          loadingTimerRef.current = null;
-        }, 500); // 500ms delay avant d'afficher l'indicateur
-      }
-    } else {
-      if (loadingTimerRef.current) {
-        clearTimeout(loadingTimerRef.current);
-        loadingTimerRef.current = null;
-      }
-      // Ajouter un léger délai avant de cacher l'indicateur pour une transition plus douce
-      setTimeout(() => {
-        setShowLoadingIndicator(false);
-      }, 200);
-    }
-    
-    return () => {
-      if (loadingTimerRef.current) {
-        clearTimeout(loadingTimerRef.current);
-        loadingTimerRef.current = null;
-      }
-    };
-  }, [loading]);
-
   // Render content based on loading state and errors
-  const renderContent = () => {
-    if (loading && clients.length === 0) {
-      return (
-        <div className="flex flex-col items-center justify-center py-12 space-y-4 animate-in fade-in duration-300">
-          <LoadingIndicator 
-            size="lg" 
-            text="Chargement des clients..." 
-            fadeIn={true}
-            showImmediately={true}
-          />
-        </div>
-      );
-    }
-    
+  const renderContent = () => {    
     if (error) {
       return (
         <div className="flex flex-col items-center justify-center py-16 space-y-6 text-center animate-in fade-in slide-in-from-bottom-4 duration-300">
@@ -150,14 +96,16 @@ export const ClientsPageContent = ({
     }
     
     return (
-      <div className={`transition-opacity duration-200 ${loading ? "opacity-70 pointer-events-none" : "opacity-100"}`}>
-        <ClientList clients={filteredClients} onEdit={handleEdit} onDelete={handleDelete} />
-        {showLoadingIndicator && loading && (
-          <div className="fixed bottom-4 right-4 bg-primary text-white px-4 py-2 rounded-md shadow-md flex items-center gap-2 animate-in fade-in slide-in-from-right-5 duration-200">
-            <LoadingIndicator size="sm" fadeIn={false} showImmediately={true} />
-            <span>Actualisation...</span>
+      <div className="relative">
+        {loading && (
+          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
+            <div className="bg-primary/10 backdrop-blur-sm rounded-full px-4 py-1 flex items-center gap-2 animate-in fade-in slide-in-from-top-5 duration-200">
+              <LoadingIndicator size="sm" fadeIn={false} showImmediately />
+              <span className="text-sm text-primary">Actualisation...</span>
+            </div>
           </div>
         )}
+        <ClientList clients={filteredClients} onEdit={handleEdit} onDelete={handleDelete} />
       </div>
     );
   };

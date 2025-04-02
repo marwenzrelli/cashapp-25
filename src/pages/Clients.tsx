@@ -12,7 +12,7 @@ const Clients = () => {
   // Display state management
   const [initialLoading, setInitialLoading] = useState(true);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
-  const [loadingIndicatorShown, setLoadingIndicatorShown] = useState(false); // Démarrer sans montrer le loading
+  const [loadingIndicatorShown, setLoadingIndicatorShown] = useState(false);
   const [pageReady, setPageReady] = useState(false); // État pour la transition de la page
   const timeoutTimerRef = useRef<NodeJS.Timeout | null>(null);
   const loadingTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -89,24 +89,21 @@ const Clients = () => {
       }, 8000);
       
       // Only show loading indicator if loading persists for more than 500ms
-      // This prevents flickering for quick operations
       if (!loadingIndicatorShown) {
         loadingTimerRef.current = setTimeout(() => {
           if (loading) {
             setLoadingIndicatorShown(true);
           }
           loadingTimerRef.current = null;
-        }, 500); // Augmenté de 300ms à 500ms pour éviter les flashs
+        }, 500);
       }
     } else {
       // When loading finishes, reset states with a small delay
       const resetTimer = setTimeout(() => {
         setInitialLoading(false);
         setLoadingTimeout(false);
-        // Garde l'indicateur de chargement un peu plus longtemps pour une transition plus douce
-        setTimeout(() => {
-          setLoadingIndicatorShown(false);
-        }, 300);
+        // Reset loading indicator state when loading completes
+        setLoadingIndicatorShown(false);
       }, 150);
       
       return () => clearTimeout(resetTimer);
@@ -116,25 +113,36 @@ const Clients = () => {
     return () => {
       if (timeoutTimerRef.current) {
         clearTimeout(timeoutTimerRef.current);
-        timeoutTimerRef.current = null;
       }
       if (loadingTimerRef.current) {
         clearTimeout(loadingTimerRef.current);
-        loadingTimerRef.current = null;
       }
     };
   }, [loading]);
 
-  // Display fullscreen loading only for initial load when we don't have cached data
-  const shouldShowFullscreenLoading = (initialLoading || loading) && 
-                                      loadingIndicatorShown && 
-                                      !clients.length;
-  
-  if (shouldShowFullscreenLoading) {
+  // Display fixed floating loading indicator instead of fullscreen one
+  const renderFloatingLoadingIndicator = () => {
+    if (loading && loadingIndicatorShown) {
+      return (
+        <div className="fixed bottom-6 right-6 bg-white dark:bg-gray-800 shadow-lg rounded-lg p-3 flex items-center gap-3 z-50 border animate-in fade-in slide-in-from-right-10 duration-300">
+          <LoadingIndicator size="sm" fadeIn={false} showImmediately />
+          <span>{loadingTimeout ? "Chargement prolongé..." : "Chargement..."}</span>
+          {loadingTimeout && (
+            <Button size="sm" variant="ghost" className="ml-2" onClick={handleRetry}>
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // Display initial loading state only when we have no data yet
+  if ((initialLoading || loading) && loadingIndicatorShown && !clients.length) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[80vh] transition-opacity duration-300">
+      <div className="flex flex-col items-center justify-center min-h-[80vh]">
         <LoadingIndicator 
-          fullscreen={true} 
           size="lg" 
           text={loadingTimeout ? "Le chargement prend plus de temps que prévu..." : "Chargement des clients..."} 
           fadeIn={true}
@@ -154,10 +162,12 @@ const Clients = () => {
   return (
     <TooltipProvider>
       <div className={`w-full max-w-[100vw] pb-8 px-0 transition-opacity duration-500 ${pageReady ? 'opacity-100' : 'opacity-0'}`}>
+        {renderFloatingLoadingIndicator()}
+        
         <ClientsPageContent
           clients={clients}
           filteredClients={filteredClients}
-          loading={loading && loadingIndicatorShown}
+          loading={loading}
           error={error}
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}

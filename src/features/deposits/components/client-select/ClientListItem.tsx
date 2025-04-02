@@ -27,14 +27,14 @@ export const ClientListItem = ({
     }
   };
 
-  // FIX: Simplified click handler for iOS devices
+  // Simple click handler - direct et fiable
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     onClick(client.id.toString(), e);
   };
   
-  // FIX: Simplified touch handler for iOS devices
+  // Touch handler pour appareils tactiles - direct et fiable
   const handleTouch = (e: React.TouchEvent) => {
     e.preventDefault();
     e.stopPropagation();
