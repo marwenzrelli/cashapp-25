@@ -20,18 +20,22 @@ export const fetchWithdrawals = async (clientId: number): Promise<WithdrawalReco
       return [];
     }
 
-    // Map to proper typed records
+    // Create array first, then populate it (avoids spread operator issues)
     const withdrawalsData: WithdrawalRecord[] = [];
+    
+    // Use a for loop instead of map to avoid complex type inference
     for (let i = 0; i < withdrawalsResult.data.length; i++) {
+      const record = withdrawalsResult.data[i];
+      // Create object with explicit property assignments
       const withdrawal: WithdrawalRecord = {
-        id: withdrawalsResult.data[i].id,
-        amount: withdrawalsResult.data[i].amount,
-        created_at: withdrawalsResult.data[i].created_at,
-        notes: withdrawalsResult.data[i].notes,
-        status: withdrawalsResult.data[i].status,
-        client_name: withdrawalsResult.data[i].client_name,
+        id: record.id,
+        amount: record.amount,
+        created_at: record.created_at,
+        notes: record.notes,
+        status: record.status,
+        client_name: record.client_name,
         client_id: clientId, // Add from context since it's not in the query
-        operation_date: withdrawalsResult.data[i].operation_date
+        operation_date: record.operation_date
       };
       withdrawalsData.push(withdrawal);
     }
@@ -44,8 +48,10 @@ export const fetchWithdrawals = async (clientId: number): Promise<WithdrawalReco
 };
 
 export const mapWithdrawalsToOperations = (withdrawals: WithdrawalRecord[]): ClientOperation[] => {
+  // Create array first, then populate it (avoids spread operator issues)
   const operations: ClientOperation[] = [];
   
+  // Use for loop instead of map to avoid complex type inference
   for (let i = 0; i < withdrawals.length; i++) {
     const withdrawal = withdrawals[i];
     operations.push({
