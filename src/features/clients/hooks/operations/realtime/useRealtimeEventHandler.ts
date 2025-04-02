@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { RealtimePayload } from "./types";
 
 /**
- * Hook to handle realtime events
+ * Hook to handle realtime events with improved throttling
  */
 export const useRealtimeEventHandler = (
   fetchClients: (retry?: number, showToast?: boolean) => Promise<void>,
@@ -13,46 +13,62 @@ export const useRealtimeEventHandler = (
   throttleTimeoutRef: React.MutableRefObject<NodeJS.Timeout | null>
 ) => {
   const queryClient = useQueryClient();
-
-  // Throttled fetch function to prevent multiple rapid fetches
+  const eventsQueueRef = useRef<string[]>([]);
+  const processingEventsRef = useRef(false);
+  
+  // More aggressive throttling to prevent excessive refreshes
   const throttledFetch = () => {
-    // Prevent fetching if another fetch is already scheduled
-    if (throttleTimeoutRef.current) {
+    // Check if another fetch is already scheduled or processing
+    if (throttleTimeoutRef.current || processingEventsRef.current) {
+      console.log("Skipping throttled fetch due to existing scheduled fetch");
       return;
     }
     
-    // Only fetch if we haven't received an event in the last 3 seconds
+    // Only fetch if we haven't received an event in the last 5 seconds (increased from 3)
     const now = Date.now();
-    if (now - lastEventTime < 3000) {
+    if (now - lastEventTime < 5000) {
       console.log("Skipping throttled fetch due to recent event");
       return;
     }
     
     setLastEventTime(now);
     
-    // Schedule a fetch with a delay
+    // Schedule a fetch with an increased delay
     throttleTimeoutRef.current = setTimeout(() => {
       console.log("Executing throttled fetchClients");
+      processingEventsRef.current = true;
+      
       fetchClients(0, false)
         .catch(err => {
           console.error("Error in throttled fetchClients:", err);
         })
         .finally(() => {
           throttleTimeoutRef.current = null;
+          processingEventsRef.current = false;
         });
         
       // Additionally trigger our custom event for client profile pages
       window.dispatchEvent(new CustomEvent('operations-update'));
-    }, 2000);
+      
+      // Clear the events queue
+      eventsQueueRef.current = [];
+      
+    }, 3000); // Increased to 3000ms (3 seconds) from 2000ms
   };
 
-  // Handler for real-time updates
+  // Handler for real-time updates with event batching
   const handleRealtimeUpdate = (payload: RealtimePayload) => {
     // Update the last event time
     setLastEventTime(Date.now());
     
     // Debug log
     console.log(`Change detected on ${payload.table}:`, payload.eventType);
+    
+    // Add this event to the queue if it's not already there
+    const eventKey = `${payload.table}-${payload.eventType}-${payload.new?.id || 'unknown'}`;
+    if (!eventsQueueRef.current.includes(eventKey)) {
+      eventsQueueRef.current.push(eventKey);
+    }
     
     // Schedule a throttled fetch
     throttledFetch();

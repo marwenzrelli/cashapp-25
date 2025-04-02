@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Database } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useState, useEffect, useRef } from "react";
 
 interface StatisticsHeaderProps {
   isSyncing: boolean;
@@ -16,6 +17,38 @@ export const StatisticsHeader = ({
   refreshData,
   usingCachedData = false
 }: StatisticsHeaderProps) => {
+  const [buttonDisabled, setButtonDisabled] = useState(false);
+  const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleRefresh = () => {
+    // Prevent multiple clicks
+    if (isSyncing || buttonDisabled) return;
+    
+    setButtonDisabled(true);
+    
+    // Call the refresh function
+    refreshData();
+    
+    // Disable button for 5 seconds to prevent spam
+    if (refreshTimerRef.current) {
+      clearTimeout(refreshTimerRef.current);
+    }
+    
+    refreshTimerRef.current = setTimeout(() => {
+      setButtonDisabled(false);
+      refreshTimerRef.current = null;
+    }, 5000); // 5-second cooldown
+  };
+  
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (refreshTimerRef.current) {
+        clearTimeout(refreshTimerRef.current);
+      }
+    };
+  }, []);
+
   return (
     <div className="flex justify-between items-center">
       <div>
@@ -30,10 +63,10 @@ export const StatisticsHeader = ({
         </p>
       </div>
       <Button 
-        onClick={refreshData} 
+        onClick={handleRefresh}
         variant="outline" 
         className="flex items-center gap-2"
-        disabled={isSyncing}
+        disabled={isSyncing || buttonDisabled || isLoading}
       >
         <RefreshCw className={`h-4 w-4 ${isSyncing || isLoading ? 'animate-spin' : ''}`} />
         {isSyncing ? 'Synchronisation...' : isLoading ? 'Chargement...' : 'Synchroniser'}

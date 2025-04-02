@@ -11,6 +11,7 @@ interface LoadingIndicatorProps {
   fullscreen?: boolean;
   fadeIn?: boolean;
   showImmediately?: boolean;
+  debounceMs?: number; // New prop to control debounce time
 }
 
 export const LoadingIndicator = ({
@@ -20,19 +21,38 @@ export const LoadingIndicator = ({
   textClassName,
   fullscreen = false,
   fadeIn = true,
-  showImmediately = false
+  showImmediately = false,
+  debounceMs = 300 // Default debounce of 300ms
 }: LoadingIndicatorProps) => {
   const [visible, setVisible] = useState(!fadeIn || showImmediately);
+  const [shouldRender, setShouldRender] = useState(showImmediately);
 
-  // Effet de transition en fondu
+  // Debounced transition effect
   useEffect(() => {
+    let fadeTimer: NodeJS.Timeout;
+    let renderTimer: NodeJS.Timeout;
+
     if (fadeIn && !showImmediately) {
-      const timer = setTimeout(() => {
-        setVisible(true);
-      }, 150); // Réduit à 150ms pour une réponse plus rapide
-      return () => clearTimeout(timer);
+      // Only render the component after the debounce period
+      renderTimer = setTimeout(() => {
+        setShouldRender(true);
+        // Then start the fade-in
+        fadeTimer = setTimeout(() => {
+          setVisible(true);
+        }, 50); // Short delay after rendering before starting fade-in
+      }, debounceMs);
+
+      return () => {
+        clearTimeout(fadeTimer);
+        clearTimeout(renderTimer);
+      };
     }
-  }, [fadeIn, showImmediately]);
+  }, [fadeIn, showImmediately, debounceMs]);
+
+  // If not yet ready to render, return null
+  if (!shouldRender && !showImmediately) {
+    return null;
+  }
 
   const sizeClasses = {
     sm: "h-4 w-4",
@@ -44,15 +64,15 @@ export const LoadingIndicator = ({
     ? "fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50" 
     : "flex flex-col items-center justify-center";
 
-  // Applique une transition de fondu plus rapide
+  // Slower fade transition to avoid rapid flicker
   const opacityClass = fadeIn 
-    ? `transition-opacity duration-200 ${visible ? 'opacity-100' : 'opacity-0'}` 
+    ? `transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-0'}` 
     : '';
 
   return (
     <div 
       className={cn(containerClasses, opacityClass, className)} 
-      style={{ pointerEvents: 'none' }} // Garantit que l'indicateur n'intercepte jamais les clics
+      style={{ pointerEvents: 'none' }} // Ensure the indicator never intercepts clicks
     >
       <Loader2 className={cn("text-primary animate-spin", sizeClasses[size])} />
       {text && (

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 
 const Clients = () => {
-  // Display state management
+  // Display state management with improved debouncing
   const [initialLoading, setInitialLoading] = useState(true);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const [loadingIndicatorShown, setLoadingIndicatorShown] = useState(false);
@@ -17,6 +17,7 @@ const Clients = () => {
   const timeoutTimerRef = useRef<NodeJS.Timeout | null>(null);
   const loadingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const pageTransitionTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const loadingCountRef = useRef(0); // Count loading state changes to reduce flickering
 
   const {
     // État
@@ -65,7 +66,7 @@ const Clients = () => {
     };
   }, []);
 
-  // Handle loading state and timeout
+  // Handle loading state and timeout with improved debouncing
   useEffect(() => {
     // Clear previous timers if they exist
     if (timeoutTimerRef.current) {
@@ -80,33 +81,40 @@ const Clients = () => {
     
     // Only set up timers if we're in a loading state
     if (loading) {
+      // Increment the loading count
+      loadingCountRef.current += 1;
+      
       // Show timeout message after 8 seconds if still loading
       timeoutTimerRef.current = setTimeout(() => {
         if (loading) {
           setLoadingTimeout(true);
         }
         timeoutTimerRef.current = null;
-      }, 8000);
+      }, 10000); // Increased from 8s to 10s
       
-      // Only show loading indicator if loading persists for more than 500ms
+      // Only show loading indicator if loading persists for more than 800ms (increased from 500ms)
+      // This helps avoid flashing for quick operations
       if (!loadingIndicatorShown) {
         loadingTimerRef.current = setTimeout(() => {
           if (loading) {
             setLoadingIndicatorShown(true);
           }
           loadingTimerRef.current = null;
-        }, 500);
+        }, 800);
       }
     } else {
-      // When loading finishes, reset states with a small delay
-      const resetTimer = setTimeout(() => {
-        setInitialLoading(false);
-        setLoadingTimeout(false);
-        // Reset loading indicator state when loading completes
-        setLoadingIndicatorShown(false);
-      }, 150);
-      
-      return () => clearTimeout(resetTimer);
+      // When loading finishes, reset states with a delay to avoid flickering
+      // Only reset if we've been in a loading state for some time
+      if (loadingCountRef.current > 0) {
+        const resetTimer = setTimeout(() => {
+          setInitialLoading(false);
+          setLoadingTimeout(false);
+          setLoadingIndicatorShown(false);
+          loadingCountRef.current = 0; // Reset loading count
+        }, 300); // Slightly longer delay for smoother transitions
+        
+        return () => clearTimeout(resetTimer);
+      }
     }
     
     // Clean up on unmount
@@ -125,7 +133,12 @@ const Clients = () => {
     if (loading && loadingIndicatorShown) {
       return (
         <div className="fixed bottom-6 right-6 bg-white dark:bg-gray-800 shadow-lg rounded-lg p-3 flex items-center gap-3 z-50 border animate-in fade-in slide-in-from-right-10 duration-300">
-          <LoadingIndicator size="sm" fadeIn={false} showImmediately />
+          <LoadingIndicator 
+            size="sm" 
+            fadeIn={false} 
+            showImmediately 
+            debounceMs={800} // Add debounce to prevent rapid flashing
+          />
           <span>{loadingTimeout ? "Chargement prolongé..." : "Chargement..."}</span>
           {loadingTimeout && (
             <Button size="sm" variant="ghost" className="ml-2" onClick={handleRetry}>
@@ -146,6 +159,7 @@ const Clients = () => {
           size="lg" 
           text={loadingTimeout ? "Le chargement prend plus de temps que prévu..." : "Chargement des clients..."} 
           fadeIn={true}
+          debounceMs={600} // Add debounce to prevent rapid flashing
         />
         {loadingTimeout && (
           <div className="mt-6 animate-in fade-in-50 slide-in-from-bottom-4 duration-300">

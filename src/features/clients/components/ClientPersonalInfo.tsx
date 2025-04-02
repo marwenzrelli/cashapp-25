@@ -2,7 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Client } from "../types";
 import { ClientQRCode } from "./ClientQRCode";
-import { RefObject, useState, useEffect } from "react";
+import { RefObject, useState, useEffect, useRef } from "react";
 import { PersonalInfoFields } from "./PersonalInfoFields";
 import { ClientIdBadge } from "./ClientIdBadge";
 import { ClientActionButtons } from "./ClientActionButtons";
@@ -37,6 +37,8 @@ export const ClientPersonalInfo = ({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [didInitialRefresh, setDidInitialRefresh] = useState(false);
   const [refreshDisabled, setRefreshDisabled] = useState(false);
+  const initialRefreshTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const refreshCooldownTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   console.log("ClientPersonalInfo - clientId:", clientId, "client:", client?.id, "realTimeBalance:", clientBalance);
 
@@ -46,7 +48,7 @@ export const ClientPersonalInfo = ({
     refreshClientBalance: refreshBalance
   } = useClientOperations(client, clientId, refetchClient);
 
-  // Automatically refresh balance once when component mounts
+  // Automatically refresh balance once when component mounts, with a longer delay
   useEffect(() => {
     if (client && client.id && refreshClientBalance && !didInitialRefresh) {
       const doInitialRefresh = async () => {
@@ -58,15 +60,24 @@ export const ClientPersonalInfo = ({
         }
       };
       
-      // Use a small timeout to avoid blocking the UI render
-      const timer = setTimeout(doInitialRefresh, 1000);
-      return () => clearTimeout(timer);
+      // Use a longer timeout (3 seconds) to avoid immediate refresh on page load
+      initialRefreshTimerRef.current = setTimeout(doInitialRefresh, 3000);
+      return () => {
+        if (initialRefreshTimerRef.current) {
+          clearTimeout(initialRefreshTimerRef.current);
+        }
+      };
     }
   }, [client, refreshClientBalance, didInitialRefresh]);
 
   const handleRefreshBalance = async () => {
     if (!refreshClientBalance) {
       toast.error("La fonction d'actualisation du solde n'est pas disponible");
+      return;
+    }
+    
+    // Prevent multiple refreshes
+    if (isRefreshing || refreshDisabled) {
       return;
     }
     
@@ -82,12 +93,25 @@ export const ClientPersonalInfo = ({
     } finally {
       setIsRefreshing(false);
       
-      // Disable the refresh button for 5 seconds to prevent spam
-      setTimeout(() => {
+      // Disable the refresh button for 10 seconds to prevent spam
+      refreshCooldownTimerRef.current = setTimeout(() => {
         setRefreshDisabled(false);
-      }, 5000);
+        refreshCooldownTimerRef.current = null;
+      }, 10000); // 10-second cooldown
     }
   };
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      if (initialRefreshTimerRef.current) {
+        clearTimeout(initialRefreshTimerRef.current);
+      }
+      if (refreshCooldownTimerRef.current) {
+        clearTimeout(refreshCooldownTimerRef.current);
+      }
+    };
+  }, []);
 
   // Helper function to pass client ID to refreshBalance
   const handleDepositRefresh = async (): Promise<boolean> => {
