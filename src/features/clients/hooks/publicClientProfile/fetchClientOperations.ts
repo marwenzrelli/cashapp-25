@@ -19,7 +19,9 @@ export const fetchClientOperations = async (
       .select('*')
       .eq('client_name', clientName)
       .order('created_at', { ascending: false })
-      .abortSignal(controller.signal);
+      .select('*', { 
+        signal: controller.signal 
+      });
 
     if (depositsError) {
       console.error("Error fetching deposits:", depositsError);
@@ -32,7 +34,9 @@ export const fetchClientOperations = async (
       .select('*')
       .eq('client_name', clientName)
       .order('created_at', { ascending: false })
-      .abortSignal(controller.signal);
+      .select('*', { 
+        signal: controller.signal 
+      });
 
     // Clear timeout
     clearTimeout(timeoutId);
