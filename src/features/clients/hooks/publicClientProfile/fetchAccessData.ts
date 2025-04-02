@@ -11,11 +11,9 @@ export const fetchAccessData = async (token: string): Promise<TokenData> => {
     // Use the signal as part of the Supabase fetch options
     const { data, error } = await supabase
       .from('qr_access')
-      .select('*')
+      .select('*', { signal: controller.signal })
       .eq('access_token', token)
-      .single({
-        signal: controller.signal
-      });
+      .single();
 
     // Clear the timeout
     clearTimeout(timeoutId);

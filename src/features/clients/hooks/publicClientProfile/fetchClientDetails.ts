@@ -10,11 +10,9 @@ export const fetchClientDetails = async (clientId: number): Promise<Client> => {
     
     const { data, error } = await supabase
       .from('clients')
-      .select('*')
+      .select('*', { signal: controller.signal })
       .eq('id', clientId)
-      .single({
-        signal: controller.signal
-      });
+      .single();
 
     // Clear the timeout
     clearTimeout(timeoutId);
