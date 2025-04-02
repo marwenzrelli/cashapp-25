@@ -134,11 +134,13 @@ export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps>
       }
       
       await fetchWithdrawals();
-      setShowDialog(false);
       
       toast.success("Opération réussie", {
         description: "Le retrait a été " + (isEditing ? "modifié" : "créé") + " avec succès"
       });
+      
+      // Close dialog after successful operation
+      setShowDialog(false);
       
       return true;
     } catch (error) {

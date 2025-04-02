@@ -19,6 +19,11 @@ export const WithdrawalDialog = ({
   onConfirm,
   refreshClientBalance
 }: WithdrawalDialogProps) => {
+  // Close dialog on success
+  const handleSuccess = () => {
+    onOpenChange(false);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
@@ -31,8 +36,9 @@ export const WithdrawalDialog = ({
             ...client,
             dateCreation: client.date_creation || new Date().toISOString()
           }]} 
-          onConfirm={onConfirm} 
-          refreshClientBalance={refreshClientBalance} 
+          onConfirm={onConfirm}
+          refreshClientBalance={refreshClientBalance}
+          onSuccess={handleSuccess}
         />
       </DialogContent>
     </Dialog>

@@ -14,12 +14,14 @@ interface StandaloneWithdrawalFormProps {
   clients: ExtendedClient[];
   onConfirm: (withdrawal: any) => Promise<boolean | void>;
   refreshClientBalance: (clientId: string) => Promise<boolean | void>;
+  onSuccess?: () => void; // Added success callback
 }
 
 export const StandaloneWithdrawalForm: React.FC<StandaloneWithdrawalFormProps> = ({
   clients,
   onConfirm,
-  refreshClientBalance
+  refreshClientBalance,
+  onSuccess
 }) => {
   const [clientId, setClientId] = useState("");
   const [amount, setAmount] = useState("");
@@ -79,6 +81,11 @@ export const StandaloneWithdrawalForm: React.FC<StandaloneWithdrawalFormProps> =
         }
         
         toast.success("Retrait effectué avec succès");
+        
+        // Call onSuccess callback if provided to close the dialog
+        if (onSuccess) {
+          onSuccess();
+        }
       }
     } catch (error) {
       console.error("Error processing withdrawal:", error);

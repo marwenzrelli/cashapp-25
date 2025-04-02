@@ -9,9 +9,10 @@ interface UseDepositFormProps {
   clients: ExtendedClient[];
   onConfirm: (deposit: Deposit) => Promise<boolean | void>;
   refreshClientBalance: (clientId: string) => Promise<boolean | void>;
+  onSuccess?: () => void; // Added success callback
 }
 
-export const useDepositForm = ({ clients, onConfirm, refreshClientBalance }: UseDepositFormProps) => {
+export const useDepositForm = ({ clients, onConfirm, refreshClientBalance, onSuccess }: UseDepositFormProps) => {
   const [selectedClient, setSelectedClient] = useState("");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState<Date>(new Date());
@@ -64,6 +65,11 @@ export const useDepositForm = ({ clients, onConfirm, refreshClientBalance }: Use
       setTime(format(new Date(), "HH:mm:ss")); // Reset with seconds
       
       toast.success("Versement effectué avec succès");
+      
+      // Call onSuccess callback if provided to close the dialog
+      if (onSuccess && result !== false) {
+        onSuccess();
+      }
     } catch (error) {
       console.error("Error submitting deposit:", error);
       toast.error("Erreur lors du traitement du versement");

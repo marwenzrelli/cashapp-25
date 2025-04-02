@@ -27,6 +27,11 @@ export const DepositDialog: React.FC<DepositDialogProps> = ({
     ? clients.filter(client => client.id.toString() === selectedClient)
     : clients;
 
+  // Close dialog on success
+  const handleSuccess = () => {
+    onOpenChange(false);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
@@ -38,6 +43,7 @@ export const DepositDialog: React.FC<DepositDialogProps> = ({
           clients={filteredClients}
           onConfirm={onConfirm}
           refreshClientBalance={refreshClientBalance}
+          onSuccess={handleSuccess}
         />
       </DialogContent>
     </Dialog>

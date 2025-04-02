@@ -20,6 +20,11 @@ export const DepositDialog = ({
   onConfirm,
   refreshClientBalance
 }: DepositDialogProps) => {
+  // Close dialog on success
+  const handleSuccess = () => {
+    onOpenChange(false);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
@@ -33,7 +38,8 @@ export const DepositDialog = ({
             dateCreation: client.date_creation || new Date().toISOString()
           }]} 
           onConfirm={onConfirm} 
-          refreshClientBalance={refreshClientBalance} 
+          refreshClientBalance={refreshClientBalance}
+          onSuccess={handleSuccess} 
         />
       </DialogContent>
     </Dialog>
