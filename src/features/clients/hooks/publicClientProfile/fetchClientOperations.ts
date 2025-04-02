@@ -69,13 +69,13 @@ export const fetchClientOperations = async (clientName: string, token: string): 
       throw new Error("ID client manquant dans le token d'accès");
     }
     
-    // Initialize empty arrays - use type assertions to simplify type inference
+    // Create empty arrays for storing data
     const depositsData: DepositRecord[] = [];
     const withdrawalsData: WithdrawalRecord[] = [];
     const fromClientData: TransferRecord[] = [];
     const toClientData: TransferRecord[] = [];
 
-    // Get deposits
+    // Get deposits - using direct assignment for simplicity
     const depositsResult = await supabase
       .from('deposits')
       .select('id, amount, created_at, notes, status, client_id, client_name, operation_date')
@@ -85,13 +85,24 @@ export const fetchClientOperations = async (clientName: string, token: string): 
     if (depositsResult.error) {
       console.error("Error in deposits query:", depositsResult.error);
     } else if (depositsResult.data) {
-      // Add items one by one with explicit type casting
+      // Avoid deep type inference by using simple loop and simple assignments
       for (let i = 0; i < depositsResult.data.length; i++) {
-        depositsData.push(depositsResult.data[i] as DepositRecord);
+        // Create a new object to break deep inference chains
+        const deposit: DepositRecord = {
+          id: depositsResult.data[i].id,
+          amount: depositsResult.data[i].amount,
+          created_at: depositsResult.data[i].created_at,
+          notes: depositsResult.data[i].notes,
+          status: depositsResult.data[i].status,
+          client_id: depositsResult.data[i].client_id,
+          client_name: depositsResult.data[i].client_name,
+          operation_date: depositsResult.data[i].operation_date
+        };
+        depositsData.push(deposit);
       }
     }
     
-    // Get withdrawals
+    // Get withdrawals - using direct assignment for simplicity
     const withdrawalsResult = await supabase
       .from('withdrawals')
       .select('id, amount, created_at, notes, status, client_name, operation_date')
@@ -101,13 +112,24 @@ export const fetchClientOperations = async (clientName: string, token: string): 
     if (withdrawalsResult.error) {
       console.error("Error in withdrawals query:", withdrawalsResult.error);
     } else if (withdrawalsResult.data) {
-      // Add items one by one with explicit type casting
+      // Avoid deep type inference by using simple loop and simple assignments
       for (let i = 0; i < withdrawalsResult.data.length; i++) {
-        withdrawalsData.push(withdrawalsResult.data[i] as WithdrawalRecord);
+        // Create a new object to break deep inference chains
+        const withdrawal: WithdrawalRecord = {
+          id: withdrawalsResult.data[i].id,
+          amount: withdrawalsResult.data[i].amount,
+          created_at: withdrawalsResult.data[i].created_at,
+          notes: withdrawalsResult.data[i].notes,
+          status: withdrawalsResult.data[i].status,
+          client_name: withdrawalsResult.data[i].client_name,
+          client_id: clientId, // Add from context since it's not in the query
+          operation_date: withdrawalsResult.data[i].operation_date
+        };
+        withdrawalsData.push(withdrawal);
       }
     }
     
-    // Get outgoing transfers
+    // Get outgoing transfers - using direct assignment for simplicity
     const fromClientResult = await supabase
       .from('transfers')
       .select('id, amount, created_at, reason, status, from_client, to_client, operation_date')
@@ -117,13 +139,24 @@ export const fetchClientOperations = async (clientName: string, token: string): 
     if (fromClientResult.error) {
       console.error("Error in from-client transfers query:", fromClientResult.error);
     } else if (fromClientResult.data) {
-      // Add items one by one with explicit type casting
+      // Avoid deep type inference by using simple loop and simple assignments
       for (let i = 0; i < fromClientResult.data.length; i++) {
-        fromClientData.push(fromClientResult.data[i] as TransferRecord);
+        // Create a new object to break deep inference chains
+        const transfer: TransferRecord = {
+          id: fromClientResult.data[i].id,
+          amount: fromClientResult.data[i].amount,
+          created_at: fromClientResult.data[i].created_at,
+          reason: fromClientResult.data[i].reason,
+          status: fromClientResult.data[i].status,
+          from_client: fromClientResult.data[i].from_client,
+          to_client: fromClientResult.data[i].to_client,
+          operation_date: fromClientResult.data[i].operation_date
+        };
+        fromClientData.push(transfer);
       }
     }
     
-    // Get incoming transfers
+    // Get incoming transfers - using direct assignment for simplicity
     const toClientResult = await supabase
       .from('transfers')
       .select('id, amount, created_at, reason, status, from_client, to_client, operation_date')
@@ -133,13 +166,24 @@ export const fetchClientOperations = async (clientName: string, token: string): 
     if (toClientResult.error) {
       console.error("Error in to-client transfers query:", toClientResult.error);
     } else if (toClientResult.data) {
-      // Add items one by one with explicit type casting
+      // Avoid deep type inference by using simple loop and simple assignments
       for (let i = 0; i < toClientResult.data.length; i++) {
-        toClientData.push(toClientResult.data[i] as TransferRecord);
+        // Create a new object to break deep inference chains
+        const transfer: TransferRecord = {
+          id: toClientResult.data[i].id,
+          amount: toClientResult.data[i].amount,
+          created_at: toClientResult.data[i].created_at,
+          reason: toClientResult.data[i].reason,
+          status: toClientResult.data[i].status,
+          from_client: toClientResult.data[i].from_client,
+          to_client: toClientResult.data[i].to_client,
+          operation_date: toClientResult.data[i].operation_date
+        };
+        toClientData.push(transfer);
       }
     }
     
-    // Manually combine transfers to prevent complex type inference
+    // Combine transfer arrays manually without spread operators
     const transfers: TransferRecord[] = [];
     for (let i = 0; i < fromClientData.length; i++) {
       transfers.push(fromClientData[i]);
