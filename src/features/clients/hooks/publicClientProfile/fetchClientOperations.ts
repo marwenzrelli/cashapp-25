@@ -69,7 +69,7 @@ export const fetchClientOperations = async (clientName: string, token: string): 
       throw new Error("ID client manquant dans le token d'accès");
     }
     
-    // Initialize empty arrays with explicit types
+    // Initialize empty arrays - use type assertions to simplify type inference
     const depositsData: DepositRecord[] = [];
     const withdrawalsData: WithdrawalRecord[] = [];
     const fromClientData: TransferRecord[] = [];
@@ -85,10 +85,9 @@ export const fetchClientOperations = async (clientName: string, token: string): 
     if (depositsResult.error) {
       console.error("Error in deposits query:", depositsResult.error);
     } else if (depositsResult.data) {
-      // Type cast and add each item individually
+      // Add items one by one with explicit type casting
       for (let i = 0; i < depositsResult.data.length; i++) {
-        const deposit = depositsResult.data[i] as DepositRecord;
-        depositsData.push(deposit);
+        depositsData.push(depositsResult.data[i] as DepositRecord);
       }
     }
     
@@ -102,10 +101,9 @@ export const fetchClientOperations = async (clientName: string, token: string): 
     if (withdrawalsResult.error) {
       console.error("Error in withdrawals query:", withdrawalsResult.error);
     } else if (withdrawalsResult.data) {
-      // Type cast and add each item individually
+      // Add items one by one with explicit type casting
       for (let i = 0; i < withdrawalsResult.data.length; i++) {
-        const withdrawal = withdrawalsResult.data[i] as WithdrawalRecord;
-        withdrawalsData.push(withdrawal);
+        withdrawalsData.push(withdrawalsResult.data[i] as WithdrawalRecord);
       }
     }
     
@@ -119,10 +117,9 @@ export const fetchClientOperations = async (clientName: string, token: string): 
     if (fromClientResult.error) {
       console.error("Error in from-client transfers query:", fromClientResult.error);
     } else if (fromClientResult.data) {
-      // Type cast and add each item individually
+      // Add items one by one with explicit type casting
       for (let i = 0; i < fromClientResult.data.length; i++) {
-        const transfer = fromClientResult.data[i] as TransferRecord;
-        fromClientData.push(transfer);
+        fromClientData.push(fromClientResult.data[i] as TransferRecord);
       }
     }
     
@@ -136,25 +133,22 @@ export const fetchClientOperations = async (clientName: string, token: string): 
     if (toClientResult.error) {
       console.error("Error in to-client transfers query:", toClientResult.error);
     } else if (toClientResult.data) {
-      // Type cast and add each item individually
+      // Add items one by one with explicit type casting
       for (let i = 0; i < toClientResult.data.length; i++) {
-        const transfer = toClientResult.data[i] as TransferRecord;
-        toClientData.push(transfer);
+        toClientData.push(toClientResult.data[i] as TransferRecord);
       }
     }
     
-    // Create a new transfers array by concatenating without spread operators
+    // Manually combine transfers to prevent complex type inference
     const transfers: TransferRecord[] = [];
-    // Add from-client transfers
     for (let i = 0; i < fromClientData.length; i++) {
       transfers.push(fromClientData[i]);
     }
-    // Add to-client transfers  
     for (let i = 0; i < toClientData.length; i++) {
       transfers.push(toClientData[i]);
     }
     
-    // Map operations to a unified format
+    // Map operations to a unified format with simple iteration
     const combinedOperations: ClientOperation[] = [];
     
     // Map deposits to ClientOperation
