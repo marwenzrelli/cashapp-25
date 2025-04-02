@@ -17,7 +17,7 @@ const Clients = () => {
   const timeoutTimerRef = useRef<NodeJS.Timeout | null>(null);
   const loadingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const pageTransitionTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const loadingCountRef = useRef(0); // Count loading state changes to reduce flickering
+  const initialLoadCompleteRef = useRef(false);
 
   const {
     // État
@@ -66,7 +66,7 @@ const Clients = () => {
     };
   }, []);
 
-  // Handle loading state and timeout with improved debouncing
+  // Handle only initial loading state
   useEffect(() => {
     // Clear previous timers if they exist
     if (timeoutTimerRef.current) {
@@ -79,21 +79,16 @@ const Clients = () => {
       loadingTimerRef.current = null;
     }
     
-    // Only set up timers if we're in a loading state
-    if (loading) {
-      // Increment the loading count
-      loadingCountRef.current += 1;
-      
-      // Show timeout message after 8 seconds if still loading
+    if (loading && !initialLoadCompleteRef.current) {
+      // Show timeout message after 10 seconds if still loading
       timeoutTimerRef.current = setTimeout(() => {
         if (loading) {
           setLoadingTimeout(true);
         }
         timeoutTimerRef.current = null;
-      }, 10000); // Increased from 8s to 10s
+      }, 10000);
       
-      // Only show loading indicator if loading persists for more than 800ms (increased from 500ms)
-      // This helps avoid flashing for quick operations
+      // Only show loading indicator if loading persists for more than 800ms
       if (!loadingIndicatorShown) {
         loadingTimerRef.current = setTimeout(() => {
           if (loading) {
@@ -102,19 +97,16 @@ const Clients = () => {
           loadingTimerRef.current = null;
         }, 800);
       }
-    } else {
-      // When loading finishes, reset states with a delay to avoid flickering
-      // Only reset if we've been in a loading state for some time
-      if (loadingCountRef.current > 0) {
-        const resetTimer = setTimeout(() => {
-          setInitialLoading(false);
-          setLoadingTimeout(false);
-          setLoadingIndicatorShown(false);
-          loadingCountRef.current = 0; // Reset loading count
-        }, 300); // Slightly longer delay for smoother transitions
-        
-        return () => clearTimeout(resetTimer);
-      }
+    } else if (!loading && initialLoading) {
+      // When initial loading finishes
+      const resetTimer = setTimeout(() => {
+        setInitialLoading(false);
+        setLoadingTimeout(false);
+        setLoadingIndicatorShown(false);
+        initialLoadCompleteRef.current = true;
+      }, 300);
+      
+      return () => clearTimeout(resetTimer);
     }
     
     // Clean up on unmount
@@ -126,18 +118,18 @@ const Clients = () => {
         clearTimeout(loadingTimerRef.current);
       }
     };
-  }, [loading]);
+  }, [loading, initialLoading]);
 
   // Display fixed floating loading indicator instead of fullscreen one
   const renderFloatingLoadingIndicator = () => {
-    if (loading && loadingIndicatorShown) {
+    if (loading && loadingIndicatorShown && !initialLoadCompleteRef.current) {
       return (
         <div className="fixed bottom-6 right-6 bg-white dark:bg-gray-800 shadow-lg rounded-lg p-3 flex items-center gap-3 z-50 border animate-in fade-in slide-in-from-right-10 duration-300">
           <LoadingIndicator 
             size="sm" 
             fadeIn={false} 
             showImmediately 
-            debounceMs={800} // Add debounce to prevent rapid flashing
+            debounceMs={800}
           />
           <span>{loadingTimeout ? "Chargement prolongé..." : "Chargement..."}</span>
           {loadingTimeout && (
@@ -152,14 +144,14 @@ const Clients = () => {
   };
 
   // Display initial loading state only when we have no data yet
-  if ((initialLoading || loading) && loadingIndicatorShown && !clients.length) {
+  if ((initialLoading || loading) && loadingIndicatorShown && !clients.length && !initialLoadCompleteRef.current) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[80vh]">
         <LoadingIndicator 
           size="lg" 
           text={loadingTimeout ? "Le chargement prend plus de temps que prévu..." : "Chargement des clients..."} 
           fadeIn={true}
-          debounceMs={600} // Add debounce to prevent rapid flashing
+          debounceMs={600}
         />
         {loadingTimeout && (
           <div className="mt-6 animate-in fade-in-50 slide-in-from-bottom-4 duration-300">
@@ -181,7 +173,7 @@ const Clients = () => {
         <ClientsPageContent
           clients={clients}
           filteredClients={filteredClients}
-          loading={loading}
+          loading={loading && !initialLoadCompleteRef.current}
           error={error}
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}

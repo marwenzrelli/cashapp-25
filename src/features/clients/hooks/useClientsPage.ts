@@ -8,7 +8,6 @@ import { Client } from "../types";
 export const useClientsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [retryAttempt, setRetryAttempt] = useState(0);
-  const [refreshInterval, setRefreshInterval] = useState<NodeJS.Timeout | null>(null);
   
   const { 
     clients,
@@ -43,30 +42,8 @@ export const useClientsPage = () => {
     console.log("Chargement initial des clients...");
     fetchClients();
     
-    // Clear any existing interval
-    if (refreshInterval) {
-      clearInterval(refreshInterval);
-    }
+    // No automatic refresh interval - only load data once when component mounts
     
-    // Set up a periodic refresh every 30 seconds only if there's no error
-    // But only if we're not in an error state
-    const newInterval = setInterval(() => {
-      if (!loading && !error) {
-        console.log("Periodic refresh of clients data");
-        fetchClients(0, false);  // Pass false to avoid showing repeated toasts
-      }
-    }, 30000);
-    
-    setRefreshInterval(newInterval);
-    
-    return () => {
-      if (refreshInterval) {
-        clearInterval(refreshInterval);
-      }
-      if (newInterval) {
-        clearInterval(newInterval);
-      }
-    };
   }, [fetchClients, retryAttempt]);
 
   // Memoize filtered clients to avoid unnecessary recalculations

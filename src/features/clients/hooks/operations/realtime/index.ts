@@ -55,29 +55,16 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
   // Set up cleanup function
   const { cleanup } = useRealtimeCleanup(getState(), throttleTimeoutRef);
   
-  // Configure a single global real-time listener to avoid multiple listeners
+  // We disable the global realtime listener - we'll rely on initial page load only
   useEffect(() => {
-    // On client profile pages, we still want realtime updates
-    // but we'll let the profile page handle its own specific updates
-    const shouldSetupGlobalListener = true;
-    
-    // Only try to set up the subscription if not already subscribed
-    if (subscribedRef.current) {
-      return;
-    }
-    
-    // Add initial delay before setting up realtime subscription
-    const timer = setTimeout(() => {
-      // Initial setup
-      if (shouldSetupGlobalListener) {
-        setupRealtimeListener();
-      }
-    }, initialConnectionDelay);
+    // Disabling automatic realtime subscription to avoid continuous refreshes
+    // The data will only be fetched when the component mounts
     
     // Clean up on unmount
     return () => {
-      clearTimeout(timer);
       cleanup();
     };
-  }, [fetchClients, setupRealtimeListener, cleanup, initialConnectionDelay, subscribedRef]);
+  }, [fetchClients, cleanup]);
+
+  return;
 };
