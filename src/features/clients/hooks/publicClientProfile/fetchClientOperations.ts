@@ -16,9 +16,10 @@ export const fetchClientOperations = async (
     // Récupérer les dépôts du client
     const { data: deposits, error: depositsError } = await supabase
       .from('deposits')
-      .select('*', { signal: controller.signal })
+      .select('*')
       .eq('client_name', clientName)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .abortSignal(controller.signal);
 
     if (depositsError) {
       console.error("Error fetching deposits:", depositsError);
@@ -28,9 +29,10 @@ export const fetchClientOperations = async (
     // Récupérer les retraits du client
     const { data: withdrawals, error: withdrawalsError } = await supabase
       .from('withdrawals')
-      .select('*', { signal: controller.signal })
+      .select('*')
       .eq('client_name', clientName)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .abortSignal(controller.signal);
 
     // Clear timeout
     clearTimeout(timeoutId);
