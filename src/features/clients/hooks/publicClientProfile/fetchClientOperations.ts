@@ -15,48 +15,52 @@ export const fetchClientOperations = async (
     });
     
     // Récupérer les dépôts du client
-    const depositsPromise = supabase
-      .from('deposits')
-      .select('*')
-      .eq('client_name', clientName)
-      .order('created_at', { ascending: false });
+    const fetchDepositsPromise = async () => {
+      const response = await supabase
+        .from('deposits')
+        .select('*')
+        .eq('client_name', clientName)
+        .order('created_at', { ascending: false });
+      
+      return response;
+    };
     
     // Utiliser Promise.race pour les dépôts
-    const { data: deposits, error: depositsError } = await Promise.race([
-      depositsPromise,
-      timeoutPromise.then(() => {
-        throw new Error("Délai d'attente dépassé lors de la récupération des dépôts");
-      })
-    ]) as typeof depositsPromise;
+    const depositsResult = await Promise.race([
+      fetchDepositsPromise(),
+      timeoutPromise
+    ]);
 
-    if (depositsError) {
-      console.error("Error fetching deposits:", depositsError);
-      throw new Error(`Erreur lors de la récupération des dépôts: ${depositsError.message}`);
+    if (depositsResult.error) {
+      console.error("Error fetching deposits:", depositsResult.error);
+      throw new Error(`Erreur lors de la récupération des dépôts: ${depositsResult.error.message}`);
     }
 
     // Récupérer les retraits du client
-    const withdrawalsPromise = supabase
-      .from('withdrawals')
-      .select('*')
-      .eq('client_name', clientName)
-      .order('created_at', { ascending: false });
+    const fetchWithdrawalsPromise = async () => {
+      const response = await supabase
+        .from('withdrawals')
+        .select('*')
+        .eq('client_name', clientName)
+        .order('created_at', { ascending: false });
+      
+      return response;
+    };
     
     // Utiliser Promise.race pour les retraits
-    const { data: withdrawals, error: withdrawalsError } = await Promise.race([
-      withdrawalsPromise,
-      timeoutPromise.then(() => {
-        throw new Error("Délai d'attente dépassé lors de la récupération des retraits");
-      })
-    ]) as typeof withdrawalsPromise;
+    const withdrawalsResult = await Promise.race([
+      fetchWithdrawalsPromise(),
+      timeoutPromise
+    ]);
 
-    if (withdrawalsError) {
-      console.error("Error fetching withdrawals:", withdrawalsError);
-      throw new Error(`Erreur lors de la récupération des retraits: ${withdrawalsError.message}`);
+    if (withdrawalsResult.error) {
+      console.error("Error fetching withdrawals:", withdrawalsResult.error);
+      throw new Error(`Erreur lors de la récupération des retraits: ${withdrawalsResult.error.message}`);
     }
 
     // Combiner et formater les opérations
     const operations: ClientOperation[] = [
-      ...(deposits || []).map((deposit): ClientOperation => ({
+      ...(depositsResult.data || []).map((deposit): ClientOperation => ({
         id: `deposit-${deposit.id}`,
         type: "deposit",
         date: deposit.operation_date || deposit.created_at,
@@ -65,7 +69,7 @@ export const fetchClientOperations = async (
         status: deposit.status,
         fromClient: deposit.client_name
       })),
-      ...(withdrawals || []).map((withdrawal): ClientOperation => ({
+      ...(withdrawalsResult.data || []).map((withdrawal): ClientOperation => ({
         id: `withdrawal-${withdrawal.id}`,
         type: "withdrawal",
         date: withdrawal.operation_date || withdrawal.created_at,

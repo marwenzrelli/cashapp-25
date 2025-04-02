@@ -12,33 +12,35 @@ export const fetchClientDetails = async (clientId: number): Promise<Client> => {
     });
     
     // La requête principale
-    const fetchPromise = supabase
-      .from('clients')
-      .select('*')
-      .eq('id', clientId)
-      .single();
+    const fetchPromise = async () => {
+      const response = await supabase
+        .from('clients')
+        .select('*')
+        .eq('id', clientId)
+        .single();
+        
+      return response;
+    };
       
     // Utiliser Promise.race pour implémenter le timeout
-    const { data, error } = await Promise.race([
-      fetchPromise,
-      timeoutPromise.then(() => {
-        throw new Error("Délai d'attente dépassé lors de la récupération des détails client");
-      })
-    ]) as typeof fetchPromise;
+    const result = await Promise.race([
+      fetchPromise(),
+      timeoutPromise
+    ]);
 
-    if (error) {
-      if (error.code === 'PGRST116') {
+    if (result.error) {
+      if (result.error.code === 'PGRST116') {
         throw new Error("Client introuvable");
       } else {
-        throw new Error(`Erreur lors de la récupération des détails du client: ${error.message}`);
+        throw new Error(`Erreur lors de la récupération des détails du client: ${result.error.message}`);
       }
     }
 
-    if (!data) {
+    if (!result.data) {
       throw new Error("Client introuvable");
     }
 
-    return data as Client;
+    return result.data as Client;
   } catch (error: any) {
     console.error("Error fetching client details:", error);
     

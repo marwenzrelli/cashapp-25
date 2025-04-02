@@ -12,37 +12,40 @@ export const fetchAccessData = async (token: string): Promise<TokenData> => {
     });
     
     // La requête principale
-    const fetchPromise = supabase
-      .from('qr_access')
-      .select('*')
-      .eq('access_token', token)
-      .single();
+    const fetchPromise = async () => {
+      const response = await supabase
+        .from('qr_access')
+        .select('*')
+        .eq('access_token', token)
+        .single();
+        
+      return response;
+    };
       
     // Utiliser Promise.race pour implémenter le timeout
-    const { data, error } = await Promise.race([
-      fetchPromise,
-      timeoutPromise.then(() => {
-        throw new Error("Délai d'attente dépassé lors de la vérification du token");
-      })
-    ]) as typeof fetchPromise;
+    const result = await Promise.race([
+      fetchPromise(),
+      timeoutPromise
+    ]);
 
-    if (error) {
-      if (error.code === 'PGRST116') {
+    // Maintenant result contient la réponse de Supabase correctement typée
+    if (result.error) {
+      if (result.error.code === 'PGRST116') {
         // No rows returned - "not found" error
         throw new Error("Token d'accès invalide ou expiré");
       } else {
-        throw new Error(`Erreur d'accès: ${error.message}`);
+        throw new Error(`Erreur d'accès: ${result.error.message}`);
       }
     }
 
-    if (!data) {
+    if (!result.data) {
       throw new Error("Token d'accès invalide ou expiré");
     }
 
     return {
-      client_id: data.client_id,
-      expires_at: data.expires_at,
-      created_at: data.created_at
+      client_id: result.data.client_id,
+      expires_at: result.data.expires_at,
+      created_at: result.data.created_at
     } as TokenData;
   } catch (error: any) {
     console.error("Error fetching access data:", error);
