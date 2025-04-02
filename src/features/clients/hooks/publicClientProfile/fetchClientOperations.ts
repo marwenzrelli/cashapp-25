@@ -16,9 +16,7 @@ export const fetchClientOperations = async (
     // Récupérer les dépôts du client
     const { data: deposits, error: depositsError } = await supabase
       .from('deposits')
-      .select('*', {
-        signal: controller.signal // Pass the signal as an option to select()
-      })
+      .select('*')
       .eq('client_name', clientName)
       .order('created_at', { ascending: false });
 
@@ -30,9 +28,7 @@ export const fetchClientOperations = async (
     // Récupérer les retraits du client
     const { data: withdrawals, error: withdrawalsError } = await supabase
       .from('withdrawals')
-      .select('*', {
-        signal: controller.signal // Pass the signal as an option to select()
-      })
+      .select('*')
       .eq('client_name', clientName)
       .order('created_at', { ascending: false });
 

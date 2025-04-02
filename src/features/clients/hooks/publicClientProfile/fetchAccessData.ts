@@ -13,9 +13,7 @@ export const fetchAccessData = async (token: string): Promise<TokenData> => {
       .from('qr_access')
       .select('*')
       .eq('access_token', token)
-      .single({
-        signal: controller.signal // Pass the signal as an option to single()
-      });
+      .single();
 
     // Clear the timeout
     clearTimeout(timeoutId);
