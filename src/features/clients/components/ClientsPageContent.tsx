@@ -1,4 +1,3 @@
-
 import { Client } from "@/features/clients/types";
 import { ClientList } from "./ClientList";
 import { ClientInsights } from "./ClientInsights";
@@ -49,6 +48,7 @@ export const ClientsPageContent = ({
 
   const [contentReady, setContentReady] = useState(false);
   const [initialContentShown, setInitialContentShown] = useState(false);
+  const initialLoadCompleteRef = useRef(false);
 
   // Effect pour transition de contenu
   useEffect(() => {
@@ -63,6 +63,13 @@ export const ClientsPageContent = ({
     
     return () => clearTimeout(timer);
   }, []);
+
+  // Keep track of initial load
+  useEffect(() => {
+    if (!loading && !initialLoadCompleteRef.current) {
+      initialLoadCompleteRef.current = true;
+    }
+  }, [loading]);
 
   // Render content based on loading state and errors
   const renderContent = () => {    
@@ -97,7 +104,8 @@ export const ClientsPageContent = ({
     
     return (
       <div className="relative">
-        {loading && (
+        {/* Only show loading indicator during initial load, not during subsequent refreshes */}
+        {loading && !initialLoadCompleteRef.current && (
           <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
             <div className="bg-primary/10 backdrop-blur-sm rounded-full px-4 py-1 flex items-center gap-2 animate-in fade-in slide-in-from-top-5 duration-200">
               <LoadingIndicator size="sm" fadeIn={false} showImmediately />

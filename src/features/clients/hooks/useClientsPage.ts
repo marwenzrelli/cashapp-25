@@ -37,14 +37,14 @@ export const useClientsPage = () => {
     resetNewClient
   } = useClientDialogs();
 
-  // Initial fetch with limited automatic retry
+  // Initial fetch with limited automatic retry - executed ONLY once on first component mount
   useEffect(() => {
     console.log("Chargement initial des clients...");
+    // Only load data once when component mounts - no additional parameters
     fetchClients();
     
-    // No automatic refresh interval - only load data once when component mounts
-    
-  }, [fetchClients, retryAttempt]);
+    // No automatic refresh interval - we don't want any automatic refreshes
+  }, [fetchClients]);
 
   // Memoize filtered clients to avoid unnecessary recalculations
   const filteredClients = useMemo(() => {

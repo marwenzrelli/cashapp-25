@@ -9,6 +9,7 @@ import { useRealtimeCleanup } from "./useRealtimeCleanup";
 
 /**
  * Hook to set up and manage realtime subscriptions to Supabase
+ * Note: Currently completely disabled to prevent continuous refreshes
  */
 export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast?: boolean) => Promise<void>) => {
   // Get configuration
@@ -55,16 +56,16 @@ export const useRealtimeSubscription = (fetchClients: (retry?: number, showToast
   // Set up cleanup function
   const { cleanup } = useRealtimeCleanup(getState(), throttleTimeoutRef);
   
-  // We disable the global realtime listener - we'll rely on initial page load only
+  // We completely disable the realtime listener - we'll rely on initial page load only
   useEffect(() => {
     // Disabling automatic realtime subscription to avoid continuous refreshes
-    // The data will only be fetched when the component mounts
+    console.log("Realtime subscriptions are completely disabled");
     
-    // Clean up on unmount
+    // No subscription setup, just cleanup on unmount
     return () => {
       cleanup();
     };
-  }, [fetchClients, cleanup]);
+  }, [cleanup]);
 
   return;
 };
