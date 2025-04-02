@@ -8,7 +8,7 @@ export const fetchAccessData = async (token: string): Promise<TokenData> => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 seconds timeout
     
-    // Create a fetch with timeout - use signal option instead of abortSignal method
+    // Create a fetch with timeout - use Supabase's fetch options
     const { data, error } = await supabase
       .from('qr_access')
       .select('*')
