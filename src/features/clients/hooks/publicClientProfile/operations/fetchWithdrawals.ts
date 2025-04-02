@@ -3,6 +3,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { WithdrawalRecord } from "./types";
 import { ClientOperation } from "../types";
 
+// Define explicit interface for the withdrawal database row to avoid deep type inference
+interface WithdrawalDatabaseRow {
+  id: number;
+  amount: number;
+  created_at: string;
+  notes: string | null;
+  status: string;
+  client_name: string;
+  operation_date: string | null;
+}
+
 export const fetchWithdrawals = async (clientId: number): Promise<WithdrawalRecord[]> => {
   try {
     const withdrawalsResult = await supabase
@@ -25,7 +36,9 @@ export const fetchWithdrawals = async (clientId: number): Promise<WithdrawalReco
     
     // Use a for loop instead of map to avoid complex type inference
     for (let i = 0; i < withdrawalsResult.data.length; i++) {
-      const record = withdrawalsResult.data[i];
+      // Explicitly cast to the database row type to avoid deep type inference
+      const record = withdrawalsResult.data[i] as WithdrawalDatabaseRow;
+      
       // Create object with explicit property assignments
       const withdrawal: WithdrawalRecord = {
         id: record.id,
