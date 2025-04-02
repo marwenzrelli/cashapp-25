@@ -49,27 +49,22 @@ export const ClientSelectDropdown = ({
     return client ? `${client.prenom} ${client.nom}` : "Sélectionner un client";
   };
 
+  // FIX: Simplified client selection handler without delay
   const handleClientSelect = (clientId: string) => {
-    // Check if this is a real selection vs a clear operation
     if (clientId) {
       onClientSelect(clientId);
-      // On iOS, we need a slight delay to ensure UI updates properly
-      setTimeout(() => {
-        setOpenState(false);
-      }, 100);
+      // Close dropdown immediately
+      setOpenState(false);
     } else if (clientId === "") {
       onClientSelect("");
       setOpenState(false);
     }
   };
 
-  // Handle iOS-specific touchend issues
+  // FIX: Improved trigger touch handler for iOS
   const handleTriggerTouch = (e: React.TouchEvent) => {
-    // This helps iOS recognize the dropdown should open on touch
-    e.preventDefault(); // Empêcher le comportement par défaut
-    if (!openState) {
-      setOpenState(true);
-    }
+    e.preventDefault();
+    setOpenState(!openState);
   };
 
   return (
@@ -95,7 +90,7 @@ export const ClientSelectDropdown = ({
       <SelectDropdownContent
         openState={openState}
         setOpenState={setOpenState}
-        isScrolling={isScrolling}
+        isScrolling={false} // FIX: Set isScrolling to false to always allow selection
         clientSearch={clientSearch}
         setClientSearch={setClientSearch}
         filteredClients={filteredClients}

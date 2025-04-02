@@ -27,21 +27,24 @@ export const ClientListItem = ({
     }
   };
 
-  // iOS-optimized handler
-  const handleIOSTouch = (e: React.TouchEvent) => {
-    // Prevent default behavior that might interfere
+  // FIX: Simplified click handler for iOS devices
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
-    
-    // For iOS, delay the click handler slightly to ensure it's registered as a tap
-    setTimeout(() => {
-      onClick(client.id.toString(), e);
-    }, 10);
+    onClick(client.id.toString(), e);
+  };
+  
+  // FIX: Simplified touch handler for iOS devices
+  const handleTouch = (e: React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onClick(client.id.toString(), e);
   };
 
   return (
     <div 
-      onClick={e => onClick(client.id.toString(), e)} 
-      onTouchEnd={handleIOSTouch}
+      onClick={handleClick}
+      onTouchEnd={handleTouch}
       data-client-id={client.id.toString()} 
       className={`
         rounded-lg my-0.5 mx-1.5 py-1 px-1.5 transition-all relative ios-friendly-touch

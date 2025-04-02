@@ -120,15 +120,12 @@ export const ClientList = ({
     }
   }, []);
 
+  // FIX: Simplify this function and remove unnecessary checks that block clicking
   const handleClientClick = (clientId: string, e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
     e.stopPropagation();
-
-    if (isScrolling) {
-      console.log('Clic ignoré - défilement en cours');
-      return;
-    }
-
+    
+    // Remove isScrolling check to allow clicks in all cases
     onClientSelect(clientId);
   };
 

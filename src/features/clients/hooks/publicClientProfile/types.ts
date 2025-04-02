@@ -27,3 +27,13 @@ export interface TokenData {
   expires_at: string | null;
   created_at: string;
 }
+
+// Simple interface to avoid complex type issues
+export interface WithdrawalData {
+  id: number | string;
+  client_name: string;
+  amount: number;
+  created_at: string;
+  notes?: string;
+  status?: string;
+}

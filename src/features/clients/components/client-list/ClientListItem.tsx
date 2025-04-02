@@ -32,7 +32,10 @@ export const ClientListItem = ({
            status;
   };
 
-  const handleView = () => {
+  // FIX: Simplified click handler to avoid propagation issues
+  const handleView = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     onView(client.id);
   };
 
