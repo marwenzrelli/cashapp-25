@@ -12,8 +12,9 @@ export const fetchClientDetails = async (clientId: number): Promise<Client> => {
       .from('clients')
       .select('*')
       .eq('id', clientId)
-      .single()
-      .abortSignal(controller.signal);
+      .single({
+        signal: controller.signal // Pass the signal as an option to single()
+      });
 
     // Clear the timeout
     clearTimeout(timeoutId);
