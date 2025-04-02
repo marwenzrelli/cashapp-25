@@ -16,18 +16,19 @@ interface WithdrawalDatabaseRow {
 
 export const fetchWithdrawals = async (clientId: number): Promise<WithdrawalRecord[]> => {
   try {
-    const withdrawalsResult = await supabase
+    // Use explicit typing for the query result to avoid deep type inference
+    const { data, error } = await supabase
       .from('withdrawals')
       .select('id, amount, created_at, notes, status, client_name, operation_date')
       .eq('client_id', clientId)
       .order('created_at', { ascending: false });
     
-    if (withdrawalsResult.error) {
-      console.error("Error in withdrawals query:", withdrawalsResult.error);
+    if (error) {
+      console.error("Error in withdrawals query:", error);
       return [];
     }
     
-    if (!withdrawalsResult.data) {
+    if (!data || data.length === 0) {
       return [];
     }
 
@@ -35,21 +36,22 @@ export const fetchWithdrawals = async (clientId: number): Promise<WithdrawalReco
     const withdrawalsData: WithdrawalRecord[] = [];
     
     // Use a for loop instead of map to avoid complex type inference
-    for (let i = 0; i < withdrawalsResult.data.length; i++) {
-      // Explicitly cast to the database row type to avoid deep type inference
-      const record = withdrawalsResult.data[i] as WithdrawalDatabaseRow;
+    for (let i = 0; i < data.length; i++) {
+      // Cast each row to our explicit interface
+      const row = data[i] as WithdrawalDatabaseRow;
       
-      // Create object with explicit property assignments
+      // Manually create each withdrawal record with explicit assignments
       const withdrawal: WithdrawalRecord = {
-        id: record.id,
-        amount: record.amount,
-        created_at: record.created_at,
-        notes: record.notes,
-        status: record.status,
-        client_name: record.client_name,
-        client_id: clientId, // Add from context since it's not in the query
-        operation_date: record.operation_date
+        id: row.id,
+        amount: row.amount,
+        created_at: row.created_at,
+        notes: row.notes,
+        status: row.status,
+        client_name: row.client_name,
+        client_id: clientId,
+        operation_date: row.operation_date
       };
+      
       withdrawalsData.push(withdrawal);
     }
     
