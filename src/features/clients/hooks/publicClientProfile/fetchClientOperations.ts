@@ -7,18 +7,27 @@ export const fetchClientOperations = async (
   token: string
 ): Promise<ClientOperation[]> => {
   try {
-    console.log(`Fetching operations for client: ${clientName}`);
+    console.log(`Récupération des opérations pour le client: ${clientName}`);
     
-    // Set a shorter timeout for this specific query
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6000); // 6 seconds timeout
+    // Utiliser une promesse avec timeout au lieu de AbortController
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error("Délai d'attente dépassé")), 10000); // 10 secondes timeout pour les opérations
+    });
     
     // Récupérer les dépôts du client
-    const { data: deposits, error: depositsError } = await supabase
+    const depositsPromise = supabase
       .from('deposits')
       .select('*')
       .eq('client_name', clientName)
       .order('created_at', { ascending: false });
+    
+    // Utiliser Promise.race pour les dépôts
+    const { data: deposits, error: depositsError } = await Promise.race([
+      depositsPromise,
+      timeoutPromise.then(() => {
+        throw new Error("Délai d'attente dépassé lors de la récupération des dépôts");
+      })
+    ]) as typeof depositsPromise;
 
     if (depositsError) {
       console.error("Error fetching deposits:", depositsError);
@@ -26,14 +35,19 @@ export const fetchClientOperations = async (
     }
 
     // Récupérer les retraits du client
-    const { data: withdrawals, error: withdrawalsError } = await supabase
+    const withdrawalsPromise = supabase
       .from('withdrawals')
       .select('*')
       .eq('client_name', clientName)
       .order('created_at', { ascending: false });
-
-    // Clear timeout
-    clearTimeout(timeoutId);
+    
+    // Utiliser Promise.race pour les retraits
+    const { data: withdrawals, error: withdrawalsError } = await Promise.race([
+      withdrawalsPromise,
+      timeoutPromise.then(() => {
+        throw new Error("Délai d'attente dépassé lors de la récupération des retraits");
+      })
+    ]) as typeof withdrawalsPromise;
 
     if (withdrawalsError) {
       console.error("Error fetching withdrawals:", withdrawalsError);
@@ -65,13 +79,14 @@ export const fetchClientOperations = async (
     // Trier par date (plus récentes en premier)
     operations.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-    console.log(`Retrieved ${operations.length} operations for client ${clientName}`);
+    console.log(`Récupéré ${operations.length} opérations pour le client ${clientName}`);
     return operations;
   } catch (error: any) {
     console.error("Error in fetchClientOperations:", error);
     
-    // More specific error handling
-    if (error.name === 'AbortError') {
+    // Plus d'informations de diagnostic
+    if (error.name === 'AbortError' || error.message.includes('délai') || error.message.includes('Délai')) {
+      console.error("Timeout détecté pendant la récupération des opérations");
       throw new Error("Délai d'attente dépassé lors de la récupération des opérations");
     }
     

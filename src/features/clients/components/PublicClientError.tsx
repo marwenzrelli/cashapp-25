@@ -1,8 +1,8 @@
 
 import { Button } from "@/components/ui/button";
-import { AlertCircle, RefreshCcw, Home } from "lucide-react";
+import { AlertCircle, RefreshCcw, Home, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 interface PublicClientErrorProps {
@@ -12,6 +12,8 @@ interface PublicClientErrorProps {
 
 export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) => {
   const navigate = useNavigate();
+  const [retryCount, setRetryCount] = useState(0);
+  const [isRetrying, setIsRetrying] = useState(false);
   
   // Show a toast when an error occurs
   useEffect(() => {
@@ -24,8 +26,16 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
   
   const handleRetry = () => {
     if (onRetry) {
-      console.log("Retrying client fetch...");
-      onRetry();
+      setIsRetrying(true);
+      setRetryCount(prev => prev + 1);
+      
+      console.log("Nouvelle tentative de récupération des données client...");
+      
+      // Petit délai pour montrer que quelque chose se passe
+      setTimeout(() => {
+        onRetry();
+        setTimeout(() => setIsRetrying(false), 1000);
+      }, 500);
     }
   };
 
@@ -33,6 +43,15 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
   const isClientNotFoundError = error && (
     error.includes("Client introuvable") || 
     error.includes("n'existe pas")
+  );
+  
+  const isNetworkError = error && (
+    error.includes("requête") ||
+    error.includes("interrompue") ||
+    error.includes("délai") ||
+    error.includes("Délai") ||
+    error.includes("timeout") ||
+    error.includes("dépassé")
   );
   
   return (
@@ -58,17 +77,35 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
           </p>
         )}
         
+        {isNetworkError && (
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+            Problème de connexion réseau. Veuillez vérifier votre connexion internet et réessayer.
+          </p>
+        )}
+        
         <div className="mt-8 space-y-3">
           {onRetry && (
             <Button 
               onClick={handleRetry}
               className="w-full gap-2"
               variant="outline"
+              disabled={isRetrying}
             >
-              <RefreshCcw className="h-4 w-4" />
-              Réessayer
+              <RefreshCcw className={`h-4 w-4 ${isRetrying ? 'animate-spin' : ''}`} />
+              {isRetrying ? 'Tentative en cours...' : (
+                retryCount > 0 ? `Réessayer (${retryCount + 1})` : 'Réessayer'
+              )}
             </Button>
           )}
+          
+          <Button 
+            onClick={() => window.location.reload()}
+            className="w-full gap-2"
+            variant="outline"
+          >
+            <ExternalLink className="h-4 w-4" />
+            Rafraîchir la page
+          </Button>
           
           <Button 
             onClick={() => navigate('/clients')}

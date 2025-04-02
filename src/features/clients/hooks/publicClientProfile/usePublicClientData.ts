@@ -16,7 +16,6 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
   const fetchingRef = useRef(false);
   const initialLoadCompletedRef = useRef(false);
   const dataFetchedRef = useRef(false);
-  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Timer pour suivre le temps de chargement
   useEffect(() => {
@@ -41,35 +40,27 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
       return;
     }
 
-    // Annuler toute requête précédente
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    abortControllerRef.current = new AbortController();
-    const signal = abortControllerRef.current.signal;
-
     fetchingRef.current = true;
     const attemptCount = fetchCount + 1;
     setFetchCount(attemptCount);
-    console.log(`Fetching client data (Attempt #${attemptCount}) with token: ${token}`);
+    console.log(`Récupération des données client (Tentative #${attemptCount}) avec le token: ${token.substring(0, 8)}...`);
     
     setIsLoading(true);
     setError(null);
     setLoadingTime(0);
 
     // Ajouter un timeout global pour toute la fonction
-    const timeout = setTimeout(() => {
-      if (fetchingRef.current && abortControllerRef.current) {
-        abortControllerRef.current.abort();
+    const globalTimeout = setTimeout(() => {
+      if (fetchingRef.current) {
         setError("Le délai d'attente a été dépassé. Veuillez réessayer.");
         setIsLoading(false);
         fetchingRef.current = false;
       }
-    }, 12000); // Reduced from 15s to 12s for faster feedback
+    }, 15000); // 15 secondes pour l'ensemble du processus
 
     try {
       // Step 1: Get client ID from token
-      console.log(`Step 1: Fetching access data with token: ${token}`);
+      console.log(`Étape 1: Récupération des données d'accès avec le token: ${token.substring(0, 8)}...`);
       const accessData: TokenData = await fetchAccessData(token);
       
       if (!accessData || !accessData.client_id) {
@@ -78,37 +69,27 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
         throw new Error(errorMsg);
       }
       
-      console.log(`Step 2: Retrieved client ID ${accessData.client_id} from token`);
+      console.log(`Étape 2: ID client ${accessData.client_id} récupéré depuis le token`);
       
       // Step 2: Get client details
       const clientData = await fetchClientDetails(accessData.client_id);
-      console.log(`Step 3: Retrieved client data:`, clientData);
-      
-      // Vérifier si l'opération a été annulée
-      if (signal.aborted) {
-        throw new Error("Opération annulée");
-      }
+      console.log(`Étape 3: Données client récupérées:`, clientData);
       
       setClient(clientData);
       
       // Step 3: Get client operations using the token for authentication
       const fullName = `${clientData.prenom} ${clientData.nom}`;
-      console.log(`Step 4: Fetching operations for ${fullName} with token for auth`);
+      console.log(`Étape 4: Récupération des opérations pour ${fullName} avec le token pour authentification`);
       
       // Wrap operations fetch in a separate try/catch to still show client data if operations fail
       try {
         const operationsData = await fetchClientOperations(fullName, token);
         
-        // Vérifier à nouveau si l'opération a été annulée
-        if (signal.aborted) {
-          throw new Error("Opération annulée");
-        }
-        
         setOperations(operationsData);
-        console.log(`Step 5: Retrieved ${operationsData.length} client operations`);
+        console.log(`Étape 5: ${operationsData.length} opérations client récupérées`);
       } catch (operationsErr: any) {
         // Log the error but still consider client data fetch successful
-        console.warn("Error fetching operations:", operationsErr);
+        console.warn("Erreur lors de la récupération des opérations:", operationsErr);
         setOperations([]);
       }
       
@@ -116,26 +97,21 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
       setIsLoading(false);
       initialLoadCompletedRef.current = true;
     } catch (err: any) {
-      if (err.name === 'AbortError' || err.message === "Opération annulée") {
-        console.log("Requête annulée");
-        setError("La requête a été interrompue. Veuillez réessayer.");
-      } else {
-        console.error("Error in fetchClientData:", err);
-        setClient(null);
-        setOperations([]);
-        const errorMessage = err.message || "Erreur lors de la récupération des données client";
-        setError(errorMessage);
-        showErrorToast("Erreur d'accès", errorMessage);
-      }
+      console.error("Error in fetchClientData:", err);
+      setClient(null);
+      setOperations([]);
+      const errorMessage = err.message || "Erreur lors de la récupération des données client";
+      setError(errorMessage);
+      showErrorToast("Erreur d'accès", errorMessage);
       setIsLoading(false);
     } finally {
       fetchingRef.current = false;
-      clearTimeout(timeout);
+      clearTimeout(globalTimeout);
     }
   }, [token, fetchCount, client]);
 
   const retryFetch = useCallback(() => {
-    console.log("Retrying client data fetch with token:", token);
+    console.log("Nouvelle tentative de récupération des données client avec le token:", token?.substring(0, 8));
     dataFetchedRef.current = false; // Reset the data fetched flag to allow a new fetch
     fetchClientData();
   }, [fetchClientData, token]);
@@ -143,16 +119,9 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
   // Initial fetch on mount or token change - only run once
   useEffect(() => {
     if (token && !initialLoadCompletedRef.current) {
-      console.log("Initial data load with token:", token);
+      console.log("Chargement initial des données avec le token:", token.substring(0, 8));
       fetchClientData();
     }
-    
-    return () => {
-      // Nettoyer les requêtes en cours lors du démontage
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
   }, [token, fetchClientData]);
 
   return {
