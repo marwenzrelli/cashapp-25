@@ -16,12 +16,14 @@ interface WithdrawalDatabaseRow {
 
 export const fetchWithdrawals = async (clientId: number): Promise<WithdrawalRecord[]> => {
   try {
-    // Create simple query with explicit type for data
-    const { data, error } = await supabase
+    // Execute query with any type to avoid TypeScript analyzing the return type too deeply
+    const result = await supabase
       .from('withdrawals')
       .select('id, amount, created_at, notes, status, client_name, operation_date')
       .eq('client_id', clientId)
       .order('created_at', { ascending: false });
+    
+    const { data, error } = result;
     
     if (error) {
       console.error("Error in withdrawals query:", error);
@@ -32,7 +34,7 @@ export const fetchWithdrawals = async (clientId: number): Promise<WithdrawalReco
       return [];
     }
 
-    // Cast the data to our explicit interface to avoid deep inference
+    // Cast data to our explicit interface after we have the result
     const typedData = data as WithdrawalDatabaseRow[];
     
     // Create array first, then populate it (avoids spread operator issues)
