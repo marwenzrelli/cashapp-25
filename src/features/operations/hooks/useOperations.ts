@@ -22,9 +22,36 @@ export const useOperations = () => {
   const { fetchAllOperations } = useFetchOperations(setOperations, setIsLoading);
   const { deleteOperation: deleteOperationLogic, confirmDeleteOperation: confirmDeleteOperationLogic } = useDeleteOperation(fetchAllOperations, setIsLoading);
 
+  // Fonction pour dédupliquer des opérations basées sur leur ID
+  const deduplicateOperations = (ops: Operation[]): Operation[] => {
+    const uniqueOps = new Map<string, Operation>();
+    
+    for (const op of ops) {
+      const uniqueId = op.id.toString();
+      if (!uniqueOps.has(uniqueId)) {
+        uniqueOps.set(uniqueId, op);
+      }
+    }
+    
+    return Array.from(uniqueOps.values());
+  };
+
   // Initialize operations on component mount
   useEffect(() => {
-    fetchAllOperations();
+    const initOperations = async () => {
+      await fetchAllOperations();
+      
+      // Dédupliquer les opérations après les avoir récupérées
+      if (operations.length > 0) {
+        const uniqueOperations = deduplicateOperations(operations);
+        if (uniqueOperations.length !== operations.length) {
+          console.log(`Dédupliqué ${operations.length - uniqueOperations.length} opérations`);
+          setOperations(uniqueOperations);
+        }
+      }
+    };
+    
+    initOperations();
   }, []);
 
   // Set up real-time subscription to operations
@@ -78,6 +105,16 @@ export const useOperations = () => {
     try {
       setIsLoading(true);
       await fetchAllOperations();
+      
+      // Dédupliquer les opérations après rafraîchissement
+      if (operations.length > 0) {
+        const uniqueOperations = deduplicateOperations(operations);
+        if (uniqueOperations.length !== operations.length) {
+          console.log(`Dédupliqué ${operations.length - uniqueOperations.length} opérations au rafraîchissement`);
+          setOperations(uniqueOperations);
+        }
+      }
+      
       toast.success("Opérations actualisées");
     } catch (error) {
       console.error("Erreur lors de l'actualisation des opérations:", error);

@@ -7,6 +7,20 @@ export const useFetchOperations = (
   setOperations: (operations: Operation[]) => void,
   setIsLoading: (isLoading: boolean) => void
 ) => {
+  // Fonction utilitaire pour dédupliquer les opérations
+  const deduplicateOperations = (operations: Operation[]): Operation[] => {
+    const uniqueIds = new Map<string, Operation>();
+    
+    operations.forEach(op => {
+      const id = op.id.toString();
+      if (!uniqueIds.has(id)) {
+        uniqueIds.set(id, op);
+      }
+    });
+    
+    return Array.from(uniqueIds.values());
+  };
+
   const fetchAllOperations = async () => {
     try {
       const { data: deposits, error: depositsError } = await supabase
@@ -72,7 +86,14 @@ export const useFetchOperations = (
         return dateB - dateA;
       });
 
-      setOperations(formattedOperations);
+      // Dédupliquer les opérations avant de les retourner
+      const uniqueOperations = deduplicateOperations(formattedOperations);
+      
+      if (uniqueOperations.length !== formattedOperations.length) {
+        console.log(`Dédupliqué ${formattedOperations.length - uniqueOperations.length} opérations dans useFetchOperations`);
+      }
+      
+      setOperations(uniqueOperations);
     } catch (error) {
       console.error("Erreur lors du chargement des opérations:", error);
       toast.error("Erreur lors du chargement des opérations");

@@ -80,11 +80,14 @@ export const fetchClientOperations = async (
       }))
     ];
 
-    // Trier par date (plus récentes en premier)
-    operations.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    // Déduplication des opérations basée sur l'ID unique
+    const uniqueOperations = deduplicateOperations(operations);
 
-    console.log(`Récupéré ${operations.length} opérations pour le client ${clientName}`);
-    return operations;
+    // Trier par date (plus récentes en premier)
+    uniqueOperations.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    console.log(`Récupéré ${uniqueOperations.length} opérations uniques sur ${operations.length} totales pour le client ${clientName}`);
+    return uniqueOperations;
   } catch (error: any) {
     console.error("Error in fetchClientOperations:", error);
     
@@ -97,3 +100,19 @@ export const fetchClientOperations = async (
     throw new Error(error.message || "Erreur lors de la récupération des opérations");
   }
 };
+
+// Fonction utilitaire pour dédupliquer les opérations basées sur leur ID unique
+function deduplicateOperations(operations: ClientOperation[]): ClientOperation[] {
+  // Utiliser un Map pour stocker les opérations uniques par ID
+  const uniqueOps = new Map<string, ClientOperation>();
+  
+  for (const operation of operations) {
+    // Vérifier si cette opération existe déjà dans notre Map
+    if (!uniqueOps.has(operation.id)) {
+      uniqueOps.set(operation.id, operation);
+    }
+  }
+  
+  // Convertir le Map en tableau
+  return Array.from(uniqueOps.values());
+}
