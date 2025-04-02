@@ -16,12 +16,16 @@ interface WithdrawalDatabaseRow {
 
 export const fetchWithdrawals = async (clientId: number): Promise<WithdrawalRecord[]> => {
   try {
-    // Use explicit cast to any to prevent TypeScript from analyzing the query too deeply
-    const { data, error } = await (supabase
+    // Execute query without any type inference - use generic SupabaseClient methods
+    const query = supabase
       .from('withdrawals')
       .select('id, amount, created_at, notes, status, client_name, operation_date')
       .eq('client_id', clientId)
-      .order('created_at', { ascending: false }) as any);
+      .order('created_at', { ascending: false });
+      
+    // Get the data and error from the result
+    const result = await query;
+    const { data, error } = result;
     
     if (error) {
       console.error("Error in withdrawals query:", error);
