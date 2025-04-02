@@ -32,9 +32,7 @@ export const ClientListItem = ({
            status;
   };
 
-  const handleView = (e: React.MouseEvent) => {
-    // Prevent any parent events from being triggered
-    e.stopPropagation();
+  const handleView = () => {
     onView(client.id);
   };
 

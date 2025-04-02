@@ -1,154 +1,159 @@
 
-import { useEffect, useState, useRef } from "react";
-import { PublicClientData } from "./types";
-import { useFetchClientData } from "./useFetchClientData";
-import { useLoadingTimer } from "./useLoadingTimer";
-import { useRetryLogic } from "./useRetryLogic";
-import { toast } from "sonner";
-import { isOnline } from "@/utils/network";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { Client } from "@/features/clients/types";
+import { ClientOperation, PublicClientData, TokenData } from "./types";
+import { fetchAccessData, fetchClientDetails, fetchClientOperations } from "./fetchClientData";
+import { showErrorToast } from "../utils/errorUtils";
 
 export const usePublicClientData = (token: string | undefined): PublicClientData => {
-  // Track connection status
-  const [isConnected, setIsConnected] = useState(isOnline);
-  
-  // Get core data fetching functionality
-  const {
-    client,
-    operations,
-    isLoading,
-    error,
-    loadingTime: fetchLoadingTime,
-    fetchingRef,
-    dataFetchedRef,
-    networkErrorCountRef,
-    abortControllerRef,
-    fetchClientData,
-    setLoadingTime
-  } = useFetchClientData(token);
+  const [client, setClient] = useState<Client | null>(null);
+  const [operations, setOperations] = useState<ClientOperation[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [fetchCount, setFetchCount] = useState(0); // Track fetch attempts for debugging
+  const [loadingTime, setLoadingTime] = useState(0);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const fetchingRef = useRef(false);
+  const initialLoadCompletedRef = useRef(false);
+  const dataFetchedRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Get loading timer functionality
-  const { loadingTime } = useLoadingTimer(isLoading, error);
-
-  // Keep loadingTime in sync between hooks
+  // Timer pour suivre le temps de chargement
   useEffect(() => {
-    setLoadingTime(loadingTime);
-  }, [loadingTime, setLoadingTime]);
+    if (isLoading && !error) {
+      timerRef.current = setInterval(() => {
+        setLoadingTime(prev => prev + 1);
+      }, 1000);
+    } else if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
 
-  // Get retry logic functionality
-  const { 
-    retryFetch, 
-    attemptAutoRetry, 
-    disableAutoRetry,
-    cleanupRetry
-  } = useRetryLogic({
-    fetchClientData,
-    networkErrorCountRef,
-    dataFetchedRef,
-    maxRetryAttempts: 4
-  });
-
-  // Track online status
-  useEffect(() => {
-    const handleOnlineStatusChange = () => {
-      const online = isOnline();
-      setIsConnected(online);
-      
-      if (online && error) {
-        console.log("Internet connection restored, auto-retry enabled");
-        // Small delay to ensure connection is stable
-        setTimeout(() => {
-          if (error) {
-            toast.info("Connexion internet rétablie", {
-              description: "Nouvelle tentative en cours..."
-            });
-            retryFetch();
-          }
-        }, 1500);
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
       }
     };
+  }, [isLoading, error]);
+
+  const fetchClientData = useCallback(async () => {
+    // Skip if no token or already fetching or already fetched
+    if (!token || fetchingRef.current || (dataFetchedRef.current && client)) {
+      return;
+    }
+
+    // Annuler toute requête précédente
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
+
+    fetchingRef.current = true;
+    const attemptCount = fetchCount + 1;
+    setFetchCount(attemptCount);
+    console.log(`Fetching client data (Attempt #${attemptCount}) with token: ${token}`);
     
-    window.addEventListener('online', handleOnlineStatusChange);
-    window.addEventListener('offline', handleOnlineStatusChange);
-    
-    // Initial check
-    handleOnlineStatusChange();
-    
-    return () => {
-      window.removeEventListener('online', handleOnlineStatusChange);
-      window.removeEventListener('offline', handleOnlineStatusChange);
-      cleanupRetry();
-    };
-  }, [error, retryFetch, cleanupRetry]);
+    setIsLoading(true);
+    setError(null);
+    setLoadingTime(0);
+
+    // Ajouter un timeout global pour toute la fonction
+    const timeout = setTimeout(() => {
+      if (fetchingRef.current && abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        setError("Le délai d'attente a été dépassé. Veuillez réessayer.");
+        setIsLoading(false);
+        fetchingRef.current = false;
+      }
+    }, 15000); // 15 secondes maximum pour la requête complète
+
+    try {
+      // Step 1: Get client ID from token
+      console.log(`Step 1: Fetching access data with token: ${token}`);
+      const accessData: TokenData = await fetchAccessData(token);
+      
+      if (!accessData || !accessData.client_id) {
+        const errorMsg = "Données d'accès invalides ou client non associé";
+        console.error(errorMsg);
+        throw new Error(errorMsg);
+      }
+      
+      console.log(`Step 2: Retrieved client ID ${accessData.client_id} from token`);
+      
+      // Step 2: Get client details
+      const clientData = await fetchClientDetails(accessData.client_id);
+      console.log(`Step 3: Retrieved client data:`, clientData);
+      
+      // Vérifier si l'opération a été annulée
+      if (signal.aborted) {
+        throw new Error("Opération annulée");
+      }
+      
+      setClient(clientData);
+      
+      // Step 3: Get client operations using the token for authentication
+      // Convert clientId to number to ensure type compatibility
+      const fullName = `${clientData.prenom} ${clientData.nom}`;
+      console.log(`Step 4: Fetching operations for ${fullName} with token for auth`);
+      const operationsData = await fetchClientOperations(fullName, token);
+      
+      // Vérifier à nouveau si l'opération a été annulée
+      if (signal.aborted) {
+        throw new Error("Opération annulée");
+      }
+      
+      setOperations(operationsData);
+      
+      console.log(`Step 5: Retrieved ${operationsData.length} client operations`);
+      dataFetchedRef.current = true;
+      setIsLoading(false);
+      initialLoadCompletedRef.current = true;
+    } catch (err: any) {
+      if (err.name === 'AbortError' || err.message === "Opération annulée") {
+        console.log("Requête annulée");
+        setError("La requête a été interrompue. Veuillez réessayer.");
+      } else {
+        console.error("Error in fetchClientData:", err);
+        setClient(null);
+        setOperations([]);
+        const errorMessage = err.message || "Erreur lors de la récupération des données client";
+        setError(errorMessage);
+        showErrorToast("Erreur d'accès", { message: errorMessage });
+      }
+      setIsLoading(false);
+    } finally {
+      fetchingRef.current = false;
+      clearTimeout(timeout);
+    }
+  }, [token, fetchCount, client]);
+
+  const retryFetch = useCallback(() => {
+    console.log("Retrying client data fetch with token:", token);
+    dataFetchedRef.current = false; // Reset the data fetched flag to allow a new fetch
+    fetchClientData();
+  }, [fetchClientData, token]);
 
   // Initial fetch on mount or token change - only run once
-  const initialLoadCompletedRef = useRef(false);
   useEffect(() => {
     if (token && !initialLoadCompletedRef.current) {
       console.log("Initial data load with token:", token);
       fetchClientData();
-      initialLoadCompletedRef.current = true;
     }
     
     return () => {
-      // Clean up any pending requests on unmount
+      // Nettoyer les requêtes en cours lors du démontage
       if (abortControllerRef.current) {
-        console.log("Cleaning up - aborting any pending requests");
-        abortControllerRef.current.abort("component unmounted");
-        abortControllerRef.current = null;
+        abortControllerRef.current.abort();
       }
-      
-      // Clean up any retry timers
-      cleanupRetry();
     };
-  }, [token, fetchClientData, abortControllerRef, cleanupRetry]);
-
-  // Handle auto-retry for network errors
-  useEffect(() => {
-    if (error && !isLoading) {
-      // Check if it's a network error
-      const isNetworkError = error.includes("network") || 
-                           error.includes("connexion") ||
-                           error.includes("Failed to fetch") ||
-                           error.includes("interrompue") ||
-                           error.includes("réseau");
-      
-      if (isNetworkError && isConnected) {
-        console.log("Network error detected but device appears online - will retry");
-      }
-      
-      const timeoutId = attemptAutoRetry(networkErrorCountRef.current, isNetworkError);
-      
-      // Check if we should disable auto-retry
-      disableAutoRetry();
-      
-      return () => {
-        if (timeoutId) clearTimeout(timeoutId);
-      };
-    }
-  }, [error, isLoading, attemptAutoRetry, disableAutoRetry, networkErrorCountRef, isConnected]);
-  
-  // Show success toast when data is loaded
-  const errorNotifiedRef = useRef(false);
-  useEffect(() => {
-    if (client && operations && !error && !isLoading) {
-      toast.success("Données client chargées", {
-        description: `${operations.length} opérations trouvées pour ${client.prenom} ${client.nom}`
-      });
-    }
-    
-    // Reset error notification ref when error or loading state changes
-    if (!error || isLoading) {
-      errorNotifiedRef.current = false;
-    }
-  }, [client, operations, isLoading, error]);
+  }, [token, fetchClientData]);
 
   return {
     client,
-    operations: operations || [],
+    operations,
     isLoading,
     error,
     loadingTime,
-    isConnected,
     fetchClientData,
     retryFetch
   };

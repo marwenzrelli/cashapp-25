@@ -1,64 +1,67 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { ClientOperation } from "./types";
-import { validateTokenAccess } from "./operations/authCheck";
-import { fetchDeposits, mapDepositsToOperations } from "./operations/fetchDeposits";
-import { fetchWithdrawals, mapWithdrawalsToOperations } from "./operations/fetchWithdrawals";
-import { 
-  fetchOutgoingTransfers, 
-  fetchIncomingTransfers, 
-  mapTransfersToOperations 
-} from "./operations/fetchTransfers";
-import { sortOperationsByDate, createTimeoutController, handleFetchError } from "./operations/utils";
 
-export const fetchClientOperations = async (clientName: string, token: string): Promise<ClientOperation[]> => {
-  // Create abort controller for timeout handling
-  const { controller, timeoutId } = createTimeoutController(15000);
-
+export const fetchClientOperations = async (
+  clientName: string,
+  token: string
+): Promise<ClientOperation[]> => {
   try {
-    // For better error messages
-    if (!navigator.onLine) {
-      throw new Error("Vous êtes hors ligne. Vérifiez votre connexion internet.");
+    console.log(`Fetching operations for client: ${clientName}`);
+    
+    // Récupérer les dépôts du client
+    const { data: deposits, error: depositsError } = await supabase
+      .from('deposits')
+      .select('*')
+      .eq('client_name', clientName)
+      .order('created_at', { ascending: false });
+
+    if (depositsError) {
+      console.error("Error fetching deposits:", depositsError);
+      throw new Error(`Erreur lors de la récupération des dépôts: ${depositsError.message}`);
     }
-    
-    // First, retrieve client ID from the token for security check
-    const accessCheck = await validateTokenAccess(token);
-    
-    if (!accessCheck.isValid || !accessCheck.clientId) {
-      throw new Error(accessCheck.error || "Erreur d'accès non spécifiée");
+
+    // Récupérer les retraits du client
+    const { data: withdrawals, error: withdrawalsError } = await supabase
+      .from('withdrawals')
+      .select('*')
+      .eq('client_name', clientName)
+      .order('created_at', { ascending: false });
+
+    if (withdrawalsError) {
+      console.error("Error fetching withdrawals:", withdrawalsError);
+      throw new Error(`Erreur lors de la récupération des retraits: ${withdrawalsError.message}`);
     }
-    
-    const clientId = accessCheck.clientId;
-    
-    // Fetch all operation types in parallel for better performance
-    const [depositsData, withdrawalsData, outgoingTransfers, incomingTransfers] = await Promise.all([
-      fetchDeposits(clientId),
-      fetchWithdrawals(clientId),
-      fetchOutgoingTransfers(clientName),
-      fetchIncomingTransfers(clientName)
-    ]);
-    
-    // Combine transfers arrays
-    const allTransfers = [...outgoingTransfers, ...incomingTransfers];
-    
-    // Convert each operation type to unified ClientOperation format
-    const depositOperations = mapDepositsToOperations(depositsData);
-    const withdrawalOperations = mapWithdrawalsToOperations(withdrawalsData);
-    const transferOperations = mapTransfersToOperations(allTransfers, clientName);
-    
-    // Combine all operations
-    const combinedOperations = [
-      ...depositOperations,
-      ...withdrawalOperations,
-      ...transferOperations
+
+    // Combiner et formater les opérations
+    const operations: ClientOperation[] = [
+      ...deposits.map((deposit): ClientOperation => ({
+        id: `deposit-${deposit.id}`,
+        type: "deposit",
+        date: deposit.operation_date || deposit.created_at,
+        amount: deposit.amount,
+        description: deposit.notes || `Versement`,
+        status: deposit.status,
+        fromClient: deposit.client_name
+      })),
+      ...withdrawals.map((withdrawal): ClientOperation => ({
+        id: `withdrawal-${withdrawal.id}`,
+        type: "withdrawal",
+        date: withdrawal.operation_date || withdrawal.created_at,
+        amount: withdrawal.amount,
+        description: withdrawal.notes || `Retrait`,
+        status: withdrawal.status,
+        fromClient: withdrawal.client_name
+      }))
     ];
-    
-    // Sort all operations by date and return
-    return sortOperationsByDate(combinedOperations);
-    
+
+    // Trier par date (plus récentes en premier)
+    operations.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    console.log(`Retrieved ${operations.length} operations for client ${clientName}`);
+    return operations;
   } catch (error: any) {
-    return handleFetchError(error);
-  } finally {
-    clearTimeout(timeoutId);
+    console.error("Error in fetchClientOperations:", error);
+    throw new Error(error.message || "Erreur lors de la récupération des opérations");
   }
 };

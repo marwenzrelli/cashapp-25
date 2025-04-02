@@ -50,7 +50,7 @@ export const LoadingIndicator = ({
     : '';
 
   return (
-    <div className={cn(containerClasses, opacityClass, className)} style={{ pointerEvents: 'none' }}>
+    <div className={cn(containerClasses, opacityClass, className)}>
       <Loader2 className={cn("text-primary animate-spin", sizeClasses[size])} />
       {text && (
         <p className={cn("mt-2 text-sm text-muted-foreground", textClassName)}>

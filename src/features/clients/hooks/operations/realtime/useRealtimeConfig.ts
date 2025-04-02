@@ -1,13 +1,18 @@
 
 import { useRef } from "react";
 
+/**
+ * Hook providing configuration values for realtime subscription
+ */
 export const useRealtimeConfig = () => {
-  // Configuration settings for realtime connection
-  const maxReconnectAttempts = 5; 
-  const reconnectBackoffMs = 2000; // Start with 2 seconds and then use exponential backoff
-  const throttleTimeMs = 2000; // Throttle time for refreshes
+  // Configuration constants - reducing values to minimize UI disruption
+  const maxReconnectAttempts = 2; // Reduced from 3 to 2
+  const reconnectBackoffMs = 8000; // Increased from 5s to 8s
+  const throttleTimeMs = 5000; // Increased from 3s to 5s
+  const initialConnectionDelay = 1000; // Add delay before first connection attempt
+
+  // Reference to throttle timeout
   const throttleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const initialConnectionDelay = 1500; // Delay before first connection attempt
 
   return {
     maxReconnectAttempts,

@@ -18,7 +18,6 @@ export interface PublicClientData {
   isLoading: boolean;
   error: string | null;
   loadingTime: number;
-  isConnected: boolean; // Added this property
   fetchClientData: () => Promise<void>;
   retryFetch: () => void;
 }

@@ -12,12 +12,11 @@ const Clients = () => {
   // Display state management
   const [initialLoading, setInitialLoading] = useState(true);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
-  const [loadingIndicatorShown, setLoadingIndicatorShown] = useState(false); 
+  const [loadingIndicatorShown, setLoadingIndicatorShown] = useState(false); // Démarrer sans montrer le loading
   const [pageReady, setPageReady] = useState(false); // État pour la transition de la page
   const timeoutTimerRef = useRef<NodeJS.Timeout | null>(null);
   const loadingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const pageTransitionTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const pageRenderedRef = useRef(false);
 
   const {
     // État
@@ -54,10 +53,6 @@ const Clients = () => {
 
   // Animation de transition de la page
   useEffect(() => {
-    if (pageRenderedRef.current) return;
-    
-    pageRenderedRef.current = true;
-    
     // Permettre un court délai pour la transition de la page
     pageTransitionTimerRef.current = setTimeout(() => {
       setPageReady(true);
@@ -101,14 +96,17 @@ const Clients = () => {
             setLoadingIndicatorShown(true);
           }
           loadingTimerRef.current = null;
-        }, 500);
+        }, 500); // Augmenté de 300ms à 500ms pour éviter les flashs
       }
     } else {
       // When loading finishes, reset states with a small delay
       const resetTimer = setTimeout(() => {
         setInitialLoading(false);
         setLoadingTimeout(false);
-        setLoadingIndicatorShown(false);
+        // Garde l'indicateur de chargement un peu plus longtemps pour une transition plus douce
+        setTimeout(() => {
+          setLoadingIndicatorShown(false);
+        }, 300);
       }, 150);
       
       return () => clearTimeout(resetTimer);
@@ -159,7 +157,7 @@ const Clients = () => {
         <ClientsPageContent
           clients={clients}
           filteredClients={filteredClients}
-          loading={loading}
+          loading={loading && loadingIndicatorShown}
           error={error}
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}

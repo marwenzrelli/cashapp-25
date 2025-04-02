@@ -27,10 +27,10 @@ export const ClientListItem = ({
     }
   };
 
-  // Optimized handler that works better on iOS
+  // iOS-optimized handler
   const handleIOSTouch = (e: React.TouchEvent) => {
+    // Prevent default behavior that might interfere
     e.stopPropagation();
-    e.preventDefault();
     
     // For iOS, delay the click handler slightly to ensure it's registered as a tap
     setTimeout(() => {
@@ -38,16 +38,9 @@ export const ClientListItem = ({
     }, 10);
   };
 
-  // Regular mouse click handler
-  const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-    onClick(client.id.toString(), e);
-  };
-
   return (
     <div 
-      onClick={handleClick}
+      onClick={e => onClick(client.id.toString(), e)} 
       onTouchEnd={handleIOSTouch}
       data-client-id={client.id.toString()} 
       className={`
