@@ -16,12 +16,15 @@ interface WithdrawalDatabaseRow {
 
 export const fetchWithdrawals = async (clientId: number): Promise<WithdrawalRecord[]> => {
   try {
-    // Use explicit typing for the query result to avoid deep type inference
-    const { data, error } = await supabase
+    // Use type assertion to avoid deep type inference
+    const result = await supabase
       .from('withdrawals')
       .select('id, amount, created_at, notes, status, client_name, operation_date')
       .eq('client_id', clientId)
       .order('created_at', { ascending: false });
+    
+    const error = result.error;
+    const data = result.data as WithdrawalDatabaseRow[] | null;
     
     if (error) {
       console.error("Error in withdrawals query:", error);
@@ -38,7 +41,7 @@ export const fetchWithdrawals = async (clientId: number): Promise<WithdrawalReco
     // Use a for loop instead of map to avoid complex type inference
     for (let i = 0; i < data.length; i++) {
       // Cast each row to our explicit interface
-      const row = data[i] as WithdrawalDatabaseRow;
+      const row = data[i];
       
       // Manually create each withdrawal record with explicit assignments
       const withdrawal: WithdrawalRecord = {
