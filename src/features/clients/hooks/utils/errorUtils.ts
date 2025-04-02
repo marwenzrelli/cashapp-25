@@ -9,7 +9,8 @@ export const handleSupabaseError = (error: any) => {
     return "Une erreur inattendue s'est produite";
   }
   
-  if (error.message?.includes("Failed to fetch")) {
+  if (error.message?.includes("Failed to fetch") || error.message?.includes("Network") || 
+      error.message?.includes("fetch") || error.message?.includes("AbortError")) {
     return "Problème de connexion réseau. Veuillez vérifier votre connexion internet.";
   }
   
@@ -27,6 +28,11 @@ export const handleSupabaseError = (error: any) => {
 
   if (error.message?.includes("introuvable")) {
     return error.message;
+  }
+
+  if (error.message?.includes("timeout") || error.message?.includes("délai") || 
+      error.message?.includes("interrompue")) {
+    return "Le délai de connexion a été dépassé. Veuillez réessayer.";
   }
   
   return error.message || "Une erreur inattendue s'est produite";

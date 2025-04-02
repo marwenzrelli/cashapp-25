@@ -1,3 +1,4 @@
+
 import { useParams, useNavigate } from "react-router-dom";
 import { PublicClientLoading } from "@/features/clients/components/PublicClientLoading";
 import { PublicClientError } from "@/features/clients/components/PublicClientError";
@@ -5,8 +6,7 @@ import { PublicClientPersonalInfo } from "@/features/clients/components/PublicCl
 import { PublicClientOperationsHistory } from "@/features/clients/components/PublicClientOperationsHistory";
 import { usePublicClientProfile } from "@/features/clients/hooks/usePublicClientProfile";
 import { useEffect, useRef, useState } from "react";
-import { showErrorToast } from "@/features/clients/hooks/utils/errorUtils";
-import { toast } from "sonner";
+import { showErrorToast, showSuccessToast } from "@/features/clients/hooks/utils/errorUtils";
 import { supabase } from "@/integrations/supabase/client";
 
 const PublicClientProfile = () => {
@@ -40,38 +40,20 @@ const PublicClientProfile = () => {
       
       // Check current session
       const checkAndCreateSession = async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session) {
-          try {
-            // If there's no existing session, create an anonymous session with our custom claims
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          
+          if (!session) {
             console.log("Creating anonymous session with token:", token);
-            // Use the correct structure for signInWithPassword
-            const anonymousEmail = `anonymous-${Date.now()}@example.com`;
-            const anonymousPassword = `anonymous-${Date.now()}`;
-            
-            // This is only for testing purposes and won't actually create a real user
-            // since we've disabled RLS, but keeping for compatibility
-            const { error } = await supabase.auth.signInWithPassword({
-              email: anonymousEmail,
-              password: anonymousPassword
-            });
-            
-            if (error) {
-              console.error("Error setting anonymous auth:", error);
-            } else {
-              // After sign in, set the session data with the token
-              const { error: updateError } = await supabase.auth.updateUser({
-                data: { public_token: token }
-              });
-              
-              if (updateError) {
-                console.error("Error updating user with public token:", updateError);
+            // Set auth header directly for public access
+            supabase.auth.onAuthStateChange((event, session) => {
+              if (event === 'SIGNED_IN' && session) {
+                console.log("Setting auth headers with token");
               }
-            }
-          } catch (error) {
-            console.error("Error creating anonymous session:", error);
+            });
           }
+        } catch (error) {
+          console.error("Error during session setup:", error);
         }
       };
       
@@ -82,7 +64,7 @@ const PublicClientProfile = () => {
   // Debug information for troubleshooting - run only once on data changes
   useEffect(() => {
     console.log("PublicClientProfile - Current state:", { 
-      token, 
+      token: token ? `${token.substring(0, 8)}...` : undefined, 
       hasClient: !!client, 
       operationsCount: operations?.length || 0,
       isLoading, 
@@ -92,16 +74,17 @@ const PublicClientProfile = () => {
     
     // Show a toast for client not found errors if we have an error and we're not loading
     if (error && !isLoading && error.includes("Client introuvable")) {
-      showErrorToast("Client introuvable", { 
-        message: "Le client demandé n'existe pas dans notre système. Veuillez vérifier l'URL ou contacter le support." 
-      });
+      showErrorToast("Client introuvable", 
+        "Le client demandé n'existe pas dans notre système. Veuillez vérifier l'URL ou contacter le support."
+      );
     }
     
     // Show success toast when client data loads - only once
-    if (client && operations && !error && !isLoading) {
-      toast.success("Données client chargées", {
-        description: `${operations.length} opérations trouvées pour ${client.prenom} ${client.nom}`
-      });
+    if (client && !error && !isLoading) {
+      showSuccessToast(
+        "Données client chargées", 
+        `${operations.length} opérations trouvées pour ${client.prenom} ${client.nom}`
+      );
     }
   }, [client, operations, isLoading, error, loadingTime]);
 
@@ -111,7 +94,7 @@ const PublicClientProfile = () => {
       // Check if token exists
       if (!token) {
         console.error("Token is missing in URL params");
-        showErrorToast("Accès refusé", { message: "Token d'accès manquant" });
+        showErrorToast("Accès refusé", "Token d'accès manquant");
         navigate("/"); // Redirect to home on missing token
         return;
       }
@@ -121,21 +104,21 @@ const PublicClientProfile = () => {
       
       if (!isValidUUID) {
         console.error("Invalid token format:", token);
-        showErrorToast("Format de token invalide", { message: "Le format du token ne correspond pas à un UUID valide" });
+        showErrorToast("Format de token invalide", "Le format du token ne correspond pas à un UUID valide");
         navigate("/"); // Redirect to home on invalid token format
         return;
       }
       
       initialCheckDone.current = true;
     }
-  }, [token, navigate, fetchClientData]);
+  }, [token, navigate]);
 
   // Show loading state
   if (isLoading) {
     return <PublicClientLoading 
       onRetry={retryFetch} 
       loadingTime={loadingTime}
-      timeout={loadingTime > 8} // Automatiquement afficher le timeout après 8 secondes
+      timeout={loadingTime > 6} // Show timeout message faster (reduced from 8s to 6s)
     />;
   }
 

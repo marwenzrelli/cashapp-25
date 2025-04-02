@@ -9,12 +9,17 @@ export const fetchClientOperations = async (
   try {
     console.log(`Fetching operations for client: ${clientName}`);
     
+    // Set a shorter timeout for this specific query
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000); // 6 seconds timeout
+    
     // Récupérer les dépôts du client
     const { data: deposits, error: depositsError } = await supabase
       .from('deposits')
       .select('*')
       .eq('client_name', clientName)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .abortSignal(controller.signal);
 
     if (depositsError) {
       console.error("Error fetching deposits:", depositsError);
@@ -26,7 +31,11 @@ export const fetchClientOperations = async (
       .from('withdrawals')
       .select('*')
       .eq('client_name', clientName)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .abortSignal(controller.signal);
+
+    // Clear timeout
+    clearTimeout(timeoutId);
 
     if (withdrawalsError) {
       console.error("Error fetching withdrawals:", withdrawalsError);
@@ -35,7 +44,7 @@ export const fetchClientOperations = async (
 
     // Combiner et formater les opérations
     const operations: ClientOperation[] = [
-      ...deposits.map((deposit): ClientOperation => ({
+      ...(deposits || []).map((deposit): ClientOperation => ({
         id: `deposit-${deposit.id}`,
         type: "deposit",
         date: deposit.operation_date || deposit.created_at,
@@ -44,7 +53,7 @@ export const fetchClientOperations = async (
         status: deposit.status,
         fromClient: deposit.client_name
       })),
-      ...withdrawals.map((withdrawal): ClientOperation => ({
+      ...(withdrawals || []).map((withdrawal): ClientOperation => ({
         id: `withdrawal-${withdrawal.id}`,
         type: "withdrawal",
         date: withdrawal.operation_date || withdrawal.created_at,
@@ -62,6 +71,12 @@ export const fetchClientOperations = async (
     return operations;
   } catch (error: any) {
     console.error("Error in fetchClientOperations:", error);
+    
+    // More specific error handling
+    if (error.name === 'AbortError') {
+      throw new Error("Délai d'attente dépassé lors de la récupération des opérations");
+    }
+    
     throw new Error(error.message || "Erreur lors de la récupération des opérations");
   }
 };

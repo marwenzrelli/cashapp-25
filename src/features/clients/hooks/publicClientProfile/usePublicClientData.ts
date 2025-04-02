@@ -65,7 +65,7 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
         setIsLoading(false);
         fetchingRef.current = false;
       }
-    }, 15000); // 15 secondes maximum pour la requête complète
+    }, 12000); // Reduced from 15s to 12s for faster feedback
 
     try {
       // Step 1: Get client ID from token
@@ -92,19 +92,26 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
       setClient(clientData);
       
       // Step 3: Get client operations using the token for authentication
-      // Convert clientId to number to ensure type compatibility
       const fullName = `${clientData.prenom} ${clientData.nom}`;
       console.log(`Step 4: Fetching operations for ${fullName} with token for auth`);
-      const operationsData = await fetchClientOperations(fullName, token);
       
-      // Vérifier à nouveau si l'opération a été annulée
-      if (signal.aborted) {
-        throw new Error("Opération annulée");
+      // Wrap operations fetch in a separate try/catch to still show client data if operations fail
+      try {
+        const operationsData = await fetchClientOperations(fullName, token);
+        
+        // Vérifier à nouveau si l'opération a été annulée
+        if (signal.aborted) {
+          throw new Error("Opération annulée");
+        }
+        
+        setOperations(operationsData);
+        console.log(`Step 5: Retrieved ${operationsData.length} client operations`);
+      } catch (operationsErr: any) {
+        // Log the error but still consider client data fetch successful
+        console.warn("Error fetching operations:", operationsErr);
+        setOperations([]);
       }
       
-      setOperations(operationsData);
-      
-      console.log(`Step 5: Retrieved ${operationsData.length} client operations`);
       dataFetchedRef.current = true;
       setIsLoading(false);
       initialLoadCompletedRef.current = true;
@@ -118,7 +125,7 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
         setOperations([]);
         const errorMessage = err.message || "Erreur lors de la récupération des données client";
         setError(errorMessage);
-        showErrorToast("Erreur d'accès", { message: errorMessage });
+        showErrorToast("Erreur d'accès", errorMessage);
       }
       setIsLoading(false);
     } finally {

@@ -37,8 +37,8 @@ export const PublicClientLoading = ({
   
   // Update timeout status based on loading time
   useEffect(() => {
-    // Show timeout message after 8 seconds (réduit de 10 à 8)
-    if (loadingTime >= 8 && !showTimeoutMessage) {
+    // Show timeout message after 6 seconds (réduit de 8 à 6)
+    if (loadingTime >= 6 && !showTimeoutMessage) {
       setShowTimeoutMessage(true);
     }
   }, [loadingTime, showTimeoutMessage]);
