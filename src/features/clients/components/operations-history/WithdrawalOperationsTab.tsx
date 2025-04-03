@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React from "react";
 import { Operation } from "@/features/operations/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { OperationsMobileCard } from "./OperationsMobileCard";
@@ -13,64 +13,24 @@ interface WithdrawalOperationsTabProps {
 }
 
 export const WithdrawalOperationsTab = ({ operations, currency = "TND" }: WithdrawalOperationsTabProps) => {
-  // Filter only withdrawal operations - improved to handle special case for client ID 4
+  // Filter only withdrawal operations
   const withdrawalOperations = operations.filter(
-    (operation) => {
-      // Special case for client ID 4 and operations 72-78
-      if (operation.fromClient?.toLowerCase().includes("pepsi men")) {
-        const operationIdString = operation.id.toString();
-        const numId = operationIdString.includes('-') 
-          ? parseInt(operationIdString.split('-')[1], 10)
-          : parseInt(operationIdString, 10);
-        
-        if (numId >= 72 && numId <= 78) {
-          return true; // Include these operations for this client 
-        }
-      }
-      return operation.type === "withdrawal";
-    }
+    (operation) => operation.type === "withdrawal"
   );
 
   // Log for debugging client ID 4 issues
-  useEffect(() => {
-    const hasSpecificIds = withdrawalOperations.some(op => {
-      const opIdStr = op.id.toString();
-      const numId = opIdStr.includes('-') 
-        ? parseInt(opIdStr.split('-')[1], 10)
-        : parseInt(opIdStr, 10);
-      return numId >= 72 && numId <= 78;
-    });
-    
-    if (hasSpecificIds) {
-      console.log("WithdrawalOperationsTab - Found specific withdrawal operations (72-78):", 
-        withdrawalOperations.filter(op => {
-          const opIdStr = op.id.toString();
-          const numId = opIdStr.includes('-') 
-            ? parseInt(opIdStr.split('-')[1], 10)
-            : parseInt(opIdStr, 10);
-          return numId >= 72 && numId <= 78;
-        }).map(op => `${op.id} (${op.fromClient})`));
-    } else {
-      // Log total count and IDs for debugging
-      console.log(`WithdrawalOperationsTab - Total operations: ${operations.length}, withdrawal operations: ${withdrawalOperations.length}`);
-      console.log("Operation IDs:", operations.map(op => op.id).join(", "));
-      
-      // Check for IDs in the 70s range
-      const seventiesOps = operations.filter(op => {
-        const opIdStr = op.id.toString();
-        const numId = opIdStr.includes('-') 
-          ? parseInt(opIdStr.split('-')[1], 10)
-          : parseInt(opIdStr, 10);
-        return numId >= 70 && numId <= 79;
-      });
-      
-      if (seventiesOps.length > 0) {
-        console.log("Operations with IDs in 70s:", seventiesOps.map(op => 
-          `${op.id} (${op.type}, ${op.fromClient})`
-        ));
-      }
-    }
-  }, [operations, withdrawalOperations]);
+  const hasSpecificIds = withdrawalOperations.some(op => {
+    const numId = parseInt(op.id, 10);
+    return numId >= 72 && numId <= 78;
+  });
+  
+  if (hasSpecificIds) {
+    console.log("WithdrawalOperationsTab - Found specific withdrawal operations (72-78):", 
+      withdrawalOperations.filter(op => {
+        const numId = parseInt(op.id, 10);
+        return numId >= 72 && numId <= 78;
+      }).map(op => `${op.id} (${op.fromClient})`));
+  }
 
   if (withdrawalOperations.length === 0) {
     return <EmptyOperations />;
