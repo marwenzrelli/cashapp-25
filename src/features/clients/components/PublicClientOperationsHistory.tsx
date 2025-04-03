@@ -13,9 +13,17 @@ interface PublicClientOperationsHistoryProps {
 
 export const PublicClientOperationsHistory = ({ operations }: PublicClientOperationsHistoryProps) => {
   const { currency } = useCurrency();
-  const [showAllOperations, setShowAllOperations] = useState<boolean>(false);
+  const [showAllOperations, setShowAllOperations] = useState<boolean>(true); // Default to showing all operations
   
-  // Default to showing the last 30 days of operations unless showAllOperations is true
+  // Log operations for debugging
+  console.log(`PublicClientOperationsHistory - Total operations: ${operations.length}`);
+  console.log(`PublicClientOperationsHistory - Operations types breakdown: 
+    Deposits: ${operations.filter(op => op.type === "deposit").length},
+    Withdrawals: ${operations.filter(op => op.type === "withdrawal").length},
+    Transfers: ${operations.filter(op => op.type === "transfer").length}`
+  );
+  
+  // Default to showing all operations, but filter to last 30 days if showAllOperations is false
   const displayedOperations = showAllOperations 
     ? operations 
     : operations.filter(op => {
