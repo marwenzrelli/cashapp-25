@@ -20,7 +20,7 @@ export const useClientOperationsFilter = (
     to: new Date()
   });
   const [isCustomRange, setIsCustomRange] = useState<boolean>(false);
-  const [showAllDates, setShowAllDates] = useState<boolean>(false);
+  const [showAllDates, setShowAllDates] = useState<boolean>(true); // Default to true to show all dates
 
   // Get operations for this client only
   const clientOperations = useMemo(() => {
@@ -30,23 +30,55 @@ export const useClientOperationsFilter = (
     
     const clientFullName = `${client.prenom} ${client.nom}`.trim().toLowerCase();
     
+    // Log for debugging specific client
+    if (client.id === 4) {
+      console.log(`Filtering operations for client ID 4 (${clientFullName}), total operations: ${operations.length}`);
+      
+      // Log transferring operations for this client
+      const transfers = operations.filter(op => op.type === "transfer");
+      console.log(`Total transfers before filtering: ${transfers.length}`);
+      if (transfers.length > 0) {
+        transfers.forEach(t => console.log(`Transfer #${t.id}: from ${t.fromClient} to ${t.toClient}, amount: ${t.amount}`));
+      }
+    }
+    
     // Filter operations to only include those for this client
     return operations.filter(operation => {
       // Normalize names for comparison
       const fromClient = operation.fromClient?.toLowerCase().trim() || '';
       const toClient = operation.toClient?.toLowerCase().trim() || '';
       
-      // Check if this client is involved in the operation
-      const isFromClient = fromClient.includes(clientFullName) || clientFullName.includes(fromClient);
-      const isToClient = operation.type === 'transfer' && (toClient.includes(clientFullName) || clientFullName.includes(toClient));
+      // For transfers, check both sides to ensure the operation is included
+      if (operation.type === 'transfer') {
+        const isInvolved = 
+          fromClient.includes(clientFullName) || 
+          clientFullName.includes(fromClient) ||
+          toClient.includes(clientFullName) || 
+          clientFullName.includes(toClient);
+        
+        // Debug log for client ID 4 transfers
+        if (client.id === 4 && isInvolved) {
+          console.log(`Including transfer #${operation.id} for client ${clientFullName}:`, 
+                      `from: ${fromClient}, to: ${toClient}`);
+        }
+        
+        return isInvolved;
+      }
       
-      return isFromClient || isToClient;
+      // For other operation types
+      const isFromClient = fromClient.includes(clientFullName) || clientFullName.includes(fromClient);
+      return isFromClient;
     });
   }, [client, operations]);
 
   // Filter operations based on user selections
   const filteredOperations = useMemo(() => {
     if (!clientOperations.length) return [];
+    
+    // Debug logging for client ID 4
+    if (client?.id === 4) {
+      console.log(`Starting filter with ${clientOperations.length} operations for client ID 4`);
+    }
     
     return clientOperations.filter(op => {
       // Filter by type
@@ -79,7 +111,24 @@ export const useClientOperationsFilter = (
       
       return true;
     });
-  }, [clientOperations, selectedType, searchTerm, dateRange, showAllDates]);
+  }, [clientOperations, selectedType, searchTerm, dateRange, showAllDates, client?.id]);
+  
+  // Log specific information for client ID 4
+  useEffect(() => {
+    if (client?.id === 4) {
+      console.log(`Filtered operations for client ID 4: ${filteredOperations.length}/${clientOperations.length}`);
+      console.log("Filtered operation IDs:", filteredOperations.map(op => op.id).join(", "));
+      
+      // Check specifically for operations 72-78
+      const missingIds = [72, 73, 74, 75, 76, 77, 78];
+      const foundSpecificOperations = filteredOperations.filter(op => 
+        missingIds.includes(parseInt(op.id.toString(), 10))
+      );
+      
+      console.log(`Found ${foundSpecificOperations.length} of the specifically requested operations:`,
+        foundSpecificOperations.map(op => op.id).join(', '));
+    }
+  }, [filteredOperations, clientOperations, client?.id]);
 
   return {
     clientOperations,

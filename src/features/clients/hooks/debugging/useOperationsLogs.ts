@@ -23,14 +23,20 @@ export const useOperationsLogs = (operations: Operation[]) => {
         missingIds.includes(op.id.toString())
       );
       
-      console.log(`Found ${foundOperations.length} of the previously missing operations`);
+      console.log(`Found ${foundOperations.length} of the previously missing operations: ${foundOperations.map(op => op.id).join(', ')}`);
       
       if (foundOperations.length > 0) {
         foundOperations.forEach(op => {
-          console.log(`Found operation ${op.id}: ${op.type}, ${op.fromClient} -> ${op.toClient || 'N/A'}, Amount: ${op.amount}`);
+          console.log(`Found operation ${op.id}: ${op.type}, ${op.fromClient} -> ${op.toClient || 'N/A'}, Amount: ${op.amount}, Date: ${op.operation_date || op.date}`);
         });
       } else {
-        console.log("Missing operations still not found in the current data");
+        console.log("Missing operations still not found in the current data set");
+        
+        // Additional logging to understand filtering issues
+        console.log("Operations with IDs in the 70s range:", operations.filter(op => {
+          const numId = parseInt(op.id.toString(), 10);
+          return numId >= 70 && numId < 80;
+        }).map(op => `${op.id} (${op.type})`));
       }
       
       // Check what types of operations we have

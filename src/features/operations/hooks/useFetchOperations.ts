@@ -46,15 +46,26 @@ export const useFetchOperations = (
       if (withdrawalsError) throw withdrawalsError;
       console.log(`Retrieved ${withdrawals?.length || 0} withdrawals`);
 
-      // Increase the default page size for transfers
+      // Increase the default page size for transfers - NO FILTER on from/to 
       const { data: transfers, error: transfersError } = await supabase
         .from('transfers')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(1000); // Increased limit
+        .limit(2000); // Further increased limit for transfers
 
       if (transfersError) throw transfersError;
       console.log(`Retrieved ${transfers?.length || 0} transfers`);
+      
+      // Log transfers with IDs 72-78 to verify we're getting them
+      const specificTransfers = transfers?.filter(t => [72, 73, 74, 75, 76, 77, 78].includes(t.id)) || [];
+      if (specificTransfers.length > 0) {
+        console.log(`Found ${specificTransfers.length} transfers with IDs 72-78:`);
+        specificTransfers.forEach(t => {
+          console.log(`Transfer #${t.id}: ${t.from_client} -> ${t.to_client}, amount: ${t.amount}`);
+        });
+      } else {
+        console.log("Specific transfers with IDs 72-78 not found in the database results");
+      }
 
       const formattedOperations: Operation[] = [
         ...deposits.map((d): Operation => ({
@@ -107,7 +118,7 @@ export const useFetchOperations = (
         .filter(op => missingIds.includes(op.id))
         .map(op => op.id);
         
-      console.log(`Found previously missing operations: ${foundMissingIds.join(', ')}`);
+      console.log(`Found operations with IDs 72-78: ${foundMissingIds.join(', ') || 'none'}`);
       
       // Dédupliquer les opérations avant de les retourner
       const uniqueOperations = deduplicateOperations(formattedOperations);
