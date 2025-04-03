@@ -129,8 +129,7 @@ export const useFetchOperations = (
           // Use both ID matching and name matching
           const wId = typeof w.id === 'string' ? parseInt(w.id, 10) : w.id;
           const isPepsiMen = pepsiMenWithdrawalIds.includes(wId) || 
-                           isPepsiMenName(w.client_name) ||
-                           (w.client_id === 4 || w.client_id === '4'); // Direct client_id matching
+                           isPepsiMenName(w.client_name);
                            
           // Ensure critical IDs are always marked as pepsi men
           const isForced = criticalIds.includes(wId);
@@ -155,8 +154,8 @@ export const useFetchOperations = (
             description: w.notes || `Retrait par ${clientName}`,
             fromClient: clientName,
             formattedDate: formatDateTime(w.operation_date || w.created_at),
-            // Check if client_id exists and handle it safely
-            client_id: isPepsiMen ? 4 : (w.client_id !== undefined ? w.client_id : undefined)
+            // Set client_id to 4 for pepsi men, otherwise undefined since withdrawals don't have client_id
+            client_id: isPepsiMen ? 4 : undefined
           };
         }),
         ...transfers.map((t): Operation => ({
