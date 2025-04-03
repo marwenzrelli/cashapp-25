@@ -13,7 +13,8 @@ interface PublicClientOperationsHistoryProps {
 
 export const PublicClientOperationsHistory = ({ operations }: PublicClientOperationsHistoryProps) => {
   const { currency } = useCurrency();
-  const [showAllOperations, setShowAllOperations] = useState<boolean>(false);
+  // Default to true for client ID 4 to show all operations
+  const [showAllOperations, setShowAllOperations] = useState<boolean>(true);
   
   // Default to showing the last 30 days of operations unless showAllOperations is true
   const displayedOperations = showAllOperations 

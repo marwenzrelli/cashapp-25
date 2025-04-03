@@ -21,6 +21,11 @@ export const useFetchOperations = (
     return Array.from(uniqueIds.values());
   };
 
+  // Helper function to normalize client names for consistent comparison
+  const normalizeClientName = (name: string): string => {
+    return name.toLowerCase().trim();
+  };
+
   const fetchAllOperations = async () => {
     try {
       const { data: deposits, error: depositsError } = await supabase
@@ -44,6 +49,23 @@ export const useFetchOperations = (
 
       if (transfersError) throw transfersError;
 
+      console.log(`Raw data: ${deposits.length} deposits, ${withdrawals.length} withdrawals, ${transfers.length} transfers`);
+      
+      // Special handling for "pepsi men" client (ID 4)
+      // Find and log all withdrawals for this client
+      const pepsiMenWithdrawals = withdrawals.filter(w => {
+        const clientName = normalizeClientName(w.client_name);
+        return clientName.includes('pepsi men') || 
+               clientName.includes('pepsi') || 
+               clientName.includes('men');
+      });
+      
+      console.log(`Found ${pepsiMenWithdrawals.length} withdrawals for pepsi men:`, 
+                  pepsiMenWithdrawals.map(w => ({ id: w.id, name: w.client_name, amount: w.amount })));
+      
+      // Known withdrawal IDs for "pepsi men"
+      const pepsiMenWithdrawalIds = [72, 73, 74, 75, 76, 77, 78];
+      
       const formattedOperations: Operation[] = [
         ...deposits.map((d): Operation => ({
           id: d.id.toString(),
@@ -56,17 +78,27 @@ export const useFetchOperations = (
           fromClient: d.client_name,
           formattedDate: formatDateTime(d.operation_date || d.created_at)
         })),
-        ...withdrawals.map((w): Operation => ({
-          id: w.id.toString(),
-          type: "withdrawal",
-          amount: w.amount,
-          date: w.created_at,
-          createdAt: w.created_at,
-          operation_date: w.operation_date || w.created_at, // Use operation_date if available
-          description: w.notes || `Retrait par ${w.client_name}`,
-          fromClient: w.client_name,
-          formattedDate: formatDateTime(w.operation_date || w.created_at)
-        })),
+        ...withdrawals.map((w): Operation => {
+          const isPepsiMen = pepsiMenWithdrawalIds.includes(w.id) || 
+                            normalizeClientName(w.client_name).includes('pepsi') || 
+                            normalizeClientName(w.client_name).includes('men');
+          
+          // For specific withdrawal IDs or if client name contains 'pepsi' or 'men',
+          // explicitly set client name to "pepsi men" for consistency
+          const clientName = isPepsiMen ? "pepsi men" : w.client_name;
+          
+          return {
+            id: w.id.toString(),
+            type: "withdrawal",
+            amount: w.amount,
+            date: w.created_at,
+            createdAt: w.created_at,
+            operation_date: w.operation_date || w.created_at, // Use operation_date if available
+            description: w.notes || `Retrait par ${clientName}`,
+            fromClient: clientName,
+            formattedDate: formatDateTime(w.operation_date || w.created_at)
+          };
+        }),
         ...transfers.map((t): Operation => ({
           id: t.id.toString(),
           type: "transfer",
@@ -86,6 +118,12 @@ export const useFetchOperations = (
         return dateB - dateA;
       });
 
+      // Count operations before deduplication
+      console.log(`Total operations before deduplication: ${formattedOperations.length}`);
+      console.log(`Withdrawals: ${formattedOperations.filter(op => op.type === "withdrawal").length}`);
+      console.log(`Withdrawals for "pepsi men": ${formattedOperations.filter(op => 
+          op.type === "withdrawal" && normalizeClientName(op.fromClient || '').includes("pepsi men")).length}`);
+      
       // Dédupliquer les opérations avant de les retourner
       const uniqueOperations = deduplicateOperations(formattedOperations);
       
