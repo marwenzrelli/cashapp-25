@@ -28,6 +28,8 @@ const ClientProfile = () => {
     setDateRange,
     isCustomRange,
     setIsCustomRange,
+    showAllDates,
+    setShowAllDates,
     formatAmount,
     exportToExcel,
     exportToPDF,
@@ -182,6 +184,8 @@ const ClientProfile = () => {
           setIsCustomRange={setIsCustomRange}
           filteredOperations={filteredOperations}
           refreshOperations={refreshClientOperations}
+          showAllDates={showAllDates}
+          setShowAllDates={setShowAllDates}
         />
 
         <OperationsDetailCards

@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from 'react';
 import { Client } from '@/features/clients/types';
 import { Operation } from '@/features/operations/types';
@@ -19,6 +20,7 @@ export const useClientOperationsFilter = (
     to: new Date()
   });
   const [isCustomRange, setIsCustomRange] = useState<boolean>(false);
+  const [showAllDates, setShowAllDates] = useState<boolean>(false);
 
   // Get operations for this client only
   const clientOperations = useMemo(() => {
@@ -64,8 +66,8 @@ export const useClientOperationsFilter = (
         }
       }
       
-      // Filter by date range
-      if (dateRange.from && dateRange.to) {
+      // Filter by date range only if not showing all dates
+      if (!showAllDates && dateRange.from && dateRange.to) {
         const opDate = new Date(op.operation_date || op.date);
         const startDate = startOfDay(dateRange.from);
         const endDate = endOfDay(dateRange.to);
@@ -77,7 +79,7 @@ export const useClientOperationsFilter = (
       
       return true;
     });
-  }, [clientOperations, selectedType, searchTerm, dateRange]);
+  }, [clientOperations, selectedType, searchTerm, dateRange, showAllDates]);
 
   return {
     clientOperations,
@@ -89,6 +91,8 @@ export const useClientOperationsFilter = (
     dateRange,
     setDateRange,
     isCustomRange,
-    setIsCustomRange
+    setIsCustomRange,
+    showAllDates,
+    setShowAllDates
   };
 };

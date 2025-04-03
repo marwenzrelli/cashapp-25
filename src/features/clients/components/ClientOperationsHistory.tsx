@@ -1,34 +1,33 @@
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { ArrowUpDown, Search, FileSpreadsheet, FileText, RefreshCw } from "lucide-react";
+import React from "react";
 import { Operation } from "@/features/operations/types";
-import { ClientOperationsHistoryTabs } from "./operations-history/ClientOperationsHistoryTabs";
-import { DatePickerWithRange } from "@/components/ui/date-range-picker";
-import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PublicClientPersonalInfo } from "./PublicClientPersonalInfo";
-import { useParams } from "react-router-dom";
-import { useClientData } from "../hooks/clientProfile/useClientData";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { DateRange } from "react-day-picker";
-import { PublicClientOperationsHistory } from "./PublicClientOperationsHistory";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { RefreshCw, Search, XCircle } from "lucide-react";
+import { ClientOperationsHistoryTabs } from "./operations-history/ClientOperationsHistoryTabs";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface ClientOperationsHistoryProps {
   operations: Operation[];
-  selectedType: string;
-  setSelectedType: (type: string) => void; // Accept any string, parent component will validate
+  selectedType: "all" | "deposit" | "withdrawal" | "transfer";
+  setSelectedType: (type: "all" | "deposit" | "withdrawal" | "transfer") => void;
   searchTerm: string;
   setSearchTerm: (term: string) => void;
-  dateRange: DateRange;
-  setDateRange: (range: DateRange) => void;
+  dateRange: DateRange | undefined;
+  setDateRange: (range: DateRange | undefined) => void;
   isCustomRange: boolean;
   setIsCustomRange: (isCustom: boolean) => void;
   filteredOperations: Operation[];
-  refreshOperations: () => Promise<void>;
+  refreshOperations: () => void;
+  showAllDates?: boolean;
+  setShowAllDates?: (showAll: boolean) => void;
 }
 
-export const ClientOperationsHistory = ({
+export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = ({
   operations,
   selectedType,
   setSelectedType,
@@ -39,97 +38,74 @@ export const ClientOperationsHistory = ({
   isCustomRange,
   setIsCustomRange,
   filteredOperations,
-  refreshOperations
-}: ClientOperationsHistoryProps) => {
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const { id } = useParams();
-  const clientId = id ? Number(id) : null;
-  const { client } = useClientData(clientId);
-
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    await refreshOperations();
-    setIsRefreshing(false);
-  };
-
+  refreshOperations,
+  showAllDates = false,
+  setShowAllDates = () => {}
+}) => {
   return (
-    <Tabs defaultValue="operations" className="w-full">
-      <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="operations">Opérations</TabsTrigger>
-        <TabsTrigger value="public">Page publique client</TabsTrigger>
-      </TabsList>
-      
-      <TabsContent value="operations">
-        <Card>
-          <CardHeader className="pb-0 pt-4 sm:pt-6">
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <CardTitle className="text-lg md:text-xl">Historique des opérations</CardTitle>
-                <CardDescription>
-                  Consultez l'historique complet des opérations liées à ce client.
-                </CardDescription>
-              </div>
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="hidden md:flex"
-                  onClick={handleRefresh}
-                  disabled={isRefreshing}
-                >
-                  <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                  {isRefreshing ? 'Actualisation...' : 'Actualiser'}
-                </Button>
+    <Card className="shadow-sm">
+      <CardHeader className="pb-3">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+          <CardTitle className="text-xl">Historique des opérations</CardTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refreshOperations}
+            className="group"
+          >
+            <RefreshCw
+              className="h-4 w-4 mr-2 group-hover:animate-spin"
+              strokeWidth={2}
+            />
+            Actualiser
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="px-0 sm:px-6">
+        <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6 px-4 sm:px-0">
+          <div className="relative w-full sm:w-2/3">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Rechercher dans l'historique..."
+              className="pl-9"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            {searchTerm && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-full px-3"
+                onClick={() => setSearchTerm("")}
+              >
+                <XCircle className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+          <div className="w-full sm:w-1/3">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <Switch 
+                  id="show-all-dates"
+                  checked={showAllDates}
+                  onCheckedChange={setShowAllDates}
+                />
+                <Label htmlFor="show-all-dates">Afficher toutes les périodes</Label>
               </div>
             </div>
-
-            <div className="flex flex-col md:flex-row gap-4 items-start md:items-end mb-6">
-              <div className="relative w-full md:w-auto md:min-w-[300px]">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground/70" />
-                <Input
-                  type="search"
-                  placeholder="Rechercher par description..."
-                  className="pl-8 w-full"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              
-              <div className="w-full md:w-auto">
-                <DatePickerWithRange
-                  date={dateRange}
-                  onDateChange={setDateRange}
-                />
-              </div>
-              
-              <div className="flex items-center w-full md:w-auto">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="md:hidden w-full"
-                  onClick={handleRefresh}
-                  disabled={isRefreshing}
-                >
-                  <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                  {isRefreshing ? 'Actualisation...' : 'Actualiser'}
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <ClientOperationsHistoryTabs filteredOperations={filteredOperations} />
-          </CardContent>
-        </Card>
-      </TabsContent>
-      
-      <TabsContent value="public">
-        <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background p-4">
-          <div className="container mx-auto max-w-6xl space-y-6">
-            {client && <PublicClientPersonalInfo client={client} />}
-            <PublicClientOperationsHistory operations={operations} />
+            {!showAllDates && (
+              <DatePickerWithRange
+                date={dateRange}
+                onDateChange={setDateRange}
+              />
+            )}
           </div>
         </div>
-      </TabsContent>
-    </Tabs>
+
+        <ClientOperationsHistoryTabs
+          filteredOperations={filteredOperations}
+        />
+      </CardContent>
+    </Card>
   );
 };

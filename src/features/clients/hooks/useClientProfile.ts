@@ -54,7 +54,9 @@ export const useClientProfile = () => {
     dateRange,
     setDateRange,
     isCustomRange,
-    setIsCustomRange
+    setIsCustomRange,
+    showAllDates,
+    setShowAllDates
   } = useClientOperationsFilter(operations, client);
   
   // Verify operations when client is loaded
@@ -99,6 +101,8 @@ export const useClientProfile = () => {
     setDateRange,
     isCustomRange,
     setIsCustomRange,
+    showAllDates,
+    setShowAllDates,
     formatAmount,
     exportToExcel,
     exportToPDF,
