@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Operation, formatDateTime } from "../types";
 import { toast } from "sonner";
@@ -57,7 +58,8 @@ export const useFetchOperations = (
         operation_date: new Date().toISOString(),
         description: `Retrait ID ${id} (pepsi men) - Données récupérées`,
         fromClient: "pepsi men",
-        formattedDate: formatDateTime(new Date().toISOString())
+        formattedDate: formatDateTime(new Date().toISOString()),
+        client_id: 4 // Set client ID explicitly for pepsi men
       }));
       
       return [...operations, ...placeholderOps];
@@ -119,7 +121,8 @@ export const useFetchOperations = (
           description: d.notes || `Versement de ${d.client_name}`,
           fromClient: d.client_name,
           formattedDate: formatDateTime(d.operation_date || d.created_at),
-          client_id: d.client_id
+          // Safely handle the client_id property which might not exist in the database response
+          client_id: typeof d.client_id === 'number' ? d.client_id : undefined
         })),
         ...withdrawals.map((w): Operation => {
           // Special handling for pepsi men withdrawals
