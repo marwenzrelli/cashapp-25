@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Operation, formatDateTime } from "../types";
 import { toast } from "sonner";
@@ -155,7 +154,7 @@ export const useFetchOperations = (
             description: w.notes || `Retrait par ${clientName}`,
             fromClient: clientName,
             formattedDate: formatDateTime(w.operation_date || w.created_at),
-            client_id: isPepsiMen ? 4 : undefined // Set client_id explicitly for pepsi men
+            client_id: isPepsiMen ? 4 : (typeof w.client_id === 'number' ? w.client_id : undefined) // Safely handle client_id
           };
         }),
         ...transfers.map((t): Operation => ({
