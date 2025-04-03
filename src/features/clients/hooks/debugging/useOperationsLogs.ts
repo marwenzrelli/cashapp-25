@@ -26,17 +26,30 @@ export const useOperationsLogs = (operations: Operation[]) => {
       console.log(`Found ${foundOperations.length} of the previously missing operations: ${foundOperations.map(op => op.id).join(', ')}`);
       
       if (foundOperations.length > 0) {
+        console.log("Found missing operations details:");
         foundOperations.forEach(op => {
-          console.log(`Found operation ${op.id}: ${op.type}, ${op.fromClient} -> ${op.toClient || 'N/A'}, Amount: ${op.amount}, Date: ${op.operation_date || op.date}`);
+          console.log(`Found operation ${op.id}: ${op.type}, client=${op.fromClient}, Amount: ${op.amount}, Date: ${op.operation_date || op.date}`);
         });
       } else {
         console.log("Missing operations still not found in the current data set");
         
         // Additional logging to understand filtering issues
+        console.log("All operation IDs:", operations.map(op => op.id).join(", "));
+        
+        // Check operations in the 70s range
         console.log("Operations with IDs in the 70s range:", operations.filter(op => {
           const numId = parseInt(op.id.toString(), 10);
           return numId >= 70 && numId < 80;
         }).map(op => `${op.id} (${op.type})`));
+        
+        // Check withdrawals specifically
+        const withdrawals = operations.filter(op => op.type === "withdrawal");
+        console.log(`Total withdrawals: ${withdrawals.length}`);
+        if (withdrawals.length > 0) {
+          console.log("First 5 withdrawals:", withdrawals.slice(0, 5).map(w => 
+            `${w.id} (${w.fromClient}, ${w.amount})`
+          ));
+        }
       }
       
       // Check what types of operations we have

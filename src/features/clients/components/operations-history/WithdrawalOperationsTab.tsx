@@ -18,6 +18,20 @@ export const WithdrawalOperationsTab = ({ operations, currency = "TND" }: Withdr
     (operation) => operation.type === "withdrawal"
   );
 
+  // Log for debugging client ID 4 issues
+  const hasSpecificIds = withdrawalOperations.some(op => {
+    const numId = parseInt(op.id, 10);
+    return numId >= 72 && numId <= 78;
+  });
+  
+  if (hasSpecificIds) {
+    console.log("WithdrawalOperationsTab - Found specific withdrawal operations (72-78):", 
+      withdrawalOperations.filter(op => {
+        const numId = parseInt(op.id, 10);
+        return numId >= 72 && numId <= 78;
+      }).map(op => `${op.id} (${op.fromClient})`));
+  }
+
   if (withdrawalOperations.length === 0) {
     return <EmptyOperations />;
   }
