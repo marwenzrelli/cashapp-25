@@ -1,4 +1,3 @@
-
 export interface Operation {
   id: string;
   type: "deposit" | "withdrawal" | "transfer";
@@ -11,6 +10,7 @@ export interface Operation {
   fromClient?: string;
   toClient?: string;
   formattedDate?: string; // Ajout du champ pour date formatée
+  client_id?: number; // Add client_id field as optional
 }
 
 export interface ClientStats {

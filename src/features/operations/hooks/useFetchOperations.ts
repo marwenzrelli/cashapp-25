@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Operation, formatDateTime } from "../types";
 import { toast } from "sonner";
@@ -100,11 +99,11 @@ export const useFetchOperations = (
       
       // Special handling for missing critical IDs
       const criticalIds = [72, 73, 74, 75, 76, 77, 78];
-      const criticalWithdrawals = withdrawals.filter(w => criticalIds.includes(w.id));
+      const criticalWithdrawals = withdrawals.filter(w => criticalIds.includes(Number(w.id)));
       console.log(`Found ${criticalWithdrawals.length} critical withdrawals out of ${criticalIds.length} expected`);
       
       if (criticalWithdrawals.length < criticalIds.length) {
-        const foundIds = criticalWithdrawals.map(w => w.id);
+        const foundIds = criticalWithdrawals.map(w => Number(w.id));
         const missingIds = criticalIds.filter(id => !foundIds.includes(id));
         console.warn(`Missing critical withdrawal IDs in raw data: ${missingIds.join(', ')}`);
       }
@@ -119,25 +118,27 @@ export const useFetchOperations = (
           operation_date: d.operation_date || d.created_at, 
           description: d.notes || `Versement de ${d.client_name}`,
           fromClient: d.client_name,
-          formattedDate: formatDateTime(d.operation_date || d.created_at)
+          formattedDate: formatDateTime(d.operation_date || d.created_at),
+          client_id: d.client_id
         })),
         ...withdrawals.map((w): Operation => {
           // Special handling for pepsi men withdrawals
           // Use both ID matching and name matching
-          const isPepsiMen = pepsiMenWithdrawalIds.includes(w.id) || 
+          const wId = typeof w.id === 'string' ? parseInt(w.id, 10) : w.id;
+          const isPepsiMen = pepsiMenWithdrawalIds.includes(wId) || 
                            isPepsiMenName(w.client_name) ||
                            (w.client_id === 4); // Direct client_id matching
                            
           // Ensure critical IDs are always marked as pepsi men
-          const isForced = criticalIds.includes(w.id);
+          const isForced = criticalIds.includes(wId);
           
           // Apply the client name consistently
           let clientName = w.client_name;
           if (isPepsiMen || isForced) {
             clientName = "pepsi men";
             // Log if this is one of our critical IDs
-            if (criticalIds.includes(w.id)) {
-              console.log(`Found critical withdrawal ID ${w.id} for pepsi men with amount ${w.amount}`);
+            if (criticalIds.includes(wId)) {
+              console.log(`Found critical withdrawal ID ${wId} for pepsi men with amount ${w.amount}`);
             }
           }
           
@@ -151,7 +152,7 @@ export const useFetchOperations = (
             description: w.notes || `Retrait par ${clientName}`,
             fromClient: clientName,
             formattedDate: formatDateTime(w.operation_date || w.created_at),
-            client_id: w.client_id || (isPepsiMen ? 4 : undefined) // Set client_id explicitly
+            client_id: isPepsiMen ? 4 : undefined // Set client_id explicitly for pepsi men
           };
         }),
         ...transfers.map((t): Operation => ({
