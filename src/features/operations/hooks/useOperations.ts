@@ -115,17 +115,6 @@ export const useOperations = () => {
         }
       }
       
-      // Debug log for operations with IDs 72-78
-      const specificIds = [72, 73, 74, 75, 76, 77, 78];
-      const foundSpecific = operations.filter(op => {
-        const numId = typeof op.id === 'string' ? 
-          parseInt(op.id.split('-')[1] || '0') : op.id;
-        return specificIds.includes(numId);
-      });
-      
-      console.log(`Operations refresh - Found ${foundSpecific.length} operations with IDs 72-78:`,
-                 foundSpecific.map(op => op.id).join(', '));
-      
       toast.success("Opérations actualisées");
     } catch (error) {
       console.error("Erreur lors de l'actualisation des opérations:", error);

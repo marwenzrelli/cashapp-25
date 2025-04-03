@@ -1,104 +1,67 @@
 
-import { Operation } from "@/features/operations/types";
+import React from "react";
+import { ArrowUpCircle, ArrowDownCircle, RefreshCcw, List } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { EmptyState } from "@/components/ui/empty-state";
-import { OperationsTable } from "./OperationsTable";
-import { useState } from "react";
-import { useOperationsLogs } from "@/features/clients/hooks/debugging/useOperationsLogs";
+import { Operation } from "@/features/operations/types";
+import { AllOperationsTab } from "./AllOperationsTab";
+import { DepositOperationsTab } from "./DepositOperationsTab";
+import { WithdrawalOperationsTab } from "./WithdrawalOperationsTab";
+import { TransferOperationsTab } from "./TransferOperationsTab";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface ClientOperationsHistoryTabsProps {
   filteredOperations: Operation[];
+  currency?: string;
 }
 
-export const ClientOperationsHistoryTabs = ({ filteredOperations }: ClientOperationsHistoryTabsProps) => {
-  const [activeTab, setActiveTab] = useState<string>("all");
-
-  // Log operations for debugging - especially for client ID 4
-  useOperationsLogs(filteredOperations);
-  
-  // Filter operations by type based on active tab
-  const operations = filteredOperations.filter((operation) => {
-    return activeTab === "all" || operation.type === activeTab;
-  });
-
+export const ClientOperationsHistoryTabs = ({
+  filteredOperations,
+  currency = "TND"
+}: ClientOperationsHistoryTabsProps) => {
   return (
-    <Tabs
-      defaultValue="all"
-      className="w-full"
-      onValueChange={setActiveTab}
-    >
-      <div className="border-b">
-        <TabsList className="h-12 bg-transparent mb-0.5">
-          <TabsTrigger
-            value="all"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none h-12"
-          >
-            Toutes ({filteredOperations.length})
-          </TabsTrigger>
-          <TabsTrigger
-            value="deposit"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none h-12"
-          >
-            Versements ({filteredOperations.filter((op) => op.type === "deposit").length})
-          </TabsTrigger>
-          <TabsTrigger
-            value="withdrawal"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none h-12"
-          >
-            Retraits ({filteredOperations.filter((op) => op.type === "withdrawal").length})
-          </TabsTrigger>
-          <TabsTrigger
-            value="transfer"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none h-12"
-          >
-            Virements ({filteredOperations.filter((op) => op.type === "transfer").length})
-          </TabsTrigger>
-        </TabsList>
-      </div>
-      
-      <TabsContent value="all" className="p-0 sm:p-0">
-        {operations.length > 0 ? (
-          <OperationsTable operations={operations} />
-        ) : (
-          <EmptyState
-            title="Aucune opération"
-            description="Il n'y a aucune opération à afficher."
-          />
-        )}
-      </TabsContent>
-      
-      <TabsContent value="deposit" className="p-0 sm:p-0">
-        {operations.length > 0 ? (
-          <OperationsTable operations={operations} />
-        ) : (
-          <EmptyState
-            title="Aucun versement"
-            description="Il n'y a aucun versement à afficher."
-          />
-        )}
-      </TabsContent>
-      
-      <TabsContent value="withdrawal" className="p-0 sm:p-0">
-        {operations.length > 0 ? (
-          <OperationsTable operations={operations} />
-        ) : (
-          <EmptyState
-            title="Aucun retrait"
-            description="Il n'y a aucun retrait à afficher."
-          />
-        )}
-      </TabsContent>
-      
-      <TabsContent value="transfer" className="p-0 sm:p-0">
-        {operations.length > 0 ? (
-          <OperationsTable operations={operations} />
-        ) : (
-          <EmptyState
-            title="Aucun virement"
-            description="Il n'y a aucun virement à afficher."
-          />
-        )}
-      </TabsContent>
+    <Tabs defaultValue="all" className="w-full">
+      <Card className="mb-4 shadow-sm my-0 py-0 px-0 mx-0">
+        <CardContent className="p-1 sm:p-2 px-0 py-0 mx-0">
+          <TabsList className="w-full grid grid-cols-2 sm:flex sm:flex-wrap gap-2 mx-0 px-0 my-[48px] py-0">
+            <TabsTrigger value="all" className="flex items-center gap-2">
+              <List className="h-4 w-4" />
+              Toutes les opérations
+            </TabsTrigger>
+            <TabsTrigger value="deposits" className="flex items-center gap-2">
+              <ArrowUpCircle className="h-4 w-4" />
+              Versements
+            </TabsTrigger>
+            <TabsTrigger value="withdrawals" className="flex items-center gap-2">
+              <ArrowDownCircle className="h-4 w-4" />
+              Retraits
+            </TabsTrigger>
+            <TabsTrigger value="transfers" className="flex items-center gap-2">
+              <RefreshCcw className="h-4 w-4" />
+              Virements
+            </TabsTrigger>
+          </TabsList>
+        </CardContent>
+      </Card>
+
+      <Card className="shadow-sm">
+        <CardContent className="p-3 sm:p-5">
+          <TabsContent value="all" className="w-full">
+            <AllOperationsTab operations={filteredOperations} currency={currency} />
+          </TabsContent>
+
+          <TabsContent value="deposits" className="w-full">
+            <DepositOperationsTab operations={filteredOperations} currency={currency} />
+          </TabsContent>
+
+          <TabsContent value="withdrawals" className="w-full">
+            <WithdrawalOperationsTab operations={filteredOperations} currency={currency} />
+          </TabsContent>
+
+          <TabsContent value="transfers" className="w-full">
+            <TransferOperationsTab operations={filteredOperations} currency={currency} />
+          </TabsContent>
+        </CardContent>
+      </Card>
     </Tabs>
   );
 };
