@@ -29,6 +29,11 @@ export const OperationsDetailCards = ({
   const latestWithdrawals = withdrawals.slice(0, 3);
   const latestTransfers = transfers.slice(0, 3);
 
+  // Special debug for client ID 4
+  console.log(`OperationsDetailCards - Total operations: ${clientOperations.length}`);
+  console.log(`Deposits: ${deposits.length}, Withdrawals: ${withdrawals.length}, Transfers: ${transfers.length}`);
+  console.log(`Missing IDs check: ${clientOperations.filter(op => [72,73,74,75,76,77,78].includes(Number(op.id))).map(op => op.id).join(', ')}`);
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {/* Versements */}
@@ -62,9 +67,6 @@ export const OperationsDetailCards = ({
                   </span>
                 </div>
               ))}
-              {latestDeposits.length === 0 && (
-                <p className="text-sm text-muted-foreground">Aucun dépôt récent</p>
-              )}
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">Aucun dépôt récent</p>
@@ -111,9 +113,6 @@ export const OperationsDetailCards = ({
                   </span>
                 </div>
               ))}
-              {latestWithdrawals.length === 0 && (
-                <p className="text-sm text-muted-foreground">Aucun retrait récent</p>
-              )}
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">Aucun retrait récent</p>
@@ -160,9 +159,6 @@ export const OperationsDetailCards = ({
                   </span>
                 </div>
               ))}
-              {latestTransfers.length === 0 && (
-                <p className="text-sm text-muted-foreground">Aucun virement récent</p>
-              )}
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">Aucun virement récent</p>
