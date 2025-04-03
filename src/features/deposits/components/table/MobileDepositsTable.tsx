@@ -111,7 +111,7 @@ export const MobileDepositsTable = ({
           <div className="flex justify-between items-center">
             <span className="font-medium text-sm text-primary/80">Total des versements {dateRangeText}:</span>
             <span className="font-semibold text-green-600 dark:text-green-400 bg-green-50/80 dark:bg-green-900/20 px-3 py-1 rounded-lg">
-              {totalDeposits.toLocaleString()} {currency}
+              + {totalDeposits.toLocaleString()} {currency}
             </span>
           </div>
         </div>

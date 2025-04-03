@@ -57,6 +57,10 @@ export const OperationsMobileCard = ({
     ? `${operation.fromClient || ''} → ${operation.toClient || ''}`
     : operation.fromClient || '';
   
+  // Create a sign prefix based on operation type
+  const signPrefix = operation.type === "withdrawal" ? "- " : 
+                     operation.type === "deposit" ? "+ " : "";
+  
   return (
     <div className="flex flex-col p-3 bg-white dark:bg-gray-800 rounded-lg border shadow-sm w-full">
       <div className="flex items-center justify-between mb-2">
@@ -99,7 +103,7 @@ export const OperationsMobileCard = ({
                   : "text-blue-500 bg-blue-50 dark:bg-blue-900/20"
             )}`}
           >
-            {operation.type === "withdrawal" ? "-" : operation.type === "deposit" ? "+" : ""}
+            {signPrefix}
             {formatAmount(operation.amount)}
             {currency && ` ${currency}`}
           </p>

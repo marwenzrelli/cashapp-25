@@ -9,6 +9,9 @@ interface ClientExpandedViewProps {
 }
 
 export const ClientExpandedView = ({ client, onView }: ClientExpandedViewProps) => {
+  // Create sign prefix based on balance
+  const signPrefix = client.solde >= 0 ? "+ " : "";
+  
   return (
     <div className="mt-4 md:pl-14 text-sm grid gap-2">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -24,7 +27,7 @@ export const ClientExpandedView = ({ client, onView }: ClientExpandedViewProps) 
                 ? 'text-green-600 border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-900/30 dark:text-green-400' 
                 : 'text-red-600 border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-900/30 dark:text-red-400'
             }`}>
-              {client.solde.toLocaleString()} TND
+              {signPrefix}{client.solde.toLocaleString()} TND
             </span>
           </div>
         </div>

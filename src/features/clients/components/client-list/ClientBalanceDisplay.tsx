@@ -7,10 +7,11 @@ interface ClientBalanceDisplayProps {
 }
 
 export const ClientBalanceDisplay = ({ solde }: ClientBalanceDisplayProps) => {
-  const { currency, formatCurrency } = useCurrency();
+  const { currency } = useCurrency();
   
-  // Format the balance properly using the currency formatter
-  const formattedBalance = formatCurrency(solde);
+  // Format the balance with explicit sign
+  const sign = solde >= 0 ? "+ " : ""; // Negative sign is automatically included
+  const formattedBalance = `${sign}${solde.toLocaleString()} ${currency}`;
   
   return (
     <div className="flex flex-col gap-1 pr-0 md:pr-6 md:border-r md:border-transparent">

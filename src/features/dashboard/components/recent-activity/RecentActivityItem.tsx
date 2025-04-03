@@ -23,6 +23,10 @@ export const RecentActivityItem = ({ activity, currency, index }: RecentActivity
     }
   };
 
+  // Create sign prefix based on operation type
+  const signPrefix = activity.type === "withdrawal" ? "- " : 
+                     activity.type === "deposit" ? "+ " : "";
+
   return (
     <div key={`${activity.id}-${index}`}>
       {/* Desktop version */}
@@ -65,7 +69,7 @@ export const RecentActivityItem = ({ activity, currency, index }: RecentActivity
             activity.type === 'withdrawal' ? "text-red-600 dark:text-red-400" :
             "text-blue-600 dark:text-blue-400"
           )}>
-            {activity.type === 'withdrawal' ? '-' : ''}{activity.amount.toLocaleString()} {currency}
+            {signPrefix}{activity.amount.toLocaleString()} {currency}
           </p>
           <p className="text-xs text-muted-foreground">
             {formatDateTime(activity.date)}
