@@ -23,26 +23,38 @@ export const useFetchOperations = (
 
   const fetchAllOperations = async () => {
     try {
+      console.log("Fetching all operations from database...");
+      setIsLoading(true);
+      
+      // Increase the default page size for deposits
       const { data: deposits, error: depositsError } = await supabase
         .from('deposits')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(1000); // Increased limit to ensure we get all operations
 
       if (depositsError) throw depositsError;
+      console.log(`Retrieved ${deposits?.length || 0} deposits`);
 
+      // Increase the default page size for withdrawals
       const { data: withdrawals, error: withdrawalsError } = await supabase
         .from('withdrawals')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(1000); // Increased limit
 
       if (withdrawalsError) throw withdrawalsError;
+      console.log(`Retrieved ${withdrawals?.length || 0} withdrawals`);
 
+      // Increase the default page size for transfers
       const { data: transfers, error: transfersError } = await supabase
         .from('transfers')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(1000); // Increased limit
 
       if (transfersError) throw transfersError;
+      console.log(`Retrieved ${transfers?.length || 0} transfers`);
 
       const formattedOperations: Operation[] = [
         ...deposits.map((d): Operation => ({
@@ -86,6 +98,17 @@ export const useFetchOperations = (
         return dateB - dateA;
       });
 
+      // Log operation IDs for debugging
+      console.log("All operation IDs:", formattedOperations.map(op => op.id).join(", "));
+      
+      // Check specifically for operations 72-78
+      const missingIds = ['72', '73', '74', '75', '76', '77', '78'];
+      const foundMissingIds = formattedOperations
+        .filter(op => missingIds.includes(op.id))
+        .map(op => op.id);
+        
+      console.log(`Found previously missing operations: ${foundMissingIds.join(', ')}`);
+      
       // Dédupliquer les opérations avant de les retourner
       const uniqueOperations = deduplicateOperations(formattedOperations);
       
@@ -93,6 +116,7 @@ export const useFetchOperations = (
         console.log(`Dédupliqué ${formattedOperations.length - uniqueOperations.length} opérations dans useFetchOperations`);
       }
       
+      console.log(`Setting ${uniqueOperations.length} unique operations`);
       setOperations(uniqueOperations);
     } catch (error) {
       console.error("Erreur lors du chargement des opérations:", error);

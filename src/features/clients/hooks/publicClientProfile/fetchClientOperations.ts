@@ -20,7 +20,8 @@ export const fetchClientOperations = async (
         .from('deposits')
         .select('*')
         .eq('client_name', clientName)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(1000); // Increased limit to get ALL operations
       
       console.log("Deposits response:", response);
       return response;
@@ -43,7 +44,8 @@ export const fetchClientOperations = async (
         .from('withdrawals')
         .select('*')
         .eq('client_name', clientName)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(1000); // Increased limit
       
       console.log("Withdrawals response:", response);
       return response;
@@ -66,7 +68,8 @@ export const fetchClientOperations = async (
         .from('transfers')
         .select('*')
         .or(`from_client.eq.${clientName},to_client.eq.${clientName}`)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(1000); // Increased limit
       
       console.log("Transfers response:", response);
       return response;
@@ -114,6 +117,17 @@ export const fetchClientOperations = async (
         toClient: transfer.to_client
       })))
     ];
+    
+    // Check specifically for transfers with IDs 72-78 to ensure they're included
+    const missingIds = [72, 73, 74, 75, 76, 77, 78];
+    const foundMissingTransfers = transfersResult.data?.filter(t => 
+      missingIds.includes(t.id)
+    ) || [];
+    
+    console.log(`Found specific transfers (72-78): ${foundMissingTransfers.length}`);
+    foundMissingTransfers.forEach(t => {
+      console.log(`  Transfer ID: ${t.id}, From: ${t.from_client}, To: ${t.to_client}, Amount: ${t.amount}`);
+    });
 
     // Déduplication des opérations basée sur l'ID unique
     const uniqueOperations = deduplicateOperations(operations);
