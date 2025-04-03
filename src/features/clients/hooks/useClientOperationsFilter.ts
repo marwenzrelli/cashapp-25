@@ -42,12 +42,12 @@ export const useClientOperationsFilter = (
       const fromClient = (operation.fromClient || '').toLowerCase().trim();
       const toClient = (operation.toClient || '').toLowerCase().trim();
       
-      // Special handling for pepsi men - specific withdrawal IDs that we know belong to this client
+      // Special handling for pepsi men - include specific withdrawal IDs
       if (isPepsiMen && operation.type === 'withdrawal') {
         // Log for debugging
         console.log(`Checking withdrawal: ID=${operation.id}, fromClient=${fromClient}, toClient=${toClient}`);
         
-        // Known withdrawal IDs for pepsi men
+        // Known withdrawal IDs for pepsi men - explicitly include these IDs
         const pepsiMenWithdrawalIds = ['72', '73', '74', '75', '76', '77', '78', 72, 73, 74, 75, 76, 77, 78];
         const operationIdStr = String(operation.id);
         const operationIdNum = parseInt(operationIdStr, 10);
@@ -82,6 +82,13 @@ export const useClientOperationsFilter = (
       // Log withdrawals separately for debugging
       const withdrawals = clientOperations.filter(op => op.type === 'withdrawal');
       console.log(`Found ${withdrawals.length} withdrawals for this client:`, withdrawals.map(w => w.id));
+      
+      // Check specifically for IDs 72-78
+      const criticalIds = ['72', '73', '74', '75', '76', '77', '78', 72, 73, 74, 75, 76, 77, 78];
+      const foundCriticalIds = withdrawals.filter(w => 
+        criticalIds.includes(w.id) || criticalIds.includes(parseInt(String(w.id), 10))
+      );
+      console.log(`Found ${foundCriticalIds.length} withdrawals with IDs 72-78:`, foundCriticalIds.map(w => w.id));
     }
   }, [clientOperations, client, operations]);
 

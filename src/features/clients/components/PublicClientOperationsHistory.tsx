@@ -3,18 +3,27 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Operation } from "@/features/operations/types";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { PublicOperationsTabs } from "./operations-history/PublicOperationsTabs";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
 interface PublicClientOperationsHistoryProps {
   operations: Operation[];
+  clientId?: number;
 }
 
-export const PublicClientOperationsHistory = ({ operations }: PublicClientOperationsHistoryProps) => {
+export const PublicClientOperationsHistory = ({ operations, clientId }: PublicClientOperationsHistoryProps) => {
   const { currency } = useCurrency();
   // Default to true for client ID 4 to show all operations
+  const isPepsiMen = clientId === 4;
   const [showAllOperations, setShowAllOperations] = useState<boolean>(true);
+  
+  // For pepsi men (ID 4), always ensure we show all operations
+  useEffect(() => {
+    if (isPepsiMen && !showAllOperations) {
+      setShowAllOperations(true);
+    }
+  }, [isPepsiMen, showAllOperations]);
   
   // Default to showing the last 30 days of operations unless showAllOperations is true
   const displayedOperations = showAllOperations 
@@ -26,6 +35,24 @@ export const PublicClientOperationsHistory = ({ operations }: PublicClientOperat
         return opDate >= thirtyDaysAgo;
       });
   
+  // Debug logging to verify we're showing the right operations
+  useEffect(() => {
+    if (isPepsiMen) {
+      console.log(`Public client operations for pepsi men (ID 4): ${displayedOperations.length} operations`);
+      // Check for specific withdrawal IDs
+      const withdrawals = displayedOperations.filter(op => op.type === 'withdrawal');
+      console.log(`Withdrawal operations for pepsi men: ${withdrawals.length}`, 
+        withdrawals.map(w => ({ id: w.id, amount: w.amount })));
+      
+      // Check specifically for IDs 72-78
+      const criticalIds = ['72', '73', '74', '75', '76', '77', '78', 72, 73, 74, 75, 76, 77, 78];
+      const foundCriticalIds = withdrawals.filter(w => 
+        criticalIds.includes(w.id) || criticalIds.includes(parseInt(String(w.id), 10))
+      );
+      console.log(`Found ${foundCriticalIds.length} withdrawals with IDs 72-78:`, foundCriticalIds.map(w => w.id));
+    }
+  }, [displayedOperations, isPepsiMen]);
+  
   return (
     <Card className="shadow-sm max-w-full overflow-hidden">
       <CardHeader className="px-4 sm:px-6">
@@ -36,6 +63,7 @@ export const PublicClientOperationsHistory = ({ operations }: PublicClientOperat
               id="show-all-operations"
               checked={showAllOperations}
               onCheckedChange={setShowAllOperations}
+              disabled={isPepsiMen} // Disable the switch for pepsi men to prevent hiding operations
             />
             <Label htmlFor="show-all-operations">Afficher toutes les périodes</Label>
           </div>

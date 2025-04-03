@@ -63,8 +63,8 @@ export const useFetchOperations = (
       console.log(`Found ${pepsiMenWithdrawals.length} withdrawals for pepsi men:`, 
                   pepsiMenWithdrawals.map(w => ({ id: w.id, name: w.client_name, amount: w.amount })));
       
-      // Known withdrawal IDs for "pepsi men"
-      const pepsiMenWithdrawalIds = [72, 73, 74, 75, 76, 77, 78];
+      // Known withdrawal IDs for "pepsi men" - expand this list to include all known IDs
+      const pepsiMenWithdrawalIds = [72, 73, 74, 75, 76, 77, 78, 14, 15, 16, 17, 36, 37, 40, 120, 121, 122, 123, 124, 125, 126, 139];
       
       const formattedOperations: Operation[] = [
         ...deposits.map((d): Operation => ({
@@ -79,13 +79,21 @@ export const useFetchOperations = (
           formattedDate: formatDateTime(d.operation_date || d.created_at)
         })),
         ...withdrawals.map((w): Operation => {
+          // Check if this is one of pepsi men's withdrawals either by ID or client name
           const isPepsiMen = pepsiMenWithdrawalIds.includes(w.id) || 
                             normalizeClientName(w.client_name).includes('pepsi') || 
-                            normalizeClientName(w.client_name).includes('men');
+                            normalizeClientName(w.client_name).includes('men') ||
+                            // Also check for withdrawal IDs as strings
+                            pepsiMenWithdrawalIds.includes(parseInt(w.id.toString(), 10));
           
           // For specific withdrawal IDs or if client name contains 'pepsi' or 'men',
           // explicitly set client name to "pepsi men" for consistency
           const clientName = isPepsiMen ? "pepsi men" : w.client_name;
+          
+          // Log all operations for pepsi men for debugging
+          if (isPepsiMen) {
+            console.log(`✅ Mapping withdrawal ID ${w.id} to pepsi men (original client: ${w.client_name})`);
+          }
           
           return {
             id: w.id.toString(),
@@ -123,6 +131,14 @@ export const useFetchOperations = (
       console.log(`Withdrawals: ${formattedOperations.filter(op => op.type === "withdrawal").length}`);
       console.log(`Withdrawals for "pepsi men": ${formattedOperations.filter(op => 
           op.type === "withdrawal" && normalizeClientName(op.fromClient || '').includes("pepsi men")).length}`);
+      
+      // Check for specific IDs 72-78
+      const criticalIds = ['72', '73', '74', '75', '76', '77', '78'];
+      const foundCriticalIds = formattedOperations.filter(op => 
+        criticalIds.includes(op.id) || criticalIds.includes(String(op.id))
+      );
+      console.log(`Found ${foundCriticalIds.length} operations with critical IDs 72-78:`, 
+        foundCriticalIds.map(op => ({ id: op.id, type: op.type, client: op.fromClient })));
       
       // Dédupliquer les opérations avant de les retourner
       const uniqueOperations = deduplicateOperations(formattedOperations);

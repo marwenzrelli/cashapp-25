@@ -1,6 +1,6 @@
 
 import { format } from "date-fns";
-import { ArrowUpCircle, ArrowDownCircle, RefreshCcw, Hash } from "lucide-react";
+import { ArrowUpCircle, ArrowDownCircle, RefreshCcw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Operation } from "@/features/operations/types";
 import { formatId } from "@/utils/formatId";
@@ -18,6 +18,21 @@ export const OperationsDetailCards = ({
   const deposits = clientOperations.filter(op => op.type === "deposit").slice(0, 3);
   const withdrawals = clientOperations.filter(op => op.type === "withdrawal").slice(0, 3);
   const transfers = clientOperations.filter(op => op.type === "transfer").slice(0, 3);
+  
+  // For debugging client with ID 4 (pepsi men)
+  const isPepsiMen = clientOperations.some(op => 
+    op.fromClient?.toLowerCase().includes('pepsi') || 
+    op.fromClient?.toLowerCase().includes('men'));
+  
+  if (isPepsiMen) {
+    console.log("OperationsDetailCards for pepsi men:");
+    console.log(`- Found ${withdrawals.length} withdrawals to display (showing max 3)`);
+    console.log(`- All withdrawals: ${clientOperations.filter(op => op.type === "withdrawal").length}`);
+    console.log(`- Sample withdrawal IDs:`, clientOperations
+      .filter(op => op.type === "withdrawal")
+      .map(op => op.id)
+      .slice(0, 10));
+  }
   
   // Format date helper
   const formatOperationDate = (date: string | Date) => {
@@ -82,6 +97,10 @@ export const OperationsDetailCards = ({
                   <div className="text-sm text-muted-foreground truncate">
                     {op.description || `Retrait #${formatId(op.id)}`}
                   </div>
+                  {/* Add ID debug info for pepsi men */}
+                  {isPepsiMen && (
+                    <div className="text-xs text-gray-500">ID: {op.id}</div>
+                  )}
                 </li>
               ))}
             </ul>
