@@ -39,16 +39,9 @@ export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = (
   setIsCustomRange,
   filteredOperations,
   refreshOperations,
-  showAllDates = true, // Default to showing all dates
+  showAllDates = false,
   setShowAllDates = () => {}
 }) => {
-  // Log operations statistics for debugging
-  console.log(`ClientOperationsHistory - Total operations: ${operations.length}, Filtered: ${filteredOperations.length}`);
-  console.log(`Operations breakdown - Deposits: ${operations.filter(op => op.type === "deposit").length}, 
-    Withdrawals: ${operations.filter(op => op.type === "withdrawal").length}, 
-    Transfers: ${operations.filter(op => op.type === "transfer").length}`
-  );
-
   return (
     <Card className="shadow-sm">
       <CardHeader className="pb-3">
