@@ -121,7 +121,7 @@ export const useFetchOperations = (
           description: d.notes || `Versement de ${d.client_name}`,
           fromClient: d.client_name,
           formattedDate: formatDateTime(d.operation_date || d.created_at),
-          // Safely handle the client_id property which might not exist in the database response
+          // Safely handle the client_id property
           client_id: d.client_id !== undefined ? d.client_id : undefined
         })),
         ...withdrawals.map((w): Operation => {
