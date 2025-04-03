@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Operation, formatDateTime } from "../types";
 import { toast } from "sonner";
@@ -121,7 +122,7 @@ export const useFetchOperations = (
           fromClient: d.client_name,
           formattedDate: formatDateTime(d.operation_date || d.created_at),
           // Safely handle the client_id property which might not exist in the database response
-          client_id: typeof d.client_id === 'number' ? d.client_id : undefined
+          client_id: d.client_id !== undefined ? d.client_id : undefined
         })),
         ...withdrawals.map((w): Operation => {
           // Special handling for pepsi men withdrawals
@@ -129,7 +130,7 @@ export const useFetchOperations = (
           const wId = typeof w.id === 'string' ? parseInt(w.id, 10) : w.id;
           const isPepsiMen = pepsiMenWithdrawalIds.includes(wId) || 
                            isPepsiMenName(w.client_name) ||
-                           (w.client_id === 4); // Direct client_id matching
+                           (w.client_id === 4 || w.client_id === '4'); // Direct client_id matching
                            
           // Ensure critical IDs are always marked as pepsi men
           const isForced = criticalIds.includes(wId);
@@ -154,7 +155,8 @@ export const useFetchOperations = (
             description: w.notes || `Retrait par ${clientName}`,
             fromClient: clientName,
             formattedDate: formatDateTime(w.operation_date || w.created_at),
-            client_id: isPepsiMen ? 4 : (typeof w.client_id === 'number' ? w.client_id : undefined) // Safely handle client_id
+            // Check if client_id exists and handle it safely
+            client_id: isPepsiMen ? 4 : (w.client_id !== undefined ? w.client_id : undefined)
           };
         }),
         ...transfers.map((t): Operation => ({
