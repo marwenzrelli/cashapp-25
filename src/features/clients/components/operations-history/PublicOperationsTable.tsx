@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { OperationsMobileCard } from "./OperationsMobileCard";
 import { getTypeStyle, getTypeIcon, getTypeLabel } from "@/features/operations/utils/operation-helpers";
 import { getAmountColor } from "@/features/operations/utils/display-helpers";
+import { useEffect } from "react";
 
 interface PublicOperationsTableProps {
   operations: Operation[];
@@ -12,6 +13,11 @@ interface PublicOperationsTableProps {
 }
 
 export const PublicOperationsTable = ({ operations, currency }: PublicOperationsTableProps) => {
+  // Log operations count for debugging
+  useEffect(() => {
+    console.log(`PublicOperationsTable rendering ${operations.length} operations`);
+  }, [operations]);
+
   // Sort operations by operation_date if available, otherwise by date
   const sortedOperations = [...operations].sort((a, b) => {
     const dateA = new Date(a.operation_date || a.date).getTime();

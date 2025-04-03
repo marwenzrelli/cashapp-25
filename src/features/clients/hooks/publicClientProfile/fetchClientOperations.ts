@@ -11,10 +11,10 @@ export const fetchClientOperations = async (
     
     // Utiliser une promesse avec timeout au lieu de AbortController
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error("Délai d'attente dépassé")), 10000); // 10 secondes timeout pour les opérations
+      setTimeout(() => reject(new Error("Délai d'attente dépassé")), 15000); // 15 secondes timeout pour les opérations
     });
     
-    // Récupérer les dépôts du client
+    // Récupérer les dépôts du client - sans limite de date
     const fetchDepositsPromise = async () => {
       const response = await supabase
         .from('deposits')
@@ -22,6 +22,7 @@ export const fetchClientOperations = async (
         .eq('client_name', clientName)
         .order('created_at', { ascending: false });
       
+      console.log("Deposits response:", response);
       return response;
     };
     
@@ -36,7 +37,7 @@ export const fetchClientOperations = async (
       throw new Error(`Erreur lors de la récupération des dépôts: ${depositsResult.error.message}`);
     }
 
-    // Récupérer les retraits du client
+    // Récupérer les retraits du client - sans limite de date
     const fetchWithdrawalsPromise = async () => {
       const response = await supabase
         .from('withdrawals')
@@ -44,6 +45,7 @@ export const fetchClientOperations = async (
         .eq('client_name', clientName)
         .order('created_at', { ascending: false });
       
+      console.log("Withdrawals response:", response);
       return response;
     };
     
@@ -56,6 +58,29 @@ export const fetchClientOperations = async (
     if (withdrawalsResult.error) {
       console.error("Error fetching withdrawals:", withdrawalsResult.error);
       throw new Error(`Erreur lors de la récupération des retraits: ${withdrawalsResult.error.message}`);
+    }
+    
+    // Récupérer les transferts où le client est impliqué
+    const fetchTransfersPromise = async () => {
+      const response = await supabase
+        .from('transfers')
+        .select('*')
+        .or(`from_client.eq.${clientName},to_client.eq.${clientName}`)
+        .order('created_at', { ascending: false });
+      
+      console.log("Transfers response:", response);
+      return response;
+    };
+    
+    // Utiliser Promise.race pour les transferts
+    const transfersResult = await Promise.race([
+      fetchTransfersPromise(),
+      timeoutPromise
+    ]);
+    
+    if (transfersResult.error) {
+      console.error("Error fetching transfers:", transfersResult.error);
+      console.warn("Will continue without transfers");
     }
 
     // Combiner et formater les opérations
@@ -77,7 +102,17 @@ export const fetchClientOperations = async (
         description: withdrawal.notes || `Retrait`,
         status: withdrawal.status,
         fromClient: withdrawal.client_name
-      }))
+      })),
+      ...((transfersResult.data || []).map((transfer): ClientOperation => ({
+        id: `transfer-${transfer.id}`,
+        type: "transfer",
+        date: transfer.operation_date || transfer.created_at,
+        amount: transfer.amount,
+        description: transfer.reason || `Virement`,
+        status: transfer.status,
+        fromClient: transfer.from_client,
+        toClient: transfer.to_client
+      })))
     ];
 
     // Déduplication des opérations basée sur l'ID unique
@@ -87,6 +122,7 @@ export const fetchClientOperations = async (
     uniqueOperations.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     console.log(`Récupéré ${uniqueOperations.length} opérations uniques sur ${operations.length} totales pour le client ${clientName}`);
+    console.log("Operation IDs:", uniqueOperations.map(op => op.id).join(", "));
     return uniqueOperations;
   } catch (error: any) {
     console.error("Error in fetchClientOperations:", error);

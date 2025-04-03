@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Operation } from "@/features/operations/types";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { PublicOperationsTabs } from "./operations-history/PublicOperationsTabs";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
@@ -24,6 +24,18 @@ export const PublicClientOperationsHistory = ({ operations }: PublicClientOperat
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         return opDate >= thirtyDaysAgo;
       });
+  
+  // Log operations for debugging
+  useEffect(() => {
+    console.log("All operations:", operations.length);
+    console.log("Displayed operations:", displayedOperations.length);
+    
+    // Log IDs of all operations to check for missing ones
+    if (operations.length > 0) {
+      console.log("Operation IDs:", operations.map(op => op.id).join(", "));
+    }
+    
+  }, [operations, displayedOperations]);
   
   return (
     <Card className="shadow-sm max-w-full overflow-hidden">

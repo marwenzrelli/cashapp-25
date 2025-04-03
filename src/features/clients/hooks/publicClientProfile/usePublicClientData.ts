@@ -35,8 +35,8 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
   }, [isLoading, error]);
 
   const fetchClientData = useCallback(async () => {
-    // Skip if no token or already fetching or already fetched
-    if (!token || fetchingRef.current || (dataFetchedRef.current && client)) {
+    // Skip if no token or already fetching
+    if (!token || fetchingRef.current) {
       return;
     }
 
@@ -85,12 +85,16 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
       try {
         const operationsData = await fetchClientOperations(fullName, token);
         
+        // Always log the operations we got
+        console.log(`Étape 5: ${operationsData.length} opérations client récupérées:`, 
+          operationsData.map(op => `${op.id} (${op.type})`));
+        
         setOperations(operationsData);
-        console.log(`Étape 5: ${operationsData.length} opérations client récupérées`);
       } catch (operationsErr: any) {
         // Log the error but still consider client data fetch successful
         console.warn("Erreur lors de la récupération des opérations:", operationsErr);
         setOperations([]);
+        // We'll try again for operations later in the retryFetch, but don't fail the whole flow
       }
       
       dataFetchedRef.current = true;
@@ -108,7 +112,7 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
       fetchingRef.current = false;
       clearTimeout(globalTimeout);
     }
-  }, [token, fetchCount, client]);
+  }, [token, fetchCount]);
 
   const retryFetch = useCallback(() => {
     console.log("Nouvelle tentative de récupération des données client avec le token:", token?.substring(0, 8));
@@ -123,6 +127,33 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
       fetchClientData();
     }
   }, [token, fetchClientData]);
+
+  // If we have a client but no operations, try to fetch operations again after a delay
+  useEffect(() => {
+    if (client && operations.length === 0 && !isLoading && !error && initialLoadCompletedRef.current) {
+      console.log("Client loaded but no operations found. Retrying operations fetch after delay...");
+      const retryTimer = setTimeout(() => {
+        // Only try to fetch operations, not the whole client data again
+        const fetchOnlyOperations = async () => {
+          try {
+            if (token && client) {
+              const fullName = `${client.prenom} ${client.nom}`;
+              console.log(`Retry: Fetching operations for ${fullName}...`);
+              const operationsData = await fetchClientOperations(fullName, token);
+              console.log(`Retry: Got ${operationsData.length} operations`);
+              setOperations(operationsData);
+            }
+          } catch (err) {
+            console.error("Error during operations retry fetch:", err);
+          }
+        };
+        
+        fetchOnlyOperations();
+      }, 2000); // Wait 2 seconds before retrying
+      
+      return () => clearTimeout(retryTimer);
+    }
+  }, [client, operations, isLoading, error, token, initialLoadCompletedRef]);
 
   return {
     client,
