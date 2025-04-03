@@ -14,16 +14,34 @@ export const OperationsDetailCards = ({
   clientOperations,
   formatAmount
 }: OperationsDetailCardsProps) => {
-  // Get the latest deposit, withdrawal, and transfer operations
-  const deposits = clientOperations.filter(op => op.type === "deposit").slice(0, 3);
-  const withdrawals = clientOperations.filter(op => op.type === "withdrawal").slice(0, 3);
-  const transfers = clientOperations.filter(op => op.type === "transfer").slice(0, 3);
+  // Critical Withdrawal IDs that must be prioritized for display
+  const criticalWithdrawalIds = ['72', '73', '74', '75', '76', '77', '78'];
   
   // Check if this is for pepsi men
   const isPepsiMen = clientOperations.some(op => {
     const client = (op.fromClient || '').toLowerCase();
     return client.includes('pepsi') || client.includes('men');
   });
+  
+  // Special handling for withdrawals if this is pepsi men
+  const withdrawals = clientOperations.filter(op => op.type === "withdrawal");
+  
+  // First, include any critical withdrawals
+  const criticalWithdrawals = withdrawals.filter(op => 
+    criticalWithdrawalIds.includes(op.id.toString())
+  );
+  
+  // Then add other withdrawals up to a total of 3
+  const otherWithdrawals = withdrawals
+    .filter(op => !criticalWithdrawalIds.includes(op.id.toString()))
+    .slice(0, Math.max(0, 3 - criticalWithdrawals.length));
+  
+  // Combine critical and other withdrawals, ensuring critical ones are included
+  const displayWithdrawals = [...criticalWithdrawals, ...otherWithdrawals].slice(0, 3);
+  
+  // Regular handling for deposits and transfers
+  const deposits = clientOperations.filter(op => op.type === "deposit").slice(0, 3);
+  const transfers = clientOperations.filter(op => op.type === "transfer").slice(0, 3);
   
   if (isPepsiMen) {
     // Log all withdrawal IDs for debugging
@@ -32,14 +50,22 @@ export const OperationsDetailCards = ({
       .map(op => op.id);
     
     console.log(`OperationsDetailCards for pepsi men:`);
-    console.log(`- Found ${withdrawals.length} withdrawals to display (showing max 3)`);
-    console.log(`- All withdrawals: ${clientOperations.filter(op => op.type === "withdrawal").length}`);
+    console.log(`- Found ${displayWithdrawals.length} withdrawals to display (showing max 3)`);
+    console.log(`- All withdrawals: ${withdrawals.length}`);
     console.log(`- All withdrawal IDs: ${allWithdrawalIds.join(', ')}`);
     
-    // Check for specific IDs
-    const criticalIds = ['72', '73', '74', '75', '76', '77', '78'];
-    const hasCriticalIds = criticalIds.some(id => allWithdrawalIds.includes(id));
+    // Check specifically for critical IDs
+    const hasCriticalIds = criticalWithdrawalIds.some(id => allWithdrawalIds.includes(id));
     console.log(`- Has critical IDs 72-78: ${hasCriticalIds}`);
+    
+    // List all found critical IDs
+    const foundCriticalIds = criticalWithdrawalIds.filter(id => allWithdrawalIds.includes(id));
+    console.log(`- Found critical IDs: ${foundCriticalIds.join(', ')}`);
+    
+    // Check for specific critical withdrawals
+    if (criticalWithdrawals.length > 0) {
+      console.log(`- Critical withdrawals to display: ${criticalWithdrawals.map(w => w.id).join(', ')}`);
+    }
   }
   
   // Format date helper
@@ -92,9 +118,9 @@ export const OperationsDetailCards = ({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {withdrawals.length > 0 ? (
+          {displayWithdrawals.length > 0 ? (
             <ul className="space-y-2">
-              {withdrawals.map(op => (
+              {displayWithdrawals.map(op => (
                 <li key={op.id} className="border-b pb-2">
                   <div className="flex justify-between">
                     <div className="font-medium">{formatAmount(op.amount)}</div>

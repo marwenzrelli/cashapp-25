@@ -27,6 +27,27 @@ export const PublicClientOperationsHistory = ({ operations, clientId }: PublicCl
     }
   }, [isPepsiMen, showAllOperations]);
   
+  // Log the critical IDs for debugging
+  useEffect(() => {
+    if (isPepsiMen) {
+      const criticalIds = [72, 73, 74, 75, 76, 77, 78].map(id => id.toString());
+      const withdrawals = operations.filter(op => op.type === 'withdrawal');
+      
+      // Check for presence of critical IDs
+      const foundCriticalIds = withdrawals.filter(w => criticalIds.includes(w.id));
+      
+      console.log(`PublicClientOperationsHistory for pepsi men (ID 4): Found ${foundCriticalIds.length}/${criticalIds.length} critical withdrawals`);
+      
+      if (foundCriticalIds.length < criticalIds.length) {
+        const missingIds = criticalIds.filter(id => !withdrawals.some(w => w.id === id));
+        console.warn(`Missing critical withdrawal IDs in PublicClientOperationsHistory: ${missingIds.join(', ')}`);
+      }
+      
+      // Log all withdrawal IDs for reference
+      console.log(`All withdrawal IDs: ${withdrawals.map(w => w.id).join(', ')}`);
+    }
+  }, [operations, isPepsiMen]);
+  
   // Determine which operations to display based on the filter
   const displayedOperations = showAllOperations 
     ? operations 
