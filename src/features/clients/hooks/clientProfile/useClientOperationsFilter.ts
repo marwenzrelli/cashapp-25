@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { Operation } from "@/features/operations/types";
 import { Client } from "@/features/clients/types";
 import { DateRange } from "react-day-picker";
+import { operationMatchesSearch } from "@/features/operations/utils/display-helpers";
 
 export const useClientOperationsFilter = (
   operations: Operation[],
@@ -18,21 +19,49 @@ export const useClientOperationsFilter = (
   const clientOperations = useMemo(() => {
     if (!client) return [];
     
-    const clientFullName = `${client.prenom} ${client.nom}`.trim();
+    const clientFullName = `${client.prenom} ${client.nom}`.trim().toLowerCase();
     console.log(`Filtering operations for client: "${clientFullName}", total operations: ${operations.length}`);
     
     // Debug log to check for missing operations
     if (client.id === 4) {
       console.log("Special debugging for client ID 4:");
-      operations.forEach(op => {
-        console.log(`Operation ID: ${op.id}, Type: ${op.type}, Client: ${op.fromClient}`);
+      console.log(`Looking for operations 72-78 in the entire dataset...`);
+      
+      const specificIds = [72, 73, 74, 75, 76, 77, 78];
+      const foundOperations = operations.filter(op => 
+        specificIds.includes(Number(op.id))
+      );
+      
+      console.log(`Found ${foundOperations.length} operations with IDs 72-78 in the full dataset:`);
+      foundOperations.forEach(op => {
+        console.log(`Operation ${op.id}: type=${op.type}, from=${op.fromClient}, to=${op.toClient}, amount=${op.amount}`);
       });
     }
     
     return operations.filter(operation => {
-      const isFromClient = operation.fromClient && operation.fromClient.includes(clientFullName);
-      const isToClient = operation.toClient && operation.toClient.includes(clientFullName);
-      return isFromClient || isToClient;
+      // For transfers, check both fromClient and toClient fields
+      if (operation.type === 'transfer') {
+        const fromClientMatch = operation.fromClient && operation.fromClient.toLowerCase().includes(clientFullName);
+        const toClientMatch = operation.toClient && operation.toClient.toLowerCase().includes(clientFullName);
+        
+        // Debug logs for client ID 4 to identify missing transfers
+        if (client.id === 4 && (fromClientMatch || toClientMatch)) {
+          console.log(`Transfer operation ${operation.id} matched for client "${clientFullName}":`, 
+                      `from=${operation.fromClient}, to=${operation.toClient}, amount=${operation.amount}`);
+        }
+        
+        return fromClientMatch || toClientMatch;
+      }
+      
+      // For deposits and withdrawals, check fromClient
+      const isFromClient = operation.fromClient && operation.fromClient.toLowerCase().includes(clientFullName);
+      
+      // Debug logs for client ID 4
+      if (client.id === 4 && isFromClient) {
+        console.log(`Operation ${operation.id} (${operation.type}) matched as fromClient for "${clientFullName}"`);
+      }
+      
+      return isFromClient;
     });
   }, [operations, client]);
 
@@ -49,15 +78,7 @@ export const useClientOperationsFilter = (
     
     // Filter by search term
     if (searchTerm) {
-      const search = searchTerm.toLowerCase();
-      filtered = filtered.filter(operation => {
-        return (
-          operation.description?.toLowerCase().includes(search) ||
-          operation.fromClient?.toLowerCase().includes(search) ||
-          operation.toClient?.toLowerCase().includes(search) ||
-          operation.amount?.toString().includes(search)
-        );
-      });
+      filtered = filtered.filter(operation => operationMatchesSearch(operation, searchTerm));
     }
     
     // Filter by date range only if not showing all dates
@@ -87,6 +108,12 @@ export const useClientOperationsFilter = (
     if (client?.id === 4) {
       console.log(`Filtered operations for client ID 4: ${filtered.length}/${clientOperations.length}`);
       console.log("Filtered operation IDs:", filtered.map(op => op.id).join(", "));
+      
+      // Check specifically for operations 72-78
+      const specificIds = [72, 73, 74, 75, 76, 77, 78];
+      const foundSpecific = filtered.filter(op => specificIds.includes(Number(op.id)));
+      console.log(`Found ${foundSpecific.length} operations with IDs 72-78 in filtered results:`, 
+                 foundSpecific.map(op => op.id).join(", "));
     }
     
     // Sort by date (newest first)

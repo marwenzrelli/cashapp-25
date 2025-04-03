@@ -11,7 +11,7 @@ export const fetchClientOperations = async (
     
     // Utiliser une promesse avec timeout au lieu de AbortController
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error("Délai d'attente dépassé")), 15000); // 15 secondes timeout pour les opérations
+      setTimeout(() => reject(new Error("Délai d'attente dépassé")), 20000); // Augmenté à 20 secondes timeout pour les opérations
     });
     
     // Récupérer les dépôts du client - sans limite de date
@@ -21,7 +21,7 @@ export const fetchClientOperations = async (
         .select('*')
         .eq('client_name', clientName)
         .order('created_at', { ascending: false })
-        .limit(1000); // Increased limit to get ALL operations
+        .limit(2000); // Increased limit even more to get ALL operations
       
       console.log("Deposits response:", response);
       return response;
@@ -45,7 +45,7 @@ export const fetchClientOperations = async (
         .select('*')
         .eq('client_name', clientName)
         .order('created_at', { ascending: false })
-        .limit(1000); // Increased limit
+        .limit(2000); // Increased limit
       
       console.log("Withdrawals response:", response);
       return response;
@@ -62,16 +62,31 @@ export const fetchClientOperations = async (
       throw new Error(`Erreur lors de la récupération des retraits: ${withdrawalsResult.error.message}`);
     }
     
-    // Récupérer les transferts où le client est impliqué
+    // Récupérer les transferts où le client est impliqué - utiliser ILIKE pour une recherche insensible à la casse
     const fetchTransfersPromise = async () => {
+      // We'll use a more flexible search pattern to ensure we get all transfers
+      const clientNamePattern = `%${clientName.toLowerCase().trim()}%`;
       const response = await supabase
         .from('transfers')
         .select('*')
-        .or(`from_client.eq.${clientName},to_client.eq.${clientName}`)
+        .or(`from_client.ilike.${clientNamePattern},to_client.ilike.${clientNamePattern}`)
         .order('created_at', { ascending: false })
-        .limit(1000); // Increased limit
+        .limit(2000); // Increased limit
       
       console.log("Transfers response:", response);
+      console.log("Transfer SQL query:", `from_client.ilike.${clientNamePattern},to_client.ilike.${clientNamePattern}`);
+      return response;
+    };
+    
+    // Also fetch specific transfers with IDs 72-78 to make sure we don't miss them
+    const fetchSpecificTransfersPromise = async () => {
+      const specificIds = [72, 73, 74, 75, 76, 77, 78];
+      const response = await supabase
+        .from('transfers')
+        .select('*')
+        .in('id', specificIds);
+      
+      console.log("Specific transfers response:", response);
       return response;
     };
     
@@ -83,7 +98,18 @@ export const fetchClientOperations = async (
     
     if (transfersResult.error) {
       console.error("Error fetching transfers:", transfersResult.error);
-      console.warn("Will continue without transfers");
+      console.warn("Will continue without regular transfers");
+    }
+    
+    // Fetch specific transfers separately
+    const specificTransfersResult = await Promise.race([
+      fetchSpecificTransfersPromise(),
+      timeoutPromise
+    ]);
+    
+    if (specificTransfersResult.error) {
+      console.error("Error fetching specific transfers:", specificTransfersResult.error);
+      console.warn("Will continue without specific transfers");
     }
 
     // Combiner et formater les opérations
@@ -115,18 +141,36 @@ export const fetchClientOperations = async (
         status: transfer.status,
         fromClient: transfer.from_client,
         toClient: transfer.to_client
+      }))),
+      ...((specificTransfersResult.data || []).map((transfer): ClientOperation => ({
+        id: `transfer-${transfer.id}`,
+        type: "transfer",
+        date: transfer.operation_date || transfer.created_at,
+        amount: transfer.amount,
+        description: transfer.reason || `Virement`,
+        status: transfer.status,
+        fromClient: transfer.from_client,
+        toClient: transfer.to_client
       })))
     ];
     
     // Check specifically for transfers with IDs 72-78 to ensure they're included
     const missingIds = [72, 73, 74, 75, 76, 77, 78];
-    const foundMissingTransfers = transfersResult.data?.filter(t => 
+    const allFoundTransfers = [...(transfersResult.data || []), ...(specificTransfersResult.data || [])];
+    const foundMissingTransfers = allFoundTransfers.filter(t => 
       missingIds.includes(t.id)
     ) || [];
     
     console.log(`Found specific transfers (72-78): ${foundMissingTransfers.length}`);
     foundMissingTransfers.forEach(t => {
       console.log(`  Transfer ID: ${t.id}, From: ${t.from_client}, To: ${t.to_client}, Amount: ${t.amount}`);
+      
+      // Check if the client name appears in either the from_client or to_client fields
+      const isClientInvolved = 
+        (t.from_client && t.from_client.toLowerCase().includes(clientName.toLowerCase())) ||
+        (t.to_client && t.to_client.toLowerCase().includes(clientName.toLowerCase()));
+      
+      console.log(`  Client "${clientName}" is involved: ${isClientInvolved}`);
     });
 
     // Déduplication des opérations basée sur l'ID unique
@@ -137,6 +181,16 @@ export const fetchClientOperations = async (
 
     console.log(`Récupéré ${uniqueOperations.length} opérations uniques sur ${operations.length} totales pour le client ${clientName}`);
     console.log("Operation IDs:", uniqueOperations.map(op => op.id).join(", "));
+    
+    // Check once more for the specific IDs
+    const finalSpecificOps = uniqueOperations.filter(op => {
+      const numId = parseInt(op.id.toString().split('-')[1]);
+      return missingIds.includes(numId);
+    });
+    
+    console.log(`Final check - Found ${finalSpecificOps.length} operations with IDs 72-78 in results:`,
+      finalSpecificOps.map(op => op.id).join(", "));
+      
     return uniqueOperations;
   } catch (error: any) {
     console.error("Error in fetchClientOperations:", error);
