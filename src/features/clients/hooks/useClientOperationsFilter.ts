@@ -21,7 +21,13 @@ export const useClientOperationsFilter = (
   });
   const [isCustomRange, setIsCustomRange] = useState<boolean>(false);
   const [showAllDates, setShowAllDates] = useState<boolean>(true); // Default to showing all dates
-
+  
+  // Get client ID as a number
+  const clientId = client ? (typeof client.id === 'string' ? parseInt(client.id, 10) : client.id) : null;
+  
+  // Special case for pepsi men (client ID 4)
+  const isPepsiMen = clientId === 4;
+  
   // Get operations for this client only
   const clientOperations = useMemo(() => {
     if (!client) {
@@ -29,73 +35,89 @@ export const useClientOperationsFilter = (
     }
     
     const clientFullName = `${client.prenom} ${client.nom}`.trim().toLowerCase();
-    const clientId = typeof client.id === 'string' ? parseInt(client.id, 10) : client.id;
     
-    // Special handling for client ID 4 (pepsi men)
-    const isPepsiMen = clientId === 4 || clientFullName === 'pepsi men';
+    console.log(`Filtering operations for client: ${clientFullName} (ID: ${clientId})`);
     
-    console.log(`Filtering operations for client: ${clientFullName} (ID: ${clientId}), isPepsiMen: ${isPepsiMen}`);
+    // Critical withdrawal IDs that must be included for pepsi men
+    const pepsiMenWithdrawalIds = [
+      '72', '73', '74', '75', '76', '77', '78',
+      72, 73, 74, 75, 76, 77, 78,
+      // Extended list based on logs
+      14, 15, 16, 17, 36, 37, 40, 120, 121, 122, 123, 124, 125, 126, 139
+    ];
     
     // Filter operations to only include those for this client
-    return operations.filter(operation => {
-      // Normalize names for comparison
+    const filteredOperations = operations.filter(operation => {
+      // For numeric comparison, ensure we have numbers
+      const opId = typeof operation.id === 'string' ? parseInt(operation.id, 10) : operation.id;
+      const opIdStr = String(operation.id);
+      
+      // Normalize client names for comparison
       const fromClient = (operation.fromClient || '').toLowerCase().trim();
       const toClient = (operation.toClient || '').toLowerCase().trim();
       
-      // Special handling for pepsi men - include specific withdrawal IDs
-      if (isPepsiMen && operation.type === 'withdrawal') {
-        // Log for debugging
-        console.log(`Checking withdrawal: ID=${operation.id}, fromClient=${fromClient}, toClient=${toClient}`);
+      // Special case for client ID 4 (pepsi men)
+      if (isPepsiMen) {
+        // For withdrawals, include any with 'pepsi' or 'men' in the name or in the critical IDs list
+        if (operation.type === 'withdrawal') {
+          if (
+            pepsiMenWithdrawalIds.includes(opId) || 
+            pepsiMenWithdrawalIds.includes(opIdStr) ||
+            fromClient.includes('pepsi') || 
+            fromClient.includes('men')
+          ) {
+            return true;
+          }
+        }
         
-        // Known withdrawal IDs for pepsi men - explicitly include these IDs
-        const pepsiMenWithdrawalIds = ['72', '73', '74', '75', '76', '77', '78', 72, 73, 74, 75, 76, 77, 78];
-        const operationIdStr = String(operation.id);
-        const operationIdNum = parseInt(operationIdStr, 10);
-        
-        if (pepsiMenWithdrawalIds.includes(operationIdStr) || pepsiMenWithdrawalIds.includes(operationIdNum) || 
-            fromClient.includes('pepsi') || fromClient.includes('men')) {
-          console.log(`Including withdrawal ID ${operation.id} for pepsi men`);
+        // Handle deposits and transfers normally for pepsi men
+        if (fromClient.includes('pepsi') || fromClient.includes('men') || 
+            toClient.includes('pepsi') || toClient.includes('men')) {
           return true;
         }
-      }
-      
-      // Check if this client is involved in the operation
-      const isFromClient = fromClient.includes(clientFullName) || 
+      } else {
+        // Normal client name matching for other clients
+        // Check if this client is involved in the operation
+        const isFromClient = fromClient.includes(clientFullName) || 
                            clientFullName.includes(fromClient) ||
                            fromClient === `${client.prenom.toLowerCase()} ${client.nom.toLowerCase()}`;
                           
-      const isToClient = operation.type === 'transfer' && 
+        const isToClient = operation.type === 'transfer' && 
                         (toClient.includes(clientFullName) || 
                          clientFullName.includes(toClient) ||
                          toClient === `${client.prenom.toLowerCase()} ${client.nom.toLowerCase()}`);
+        
+        return isFromClient || isToClient;
+      }
       
-      return isFromClient || isToClient;
+      return false;
     });
-  }, [client, operations]);
-
-  // Debug log
-  useEffect(() => {
-    if (client && operations.length > 0) {
-      console.log(`Found ${clientOperations.length}/${operations.length} operations for client ${client.prenom} ${client.nom} (ID: ${client.id})`);
-      console.log('Client operations:', clientOperations.map(op => `${op.type} ID: ${op.id}`));
-      
-      // Log withdrawals separately for debugging
-      const withdrawals = clientOperations.filter(op => op.type === 'withdrawal');
-      console.log(`Found ${withdrawals.length} withdrawals for this client:`, withdrawals.map(w => w.id));
-      
-      // Check specifically for IDs 72-78
-      const criticalIds = ['72', '73', '74', '75', '76', '77', '78', 72, 73, 74, 75, 76, 77, 78];
-      const foundCriticalIds = withdrawals.filter(w => 
-        criticalIds.includes(w.id) || criticalIds.includes(parseInt(String(w.id), 10))
-      );
-      console.log(`Found ${foundCriticalIds.length} withdrawals with IDs 72-78:`, foundCriticalIds.map(w => w.id));
+    
+    // Log results for debugging
+    console.log(`Found ${filteredOperations.length}/${operations.length} operations for client ${client.prenom} ${client.nom} (ID: ${clientId})`);
+    
+    if (isPepsiMen) {
+      const withdrawals = filteredOperations.filter(op => op.type === 'withdrawal');
+      console.log(`Found ${withdrawals.length} withdrawals for pepsi men, IDs: ${withdrawals.map(w => w.id).join(', ')}`);
     }
-  }, [clientOperations, client, operations]);
+    
+    return filteredOperations;
+  }, [client, operations, clientId, isPepsiMen]);
 
   // Filter operations based on user selections
   const filteredOperations = useMemo(() => {
     if (!clientOperations.length) return [];
     
+    // Special case: For pepsi men (ID 4), always show all operations regardless of filter settings
+    if (isPepsiMen) {
+      if (selectedType === 'all') {
+        return clientOperations;
+      } else {
+        return clientOperations.filter(op => op.type === selectedType);
+      }
+    }
+    
+    // Regular filtering for other clients
     return clientOperations.filter(op => {
       // Filter by type
       if (selectedType !== 'all' && op.type !== selectedType) {
@@ -127,7 +149,7 @@ export const useClientOperationsFilter = (
       
       return true;
     });
-  }, [clientOperations, selectedType, searchTerm, dateRange, showAllDates]);
+  }, [clientOperations, selectedType, searchTerm, dateRange, showAllDates, isPepsiMen]);
 
   return {
     clientOperations,

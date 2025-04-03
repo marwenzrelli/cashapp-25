@@ -14,18 +14,20 @@ interface PublicClientOperationsHistoryProps {
 
 export const PublicClientOperationsHistory = ({ operations, clientId }: PublicClientOperationsHistoryProps) => {
   const { currency } = useCurrency();
-  // Default to true for client ID 4 to show all operations
+  // Determine if this is for "pepsi men" (client ID 4)
   const isPepsiMen = clientId === 4;
+  
+  // Always show all operations for pepsi men, default to true for other clients too
   const [showAllOperations, setShowAllOperations] = useState<boolean>(true);
   
-  // For pepsi men (ID 4), always ensure we show all operations
+  // Ensure we always show all operations for pepsi men
   useEffect(() => {
     if (isPepsiMen && !showAllOperations) {
       setShowAllOperations(true);
     }
   }, [isPepsiMen, showAllOperations]);
   
-  // Default to showing the last 30 days of operations unless showAllOperations is true
+  // Determine which operations to display based on the filter
   const displayedOperations = showAllOperations 
     ? operations 
     : operations.filter(op => {
@@ -35,23 +37,26 @@ export const PublicClientOperationsHistory = ({ operations, clientId }: PublicCl
         return opDate >= thirtyDaysAgo;
       });
   
-  // Debug logging to verify we're showing the right operations
+  // Special handling for pepsi men operations
   useEffect(() => {
     if (isPepsiMen) {
-      console.log(`Public client operations for pepsi men (ID 4): ${displayedOperations.length} operations`);
+      console.log(`Public client operations for pepsi men (ID 4): ${operations.length} operations total`);
+      console.log(`Displaying ${displayedOperations.length} operations`);
+      
       // Check for specific withdrawal IDs
-      const withdrawals = displayedOperations.filter(op => op.type === 'withdrawal');
-      console.log(`Withdrawal operations for pepsi men: ${withdrawals.length}`, 
-        withdrawals.map(w => ({ id: w.id, amount: w.amount })));
+      const withdrawals = operations.filter(op => op.type === 'withdrawal');
+      const displayedWithdrawals = displayedOperations.filter(op => op.type === 'withdrawal');
+      
+      console.log(`Withdrawal count - Total: ${withdrawals.length}, Displayed: ${displayedWithdrawals.length}`);
       
       // Check specifically for IDs 72-78
-      const criticalIds = ['72', '73', '74', '75', '76', '77', '78', 72, 73, 74, 75, 76, 77, 78];
-      const foundCriticalIds = withdrawals.filter(w => 
-        criticalIds.includes(w.id) || criticalIds.includes(parseInt(String(w.id), 10))
-      );
-      console.log(`Found ${foundCriticalIds.length} withdrawals with IDs 72-78:`, foundCriticalIds.map(w => w.id));
+      const criticalIds = [72, 73, 74, 75, 76, 77, 78].map(id => id.toString());
+      const foundCriticalIds = withdrawals.filter(w => criticalIds.includes(w.id));
+      
+      console.log(`Found ${foundCriticalIds.length} withdrawals with IDs 72-78:`, 
+        foundCriticalIds.map(w => `ID: ${w.id}, Amount: ${w.amount}`));
     }
-  }, [displayedOperations, isPepsiMen]);
+  }, [operations, displayedOperations, isPepsiMen]);
   
   return (
     <Card className="shadow-sm max-w-full overflow-hidden">

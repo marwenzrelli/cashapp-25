@@ -19,19 +19,27 @@ export const OperationsDetailCards = ({
   const withdrawals = clientOperations.filter(op => op.type === "withdrawal").slice(0, 3);
   const transfers = clientOperations.filter(op => op.type === "transfer").slice(0, 3);
   
-  // For debugging client with ID 4 (pepsi men)
-  const isPepsiMen = clientOperations.some(op => 
-    op.fromClient?.toLowerCase().includes('pepsi') || 
-    op.fromClient?.toLowerCase().includes('men'));
+  // Check if this is for pepsi men
+  const isPepsiMen = clientOperations.some(op => {
+    const client = (op.fromClient || '').toLowerCase();
+    return client.includes('pepsi') || client.includes('men');
+  });
   
   if (isPepsiMen) {
-    console.log("OperationsDetailCards for pepsi men:");
+    // Log all withdrawal IDs for debugging
+    const allWithdrawalIds = clientOperations
+      .filter(op => op.type === "withdrawal")
+      .map(op => op.id);
+    
+    console.log(`OperationsDetailCards for pepsi men:`);
     console.log(`- Found ${withdrawals.length} withdrawals to display (showing max 3)`);
     console.log(`- All withdrawals: ${clientOperations.filter(op => op.type === "withdrawal").length}`);
-    console.log(`- Sample withdrawal IDs:`, clientOperations
-      .filter(op => op.type === "withdrawal")
-      .map(op => op.id)
-      .slice(0, 10));
+    console.log(`- All withdrawal IDs: ${allWithdrawalIds.join(', ')}`);
+    
+    // Check for specific IDs
+    const criticalIds = ['72', '73', '74', '75', '76', '77', '78'];
+    const hasCriticalIds = criticalIds.some(id => allWithdrawalIds.includes(id));
+    console.log(`- Has critical IDs 72-78: ${hasCriticalIds}`);
   }
   
   // Format date helper
@@ -97,10 +105,8 @@ export const OperationsDetailCards = ({
                   <div className="text-sm text-muted-foreground truncate">
                     {op.description || `Retrait #${formatId(op.id)}`}
                   </div>
-                  {/* Add ID debug info for pepsi men */}
-                  {isPepsiMen && (
-                    <div className="text-xs text-gray-500">ID: {op.id}</div>
-                  )}
+                  {/* Always show operation ID for better tracking */}
+                  <div className="text-xs text-gray-500">ID: {op.id}</div>
                 </li>
               ))}
             </ul>
