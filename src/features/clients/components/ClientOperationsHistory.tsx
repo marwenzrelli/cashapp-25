@@ -39,7 +39,7 @@ export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = (
   setIsCustomRange,
   filteredOperations,
   refreshOperations,
-  showAllDates = false,
+  showAllDates = true, // Default to showing all dates
   setShowAllDates = () => {}
 }) => {
   return (

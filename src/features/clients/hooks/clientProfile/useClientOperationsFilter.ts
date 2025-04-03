@@ -20,7 +20,7 @@ export const useClientOperationsFilter = (
     to: new Date()
   });
   const [isCustomRange, setIsCustomRange] = useState<boolean>(false);
-  const [showAllDates, setShowAllDates] = useState<boolean>(false);
+  const [showAllDates, setShowAllDates] = useState<boolean>(true); // Default to showing all dates
 
   // Get operations for this client only
   const clientOperations = useMemo(() => {
