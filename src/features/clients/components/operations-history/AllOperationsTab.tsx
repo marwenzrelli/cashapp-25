@@ -1,57 +1,51 @@
 
 import React from "react";
 import { Operation } from "@/features/operations/types";
-import { format } from "date-fns";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getTypeStyle, getTypeIcon, getTypeLabel } from "@/features/operations/utils/operation-helpers";
 import { OperationsMobileCard } from "./OperationsMobileCard";
 import { EmptyOperations } from "./EmptyOperations";
-import { getAmountColor } from "./utils";
+import { cn } from "@/lib/utils";
 import { formatId } from "@/utils/formatId";
+import { format } from "date-fns";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface AllOperationsTabProps {
   operations: Operation[];
   currency?: string;
+  selectedOperations?: Record<string, boolean>;
+  toggleSelection?: (id: string) => void;
 }
 
-export const AllOperationsTab = ({ operations, currency = "TND" }: AllOperationsTabProps) => {
-  if (!operations || operations.length === 0) {
+export const AllOperationsTab = ({ 
+  operations, 
+  currency = "TND",
+  selectedOperations = {},
+  toggleSelection = () => {}
+}: AllOperationsTabProps) => {
+  if (operations.length === 0) {
     return <EmptyOperations />;
   }
-
-  // Calculate totals for each operation type
-  const calculateTotals = () => {
-    const totals = {
-      deposit: 0,
-      withdrawal: 0,
-      transfer: 0
-    };
-
-    operations.forEach(operation => {
-      switch (operation.type) {
-        case "deposit":
-          totals.deposit += operation.amount;
-          break;
-        case "withdrawal":
-          totals.withdrawal += operation.amount;
-          break;
-        case "transfer":
-          totals.transfer += operation.amount;
-          break;
-      }
-    });
-
-    return totals;
-  };
-
-  const totals = calculateTotals();
 
   // Format number with 2 decimal places and comma separator
   const formatNumber = (num: number): string => {
     return num.toLocaleString('fr-FR', { 
-      minimumFractionDigits: 2,
+      minimumFractionDigits: 2, 
       maximumFractionDigits: 2 
     });
+  };
+
+  // Determine color based on operation type
+  const getOperationTypeColor = (type: string): string => {
+    switch (type) {
+      case "deposit":
+        return "text-green-600 dark:text-green-400";
+      case "withdrawal":
+        return "text-red-600 dark:text-red-400";
+      case "transfer":
+        return "text-blue-600 dark:text-blue-400";
+      default:
+        return "";
+    }
   };
 
   return (
@@ -61,15 +55,13 @@ export const AllOperationsTab = ({ operations, currency = "TND" }: AllOperations
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[50px]"></TableHead>
               <TableHead>Type</TableHead>
               <TableHead>ID</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Description</TableHead>
-              <TableHead className="text-center">Montant</TableHead>
-              {/* Only show transfer details column for transfer operations */}
-              {operations.some(op => op.type === "transfer") && (
-                <TableHead>Détails</TableHead>
-              )}
+              <TableHead className="text-right">Montant</TableHead>
+              <TableHead>Client</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -85,75 +77,52 @@ export const AllOperationsTab = ({ operations, currency = "TND" }: AllOperations
                 ? operation.id 
                 : formatId(parseInt(operation.id));
                 
+              // Check if operation is selected
+              const isSelected = selectedOperations[operation.id] || false;
+                
               return (
-                <TableRow key={operation.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${getTypeStyle(operation.type)}`}>
-                        {getTypeIcon(operation.type)}
-                      </div>
-                      <span>{getTypeLabel(operation.type)}</span>
-                    </div>
+                <TableRow 
+                  key={operation.id} 
+                  className={cn(
+                    isSelected ? "bg-blue-50 dark:bg-blue-900/20" : "",
+                    "transition-colors cursor-pointer"
+                  )}
+                  onClick={() => toggleSelection(operation.id)}
+                >
+                  <TableCell className="w-[50px] p-2">
+                    <Checkbox 
+                      checked={isSelected}
+                      onCheckedChange={() => toggleSelection(operation.id)}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap capitalize">
+                    {operation.type === "deposit" && "Versement"}
+                    {operation.type === "withdrawal" && "Retrait"}
+                    {operation.type === "transfer" && "Virement"}
                   </TableCell>
                   <TableCell className="font-mono text-xs text-muted-foreground">
                     #{operationId}
                   </TableCell>
-                  <TableCell>{formattedDate}</TableCell>
+                  <TableCell className="whitespace-nowrap">{formattedDate}</TableCell>
                   <TableCell className="max-w-[200px] truncate">{operation.description}</TableCell>
-                  <TableCell className={`text-center font-medium ${getAmountColor(operation.type)}`}>
-                    {operation.type === "withdrawal" ? "-" : ""}{formatNumber(operation.amount)} {currency}
+                  <TableCell className={cn("text-right font-medium whitespace-nowrap", getOperationTypeColor(operation.type))}>
+                    {operation.type === "withdrawal" ? "-" : 
+                     operation.type === "deposit" ? "+" : ""}{formatNumber(operation.amount)} {currency}
                   </TableCell>
-                  {/* Show transfer details only for transfers and if there are any transfers in the list */}
-                  {operations.some(op => op.type === "transfer") && operation.type === "transfer" && (
-                    <TableCell className="max-w-[200px] truncate">
-                      {operation.fromClient} → {operation.toClient}
-                    </TableCell>
-                  )}
-                  {/* Add empty cell for non-transfers to maintain table structure */}
-                  {operations.some(op => op.type === "transfer") && operation.type !== "transfer" && (
-                    <TableCell></TableCell>
-                  )}
+                  <TableCell className="max-w-[150px] truncate">
+                    {operation.type === "transfer" ? (
+                      <div className="flex flex-col">
+                        <span className="text-sm">De: {operation.fromClient}</span>
+                        <span className="text-sm">À: {operation.toClient}</span>
+                      </div>
+                    ) : (
+                      operation.fromClient
+                    )}
+                  </TableCell>
                 </TableRow>
               );
             })}
-            
-            {/* Totals section for desktop */}
-            <TableRow className="border-t-2 border-primary/20">
-              <TableCell colSpan={operations.some(op => op.type === "transfer") ? 4 : 3} className="font-medium">
-                Totaux par type d'opération:
-              </TableCell>
-              <TableCell colSpan={operations.some(op => op.type === "transfer") ? 2 : 2}></TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell colSpan={2}></TableCell>
-              <TableCell colSpan={operations.some(op => op.type === "transfer") ? 2 : 1} className="font-medium">
-                Dépôts:
-              </TableCell>
-              <TableCell className="text-center font-medium text-green-600 dark:text-green-400">
-                +{formatNumber(totals.deposit)} {currency}
-              </TableCell>
-              {operations.some(op => op.type === "transfer") && <TableCell></TableCell>}
-            </TableRow>
-            <TableRow>
-              <TableCell colSpan={2}></TableCell>
-              <TableCell colSpan={operations.some(op => op.type === "transfer") ? 2 : 1} className="font-medium">
-                Retraits:
-              </TableCell>
-              <TableCell className="text-center font-medium text-red-600 dark:text-red-400">
-                -{formatNumber(totals.withdrawal)} {currency}
-              </TableCell>
-              {operations.some(op => op.type === "transfer") && <TableCell></TableCell>}
-            </TableRow>
-            <TableRow>
-              <TableCell colSpan={2}></TableCell>
-              <TableCell colSpan={operations.some(op => op.type === "transfer") ? 2 : 1} className="font-medium">
-                Transferts:
-              </TableCell>
-              <TableCell className="text-center font-medium text-blue-600 dark:text-blue-400">
-                {formatNumber(totals.transfer)} {currency}
-              </TableCell>
-              {operations.some(op => op.type === "transfer") && <TableCell></TableCell>}
-            </TableRow>
           </TableBody>
         </Table>
       </div>
@@ -161,40 +130,37 @@ export const AllOperationsTab = ({ operations, currency = "TND" }: AllOperations
       {/* Mobile version */}
       <div className="md:hidden space-y-3 w-full">
         {operations.map((operation) => (
-          <OperationsMobileCard 
-            key={operation.id} 
-            operation={operation}
-            formatAmount={(amount) => `${formatNumber(amount)}`}
-            currency={currency}
-            colorClass={getAmountColor(operation.type)}
-            showType={true}
-          />
-        ))}
-        
-        {/* Totals section for mobile */}
-        <div className="mt-8 border-t-2 border-primary/20 pt-4">
-          <h3 className="font-medium text-base mb-3">Totaux par type d'opération:</h3>
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="font-medium">Dépôts:</span>
-              <span className="font-medium text-green-600 dark:text-green-400">
-                +{formatNumber(totals.deposit)} {currency}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="font-medium">Retraits:</span>
-              <span className="font-medium text-red-600 dark:text-red-400">
-                -{formatNumber(totals.withdrawal)} {currency}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="font-medium">Transferts:</span>
-              <span className="font-medium text-blue-600 dark:text-blue-400">
-                {formatNumber(totals.transfer)} {currency}
-              </span>
+          <div 
+            key={operation.id}
+            className={cn(
+              "transition-colors",
+              selectedOperations[operation.id] ? "border-l-4 border-blue-500 pl-2" : ""
+            )}
+            onClick={() => toggleSelection(operation.id)}
+          >
+            <div className="flex items-center mb-2">
+              <Checkbox 
+                checked={selectedOperations[operation.id] || false}
+                onCheckedChange={() => toggleSelection(operation.id)}
+                onClick={(e) => e.stopPropagation()}
+                className="mr-2"
+              />
+              <div className="w-full">
+                <OperationsMobileCard 
+                  operation={operation}
+                  formatAmount={(amount) => {
+                    const prefix = operation.type === "withdrawal" ? "-" : 
+                               operation.type === "deposit" ? "+" : "";
+                    return `${prefix}${formatNumber(amount)}`;
+                  }}
+                  currency={currency}
+                  colorClass={getOperationTypeColor(operation.type)}
+                  showType={true}
+                />
+              </div>
             </div>
           </div>
-        </div>
+        ))}
       </div>
     </>
   );

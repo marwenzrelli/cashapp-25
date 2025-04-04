@@ -4,16 +4,24 @@ import { Operation } from "@/features/operations/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { OperationsMobileCard } from "./OperationsMobileCard";
 import { EmptyOperations } from "./EmptyOperations";
-import { ArrowDown, ArrowRight, ArrowUp } from "lucide-react";
 import { formatId } from "@/utils/formatId";
 import { format } from "date-fns";
+import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/lib/utils";
 
 interface TransferOperationsTabProps {
   operations: Operation[];
   currency?: string;
+  selectedOperations?: Record<string, boolean>;
+  toggleSelection?: (id: string) => void;
 }
 
-export const TransferOperationsTab = ({ operations, currency = "TND" }: TransferOperationsTabProps) => {
+export const TransferOperationsTab = ({ 
+  operations, 
+  currency = "TND",
+  selectedOperations = {},
+  toggleSelection = () => {}
+}: TransferOperationsTabProps) => {
   // Filter only transfer operations
   const transferOperations = operations.filter(
     (operation) => operation.type === "transfer"
@@ -41,10 +49,10 @@ export const TransferOperationsTab = ({ operations, currency = "TND" }: Transfer
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[50px]"></TableHead>
               <TableHead>ID</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>De</TableHead>
-              <TableHead></TableHead>
               <TableHead>À</TableHead>
               <TableHead>Description</TableHead>
               <TableHead className="text-right">Montant</TableHead>
@@ -63,16 +71,30 @@ export const TransferOperationsTab = ({ operations, currency = "TND" }: Transfer
                 ? operation.id 
                 : formatId(parseInt(operation.id));
                 
+              // Check if operation is selected
+              const isSelected = selectedOperations[operation.id] || false;
+                
               return (
-                <TableRow key={operation.id}>
+                <TableRow 
+                  key={operation.id}
+                  className={cn(
+                    isSelected ? "bg-blue-50 dark:bg-blue-900/20" : "",
+                    "transition-colors cursor-pointer"
+                  )}
+                  onClick={() => toggleSelection(operation.id)}
+                >
+                  <TableCell className="w-[50px] p-2">
+                    <Checkbox 
+                      checked={isSelected}
+                      onCheckedChange={() => toggleSelection(operation.id)}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </TableCell>
                   <TableCell className="font-mono text-xs text-muted-foreground">
                     #{operationId}
                   </TableCell>
                   <TableCell className="whitespace-nowrap">{formattedDate}</TableCell>
                   <TableCell className="max-w-[150px] truncate">{operation.fromClient}</TableCell>
-                  <TableCell className="px-0 text-center">
-                    <ArrowRight className="h-4 w-4 text-blue-500" />
-                  </TableCell>
                   <TableCell className="max-w-[150px] truncate">{operation.toClient}</TableCell>
                   <TableCell className="max-w-[200px] truncate">{operation.description}</TableCell>
                   <TableCell className="text-right font-medium text-blue-600 dark:text-blue-400">
@@ -84,8 +106,7 @@ export const TransferOperationsTab = ({ operations, currency = "TND" }: Transfer
             
             {/* Totals section for desktop */}
             <TableRow className="border-t-2 border-primary/20">
-              <TableCell colSpan={5} className="font-medium">Total des virements:</TableCell>
-              <TableCell colSpan={1}></TableCell>
+              <TableCell colSpan={6} className="font-medium">Total des virements:</TableCell>
               <TableCell className="text-right font-medium text-blue-600 dark:text-blue-400">
                 {formatNumber(totalTransfers)} {currency}
               </TableCell>
@@ -97,14 +118,33 @@ export const TransferOperationsTab = ({ operations, currency = "TND" }: Transfer
       {/* Mobile version */}
       <div className="md:hidden space-y-3 w-full">
         {transferOperations.map((operation) => (
-          <OperationsMobileCard 
-            key={operation.id} 
-            operation={operation}
-            formatAmount={(amount) => `${formatNumber(amount)}`}
-            currency={currency}
-            colorClass="text-blue-600 dark:text-blue-400"
-            showType={false}
-          />
+          <div 
+            key={operation.id}
+            className={cn(
+              "transition-colors",
+              selectedOperations[operation.id] ? "border-l-4 border-blue-500 pl-2" : ""
+            )}
+            onClick={() => toggleSelection(operation.id)}
+          >
+            <div className="flex items-center mb-2">
+              <Checkbox 
+                checked={selectedOperations[operation.id] || false}
+                onCheckedChange={() => toggleSelection(operation.id)}
+                onClick={(e) => e.stopPropagation()}
+                className="mr-2"
+              />
+              <div className="w-full">
+                <OperationsMobileCard 
+                  key={operation.id} 
+                  operation={operation}
+                  formatAmount={(amount) => formatNumber(amount)}
+                  currency={currency}
+                  colorClass="text-blue-600 dark:text-blue-400"
+                  showType={false}
+                />
+              </div>
+            </div>
+          </div>
         ))}
         
         {/* Totals section for mobile */}

@@ -6,13 +6,22 @@ import { OperationsMobileCard } from "./OperationsMobileCard";
 import { EmptyOperations } from "./EmptyOperations";
 import { formatId } from "@/utils/formatId";
 import { format } from "date-fns";
+import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/lib/utils";
 
 interface DepositOperationsTabProps {
   operations: Operation[];
   currency?: string;
+  selectedOperations?: Record<string, boolean>;
+  toggleSelection?: (id: string) => void;
 }
 
-export const DepositOperationsTab = ({ operations, currency = "TND" }: DepositOperationsTabProps) => {
+export const DepositOperationsTab = ({ 
+  operations, 
+  currency = "TND",
+  selectedOperations = {},
+  toggleSelection = () => {}
+}: DepositOperationsTabProps) => {
   // Filter only deposit operations
   const depositOperations = operations.filter(
     (operation) => operation.type === "deposit"
@@ -40,6 +49,7 @@ export const DepositOperationsTab = ({ operations, currency = "TND" }: DepositOp
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[50px]"></TableHead>
               <TableHead>ID</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Client</TableHead>
@@ -60,8 +70,25 @@ export const DepositOperationsTab = ({ operations, currency = "TND" }: DepositOp
                 ? operation.id 
                 : formatId(parseInt(operation.id));
                 
+              // Check if operation is selected
+              const isSelected = selectedOperations[operation.id] || false;
+                
               return (
-                <TableRow key={operation.id}>
+                <TableRow 
+                  key={operation.id}
+                  className={cn(
+                    isSelected ? "bg-green-50 dark:bg-green-900/20" : "",
+                    "transition-colors cursor-pointer"
+                  )}
+                  onClick={() => toggleSelection(operation.id)}
+                >
+                  <TableCell className="w-[50px] p-2">
+                    <Checkbox 
+                      checked={isSelected}
+                      onCheckedChange={() => toggleSelection(operation.id)}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </TableCell>
                   <TableCell className="font-mono text-xs text-muted-foreground">
                     #{operationId}
                   </TableCell>
@@ -77,8 +104,7 @@ export const DepositOperationsTab = ({ operations, currency = "TND" }: DepositOp
             
             {/* Totals section for desktop */}
             <TableRow className="border-t-2 border-primary/20">
-              <TableCell colSpan={3} className="font-medium">Total des versements:</TableCell>
-              <TableCell colSpan={1}></TableCell>
+              <TableCell colSpan={5} className="font-medium">Total des versements:</TableCell>
               <TableCell className="text-right font-medium text-green-600 dark:text-green-400">
                 +{formatNumber(totalDeposits)} {currency}
               </TableCell>
@@ -90,14 +116,33 @@ export const DepositOperationsTab = ({ operations, currency = "TND" }: DepositOp
       {/* Mobile version */}
       <div className="md:hidden space-y-3 w-full">
         {depositOperations.map((operation) => (
-          <OperationsMobileCard 
-            key={operation.id} 
-            operation={operation}
-            formatAmount={(amount) => `+${formatNumber(amount)}`}
-            currency={currency}
-            colorClass="text-green-600 dark:text-green-400"
-            showType={false}
-          />
+          <div 
+            key={operation.id}
+            className={cn(
+              "transition-colors",
+              selectedOperations[operation.id] ? "border-l-4 border-green-500 pl-2" : ""
+            )}
+            onClick={() => toggleSelection(operation.id)}
+          >
+            <div className="flex items-center mb-2">
+              <Checkbox 
+                checked={selectedOperations[operation.id] || false}
+                onCheckedChange={() => toggleSelection(operation.id)}
+                onClick={(e) => e.stopPropagation()}
+                className="mr-2"
+              />
+              <div className="w-full">
+                <OperationsMobileCard 
+                  key={operation.id} 
+                  operation={operation}
+                  formatAmount={(amount) => `+${formatNumber(amount)}`}
+                  currency={currency}
+                  colorClass="text-green-600 dark:text-green-400"
+                  showType={false}
+                />
+              </div>
+            </div>
+          </div>
         ))}
         
         {/* Totals section for mobile */}
