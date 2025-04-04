@@ -31,7 +31,7 @@ export const useFetchOperations = (
   const isPepsiMenName = (name: string): boolean => {
     if (!name) return false;
     const normalized = normalizeClientName(name);
-    return normalized === 'pepsi men'; // Exact match only
+    return normalized === 'pepsi men' || normalized.includes('pepsi men'); // Match exact and partial for "pepsi men"
   };
 
   // Special function to ensure critical withdrawals are included
@@ -77,7 +77,8 @@ export const useFetchOperations = (
 
       if (depositsError) throw depositsError;
 
-      const { data: withdrawals, error: withdrawalsError } = await supabase
+      // Modified this part to make sure we capture all withdrawals for client_id = 4
+      const { data: allWithdrawals, error: withdrawalsError } = await supabase
         .from('withdrawals')
         .select('*')
         .order('created_at', { ascending: false });
@@ -93,6 +94,20 @@ export const useFetchOperations = (
         }
       }
 
+      // Make a special query just for client ID 4 (pepsi men) to ensure we get all withdrawals
+      const { data: pepsiMenWithdrawals, error: pepsiMenError } = await supabase
+        .from('withdrawals')
+        .select('*')
+        .eq('client_id', 4)
+        .order('created_at', { ascending: false });
+
+      if (pepsiMenError) {
+        console.error("Error fetching pepsi men withdrawals:", pepsiMenError);
+        // Continue with regular withdrawals if there's an error
+      } else {
+        console.log(`Found ${pepsiMenWithdrawals?.length || 0} specific withdrawals for pepsi men (ID 4)`);
+      }
+
       const { data: transfers, error: transfersError } = await supabase
         .from('transfers')
         .select('*')
@@ -100,18 +115,35 @@ export const useFetchOperations = (
 
       if (transfersError) throw transfersError;
 
-      console.log(`Raw data: ${deposits?.length || 0} deposits, ${withdrawals?.length || 0} withdrawals, ${transfers?.length || 0} transfers`);
+      console.log(`Raw data: ${deposits?.length || 0} deposits, ${allWithdrawals?.length || 0} withdrawals, ${transfers?.length || 0} transfers`);
       
       // Known withdrawal IDs for "pepsi men" - critical IDs only
       const pepsiMenWithdrawalIds = [72, 73, 74, 75, 76, 77, 78];
       
       // Safety check - make sure withdrawals is an array even if there was an error
-      const safeWithdrawals = Array.isArray(withdrawals) ? withdrawals : [];
+      const safeWithdrawals = Array.isArray(allWithdrawals) ? allWithdrawals : [];
+      
+      // Combine regular withdrawals with pepsi men specific withdrawals if available
+      let combinedWithdrawals = safeWithdrawals;
+      if (pepsiMenWithdrawals && pepsiMenWithdrawals.length > 0) {
+        // Combine withdrawals, prioritizing pepsi men specific withdrawals
+        const withdrawalIdSet = new Set(safeWithdrawals.map(w => w.id.toString()));
+        
+        // Add pepsiMenWithdrawals that aren't already in safeWithdrawals
+        pepsiMenWithdrawals.forEach(w => {
+          if (!withdrawalIdSet.has(w.id.toString())) {
+            combinedWithdrawals.push(w);
+          }
+        });
+        
+        console.log(`Combined withdrawals count: ${combinedWithdrawals.length}`);
+      }
       
       // Special handling for missing critical IDs
-      const criticalWithdrawals = safeWithdrawals.filter(w => 
+      const criticalWithdrawals = combinedWithdrawals.filter(w => 
         pepsiMenWithdrawalIds.includes(Number(w.id)) || 
-        (w.client_id !== undefined && w.client_id === 4)
+        (w.client_id !== undefined && w.client_id === 4) ||
+        (isPepsiMenName(w.client_name))
       );
       console.log(`Found ${criticalWithdrawals.length} critical withdrawals for pepsi men`);
       
@@ -135,7 +167,7 @@ export const useFetchOperations = (
           // Use client_id from the database
           client_id: d.client_id
         })),
-        ...(safeWithdrawals).map((w): Operation => {
+        ...(combinedWithdrawals).map((w): Operation => {
           // Use client_id from database first, fall back to name matching for pepsi men
           const clientId = w.client_id;
           const isPepsiMen = clientId === 4 || 
@@ -189,12 +221,21 @@ export const useFetchOperations = (
       );
       
       console.log(`Found ${pepsiMenOps.length} operations for pepsi men`);
+      console.log(`Found ${pepsiMenOps.filter(op => op.type === "withdrawal").length} withdrawals for pepsi men`);
       
       // Ensure critical withdrawals are included
       const withCriticalOps = ensureCriticalWithdrawalsIncluded(formattedOperations);
       
       // Dédupliquer les opérations avant de les retourner
       const uniqueOperations = deduplicateOperations(withCriticalOps);
+      
+      // Log final counts for verification
+      const finalPepsiMenOps = uniqueOperations.filter(op => 
+        op.client_id === 4 || isPepsiMenName(op.fromClient)
+      );
+      
+      console.log(`Final: ${finalPepsiMenOps.length} operations for pepsi men`);
+      console.log(`Final: ${finalPepsiMenOps.filter(op => op.type === "withdrawal").length} withdrawals for pepsi men`);
       
       setOperations(uniqueOperations);
     } catch (error) {

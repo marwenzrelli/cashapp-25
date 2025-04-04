@@ -43,6 +43,11 @@ export const useClientOperationsFilter = (
     
     // For pepsi men, we do a special filter to ensure we catch all operations
     if (isPepsiMen) {
+      // Count all operations with client_id = 4 before filtering
+      const allClientIdOps = operations.filter(op => op.client_id === 4);
+      console.log(`Total operations with client_id = 4: ${allClientIdOps.length}`);
+      console.log(`Total withdrawals with client_id = 4: ${allClientIdOps.filter(op => op.type === "withdrawal").length}`);
+      
       const pepsiOperations = operations.filter(op => {
         // For numeric comparison, ensure we have numbers
         const opId = typeof op.id === 'string' ? parseInt(op.id, 10) : op.id;
@@ -62,9 +67,9 @@ export const useClientOperationsFilter = (
         const fromClient = (op.fromClient || '').toLowerCase().trim();
         const toClient = (op.toClient || '').toLowerCase().trim();
         
-        // Match by client name
-        if (fromClient.includes('pepsi') || fromClient.includes('men') || 
-            toClient.includes('pepsi') || toClient.includes('men')) {
+        // Match by client name (partial match for "pepsi men")
+        if (fromClient.includes('pepsi') && fromClient.includes('men') || 
+            toClient.includes('pepsi') && toClient.includes('men')) {
           return true;
         }
         
@@ -73,13 +78,13 @@ export const useClientOperationsFilter = (
       
       // Log the found operations, particularly check for critical IDs
       const withdrawalIds = pepsiOperations
-        .filter(op => op.type === 'withdrawal')
+        .filter(op => op.type === "withdrawal")
         .map(op => op.id);
       
       const foundCriticalIds = criticalWithdrawalIds.filter(id => withdrawalIds.includes(id));
       
       console.log(`Found ${pepsiOperations.length} operations for pepsi men`);
-      console.log(`Found ${pepsiOperations.filter(op => op.type === 'withdrawal').length} withdrawals`);
+      console.log(`Found ${pepsiOperations.filter(op => op.type === "withdrawal").length} withdrawals`);
       console.log(`Found ${foundCriticalIds.length}/${criticalWithdrawalIds.length} critical withdrawal IDs`);
       
       if (foundCriticalIds.length < criticalWithdrawalIds.length) {
