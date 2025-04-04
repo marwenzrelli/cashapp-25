@@ -29,13 +29,17 @@ export const PublicClientOperationsHistory = ({ operations, clientId }: PublicCl
   
   // Log operations data for debugging
   useEffect(() => {
+    console.log(`PublicClientOperationsHistory - Total operations: ${operations.length}`);
+    console.log(`PublicClientOperationsHistory - Client ID: ${clientId}`);
+    console.log(`PublicClientOperationsHistory - Is pepsi men: ${isPepsiMen}`);
+    console.log(`PublicClientOperationsHistory - Show all operations: ${showAllOperations}`);
+    
     if (isPepsiMen) {
       const allWithdrawals = operations.filter(op => op.type === 'withdrawal');
-      console.log(`PublicClientOperationsHistory - Total operations for pepsi men: ${operations.length}`);
       console.log(`PublicClientOperationsHistory - Total withdrawals for pepsi men: ${allWithdrawals.length}`);
       console.log(`Withdrawal IDs: ${allWithdrawals.map(w => w.id).join(', ')}`);
     }
-  }, [operations, isPepsiMen]);
+  }, [operations, isPepsiMen, clientId, showAllOperations]);
   
   // Determine which operations to display based on the filter
   const displayedOperations = showAllOperations 

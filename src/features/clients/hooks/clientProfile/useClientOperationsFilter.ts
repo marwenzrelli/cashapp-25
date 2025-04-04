@@ -22,47 +22,82 @@ export const useClientOperationsFilter = (
   const [isCustomRange, setIsCustomRange] = useState<boolean>(false);
   const [showAllDates, setShowAllDates] = useState<boolean>(true); // Default to showing all dates
   
-  // Get client ID as a number
+  // Get client ID as a number and determine if this is pepsi men
   const clientId = client ? (typeof client.id === 'string' ? parseInt(client.id, 10) : client.id) : null;
+  const isPepsiMen = clientId === 4;
+  
+  // Ensure we always show all dates for pepsi men
+  useEffect(() => {
+    if (isPepsiMen && !showAllDates) {
+      setShowAllDates(true);
+    }
+  }, [isPepsiMen, showAllDates]);
+  
+  // Enhanced name matching function
+  const matchesClientName = (operationName: string | undefined, clientFullName: string, firstName: string, lastName: string): boolean => {
+    if (!operationName) return false;
+    
+    const opName = operationName.toLowerCase().trim();
+    const normalizedClientName = clientFullName.toLowerCase().trim();
+    const normalizedFirstName = firstName.toLowerCase().trim();
+    const normalizedLastName = lastName.toLowerCase().trim();
+    
+    // Exact full name match
+    if (opName === normalizedClientName) return true;
+    
+    // First name + last name match
+    if (opName === `${normalizedFirstName} ${normalizedLastName}`) return true;
+    
+    // Last name + first name match (some systems might reverse)
+    if (opName === `${normalizedLastName} ${normalizedFirstName}`) return true;
+    
+    // Contains both first and last name
+    if (opName.includes(normalizedFirstName) && opName.includes(normalizedLastName)) return true;
+    
+    // Special case for pepsi men - more permissive matching
+    if (isPepsiMen && (opName.includes('pepsi') && opName.includes('men'))) return true;
+    
+    return false;
+  };
   
   // Get operations for this client only
   const clientOperations = useMemo(() => {
-    if (!client || !clientId) {
+    if (!client) {
       return [];
     }
     
-    // Log clientId for debugging
-    console.log(`Filtering operations for client ID: ${clientId}`);
+    const clientFullName = `${client.prenom} ${client.nom}`.trim().toLowerCase();
     
-    // Filter operations to only include those for this client based on client_id or name matching
-    return operations.filter(op => {
-      // First priority: Direct client_id matching if available
-      if (op.client_id !== undefined && op.client_id === clientId) {
+    console.log(`Filtering operations for client: ${clientFullName} (ID: ${clientId})`);
+    
+    // Special case for client ID 4 (pepsi men)
+    if (isPepsiMen) {
+      // Log the operations count before filtering
+      console.log("Using special pepsi men filtering logic");
+      
+      return operations.filter(op => 
+        op.client_id === 4 || 
+        (op.fromClient && op.fromClient.toLowerCase().includes('pepsi') && op.fromClient.toLowerCase().includes('men')) ||
+        (op.toClient && op.toClient.toLowerCase().includes('pepsi') && op.toClient.toLowerCase().includes('men'))
+      );
+    }
+    
+    // Regular client filtering with improved name matching
+    return operations.filter(operation => {
+      // First check client_id if available
+      if (operation.client_id !== undefined && operation.client_id === clientId) {
         return true;
       }
       
-      // For operations without client_id, fall back to name matching
-      if (op.client_id === undefined) {
-        const clientFullName = `${client.prenom} ${client.nom}`.trim().toLowerCase();
-        
-        // Normalize names for comparison
-        const fromClient = (op.fromClient || '').toLowerCase().trim();
-        const toClient = (op.toClient || '').toLowerCase().trim();
-        
-        // Use exact name matching (not partial matching)
-        const isFromClient = fromClient === clientFullName || 
-                           fromClient === `${client.prenom.toLowerCase()} ${client.nom.toLowerCase()}`;
+      // Name-based matching as fallback
+      const isFromClient = matchesClientName(operation.fromClient, clientFullName, client.prenom, client.nom);
                         
-        const isToClient = op.type === 'transfer' && 
-                        (toClient === clientFullName || 
-                         toClient === `${client.prenom.toLowerCase()} ${client.nom.toLowerCase()}`);
-        
-        return isFromClient || isToClient;
-      }
+      const isToClient = operation.type === 'transfer' && 
+                        matchesClientName(operation.toClient, clientFullName, client.prenom, client.nom);
       
-      return false;
+      return isFromClient || isToClient;
     });
-  }, [client, operations, clientId]);
+  }, [client, operations, clientId, isPepsiMen]);
 
   // Filter operations based on user selections
   const filteredOperations = useMemo(() => {
@@ -113,6 +148,7 @@ export const useClientOperationsFilter = (
     isCustomRange,
     setIsCustomRange,
     showAllDates,
-    setShowAllDates
+    setShowAllDates,
+    isPepsiMen
   };
 };

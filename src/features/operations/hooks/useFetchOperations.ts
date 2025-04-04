@@ -34,17 +34,23 @@ export const useFetchOperations = (
     return normalized.includes('pepsi') && normalized.includes('men');
   };
 
-  // Special function to log information about withdrawals for pepsi men
-  const logPepsiMenWithdrawals = (operations: Operation[]): void => {
-    const pepsiMenOps = operations.filter(op => 
+  // Log information about pepsi men operations
+  const logPepsiOperations = (operations: Operation[]) => {
+    // Find all operations related to pepsi men
+    const pepsiOps = operations.filter(op => 
       op.client_id === 4 || 
-      (op.fromClient && isPepsiMenName(op.fromClient))
+      (op.fromClient && isPepsiMenName(op.fromClient)) || 
+      (op.toClient && isPepsiMenName(op.toClient))
     );
     
-    const withdrawals = pepsiMenOps.filter(op => op.type === "withdrawal");
+    console.log(`Found ${pepsiOps.length} operations for pepsi men`);
     
-    console.log(`Found ${pepsiMenOps.length} operations for pepsi men`);
-    console.log(`Found ${withdrawals.length} withdrawals for pepsi men`);
+    // Count by type
+    const deposits = pepsiOps.filter(op => op.type === "deposit");
+    const withdrawals = pepsiOps.filter(op => op.type === "withdrawal");
+    const transfers = pepsiOps.filter(op => op.type === "transfer");
+    
+    console.log(`Pepsi men operations: ${deposits.length} deposits, ${withdrawals.length} withdrawals, ${transfers.length} transfers`);
     
     // Log all withdrawal IDs
     const withdrawalIds = withdrawals.map(w => w.id).sort();
@@ -53,12 +59,19 @@ export const useFetchOperations = (
 
   const fetchAllOperations = async () => {
     try {
+      // Start loading
+      setIsLoading(true);
+      
+      // Fetch all deposits
       const { data: deposits, error: depositsError } = await supabase
         .from('deposits')
         .select('*, client_id')
         .order('created_at', { ascending: false });
 
-      if (depositsError) throw depositsError;
+      if (depositsError) {
+        console.error("Error fetching deposits:", depositsError);
+        throw depositsError;
+      }
 
       // Fetch all withdrawals
       const { data: allWithdrawals, error: withdrawalsError } = await supabase
@@ -68,10 +81,10 @@ export const useFetchOperations = (
 
       if (withdrawalsError) {
         console.error("Error fetching withdrawals:", withdrawalsError);
-        // Handle error but continue to maximize data retrieval
+        // Continue to retrieve other data despite error
       }
 
-      // Make a separate query specifically for client ID 4 (pepsi men)
+      // Make a specific query for pepsi men withdrawals
       const { data: pepsiMenWithdrawals, error: pepsiMenError } = await supabase
         .from('withdrawals')
         .select('*')
@@ -84,27 +97,31 @@ export const useFetchOperations = (
         console.log(`Found ${pepsiMenWithdrawals.length} specific withdrawals for pepsi men`);
       }
 
+      // Fetch all transfers
       const { data: transfers, error: transfersError } = await supabase
         .from('transfers')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (transfersError) throw transfersError;
+      if (transfersError) {
+        console.error("Error fetching transfers:", transfersError);
+        throw transfersError;
+      }
 
-      // Safety checks for data
+      // Safety checks for null data
       const safeDeposits = deposits || [];
       const safeWithdrawals = allWithdrawals || [];
       const safePepsiWithdrawals = pepsiMenWithdrawals || [];
       const safeTransfers = transfers || [];
       
-      // Add debugging information
+      // Log raw data counts
       console.log(`Raw data: ${safeDeposits.length} deposits, ${safeWithdrawals.length} withdrawals, ${safeTransfers.length} transfers`);
-      console.log(`Dedicated query for pepsi men found ${safePepsiWithdrawals.length} withdrawals`);
+      console.log(`Pepsi men query found ${safePepsiWithdrawals.length} withdrawals`);
       
-      // Combine all withdrawals, prioritizing pepsi men results
+      // Combine all withdrawals, ensuring pepsi men withdrawals are included
       const combinedWithdrawals = [...safeWithdrawals];
       
-      // Add pepsi men withdrawals that might be missing
+      // Add pepsi men withdrawals that might be missing from the main query
       if (safePepsiWithdrawals.length > 0) {
         const existingIds = new Set(combinedWithdrawals.map(w => w.id.toString()));
         
@@ -118,6 +135,7 @@ export const useFetchOperations = (
         console.log(`Final combined withdrawals count: ${combinedWithdrawals.length}`);
       }
       
+      // Map raw data to Operation objects
       const formattedOperations: Operation[] = [
         ...safeDeposits.map((d): Operation => ({
           id: d.id.toString(),
@@ -132,7 +150,7 @@ export const useFetchOperations = (
           client_id: d.client_id
         })),
         ...combinedWithdrawals.map((w): Operation => {
-          // Determine if this is a pepsi men operation
+          // Special handling for pepsi men withdrawals
           const isPepsiMen = 
             (w.client_id === 4) || 
             (w.client_name && isPepsiMenName(w.client_name));
@@ -174,16 +192,18 @@ export const useFetchOperations = (
         return dateB - dateA;
       });
       
-      // Log information about pepsi men operations after formatting
-      logPepsiMenWithdrawals(formattedOperations);
-      
-      // Deduplicate operations before returning
+      // Deduplicate operations before updating state
       const uniqueOperations = deduplicateOperations(formattedOperations);
       
-      // Final check for pepsi men operations
-      logPepsiMenWithdrawals(uniqueOperations);
+      // Special logging for pepsi men operations
+      logPepsiOperations(uniqueOperations);
       
+      // Update state with deduplicated operations
       setOperations(uniqueOperations);
+      
+      // Log final operations count
+      console.log(`Final operations count: ${uniqueOperations.length}`);
+      
     } catch (error) {
       console.error("Erreur lors du chargement des opérations:", error);
       toast.error("Erreur lors du chargement des opérations");

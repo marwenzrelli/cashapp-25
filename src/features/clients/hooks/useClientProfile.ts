@@ -1,5 +1,5 @@
 
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useOperations } from "@/features/operations/hooks/useOperations";
 import { useClientData } from "./clientProfile/useClientData";
@@ -15,6 +15,9 @@ export const useClientProfile = () => {
   const { operations, refreshOperations } = useOperations();
   const qrCodeRef = useRef<HTMLDivElement>(null);
   const clientId = id ? Number(id) : null;
+  
+  // Determine if this is the pepsi men client
+  const isPepsiMen = useMemo(() => clientId === 4, [clientId]);
   
   // Debug to ensure ID is parsed correctly
   console.log("useClientProfile - Raw ID from params:", id, "Parsed client ID:", clientId);
@@ -56,7 +59,8 @@ export const useClientProfile = () => {
     isCustomRange,
     setIsCustomRange,
     showAllDates,
-    setShowAllDates
+    setShowAllDates,
+    isPepsiMen: isPepsiClient
   } = useClientOperationsFilter(operations, client);
   
   // Verify operations when client is loaded
@@ -109,6 +113,7 @@ export const useClientProfile = () => {
     refetchClient,
     refreshClientBalance,
     refreshClientOperations,
-    clientBalance: effectiveBalance
+    clientBalance: effectiveBalance,
+    isPepsiMen // Export this flag
   };
 };

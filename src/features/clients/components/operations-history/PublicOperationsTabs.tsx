@@ -3,6 +3,7 @@ import { ArrowUpCircle, ArrowDownCircle, RefreshCcw } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Operation } from "@/features/operations/types";
 import { PublicOperationsTable } from "./PublicOperationsTable";
+import { useEffect } from "react";
 
 interface PublicOperationsTabsProps {
   operations: Operation[];
@@ -10,6 +11,18 @@ interface PublicOperationsTabsProps {
 }
 
 export const PublicOperationsTabs = ({ operations, currency }: PublicOperationsTabsProps) => {
+  // Log operations count for debugging
+  useEffect(() => {
+    console.log(`PublicOperationsTabs - Total operations: ${operations.length}`);
+    console.log(`PublicOperationsTabs - Operations by type:`,
+      {
+        deposits: operations.filter(op => op.type === "deposit").length,
+        withdrawals: operations.filter(op => op.type === "withdrawal").length,
+        transfers: operations.filter(op => op.type === "transfer").length
+      }
+    );
+  }, [operations]);
+
   return (
     <Tabs defaultValue="all" className="w-full">
       <TabsList className="w-full flex overflow-x-auto no-scrollbar p-0 rounded-none border-b">

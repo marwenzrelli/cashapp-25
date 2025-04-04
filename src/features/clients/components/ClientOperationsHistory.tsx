@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React from "react";
 import { Operation } from "@/features/operations/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -26,6 +26,7 @@ interface ClientOperationsHistoryProps {
   showAllDates?: boolean;
   setShowAllDates?: (showAll: boolean) => void;
   clientId?: number;
+  isPepsiMen?: boolean;
 }
 
 export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = ({
@@ -42,13 +43,11 @@ export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = (
   refreshOperations,
   showAllDates = false,
   setShowAllDates = () => {},
-  clientId
+  clientId,
+  isPepsiMen = false
 }) => {
-  // Special handling for pepsi men (client ID 4)
-  const isPepsiMen = clientId === 4;
-  
-  // Debug log for pepsi men operations
-  useEffect(() => {
+  // Log operations data for pepsi men for debugging
+  React.useEffect(() => {
     if (isPepsiMen) {
       console.log(`ClientOperationsHistory - Total operations for client ID ${clientId}: ${operations.length}`);
       console.log(`ClientOperationsHistory - Filtered operations: ${filteredOperations.length}`);
