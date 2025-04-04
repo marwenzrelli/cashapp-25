@@ -37,9 +37,9 @@ export const useFetchOperations = () => {
       
       if (transfersError) throw transfersError;
 
-      // Transform to common Operation type
+      // Transform to common Operation type, CONVERTING ID TO STRING
       const transformedDeposits: Operation[] = (deposits || []).map(deposit => ({
-        id: deposit.id,
+        id: deposit.id.toString(), // Convert number to string
         type: 'deposit',
         amount: deposit.amount,
         date: deposit.created_at,
@@ -51,7 +51,7 @@ export const useFetchOperations = () => {
       }));
       
       const transformedWithdrawals: Operation[] = (withdrawals || []).map(withdrawal => ({
-        id: withdrawal.id,
+        id: withdrawal.id.toString(), // Convert number to string
         type: 'withdrawal',
         amount: withdrawal.amount,
         date: withdrawal.created_at,
@@ -63,7 +63,7 @@ export const useFetchOperations = () => {
       }));
       
       const transformedTransfers: Operation[] = (transfers || []).map(transfer => ({
-        id: transfer.id,
+        id: transfer.id.toString(), // Convert number to string
         type: 'transfer',
         amount: transfer.amount,
         date: transfer.created_at,

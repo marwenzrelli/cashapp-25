@@ -19,8 +19,14 @@ export const useOperations = () => {
     setShowDeleteDialog
   } = useOperationsState();
 
-  const { fetchAllOperations } = useFetchOperations(setOperations, setIsLoading);
-  const { deleteOperation: deleteOperationLogic, confirmDeleteOperation: confirmDeleteOperationLogic } = useDeleteOperation(fetchAllOperations, setIsLoading);
+  // Use fetchOperations instead of fetchAllOperations
+  const { operations: fetchedOperations, isLoading: fetchLoading, error: fetchError, refreshOperations } = useFetchOperations();
+  const { deleteOperation: deleteOperationLogic, confirmDeleteOperation: confirmDeleteOperationLogic } = useDeleteOperation(refreshOperations, setIsLoading);
+
+  // Update local operations when fetchedOperations change
+  useEffect(() => {
+    setOperations(fetchedOperations);
+  }, [fetchedOperations, setOperations]);
 
   // Fonction pour dédupliquer des opérations basées sur leur ID
   const deduplicateOperations = (ops: Operation[]): Operation[] => {
@@ -39,7 +45,7 @@ export const useOperations = () => {
   // Initialize operations on component mount
   useEffect(() => {
     const initOperations = async () => {
-      await fetchAllOperations();
+      await refreshOperations();
       
       // Dédupliquer les opérations après les avoir récupérées
       if (operations.length > 0) {
@@ -64,7 +70,7 @@ export const useOperations = () => {
         table: 'deposits'
       }, () => {
         console.log('Deposit change detected, refreshing operations');
-        fetchAllOperations();
+        refreshOperations();
       })
       .on('postgres_changes', { 
         event: '*', 
@@ -72,7 +78,7 @@ export const useOperations = () => {
         table: 'withdrawals'
       }, () => {
         console.log('Withdrawal change detected, refreshing operations');
-        fetchAllOperations();
+        refreshOperations();
       })
       .on('postgres_changes', { 
         event: '*', 
@@ -80,14 +86,14 @@ export const useOperations = () => {
         table: 'transfers'
       }, () => {
         console.log('Transfer change detected, refreshing operations');
-        fetchAllOperations();
+        refreshOperations();
       })
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [fetchAllOperations]);
+  }, [refreshOperations]);
 
   // Wrapper for delete operation to update state
   const deleteOperation = async (operation: Operation) => {
@@ -101,10 +107,10 @@ export const useOperations = () => {
   };
 
   // Function to refresh operations with UI feedback
-  const refreshOperations = async () => {
+  const refreshOperationsWithFeedback = async () => {
     try {
       setIsLoading(true);
-      await fetchAllOperations();
+      await refreshOperations();
       
       // Dédupliquer les opérations après rafraîchissement
       if (operations.length > 0) {
@@ -126,9 +132,10 @@ export const useOperations = () => {
 
   return {
     operations,
-    isLoading,
-    fetchOperations: fetchAllOperations,
-    refreshOperations,
+    isLoading: isLoading || fetchLoading,
+    error: fetchError,
+    fetchOperations: refreshOperations,
+    refreshOperations: refreshOperationsWithFeedback,
     deleteOperation,
     showDeleteDialog,
     setShowDeleteDialog,
