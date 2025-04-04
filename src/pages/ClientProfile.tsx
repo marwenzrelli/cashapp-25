@@ -98,7 +98,10 @@ export default function ClientProfile() {
               exportToPDF={exportToPDF}
               formatAmount={formatAmount}
             />
-            <ClientQRCode clientId={clientId} />
+            <ClientQRCode 
+              clientId={clientId}
+              clientName={`${client.prenom} ${client.nom}`}
+            />
           </div>
         </div>
 
