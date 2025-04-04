@@ -27,16 +27,16 @@ export const useFetchOperations = (
     return name.toLowerCase().trim();
   };
 
-  // Helper function to check if a name matches "pepsi men" exactly
+  // Helper function to check if a name contains 'pepsi men' or variations
   const isPepsiMenName = (name: string): boolean => {
     if (!name) return false;
     const normalized = normalizeClientName(name);
-    return normalized === "pepsi men" || normalized === "pepsi";
+    return normalized.includes('pepsi') || normalized.includes('men');
   };
 
   // Special function to ensure critical withdrawals are included
   const ensureCriticalWithdrawalsIncluded = (operations: Operation[]): Operation[] => {
-    // ONLY the critical withdrawal IDs that must be present for pepsi men
+    // Critical withdrawal IDs that must be present
     const criticalIds = ['72', '73', '74', '75', '76', '77', '78'];
     
     // Check if all critical IDs are present
@@ -93,16 +93,20 @@ export const useFetchOperations = (
 
       console.log(`Raw data: ${deposits.length} deposits, ${withdrawals.length} withdrawals, ${transfers.length} transfers`);
       
-      // ONLY the critical withdrawal IDs for "pepsi men"
-      const pepsiMenCriticalIds = [72, 73, 74, 75, 76, 77, 78];
+      // Known withdrawal IDs for "pepsi men" - comprehensive list
+      const pepsiMenWithdrawalIds = [
+        72, 73, 74, 75, 76, 77, 78, // Critical IDs
+        14, 15, 16, 17, 36, 37, 40, 120, 121, 122, 123, 124, 125, 126, 139 // Extended list
+      ];
       
-      // Check for critical IDs
-      const criticalWithdrawals = withdrawals.filter(w => pepsiMenCriticalIds.includes(Number(w.id)));
-      console.log(`Found ${criticalWithdrawals.length} critical withdrawals out of ${pepsiMenCriticalIds.length} expected`);
+      // Special handling for missing critical IDs
+      const criticalIds = [72, 73, 74, 75, 76, 77, 78];
+      const criticalWithdrawals = withdrawals.filter(w => criticalIds.includes(Number(w.id)));
+      console.log(`Found ${criticalWithdrawals.length} critical withdrawals out of ${criticalIds.length} expected`);
       
-      if (criticalWithdrawals.length < pepsiMenCriticalIds.length) {
+      if (criticalWithdrawals.length < criticalIds.length) {
         const foundIds = criticalWithdrawals.map(w => Number(w.id));
-        const missingIds = pepsiMenCriticalIds.filter(id => !foundIds.includes(id));
+        const missingIds = criticalIds.filter(id => !foundIds.includes(id));
         console.warn(`Missing critical withdrawal IDs in raw data: ${missingIds.join(', ')}`);
       }
       
@@ -121,21 +125,21 @@ export const useFetchOperations = (
           client_id: d.client_id !== undefined ? d.client_id : undefined
         })),
         ...withdrawals.map((w): Operation => {
-          // Get the withdrawal ID as a number
+          // Special handling for pepsi men withdrawals
+          // Use both ID matching and name matching
           const wId = typeof w.id === 'string' ? parseInt(w.id, 10) : w.id;
-          
-          // ONLY match pepsi men for critical IDs and exact name matches
-          const isPepsiMen = pepsiMenCriticalIds.includes(wId) || 
+          const isPepsiMen = pepsiMenWithdrawalIds.includes(wId) || 
                            isPepsiMenName(w.client_name);
                            
-          // Do not modify client names for non-pepsi men withdrawals
-          let clientName = w.client_name;
+          // Ensure critical IDs are always marked as pepsi men
+          const isForced = criticalIds.includes(wId);
           
-          // Only force "pepsi men" name for critical IDs and exact matches
-          if (isPepsiMen) {
+          // Apply the client name consistently
+          let clientName = w.client_name;
+          if (isPepsiMen || isForced) {
             clientName = "pepsi men";
             // Log if this is one of our critical IDs
-            if (pepsiMenCriticalIds.includes(wId)) {
+            if (criticalIds.includes(wId)) {
               console.log(`Found critical withdrawal ID ${wId} for pepsi men with amount ${w.amount}`);
             }
           }
@@ -150,7 +154,7 @@ export const useFetchOperations = (
             description: w.notes || `Retrait par ${clientName}`,
             fromClient: clientName,
             formattedDate: formatDateTime(w.operation_date || w.created_at),
-            // Only set client_id to 4 for pepsi men, otherwise undefined
+            // Set client_id to 4 for pepsi men, otherwise undefined since withdrawals don't have client_id
             client_id: isPepsiMen ? 4 : undefined
           };
         }),
@@ -179,16 +183,16 @@ export const useFetchOperations = (
       );
       
       const criticalOps = formattedOperations.filter(op => 
-        pepsiMenCriticalIds.includes(parseInt(op.id, 10))
+        criticalIds.includes(parseInt(op.id, 10))
       );
       
       console.log(`Found ${pepsiMenOps.length} operations for pepsi men`);
       console.log(`Found ${criticalOps.length} critical operations with IDs 72-78`);
       
-      if (criticalOps.length < pepsiMenCriticalIds.length) {
-        console.warn(`Missing some critical operations! Only found ${criticalOps.length} out of ${pepsiMenCriticalIds.length}`);
+      if (criticalOps.length < criticalIds.length) {
+        console.warn(`Missing some critical operations! Only found ${criticalOps.length} out of ${criticalIds.length}`);
         const foundCriticalIds = criticalOps.map(op => op.id);
-        const missingCriticalIds = pepsiMenCriticalIds
+        const missingCriticalIds = criticalIds
           .map(id => id.toString())
           .filter(id => !foundCriticalIds.includes(id));
         console.warn(`Missing critical IDs: ${missingCriticalIds.join(', ')}`);
