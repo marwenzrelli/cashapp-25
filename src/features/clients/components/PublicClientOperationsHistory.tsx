@@ -27,24 +27,13 @@ export const PublicClientOperationsHistory = ({ operations, clientId }: PublicCl
     }
   }, [isPepsiMen, showAllOperations]);
   
-  // Log the critical IDs for debugging
+  // Log operations data for debugging
   useEffect(() => {
     if (isPepsiMen) {
-      const criticalIds = [72, 73, 74, 75, 76, 77, 78].map(id => id.toString());
-      const withdrawals = operations.filter(op => op.type === 'withdrawal');
-      
-      // Check for presence of critical IDs
-      const foundCriticalIds = withdrawals.filter(w => criticalIds.includes(w.id));
-      
-      console.log(`PublicClientOperationsHistory for pepsi men (ID 4): Found ${foundCriticalIds.length}/${criticalIds.length} critical withdrawals`);
-      
-      if (foundCriticalIds.length < criticalIds.length) {
-        const missingIds = criticalIds.filter(id => !withdrawals.some(w => w.id === id));
-        console.warn(`Missing critical withdrawal IDs in PublicClientOperationsHistory: ${missingIds.join(', ')}`);
-      }
-      
-      // Log all withdrawal IDs for reference
-      console.log(`All withdrawal IDs: ${withdrawals.map(w => w.id).join(', ')}`);
+      const allWithdrawals = operations.filter(op => op.type === 'withdrawal');
+      console.log(`PublicClientOperationsHistory - Total operations for pepsi men: ${operations.length}`);
+      console.log(`PublicClientOperationsHistory - Total withdrawals for pepsi men: ${allWithdrawals.length}`);
+      console.log(`Withdrawal IDs: ${allWithdrawals.map(w => w.id).join(', ')}`);
     }
   }, [operations, isPepsiMen]);
   
@@ -57,27 +46,6 @@ export const PublicClientOperationsHistory = ({ operations, clientId }: PublicCl
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         return opDate >= thirtyDaysAgo;
       });
-  
-  // Special handling for pepsi men operations
-  useEffect(() => {
-    if (isPepsiMen) {
-      console.log(`Public client operations for pepsi men (ID 4): ${operations.length} operations total`);
-      console.log(`Displaying ${displayedOperations.length} operations`);
-      
-      // Check for specific withdrawal IDs
-      const withdrawals = operations.filter(op => op.type === 'withdrawal');
-      const displayedWithdrawals = displayedOperations.filter(op => op.type === 'withdrawal');
-      
-      console.log(`Withdrawal count - Total: ${withdrawals.length}, Displayed: ${displayedWithdrawals.length}`);
-      
-      // Check specifically for IDs 72-78
-      const criticalIds = [72, 73, 74, 75, 76, 77, 78].map(id => id.toString());
-      const foundCriticalIds = withdrawals.filter(w => criticalIds.includes(w.id));
-      
-      console.log(`Found ${foundCriticalIds.length} withdrawals with IDs 72-78:`, 
-        foundCriticalIds.map(w => `ID: ${w.id}, Amount: ${w.amount}`));
-    }
-  }, [operations, displayedOperations, isPepsiMen]);
   
   return (
     <Card className="shadow-sm max-w-full overflow-hidden">

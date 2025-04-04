@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Operation } from "@/features/operations/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,7 @@ interface ClientOperationsHistoryProps {
   refreshOperations: () => void;
   showAllDates?: boolean;
   setShowAllDates?: (showAll: boolean) => void;
+  clientId?: number;
 }
 
 export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = ({
@@ -40,8 +41,24 @@ export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = (
   filteredOperations,
   refreshOperations,
   showAllDates = false,
-  setShowAllDates = () => {}
+  setShowAllDates = () => {},
+  clientId
 }) => {
+  // Special handling for pepsi men (client ID 4)
+  const isPepsiMen = clientId === 4;
+  
+  // Debug log for pepsi men operations
+  useEffect(() => {
+    if (isPepsiMen) {
+      console.log(`ClientOperationsHistory - Total operations for client ID ${clientId}: ${operations.length}`);
+      console.log(`ClientOperationsHistory - Filtered operations: ${filteredOperations.length}`);
+      
+      const withdrawals = operations.filter(op => op.type === "withdrawal");
+      console.log(`ClientOperationsHistory - Total withdrawals: ${withdrawals.length}`);
+      console.log(`Withdrawal IDs: ${withdrawals.map(w => w.id).join(', ')}`);
+    }
+  }, [operations, filteredOperations, clientId, isPepsiMen]);
+
   return (
     <Card className="shadow-sm">
       <CardHeader className="pb-3">
@@ -89,11 +106,12 @@ export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = (
                   id="show-all-dates"
                   checked={showAllDates}
                   onCheckedChange={setShowAllDates}
+                  disabled={isPepsiMen} // Disable for pepsi men to force showing all dates
                 />
                 <Label htmlFor="show-all-dates">Afficher toutes les périodes</Label>
               </div>
             </div>
-            {!showAllDates && (
+            {!showAllDates && !isPepsiMen && (
               <DatePickerWithRange
                 date={dateRange}
                 onDateChange={setDateRange}

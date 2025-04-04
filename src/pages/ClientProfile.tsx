@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 import { useClientProfile } from "@/features/clients/hooks/useClientProfile";
@@ -39,9 +38,7 @@ const ClientProfile = () => {
     clientBalance
   } = useClientProfile();
 
-  // Track if we've shown the initial loading state
   const [initialLoadingShown, setInitialLoadingShown] = useState(true);
-  // Track if we're in a loading timeout state
   const [loadingTimeout, setLoadingTimeout] = useState(false);
 
   useEffect(() => {
@@ -54,12 +51,11 @@ const ClientProfile = () => {
       });
     }
     
-    // Set a timeout for long-running loading states
     let timer: NodeJS.Timeout | null = null;
     if (isLoading && initialLoadingShown) {
       timer = setTimeout(() => {
         setLoadingTimeout(true);
-      }, 10000); // Show timeout message after 10 seconds
+      }, 10000);
     } else {
       setInitialLoadingShown(false);
       setLoadingTimeout(false);
@@ -79,13 +75,11 @@ const ClientProfile = () => {
     }
   }, [client, clientOperations]);
 
-  // Listen for operation updates from real-time subscriptions
   useEffect(() => {
     const handleOperationUpdate = (e: Event) => {
       const customEvent = e as CustomEvent;
       const updateClientId = customEvent.detail?.clientId;
       
-      // Only refresh if this client is affected
       if (updateClientId === clientId || !updateClientId) {
         console.log("Auto-refreshing operations after update detection");
         refreshClientOperations();
@@ -111,7 +105,6 @@ const ClientProfile = () => {
     currentBalance: clientBalance
   });
 
-  // Extended loading state with retry option for timeouts
   if (isLoading && initialLoadingShown) {
     return (
       <PublicClientLoading 
@@ -136,14 +129,11 @@ const ClientProfile = () => {
   const actualClientId = typeof client.id === 'string' ? parseInt(client.id, 10) : client.id;
   console.log("Utilisation de l'ID client pour le code QR:", actualClientId);
 
-  // Updated handleTypeChange to ensure we only pass valid union types
   const handleTypeChange = (type: string) => {
-    // Validate that the type is one of the allowed values before setting
     if (type === "deposit" || type === "withdrawal" || type === "transfer" || type === "all") {
       setSelectedType(type as "deposit" | "withdrawal" | "transfer" | "all");
     } else {
       console.error(`Invalid operation type: ${type}`);
-      // Default to "all" if an invalid type is provided
       setSelectedType("all");
     }
   };
@@ -186,6 +176,7 @@ const ClientProfile = () => {
           refreshOperations={refreshClientOperations}
           showAllDates={showAllDates}
           setShowAllDates={setShowAllDates}
+          clientId={clientId}
         />
 
         <OperationsDetailCards
