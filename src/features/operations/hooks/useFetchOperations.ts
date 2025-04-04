@@ -79,10 +79,19 @@ export const useFetchOperations = (
 
       const { data: withdrawals, error: withdrawalsError } = await supabase
         .from('withdrawals')
-        .select('*, client_id')
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (withdrawalsError) throw withdrawalsError;
+      if (withdrawalsError) {
+        console.error("Error fetching withdrawals:", withdrawalsError);
+        // If the error is about the client_id column not existing, we'll continue with empty withdrawals
+        if (withdrawalsError.message && withdrawalsError.message.includes("client_id")) {
+          console.warn("client_id column may not exist yet in withdrawals table. Proceeding with empty withdrawals.");
+          // Continue with empty withdrawals array
+        } else {
+          throw withdrawalsError;
+        }
+      }
 
       const { data: transfers, error: transfersError } = await supabase
         .from('transfers')
@@ -91,14 +100,18 @@ export const useFetchOperations = (
 
       if (transfersError) throw transfersError;
 
-      console.log(`Raw data: ${deposits.length} deposits, ${withdrawals.length} withdrawals, ${transfers.length} transfers`);
+      console.log(`Raw data: ${deposits?.length || 0} deposits, ${withdrawals?.length || 0} withdrawals, ${transfers?.length || 0} transfers`);
       
       // Known withdrawal IDs for "pepsi men" - critical IDs only
       const pepsiMenWithdrawalIds = [72, 73, 74, 75, 76, 77, 78];
       
+      // Safety check - make sure withdrawals is an array even if there was an error
+      const safeWithdrawals = Array.isArray(withdrawals) ? withdrawals : [];
+      
       // Special handling for missing critical IDs
-      const criticalWithdrawals = withdrawals.filter(w => 
-        pepsiMenWithdrawalIds.includes(Number(w.id)) || w.client_id === 4
+      const criticalWithdrawals = safeWithdrawals.filter(w => 
+        pepsiMenWithdrawalIds.includes(Number(w.id)) || 
+        (w.client_id !== undefined && w.client_id === 4)
       );
       console.log(`Found ${criticalWithdrawals.length} critical withdrawals for pepsi men`);
       
@@ -109,7 +122,7 @@ export const useFetchOperations = (
       }
       
       const formattedOperations: Operation[] = [
-        ...deposits.map((d): Operation => ({
+        ...(deposits || []).map((d): Operation => ({
           id: d.id.toString(),
           type: "deposit",
           amount: d.amount,
@@ -122,7 +135,7 @@ export const useFetchOperations = (
           // Use client_id from the database
           client_id: d.client_id
         })),
-        ...withdrawals.map((w): Operation => {
+        ...(safeWithdrawals).map((w): Operation => {
           // Use client_id from database first, fall back to name matching for pepsi men
           const clientId = w.client_id;
           const isPepsiMen = clientId === 4 || 
@@ -151,7 +164,7 @@ export const useFetchOperations = (
             client_id: assignedClientId
           };
         }),
-        ...transfers.map((t): Operation => ({
+        ...(transfers || []).map((t): Operation => ({
           id: t.id.toString(),
           type: "transfer",
           amount: t.amount,

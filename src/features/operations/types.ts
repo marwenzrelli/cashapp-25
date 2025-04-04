@@ -15,6 +15,13 @@ export interface Operation {
   client_id?: number; // Add client_id property
 }
 
+// Add ClientStats interface that was missing
+export interface ClientStats {
+  totalAmount: number;
+  transactionCount: number;
+  averageAmount: number;
+}
+
 export const formatDateTime = (dateString: string): string => {
   try {
     return format(parseISO(dateString), "dd/MM/yyyy HH:mm");
