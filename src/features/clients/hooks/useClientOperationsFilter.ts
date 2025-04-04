@@ -20,22 +20,10 @@ export const useClientOperationsFilter = (
     to: new Date()
   });
   const [isCustomRange, setIsCustomRange] = useState<boolean>(false);
+  const [showAllDates, setShowAllDates] = useState<boolean>(true); // Default to showing all dates
   
   // Get client ID as a number
   const clientId = client ? (typeof client.id === 'string' ? parseInt(client.id, 10) : client.id) : null;
-  
-  // Special handling for pepsi men (client ID 4)
-  const isPepsiMen = clientId === 4;
-  
-  // For pepsi men, always show all dates
-  const [showAllDates, setShowAllDates] = useState<boolean>(isPepsiMen || true);
-  
-  // Ensure pepsi men always has showAllDates set to true
-  useEffect(() => {
-    if (isPepsiMen && !showAllDates) {
-      setShowAllDates(true);
-    }
-  }, [isPepsiMen, showAllDates]);
   
   // Get operations for this client only
   const clientOperations = useMemo(() => {
@@ -113,9 +101,8 @@ export const useClientOperationsFilter = (
         }
       }
       
-      // Filter by date range only if not showing all dates AND not pepsi men
-      // For pepsi men, we never filter by date (always show all)
-      if (!showAllDates && !isPepsiMen && dateRange.from && dateRange.to) {
+      // Filter by date range only if not showing all dates
+      if (!showAllDates && dateRange.from && dateRange.to) {
         const opDate = new Date(op.operation_date || op.date);
         const startDate = startOfDay(dateRange.from);
         const endDate = endOfDay(dateRange.to);
@@ -127,7 +114,7 @@ export const useClientOperationsFilter = (
       
       return true;
     });
-  }, [clientOperations, selectedType, searchTerm, dateRange, showAllDates, isPepsiMen]);
+  }, [clientOperations, selectedType, searchTerm, dateRange, showAllDates]);
 
   return {
     clientOperations,

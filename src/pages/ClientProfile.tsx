@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 import { useClientProfile } from "@/features/clients/hooks/useClientProfile";
@@ -41,9 +40,6 @@ const ClientProfile = () => {
 
   const [initialLoadingShown, setInitialLoadingShown] = useState(true);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
-
-  // Check if this is the pepsi men client - we need to determine this early and consistently
-  const isPepsiMen = clientId === 4;
 
   useEffect(() => {
     console.log(`ClientProfile - Paramètres de la route: clientId=${clientId}, chemin=${window.location.pathname}`);
@@ -96,13 +92,6 @@ const ClientProfile = () => {
       window.removeEventListener('operations-update', handleOperationUpdate);
     };
   }, [clientId, refreshClientOperations]);
-
-  // Ensure we show all dates for pepsi men - moved outside of render
-  useEffect(() => {
-    if (isPepsiMen && !showAllDates) {
-      setShowAllDates(true);
-    }
-  }, [isPepsiMen, showAllDates, setShowAllDates]);
 
   console.log("ClientProfile - État complet:", { 
     client, 
@@ -165,7 +154,7 @@ const ClientProfile = () => {
 
         <ClientPersonalInfo 
           client={client} 
-          clientId={actualClientId}
+          clientId={typeof client?.id === 'string' ? parseInt(client.id, 10) : client?.id}
           qrCodeRef={qrCodeRef}
           formatAmount={formatAmount}
           refetchClient={refetchClient}
@@ -187,7 +176,7 @@ const ClientProfile = () => {
           refreshOperations={refreshClientOperations}
           showAllDates={showAllDates}
           setShowAllDates={setShowAllDates}
-          clientId={actualClientId}
+          clientId={clientId}
         />
 
         <OperationsDetailCards
