@@ -31,7 +31,7 @@ export const useFetchOperations = (
   const isPepsiMenName = (name: string): boolean => {
     if (!name) return false;
     const normalized = normalizeClientName(name);
-    return normalized.includes('pepsi') && normalized.includes('men');
+    return normalized.includes('pepsi') || normalized.includes('men');
   };
 
   // Log information about pepsi men operations
@@ -53,8 +53,10 @@ export const useFetchOperations = (
     console.log(`Pepsi men operations: ${deposits.length} deposits, ${withdrawals.length} withdrawals, ${transfers.length} transfers`);
     
     // Log all withdrawal IDs
-    const withdrawalIds = withdrawals.map(w => w.id).sort();
-    console.log(`All pepsi men withdrawal IDs: ${withdrawalIds.join(', ')}`);
+    if (withdrawals.length > 0) {
+      const withdrawalIds = withdrawals.map(w => w.id).sort();
+      console.log(`All pepsi men withdrawal IDs: ${withdrawalIds.join(', ')}`);
+    }
   };
 
   const fetchAllOperations = async () => {
@@ -84,17 +86,35 @@ export const useFetchOperations = (
         // Continue to retrieve other data despite error
       }
 
-      // Make a specific query for pepsi men withdrawals
+      // Make specific queries for pepsi men operations
+      // 1. By client_id
       const { data: pepsiMenWithdrawals, error: pepsiMenError } = await supabase
         .from('withdrawals')
         .select('*')
-        .or('client_id.eq.4,client_name.ilike.%pepsi%men%')
+        .eq('client_id', 4)
+        .order('created_at', { ascending: false });
+
+      // 2. By name contains
+      const { data: pepsiMenNameWithdrawals } = await supabase
+        .from('withdrawals')
+        .select('*')
+        .ilike('client_name', '%pepsi%')
+        .order('created_at', { ascending: false });
+        
+      // 3. More variations
+      const { data: menNameWithdrawals } = await supabase
+        .from('withdrawals')
+        .select('*')
+        .ilike('client_name', '%men%')
         .order('created_at', { ascending: false });
 
       if (pepsiMenError) {
         console.error("Error fetching pepsi men withdrawals:", pepsiMenError);
-      } else if (pepsiMenWithdrawals) {
-        console.log(`Found ${pepsiMenWithdrawals.length} specific withdrawals for pepsi men`);
+      } else {
+        console.log(`Found specific pepsi men operations:
+          - By client_id=4: ${pepsiMenWithdrawals?.length || 0}
+          - By name contains 'pepsi': ${pepsiMenNameWithdrawals?.length || 0}
+          - By name contains 'men': ${menNameWithdrawals?.length || 0}`);
       }
 
       // Fetch all transfers
@@ -108,32 +128,70 @@ export const useFetchOperations = (
         throw transfersError;
       }
 
+      // Fetch pepsi men specific transfers
+      const { data: pepsiTransfersFrom } = await supabase
+        .from('transfers')
+        .select('*')
+        .ilike('from_client', '%pepsi%')
+        .order('created_at', { ascending: false });
+        
+      const { data: pepsiTransfersTo } = await supabase
+        .from('transfers')
+        .select('*')
+        .ilike('to_client', '%pepsi%')
+        .order('created_at', { ascending: false });
+
       // Safety checks for null data
       const safeDeposits = deposits || [];
       const safeWithdrawals = allWithdrawals || [];
-      const safePepsiWithdrawals = pepsiMenWithdrawals || [];
       const safeTransfers = transfers || [];
+      
+      // Special pepsi men withdrawals from all queries
+      const pepsiWithdrawals = [
+        ...(pepsiMenWithdrawals || []),
+        ...(pepsiMenNameWithdrawals || []),
+        ...(menNameWithdrawals || [])
+      ];
+      
+      // Special pepsi men transfers from all queries
+      const pepsiTransfers = [
+        ...(pepsiTransfersFrom || []),
+        ...(pepsiTransfersTo || [])
+      ];
       
       // Log raw data counts
       console.log(`Raw data: ${safeDeposits.length} deposits, ${safeWithdrawals.length} withdrawals, ${safeTransfers.length} transfers`);
-      console.log(`Pepsi men query found ${safePepsiWithdrawals.length} withdrawals`);
+      console.log(`Pepsi men specific queries found ${pepsiWithdrawals.length} withdrawals, ${pepsiTransfers.length} transfers`);
       
       // Combine all withdrawals, ensuring pepsi men withdrawals are included
       const combinedWithdrawals = [...safeWithdrawals];
+      const combinedTransfers = [...safeTransfers];
       
       // Add pepsi men withdrawals that might be missing from the main query
-      if (safePepsiWithdrawals.length > 0) {
+      if (pepsiWithdrawals.length > 0) {
         const existingIds = new Set(combinedWithdrawals.map(w => w.id.toString()));
         
-        safePepsiWithdrawals.forEach(w => {
+        pepsiWithdrawals.forEach(w => {
           if (!existingIds.has(w.id.toString())) {
             combinedWithdrawals.push(w);
             console.log(`Added missing pepsi men withdrawal with ID ${w.id}`);
           }
         });
-        
-        console.log(`Final combined withdrawals count: ${combinedWithdrawals.length}`);
       }
+      
+      // Add pepsi men transfers that might be missing
+      if (pepsiTransfers.length > 0) {
+        const existingIds = new Set(combinedTransfers.map(t => t.id.toString()));
+        
+        pepsiTransfers.forEach(t => {
+          if (!existingIds.has(t.id.toString())) {
+            combinedTransfers.push(t);
+            console.log(`Added missing pepsi men transfer with ID ${t.id}`);
+          }
+        });
+      }
+      
+      console.log(`Final combined counts: ${combinedWithdrawals.length} withdrawals, ${combinedTransfers.length} transfers`);
       
       // Map raw data to Operation objects
       const formattedOperations: Operation[] = [
@@ -174,18 +232,29 @@ export const useFetchOperations = (
             client_id: clientId
           };
         }),
-        ...safeTransfers.map((t): Operation => ({
-          id: t.id.toString(),
-          type: "transfer",
-          amount: t.amount,
-          date: t.created_at,
-          createdAt: t.created_at,
-          operation_date: t.operation_date || t.created_at,
-          description: t.reason || `Virement de ${t.from_client} vers ${t.to_client}`,
-          fromClient: t.from_client,
-          toClient: t.to_client,
-          formattedDate: formatDateTime(t.operation_date || t.created_at)
-        }))
+        ...combinedTransfers.map((t): Operation => {
+          // Check if this transfer is pepsi men related
+          const isFromPepsiMen = t.from_client && isPepsiMenName(t.from_client);
+          const isToPepsiMen = t.to_client && isPepsiMenName(t.to_client);
+          const isPepsiMenTransfer = isFromPepsiMen || isToPepsiMen;
+          
+          // Create description with pepsi men indicators if needed
+          let description = t.reason || `Virement de ${t.from_client} vers ${t.to_client}`;
+          
+          return {
+            id: t.id.toString(),
+            type: "transfer",
+            amount: t.amount,
+            date: t.created_at,
+            createdAt: t.created_at,
+            operation_date: t.operation_date || t.created_at,
+            description: description,
+            fromClient: t.from_client,
+            toClient: t.to_client,
+            formattedDate: formatDateTime(t.operation_date || t.created_at),
+            client_id: isPepsiMenTransfer ? 4 : undefined // Set client_id for pepsi men transfers
+          };
+        })
       ].sort((a, b) => {
         const dateA = new Date(a.operation_date || a.createdAt || a.date).getTime();
         const dateB = new Date(b.operation_date || b.createdAt || b.date).getTime();
@@ -203,6 +272,14 @@ export const useFetchOperations = (
       
       // Log final operations count
       console.log(`Final operations count: ${uniqueOperations.length}`);
+      console.log(`Operations available for clients/4 page: 
+        Total: ${uniqueOperations.length}
+        Pepsi men: ${uniqueOperations.filter(op => 
+          op.client_id === 4 || 
+          (op.fromClient && isPepsiMenName(op.fromClient)) ||
+          (op.toClient && isPepsiMenName(op.toClient))
+        ).length}
+      `);
       
     } catch (error) {
       console.error("Erreur lors du chargement des opérations:", error);

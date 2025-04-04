@@ -33,7 +33,27 @@ export const useClientOperationsFilter = (
     }
   }, [isPepsiMen, showAllDates]);
   
-  // Enhanced name matching function
+  // Debug logging for pepsi men operations
+  useEffect(() => {
+    if (isPepsiMen) {
+      console.log(`Pepsi Men Client - Total operations available: ${operations.length}`);
+      
+      // Count by type
+      const byType = {
+        deposits: operations.filter(op => op.type === 'deposit').length,
+        withdrawals: operations.filter(op => op.type === 'withdrawal').length,
+        transfers: operations.filter(op => op.type === 'transfer').length
+      };
+      
+      console.log('Operations by type:', byType);
+      
+      // List all operation IDs for debugging
+      const allIds = operations.map(op => `${op.type}-${op.id}`).join(', ');
+      console.log(`All operation IDs: ${allIds}`);
+    }
+  }, [operations, isPepsiMen]);
+  
+  // Enhanced name matching function with more permissive matching for pepsi men
   const matchesClientName = (operationName: string | undefined, clientFullName: string, firstName: string, lastName: string): boolean => {
     if (!operationName) return false;
     
@@ -42,6 +62,14 @@ export const useClientOperationsFilter = (
     const normalizedFirstName = firstName.toLowerCase().trim();
     const normalizedLastName = lastName.toLowerCase().trim();
     
+    // Special case for pepsi men - extremely permissive matching
+    if (isPepsiMen) {
+      return opName.includes('pepsi') || opName.includes('men') || 
+             opName.includes('pepsi men') || opName.includes('pepsi-men') ||
+             opName === 'pepsi' || opName === 'men';
+    }
+    
+    // Regular matching for other clients
     // Exact full name match
     if (opName === normalizedClientName) return true;
     
@@ -54,13 +82,10 @@ export const useClientOperationsFilter = (
     // Contains both first and last name
     if (opName.includes(normalizedFirstName) && opName.includes(normalizedLastName)) return true;
     
-    // Special case for pepsi men - more permissive matching
-    if (isPepsiMen && (opName.includes('pepsi') && opName.includes('men'))) return true;
-    
     return false;
   };
   
-  // Get operations for this client only
+  // Get operations for this client only - with special handling for pepsi men
   const clientOperations = useMemo(() => {
     if (!client) {
       return [];
@@ -69,22 +94,34 @@ export const useClientOperationsFilter = (
     const clientFullName = `${client.prenom} ${client.nom}`.trim().toLowerCase();
     
     console.log(`Filtering operations for client: ${clientFullName} (ID: ${clientId})`);
+    console.log(`Total operations before filtering: ${operations.length}`);
     
-    // Special case for client ID 4 (pepsi men)
+    // Special case for client ID 4 (pepsi men) - extremely permissive matching
     if (isPepsiMen) {
-      // Log the operations count before filtering
-      console.log("Using special pepsi men filtering logic");
+      console.log("Using super-permissive pepsi men filtering logic");
       
-      return operations.filter(op => 
-        op.client_id === 4 || 
-        (op.fromClient && op.fromClient.toLowerCase().includes('pepsi') && op.fromClient.toLowerCase().includes('men')) ||
-        (op.toClient && op.toClient.toLowerCase().includes('pepsi') && op.toClient.toLowerCase().includes('men'))
-      );
+      const pepsiOps = operations.filter(op => {
+        // Direct client ID match (most reliable)
+        if (op.client_id === 4) return true;
+        
+        // Name-based matching (any variation of pepsi/men in any field)
+        const fromClient = (op.fromClient || '').toLowerCase();
+        const toClient = (op.toClient || '').toLowerCase();
+        const desc = (op.description || '').toLowerCase();
+        
+        const hasPepsi = fromClient.includes('pepsi') || toClient.includes('pepsi') || desc.includes('pepsi');
+        const hasMen = fromClient.includes('men') || toClient.includes('men') || desc.includes('men');
+        
+        return hasPepsi || hasMen;
+      });
+      
+      console.log(`Pepsi men operations found: ${pepsiOps.length}`);
+      return pepsiOps;
     }
     
     // Regular client filtering with improved name matching
     return operations.filter(operation => {
-      // First check client_id if available
+      // First check client_id if available (most reliable method)
       if (operation.client_id !== undefined && operation.client_id === clientId) {
         return true;
       }
@@ -102,6 +139,8 @@ export const useClientOperationsFilter = (
   // Filter operations based on user selections
   const filteredOperations = useMemo(() => {
     if (!clientOperations.length) return [];
+    
+    console.log(`Filtering ${clientOperations.length} operations by type=${selectedType}, searchTerm=${searchTerm}, showAllDates=${showAllDates}`);
     
     return clientOperations.filter(op => {
       // Filter by type
