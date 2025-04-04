@@ -6,6 +6,7 @@ import { PublicOperationsTabs } from "./operations-history/PublicOperationsTabs"
 import { useState, useEffect } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Lock } from "lucide-react";
 
 interface PublicClientOperationsHistoryProps {
   operations: Operation[];
@@ -53,13 +54,21 @@ export const PublicClientOperationsHistory = ({ operations, clientId }: PublicCl
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <CardTitle className="text-xl">Historique des opérations</CardTitle>
           <div className="flex items-center space-x-2">
-            <Switch 
-              id="show-all-operations"
-              checked={showAllOperations}
-              onCheckedChange={setShowAllOperations}
-              disabled={isPepsiMen} // Disable the switch for pepsi men to prevent hiding operations
-            />
-            <Label htmlFor="show-all-operations">Afficher toutes les périodes</Label>
+            <div className="relative">
+              <Switch 
+                id="show-all-operations"
+                checked={showAllOperations}
+                onCheckedChange={isPepsiMen ? undefined : setShowAllOperations}
+                disabled={isPepsiMen} // Disable the switch for pepsi men to prevent hiding operations
+              />
+              {isPepsiMen && (
+                <Lock className="h-3 w-3 absolute -top-1 -right-1 text-primary" />
+              )}
+            </div>
+            <Label htmlFor="show-all-operations" className="flex items-center">
+              Afficher toutes les périodes
+              {isPepsiMen && <span className="text-xs text-muted-foreground ml-1">(verrouillé)</span>}
+            </Label>
           </div>
         </div>
       </CardHeader>

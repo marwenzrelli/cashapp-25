@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DateRange } from "react-day-picker";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
-import { RefreshCw, Search, XCircle } from "lucide-react";
+import { RefreshCw, Search, XCircle, Lock } from "lucide-react";
 import { ClientOperationsHistoryTabs } from "./operations-history/ClientOperationsHistoryTabs";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -46,6 +46,13 @@ export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = (
 }) => {
   // Special handling for pepsi men (client ID 4)
   const isPepsiMen = clientId === 4;
+  
+  // Always set showAllDates to true for pepsi men
+  useEffect(() => {
+    if (isPepsiMen && !showAllDates) {
+      setShowAllDates(true);
+    }
+  }, [isPepsiMen, showAllDates, setShowAllDates]);
   
   // Debug log for pepsi men operations
   useEffect(() => {
@@ -102,13 +109,21 @@ export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = (
           <div className="w-full sm:w-1/3">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-2">
-                <Switch 
-                  id="show-all-dates"
-                  checked={showAllDates}
-                  onCheckedChange={setShowAllDates}
-                  disabled={isPepsiMen} // Disable for pepsi men to force showing all dates
-                />
-                <Label htmlFor="show-all-dates">Afficher toutes les périodes</Label>
+                <div className="relative">
+                  <Switch 
+                    id="show-all-dates"
+                    checked={showAllDates}
+                    onCheckedChange={isPepsiMen ? undefined : setShowAllDates}
+                    disabled={isPepsiMen} // Disable toggle for pepsi men
+                  />
+                  {isPepsiMen && (
+                    <Lock className="h-3 w-3 absolute -top-1 -right-1 text-primary" />
+                  )}
+                </div>
+                <Label htmlFor="show-all-dates" className="flex items-center">
+                  Afficher toutes les périodes
+                  {isPepsiMen && <span className="text-xs text-muted-foreground ml-1">(verrouillé)</span>}
+                </Label>
               </div>
             </div>
             {!showAllDates && !isPepsiMen && (

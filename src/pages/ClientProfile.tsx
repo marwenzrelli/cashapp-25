@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 import { useClientProfile } from "@/features/clients/hooks/useClientProfile";
@@ -138,6 +139,16 @@ const ClientProfile = () => {
     }
   };
 
+  // Check if this is the pepsi men client
+  const isPepsiMen = actualClientId === 4;
+  
+  // Ensure we show all dates for pepsi men
+  useEffect(() => {
+    if (isPepsiMen && !showAllDates) {
+      setShowAllDates(true);
+    }
+  }, [isPepsiMen, showAllDates, setShowAllDates]);
+
   return (
     <div className="sm:container mx-auto px-0 sm:px-4 py-4 sm:py-8 max-w-7xl overflow-x-hidden">
       <div className="space-y-4 sm:space-y-6 w-full px-2 sm:px-0">
@@ -154,7 +165,7 @@ const ClientProfile = () => {
 
         <ClientPersonalInfo 
           client={client} 
-          clientId={typeof client?.id === 'string' ? parseInt(client.id, 10) : client?.id}
+          clientId={actualClientId}
           qrCodeRef={qrCodeRef}
           formatAmount={formatAmount}
           refetchClient={refetchClient}
@@ -176,7 +187,7 @@ const ClientProfile = () => {
           refreshOperations={refreshClientOperations}
           showAllDates={showAllDates}
           setShowAllDates={setShowAllDates}
-          clientId={clientId}
+          clientId={actualClientId}
         />
 
         <OperationsDetailCards
