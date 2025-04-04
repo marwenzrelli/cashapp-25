@@ -42,6 +42,9 @@ const ClientProfile = () => {
   const [initialLoadingShown, setInitialLoadingShown] = useState(true);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
 
+  // Check if this is the pepsi men client - we need to determine this early and consistently
+  const isPepsiMen = clientId === 4;
+
   useEffect(() => {
     console.log(`ClientProfile - Paramètres de la route: clientId=${clientId}, chemin=${window.location.pathname}`);
     
@@ -94,6 +97,13 @@ const ClientProfile = () => {
     };
   }, [clientId, refreshClientOperations]);
 
+  // Ensure we show all dates for pepsi men - moved outside of render
+  useEffect(() => {
+    if (isPepsiMen && !showAllDates) {
+      setShowAllDates(true);
+    }
+  }, [isPepsiMen, showAllDates, setShowAllDates]);
+
   console.log("ClientProfile - État complet:", { 
     client, 
     isLoading, 
@@ -138,16 +148,6 @@ const ClientProfile = () => {
       setSelectedType("all");
     }
   };
-
-  // Check if this is the pepsi men client
-  const isPepsiMen = actualClientId === 4;
-  
-  // Ensure we show all dates for pepsi men
-  useEffect(() => {
-    if (isPepsiMen && !showAllDates) {
-      setShowAllDates(true);
-    }
-  }, [isPepsiMen, showAllDates, setShowAllDates]);
 
   return (
     <div className="sm:container mx-auto px-0 sm:px-4 py-4 sm:py-8 max-w-7xl overflow-x-hidden">
