@@ -1,201 +1,104 @@
 
+import React from 'react';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import { Operation } from "@/features/operations/types";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { cn } from "@/lib/utils";
-import { OperationsMobileCard } from "./OperationsMobileCard";
-import { getTypeStyle, getTypeIcon, getTypeLabel } from "@/features/operations/utils/operation-helpers";
-import { getAmountColor } from "@/features/operations/utils/display-helpers";
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { getOperationStatusBadge } from './utils';
 
 interface PublicOperationsTableProps {
   operations: Operation[];
   currency: string;
 }
 
-export const PublicOperationsTable = ({ operations, currency }: PublicOperationsTableProps) => {
-  // Sort operations by operation_date if available, otherwise by date
-  const sortedOperations = [...operations].sort((a, b) => {
-    const dateA = new Date(a.operation_date || a.date).getTime();
-    const dateB = new Date(b.operation_date || b.date).getTime();
-    return dateB - dateA; // DESC order (newest first)
-  });
-
-  // Function to format the operation ID as a 6-digit number
-  const formatOperationId = (id: string): string => {
-    // Extract numeric part from the operation ID
-    const numericId = id.split('-').pop() || '';
-    // Pad with leading zeros to get 6 digits
-    return numericId.padStart(6, '0');
-  };
-
-  // Format number with 2 decimal places and comma separator
-  const formatNumber = (num: number): string => {
-    return num.toLocaleString('fr-FR', { 
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2 
-    });
-  };
-
-  // Calculate totals for each operation type
-  const calculateTotals = () => {
-    const totals = {
-      deposit: 0,
-      withdrawal: 0,
-      transfer: 0
-    };
-
-    sortedOperations.forEach(operation => {
-      switch (operation.type) {
-        case "deposit":
-          totals.deposit += operation.amount;
-          break;
-        case "withdrawal":
-          totals.withdrawal += operation.amount;
-          break;
-        case "transfer":
-          totals.transfer += operation.amount;
-          break;
-      }
-    });
-
-    return totals;
-  };
-
-  const totals = calculateTotals();
-
-  if (sortedOperations.length === 0) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-muted-foreground">Aucune opération trouvée</p>
-      </div>
-    );
-  }
+export const PublicOperationsTable: React.FC<PublicOperationsTableProps> = ({ operations, currency }) => {
+  // Calculate total amounts by type
+  const totalDeposits = operations
+    .filter(op => op.type === 'deposit')
+    .reduce((sum, op) => sum + op.amount, 0);
+    
+  const totalWithdrawals = operations
+    .filter(op => op.type === 'withdrawal')
+    .reduce((sum, op) => sum + op.amount, 0);
+    
+  const totalTransfers = operations
+    .filter(op => op.type === 'transfer')
+    .reduce((sum, op) => sum + op.amount, 0);
+    
+  // Calculate net movement (deposits - withdrawals)
+  const netMovement = totalDeposits - totalWithdrawals;
 
   return (
-    <>
-      {/* Table for desktop */}
-      <div className="hidden md:block overflow-auto">
-        <Table>
-          <TableHeader>
+    <div>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[120px]">Date</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>Description</TableHead>
+            <TableHead className="text-right">Montant</TableHead>
+            <TableHead className="w-[100px] text-center">Statut</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {operations.length === 0 ? (
             <TableRow>
-              <TableHead className="whitespace-nowrap">ID</TableHead>
-              <TableHead className="whitespace-nowrap">Type</TableHead>
-              <TableHead className="whitespace-nowrap">Date</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead className="whitespace-nowrap text-right">Montant</TableHead>
-              <TableHead className="whitespace-nowrap">Client</TableHead>
+              <TableCell colSpan={5} className="h-24 text-center">
+                Aucune opération trouvée.
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sortedOperations.map((operation) => (
+          ) : (
+            operations.map((operation) => (
               <TableRow key={operation.id}>
-                <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap">
-                  {formatOperationId(operation.id)}
+                <TableCell className="font-medium">
+                  {format(new Date(operation.operation_date || operation.date), 'dd MMM yyyy', { locale: fr })}
                 </TableCell>
-                <TableCell className="whitespace-nowrap">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getTypeStyle(operation.type)}`}>
-                      {getTypeIcon(operation.type)}
-                    </div>
-                    <span>{getTypeLabel(operation.type)}</span>
-                  </div>
+                <TableCell>
+                  <Badge variant="outline" className="capitalize">
+                    {operation.type === 'deposit' ? 'Versement' : 
+                     operation.type === 'withdrawal' ? 'Retrait' : 
+                     'Virement'}
+                  </Badge>
                 </TableCell>
-                <TableCell className="text-muted-foreground whitespace-nowrap">
-                  {operation.formattedDate || new Date(operation.operation_date || operation.date).toLocaleDateString()}
+                <TableCell>{operation.description}</TableCell>
+                <TableCell className="text-right">
+                  <span className={`${operation.type === 'withdrawal' ? 'text-red-500' : 'text-green-500'}`}>
+                    {operation.type === 'withdrawal' ? '-' : '+'}{operation.amount.toLocaleString()} {currency}
+                  </span>
                 </TableCell>
-                <TableCell className="max-w-[250px] truncate">{operation.description}</TableCell>
-                <TableCell className={cn("font-medium whitespace-nowrap text-right", getAmountColor(operation.type))}>
-                  {operation.type === "withdrawal" || (operation.type === "transfer" && operation.amount < 0) 
-                    ? "-" 
-                    : "+"}{formatNumber(Math.abs(operation.amount))} {currency}
-                </TableCell>
-                <TableCell className="max-w-[150px]">
-                  {operation.type === "transfer" ? (
-                    <div className="flex flex-col">
-                      <span className="text-sm truncate">De: {operation.fromClient}</span>
-                      <span className="text-sm truncate">À: {operation.toClient}</span>
-                    </div>
-                  ) : (
-                    <span className="truncate">{operation.fromClient}</span>
-                  )}
+                <TableCell className="text-center">
+                  {getOperationStatusBadge(operation.status || 'completed')}
                 </TableCell>
               </TableRow>
-            ))}
-            
-            {/* Totals section for desktop */}
-            <TableRow className="border-t-2 border-primary/20">
-              <TableCell colSpan={4} className="font-medium">Totaux par type d'opération:</TableCell>
-              <TableCell colSpan={2}></TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell colSpan={2}></TableCell>
-              <TableCell colSpan={2} className="font-medium">Dépôts:</TableCell>
-              <TableCell className="text-right font-medium text-green-600 dark:text-green-400">
-                +{formatNumber(totals.deposit)} {currency}
-              </TableCell>
-              <TableCell></TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell colSpan={2}></TableCell>
-              <TableCell colSpan={2} className="font-medium">Retraits:</TableCell>
-              <TableCell className="text-right font-medium text-red-600 dark:text-red-400">
-                -{formatNumber(totals.withdrawal)} {currency}
-              </TableCell>
-              <TableCell></TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell colSpan={2}></TableCell>
-              <TableCell colSpan={2} className="font-medium">Transferts:</TableCell>
-              <TableCell className="text-right font-medium text-blue-600 dark:text-blue-400">
-                {formatNumber(totals.transfer)} {currency}
-              </TableCell>
-              <TableCell></TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </div>
-      
-      {/* Enhanced cards for mobile */}
-      <div className="md:hidden space-y-4 px-0 py-2 sm:py-4 w-full">
-        {sortedOperations.map((operation) => (
-          <OperationsMobileCard 
-            key={operation.id} 
-            operation={{
-              ...operation,
-              id: formatOperationId(operation.id) // Pass formatted ID to mobile card
-            }}
-            formatAmount={(amount) => `${amount < 0 ? "-" : "+"}${formatNumber(Math.abs(amount))}`}
-            currency={currency}
-            showType={true}
-            colorClass={getAmountColor(operation.type)}
-            showId={true}
-          />
-        ))}
+            ))
+          )}
+        </TableBody>
+      </Table>
 
-        {/* Totals section for mobile */}
-        <div className="mt-8 border-t-2 border-primary/20 pt-4">
-          <h3 className="font-medium text-base mb-3">Totaux par type d'opération:</h3>
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="font-medium">Dépôts:</span>
-              <span className="font-medium text-green-600 dark:text-green-400">
-                +{formatNumber(totals.deposit)} {currency}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="font-medium">Retraits:</span>
-              <span className="font-medium text-red-600 dark:text-red-400">
-                -{formatNumber(totals.withdrawal)} {currency}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="font-medium">Transferts:</span>
-              <span className="font-medium text-blue-600 dark:text-blue-400">
-                {formatNumber(totals.transfer)} {currency}
-              </span>
+      {/* Totals section */}
+      {operations.length > 0 && (
+        <div className="mt-6 space-y-2 border-t pt-4">
+          <div className="grid grid-cols-2 text-sm">
+            <div className="font-medium">Total Versements:</div>
+            <div className="text-right text-green-500">{totalDeposits.toLocaleString()} {currency}</div>
+          </div>
+          <div className="grid grid-cols-2 text-sm">
+            <div className="font-medium">Total Retraits:</div>
+            <div className="text-right text-red-500">{totalWithdrawals.toLocaleString()} {currency}</div>
+          </div>
+          <div className="grid grid-cols-2 text-sm">
+            <div className="font-medium">Total Virements:</div>
+            <div className="text-right text-blue-500">{totalTransfers.toLocaleString()} {currency}</div>
+          </div>
+          <div className="grid grid-cols-2 text-sm font-bold border-t pt-2">
+            <div>Mouvement Net:</div>
+            <div className={`text-right ${netMovement >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {netMovement.toLocaleString()} {currency}
             </div>
           </div>
         </div>
-      </div>
-    </>
+      )}
+    </div>
   );
 };

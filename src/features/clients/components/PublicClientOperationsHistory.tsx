@@ -6,6 +6,9 @@ import { PublicOperationsTabs } from "./operations-history/PublicOperationsTabs"
 import { useState, useEffect } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { DateRange } from "react-day-picker";
+import { subDays } from "date-fns";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 
 interface PublicClientOperationsHistoryProps {
   operations: Operation[];
@@ -19,6 +22,12 @@ export const PublicClientOperationsHistory = ({ operations, clientId }: PublicCl
   
   // Always show all operations for pepsi men, default to true for other clients too
   const [showAllOperations, setShowAllOperations] = useState<boolean>(true);
+  
+  // Add date range state
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: subDays(new Date(), 30),
+    to: new Date()
+  });
   
   // Ensure we always show all operations for pepsi men
   useEffect(() => {
@@ -46,9 +55,18 @@ export const PublicClientOperationsHistory = ({ operations, clientId }: PublicCl
     ? operations 
     : operations.filter(op => {
         const opDate = new Date(op.operation_date || op.date);
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        return opDate >= thirtyDaysAgo;
+        if (dateRange?.from && dateRange?.to) {
+          // Use the provided date range
+          const from = new Date(dateRange.from);
+          const to = new Date(dateRange.to);
+          to.setHours(23, 59, 59, 999); // Include the entire "to" day
+          return opDate >= from && opDate <= to;
+        } else {
+          // Default to last 30 days if no date range provided
+          const thirtyDaysAgo = new Date();
+          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+          return opDate >= thirtyDaysAgo;
+        }
       });
   
   return (
@@ -68,6 +86,15 @@ export const PublicClientOperationsHistory = ({ operations, clientId }: PublicCl
         </div>
       </CardHeader>
       <CardContent className="p-0 sm:p-6">
+        {/* Add date range picker when not showing all operations */}
+        {!showAllOperations && (
+          <div className="px-4 sm:px-0 mb-4">
+            <DatePickerWithRange
+              date={dateRange}
+              onDateChange={setDateRange}
+            />
+          </div>
+        )}
         <PublicOperationsTabs operations={displayedOperations} currency={currency} />
       </CardContent>
     </Card>

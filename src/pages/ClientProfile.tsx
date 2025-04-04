@@ -1,15 +1,17 @@
-import { Button } from "@/components/ui/button";
-import { ChevronLeft } from "lucide-react";
+
 import { useClientProfile } from "@/features/clients/hooks/useClientProfile";
 import { ClientPersonalInfo } from "@/features/clients/components/ClientPersonalInfo";
+import { ClientBalanceCard } from "@/features/clients/components/ClientBalanceCard";
 import { ClientOperationsHistory } from "@/features/clients/components/ClientOperationsHistory";
+import { ClientInsights } from "@/features/clients/components/ClientInsights";
+import { ClientQRCode } from "@/features/clients/components/ClientQRCode";
 import { OperationsDetailCards } from "@/features/clients/components/OperationsDetailCards";
-import { PublicClientError } from "@/features/clients/components/PublicClientError";
-import { PublicClientLoading } from "@/features/clients/components/PublicClientLoading";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { ClientIdBadge } from "@/features/clients/components/ClientIdBadge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ClientActionButtons } from "@/features/clients/components/ClientActionButtons";
+import { ClientPublicPreview } from "@/features/clients/components/ClientPublicPreview";
 
-const ClientProfile = () => {
+export default function ClientProfile() {
   const {
     client,
     clientId,
@@ -35,157 +37,111 @@ const ClientProfile = () => {
     refetchClient,
     refreshClientBalance,
     refreshClientOperations,
-    clientBalance
+    clientBalance,
+    isPepsiMen
   } = useClientProfile();
 
-  const [initialLoadingShown, setInitialLoadingShown] = useState(true);
-  const [loadingTimeout, setLoadingTimeout] = useState(false);
+  if (isLoading) {
+    return <div className="p-8 flex justify-center">Chargement du profil client...</div>;
+  }
 
-  useEffect(() => {
-    console.log(`ClientProfile - Paramètres de la route: clientId=${clientId}, chemin=${window.location.pathname}`);
-    
-    if (error) {
-      console.error("ClientProfile - Erreur détectée:", error);
-      toast.error("Erreur de chargement", {
-        description: error
-      });
-    }
-    
-    let timer: NodeJS.Timeout | null = null;
-    if (isLoading && initialLoadingShown) {
-      timer = setTimeout(() => {
-        setLoadingTimeout(true);
-      }, 10000);
-    } else {
-      setInitialLoadingShown(false);
-      setLoadingTimeout(false);
-    }
-    
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
-  }, [clientId, error, isLoading, initialLoadingShown]);
-
-  useEffect(() => {
-    if (client && clientOperations?.length === 0) {
-      console.log("Client chargé mais aucune opération trouvée. Cela pourrait indiquer un problème de récupération de données.");
-      
-      const clientFullName = client ? `${client.prenom} ${client.nom}`.trim() : null;
-      console.log(`Nom complet du client utilisé pour le filtrage des opérations: "${clientFullName}"`);
-    }
-  }, [client, clientOperations]);
-
-  useEffect(() => {
-    const handleOperationUpdate = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      const updateClientId = customEvent.detail?.clientId;
-      
-      if (updateClientId === clientId || !updateClientId) {
-        console.log("Auto-refreshing operations after update detection");
-        refreshClientOperations();
-      }
-    };
-    
-    window.addEventListener('operations-update', handleOperationUpdate);
-    
-    return () => {
-      window.removeEventListener('operations-update', handleOperationUpdate);
-    };
-  }, [clientId, refreshClientOperations]);
-
-  console.log("ClientProfile - État complet:", { 
-    client, 
-    isLoading, 
-    error, 
-    clientId,
-    hasOperations: clientOperations?.length > 0,
-    filteredOpsCount: filteredOperations?.length,
-    clientName: client ? `${client.prenom} ${client.nom}` : null,
-    currentPath: window.location.pathname,
-    currentBalance: clientBalance
-  });
-
-  if (isLoading && initialLoadingShown) {
+  if (!client || error) {
     return (
-      <PublicClientLoading 
-        onRetry={refetchClient} 
-        timeout={loadingTimeout}
-        timeoutMessage="Le chargement prend plus de temps que prévu. Vous pouvez réessayer ou revenir plus tard."
-      />
+      <div className="p-8">
+        <h1 className="text-2xl font-bold text-red-500">
+          Erreur lors du chargement du profil client
+        </h1>
+        <p className="mt-2">{error || "Client introuvable"}</p>
+        <button
+          onClick={() => navigate("/clients")}
+          className="mt-4 px-4 py-2 bg-primary text-white rounded-md"
+        >
+          Retour à la liste des clients
+        </button>
+      </div>
     );
   }
 
-  if (error) {
-    console.log("Affichage de l'erreur:", error);
-    return <PublicClientError error={error} onRetry={refetchClient} />;
-  }
-
-  if (!client) {
-    console.log("Client non trouvé pour l'ID:", clientId);
-    const errorMessage = `Le client avec l'identifiant ${clientId} n'existe pas ou a été supprimé.`;
-    return <PublicClientError error={errorMessage} onRetry={refetchClient} />;
-  }
-
-  const actualClientId = typeof client.id === 'string' ? parseInt(client.id, 10) : client.id;
-  console.log("Utilisation de l'ID client pour le code QR:", actualClientId);
-
-  const handleTypeChange = (type: string) => {
-    if (type === "deposit" || type === "withdrawal" || type === "transfer" || type === "all") {
-      setSelectedType(type as "deposit" | "withdrawal" | "transfer" | "all");
-    } else {
-      console.error(`Invalid operation type: ${type}`);
-      setSelectedType("all");
-    }
-  };
-
   return (
-    <div className="sm:container mx-auto px-0 sm:px-4 py-4 sm:py-8 max-w-7xl overflow-x-hidden">
-      <div className="space-y-4 sm:space-y-6 w-full px-2 sm:px-0">
-        <div>
-          <Button variant="ghost" onClick={() => navigate('/clients')} className="mb-4">
-            <ChevronLeft className="mr-2 h-4 w-4" />
-            Retour aux clients
-          </Button>
-          <h1 className="text-2xl sm:text-3xl font-bold">Profil Client</h1>
+    <div className="p-4 md:p-6 space-y-6">
+      <div className="flex flex-col md:flex-row gap-4 justify-between items-start mb-4">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            {client.prenom} {client.nom}
+            <ClientIdBadge clientId={client.id} />
+          </h1>
           <p className="text-muted-foreground">
-            Détails et historique des opérations
+            Client depuis{" "}
+            {new Date(client.date_creation).toLocaleDateString("fr-FR", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
           </p>
         </div>
-
-        <ClientPersonalInfo 
-          client={client} 
-          clientId={typeof client?.id === 'string' ? parseInt(client.id, 10) : client?.id}
-          qrCodeRef={qrCodeRef}
-          formatAmount={formatAmount}
-          refetchClient={refetchClient}
-          refreshClientBalance={refreshClientBalance}
-          clientBalance={clientBalance}
+        <ClientActionButtons
+          client={client}
+          exportToExcel={exportToExcel}
+          exportToPDF={exportToPDF}
+          refreshBalance={refreshClientBalance}
         />
+      </div>
 
-        <ClientOperationsHistory
-          operations={clientOperations}
-          selectedType={selectedType}
-          setSelectedType={handleTypeChange}
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          dateRange={dateRange}
-          setDateRange={setDateRange}
-          isCustomRange={isCustomRange}
-          setIsCustomRange={setIsCustomRange}
-          filteredOperations={filteredOperations}
-          refreshOperations={refreshClientOperations}
-          showAllDates={showAllDates}
-          setShowAllDates={setShowAllDates}
-          clientId={clientId}
-        />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="col-span-1">
+          <div className="space-y-6">
+            <ClientPersonalInfo client={client} onRefresh={refetchClient} />
+            <ClientBalanceCard
+              balance={clientBalance}
+              currency="TND"
+              clientId={clientId}
+            />
+            <ClientQRCode client={client} qrRef={qrCodeRef} />
+          </div>
+        </div>
 
-        <OperationsDetailCards
-          clientOperations={clientOperations}
-          formatAmount={formatAmount}
-        />
+        <div className="col-span-1 md:col-span-2">
+          <Tabs defaultValue="operations" className="space-y-6">
+            <TabsList className="w-full grid grid-cols-3">
+              <TabsTrigger value="operations">Opérations</TabsTrigger>
+              <TabsTrigger value="insights">Insights</TabsTrigger>
+              <TabsTrigger value="public-preview">Aperçu public</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="operations" className="space-y-6">
+              <OperationsDetailCards operations={clientOperations} />
+              <ClientOperationsHistory
+                operations={clientOperations}
+                selectedType={selectedType}
+                setSelectedType={setSelectedType}
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                dateRange={dateRange}
+                setDateRange={setDateRange}
+                isCustomRange={isCustomRange}
+                setIsCustomRange={setIsCustomRange}
+                filteredOperations={filteredOperations}
+                refreshOperations={refreshClientOperations}
+                showAllDates={showAllDates}
+                setShowAllDates={setShowAllDates}
+                clientId={clientId}
+                isPepsiMen={isPepsiMen}
+              />
+            </TabsContent>
+            
+            <TabsContent value="insights" className="space-y-6">
+              <ClientInsights operations={clientOperations} client={client} />
+            </TabsContent>
+            
+            <TabsContent value="public-preview" className="space-y-6">
+              <ClientPublicPreview 
+                client={client} 
+                operations={clientOperations} 
+              />
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     </div>
   );
-};
-
-export default ClientProfile;
+}

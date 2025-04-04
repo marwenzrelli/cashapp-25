@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Operation } from "@/features/operations/types";
 import { PublicOperationsTable } from "./PublicOperationsTable";
 import { useEffect } from "react";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 
 interface PublicOperationsTabsProps {
   operations: Operation[];
@@ -29,6 +30,22 @@ export const PublicOperationsTabs = ({ operations, currency }: PublicOperationsT
     console.log(`PublicOperationsTabs - Deposit IDs: ${depositIds}`);
     console.log(`PublicOperationsTabs - Withdrawal IDs: ${withdrawalIds}`);
   }, [operations]);
+
+  // Calculate totals for the summary footer
+  const depositsTotal = operations
+    .filter(op => op.type === "deposit")
+    .reduce((total, op) => total + op.amount, 0);
+    
+  const withdrawalsTotal = operations
+    .filter(op => op.type === "withdrawal")
+    .reduce((total, op) => total + op.amount, 0);
+    
+  const transfersTotal = operations
+    .filter(op => op.type === "transfer")
+    .reduce((total, op) => total + op.amount, 0);
+    
+  // Calculate net balance movement
+  const netMovement = depositsTotal - withdrawalsTotal;
 
   return (
     <Tabs defaultValue="all" className="w-full">
@@ -73,6 +90,32 @@ export const PublicOperationsTabs = ({ operations, currency }: PublicOperationsT
           <PublicOperationsTable operations={operations.filter(op => op.type === "transfer")} currency={currency} />
         </TabsContent>
       </div>
+
+      {/* Summary footer with totals */}
+      <Card className="mt-4 border-t">
+        <CardFooter className="px-4 py-3">
+          <div className="w-full grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="text-center p-2 bg-primary/5 rounded-lg">
+              <p className="text-sm text-muted-foreground">Versements</p>
+              <p className="text-lg font-semibold text-green-600">{depositsTotal.toLocaleString()} {currency}</p>
+            </div>
+            <div className="text-center p-2 bg-primary/5 rounded-lg">
+              <p className="text-sm text-muted-foreground">Retraits</p>
+              <p className="text-lg font-semibold text-red-600">{withdrawalsTotal.toLocaleString()} {currency}</p>
+            </div>
+            <div className="text-center p-2 bg-primary/5 rounded-lg">
+              <p className="text-sm text-muted-foreground">Virements</p>
+              <p className="text-lg font-semibold text-blue-600">{transfersTotal.toLocaleString()} {currency}</p>
+            </div>
+            <div className="text-center p-2 bg-primary/5 rounded-lg">
+              <p className="text-sm text-muted-foreground">Mouvement Net</p>
+              <p className={`text-lg font-semibold ${netMovement >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {netMovement.toLocaleString()} {currency}
+              </p>
+            </div>
+          </div>
+        </CardFooter>
+      </Card>
     </Tabs>
   );
 };
