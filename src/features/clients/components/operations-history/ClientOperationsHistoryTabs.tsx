@@ -8,6 +8,7 @@ import { DepositOperationsTab } from "./DepositOperationsTab";
 import { WithdrawalOperationsTab } from "./WithdrawalOperationsTab";
 import { TransferOperationsTab } from "./TransferOperationsTab";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 interface ClientOperationsHistoryTabsProps {
   filteredOperations: Operation[];
@@ -18,6 +19,11 @@ export const ClientOperationsHistoryTabs = ({
   filteredOperations,
   currency = "TND"
 }: ClientOperationsHistoryTabsProps) => {
+  // Count operations by type
+  const depositsCount = filteredOperations.filter(op => op.type === "deposit").length;
+  const withdrawalsCount = filteredOperations.filter(op => op.type === "withdrawal").length;
+  const transfersCount = filteredOperations.filter(op => op.type === "transfer").length;
+  
   return (
     <Tabs defaultValue="all" className="w-full">
       <Card className="mb-4 shadow-sm my-0 py-0 px-0 mx-0">
@@ -26,18 +32,22 @@ export const ClientOperationsHistoryTabs = ({
             <TabsTrigger value="all" className="flex items-center gap-2">
               <List className="h-4 w-4" />
               Toutes les opérations
+              <Badge variant="secondary" className="ml-1">{filteredOperations.length}</Badge>
             </TabsTrigger>
             <TabsTrigger value="deposits" className="flex items-center gap-2">
               <ArrowUpCircle className="h-4 w-4" />
               Versements
+              <Badge variant="secondary" className="ml-1">{depositsCount}</Badge>
             </TabsTrigger>
             <TabsTrigger value="withdrawals" className="flex items-center gap-2">
               <ArrowDownCircle className="h-4 w-4" />
               Retraits
+              <Badge variant="secondary" className="ml-1">{withdrawalsCount}</Badge>
             </TabsTrigger>
             <TabsTrigger value="transfers" className="flex items-center gap-2">
               <RefreshCcw className="h-4 w-4" />
               Virements
+              <Badge variant="secondary" className="ml-1">{transfersCount}</Badge>
             </TabsTrigger>
           </TabsList>
         </CardContent>
