@@ -46,44 +46,8 @@ export const useClientOperationsFilter = (
       };
       
       console.log('Operations by type:', byType);
-      
-      // List all operation IDs for debugging
-      const allIds = operations.map(op => `${op.type}-${op.id}`).join(', ');
-      console.log(`All operation IDs: ${allIds}`);
     }
   }, [operations, isPepsiMen]);
-  
-  // Enhanced name matching function with more permissive matching for pepsi men
-  const matchesClientName = (operationName: string | undefined, clientFullName: string, firstName: string, lastName: string): boolean => {
-    if (!operationName) return false;
-    
-    const opName = operationName.toLowerCase().trim();
-    const normalizedClientName = clientFullName.toLowerCase().trim();
-    const normalizedFirstName = firstName.toLowerCase().trim();
-    const normalizedLastName = lastName.toLowerCase().trim();
-    
-    // Special case for pepsi men - extremely permissive matching
-    if (isPepsiMen) {
-      return opName.includes('pepsi') || opName.includes('men') || 
-             opName.includes('pepsi men') || opName.includes('pepsi-men') ||
-             opName === 'pepsi' || opName === 'men';
-    }
-    
-    // Regular matching for other clients
-    // Exact full name match
-    if (opName === normalizedClientName) return true;
-    
-    // First name + last name match
-    if (opName === `${normalizedFirstName} ${normalizedLastName}`) return true;
-    
-    // Last name + first name match (some systems might reverse)
-    if (opName === `${normalizedLastName} ${normalizedFirstName}`) return true;
-    
-    // Contains both first and last name
-    if (opName.includes(normalizedFirstName) && opName.includes(normalizedLastName)) return true;
-    
-    return false;
-  };
   
   // Get operations for this client only - with special handling for pepsi men
   const clientOperations = useMemo(() => {
@@ -94,45 +58,45 @@ export const useClientOperationsFilter = (
     const clientFullName = `${client.prenom} ${client.nom}`.trim().toLowerCase();
     
     console.log(`Filtering operations for client: ${clientFullName} (ID: ${clientId})`);
-    console.log(`Total operations before filtering: ${operations.length}`);
     
-    // Special case for client ID 4 (pepsi men) - extremely permissive matching
+    // Special case for client ID 4 (pepsi men)
     if (isPepsiMen) {
-      console.log("Using super-permissive pepsi men filtering logic");
+      console.log("Using strict pepsi men filtering logic");
       
-      const pepsiOps = operations.filter(op => {
+      return operations.filter(op => {
         // Direct client ID match (most reliable)
         if (op.client_id === 4) return true;
         
-        // Name-based matching (any variation of pepsi/men in any field)
+        // For operations without client_id, do strict name matching
         const fromClient = (op.fromClient || '').toLowerCase();
         const toClient = (op.toClient || '').toLowerCase();
-        const desc = (op.description || '').toLowerCase();
         
-        const hasPepsi = fromClient.includes('pepsi') || toClient.includes('pepsi') || desc.includes('pepsi');
-        const hasMen = fromClient.includes('men') || toClient.includes('men') || desc.includes('men');
+        // Only match "pepsi men" exactly - no partial matches
+        const exactPepsiMen = 
+          fromClient === 'pepsi men' || 
+          toClient === 'pepsi men' ||
+          (fromClient.includes('pepsi') && fromClient.includes('men'));
         
-        return hasPepsi || hasMen;
+        return exactPepsiMen;
       });
-      
-      console.log(`Pepsi men operations found: ${pepsiOps.length}`);
-      return pepsiOps;
     }
     
-    // Regular client filtering with improved name matching
-    return operations.filter(operation => {
-      // First check client_id if available (most reliable method)
-      if (operation.client_id !== undefined && operation.client_id === clientId) {
+    // Regular client filtering with direct ID matching
+    return operations.filter(op => {
+      // Use client_id as primary filter when available
+      if (op.client_id !== undefined && op.client_id === clientId) {
         return true;
       }
       
-      // Name-based matching as fallback
-      const isFromClient = matchesClientName(operation.fromClient, clientFullName, client.prenom, client.nom);
-                        
-      const isToClient = operation.type === 'transfer' && 
-                        matchesClientName(operation.toClient, clientFullName, client.prenom, client.nom);
+      // Strict name-based matching as fallback
+      const fromClient = (op.fromClient || '').toLowerCase();
+      const exactFromMatch = fromClient === clientFullName;
       
-      return isFromClient || isToClient;
+      // For transfers, also check toClient field
+      const toClient = (op.toClient || '').toLowerCase(); 
+      const exactToMatch = op.type === 'transfer' && toClient === clientFullName;
+      
+      return exactFromMatch || exactToMatch;
     });
   }, [client, operations, clientId, isPepsiMen]);
 

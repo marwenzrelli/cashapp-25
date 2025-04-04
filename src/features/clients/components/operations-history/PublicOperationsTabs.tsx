@@ -22,15 +22,12 @@ export const PublicOperationsTabs = ({ operations, currency }: PublicOperationsT
       }
     );
     
-    // Log all operation IDs for debugging
-    const allOperationIds = operations.map(op => `${op.type}-${op.id}`).join(', ');
-    console.log(`PublicOperationsTabs - All operation IDs: ${allOperationIds}`);
+    // For debugging, log all operation types
+    const depositIds = operations.filter(op => op.type === "deposit").map(op => op.id).join(', ');
+    const withdrawalIds = operations.filter(op => op.type === "withdrawal").map(op => op.id).join(', ');
     
-    // Detailed withdraw info for the pepsi men client
-    const withdrawals = operations.filter(op => op.type === "withdrawal");
-    if (withdrawals.length > 0) {
-      console.log(`PublicOperationsTabs - Withdrawal IDs: ${withdrawals.map(w => w.id).join(', ')}`);
-    }
+    console.log(`PublicOperationsTabs - Deposit IDs: ${depositIds}`);
+    console.log(`PublicOperationsTabs - Withdrawal IDs: ${withdrawalIds}`);
   }, [operations]);
 
   return (
