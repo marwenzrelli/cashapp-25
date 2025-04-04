@@ -53,6 +53,7 @@ export function useClientWithdrawal(clientId?: number, refetchClient?: () => voi
           error
         } = await supabase.from('withdrawals').update({
           client_name: withdrawal.client_name,
+          client_id: clientId, // Set client_id explicitly
           amount: amount,
           operation_date: operationDate,
           notes: withdrawal.notes,
@@ -77,6 +78,7 @@ export function useClientWithdrawal(clientId?: number, refetchClient?: () => voi
           error
         } = await supabase.from('withdrawals').insert({
           client_name: withdrawal.client_name,
+          client_id: clientId, // Set client_id explicitly
           amount: amount,
           operation_date: operationDate,
           notes: withdrawal.notes,

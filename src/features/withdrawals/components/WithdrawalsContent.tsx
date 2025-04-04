@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { StandaloneWithdrawalForm } from "./standalone/StandaloneWithdrawalForm";
 import { WithdrawalTable } from "./WithdrawalTable";
@@ -101,10 +102,15 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
 
   const handleWithdrawalConfirm = async (withdrawal: any): Promise<void> => {
     try {
+      // Find the client ID based on the client name
+      const client = clients.find(c => `${c.prenom} ${c.nom}` === withdrawal.client_name);
+      const clientId = client ? client.id : undefined;
+
       const { error } = await supabase
         .from('withdrawals')
         .insert({
           client_name: withdrawal.client_name,
+          client_id: clientId, // Set the client_id if available
           amount: withdrawal.amount,
           operation_date: withdrawal.date,
           notes: withdrawal.notes

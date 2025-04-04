@@ -319,6 +319,7 @@ export type Database = {
       withdrawals: {
         Row: {
           amount: number
+          client_id: number | null
           client_name: string
           created_at: string | null
           created_by: string | null
@@ -330,6 +331,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          client_id?: number | null
           client_name: string
           created_at?: string | null
           created_by?: string | null
@@ -341,6 +343,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          client_id?: number | null
           client_name?: string
           created_at?: string | null
           created_by?: string | null
@@ -350,7 +353,15 @@ export type Database = {
           operation_date?: string | null
           status?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "withdrawals_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

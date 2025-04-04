@@ -20,29 +20,49 @@ export const useClientOperationsFilter = (
     to: new Date()
   });
   const [isCustomRange, setIsCustomRange] = useState<boolean>(false);
-  const [showAllDates, setShowAllDates] = useState<boolean>(false);
-
+  const [showAllDates, setShowAllDates] = useState<boolean>(true); // Default to showing all dates
+  
+  // Get client ID as a number
+  const clientId = client ? (typeof client.id === 'string' ? parseInt(client.id, 10) : client.id) : null;
+  
   // Get operations for this client only
   const clientOperations = useMemo(() => {
-    if (!client) {
+    if (!client || !clientId) {
       return [];
     }
     
-    const clientFullName = `${client.prenom} ${client.nom}`.trim().toLowerCase();
+    // Log clientId for debugging
+    console.log(`Filtering operations for client ID: ${clientId}`);
     
-    // Filter operations to only include those for this client
-    return operations.filter(operation => {
-      // Normalize names for comparison
-      const fromClient = operation.fromClient?.toLowerCase().trim() || '';
-      const toClient = operation.toClient?.toLowerCase().trim() || '';
+    // Filter operations to only include those for this client based on client_id or name matching
+    return operations.filter(op => {
+      // First priority: Direct client_id matching if available
+      if (op.client_id !== undefined && op.client_id === clientId) {
+        return true;
+      }
       
-      // Check if this client is involved in the operation
-      const isFromClient = fromClient.includes(clientFullName) || clientFullName.includes(fromClient);
-      const isToClient = operation.type === 'transfer' && (toClient.includes(clientFullName) || clientFullName.includes(toClient));
+      // For operations without client_id, fall back to name matching
+      if (op.client_id === undefined) {
+        const clientFullName = `${client.prenom} ${client.nom}`.trim().toLowerCase();
+        
+        // Normalize names for comparison
+        const fromClient = (op.fromClient || '').toLowerCase().trim();
+        const toClient = (op.toClient || '').toLowerCase().trim();
+        
+        // Use exact name matching (not partial matching)
+        const isFromClient = fromClient === clientFullName || 
+                           fromClient === `${client.prenom.toLowerCase()} ${client.nom.toLowerCase()}`;
+                        
+        const isToClient = op.type === 'transfer' && 
+                        (toClient === clientFullName || 
+                         toClient === `${client.prenom.toLowerCase()} ${client.nom.toLowerCase()}`);
+        
+        return isFromClient || isToClient;
+      }
       
-      return isFromClient || isToClient;
+      return false;
     });
-  }, [client, operations]);
+  }, [client, operations, clientId]);
 
   // Filter operations based on user selections
   const filteredOperations = useMemo(() => {
