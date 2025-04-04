@@ -12,7 +12,8 @@ export interface Operation {
   fromClient?: string;
   toClient?: string;
   formattedDate?: string;
-  client_id?: number; // Add client_id property
+  client_id?: number;
+  status?: string; // Added the status field to the Operation interface
 }
 
 // Add ClientStats interface that was missing

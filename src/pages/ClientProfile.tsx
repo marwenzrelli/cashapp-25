@@ -80,7 +80,6 @@ export default function ClientProfile() {
           </p>
         </div>
         <ClientActionButtons
-          client={client}
           exportToExcel={exportToExcel}
           exportToPDF={exportToPDF}
           refreshBalance={refreshClientBalance}
@@ -90,13 +89,11 @@ export default function ClientProfile() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="col-span-1">
           <div className="space-y-6">
-            <ClientPersonalInfo client={client} onRefresh={refetchClient} />
+            <ClientPersonalInfo client={client} />
             <ClientBalanceCard
-              balance={clientBalance}
-              currency="TND"
               clientId={clientId}
             />
-            <ClientQRCode client={client} qrRef={qrCodeRef} />
+            <ClientQRCode clientId={clientId} qrRef={qrCodeRef} />
           </div>
         </div>
 
@@ -109,7 +106,7 @@ export default function ClientProfile() {
             </TabsList>
             
             <TabsContent value="operations" className="space-y-6">
-              <OperationsDetailCards operations={clientOperations} />
+              <OperationsDetailCards />
               <ClientOperationsHistory
                 operations={clientOperations}
                 selectedType={selectedType}
@@ -130,7 +127,7 @@ export default function ClientProfile() {
             </TabsContent>
             
             <TabsContent value="insights" className="space-y-6">
-              <ClientInsights operations={clientOperations} client={client} />
+              <ClientInsights />
             </TabsContent>
             
             <TabsContent value="public-preview" className="space-y-6">
