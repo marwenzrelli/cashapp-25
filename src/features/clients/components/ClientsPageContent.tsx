@@ -1,10 +1,8 @@
 import { Client } from "@/features/clients/types";
 import { ClientList } from "./ClientList";
-import { ClientInsights } from "./ClientInsights";
 import { ClientSearch } from "./ClientSearch";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { AISuggestion } from "../types";
 import { LoadingIndicator } from "@/components/ui/loading-indicator";
 import { useRef, useEffect, useState } from "react";
 
@@ -33,19 +31,6 @@ export const ClientsPageContent = ({
   handleRetry,
   openNewClientDialog
 }: ClientsPageContentProps) => {
-  // Fixed the type issue by explicitly setting the type properties to valid values
-  const aiSuggestions: AISuggestion[] = [{
-    id: "1",
-    message: "Nouveau client potentiel détecté",
-    type: "success",
-    clientId: "1"
-  }, {
-    id: "2",
-    message: "Mise à jour des informations recommandée",
-    type: "info",
-    clientId: "3"
-  }];
-
   const [contentReady, setContentReady] = useState(false);
   const [initialContentShown, setInitialContentShown] = useState(false);
   const initialLoadCompleteRef = useRef(false);
@@ -127,8 +112,7 @@ export const ClientsPageContent = ({
         </p>
       </div>
 
-      <div className={`grid gap-4 md:gap-6 md:grid-cols-2 transition-opacity duration-300 ${initialContentShown ? 'opacity-100' : 'opacity-0'}`}>
-        <ClientInsights suggestions={aiSuggestions} />
+      <div className={`transition-opacity duration-300 ${initialContentShown ? 'opacity-100' : 'opacity-0'}`}>
         <ClientSearch searchTerm={searchTerm} onSearchChange={setSearchTerm} onNewClient={openNewClientDialog} />
       </div>
 

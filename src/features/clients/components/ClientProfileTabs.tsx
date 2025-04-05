@@ -2,7 +2,6 @@
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ClientOperationsHistory } from "./ClientOperationsHistory";
-import { ClientInsights } from "./ClientInsights";
 import { ClientPublicPreview } from "./ClientPublicPreview";
 import { Client } from "../types";
 import { Operation } from "@/features/operations/types";
@@ -54,9 +53,8 @@ export function ClientProfileTabs({
   return (
     <Card className="overflow-hidden border-none shadow-md">
       <Tabs defaultValue="operations" className="w-full">
-        <TabsList className="w-full grid grid-cols-3 rounded-none bg-muted/50 p-0">
+        <TabsList className="w-full grid grid-cols-2 rounded-none bg-muted/50 p-0">
           <TabsTrigger value="operations" className="rounded-none py-3 data-[state=active]:bg-background">Opérations</TabsTrigger>
-          <TabsTrigger value="insights" className="rounded-none py-3 data-[state=active]:bg-background">Insights</TabsTrigger>
           <TabsTrigger value="public-preview" className="rounded-none py-3 data-[state=active]:bg-background">Aperçu public</TabsTrigger>
         </TabsList>
         
@@ -78,14 +76,6 @@ export function ClientProfileTabs({
               setShowAllDates={setShowAllDates}
               clientId={clientId}
               isPepsiMen={isPepsiMen}
-            />
-          </TabsContent>
-          
-          <TabsContent value="insights" className="space-y-6 mt-0">
-            <ClientInsights 
-              suggestions={[]} 
-              client={client}
-              operations={clientOperations}
             />
           </TabsContent>
           
