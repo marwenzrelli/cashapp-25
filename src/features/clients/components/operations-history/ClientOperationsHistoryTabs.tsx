@@ -30,6 +30,7 @@ export const ClientOperationsHistoryTabs = ({
   
   return (
     <Tabs defaultValue="all" className="w-full">
+      {/* Separate card for tabs on mobile */}
       <Card className="mb-4 shadow-sm my-0 py-0 px-0 mx-0">
         <CardContent className="p-1 sm:p-2 px-0 py-0 mx-0">
           <div className="flex flex-wrap items-center px-2 py-2">
@@ -59,6 +60,7 @@ export const ClientOperationsHistoryTabs = ({
         </CardContent>
       </Card>
 
+      {/* Separate card for content */}
       <Card className="shadow-sm">
         <CardContent className="p-0 sm:p-0">
           <TabsContent value="all" className="w-full">

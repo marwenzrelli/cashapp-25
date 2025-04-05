@@ -39,9 +39,8 @@ export const OperationsMobileList = ({
             <OperationsMobileCard 
               operation={operation}
               formatAmount={(amount) => {
-                // Fix the formattage to avoid double symbols
-                const formattedAmount = formatNumber(amount);
-                return formattedAmount;
+                // Format the amount without adding symbols (let the component handle it)
+                return formatNumber(Math.abs(amount));
               }}
               currency={currency}
               colorClass={getOperationTypeColor(operation.type)}
