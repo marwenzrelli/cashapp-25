@@ -1,7 +1,6 @@
 
 import { useState } from "react";
 import { ClientPersonalInfo } from "./ClientPersonalInfo";
-import { OperationsDetailCards } from "./OperationsDetailCards";
 import { Client } from "../types";
 import { Operation } from "@/features/operations/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -70,11 +69,6 @@ export function ClientInfoCards({
         clientId={clientId} 
         formatAmount={formatAmount}
         clientBalance={client.solde}
-      />
-      
-      <OperationsDetailCards
-        clientOperations={clientOperations}
-        formatAmount={formatAmount}
       />
       
       <Card>

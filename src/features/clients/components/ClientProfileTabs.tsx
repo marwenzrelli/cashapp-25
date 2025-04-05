@@ -10,6 +10,7 @@ import { useState } from "react";
 import { Smartphone, Monitor } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { OperationsDetailCards } from "./OperationsDetailCards";
 
 interface ClientProfileTabsProps {
   client: Client;
@@ -49,61 +50,79 @@ export function ClientProfileTabs({
   isPepsiMen
 }: ClientProfileTabsProps) {
   const [showMobilePreview, setShowMobilePreview] = useState(false);
+  
+  // Function to format amounts for the operations detail cards
+  const formatAmount = (amount: number): string => {
+    return new Intl.NumberFormat('fr-TN', {
+      style: 'currency',
+      currency: 'TND',
+      minimumFractionDigits: 3,
+      maximumFractionDigits: 3
+    }).format(amount);
+  };
 
   return (
-    <Card className="overflow-hidden border-none shadow-md">
-      <Tabs defaultValue="operations" className="w-full">
-        <TabsList className="w-full grid grid-cols-2 rounded-none bg-muted/50 p-0">
-          <TabsTrigger value="operations" className="rounded-none py-3 data-[state=active]:bg-background">Opérations</TabsTrigger>
-          <TabsTrigger value="public-preview" className="rounded-none py-3 data-[state=active]:bg-background">Aperçu public</TabsTrigger>
-        </TabsList>
-        
-        <div className="p-6">
-          <TabsContent value="operations" className="space-y-6 mt-0">
-            <ClientOperationsHistory
-              operations={clientOperations}
-              selectedType={selectedType}
-              setSelectedType={setSelectedType}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              dateRange={dateRange}
-              setDateRange={setDateRange}
-              isCustomRange={isCustomRange}
-              setIsCustomRange={setIsCustomRange}
-              filteredOperations={filteredOperations}
-              refreshOperations={refreshClientOperations}
-              showAllDates={showAllDates}
-              setShowAllDates={setShowAllDates}
-              clientId={clientId}
-              isPepsiMen={isPepsiMen}
-            />
-          </TabsContent>
+    <div className="space-y-6">
+      <Card className="overflow-hidden border-none shadow-md">
+        <Tabs defaultValue="operations" className="w-full">
+          <TabsList className="w-full grid grid-cols-2 rounded-none bg-muted/50 p-0">
+            <TabsTrigger value="operations" className="rounded-none py-3 data-[state=active]:bg-background">Opérations</TabsTrigger>
+            <TabsTrigger value="public-preview" className="rounded-none py-3 data-[state=active]:bg-background">Aperçu public</TabsTrigger>
+          </TabsList>
           
-          <TabsContent value="public-preview" className="space-y-6 mt-0">
-            {/* Mobile preview toggle */}
-            <div className="flex items-center justify-end mb-4 gap-2">
-              <Label htmlFor="mobile-preview" className="flex items-center gap-1 text-sm text-muted-foreground">
-                <Monitor className="h-4 w-4" />
-              </Label>
-              <Switch 
-                id="mobile-preview" 
-                checked={showMobilePreview} 
-                onCheckedChange={setShowMobilePreview} 
+          <div className="p-6">
+            <TabsContent value="operations" className="space-y-6 mt-0">
+              <ClientOperationsHistory
+                operations={clientOperations}
+                selectedType={selectedType}
+                setSelectedType={setSelectedType}
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                dateRange={dateRange}
+                setDateRange={setDateRange}
+                isCustomRange={isCustomRange}
+                setIsCustomRange={setIsCustomRange}
+                filteredOperations={filteredOperations}
+                refreshOperations={refreshClientOperations}
+                showAllDates={showAllDates}
+                setShowAllDates={setShowAllDates}
+                clientId={clientId}
+                isPepsiMen={isPepsiMen}
               />
-              <Label htmlFor="mobile-preview" className="flex items-center gap-1 text-sm text-muted-foreground">
-                <Smartphone className="h-4 w-4" />
-                Aperçu mobile
-              </Label>
-            </div>
+            </TabsContent>
+            
+            <TabsContent value="public-preview" className="space-y-6 mt-0">
+              {/* Mobile preview toggle */}
+              <div className="flex items-center justify-end mb-4 gap-2">
+                <Label htmlFor="mobile-preview" className="flex items-center gap-1 text-sm text-muted-foreground">
+                  <Monitor className="h-4 w-4" />
+                </Label>
+                <Switch 
+                  id="mobile-preview" 
+                  checked={showMobilePreview} 
+                  onCheckedChange={setShowMobilePreview} 
+                />
+                <Label htmlFor="mobile-preview" className="flex items-center gap-1 text-sm text-muted-foreground">
+                  <Smartphone className="h-4 w-4" />
+                  Aperçu mobile
+                </Label>
+              </div>
 
-            <ClientPublicPreview 
-              client={client} 
-              operations={clientOperations} 
-              isMobilePreview={showMobilePreview}
-            />
-          </TabsContent>
-        </div>
-      </Tabs>
-    </Card>
+              <ClientPublicPreview 
+                client={client} 
+                operations={clientOperations} 
+                isMobilePreview={showMobilePreview}
+              />
+            </TabsContent>
+          </div>
+        </Tabs>
+      </Card>
+
+      {/* Operations Detail Cards moved here at the bottom */}
+      <OperationsDetailCards
+        clientOperations={clientOperations}
+        formatAmount={formatAmount}
+      />
+    </div>
   );
 }
