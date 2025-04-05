@@ -71,8 +71,8 @@ export const PersonalInfoFields = ({
       
       {/* Secondary info cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border shadow-sm">
-          <div className="flex items-center gap-3 mb-2">
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border shadow-sm hover:shadow-md transition-shadow duration-300">
+          <div className="flex items-center gap-3">
             <div className="bg-primary/10 p-2 rounded-full">
               <Calendar className="h-4 w-4 text-primary" />
             </div>
@@ -86,8 +86,8 @@ export const PersonalInfoFields = ({
         </div>
         
         {showBalance && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border shadow-sm">
-            <div className="flex items-center gap-3 mb-2">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border shadow-sm hover:shadow-md transition-shadow duration-300">
+            <div className="flex items-center gap-3">
               <div className="bg-primary/10 p-2 rounded-full">
                 <Wallet className="h-4 w-4 text-primary" />
               </div>

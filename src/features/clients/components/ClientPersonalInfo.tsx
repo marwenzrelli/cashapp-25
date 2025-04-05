@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Client } from "../types";
 import { ClientQRCode } from "./ClientQRCode";
@@ -48,7 +47,6 @@ export const ClientPersonalInfo = ({
     refreshClientBalance: refreshBalance
   } = useClientOperations(client, clientId, refetchClient);
 
-  // Automatically refresh balance once when component mounts, with a longer delay
   useEffect(() => {
     if (client && client.id && refreshClientBalance && !didInitialRefresh) {
       const doInitialRefresh = async () => {
@@ -60,7 +58,6 @@ export const ClientPersonalInfo = ({
         }
       };
       
-      // Use a longer timeout (3 seconds) to avoid immediate refresh on page load
       initialRefreshTimerRef.current = setTimeout(doInitialRefresh, 3000);
       return () => {
         if (initialRefreshTimerRef.current) {
@@ -76,7 +73,6 @@ export const ClientPersonalInfo = ({
       return;
     }
     
-    // Prevent multiple refreshes
     if (isRefreshing || refreshDisabled) {
       return;
     }
@@ -93,15 +89,13 @@ export const ClientPersonalInfo = ({
     } finally {
       setIsRefreshing(false);
       
-      // Disable the refresh button for 10 seconds to prevent spam
       refreshCooldownTimerRef.current = setTimeout(() => {
         setRefreshDisabled(false);
         refreshCooldownTimerRef.current = null;
-      }, 10000); // 10-second cooldown
+      }, 10000);
     }
   };
 
-  // Cleanup timers on unmount
   useEffect(() => {
     return () => {
       if (initialRefreshTimerRef.current) {
@@ -113,7 +107,6 @@ export const ClientPersonalInfo = ({
     };
   }, []);
 
-  // Helper function to pass client ID to refreshBalance
   const handleDepositRefresh = async (): Promise<boolean> => {
     if (client && client.id) {
       return await refreshBalance(client.id);
@@ -121,7 +114,6 @@ export const ClientPersonalInfo = ({
     return false;
   };
 
-  // Helper function to pass client ID to refreshBalance
   const handleWithdrawalRefresh = async (): Promise<boolean> => {
     if (client && client.id) {
       return await refreshBalance(client.id);
@@ -129,16 +121,15 @@ export const ClientPersonalInfo = ({
     return false;
   };
 
-  // Dummy functions for exportToExcel and exportToPDF
   const dummyExport = () => {
     console.log("Export function not provided");
   };
 
   return (
-    <Card className="md:col-span-3">
-      <CardHeader>
+    <Card className="overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300">
+      <CardHeader className="bg-gradient-to-r from-primary/10 to-transparent pb-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
-          <CardTitle className="flex items-center">
+          <CardTitle className="flex items-center text-xl">
             Informations personnelles
             {clientId && <ClientIdBadge clientId={clientId} />}
           </CardTitle>
@@ -148,8 +139,8 @@ export const ClientPersonalInfo = ({
               variant="outline" 
               size="sm" 
               onClick={handleRefreshBalance} 
-              disabled={isRefreshing || refreshDisabled} 
-              className="px-[23px]"
+              disabled={isRefreshing || refreshDisabled}
+              className="px-[23px] bg-white/70 dark:bg-gray-800/70"
             >
               <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
               {isRefreshing ? 'Actualisation...' : 'Actualiser le solde'}
@@ -164,12 +155,11 @@ export const ClientPersonalInfo = ({
           </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-5">
         <div className="grid gap-6 md:grid-cols-2">
           <div>
             <PersonalInfoFields client={client} formatAmount={formatAmount} showBalance={true} realTimeBalance={clientBalance} />
             
-            {/* Refresh button for mobile */}
             <div className="md:hidden mt-4 w-full">
               <Button 
                 variant="outline" 
@@ -186,15 +176,14 @@ export const ClientPersonalInfo = ({
           
           {client && client.id && (
             <div className="flex flex-col items-center space-y-4 w-full">
-              <div className="flex justify-center w-full" ref={qrCodeRef}>
+              <div className="flex justify-center w-full bg-white dark:bg-gray-800 p-4 rounded-xl shadow-inner" ref={qrCodeRef}>
                 <ClientQRCode 
                   clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} 
                   clientName={`${client.prenom} ${client.nom}`} 
-                  size={256} 
+                  size={220} 
                 />
               </div>
               
-              {/* Action buttons below QR code on mobile */}
               <div className="md:hidden w-full">
                 <ClientActionButtons 
                   onDepositClick={() => setDepositDialogOpen(true)} 

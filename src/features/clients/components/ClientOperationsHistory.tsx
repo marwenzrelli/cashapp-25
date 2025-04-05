@@ -59,15 +59,15 @@ export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = (
   }, [operations, filteredOperations, clientId, isPepsiMen]);
 
   return (
-    <Card className="shadow-sm">
-      <CardHeader className="pb-3">
+    <Card className="shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+      <CardHeader className="pb-3 bg-gradient-to-r from-primary/5 to-transparent">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <CardTitle className="text-xl">Historique des opérations</CardTitle>
           <Button
             variant="outline"
             size="sm"
             onClick={refreshOperations}
-            className="group"
+            className="group bg-white/70 dark:bg-gray-800/70"
           >
             <RefreshCw
               className="h-4 w-4 mr-2 group-hover:animate-spin"
@@ -77,7 +77,7 @@ export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = (
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="px-0 sm:px-6">
+      <CardContent className="px-0 sm:px-6 pt-5">
         <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6 px-4 sm:px-0">
           <div className="relative w-full sm:w-2/3">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />

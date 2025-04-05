@@ -8,9 +8,9 @@ interface ClientIdBadgeProps {
 
 export const ClientIdBadge = ({ clientId }: ClientIdBadgeProps) => {
   return (
-    <div className="flex items-center gap-2 text-sm bg-muted px-3 py-1 rounded-full">
+    <div className="flex items-center gap-2 text-sm bg-muted/70 px-3 py-1 rounded-full ml-2 border border-muted">
       <Hash className="h-4 w-4 text-muted-foreground" />
-      <span>ID: {formatId(clientId)}</span>
+      <span className="font-medium">ID: {formatId(clientId)}</span>
     </div>
   );
 };

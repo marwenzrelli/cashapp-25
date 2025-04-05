@@ -24,44 +24,46 @@ export const ClientBalanceCard = ({
   showQRCode = true,
 }: ClientBalanceCardProps) => {
   return (
-    <Card className="sticky top-8">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+    <Card className="overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300">
+      <CardHeader className="bg-gradient-to-r from-primary/10 to-transparent">
+        <CardTitle className="flex items-center gap-2 text-xl">
           <Wallet className="h-5 w-5 text-primary" />
           Solde actuel
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div
-          className={cn(
-            "text-3xl font-bold",
-            client.solde >= 0
-              ? "text-green-600 dark:text-green-400"
-              : "text-red-600 dark:text-red-400"
-          )}
-        >
-          {formatAmount(client.solde)}
+      <CardContent className="p-5">
+        <div className="flex flex-col items-center">
+          <div
+            className={cn(
+              "text-4xl font-bold py-4",
+              client.solde >= 0
+                ? "text-green-600 dark:text-green-400"
+                : "text-red-600 dark:text-red-400"
+            )}
+          >
+            {formatAmount(client.solde)}
+          </div>
+          <p className="text-sm text-muted-foreground mb-6">
+            Mis à jour le {format(new Date(), "dd/MM/yyyy HH:mm")}
+          </p>
         </div>
-        <p className="text-sm text-muted-foreground mt-2">
-          Mis à jour le {format(new Date(), "dd/MM/yyyy HH:mm")}
-        </p>
         
-        <div className="flex gap-2 mt-6">
+        <div className="grid grid-cols-2 gap-3 mt-2">
           <Button
             variant="outline"
-            className="w-full"
+            className="w-full flex items-center justify-center gap-2"
             onClick={exportToExcel}
           >
-            <FileSpreadsheet className="h-4 w-4 mr-2" />
-            Export Excel
+            <FileSpreadsheet className="h-4 w-4" />
+            Excel
           </Button>
           <Button
             variant="outline"
-            className="w-full"
+            className="w-full flex items-center justify-center gap-2"
             onClick={exportToPDF}
           >
-            <FileText className="h-4 w-4 mr-2" />
-            Export PDF
+            <FileText className="h-4 w-4" />
+            PDF
           </Button>
         </div>
       </CardContent>

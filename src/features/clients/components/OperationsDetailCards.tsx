@@ -77,32 +77,32 @@ export const OperationsDetailCards = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {/* Versements */}
-      <Card>
-        <CardHeader className="pb-2">
+      <Card className="overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 bg-gradient-to-br from-white to-green-50 dark:from-gray-800 dark:to-gray-800/95">
+        <CardHeader className="pb-2 border-b">
           <CardTitle className="text-lg flex items-center gap-2">
             <ArrowUpCircle className="h-5 w-5 text-green-500" />
             Derniers versements
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4">
           {deposits.length > 0 ? (
-            <ul className="space-y-2">
+            <ul className="space-y-3">
               {deposits.map(op => (
-                <li key={op.id} className="border-b pb-2">
-                  <div className="flex justify-between">
-                    <div className="font-medium">{formatAmount(op.amount)}</div>
-                    <div className="text-sm text-muted-foreground">
+                <li key={op.id} className="border-b pb-3 last:border-0 last:pb-0">
+                  <div className="flex justify-between items-center">
+                    <div className="font-medium text-green-600 dark:text-green-400">{formatAmount(op.amount)}</div>
+                    <div className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-full">
                       {formatOperationDate(op.operation_date || op.date)}
                     </div>
                   </div>
-                  <div className="text-sm text-muted-foreground truncate">
+                  <div className="text-sm text-muted-foreground truncate mt-1">
                     {op.description || `Versement #${formatId(op.id)}`}
                   </div>
                 </li>
               ))}
             </ul>
           ) : (
-            <div className="text-center py-4 text-muted-foreground">
+            <div className="text-center py-6 text-muted-foreground">
               Aucun versement récent
             </div>
           )}
@@ -110,34 +110,34 @@ export const OperationsDetailCards = ({
       </Card>
 
       {/* Retraits */}
-      <Card>
-        <CardHeader className="pb-2">
+      <Card className="overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 bg-gradient-to-br from-white to-red-50 dark:from-gray-800 dark:to-gray-800/95">
+        <CardHeader className="pb-2 border-b">
           <CardTitle className="text-lg flex items-center gap-2">
             <ArrowDownCircle className="h-5 w-5 text-red-500" />
             Derniers retraits
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4">
           {displayWithdrawals.length > 0 ? (
-            <ul className="space-y-2">
+            <ul className="space-y-3">
               {displayWithdrawals.map(op => (
-                <li key={op.id} className="border-b pb-2">
-                  <div className="flex justify-between">
-                    <div className="font-medium">{formatAmount(op.amount)}</div>
-                    <div className="text-sm text-muted-foreground">
+                <li key={op.id} className="border-b pb-3 last:border-0 last:pb-0">
+                  <div className="flex justify-between items-center">
+                    <div className="font-medium text-red-600 dark:text-red-400">{formatAmount(op.amount)}</div>
+                    <div className="text-xs px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 rounded-full">
                       {formatOperationDate(op.operation_date || op.date)}
                     </div>
                   </div>
-                  <div className="text-sm text-muted-foreground truncate">
+                  <div className="text-sm text-muted-foreground truncate mt-1">
                     {op.description || `Retrait #${formatId(op.id)}`}
                   </div>
                   {/* Always show operation ID for better tracking */}
-                  <div className="text-xs text-gray-500">ID: {op.id}</div>
+                  <div className="text-xs text-gray-500 mt-1">ID: {op.id}</div>
                 </li>
               ))}
             </ul>
           ) : (
-            <div className="text-center py-4 text-muted-foreground">
+            <div className="text-center py-6 text-muted-foreground">
               Aucun retrait récent
             </div>
           )}
@@ -145,32 +145,32 @@ export const OperationsDetailCards = ({
       </Card>
 
       {/* Virements */}
-      <Card>
-        <CardHeader className="pb-2">
+      <Card className="overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 bg-gradient-to-br from-white to-blue-50 dark:from-gray-800 dark:to-gray-800/95">
+        <CardHeader className="pb-2 border-b">
           <CardTitle className="text-lg flex items-center gap-2">
             <RefreshCcw className="h-5 w-5 text-blue-500" />
             Derniers virements
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4">
           {transfers.length > 0 ? (
-            <ul className="space-y-2">
+            <ul className="space-y-3">
               {transfers.map(op => (
-                <li key={op.id} className="border-b pb-2">
-                  <div className="flex justify-between">
-                    <div className="font-medium">{formatAmount(op.amount)}</div>
-                    <div className="text-sm text-muted-foreground">
+                <li key={op.id} className="border-b pb-3 last:border-0 last:pb-0">
+                  <div className="flex justify-between items-center">
+                    <div className="font-medium text-blue-600 dark:text-blue-400">{formatAmount(op.amount)}</div>
+                    <div className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full">
                       {formatOperationDate(op.operation_date || op.date)}
                     </div>
                   </div>
-                  <div className="text-sm text-muted-foreground truncate">
+                  <div className="text-sm text-muted-foreground truncate mt-1">
                     {op.description || `Virement #${formatId(op.id)}`}
                   </div>
                 </li>
               ))}
             </ul>
           ) : (
-            <div className="text-center py-4 text-muted-foreground">
+            <div className="text-center py-6 text-muted-foreground">
               Aucun virement récent
             </div>
           )}
