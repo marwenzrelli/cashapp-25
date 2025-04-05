@@ -12,6 +12,7 @@ import { useClientOperations } from "../hooks/useClientOperations";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ClientPersonalInfoProps {
   client: Client;
@@ -39,6 +40,7 @@ export const ClientPersonalInfo = ({
   const [refreshDisabled, setRefreshDisabled] = useState(false);
   const initialRefreshTimerRef = useRef<NodeJS.Timeout | null>(null);
   const refreshCooldownTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isMobile = useIsMobile();
   
   console.log("ClientPersonalInfo - clientId:", clientId, "client:", client?.id, "realTimeBalance:", clientBalance);
 
@@ -129,12 +131,15 @@ export const ClientPersonalInfo = ({
               {isRefreshing ? 'Actualisation...' : 'Actualiser le solde'}
             </Button>
             
-            <ClientActionButtons 
-              onDepositClick={() => setDepositDialogOpen(true)} 
-              onWithdrawalClick={() => setWithdrawalDialogOpen(true)}
-              exportToExcel={dummyExport}
-              exportToPDF={dummyExport}
-            />
+            {/* Only show action buttons on desktop */}
+            {!isMobile && (
+              <ClientActionButtons 
+                onDepositClick={() => setDepositDialogOpen(true)} 
+                onWithdrawalClick={() => setWithdrawalDialogOpen(true)}
+                exportToExcel={dummyExport}
+                exportToPDF={dummyExport}
+              />
+            )}
           </div>
         </div>
       </CardHeader>
@@ -154,7 +159,8 @@ export const ClientPersonalInfo = ({
                 />
               </div>
               
-              <div className="md:hidden w-full">
+              {/* Remove these buttons on mobile */}
+              {/* <div className="md:hidden w-full">
                 <ClientActionButtons 
                   onDepositClick={() => setDepositDialogOpen(true)} 
                   onWithdrawalClick={() => setWithdrawalDialogOpen(true)} 
@@ -162,7 +168,7 @@ export const ClientPersonalInfo = ({
                   exportToExcel={dummyExport}
                   exportToPDF={dummyExport}
                 />
-              </div>
+              </div> */}
             </div>
           )}
         </div>
