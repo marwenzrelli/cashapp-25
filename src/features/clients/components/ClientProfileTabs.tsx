@@ -86,6 +86,7 @@ export function ClientProfileTabs({
               setShowAllDates={setShowAllDates}
               clientId={clientId}
               isPepsiMen={isPepsiMen}
+              isMobilePreview={showMobilePreview}
             />
           </TabsContent>
           
@@ -94,6 +95,7 @@ export function ClientProfileTabs({
               suggestions={[]} 
               client={client}
               operations={clientOperations}
+              isMobilePreview={showMobilePreview}
             />
           </TabsContent>
           

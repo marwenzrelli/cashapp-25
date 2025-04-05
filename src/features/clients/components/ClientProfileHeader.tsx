@@ -1,11 +1,9 @@
 
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Smartphone, Download, RefreshCw, Monitor } from "lucide-react";
+import { ChevronLeft, Download, RefreshCw } from "lucide-react";
 import { LoadingIndicator } from "@/components/ui/loading-indicator";
 import { Client } from "../types";
 import { ClientIdBadge } from "./ClientIdBadge";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 
 interface ClientProfileHeaderProps {
   client: Client | null;
