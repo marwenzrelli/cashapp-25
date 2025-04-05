@@ -5,25 +5,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Client } from "../types";
-import { ClientQRCode } from "./ClientQRCode";
-import { RefObject } from "react";
 
 interface ClientBalanceCardProps {
   client: Client;
   clientId: number;
-  qrCodeRef: RefObject<HTMLDivElement>;
   exportToExcel: () => void;
   exportToPDF: () => void;
   formatAmount: (amount: number) => string;
+  showQRCode?: boolean;
 }
 
 export const ClientBalanceCard = ({
   client,
   clientId,
-  qrCodeRef,
   exportToExcel,
   exportToPDF,
   formatAmount,
+  showQRCode = true,
 }: ClientBalanceCardProps) => {
   return (
     <Card className="sticky top-8">
@@ -47,12 +45,7 @@ export const ClientBalanceCard = ({
         <p className="text-sm text-muted-foreground mt-2">
           Mis à jour le {format(new Date(), "dd/MM/yyyy HH:mm")}
         </p>
-        <div className="mt-6" ref={qrCodeRef}>
-          <ClientQRCode
-            clientId={clientId}
-            clientName={`${client.prenom} ${client.nom}`}
-          />
-        </div>
+        
         <div className="flex gap-2 mt-6">
           <Button
             variant="outline"
@@ -74,4 +67,4 @@ export const ClientBalanceCard = ({
       </CardContent>
     </Card>
   );
-};
+}

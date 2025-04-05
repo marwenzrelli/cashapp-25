@@ -129,6 +129,11 @@ export const ClientPersonalInfo = ({
     return false;
   };
 
+  // Dummy functions for exportToExcel and exportToPDF
+  const dummyExport = () => {
+    console.log("Export function not provided");
+  };
+
   return (
     <Card className="md:col-span-3">
       <CardHeader>
@@ -150,7 +155,12 @@ export const ClientPersonalInfo = ({
               {isRefreshing ? 'Actualisation...' : 'Actualiser le solde'}
             </Button>
             
-            <ClientActionButtons onDepositClick={() => setDepositDialogOpen(true)} onWithdrawalClick={() => setWithdrawalDialogOpen(true)} />
+            <ClientActionButtons 
+              onDepositClick={() => setDepositDialogOpen(true)} 
+              onWithdrawalClick={() => setWithdrawalDialogOpen(true)}
+              exportToExcel={dummyExport}
+              exportToPDF={dummyExport}
+            />
           </div>
         </div>
       </CardHeader>
@@ -177,12 +187,22 @@ export const ClientPersonalInfo = ({
           {client && client.id && (
             <div className="flex flex-col items-center space-y-4 w-full">
               <div className="flex justify-center w-full" ref={qrCodeRef}>
-                <ClientQRCode clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} clientName={`${client.prenom} ${client.nom}`} size={256} />
+                <ClientQRCode 
+                  clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} 
+                  clientName={`${client.prenom} ${client.nom}`} 
+                  size={256} 
+                />
               </div>
               
               {/* Action buttons below QR code on mobile */}
               <div className="md:hidden w-full">
-                <ClientActionButtons onDepositClick={() => setDepositDialogOpen(true)} onWithdrawalClick={() => setWithdrawalDialogOpen(true)} orientation="vertical" />
+                <ClientActionButtons 
+                  onDepositClick={() => setDepositDialogOpen(true)} 
+                  onWithdrawalClick={() => setWithdrawalDialogOpen(true)} 
+                  orientation="vertical"
+                  exportToExcel={dummyExport}
+                  exportToPDF={dummyExport}
+                />
               </div>
             </div>
           )}

@@ -4,7 +4,6 @@ import { ClientPersonalInfo } from "@/features/clients/components/ClientPersonal
 import { ClientBalanceCard } from "@/features/clients/components/ClientBalanceCard";
 import { ClientOperationsHistory } from "@/features/clients/components/ClientOperationsHistory";
 import { ClientInsights } from "@/features/clients/components/ClientInsights";
-import { ClientQRCode } from "@/features/clients/components/ClientQRCode";
 import { OperationsDetailCards } from "@/features/clients/components/OperationsDetailCards";
 import { ClientIdBadge } from "@/features/clients/components/ClientIdBadge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -89,18 +88,22 @@ export default function ClientProfile() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="col-span-1">
           <div className="space-y-6">
-            <ClientPersonalInfo client={client} />
+            <ClientPersonalInfo 
+              client={client} 
+              clientId={clientId}
+              qrCodeRef={qrCodeRef}
+              formatAmount={formatAmount}
+              refetchClient={refetchClient}
+              refreshClientBalance={refreshClientBalance}
+              clientBalance={clientBalance}
+            />
             <ClientBalanceCard
               client={client}
               clientId={clientId}
-              qrCodeRef={qrCodeRef}
               exportToExcel={exportToExcel}
               exportToPDF={exportToPDF}
               formatAmount={formatAmount}
-            />
-            <ClientQRCode 
-              clientId={clientId}
-              clientName={`${client.prenom} ${client.nom}`}
+              showQRCode={false}
             />
           </div>
         </div>
