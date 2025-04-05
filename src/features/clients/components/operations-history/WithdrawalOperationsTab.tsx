@@ -78,7 +78,7 @@ export const WithdrawalOperationsTab = ({
                   key={operation.id}
                   className={cn(
                     isSelected ? "bg-red-50 dark:bg-red-900/20" : "",
-                    "transition-colors cursor-pointer hover:bg-muted/50"
+                    "transition-colors cursor-pointer hover:bg-muted/50 border-l-4 border-red-500"
                   )}
                   onClick={() => toggleSelection(operation.id)}
                 >
@@ -119,8 +119,8 @@ export const WithdrawalOperationsTab = ({
           <div 
             key={operation.id}
             className={cn(
-              "transition-colors",
-              selectedOperations[operation.id] ? "border-l-4 border-red-500 pl-2" : ""
+              "transition-colors border-l-4 border-red-500",
+              selectedOperations[operation.id] ? "pl-2" : ""
             )}
             onClick={() => toggleSelection(operation.id)}
           >

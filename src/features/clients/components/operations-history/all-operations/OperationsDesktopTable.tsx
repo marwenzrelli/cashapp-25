@@ -41,11 +41,18 @@ export const OperationsDesktopTable = ({
             const operationId = isNaN(parseInt(operation.id)) 
               ? operation.id 
               : formatId(parseInt(operation.id));
+            
+            // Add border classes based on operation type
+            const rowBorderClass = operation.type === "deposit" 
+              ? "border-l-4 border-green-500" 
+              : operation.type === "withdrawal" 
+                ? "border-l-4 border-red-500" 
+                : "";
               
             return (
               <TableRow 
                 key={operation.id} 
-                className="transition-colors hover:bg-muted/50"
+                className={cn("transition-colors hover:bg-muted/50", rowBorderClass)}
               >
                 <TableCell className="whitespace-nowrap capitalize">
                   {operation.type === "deposit" && "Versement"}

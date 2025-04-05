@@ -28,12 +28,26 @@ export const OperationsMobileList = ({
     }
   };
 
+  // Get border class based on operation type
+  const getOperationBorderClass = (type: string): string => {
+    switch (type) {
+      case "deposit":
+        return "border-l-4 border-green-500";
+      case "withdrawal":
+        return "border-l-4 border-red-500";
+      case "transfer":
+        return ""; // No specific border for transfers
+      default:
+        return "";
+    }
+  };
+
   return (
     <div className="md:hidden space-y-3 w-full p-3">
       {operations.map((operation) => (
         <div 
           key={operation.id}
-          className="w-full"
+          className={cn("w-full", getOperationBorderClass(operation.type))}
         >
           <div className="mb-2">
             <OperationsMobileCard 
