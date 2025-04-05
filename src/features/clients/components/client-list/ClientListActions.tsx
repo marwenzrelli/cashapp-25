@@ -30,26 +30,26 @@ export const ClientListActions = ({ client, onView, onEdit, onDelete, isMobile }
           variant="ghost"
           size="icon"
           onClick={handleView}
-          className="h-8 w-8 text-primary"
+          className="h-10 w-10 text-primary"
           disabled={!client || !client.id}
         >
-          <Eye className="h-4 w-4" />
+          <Eye className="h-5 w-5" />
         </Button>
         <Button
           variant="ghost"
           size="icon"
           onClick={() => onEdit(client)}
-          className="h-8 w-8 text-amber-500"
+          className="h-10 w-10 text-amber-500"
         >
-          <Pencil className="h-4 w-4" />
+          <Pencil className="h-5 w-5" />
         </Button>
         <Button
           variant="ghost"
           size="icon"
           onClick={() => onDelete(client)}
-          className="h-8 w-8 text-destructive"
+          className="h-10 w-10 text-destructive"
         >
-          <Trash className="h-4 w-4" />
+          <Trash className="h-5 w-5" />
         </Button>
       </div>
     );

@@ -57,6 +57,28 @@
   animation: slideIn 0.3s ease-out;
 }
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
 /* Responsive table styles */
 @media (max-width: 768px) {
   .table-container {
@@ -64,7 +86,7 @@
     -webkit-overflow-scrolling: touch;
     margin: 0;
     padding: 0;
-    width: 100vw;
+    width: 100%;
     max-width: 100%;
   }
   
@@ -77,10 +99,34 @@
   .container-mobile-full {
     width: 100% !important;
     max-width: 100% !important;
-    padding-left: 0.5rem !important;
-    padding-right: 0.5rem !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
+  }
+  
+  /* Better spacing for mobile inputs and buttons */
+  input, button, select, textarea {
+    min-height: 44px;
+  }
+  
+  /* Better touch targets */
+  button, [role="button"], a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Improved mobile padding */
+  .card-content-mobile {
+    padding: 1rem !important;
+  }
+  
+  /* Better card styling on mobile */
+  .mobile-card {
+    border-radius: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    margin-bottom: 1rem;
+    border: 1px solid rgba(0, 0, 0, 0.05);
   }
 }
 
@@ -93,8 +139,8 @@
 /* Full width containers on mobile */
 @media (max-width: 640px) {
   .container {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
     width: 100%;
     max-width: 100%;
   }
@@ -106,7 +152,7 @@
   }
   
   .card {
-    border-radius: 0.5rem;
+    border-radius: 0.75rem;
   }
   
   /* Remove padding on mobile for full width */
@@ -129,7 +175,23 @@
   .content-container {
     width: 100%;
     max-width: 100vw;
-    padding: 0 0.5rem;
+    padding: 0 0.75rem;
+  }
+  
+  /* Better list items on mobile */
+  .mobile-list-item {
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    border-radius: 0.75rem;
+    background-color: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+  
+  /* Better dropdown menus on mobile */
+  .mobile-dropdown {
+    width: 100%;
+    padding: 0.5rem;
+    border-radius: 0.75rem;
   }
 }
 
@@ -152,12 +214,28 @@ body, #root {
 /* Better spacing for mobile */
 @media (max-width: 640px) {
   .space-y-mobile > * + * {
-    margin-top: 0.5rem;
+    margin-top: 0.75rem;
   }
   
   .card, .shadow-card {
     margin-left: 0;
     margin-right: 0;
     width: 100%;
+  }
+  
+  /* Improved buttons on mobile */
+  .btn-mobile {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    font-size: 1rem;
+  }
+  
+  /* Better input styling on mobile */
+  .input-mobile {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+    border-radius: 0.75rem;
   }
 }

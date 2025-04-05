@@ -40,15 +40,15 @@ export const ClientListItem = ({
   };
 
   return (
-    <div className={`p-3 md:p-4 transition-colors w-full ${isExpanded ? 'bg-muted/50' : 'hover:bg-muted/30'}`}>
+    <div className={`p-4 md:p-5 transition-colors w-full ${isExpanded ? 'bg-muted/50' : 'hover:bg-muted/30'}`}>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-0">
         <div className="flex items-center gap-3 md:gap-4">
-          <div className="flex-shrink-0 h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
+          <div className="flex-shrink-0 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
             {client.prenom.charAt(0)}{client.nom.charAt(0)}
           </div>
           <div className="flex-grow">
             <h3 
-              className="font-medium cursor-pointer hover:text-primary hover:underline"
+              className="font-medium text-base cursor-pointer hover:text-primary hover:underline"
               onClick={handleView}
             >
               {client.prenom} {client.nom}

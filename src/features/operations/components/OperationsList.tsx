@@ -43,7 +43,7 @@ export const OperationsList = ({ operations, isLoading, onDelete }: OperationsLi
 
   return (
     <Card className="w-full overflow-hidden">
-      <CardHeader className="px-4">
+      <CardHeader className="px-4 sm:px-6">
         <CardTitle className="text-lg sm:text-xl">Liste des opérations</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
@@ -111,11 +111,11 @@ export const OperationsList = ({ operations, isLoading, onDelete }: OperationsLi
         </div>
 
         {/* Liste pour mobile */}
-        <div className="md:hidden space-y-2 p-2 w-full">
+        <div className="md:hidden space-y-3 p-3 w-full">
           {operationsWithFormattedDates.map((operation) => (
             <div key={`${operation.type}-${operation.id}`} 
-                 className="p-3 bg-white dark:bg-gray-800 rounded-lg border shadow-sm w-full">
-              <div className="flex items-center justify-between mb-2">
+                 className="p-4 bg-white dark:bg-gray-800 rounded-lg border shadow-sm w-full">
+              <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getTypeStyle(operation.type)}`}>
                     {getTypeIcon(operation.type)}
@@ -126,12 +126,12 @@ export const OperationsList = ({ operations, isLoading, onDelete }: OperationsLi
                   </div>
                 </div>
                 
-                <span className={`font-semibold ${getAmountColor(operation.type)}`}>
+                <span className={`text-lg font-semibold px-3 py-1 rounded-md ${getAmountColor(operation.type)}`}>
                   {operation.type === "withdrawal" ? "-" : ""}{formatNumber(operation.amount)} TND
                 </span>
               </div>
               
-              <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground mb-2">
+              <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground mb-3">
                 <div className="flex items-center gap-1">
                   <CalendarIcon className="h-3 w-3" />
                   <span>{operation.formattedDate?.split(' ')[0] || ''}</span>
@@ -144,10 +144,12 @@ export const OperationsList = ({ operations, isLoading, onDelete }: OperationsLi
               </div>
               
               {operation.description && (
-                <p className="text-sm mb-2 line-clamp-2 break-words">{operation.description}</p>
+                <p className="text-sm mb-3 line-clamp-2 break-words px-3 py-2 bg-gray-50 dark:bg-gray-700/20 rounded-md">
+                  {operation.description}
+                </p>
               )}
               
-              <div className="text-xs text-muted-foreground mb-2">
+              <div className="text-xs text-muted-foreground mb-3">
                 {operation.type === "transfer" ? (
                   <>
                     <div className="flex items-center gap-1 truncate"><User className="h-3 w-3 flex-shrink-0" /> De: {operation.fromClient}</div>
@@ -163,9 +165,9 @@ export const OperationsList = ({ operations, isLoading, onDelete }: OperationsLi
                   variant="ghost"
                   size="sm"
                   onClick={() => onDelete(operation)}
-                  className="h-8 text-red-600"
+                  className="h-10 px-4 text-red-600"
                 >
-                  <Trash2 className="h-4 w-4 mr-1" />
+                  <Trash2 className="h-4 w-4 mr-2" />
                   Supprimer
                 </Button>
               </div>

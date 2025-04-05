@@ -16,7 +16,7 @@ interface NavbarProps {
 
 export const Navbar = ({ currentPath, userRole, isOpen, setIsOpen, handleLogout }: NavbarProps) => {
   return (
-    <nav className="border-b bg-card">
+    <nav className="border-b bg-card w-full">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center">

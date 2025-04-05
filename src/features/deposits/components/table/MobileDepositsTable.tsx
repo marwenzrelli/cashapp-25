@@ -62,8 +62,8 @@ export const MobileDepositsTable = ({
           >
             <CollapsibleTrigger className="w-full text-left">
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-1.5 bg-purple-50/80 dark:bg-purple-900/30 px-2 py-1 rounded-md">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-1.5 bg-purple-50/80 dark:bg-purple-900/30 px-3 py-1.5 rounded-md">
                     <Hash className="h-3.5 w-3.5 text-primary/60" />
                     <span className="text-xs font-mono text-primary/70 tracking-wide">{operationId}</span>
                   </div>
@@ -72,7 +72,7 @@ export const MobileDepositsTable = ({
                   </div>
                 </div>
                 
-                <div className="mb-2">
+                <div className="mb-3">
                   <DepositClientInfo 
                     clientName={deposit.client_name} 
                     depositId={deposit.id}
@@ -84,14 +84,14 @@ export const MobileDepositsTable = ({
                   <div className="flex items-center gap-1">
                     <DepositDateInfo deposit={deposit} />
                   </div>
-                  <p className={`line-clamp-2 text-muted-foreground/80 bg-gray-50/50 dark:bg-gray-800/30 px-3 py-1.5 rounded-lg mt-1 ${isExpanded ? 'line-clamp-none' : ''}`}>
+                  <p className={`line-clamp-2 text-muted-foreground/80 bg-gray-50/50 dark:bg-gray-800/30 px-3 py-2 rounded-lg mt-2 ${isExpanded ? 'line-clamp-none' : ''}`}>
                     {deposit.description}
                   </p>
                 </div>
               </div>
             </CollapsibleTrigger>
             
-            <CollapsibleContent className="pt-2 animate-accordion-down">
+            <CollapsibleContent className="pt-3 animate-accordion-down">
               <div className="flex justify-end">
                 <DepositActions 
                   deposit={deposit} 
@@ -110,7 +110,7 @@ export const MobileDepositsTable = ({
         <div className="mt-5 border-t border-primary/10 pt-4 bg-gradient-to-br from-white to-purple-50/80 dark:from-gray-800/90 dark:to-purple-900/20 p-4 rounded-xl shadow-sm">
           <div className="flex justify-between items-center">
             <span className="font-medium text-sm text-primary/80">Total des versements {dateRangeText}:</span>
-            <span className="font-semibold text-green-600 dark:text-green-400 bg-green-50/80 dark:bg-green-900/20 px-3 py-1 rounded-lg">
+            <span className="font-semibold text-green-600 dark:text-green-400 bg-green-50/80 dark:bg-green-900/20 px-3 py-1.5 rounded-lg">
               + {totalDeposits.toLocaleString()} {currency}
             </span>
           </div>

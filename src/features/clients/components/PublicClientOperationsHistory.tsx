@@ -69,25 +69,28 @@ export const PublicClientOperationsHistory = ({ operations, clientId }: PublicCl
       });
   
   return (
-    <Card className="shadow-sm max-w-full overflow-hidden">
+    <Card className="shadow-sm max-w-full w-full overflow-hidden">
       <CardHeader className="px-4 sm:px-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <CardTitle className="text-xl">Historique des opérations</CardTitle>
-          <Switch 
-            id="show-all-operations"
-            checked={showAllOperations}
-            onCheckedChange={setShowAllOperations}
-            disabled={isPepsiMen} // Disable the switch for pepsi men to prevent hiding operations
-          />
+          <div className="flex items-center space-x-2">
+            <Switch 
+              id="show-all-operations"
+              checked={showAllOperations}
+              onCheckedChange={setShowAllOperations}
+              disabled={isPepsiMen} // Disable the switch for pepsi men to prevent hiding operations
+            />
+          </div>
         </div>
       </CardHeader>
       <CardContent className="p-0 sm:p-6">
         {/* Add date range picker when not showing all operations */}
         {!showAllOperations && (
-          <div className="px-4 sm:px-0 mb-4">
+          <div className="px-4 sm:px-0 mb-4 w-full">
             <DatePickerWithRange
               date={dateRange}
               onDateChange={setDateRange}
+              className="w-full"
             />
           </div>
         )}

@@ -50,25 +50,25 @@ export const MobileDepositDialog: React.FC<MobileDepositDialogProps> = ({
 }) => {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="h-[85vh] overflow-y-auto">
-        <SheetHeader className="text-left">
-          <SheetTitle>Nouveau versement</SheetTitle>
+      <SheetContent className="h-[90vh] overflow-y-auto w-full max-w-md">
+        <SheetHeader className="text-left mb-6">
+          <SheetTitle className="text-xl">Nouveau versement</SheetTitle>
           <SheetDescription>
             Créez un nouveau versement pour un client
           </SheetDescription>
         </SheetHeader>
         
         {!showSuccess ? (
-          <form onSubmit={handleSubmit} className="space-y-6 mt-6">
-            <div className="space-y-2">
-              <Label htmlFor="client">Client</Label>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-3">
+              <Label htmlFor="client" className="text-base">Client</Label>
               <Select value={formState.selectedClient} onValueChange={setSelectedClient}>
-                <SelectTrigger>
+                <SelectTrigger className="w-full h-12">
                   <SelectValue placeholder="Sélectionner un client" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[300px]">
                   {clients.map(client => (
-                    <SelectItem key={client.id} value={client.id.toString()}>
+                    <SelectItem key={client.id} value={client.id.toString()} className="py-3">
                       {client.prenom} {client.nom}
                     </SelectItem>
                   ))}
@@ -76,20 +76,21 @@ export const MobileDepositDialog: React.FC<MobileDepositDialogProps> = ({
               </Select>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="amount">Montant (TND)</Label>
+            <div className="space-y-3">
+              <Label htmlFor="amount" className="text-base">Montant (TND)</Label>
               <Input
                 id="amount"
                 type="number"
                 placeholder="0.00"
                 value={formState.amount}
                 onChange={(e) => setAmount(e.target.value)}
+                className="h-12 text-lg"
               />
             </div>
             
-            <div className="space-y-2">
-              <Label>Date du versement</Label>
-              <div className="border rounded-md p-3">
+            <div className="space-y-3">
+              <Label className="text-base">Date du versement</Label>
+              <div className="border rounded-lg p-4">
                 <Calendar
                   mode="single"
                   selected={formState.date}
@@ -98,29 +99,30 @@ export const MobileDepositDialog: React.FC<MobileDepositDialogProps> = ({
                   className="mx-auto"
                 />
               </div>
-              <div className="text-center text-sm text-gray-500">
+              <div className="text-center text-sm text-gray-500 bg-gray-50 dark:bg-gray-800/30 py-2 px-3 rounded-lg">
                 {format(formState.date, 'dd MMMM yyyy', { locale: fr })}
               </div>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="description">Description (optionnel)</Label>
+            <div className="space-y-3">
+              <Label htmlFor="description" className="text-base">Description (optionnel)</Label>
               <Input
                 id="description"
                 placeholder="Entrez une description..."
                 value={formState.description}
                 onChange={(e) => setDescription(e.target.value)}
+                className="h-12"
               />
             </div>
             
             <Button
               type="submit"
-              className="w-full"
+              className="w-full h-12 text-base mt-6"
               disabled={!isValid || isLoading}
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                   Traitement en cours...
                 </>
               ) : (

@@ -33,7 +33,7 @@ export function DatePickerWithRange({
             id="date"
             variant={"outline"}
             className={cn(
-              "w-full justify-start text-left font-normal",
+              "w-full justify-start text-left font-normal h-12",
               !date && "text-muted-foreground"
             )}
           >
@@ -59,9 +59,9 @@ export function DatePickerWithRange({
             defaultMonth={date?.from}
             selected={date}
             onSelect={onDateChange}
-            numberOfMonths={2}
+            numberOfMonths={1}
             locale={fr}
-            className="pointer-events-auto"
+            className="pointer-events-auto p-3"
           />
         </PopoverContent>
       </Popover>

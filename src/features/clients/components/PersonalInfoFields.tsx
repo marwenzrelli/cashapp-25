@@ -74,7 +74,7 @@ export const PersonalInfoFields = ({
         <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border shadow-sm hover:shadow-md transition-shadow duration-300">
           <div className="flex items-center gap-3">
             <div className="bg-primary/10 p-2 rounded-full">
-              <Calendar className="h-4 w-4 text-primary" />
+              <Calendar className="h-5 w-5 text-primary" />
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Date de création</p>
@@ -89,12 +89,12 @@ export const PersonalInfoFields = ({
           <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border shadow-sm hover:shadow-md transition-shadow duration-300">
             <div className="flex items-center gap-3">
               <div className="bg-primary/10 p-2 rounded-full">
-                <Wallet className="h-4 w-4 text-primary" />
+                <Wallet className="h-5 w-5 text-primary" />
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Solde</p>
                 <span className={cn(
-                  "font-medium px-2 py-1 mt-1 inline-block border rounded-md", 
+                  "font-medium px-3 py-1.5 mt-1 inline-block border rounded-md", 
                   effectiveBalance >= 0 
                     ? "text-green-600 dark:text-green-400 border-green-200 dark:border-green-900/30 bg-green-50 dark:bg-green-900/20" 
                     : "text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/30 bg-red-50 dark:bg-red-900/20"

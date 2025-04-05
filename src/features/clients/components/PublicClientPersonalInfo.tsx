@@ -20,7 +20,7 @@ export const PublicClientPersonalInfo = ({ client }: PublicClientPersonalInfoPro
   const formattedBalance = `${sign}${client.solde.toLocaleString()} ${currency}`;
   
   return (
-    <Card className="backdrop-blur-xl bg-white/50 dark:bg-gray-950/50 md:col-span-3 w-full sm:rounded-lg rounded-none sm:border border-x-0">
+    <Card className="backdrop-blur-xl bg-white/50 dark:bg-gray-950/50 md:col-span-3 w-full rounded-lg border">
       <CardHeader>
         <CardTitle className="text-xl flex items-center justify-between">
           Informations personnelles
