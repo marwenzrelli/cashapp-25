@@ -18,7 +18,7 @@ export const useRealTimeBalance = (clientId: number | null) => {
     }));
   }, [clientId]);
   
-  // Set up a real-time subscription for client balance
+  // Set up a real-time subscription for client balance - limited to once
   useEffect(() => {
     if (!clientId) return;
     
@@ -59,7 +59,7 @@ export const useRealTimeBalance = (clientId: number | null) => {
       
     channelRef.current = channel;
 
-    // Set up a subscription for operations affecting this client
+    // Set up a subscription for operations affecting this client - but no automatic updates
     const operationsChannel = supabase
       .channel(`client-operations-${clientId}`)
       .on('postgres_changes', {
@@ -68,7 +68,7 @@ export const useRealTimeBalance = (clientId: number | null) => {
         table: 'deposits'
       }, (payload) => {
         console.log("Deposit operation detected:", payload);
-        refreshOperations();
+        // Only refresh on manual request or significant events
       })
       .on('postgres_changes', {
         event: '*',
@@ -76,7 +76,7 @@ export const useRealTimeBalance = (clientId: number | null) => {
         table: 'withdrawals'
       }, (payload) => {
         console.log("Withdrawal operation detected:", payload);
-        refreshOperations();
+        // Only refresh on manual request or significant events
       })
       .on('postgres_changes', {
         event: '*',
@@ -84,7 +84,7 @@ export const useRealTimeBalance = (clientId: number | null) => {
         table: 'transfers'
       }, (payload) => {
         console.log("Transfer operation detected:", payload);
-        refreshOperations();
+        // Only refresh on manual request or significant events
       })
       .subscribe();
 
@@ -101,7 +101,7 @@ export const useRealTimeBalance = (clientId: number | null) => {
         operationsChannelRef.current = null;
       }
     };
-  }, [clientId, refreshOperations]);
+  }, [clientId]);
 
   return { realTimeBalance, setRealTimeBalance };
 };

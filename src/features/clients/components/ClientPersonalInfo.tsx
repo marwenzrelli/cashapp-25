@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Client } from "../types";
 import { ClientQRCode } from "./ClientQRCode";
@@ -47,25 +48,18 @@ export const ClientPersonalInfo = ({
     refreshClientBalance: refreshBalance
   } = useClientOperations(client, clientId, refetchClient);
 
+  // Removed automatic refresh that happens every 2 seconds
   useEffect(() => {
-    if (client && client.id && refreshClientBalance && !didInitialRefresh) {
-      const doInitialRefresh = async () => {
-        try {
-          await refreshClientBalance();
-          setDidInitialRefresh(true);
-        } catch (error) {
-          console.error("Error during initial balance refresh:", error);
-        }
-      };
-      
-      initialRefreshTimerRef.current = setTimeout(doInitialRefresh, 3000);
-      return () => {
-        if (initialRefreshTimerRef.current) {
-          clearTimeout(initialRefreshTimerRef.current);
-        }
-      };
-    }
-  }, [client, refreshClientBalance, didInitialRefresh]);
+    // Only perform a manual refresh if explicitly requested
+    return () => {
+      if (initialRefreshTimerRef.current) {
+        clearTimeout(initialRefreshTimerRef.current);
+      }
+      if (refreshCooldownTimerRef.current) {
+        clearTimeout(refreshCooldownTimerRef.current);
+      }
+    };
+  }, []);
 
   const handleRefreshBalance = async () => {
     if (!refreshClientBalance) {
@@ -96,17 +90,6 @@ export const ClientPersonalInfo = ({
     }
   };
 
-  useEffect(() => {
-    return () => {
-      if (initialRefreshTimerRef.current) {
-        clearTimeout(initialRefreshTimerRef.current);
-      }
-      if (refreshCooldownTimerRef.current) {
-        clearTimeout(refreshCooldownTimerRef.current);
-      }
-    };
-  }, []);
-
   const handleDepositRefresh = async (): Promise<boolean> => {
     if (client && client.id) {
       return await refreshBalance(client.id);
@@ -134,7 +117,7 @@ export const ClientPersonalInfo = ({
             {clientId && <ClientIdBadge clientId={clientId} />}
           </CardTitle>
           
-          <div className="hidden md:flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <Button 
               variant="outline" 
               size="sm" 
@@ -156,31 +139,18 @@ export const ClientPersonalInfo = ({
         </div>
       </CardHeader>
       <CardContent className="p-5">
-        <div className="grid gap-6 md:grid-cols-2">
-          <div>
+        <div className="flex flex-col md:flex-row gap-6 justify-between">
+          <div className="w-full md:w-3/5">
             <PersonalInfoFields client={client} formatAmount={formatAmount} showBalance={true} realTimeBalance={clientBalance} />
-            
-            <div className="md:hidden mt-4 w-full">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleRefreshBalance} 
-                disabled={isRefreshing || refreshDisabled} 
-                className="w-full"
-              >
-                <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-                {isRefreshing ? 'Actualisation...' : 'Actualiser le solde'}
-              </Button>
-            </div>
           </div>
           
           {client && client.id && (
-            <div className="flex flex-col items-center space-y-4 w-full">
+            <div className="flex flex-col items-center space-y-4 w-full md:w-2/5">
               <div className="flex justify-center w-full bg-white dark:bg-gray-800 p-4 rounded-xl shadow-inner" ref={qrCodeRef}>
                 <ClientQRCode 
                   clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} 
                   clientName={`${client.prenom} ${client.nom}`} 
-                  size={220} 
+                  size={200} 
                 />
               </div>
               

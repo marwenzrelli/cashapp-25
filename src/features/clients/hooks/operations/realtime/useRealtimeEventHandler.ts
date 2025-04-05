@@ -16,44 +16,14 @@ export const useRealtimeEventHandler = (
   const eventsQueueRef = useRef<string[]>([]);
   const processingEventsRef = useRef(false);
   
-  // More aggressive throttling to prevent excessive refreshes
+  // Aggressive throttling to prevent excessive refreshes - disabled auto-refresh
   const throttledFetch = () => {
-    // Check if another fetch is already scheduled or processing
-    if (throttleTimeoutRef.current || processingEventsRef.current) {
-      console.log("Skipping throttled fetch due to existing scheduled fetch");
-      return;
-    }
+    // Disabled automatic refresh to prevent page reloading every 2 seconds
+    console.log("Automatic refresh is disabled to prevent excessive page refreshes");
     
-    // Only fetch if we haven't received an event in the last 5 seconds (increased from 3)
-    const now = Date.now();
-    if (now - lastEventTime < 5000) {
-      console.log("Skipping throttled fetch due to recent event");
-      return;
-    }
-    
-    setLastEventTime(now);
-    
-    // Schedule a fetch with an increased delay
-    throttleTimeoutRef.current = setTimeout(() => {
-      console.log("Executing throttled fetchClients");
-      processingEventsRef.current = true;
-      
-      fetchClients(0, false)
-        .catch(err => {
-          console.error("Error in throttled fetchClients:", err);
-        })
-        .finally(() => {
-          throttleTimeoutRef.current = null;
-          processingEventsRef.current = false;
-        });
-        
-      // Additionally trigger our custom event for client profile pages
-      window.dispatchEvent(new CustomEvent('operations-update'));
-      
-      // Clear the events queue
-      eventsQueueRef.current = [];
-      
-    }, 3000); // Increased to 3000ms (3 seconds) from 2000ms
+    // Only invalidate query cache
+    queryClient.invalidateQueries({ queryKey: ['clients'] });
+    return;
   };
 
   // Handler for real-time updates with event batching
@@ -70,10 +40,7 @@ export const useRealtimeEventHandler = (
       eventsQueueRef.current.push(eventKey);
     }
     
-    // Schedule a throttled fetch
-    throttledFetch();
-    
-    // Invalidate related queries
+    // Invalidate related queries without automatic refresh
     queryClient.invalidateQueries({ queryKey: ['clients'] });
     
     if (payload.new && 'id' in payload.new) {
@@ -88,13 +55,8 @@ export const useRealtimeEventHandler = (
                         ('id' in payload.new && payload.table === 'clients') ? payload.new.id : null;
                         
         if (clientId) {
-          window.dispatchEvent(new CustomEvent('operations-update', {
-            detail: { 
-              clientId,
-              table: payload.table,
-              operationType: payload.eventType
-            }
-          }));
+          // Only dispatch events for manually triggered changes
+          console.log(`Event for client ${clientId} detected but automatic refresh disabled`);
         }
       }
     }

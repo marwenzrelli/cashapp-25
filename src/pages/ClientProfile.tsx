@@ -103,81 +103,86 @@ export default function ClientProfile() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="col-span-1">
-          <div className="space-y-6 sticky top-6">
-            <ClientPersonalInfo 
-              client={client} 
-              clientId={clientId}
-              qrCodeRef={qrCodeRef}
-              formatAmount={formatAmount}
-              refetchClient={refetchClient}
-              refreshClientBalance={refreshClientBalance}
-              clientBalance={clientBalance}
-            />
-            <ClientBalanceCard
-              client={client}
-              clientId={clientId}
-              exportToExcel={exportToExcel}
-              exportToPDF={exportToPDF}
-              formatAmount={formatAmount}
-              showQRCode={false}
-            />
+      <div className="space-y-6">
+        {/* Client Info & Balance - Horizontal Full Width */}
+        <div className="grid grid-cols-1 gap-6">
+          <ClientPersonalInfo 
+            client={client} 
+            clientId={clientId}
+            qrCodeRef={qrCodeRef}
+            formatAmount={formatAmount}
+            refetchClient={refetchClient}
+            refreshClientBalance={refreshClientBalance}
+            clientBalance={clientBalance}
+          />
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="md:col-span-1">
+              <ClientBalanceCard
+                client={client}
+                clientId={clientId}
+                exportToExcel={exportToExcel}
+                exportToPDF={exportToPDF}
+                formatAmount={formatAmount}
+                showQRCode={false}
+              />
+            </div>
+            
+            <div className="md:col-span-2">
+              <OperationsDetailCards 
+                clientOperations={clientOperations}
+                formatAmount={formatAmount}
+              />
+            </div>
           </div>
         </div>
 
-        <div className="col-span-1 md:col-span-2">
-          <Card className="overflow-hidden border-none shadow-md">
-            <Tabs defaultValue="operations" className="w-full">
-              <TabsList className="w-full grid grid-cols-3 rounded-none bg-muted/50 p-0">
-                <TabsTrigger value="operations" className="rounded-none py-3 data-[state=active]:bg-background">Opérations</TabsTrigger>
-                <TabsTrigger value="insights" className="rounded-none py-3 data-[state=active]:bg-background">Insights</TabsTrigger>
-                <TabsTrigger value="public-preview" className="rounded-none py-3 data-[state=active]:bg-background">Aperçu public</TabsTrigger>
-              </TabsList>
+        <Card className="overflow-hidden border-none shadow-md">
+          <Tabs defaultValue="operations" className="w-full">
+            <TabsList className="w-full grid grid-cols-3 rounded-none bg-muted/50 p-0">
+              <TabsTrigger value="operations" className="rounded-none py-3 data-[state=active]:bg-background">Opérations</TabsTrigger>
+              <TabsTrigger value="insights" className="rounded-none py-3 data-[state=active]:bg-background">Insights</TabsTrigger>
+              <TabsTrigger value="public-preview" className="rounded-none py-3 data-[state=active]:bg-background">Aperçu public</TabsTrigger>
+            </TabsList>
+            
+            <div className="p-6">
+              <TabsContent value="operations" className="space-y-6 mt-0">
+                <ClientOperationsHistory
+                  operations={clientOperations}
+                  selectedType={selectedType}
+                  setSelectedType={setSelectedType}
+                  searchTerm={searchTerm}
+                  setSearchTerm={setSearchTerm}
+                  dateRange={dateRange}
+                  setDateRange={setDateRange}
+                  isCustomRange={isCustomRange}
+                  setIsCustomRange={setIsCustomRange}
+                  filteredOperations={filteredOperations}
+                  refreshOperations={refreshClientOperations}
+                  showAllDates={showAllDates}
+                  setShowAllDates={setShowAllDates}
+                  clientId={clientId}
+                  isPepsiMen={isPepsiMen}
+                />
+              </TabsContent>
               
-              <div className="p-6">
-                <TabsContent value="operations" className="space-y-6 mt-0">
-                  <OperationsDetailCards 
-                    clientOperations={clientOperations}
-                    formatAmount={formatAmount}
-                  />
-                  <ClientOperationsHistory
-                    operations={clientOperations}
-                    selectedType={selectedType}
-                    setSelectedType={setSelectedType}
-                    searchTerm={searchTerm}
-                    setSearchTerm={setSearchTerm}
-                    dateRange={dateRange}
-                    setDateRange={setDateRange}
-                    isCustomRange={isCustomRange}
-                    setIsCustomRange={setIsCustomRange}
-                    filteredOperations={filteredOperations}
-                    refreshOperations={refreshClientOperations}
-                    showAllDates={showAllDates}
-                    setShowAllDates={setShowAllDates}
-                    clientId={clientId}
-                    isPepsiMen={isPepsiMen}
-                  />
-                </TabsContent>
-                
-                <TabsContent value="insights" className="space-y-6 mt-0">
-                  <ClientInsights 
-                    suggestions={[]} 
-                    client={client}
-                    operations={clientOperations}
-                  />
-                </TabsContent>
-                
-                <TabsContent value="public-preview" className="space-y-6 mt-0">
-                  <ClientPublicPreview 
-                    client={client} 
-                    operations={clientOperations} 
-                  />
-                </TabsContent>
-              </div>
-            </Tabs>
-          </Card>
-        </div>
+              <TabsContent value="insights" className="space-y-6 mt-0">
+                <ClientInsights 
+                  suggestions={[]} 
+                  client={client}
+                  operations={clientOperations}
+                />
+              </TabsContent>
+              
+              <TabsContent value="public-preview" className="space-y-6 mt-0">
+                <ClientPublicPreview 
+                  client={client} 
+                  operations={clientOperations} 
+                />
+              </TabsContent>
+            </div>
+          </Tabs>
+        </Card>
       </div>
     </div>
   );
