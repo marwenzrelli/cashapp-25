@@ -107,7 +107,7 @@ export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = (
                   onCheckedChange={setShowAllDates}
                   disabled={isPepsiMen} // Disable for pepsi men to force showing all dates
                 />
-                <Label htmlFor="show-all-dates">Afficher toutes les périodes</Label>
+                <Label htmlFor="show-all-dates">Toutes périodes</Label>
               </div>
             </div>
             {!showAllDates && !isPepsiMen && (

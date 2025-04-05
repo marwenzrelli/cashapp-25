@@ -81,7 +81,7 @@ export const PublicClientOperationsHistory = ({ operations, clientId }: PublicCl
               onCheckedChange={setShowAllOperations}
               disabled={isPepsiMen} // Disable the switch for pepsi men to prevent hiding operations
             />
-            <Label htmlFor="show-all-operations">Afficher toutes les périodes</Label>
+            <Label htmlFor="show-all-operations">Toutes périodes</Label>
           </div>
         </div>
       </CardHeader>
