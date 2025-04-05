@@ -190,9 +190,10 @@ export const ClientQRCode = ({
   }
 
   return (
-    <Card className="p-4 bg-gradient-to-br from-violet-100 to-purple-50 shadow-lg border-purple-200 hover:shadow-xl transition-all w-full">
-      <div className="flex flex-col items-center gap-4 w-full">
-        <div className="bg-white p-3 rounded-2xl shadow-inner relative w-full max-w-[200px]">
+    <div className="flex flex-col space-y-4">
+      {/* QR Code Frame */}
+      <Card className="p-4 bg-gradient-to-br from-violet-100 to-purple-50 shadow-lg border-purple-200 hover:shadow-xl transition-all w-full">
+        <div className="bg-white p-3 rounded-2xl shadow-inner relative w-full max-w-[200px] mx-auto">
           {isLoading ? (
             <div className="absolute inset-0 flex items-center justify-center bg-white/90 backdrop-blur-sm rounded-2xl z-10">
               <RefreshCw className="h-6 w-6 animate-spin text-violet-500" />
@@ -210,29 +211,30 @@ export const ClientQRCode = ({
           </div>
         </div>
         
-        <div className="flex flex-col items-center gap-3 w-full">
+        <div className="flex items-center justify-center mt-2">
           <p className="text-sm text-center text-violet-700 font-medium">
             Code QR pour {clientName}
           </p>
-          
-          <div className="flex gap-2 w-full">
-            <Button variant="outline" size="sm" className="flex-1 border-violet-200 hover:bg-violet-100 hover:text-violet-700 transition-all gap-2" onClick={handleCopyLink} disabled={!accessToken || isLoading}>
-              <Copy className="h-3.5 w-3.5" />
-              <span className="text-xs">Copier</span>
-            </Button>
-            
-            <Button variant="outline" size="sm" className="flex-1 border-violet-200 hover:bg-violet-100 hover:text-violet-700 transition-all gap-2" onClick={handleOpenLink} disabled={!accessToken || isLoading}>
-              <ExternalLink className="h-3.5 w-3.5" />
-              <span className="text-xs">Ouvrir</span>
-            </Button>
-            
-            <Button variant="outline" size="sm" className={cn("flex-1 border-violet-200 hover:bg-violet-100 hover:text-violet-700 transition-all gap-2", isLoading && "animate-pulse")} onClick={handleRegenerateQR} disabled={isLoading}>
-              <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-              <span className="text-xs">Refresh</span>
-            </Button>
-          </div>
         </div>
+      </Card>
+      
+      {/* Action Buttons Outside QR Code Frame */}
+      <div className="flex gap-2 w-full">
+        <Button variant="outline" size="sm" className="flex-1 border-violet-200 hover:bg-violet-100 hover:text-violet-700 transition-all gap-2" onClick={handleCopyLink} disabled={!accessToken || isLoading}>
+          <Copy className="h-3.5 w-3.5" />
+          <span className="text-xs">Copier</span>
+        </Button>
+        
+        <Button variant="outline" size="sm" className="flex-1 border-violet-200 hover:bg-violet-100 hover:text-violet-700 transition-all gap-2" onClick={handleOpenLink} disabled={!accessToken || isLoading}>
+          <ExternalLink className="h-3.5 w-3.5" />
+          <span className="text-xs">Ouvrir</span>
+        </Button>
+        
+        <Button variant="outline" size="sm" className={cn("flex-1 border-violet-200 hover:bg-violet-100 hover:text-violet-700 transition-all gap-2", isLoading && "animate-pulse")} onClick={handleRegenerateQR} disabled={isLoading}>
+          <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+          <span className="text-xs">Refresh</span>
+        </Button>
       </div>
-    </Card>
+    </div>
   );
 };
