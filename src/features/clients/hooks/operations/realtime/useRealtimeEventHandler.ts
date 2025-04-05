@@ -18,7 +18,7 @@ export const useRealtimeEventHandler = (
   
   // Aggressive throttling to prevent excessive refreshes - disabled auto-refresh
   const throttledFetch = () => {
-    // Disabled automatic refresh to prevent page reloading every 2 seconds
+    // Disabled automatic refresh to prevent excessive page refreshes
     console.log("Automatic refresh is disabled to prevent excessive page refreshes");
     
     // Only invalidate query cache

@@ -59,7 +59,7 @@ export const useRealTimeBalance = (clientId: number | null) => {
       
     channelRef.current = channel;
 
-    // Set up a subscription for operations affecting this client - but no automatic updates
+    // Set up a subscription for operations affecting this client - without automatic refresh
     const operationsChannel = supabase
       .channel(`client-operations-${clientId}`)
       .on('postgres_changes', {
@@ -68,7 +68,8 @@ export const useRealTimeBalance = (clientId: number | null) => {
         table: 'deposits'
       }, (payload) => {
         console.log("Deposit operation detected:", payload);
-        // Only refresh on manual request or significant events
+        // Only notify about operation changes without auto-refresh
+        toast.info("Un nouveau versement a été détecté");
       })
       .on('postgres_changes', {
         event: '*',
@@ -76,7 +77,8 @@ export const useRealTimeBalance = (clientId: number | null) => {
         table: 'withdrawals'
       }, (payload) => {
         console.log("Withdrawal operation detected:", payload);
-        // Only refresh on manual request or significant events
+        // Only notify about operation changes without auto-refresh
+        toast.info("Un nouveau retrait a été détecté");
       })
       .on('postgres_changes', {
         event: '*',
@@ -84,7 +86,8 @@ export const useRealTimeBalance = (clientId: number | null) => {
         table: 'transfers'
       }, (payload) => {
         console.log("Transfer operation detected:", payload);
-        // Only refresh on manual request or significant events
+        // Only notify about operation changes without auto-refresh
+        toast.info("Un nouveau transfert a été détecté");
       })
       .subscribe();
 
