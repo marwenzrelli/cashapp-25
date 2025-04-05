@@ -4,6 +4,7 @@ import { Operation } from "@/features/operations/types";
 import { EmptyOperations } from "./EmptyOperations";
 import { OperationsDesktopTable } from "./all-operations/OperationsDesktopTable";
 import { OperationsMobileList } from "./all-operations/OperationsMobileList";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface AllOperationsTabProps {
   operations: Operation[];
@@ -14,23 +15,29 @@ export const AllOperationsTab = ({
   operations, 
   currency = "TND"
 }: AllOperationsTabProps) => {
+  const isMobile = useIsMobile();
+  
   if (operations.length === 0) {
     return <EmptyOperations />;
   }
 
   return (
     <>
-      {/* Desktop version */}
-      <OperationsDesktopTable 
-        operations={operations}
-        currency={currency}
-      />
+      {/* Desktop version - hidden on mobile */}
+      <div className="hidden md:block">
+        <OperationsDesktopTable 
+          operations={operations}
+          currency={currency}
+        />
+      </div>
 
-      {/* Mobile version */}
-      <OperationsMobileList 
-        operations={operations}
-        currency={currency}
-      />
+      {/* Mobile version - only shown on mobile */}
+      {isMobile && (
+        <OperationsMobileList 
+          operations={operations}
+          currency={currency}
+        />
+      )}
     </>
   );
 };

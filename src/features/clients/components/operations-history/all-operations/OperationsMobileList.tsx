@@ -39,9 +39,9 @@ export const OperationsMobileList = ({
             <OperationsMobileCard 
               operation={operation}
               formatAmount={(amount) => {
-                const prefix = operation.type === "withdrawal" ? "-" : 
-                           operation.type === "deposit" ? "+" : "";
-                return `${prefix}${formatNumber(amount)}`;
+                // Fix the formattage to avoid double symbols
+                const formattedAmount = formatNumber(amount);
+                return formattedAmount;
               }}
               currency={currency}
               colorClass={getOperationTypeColor(operation.type)}
