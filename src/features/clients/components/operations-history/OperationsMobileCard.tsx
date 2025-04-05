@@ -5,6 +5,7 @@ import { Operation } from "@/features/operations/types";
 import { Badge } from "@/components/ui/badge";
 import { CalendarClock, Clock, Hash, User } from "lucide-react";
 import { formatId } from "@/utils/formatId";
+import { cn } from "@/lib/utils";
 
 interface OperationsMobileCardProps {
   operation: Operation;
@@ -13,6 +14,7 @@ interface OperationsMobileCardProps {
   showType?: boolean;
   colorClass?: string;
   showId?: boolean;
+  typeBackgroundClass?: string;
 }
 
 export const OperationsMobileCard = ({
@@ -21,7 +23,8 @@ export const OperationsMobileCard = ({
   currency = "",
   showType = true,
   colorClass,
-  showId = false
+  showId = false,
+  typeBackgroundClass
 }: OperationsMobileCardProps) => {
   // Fonction sécurisée pour parser les dates
   const parseDate = (dateValue: string | Date): Date => {
@@ -62,20 +65,16 @@ export const OperationsMobileCard = ({
       <div className="flex items-center justify-between mb-3">
         {showType && (
           <Badge 
-            variant={
+            variant="outline"
+            className={cn(
+              "text-xs mr-2",
+              typeBackgroundClass,
               operation.type === "deposit" 
-                ? "default" 
+                ? "border-green-500 text-green-700 dark:text-green-400"
                 : operation.type === "withdrawal" 
-                  ? "destructive" 
-                  : "outline"
-            } 
-            className={
-              operation.type === "deposit"
-                ? "text-xs mr-2 bg-green-500 hover:bg-green-600"
-                : operation.type === "withdrawal"
-                  ? "text-xs mr-2"
-                  : "text-xs mr-2"
-            }
+                  ? "border-red-500 text-red-700 dark:text-red-400"
+                  : "border-blue-500 text-blue-700 dark:text-blue-400"
+            )}
           >
             {operation.type === "deposit" 
               ? "Dépôt" 

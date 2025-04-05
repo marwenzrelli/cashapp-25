@@ -28,6 +28,20 @@ export const OperationsMobileList = ({
     }
   };
 
+  // Background color for the badge based on operation type
+  const getTypeBackgroundColor = (type: string): string => {
+    switch (type) {
+      case "deposit":
+        return "bg-green-100 dark:bg-green-900/30";
+      case "withdrawal":
+        return "bg-red-100 dark:bg-red-900/30";
+      case "transfer":
+        return "bg-blue-100 dark:bg-blue-900/30";
+      default:
+        return "";
+    }
+  };
+
   return (
     <div className="md:hidden space-y-3 w-full p-3">
       {operations.map((operation) => (
@@ -45,6 +59,7 @@ export const OperationsMobileList = ({
               currency={currency}
               colorClass={getOperationTypeColor(operation.type)}
               showType={true}
+              typeBackgroundClass={getTypeBackgroundColor(operation.type)}
             />
           </div>
         </div>

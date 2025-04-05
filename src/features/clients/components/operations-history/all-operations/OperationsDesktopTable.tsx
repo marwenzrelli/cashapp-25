@@ -42,12 +42,26 @@ export const OperationsDesktopTable = ({
               ? operation.id 
               : formatId(parseInt(operation.id));
               
+            // Background color based on operation type
+            const getTypeBackgroundColor = (type: string): string => {
+              switch (type) {
+                case "deposit":
+                  return "bg-green-100 dark:bg-green-900/30";
+                case "withdrawal":
+                  return "bg-red-100 dark:bg-red-900/30";
+                case "transfer":
+                  return "bg-blue-100 dark:bg-blue-900/30";
+                default:
+                  return "";
+              }
+            };
+              
             return (
               <TableRow 
                 key={operation.id} 
                 className="transition-colors hover:bg-muted/50"
               >
-                <TableCell className="whitespace-nowrap capitalize">
+                <TableCell className={cn("whitespace-nowrap capitalize", getTypeBackgroundColor(operation.type))}>
                   {operation.type === "deposit" && "Versement"}
                   {operation.type === "withdrawal" && "Retrait"}
                   {operation.type === "transfer" && "Virement"}
