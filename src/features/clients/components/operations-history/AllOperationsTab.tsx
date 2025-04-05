@@ -8,15 +8,11 @@ import { OperationsMobileList } from "./all-operations/OperationsMobileList";
 interface AllOperationsTabProps {
   operations: Operation[];
   currency?: string;
-  selectedOperations?: Record<string, boolean>;
-  toggleSelection?: (id: string) => void;
 }
 
 export const AllOperationsTab = ({ 
   operations, 
-  currency = "TND",
-  selectedOperations = {},
-  toggleSelection = () => {}
+  currency = "TND"
 }: AllOperationsTabProps) => {
   if (operations.length === 0) {
     return <EmptyOperations />;
@@ -28,16 +24,12 @@ export const AllOperationsTab = ({
       <OperationsDesktopTable 
         operations={operations}
         currency={currency}
-        selectedOperations={selectedOperations}
-        toggleSelection={toggleSelection}
       />
 
       {/* Mobile version */}
       <OperationsMobileList 
         operations={operations}
         currency={currency}
-        selectedOperations={selectedOperations}
-        toggleSelection={toggleSelection}
       />
     </>
   );

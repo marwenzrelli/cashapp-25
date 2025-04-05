@@ -4,29 +4,23 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { cn } from "@/lib/utils";
 import { formatId } from "@/utils/formatId";
 import { format } from "date-fns";
-import { Checkbox } from "@/components/ui/checkbox";
 import { getOperationTypeColor, formatNumber } from "./OperationTypeHelpers";
 import { TotalsSection } from "./TotalsSection";
 
 interface OperationsDesktopTableProps {
   operations: Operation[];
   currency: string;
-  selectedOperations: Record<string, boolean>;
-  toggleSelection: (id: string) => void;
 }
 
 export const OperationsDesktopTable = ({ 
   operations, 
-  currency,
-  selectedOperations,
-  toggleSelection
+  currency
 }: OperationsDesktopTableProps) => {
   return (
     <div className="hidden md:block overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/50">
-            <TableHead className="w-[50px] text-center"></TableHead>
             <TableHead className="w-[12%] whitespace-nowrap font-medium">Type</TableHead>
             <TableHead className="w-[10%] whitespace-nowrap font-medium">ID</TableHead>
             <TableHead className="w-[15%] whitespace-nowrap font-medium">Date</TableHead>
@@ -48,25 +42,11 @@ export const OperationsDesktopTable = ({
               ? operation.id 
               : formatId(parseInt(operation.id));
               
-            // Check if operation is selected
-            const isSelected = selectedOperations[operation.id] || false;
-              
             return (
               <TableRow 
                 key={operation.id} 
-                className={cn(
-                  isSelected ? "bg-blue-50 dark:bg-blue-900/20" : "",
-                  "transition-colors cursor-pointer hover:bg-muted/50"
-                )}
-                onClick={() => toggleSelection(operation.id)}
+                className="transition-colors hover:bg-muted/50"
               >
-                <TableCell className="w-[50px] p-2 text-center">
-                  <Checkbox 
-                    checked={isSelected}
-                    onCheckedChange={() => toggleSelection(operation.id)}
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                </TableCell>
                 <TableCell className="whitespace-nowrap capitalize">
                   {operation.type === "deposit" && "Versement"}
                   {operation.type === "withdrawal" && "Retrait"}
@@ -97,7 +77,7 @@ export const OperationsDesktopTable = ({
           
           {/* Totals section */}
           <TableRow className="border-t-2 border-primary/20 font-medium bg-muted/30">
-            <TableCell colSpan={5} className="text-right">
+            <TableCell colSpan={4} className="text-right">
               Totaux:
             </TableCell>
             <TableCell colSpan={2} className="px-3">
