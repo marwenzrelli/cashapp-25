@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Smartphone, Download, RefreshCw, Monitor } from "lucide-react";
-import { LoadingSpinner } from "@/components/ui/loading-indicator";
+import { LoadingIndicator } from "@/components/ui/loading-indicator";
 import { Client } from "../types";
 import { ClientIdBadge } from "./ClientIdBadge";
 import { Switch } from "@/components/ui/switch";
@@ -48,14 +48,14 @@ export const ClientProfileHeader = ({
         <div>
           <h1 className="text-xl font-bold flex items-center">
             {isLoading ? (
-              <LoadingSpinner className="mr-2" />
+              <LoadingIndicator className="mr-2" size="sm" />
             ) : error ? (
               "Erreur"
             ) : (
               <>
                 {client ? `${client.prenom} ${client.nom}` : "Client"} 
                 {clientId && (
-                  <ClientIdBadge clientId={clientId} className="ml-2" />
+                  <ClientIdBadge clientId={clientId} />
                 )}
               </>
             )}
