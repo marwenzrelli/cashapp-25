@@ -135,7 +135,7 @@ export default function ClientProfile() {
                   <p className="text-xs text-muted-foreground">Solde actuel</p>
                   <div className="flex justify-between items-center">
                     <span className={`font-bold text-xl ${(clientBalance || client.solde) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {formatAmount(clientBalance !== null ? clientBalance : client.solde, "TND")}
+                      {formatAmount(clientBalance !== null ? clientBalance : client.solde)}
                     </span>
                     <Button 
                       variant="outline" 
