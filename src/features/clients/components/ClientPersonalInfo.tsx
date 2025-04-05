@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Client } from "../types";
 import { ClientQRCode } from "./ClientQRCode";
@@ -47,6 +48,7 @@ export const ClientPersonalInfo = ({
     refreshClientBalance: refreshBalance
   } = useClientOperations(client, clientId, refetchClient);
 
+  // Automatically refresh balance once when component mounts, with a longer delay
   useEffect(() => {
     if (client && client.id && refreshClientBalance && !didInitialRefresh) {
       const doInitialRefresh = async () => {
@@ -58,6 +60,7 @@ export const ClientPersonalInfo = ({
         }
       };
       
+      // Use a longer timeout (3 seconds) to avoid immediate refresh on page load
       initialRefreshTimerRef.current = setTimeout(doInitialRefresh, 3000);
       return () => {
         if (initialRefreshTimerRef.current) {
@@ -73,6 +76,7 @@ export const ClientPersonalInfo = ({
       return;
     }
     
+    // Prevent multiple refreshes
     if (isRefreshing || refreshDisabled) {
       return;
     }
@@ -89,13 +93,15 @@ export const ClientPersonalInfo = ({
     } finally {
       setIsRefreshing(false);
       
+      // Disable the refresh button for 10 seconds to prevent spam
       refreshCooldownTimerRef.current = setTimeout(() => {
         setRefreshDisabled(false);
         refreshCooldownTimerRef.current = null;
-      }, 10000);
+      }, 10000); // 10-second cooldown
     }
   };
 
+  // Cleanup timers on unmount
   useEffect(() => {
     return () => {
       if (initialRefreshTimerRef.current) {
@@ -107,6 +113,7 @@ export const ClientPersonalInfo = ({
     };
   }, []);
 
+  // Helper function to pass client ID to refreshBalance
   const handleDepositRefresh = async (): Promise<boolean> => {
     if (client && client.id) {
       return await refreshBalance(client.id);
@@ -114,19 +121,12 @@ export const ClientPersonalInfo = ({
     return false;
   };
 
+  // Helper function to pass client ID to refreshBalance
   const handleWithdrawalRefresh = async (): Promise<boolean> => {
     if (client && client.id) {
       return await refreshBalance(client.id);
     }
     return false;
-  };
-
-  const dummyExportToExcel = () => {
-    console.log("Export to Excel not implemented in this context");
-  };
-  
-  const dummyExportToPDF = () => {
-    console.log("Export to PDF not implemented in this context");
   };
 
   return (
@@ -150,12 +150,7 @@ export const ClientPersonalInfo = ({
               {isRefreshing ? 'Actualisation...' : 'Actualiser le solde'}
             </Button>
             
-            <ClientActionButtons 
-              onDepositClick={() => setDepositDialogOpen(true)} 
-              onWithdrawalClick={() => setWithdrawalDialogOpen(true)} 
-              exportToExcel={dummyExportToExcel}
-              exportToPDF={dummyExportToPDF}
-            />
+            <ClientActionButtons onDepositClick={() => setDepositDialogOpen(true)} onWithdrawalClick={() => setWithdrawalDialogOpen(true)} />
           </div>
         </div>
       </CardHeader>
@@ -164,6 +159,7 @@ export const ClientPersonalInfo = ({
           <div>
             <PersonalInfoFields client={client} formatAmount={formatAmount} showBalance={true} realTimeBalance={clientBalance} />
             
+            {/* Refresh button for mobile */}
             <div className="md:hidden mt-4 w-full">
               <Button 
                 variant="outline" 
@@ -184,14 +180,9 @@ export const ClientPersonalInfo = ({
                 <ClientQRCode clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} clientName={`${client.prenom} ${client.nom}`} size={256} />
               </div>
               
+              {/* Action buttons below QR code on mobile */}
               <div className="md:hidden w-full">
-                <ClientActionButtons 
-                  onDepositClick={() => setDepositDialogOpen(true)} 
-                  onWithdrawalClick={() => setWithdrawalDialogOpen(true)} 
-                  orientation="vertical" 
-                  exportToExcel={dummyExportToExcel}
-                  exportToPDF={dummyExportToPDF}
-                />
+                <ClientActionButtons onDepositClick={() => setDepositDialogOpen(true)} onWithdrawalClick={() => setWithdrawalDialogOpen(true)} orientation="vertical" />
               </div>
             </div>
           )}

@@ -6,8 +6,8 @@ interface ClientActionButtonsProps {
   onDepositClick?: () => void;
   onWithdrawalClick?: () => void;
   refreshBalance?: () => Promise<void>;
-  exportToExcel?: () => void;
-  exportToPDF?: () => void;
+  exportToExcel: () => void;
+  exportToPDF: () => void;
   orientation?: "horizontal" | "vertical";
 }
 
@@ -39,16 +39,12 @@ export const ClientActionButtons = ({
           Rafraîchir le solde
         </Button>
       )}
-      {exportToExcel && (
-        <Button onClick={exportToExcel} size="sm" variant="outline" className="flex items-center justify-center gap-2">
-          ExportExcel
-        </Button>
-      )}
-      {exportToPDF && (
-        <Button onClick={exportToPDF} size="sm" variant="outline" className="flex items-center justify-center gap-2">
-          ExportPDF
-        </Button>
-      )}
+      <Button onClick={exportToExcel} size="sm" variant="outline" className="flex items-center justify-center gap-2">
+        ExportExcel
+      </Button>
+      <Button onClick={exportToPDF} size="sm" variant="outline" className="flex items-center justify-center gap-2">
+        ExportPDF
+      </Button>
     </div>
   );
 };
