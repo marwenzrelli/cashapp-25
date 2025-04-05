@@ -46,7 +46,7 @@ export default function ClientProfile() {
         formatAmount={formatAmount}
         refreshClientBalance={refreshClientBalance}
         navigateToClients={navigateToClients}
-        error={error}
+        error={error instanceof Error ? error : error ? new Error(String(error)) : null}
       />
 
       {client && !isLoading && !error && (
