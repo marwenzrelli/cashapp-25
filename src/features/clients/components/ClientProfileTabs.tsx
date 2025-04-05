@@ -7,6 +7,10 @@ import { ClientPublicPreview } from "./ClientPublicPreview";
 import { Client } from "../types";
 import { Operation } from "@/features/operations/types";
 import { DateRange } from "react-day-picker";
+import { useState } from "react";
+import { Smartphone, Monitor } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface ClientProfileTabsProps {
   client: Client;
@@ -45,6 +49,8 @@ export function ClientProfileTabs({
   refreshClientOperations,
   isPepsiMen
 }: ClientProfileTabsProps) {
+  const [showMobilePreview, setShowMobilePreview] = useState(false);
+
   return (
     <Card className="overflow-hidden border-none shadow-md">
       <Tabs defaultValue="operations" className="w-full">
@@ -84,9 +90,26 @@ export function ClientProfileTabs({
           </TabsContent>
           
           <TabsContent value="public-preview" className="space-y-6 mt-0">
+            {/* Mobile preview toggle */}
+            <div className="flex items-center justify-end mb-4 gap-2">
+              <Label htmlFor="mobile-preview" className="flex items-center gap-1 text-sm text-muted-foreground">
+                <Monitor className="h-4 w-4" />
+              </Label>
+              <Switch 
+                id="mobile-preview" 
+                checked={showMobilePreview} 
+                onCheckedChange={setShowMobilePreview} 
+              />
+              <Label htmlFor="mobile-preview" className="flex items-center gap-1 text-sm text-muted-foreground">
+                <Smartphone className="h-4 w-4" />
+                Aperçu mobile
+              </Label>
+            </div>
+
             <ClientPublicPreview 
               client={client} 
               operations={clientOperations} 
+              isMobilePreview={showMobilePreview}
             />
           </TabsContent>
         </div>
