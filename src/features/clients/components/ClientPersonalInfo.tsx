@@ -129,6 +129,15 @@ export const ClientPersonalInfo = ({
     return false;
   };
 
+  // Provide dummy implementations for the required props
+  const dummyExportToExcel = () => {
+    console.log("Export to Excel not implemented in ClientPersonalInfo");
+  };
+  
+  const dummyExportToPDF = () => {
+    console.log("Export to PDF not implemented in ClientPersonalInfo");
+  };
+
   return (
     <Card className="md:col-span-3">
       <CardHeader>
@@ -150,7 +159,12 @@ export const ClientPersonalInfo = ({
               {isRefreshing ? 'Actualisation...' : 'Actualiser le solde'}
             </Button>
             
-            <ClientActionButtons onDepositClick={() => setDepositDialogOpen(true)} onWithdrawalClick={() => setWithdrawalDialogOpen(true)} />
+            <ClientActionButtons 
+              onDepositClick={() => setDepositDialogOpen(true)} 
+              onWithdrawalClick={() => setWithdrawalDialogOpen(true)}
+              exportToExcel={dummyExportToExcel}
+              exportToPDF={dummyExportToPDF}
+            />
           </div>
         </div>
       </CardHeader>
@@ -182,7 +196,13 @@ export const ClientPersonalInfo = ({
               
               {/* Action buttons below QR code on mobile */}
               <div className="md:hidden w-full">
-                <ClientActionButtons onDepositClick={() => setDepositDialogOpen(true)} onWithdrawalClick={() => setWithdrawalDialogOpen(true)} orientation="vertical" />
+                <ClientActionButtons 
+                  onDepositClick={() => setDepositDialogOpen(true)} 
+                  onWithdrawalClick={() => setWithdrawalDialogOpen(true)} 
+                  orientation="vertical"
+                  exportToExcel={dummyExportToExcel}
+                  exportToPDF={dummyExportToPDF}
+                />
               </div>
             </div>
           )}
