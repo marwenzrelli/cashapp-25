@@ -1,6 +1,5 @@
 
 import { ClientBalanceCard } from "./ClientBalanceCard";
-import { OperationsDetailCards } from "./OperationsDetailCards";
 import { Client } from "../types";
 import { Operation } from "@/features/operations/types";
 
@@ -22,8 +21,8 @@ export function ClientInfoCards({
   formatAmount
 }: ClientInfoCardsProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div className="md:col-span-1">
+    <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
+      <div>
         <ClientBalanceCard
           client={client}
           clientId={clientId}
@@ -31,13 +30,6 @@ export function ClientInfoCards({
           exportToPDF={exportToPDF}
           formatAmount={formatAmount}
           showQRCode={false}
-        />
-      </div>
-      
-      <div className="md:col-span-2">
-        <OperationsDetailCards 
-          clientOperations={clientOperations}
-          formatAmount={formatAmount}
         />
       </div>
     </div>
