@@ -36,6 +36,9 @@ export default function ClientProfile() {
 
   const navigateToClients = () => navigate("/clients");
 
+  // Process the error to ensure it's either null or an Error object
+  const processedError = error ? (typeof error === 'object' ? error : new Error(String(error))) : null;
+
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto">
       <ClientProfileHeader
@@ -46,7 +49,7 @@ export default function ClientProfile() {
         formatAmount={formatAmount}
         refreshClientBalance={refreshClientBalance}
         navigateToClients={navigateToClients}
-        error={error ? (error instanceof Error ? error : new Error(String(error))) : null}
+        error={processedError}
       />
 
       {client && !isLoading && !error && (
