@@ -62,9 +62,7 @@ export function ClientProfileHeader({
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
           {client.prenom} {client.nom}
         </h1>
-        <p className="text-lg text-muted-foreground">
-          Solde: <span className="font-semibold">{formatAmount(displayBalance || 0)}</span>
-        </p>
+        {/* Removing the redundant solde display here */}
       </div>
       
       <Button
