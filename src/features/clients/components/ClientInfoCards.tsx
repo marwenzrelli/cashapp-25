@@ -18,6 +18,7 @@ interface ClientInfoCardsProps {
   exportToExcel: () => void;
   exportToPDF: () => void;
   formatAmount: (amount: number) => string;
+  isMobilePreview?: boolean; // Add the missing prop
 }
 
 export function ClientInfoCards({
@@ -26,7 +27,8 @@ export function ClientInfoCards({
   clientOperations,
   exportToExcel,
   exportToPDF,
-  formatAmount
+  formatAmount,
+  isMobilePreview = false // Add default value
 }: ClientInfoCardsProps) {
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: subMonths(new Date(), 1),
