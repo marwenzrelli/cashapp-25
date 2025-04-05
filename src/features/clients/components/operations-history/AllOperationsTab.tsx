@@ -1,13 +1,9 @@
 
 import React from "react";
 import { Operation } from "@/features/operations/types";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { OperationsMobileCard } from "./OperationsMobileCard";
 import { EmptyOperations } from "./EmptyOperations";
-import { cn } from "@/lib/utils";
-import { formatId } from "@/utils/formatId";
-import { format } from "date-fns";
-import { Checkbox } from "@/components/ui/checkbox";
+import { OperationsDesktopTable } from "./all-operations/OperationsDesktopTable";
+import { OperationsMobileList } from "./all-operations/OperationsMobileList";
 
 interface AllOperationsTabProps {
   operations: Operation[];
@@ -26,224 +22,23 @@ export const AllOperationsTab = ({
     return <EmptyOperations />;
   }
 
-  // Format number with 2 decimal places and comma separator
-  const formatNumber = (num: number): string => {
-    return num.toLocaleString('fr-FR', { 
-      minimumFractionDigits: 2, 
-      maximumFractionDigits: 2 
-    });
-  };
-
-  // Determine color based on operation type
-  const getOperationTypeColor = (type: string): string => {
-    switch (type) {
-      case "deposit":
-        return "text-green-600 dark:text-green-400";
-      case "withdrawal":
-        return "text-red-600 dark:text-red-400";
-      case "transfer":
-        return "text-blue-600 dark:text-blue-400";
-      default:
-        return "";
-    }
-  };
-
-  // Calculate totals by operation type
-  const totalDeposits = operations
-    .filter(op => op.type === "deposit")
-    .reduce((total, op) => total + op.amount, 0);
-    
-  const totalWithdrawals = operations
-    .filter(op => op.type === "withdrawal")
-    .reduce((total, op) => total + op.amount, 0);
-    
-  const totalTransfers = operations
-    .filter(op => op.type === "transfer")
-    .reduce((total, op) => total + op.amount, 0);
-    
-  // Calculate net movement (deposits - withdrawals)
-  const netMovement = totalDeposits - totalWithdrawals;
-
   return (
     <>
       {/* Desktop version */}
-      <div className="hidden md:block overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/50">
-              <TableHead className="w-[50px] text-center"></TableHead>
-              <TableHead className="w-[12%] whitespace-nowrap font-medium">Type</TableHead>
-              <TableHead className="w-[10%] whitespace-nowrap font-medium">ID</TableHead>
-              <TableHead className="w-[15%] whitespace-nowrap font-medium">Date</TableHead>
-              <TableHead className="w-[20%] font-medium">Description</TableHead>
-              <TableHead className="w-[15%] text-right whitespace-nowrap font-medium">Montant</TableHead>
-              <TableHead className="w-[18%] font-medium">Client</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {operations.map((operation) => {
-              // Use operation_date if available, otherwise fall back to date
-              const displayDate = operation.operation_date || operation.date;
-              const formattedDate = typeof displayDate === 'string' 
-                ? format(new Date(displayDate), "dd/MM/yyyy HH:mm") 
-                : format(displayDate, "dd/MM/yyyy HH:mm");
-              
-              // Format operation ID
-              const operationId = isNaN(parseInt(operation.id)) 
-                ? operation.id 
-                : formatId(parseInt(operation.id));
-                
-              // Check if operation is selected
-              const isSelected = selectedOperations[operation.id] || false;
-                
-              return (
-                <TableRow 
-                  key={operation.id} 
-                  className={cn(
-                    isSelected ? "bg-blue-50 dark:bg-blue-900/20" : "",
-                    "transition-colors cursor-pointer hover:bg-muted/50"
-                  )}
-                  onClick={() => toggleSelection(operation.id)}
-                >
-                  <TableCell className="w-[50px] p-2 text-center">
-                    <Checkbox 
-                      checked={isSelected}
-                      onCheckedChange={() => toggleSelection(operation.id)}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap capitalize">
-                    {operation.type === "deposit" && "Versement"}
-                    {operation.type === "withdrawal" && "Retrait"}
-                    {operation.type === "transfer" && "Virement"}
-                  </TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">
-                    #{operationId}
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap">{formattedDate}</TableCell>
-                  <TableCell className="max-w-[200px] truncate">{operation.description}</TableCell>
-                  <TableCell className={cn("text-right font-medium whitespace-nowrap", getOperationTypeColor(operation.type))}>
-                    {operation.type === "withdrawal" ? "-" : 
-                     operation.type === "deposit" ? "+" : ""}{formatNumber(operation.amount)} {currency}
-                  </TableCell>
-                  <TableCell className="max-w-[150px] truncate">
-                    {operation.type === "transfer" ? (
-                      <div className="flex flex-col">
-                        <span className="text-sm">De: {operation.fromClient}</span>
-                        <span className="text-sm">À: {operation.toClient}</span>
-                      </div>
-                    ) : (
-                      operation.fromClient
-                    )}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-            
-            {/* Totals section */}
-            <TableRow className="border-t-2 border-primary/20 font-medium bg-muted/30">
-              <TableCell colSpan={5} className="text-right">
-                Totaux:
-              </TableCell>
-              <TableCell colSpan={2} className="px-3">
-                <div className="space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Versements:</span>
-                    <span className="font-medium text-green-600 dark:text-green-400">{formatNumber(totalDeposits)} {currency}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Retraits:</span>
-                    <span className="font-medium text-red-600 dark:text-red-400">{formatNumber(totalWithdrawals)} {currency}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Virements:</span>
-                    <span className="font-medium text-blue-600 dark:text-blue-400">{formatNumber(totalTransfers)} {currency}</span>
-                  </div>
-                  <div className="flex justify-between pt-1 border-t">
-                    <span className="font-medium">Mouvement Net:</span>
-                    <span className={cn("font-bold", netMovement >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400")}>
-                      {formatNumber(netMovement)} {currency}
-                    </span>
-                  </div>
-                </div>
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </div>
+      <OperationsDesktopTable 
+        operations={operations}
+        currency={currency}
+        selectedOperations={selectedOperations}
+        toggleSelection={toggleSelection}
+      />
 
       {/* Mobile version */}
-      <div className="md:hidden space-y-3 w-full p-3">
-        {operations.map((operation) => (
-          <div 
-            key={operation.id}
-            className={cn(
-              "transition-colors",
-              selectedOperations[operation.id] ? "border-l-4 border-blue-500 pl-2" : ""
-            )}
-            onClick={() => toggleSelection(operation.id)}
-          >
-            <div className="flex items-center mb-2">
-              <Checkbox 
-                checked={selectedOperations[operation.id] || false}
-                onCheckedChange={() => toggleSelection(operation.id)}
-                onClick={(e) => e.stopPropagation()}
-                className="mr-2"
-              />
-              <div className="w-full">
-                <OperationsMobileCard 
-                  operation={operation}
-                  formatAmount={(amount) => {
-                    const prefix = operation.type === "withdrawal" ? "-" : 
-                               operation.type === "deposit" ? "+" : "";
-                    return `${prefix}${formatNumber(amount)}`;
-                  }}
-                  currency={currency}
-                  colorClass={getOperationTypeColor(operation.type)}
-                  showType={true}
-                />
-              </div>
-            </div>
-          </div>
-        ))}
-        
-        {/* Mobile Totals Card */}
-        <div className="mt-6 p-4 border rounded-lg bg-muted/30">
-          <h3 className="font-semibold mb-2 text-center">Récapitulatif</h3>
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-sm">Versements:</span>
-              <span className="font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded">
-                {formatNumber(totalDeposits)} {currency}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm">Retraits:</span>
-              <span className="font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded">
-                {formatNumber(totalWithdrawals)} {currency}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm">Virements:</span>
-              <span className="font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded">
-                {formatNumber(totalTransfers)} {currency}
-              </span>
-            </div>
-            <div className="flex justify-between items-center pt-2 border-t mt-2">
-              <span className="font-medium">Mouvement Net:</span>
-              <span className={cn(
-                "font-bold px-2 py-0.5 rounded",
-                netMovement >= 0 
-                  ? "text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20" 
-                  : "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20"
-              )}>
-                {formatNumber(netMovement)} {currency}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
+      <OperationsMobileList 
+        operations={operations}
+        currency={currency}
+        selectedOperations={selectedOperations}
+        toggleSelection={toggleSelection}
+      />
     </>
   );
 };
-
