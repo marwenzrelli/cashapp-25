@@ -45,17 +45,17 @@ export const TransferOperationsTab = ({
   return (
     <>
       {/* Desktop version */}
-      <div className="hidden md:block">
+      <div className="hidden md:block overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead className="w-[50px]"></TableHead>
-              <TableHead>ID</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>De</TableHead>
-              <TableHead>À</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead className="text-right">Montant</TableHead>
+            <TableRow className="bg-muted/50">
+              <TableHead className="w-[50px] text-center"></TableHead>
+              <TableHead className="w-[10%] whitespace-nowrap font-medium">ID</TableHead>
+              <TableHead className="w-[15%] whitespace-nowrap font-medium">Date</TableHead>
+              <TableHead className="w-[15%] font-medium">De</TableHead>
+              <TableHead className="w-[15%] font-medium">À</TableHead>
+              <TableHead className="w-[25%] font-medium">Description</TableHead>
+              <TableHead className="w-[15%] text-right whitespace-nowrap font-medium">Montant</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -79,11 +79,11 @@ export const TransferOperationsTab = ({
                   key={operation.id}
                   className={cn(
                     isSelected ? "bg-blue-50 dark:bg-blue-900/20" : "",
-                    "transition-colors cursor-pointer"
+                    "transition-colors cursor-pointer hover:bg-muted/50"
                   )}
                   onClick={() => toggleSelection(operation.id)}
                 >
-                  <TableCell className="w-[50px] p-2">
+                  <TableCell className="w-[50px] p-2 text-center">
                     <Checkbox 
                       checked={isSelected}
                       onCheckedChange={() => toggleSelection(operation.id)}
@@ -97,7 +97,7 @@ export const TransferOperationsTab = ({
                   <TableCell className="max-w-[150px] truncate">{operation.fromClient}</TableCell>
                   <TableCell className="max-w-[150px] truncate">{operation.toClient}</TableCell>
                   <TableCell className="max-w-[200px] truncate">{operation.description}</TableCell>
-                  <TableCell className="text-right font-medium text-blue-600 dark:text-blue-400">
+                  <TableCell className="text-right font-medium text-blue-600 dark:text-blue-400 whitespace-nowrap">
                     {formatNumber(operation.amount)} {currency}
                   </TableCell>
                 </TableRow>
@@ -105,8 +105,8 @@ export const TransferOperationsTab = ({
             })}
             
             {/* Totals section for desktop */}
-            <TableRow className="border-t-2 border-primary/20">
-              <TableCell colSpan={6} className="font-medium">Total des virements:</TableCell>
+            <TableRow className="border-t-2 border-primary/20 bg-muted/30">
+              <TableCell colSpan={6} className="font-medium text-right">Total des virements:</TableCell>
               <TableCell className="text-right font-medium text-blue-600 dark:text-blue-400">
                 {formatNumber(totalTransfers)} {currency}
               </TableCell>
@@ -116,7 +116,7 @@ export const TransferOperationsTab = ({
       </div>
 
       {/* Mobile version */}
-      <div className="md:hidden space-y-3 w-full">
+      <div className="md:hidden space-y-3 w-full p-3">
         {transferOperations.map((operation) => (
           <div 
             key={operation.id}

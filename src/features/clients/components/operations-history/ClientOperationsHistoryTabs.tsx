@@ -93,7 +93,7 @@ export const ClientOperationsHistoryTabs = ({
       </Card>
 
       <Card className="shadow-sm">
-        <CardContent className="p-3 sm:p-5">
+        <CardContent className="p-0 sm:p-0">
           <TabsContent value="all" className="w-full">
             <AllOperationsTab 
               operations={filteredOperations} 

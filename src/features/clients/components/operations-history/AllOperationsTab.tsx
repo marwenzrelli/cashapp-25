@@ -51,17 +51,17 @@ export const AllOperationsTab = ({
   return (
     <>
       {/* Desktop version */}
-      <div className="hidden md:block">
+      <div className="hidden md:block overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead className="w-[50px]"></TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>ID</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead className="text-right">Montant</TableHead>
-              <TableHead>Client</TableHead>
+            <TableRow className="bg-muted/50">
+              <TableHead className="w-[50px] text-center"></TableHead>
+              <TableHead className="w-[12%] whitespace-nowrap font-medium">Type</TableHead>
+              <TableHead className="w-[10%] whitespace-nowrap font-medium">ID</TableHead>
+              <TableHead className="w-[15%] whitespace-nowrap font-medium">Date</TableHead>
+              <TableHead className="w-[20%] font-medium">Description</TableHead>
+              <TableHead className="w-[15%] text-right whitespace-nowrap font-medium">Montant</TableHead>
+              <TableHead className="w-[18%] font-medium">Client</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -85,11 +85,11 @@ export const AllOperationsTab = ({
                   key={operation.id} 
                   className={cn(
                     isSelected ? "bg-blue-50 dark:bg-blue-900/20" : "",
-                    "transition-colors cursor-pointer"
+                    "transition-colors cursor-pointer hover:bg-muted/50"
                   )}
                   onClick={() => toggleSelection(operation.id)}
                 >
-                  <TableCell className="w-[50px] p-2">
+                  <TableCell className="w-[50px] p-2 text-center">
                     <Checkbox 
                       checked={isSelected}
                       onCheckedChange={() => toggleSelection(operation.id)}
@@ -128,7 +128,7 @@ export const AllOperationsTab = ({
       </div>
 
       {/* Mobile version */}
-      <div className="md:hidden space-y-3 w-full">
+      <div className="md:hidden space-y-3 w-full p-3">
         {operations.map((operation) => (
           <div 
             key={operation.id}
