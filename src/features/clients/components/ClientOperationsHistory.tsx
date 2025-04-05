@@ -100,15 +100,12 @@ export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = (
           </div>
           <div className="w-full sm:w-1/3">
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-2">
-                <Switch 
-                  id="show-all-dates"
-                  checked={showAllDates}
-                  onCheckedChange={setShowAllDates}
-                  disabled={isPepsiMen} // Disable for pepsi men to force showing all dates
-                />
-                <Label htmlFor="show-all-dates">Toutes périodes</Label>
-              </div>
+              <Switch 
+                id="show-all-dates"
+                checked={showAllDates}
+                onCheckedChange={setShowAllDates}
+                disabled={isPepsiMen} // Disable for pepsi men to force showing all dates
+              />
             </div>
             {!showAllDates && !isPepsiMen && (
               <DatePickerWithRange

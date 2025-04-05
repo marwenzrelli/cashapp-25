@@ -5,7 +5,6 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { PublicOperationsTabs } from "./operations-history/PublicOperationsTabs";
 import { useState, useEffect } from "react";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { DateRange } from "react-day-picker";
 import { subDays } from "date-fns";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
@@ -74,15 +73,12 @@ export const PublicClientOperationsHistory = ({ operations, clientId }: PublicCl
       <CardHeader className="px-4 sm:px-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <CardTitle className="text-xl">Historique des opérations</CardTitle>
-          <div className="flex items-center space-x-2">
-            <Switch 
-              id="show-all-operations"
-              checked={showAllOperations}
-              onCheckedChange={setShowAllOperations}
-              disabled={isPepsiMen} // Disable the switch for pepsi men to prevent hiding operations
-            />
-            <Label htmlFor="show-all-operations">Toutes périodes</Label>
-          </div>
+          <Switch 
+            id="show-all-operations"
+            checked={showAllOperations}
+            onCheckedChange={setShowAllOperations}
+            disabled={isPepsiMen} // Disable the switch for pepsi men to prevent hiding operations
+          />
         </div>
       </CardHeader>
       <CardContent className="p-0 sm:p-6">
