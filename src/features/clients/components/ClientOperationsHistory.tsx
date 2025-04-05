@@ -26,7 +26,6 @@ interface ClientOperationsHistoryProps {
   setShowAllDates?: (showAll: boolean) => void;
   clientId?: number;
   isPepsiMen?: boolean;
-  isMobilePreview?: boolean; // Add the new prop
 }
 export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = ({
   operations,
@@ -43,8 +42,7 @@ export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = (
   showAllDates = false,
   setShowAllDates = () => {},
   clientId,
-  isPepsiMen = false,
-  isMobilePreview = false // Add default value
+  isPepsiMen = false
 }) => {
   // Log operations data for pepsi men for debugging
   React.useEffect(() => {

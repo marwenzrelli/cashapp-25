@@ -9,7 +9,6 @@ interface ClientInsightsProps {
   suggestions: AISuggestion[];
   client?: Client;
   operations?: Operation[];
-  isMobilePreview?: boolean; // Add the missing prop
 }
 
 const getSuggestionStyle = (type: AISuggestion["type"]) => {
@@ -23,12 +22,7 @@ const getSuggestionStyle = (type: AISuggestion["type"]) => {
   }
 };
 
-export const ClientInsights = ({ 
-  suggestions, 
-  client, 
-  operations,
-  isMobilePreview = false // Add default value
-}: ClientInsightsProps) => {
+export const ClientInsights = ({ suggestions, client, operations }: ClientInsightsProps) => {
   return (
     <Card className="border-primary/20">
       <CardHeader>
