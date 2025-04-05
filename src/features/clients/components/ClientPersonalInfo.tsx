@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Client } from "../types";
 import { ClientQRCode } from "./ClientQRCode";
@@ -50,9 +49,7 @@ export const ClientPersonalInfo = ({
     refreshClientBalance: refreshBalance
   } = useClientOperations(client, clientId, refetchClient);
 
-  // Removed automatic refresh that happens every 2 seconds
   useEffect(() => {
-    // Only perform a manual refresh if explicitly requested
     return () => {
       if (initialRefreshTimerRef.current) {
         clearTimeout(initialRefreshTimerRef.current);
@@ -131,7 +128,6 @@ export const ClientPersonalInfo = ({
               {isRefreshing ? 'Actualisation...' : 'Actualiser le solde'}
             </Button>
             
-            {/* Only show action buttons on desktop */}
             {!isMobile && (
               <ClientActionButtons 
                 onDepositClick={() => setDepositDialogOpen(true)} 
@@ -159,8 +155,7 @@ export const ClientPersonalInfo = ({
                 />
               </div>
               
-              {/* Remove these buttons on mobile */}
-              {/* <div className="md:hidden w-full">
+              <div className="md:hidden w-full">
                 <ClientActionButtons 
                   onDepositClick={() => setDepositDialogOpen(true)} 
                   onWithdrawalClick={() => setWithdrawalDialogOpen(true)} 
@@ -168,7 +163,7 @@ export const ClientPersonalInfo = ({
                   exportToExcel={dummyExport}
                   exportToPDF={dummyExport}
                 />
-              </div> */}
+              </div>
             </div>
           )}
         </div>
