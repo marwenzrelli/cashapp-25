@@ -14,7 +14,7 @@ import { TransferPagination } from "@/features/transfers/components/TransferPagi
 import { LoadingIndicator } from "@/components/ui/loading-indicator";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, AlertCircle } from "lucide-react";
+import { RefreshCw, AlertCircle, Info } from "lucide-react";
 
 const Operations = () => {
   const { 
@@ -41,20 +41,24 @@ const Operations = () => {
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const [loadingDuration, setLoadingDuration] = useState(0);
   const [showNetworkError, setShowNetworkError] = useState(false);
+  const [forcedRefresh, setForcedRefresh] = useState(false);
   const lastRefreshTimeRef = useRef<number>(Date.now());
   const manualRefreshClickedRef = useRef<boolean>(false);
   const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const loadingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const loadingStartTimeRef = useRef<number>(0);
+  const initialFetchAttemptRef = useRef<number>(0);
 
   // Fetch operations on initial load
   useEffect(() => {
     if (!initialLoadAttempted) {
       console.log("Initial operations fetch");
-      fetchOperations(true);
       setInitialLoadAttempted(true);
       lastRefreshTimeRef.current = Date.now();
       loadingStartTimeRef.current = Date.now();
+      
+      // Attempt the initial fetch
+      fetchOperations(true);
       
       // Set a loading timeout to detect stalled loading
       if (loadingTimeoutRef.current) {
@@ -65,7 +69,7 @@ const Operations = () => {
         if (isLoading) {
           setLoadingTimeout(true);
         }
-      }, 10000); // Reduced from 15s to 10s
+      }, 7000); // Reduced to 7s from 10s
       
       // Start a timer to show how long we've been loading
       if (loadingTimerRef.current) {
@@ -77,8 +81,8 @@ const Operations = () => {
           const duration = Math.floor((Date.now() - loadingStartTimeRef.current) / 1000);
           setLoadingDuration(duration);
           
-          // After 20 seconds of loading, show network error suggestion
-          if (duration > 20 && !showNetworkError) {
+          // After 15 seconds of loading, show network error suggestion
+          if (duration > 15 && !showNetworkError) {
             setShowNetworkError(true);
           }
         }
@@ -95,6 +99,21 @@ const Operations = () => {
     };
   }, [fetchOperations, initialLoadAttempted, isLoading, showNetworkError]);
 
+  // Auto-retry initial load if still loading after timeout
+  useEffect(() => {
+    if (isLoading && loadingTimeout && initialLoadAttempted && stableOperations.length === 0 && initialFetchAttemptRef.current < 2) {
+      // Auto-retry the fetch, but only twice
+      initialFetchAttemptRef.current += 1;
+      console.log(`Auto-retrying initial fetch, attempt #${initialFetchAttemptRef.current}`);
+      
+      // Reset loading timeout 
+      setLoadingTimeout(false);
+      
+      // Force a fresh fetch
+      fetchOperations(true);
+    }
+  }, [fetchOperations, isLoading, loadingTimeout, initialLoadAttempted, stableOperations.length]);
+
   // Reset loading timer when loading state changes
   useEffect(() => {
     if (isLoading) {
@@ -110,15 +129,21 @@ const Operations = () => {
         clearInterval(loadingTimerRef.current);
         loadingTimerRef.current = null;
       }
+      
+      // Reset forced refresh state when loading completes
+      if (forcedRefresh) {
+        setForcedRefresh(false);
+      }
     }
-  }, [isLoading]);
+  }, [isLoading, forcedRefresh]);
 
-  // Stabilisez les opérations pour éviter les clignotements
+  // Stabilize operations to avoid flicker
   useEffect(() => {
-    // Après le chargement initial ou un rafraîchissement manuel, mettre à jour les opérations stables
+    // After initial load or manual refresh, update stable operations
     const shouldUpdateStableOperations = 
       (!isLoading && operations.length > 0) ||
-      (manualRefreshClickedRef.current && !isLoading);
+      (manualRefreshClickedRef.current && !isLoading) ||
+      (forcedRefresh && !isLoading);
     
     if (shouldUpdateStableOperations) {
       console.log(`Updating stable operations with ${operations.length} operations`);
@@ -126,17 +151,17 @@ const Operations = () => {
       manualRefreshClickedRef.current = false;
       setLoadingTimeout(false);
     }
-  }, [operations, isLoading]);
+  }, [operations, isLoading, forcedRefresh]);
 
-  // Filtrer les opérations stables (pas les opérations qui changent en temps réel)
+  // Filter stable operations (not real-time changing operations)
   const filteredOperations = stableOperations.filter((op) => {
-    // Filtrage par type
+    // Filter by type
     const matchesType = !filterType || op.type === filterType;
     
-    // Utiliser la fonction améliorée pour la recherche de client
+    // Use improved function for client search
     const matchesClient = operationMatchesSearch(op, filterClient);
     
-    // Filtrage par date
+    // Date filtering
     const matchesDate =
       (!dateRange?.from ||
         new Date(op.operation_date || op.date) >= new Date(dateRange.from)) &&
@@ -146,7 +171,7 @@ const Operations = () => {
     return matchesType && matchesClient && matchesDate;
   });
 
-  // Reset the filtering state after a brief delay
+  // Reset filtering state after a brief delay
   useEffect(() => {
     setIsFiltering(true);
     const timeout = setTimeout(() => {
@@ -167,7 +192,7 @@ const Operations = () => {
     formattedDate: formatDateTime(op.operation_date || op.date)
   }));
 
-  // Pagination des opérations
+  // Pagination of operations
   const paginatedOperations = operationsWithFormattedDates.slice(
     (currentPage - 1) * parseInt(itemsPerPage),
     currentPage * parseInt(itemsPerPage)
@@ -189,7 +214,7 @@ const Operations = () => {
     const now = Date.now();
     const timeSinceLastRefresh = now - lastRefreshTimeRef.current;
     
-    // Limiter les rafraîchissements manuels à un toutes les 3 secondes
+    // Limit manual refreshes to one every 3 seconds
     if (timeSinceLastRefresh < 3000) {
       toast.info(`Attendez ${Math.ceil((3000 - timeSinceLastRefresh) / 1000)} secondes avant de rafraîchir à nouveau`);
       return;
@@ -203,19 +228,20 @@ const Operations = () => {
     refreshOperations();
   };
 
-  // Fonction de récupération forcée en cas de timeout
+  // Function for forced refresh in case of timeout
   const handleForceRefresh = () => {
     console.log("Force refresh triggered");
     manualRefreshClickedRef.current = true;
     lastRefreshTimeRef.current = Date.now();
     setLoadingTimeout(false);
     setShowNetworkError(false);
+    setForcedRefresh(true);
     
     // Force discard previous request state
     fetchOperations(true);
   };
 
-  // Déterminer si nous devons afficher un chargement, une erreur ou le contenu
+  // Determine if we should show loading, error, or content
   const showInitialLoading = isLoading && stableOperations.length === 0 && !loadingTimeout;
   const showLoadingTimeout = loadingTimeout && stableOperations.length === 0;
   const showError = !isLoading && error && stableOperations.length === 0;
@@ -242,19 +268,19 @@ const Operations = () => {
       {showInitialLoading && (
         <div className="py-12 flex flex-col items-center justify-center">
           <LoadingIndicator 
-            text={`Chargement des opérations... ${loadingDuration > 5 ? `(${loadingDuration}s)` : ''}`}
+            text={`Chargement des opérations... ${loadingDuration > 3 ? `(${loadingDuration}s)` : ''}`}
             size="lg" 
             showImmediately={true}
           />
           
-          {loadingDuration > 8 && (
+          {loadingDuration > 5 && (
             <Button 
               onClick={handleForceRefresh}
               variant="outline"
               className="mt-6"
             >
               <RefreshCw className="mr-2 h-4 w-4" />
-              Actualiser
+              Force l'actualisation
             </Button>
           )}
           
@@ -265,7 +291,7 @@ const Operations = () => {
                 Le chargement prend plus de temps que prévu.
               </p>
               <p className="text-xs text-yellow-600">
-                Vérifiez votre connexion réseau ou essayez d'actualiser la page.
+                Vérifiez votre connexion réseau ou essayez de rafraîchir la page.
               </p>
             </div>
           )}
@@ -274,16 +300,25 @@ const Operations = () => {
       
       {showLoadingTimeout && (
         <div className="rounded-lg bg-yellow-50 p-6 text-center">
+          <AlertCircle className="h-6 w-6 text-yellow-600 mx-auto mb-2" />
           <p className="text-yellow-700 mb-4">
             Le chargement des opérations prend plus de temps que prévu.
           </p>
-          <Button 
-            onClick={handleForceRefresh}
-            className="bg-yellow-500 hover:bg-yellow-600 text-white"
-          >
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Forcer l'actualisation
-          </Button>
+          <div className="flex flex-col sm:flex-row justify-center gap-3">
+            <Button 
+              onClick={handleForceRefresh}
+              className="bg-yellow-500 hover:bg-yellow-600 text-white"
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Forcer l'actualisation
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => window.location.reload()}
+            >
+              Recharger la page
+            </Button>
+          </div>
         </div>
       )}
 
@@ -295,18 +330,27 @@ const Operations = () => {
           <p className="text-sm text-red-500 mb-4">
             {error}
           </p>
-          <Button 
-            onClick={handleManualRefresh}
-            variant="destructive"
-          >
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Réessayer
-          </Button>
+          <div className="flex flex-col sm:flex-row justify-center gap-3">
+            <Button 
+              onClick={handleManualRefresh}
+              variant="destructive"
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Réessayer
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => window.location.reload()}
+            >
+              Recharger la page
+            </Button>
+          </div>
         </div>
       )}
 
       {showEmptyState && (
         <div className="rounded-lg bg-gray-50 p-6 text-center">
+          <Info className="h-8 w-8 text-gray-400 mx-auto mb-2" />
           <p className="text-muted-foreground">
             Aucune opération trouvée. Créez des versements, retraits ou virements pour les voir ici.
           </p>

@@ -27,6 +27,8 @@ export const useOperations = () => {
   const channelRef = useRef<any>(null);
   const [subscriptionAttempts, setSubscriptionAttempts] = useState(0);
   const connectionCheckTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const lastRealtimeUpdateRef = useRef<number>(0);
+  const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Update local operations when fetchedOperations change
   useEffect(() => {
@@ -38,12 +40,12 @@ export const useOperations = () => {
         setInitialLoadDone(true);
       }
     } else if (!fetchLoading && initialLoadDone) {
-      // Si le chargement est terminé mais qu'aucune opération n'a été trouvée
+      // If loading is complete but no operations were found
       console.log("No operations found after loading completed");
     }
   }, [fetchedOperations, fetchLoading, initialLoadDone, setOperations]);
 
-  // Fonction pour dédupliquer des opérations basées sur leur ID
+  // Function to deduplicate operations based on their ID
   const deduplicateOperations = (ops: Operation[]): Operation[] => {
     const uniqueOps = new Map<string, Operation>();
     
@@ -111,7 +113,7 @@ export const useOperations = () => {
 
   // Set up real-time subscription to operations with improved error handling
   useEffect(() => {
-    // Nettoyage de la souscription précédente si elle existe
+    // Clean up previous subscription if it exists
     if (channelRef.current) {
       console.log("Cleaning up previous realtime subscription");
       supabase.removeChannel(channelRef.current);
@@ -126,7 +128,8 @@ export const useOperations = () => {
       setSubscriptionAttempts(prev => prev + 1);
       
       // Use a unique channel ID to prevent collisions
-      const channelId = `operations-realtime-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      const uuid = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 9);
+      const channelId = `operations-realtime-${Date.now()}-${uuid}`;
       
       const channel = supabase
         .channel(channelId)
@@ -135,24 +138,25 @@ export const useOperations = () => {
           schema: 'public', 
           table: 'deposits'
         }, () => {
-          console.log('Deposit change detected, refreshing operations');
-          refreshOperations();
+          console.log('Deposit change detected');
+          // Debounce the refresh operations call
+          handleRealtimeUpdate();
         })
         .on('postgres_changes', { 
           event: '*', 
           schema: 'public', 
           table: 'withdrawals'
         }, () => {
-          console.log('Withdrawal change detected, refreshing operations');
-          refreshOperations();
+          console.log('Withdrawal change detected');
+          handleRealtimeUpdate();
         })
         .on('postgres_changes', { 
           event: '*', 
           schema: 'public', 
           table: 'transfers'
         }, () => {
-          console.log('Transfer change detected, refreshing operations');
-          refreshOperations();
+          console.log('Transfer change detected');
+          handleRealtimeUpdate();
         })
         .subscribe((status) => {
           console.log(`Realtime subscription status: ${status}`);
@@ -170,7 +174,7 @@ export const useOperations = () => {
           }
         });
         
-      // Si la souscription n'est pas établie après 8 secondes, considérer comme échec
+      // If subscription is not established after 8 seconds, consider it failed
       const timeout = setTimeout(() => {
         if (!realtimeSubscribedRef.current) {
           console.log("Realtime subscription timeout");
@@ -204,6 +208,36 @@ export const useOperations = () => {
     }
   }, [refreshOperations, subscriptionAttempts]);
 
+  // Debounced handler for realtime updates
+  const handleRealtimeUpdate = useCallback(() => {
+    const now = Date.now();
+    const timeSinceLastUpdate = now - lastRealtimeUpdateRef.current;
+    
+    // Debounce to prevent multiple refreshes in quick succession
+    if (timeSinceLastUpdate < 2000) {
+      console.log(`Debouncing realtime update, last update was ${timeSinceLastUpdate}ms ago`);
+      
+      // Clear any pending timeout
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+      }
+      
+      // Set a new timeout to refresh after the debounce period
+      refreshTimeoutRef.current = setTimeout(() => {
+        console.log('Executing debounced refresh');
+        refreshOperations();
+        lastRealtimeUpdateRef.current = Date.now();
+      }, 2000);
+      
+      return;
+    }
+    
+    // If it's been more than 2 seconds since the last update, refresh immediately
+    console.log('Refreshing operations due to realtime update');
+    refreshOperations();
+    lastRealtimeUpdateRef.current = now;
+  }, [refreshOperations]);
+
   // Wrapper for delete operation to update state
   const deleteOperation = async (operation: Operation) => {
     setOperationToDelete(operation);
@@ -225,11 +259,11 @@ export const useOperations = () => {
       setIsLoading(true);
       await refreshOperations(true);
       
-      // Dédupliquer les opérations après rafraîchissement
+      // Deduplicate operations after refresh
       if (operations.length > 0) {
         const uniqueOperations = deduplicateOperations(operations);
         if (uniqueOperations.length !== operations.length) {
-          console.log(`Dédupliqué ${operations.length - uniqueOperations.length} opérations au rafraîchissement`);
+          console.log(`Deduplicated ${operations.length - uniqueOperations.length} operations during refresh`);
           setOperations(uniqueOperations);
         }
       }
@@ -252,17 +286,28 @@ export const useOperations = () => {
         if (isLoading || fetchLoading) {
           console.log("Loading operations is taking too long, attempting to recover");
           setIsLoading(false);
-          
-          // Don't auto-refresh here as it might cause an infinite loop
-          // Just reset the loading state and let the user refresh manually
         }
-      }, 15000); // If loading for more than 15 seconds, reset loading state
+      }, 10000); // If loading for more than 10 seconds, reset loading state
     }
     
     return () => {
       if (loadingTimer) clearTimeout(loadingTimer);
     };
   }, [isLoading, fetchLoading, setIsLoading]);
+
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+      }
+      
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+    };
+  }, []);
 
   return {
     operations,

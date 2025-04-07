@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 
 export const useFetchOperations = () => {
   const [operations, setOperations] = useState<Operation[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false); // Start with not loading
   const [error, setError] = useState<string | null>(null);
   const [lastFetchTime, setLastFetchTime] = useState<number>(0);
   const [fetchAttempts, setFetchAttempts] = useState<number>(0);
@@ -14,15 +14,16 @@ export const useFetchOperations = () => {
   const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const fetchingRef = useRef<boolean>(false);
   const maxRetries = useRef<number>(3);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const fetchOperations = useCallback(async (force: boolean = false) => {
-    // Si une requête est déjà en cours et ce n'est pas forcé, ne pas en lancer une autre
+    // If a request is already in progress and not forced, don't start another
     if (fetchingRef.current && !force) {
       console.log("Une requête est déjà en cours, ignorant cette requête");
       return;
     }
     
-    // Si dernier fetch était il y a moins de 2 secondes et pas forcé, ne pas fetch à nouveau
+    // If last fetch was less than 2 seconds ago and not forced, don't fetch again
     const now = Date.now();
     if (!force && now - lastFetchTime < 2000) {
       console.log(`Dernier fetch il y a ${now - lastFetchTime}ms, ignorant cette requête`);
@@ -31,6 +32,14 @@ export const useFetchOperations = () => {
     
     try {
       if (!isMountedRef.current) return;
+      
+      // Cancel any in-progress fetch
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      
+      // Create a new abort controller
+      abortControllerRef.current = new AbortController();
       
       fetchingRef.current = true;
       setIsLoading(true);
@@ -45,8 +54,14 @@ export const useFetchOperations = () => {
           console.warn("Fetch operation timeout - resetting loading state");
           fetchingRef.current = false;
           setIsLoading(false);
+          
+          // Reset the abort controller
+          if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+            abortControllerRef.current = null;
+          }
         }
-      }, 15000); // 15 seconds timeout
+      }, 10000); // 10 seconds timeout (reduced from 15)
       
       // Fetch deposits with client_id
       const { data: deposits, error: depositsError } = await supabase
@@ -129,7 +144,7 @@ export const useFetchOperations = () => {
 
       console.log(`Fetched ${allOperations.length} operations (${transformedDeposits.length} deposits, ${transformedWithdrawals.length} withdrawals, ${transformedTransfers.length} transfers)`);
       
-      // Dédupliquer les opérations avant de les définir
+      // Deduplicate operations before setting them
       const uniqueMap = new Map<string, Operation>();
       allOperations.forEach(op => {
         const key = `${op.type}-${op.id}`;
@@ -187,30 +202,39 @@ export const useFetchOperations = () => {
       if (isMountedRef.current) {
         setIsLoading(false);
         fetchingRef.current = false;
+        
+        // Clear the abort controller
+        abortControllerRef.current = null;
       }
     }
   }, [lastFetchTime, fetchAttempts]);
 
-  // Initial fetch avec un délai pour éviter les conditions de course
+  // Initial fetch with a delay to avoid race conditions
   useEffect(() => {
     isMountedRef.current = true;
     
-    // Nettoyer tout timeout existant
+    // Clean up any existing timeout
     if (fetchTimeoutRef.current) {
       clearTimeout(fetchTimeoutRef.current);
     }
     
-    // Démarrer un nouveau fetch avec délai
+    // Start a new fetch with delay
     fetchTimeoutRef.current = setTimeout(() => {
       if (isMountedRef.current) {
+        setIsLoading(true); // Make sure loading state is set before the initial fetch
         fetchOperations(true);
       }
-    }, 100); // Réduit à 100ms au lieu de 500ms pour charger plus rapidement
+    }, 100); // Reduced to 100ms instead of 500ms to load faster
     
     return () => {
       isMountedRef.current = false;
       if (fetchTimeoutRef.current) {
         clearTimeout(fetchTimeoutRef.current);
+      }
+      
+      // Cancel any in-progress fetch
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
       }
     };
   }, [fetchOperations]);
