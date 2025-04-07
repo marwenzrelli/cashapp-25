@@ -11,6 +11,7 @@ export const useOperationsFetcher = () => {
    * Fetches deposits from Supabase
    */
   const fetchDeposits = useCallback(async () => {
+    console.log('Fetching deposits...');
     const response = await supabase
       .from('deposits')
       .select('*')
@@ -18,9 +19,11 @@ export const useOperationsFetcher = () => {
       
     if (response.error) {
       console.error('Error fetching deposits:', response.error);
+      toast.error('Erreur lors de la récupération des versements');
       throw response.error;
     }
     
+    console.log(`Fetched ${response.data?.length || 0} deposits`);
     return response.data || [];
   }, []);
 
@@ -28,6 +31,7 @@ export const useOperationsFetcher = () => {
    * Fetches withdrawals from Supabase
    */
   const fetchWithdrawals = useCallback(async () => {
+    console.log('Fetching withdrawals...');
     const response = await supabase
       .from('withdrawals')
       .select('*')
@@ -35,9 +39,11 @@ export const useOperationsFetcher = () => {
       
     if (response.error) {
       console.error('Error fetching withdrawals:', response.error);
+      toast.error('Erreur lors de la récupération des retraits');
       throw response.error;
     }
     
+    console.log(`Fetched ${response.data?.length || 0} withdrawals`);
     return response.data || [];
   }, []);
 
@@ -45,6 +51,7 @@ export const useOperationsFetcher = () => {
    * Fetches transfers from Supabase
    */
   const fetchTransfers = useCallback(async () => {
+    console.log('Fetching transfers...');
     const response = await supabase
       .from('transfers')
       .select('*')
@@ -52,9 +59,11 @@ export const useOperationsFetcher = () => {
       
     if (response.error) {
       console.error('Error fetching transfers:', response.error);
+      toast.error('Erreur lors de la récupération des virements');
       throw response.error;
     }
     
+    console.log(`Fetched ${response.data?.length || 0} transfers`);
     return response.data || [];
   }, []);
 
@@ -63,11 +72,14 @@ export const useOperationsFetcher = () => {
    */
   const fetchAllOperations = useCallback(async () => {
     try {
+      console.log('Starting fetchAllOperations...');
       const [deposits, withdrawals, transfers] = await Promise.all([
         fetchDeposits(),
         fetchWithdrawals(),
         fetchTransfers()
       ]);
+      
+      console.log(`fetchAllOperations completed with ${deposits.length} deposits, ${withdrawals.length} withdrawals, ${transfers.length} transfers`);
       
       return { deposits, withdrawals, transfers };
     } catch (error) {

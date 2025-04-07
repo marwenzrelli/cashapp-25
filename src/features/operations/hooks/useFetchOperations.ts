@@ -15,7 +15,7 @@ import { calculateRetryDelay, shouldRetry } from './utils/retryLogic';
  */
 export const useFetchOperations = () => {
   const [operations, setOperations] = useState<Operation[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [lastFetchTime, setLastFetchTime] = useState<number>(0);
   const [fetchAttempts, setFetchAttempts] = useState<number>(0);
@@ -80,9 +80,7 @@ export const useFetchOperations = () => {
       
       if (!isMountedRef.current) return;
 
-      console.log("Raw deposits data:", deposits);
-      console.log("Raw withdrawals data:", withdrawals);
-      console.log("Raw transfers data:", transfers);
+      console.log(`Raw data - deposits: ${deposits?.length || 0}, withdrawals: ${withdrawals?.length || 0}, transfers: ${transfers?.length || 0}`);
 
       // Transform the data
       const allOperations = transformToOperations(deposits, withdrawals, transfers);
@@ -90,14 +88,26 @@ export const useFetchOperations = () => {
       // Sort operations by date
       const sortedOperations = sortOperationsByDate(allOperations);
       
-      console.log(`Fetched ${allOperations.length} operations (${deposits.length || 0} deposits, ${withdrawals.length || 0} withdrawals, ${transfers.length || 0} transfers)`);
+      console.log(`Fetched ${allOperations.length} operations (${deposits?.length || 0} deposits, ${withdrawals?.length || 0} withdrawals, ${transfers?.length || 0} transfers)`);
       
       // Deduplicate operations
       const uniqueOperations = deduplicateOperations(sortedOperations);
       
       if (!isMountedRef.current) return;
       
-      setOperations(uniqueOperations);
+      // Formater les dates pour l'affichage
+      const formattedOperations = uniqueOperations.map(op => ({
+        ...op,
+        formattedDate: new Date(op.operation_date || op.date).toLocaleString('fr-FR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })
+      }));
+      
+      setOperations(formattedOperations);
       setError(null);
       
       maxRetries.current = 3;  // Reset max retries on success
@@ -141,12 +151,9 @@ export const useFetchOperations = () => {
       clearTimeout(fetchTimeoutRef.current);
     }
     
-    fetchTimeoutRef.current = setTimeout(() => {
-      if (isMountedRef.current) {
-        setIsLoading(true);
-        fetchOperations(true);
-      }
-    }, 100);
+    // Initiate fetch immediately
+    setIsLoading(true);
+    fetchOperations(true);
     
     // Cleanup on unmount
     return () => {
