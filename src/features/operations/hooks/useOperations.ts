@@ -24,6 +24,8 @@ export const useOperations = () => {
   const [initialLoadDone, setInitialLoadDone] = useState(false);
   const [dataError, setDataError] = useState<string | null>(null);
   const realtimeSubscribedRef = useRef(false);
+  const channelRef = useRef<any>(null);
+  const [subscriptionAttempts, setSubscriptionAttempts] = useState(0);
 
   // Update local operations when fetchedOperations change
   useEffect(() => {
@@ -67,49 +69,83 @@ export const useOperations = () => {
     }
   }, [initialLoadDone, fetchLoading, fetchedOperations.length, refreshOperations]);
 
-  // Set up real-time subscription to operations
+  // Set up real-time subscription to operations with improved error handling
   useEffect(() => {
+    // Nettoyage de la souscription précédente si elle existe
+    if (channelRef.current) {
+      console.log("Cleaning up previous realtime subscription");
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+      realtimeSubscribedRef.current = false;
+    }
+    
     if (realtimeSubscribedRef.current) return;
     
-    realtimeSubscribedRef.current = true;
-    console.log("Setting up realtime subscription for operations");
-    
-    const channel = supabase
-      .channel('operations-realtime')
-      .on('postgres_changes', { 
-        event: '*', 
-        schema: 'public', 
-        table: 'deposits'
-      }, () => {
-        console.log('Deposit change detected, refreshing operations');
-        refreshOperations();
-      })
-      .on('postgres_changes', { 
-        event: '*', 
-        schema: 'public', 
-        table: 'withdrawals'
-      }, () => {
-        console.log('Withdrawal change detected, refreshing operations');
-        refreshOperations();
-      })
-      .on('postgres_changes', { 
-        event: '*', 
-        schema: 'public', 
-        table: 'transfers'
-      }, () => {
-        console.log('Transfer change detected, refreshing operations');
-        refreshOperations();
-      })
-      .subscribe((status) => {
-        console.log(`Realtime subscription status: ${status}`);
-      });
-
-    return () => {
-      console.log("Cleaning up realtime subscription");
-      supabase.removeChannel(channel);
+    try {
+      console.log("Setting up realtime subscription for operations, attempt:", subscriptionAttempts + 1);
+      setSubscriptionAttempts(prev => prev + 1);
+      
+      const channel = supabase
+        .channel('operations-realtime-' + Date.now())
+        .on('postgres_changes', { 
+          event: '*', 
+          schema: 'public', 
+          table: 'deposits'
+        }, () => {
+          console.log('Deposit change detected, refreshing operations');
+          refreshOperations();
+        })
+        .on('postgres_changes', { 
+          event: '*', 
+          schema: 'public', 
+          table: 'withdrawals'
+        }, () => {
+          console.log('Withdrawal change detected, refreshing operations');
+          refreshOperations();
+        })
+        .on('postgres_changes', { 
+          event: '*', 
+          schema: 'public', 
+          table: 'transfers'
+        }, () => {
+          console.log('Transfer change detected, refreshing operations');
+          refreshOperations();
+        })
+        .subscribe((status) => {
+          console.log(`Realtime subscription status: ${status}`);
+          if (status === 'SUBSCRIBED') {
+            realtimeSubscribedRef.current = true;
+            channelRef.current = channel;
+          } else if (status === 'CHANNEL_ERROR') {
+            console.error("Channel error occurred");
+            realtimeSubscribedRef.current = false;
+          }
+        });
+        
+      // Si la souscription n'est pas établie après 5 secondes, considérer comme échec
+      const timeout = setTimeout(() => {
+        if (!realtimeSubscribedRef.current && subscriptionAttempts < 3) {
+          console.log("Realtime subscription timeout, retrying...");
+          supabase.removeChannel(channel);
+          setSubscriptionAttempts(prev => prev + 1);
+        }
+      }, 5000);
+      
+      return () => {
+        clearTimeout(timeout);
+        if (channel) {
+          console.log("Cleaning up realtime subscription");
+          supabase.removeChannel(channel);
+          realtimeSubscribedRef.current = false;
+          channelRef.current = null;
+        }
+      };
+    } catch (error) {
+      console.error("Error setting up realtime subscription:", error);
       realtimeSubscribedRef.current = false;
-    };
-  }, [refreshOperations]);
+      return () => {};
+    }
+  }, [refreshOperations, subscriptionAttempts]);
 
   // Wrapper for delete operation to update state
   const deleteOperation = async (operation: Operation) => {

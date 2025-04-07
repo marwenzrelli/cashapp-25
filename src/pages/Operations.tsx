@@ -13,6 +13,8 @@ import { operationMatchesSearch } from "@/features/operations/utils/display-help
 import { TransferPagination } from "@/features/transfers/components/TransferPagination";
 import { LoadingIndicator } from "@/components/ui/loading-indicator";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 
 const Operations = () => {
   const { 
@@ -36,8 +38,10 @@ const Operations = () => {
   const [isFiltering, setIsFiltering] = useState(false);
   const [initialLoadAttempted, setInitialLoadAttempted] = useState(false);
   const [stableOperations, setStableOperations] = useState<Operation[]>([]);
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
   const lastRefreshTimeRef = useRef<number>(Date.now());
   const manualRefreshClickedRef = useRef<boolean>(false);
+  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch operations on initial load
   useEffect(() => {
@@ -46,8 +50,24 @@ const Operations = () => {
       fetchOperations(true);
       setInitialLoadAttempted(true);
       lastRefreshTimeRef.current = Date.now();
+      
+      // Set a loading timeout to detect stalled loading
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+      loadingTimeoutRef.current = setTimeout(() => {
+        if (isLoading) {
+          setLoadingTimeout(true);
+        }
+      }, 15000);
     }
-  }, [fetchOperations, initialLoadAttempted]);
+    
+    return () => {
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+    };
+  }, [fetchOperations, initialLoadAttempted, isLoading]);
 
   // Stabilisez les opérations pour éviter les clignotements
   useEffect(() => {
@@ -60,6 +80,7 @@ const Operations = () => {
       console.log(`Updating stable operations with ${operations.length} operations`);
       setStableOperations(operations);
       manualRefreshClickedRef.current = false;
+      setLoadingTimeout(false);
     }
   }, [operations, isLoading]);
 
@@ -133,13 +154,26 @@ const Operations = () => {
     console.log("Manual refresh triggered");
     manualRefreshClickedRef.current = true;
     lastRefreshTimeRef.current = now;
+    setLoadingTimeout(false);
     refreshOperations();
   };
 
+  // Fonction de récupération forcée en cas de timeout
+  const handleForceRefresh = () => {
+    console.log("Force refresh triggered");
+    manualRefreshClickedRef.current = true;
+    lastRefreshTimeRef.current = Date.now();
+    setLoadingTimeout(false);
+    
+    // Forcer une actualisation complète
+    fetchOperations(true);
+  };
+
   // Déterminer si nous devons afficher un chargement, une erreur ou le contenu
-  const showInitialLoading = isLoading && stableOperations.length === 0;
+  const showInitialLoading = isLoading && stableOperations.length === 0 && !loadingTimeout;
+  const showLoggingTimeout = loadingTimeout && stableOperations.length === 0;
   const showError = !isLoading && error && stableOperations.length === 0;
-  const showEmptyState = !isLoading && !error && stableOperations.length === 0 && initialLoadAttempted;
+  const showEmptyState = !isLoading && !error && stableOperations.length === 0 && initialLoadAttempted && !loadingTimeout;
   const showContent = stableOperations.length > 0 || isLoading;
 
   return (
@@ -166,6 +200,21 @@ const Operations = () => {
             size="lg" 
             showImmediately={true}
           />
+        </div>
+      )}
+      
+      {showLoggingTimeout && (
+        <div className="rounded-lg bg-yellow-50 p-6 text-center">
+          <p className="text-yellow-700 mb-4">
+            Le chargement des opérations prend plus de temps que prévu.
+          </p>
+          <Button 
+            onClick={handleForceRefresh}
+            className="bg-yellow-500 hover:bg-yellow-600 text-white"
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Forcer l'actualisation
+          </Button>
         </div>
       )}
 

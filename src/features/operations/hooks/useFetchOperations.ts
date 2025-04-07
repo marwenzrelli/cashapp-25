@@ -12,10 +12,11 @@ export const useFetchOperations = () => {
   const [fetchAttempts, setFetchAttempts] = useState<number>(0);
   const isMountedRef = useRef<boolean>(true);
   const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const fetchingRef = useRef<boolean>(false);
 
   const fetchOperations = useCallback(async (force: boolean = false) => {
     // Si une requête est déjà en cours et ce n'est pas forcé, ne pas en lancer une autre
-    if (!force && isLoading) {
+    if (fetchingRef.current && !force) {
       console.log("Une requête est déjà en cours, ignorant cette requête");
       return;
     }
@@ -30,6 +31,7 @@ export const useFetchOperations = () => {
     try {
       if (!isMountedRef.current) return;
       
+      fetchingRef.current = true;
       setIsLoading(true);
       setLastFetchTime(now);
       setFetchAttempts(prev => prev + 1);
@@ -136,6 +138,7 @@ export const useFetchOperations = () => {
     } finally {
       if (isMountedRef.current) {
         setIsLoading(false);
+        fetchingRef.current = false;
       }
     }
   }, [lastFetchTime, fetchAttempts, isLoading]);
@@ -154,7 +157,7 @@ export const useFetchOperations = () => {
       if (isMountedRef.current) {
         fetchOperations(true);
       }
-    }, 500);
+    }, 100); // Réduit à 100ms au lieu de 500ms pour charger plus rapidement
     
     return () => {
       isMountedRef.current = false;
