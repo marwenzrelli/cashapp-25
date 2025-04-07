@@ -47,9 +47,9 @@ export const useOperationsFetcher = () => {
     const controller = createAbortController('deposits');
     
     try {
-      // Create a timeout promise
+      // Increased timeout from 12s to 20s
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Fetch deposits timeout')), 12000);
+        setTimeout(() => reject(new Error('Fetch deposits timeout')), 20000);
       });
       
       // Create the database query promise
@@ -68,7 +68,7 @@ export const useOperationsFetcher = () => {
         if (result.error) {
           console.error('Error fetching deposits:', result.error);
           toast.error('Erreur lors de la récupération des versements');
-          throw result.error;
+          return [];
         }
         
         console.log(`Fetched ${result.data?.length || 0} deposits`);
@@ -78,7 +78,8 @@ export const useOperationsFetcher = () => {
       return [];
     } catch (error) {
       console.error('Error in fetchDeposits:', error);
-      throw error;
+      // Return empty array on error to avoid breaking the UI
+      return [];
     } finally {
       removeAbortController('deposits');
     }
@@ -92,9 +93,9 @@ export const useOperationsFetcher = () => {
     const controller = createAbortController('withdrawals');
     
     try {
-      // Create a timeout promise
+      // Increased timeout from 12s to 20s
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Fetch withdrawals timeout')), 12000);
+        setTimeout(() => reject(new Error('Fetch withdrawals timeout')), 20000);
       });
       
       // Create the database query promise
@@ -113,7 +114,7 @@ export const useOperationsFetcher = () => {
         if (result.error) {
           console.error('Error fetching withdrawals:', result.error);
           toast.error('Erreur lors de la récupération des retraits');
-          throw result.error;
+          return [];
         }
         
         console.log(`Fetched ${result.data?.length || 0} withdrawals`);
@@ -123,7 +124,8 @@ export const useOperationsFetcher = () => {
       return [];
     } catch (error) {
       console.error('Error in fetchWithdrawals:', error);
-      throw error;
+      // Return empty array on error to avoid breaking the UI
+      return [];
     } finally {
       removeAbortController('withdrawals');
     }
@@ -137,9 +139,9 @@ export const useOperationsFetcher = () => {
     const controller = createAbortController('transfers');
     
     try {
-      // Create a timeout promise
+      // Increased timeout from 12s to 20s
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Fetch transfers timeout')), 12000);
+        setTimeout(() => reject(new Error('Fetch transfers timeout')), 20000);
       });
       
       // Create the database query promise
@@ -158,7 +160,7 @@ export const useOperationsFetcher = () => {
         if (result.error) {
           console.error('Error fetching transfers:', result.error);
           toast.error('Erreur lors de la récupération des virements');
-          throw result.error;
+          return [];
         }
         
         console.log(`Fetched ${result.data?.length || 0} transfers`);
@@ -181,15 +183,15 @@ export const useOperationsFetcher = () => {
     try {
       console.log('Starting fetchAllOperations...');
       
-      // Set a timeout to ensure we don't hang forever
+      // Increased timeout from 20s to 30s
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Fetch operations timeout')), 20000);
+        setTimeout(() => reject(new Error('Fetch operations timeout')), 30000);
       });
       
       const fetchPromise = Promise.all([
-        fetchDeposits(),
-        fetchWithdrawals(),
-        fetchTransfers()
+        fetchDeposits().catch(() => []),
+        fetchWithdrawals().catch(() => []),
+        fetchTransfers().catch(() => [])
       ]);
       
       // Race the fetch against the timeout
@@ -200,19 +202,23 @@ export const useOperationsFetcher = () => {
         const [deposits, withdrawals, transfers] = result;
         
         console.log(`fetchAllOperations completed with ${deposits.length} deposits, ${withdrawals.length} withdrawals, ${transfers.length} transfers`);
+        console.log('Raw data - deposits:', deposits.length, ', withdrawals:', withdrawals.length, ', transfers:', transfers.length);
         
         return { deposits, withdrawals, transfers };
       }
       
-      // This should not happen due to the rejected promise in timeoutPromise
+      console.log('fetchAllOperations completed with no results (should not happen)');
       return { deposits: [], withdrawals: [], transfers: [] };
     } catch (error) {
       console.error('Error fetching all operations:', error);
+      
+      // Ensure we provide feedback to the user about the timeout
       if (error && typeof error === 'object' && 'message' in error && 
           error.message === 'Fetch operations timeout') {
         toast.error('Délai d\'attente dépassé lors de la récupération des opérations');
       }
-      // Return empty arrays so the UI can still render
+      
+      // We still return empty arrays so the UI can render an empty state
       return { deposits: [], withdrawals: [], transfers: [] };
     }
   }, [fetchDeposits, fetchWithdrawals, fetchTransfers]);
