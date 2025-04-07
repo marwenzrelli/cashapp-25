@@ -58,6 +58,12 @@ const Operations = () => {
     fetchOperations
   });
 
+  // Log operations count to help with debugging
+  useEffect(() => {
+    console.log(`Operations page - Total operations: ${allOperations.length}`);
+    console.log(`Operations page - Filtered operations: ${filteredOperations.length}`);
+  }, [allOperations.length, filteredOperations.length]);
+
   // Export PDF functionality
   const handleExportPDF = () => {
     generatePDF(filteredOperations, filterType, filterClient, dateRange);
@@ -99,7 +105,9 @@ const Operations = () => {
         />
       )}
 
-      {showEmptyState && <OperationsEmptyState />}
+      {showEmptyState && (
+        <OperationsEmptyState onRefresh={handleManualRefresh} />
+      )}
 
       {showContent && (
         <OperationsContent

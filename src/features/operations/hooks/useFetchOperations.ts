@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Operation } from '../types';
@@ -17,7 +16,6 @@ export const useFetchOperations = () => {
   const maxRetries = useRef<number>(3);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Fonction pour transformer les données en type Operation
   const transformToOperations = (
     deposits: any[] = [], 
     withdrawals: any[] = [], 
@@ -62,7 +60,6 @@ export const useFetchOperations = () => {
     return [...transformedDeposits, ...transformedWithdrawals, ...transformedTransfers];
   };
 
-  // Fonction pour dédupliquer les opérations
   const deduplicateOperations = (operations: Operation[]): Operation[] => {
     const uniqueMap = new Map<string, Operation>();
     operations.forEach(op => {
@@ -74,15 +71,12 @@ export const useFetchOperations = () => {
     return Array.from(uniqueMap.values());
   };
 
-  // Fonction pour récupérer les opérations
   const fetchOperations = useCallback(async (force: boolean = false) => {
-    // Si une requête est déjà en cours et pas forcée, ne pas en démarrer une autre
     if (fetchingRef.current && !force) {
       console.log("Une requête est déjà en cours, ignorant cette requête");
       return;
     }
     
-    // Si le dernier fetch était il y a moins de 2 secondes et pas forcé, ne pas fetch à nouveau
     const now = Date.now();
     if (!force && now - lastFetchTime < 2000) {
       console.log(`Dernier fetch il y a ${now - lastFetchTime}ms, ignorant cette requête`);
@@ -92,12 +86,10 @@ export const useFetchOperations = () => {
     try {
       if (!isMountedRef.current) return;
       
-      // Annuler toute requête en cours
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
       
-      // Créer un nouveau controller d'abandon
       abortControllerRef.current = new AbortController();
       
       fetchingRef.current = true;
@@ -107,46 +99,43 @@ export const useFetchOperations = () => {
       
       console.log("Fetching operations, attempt #", fetchAttempts + 1);
       
-      // Configurer un timeout pour réinitialiser l'état de chargement si le fetch prend trop de temps
       const loadingTimeout = setTimeout(() => {
         if (fetchingRef.current && isMountedRef.current) {
           console.warn("Fetch operation timeout - resetting loading state");
           fetchingRef.current = false;
           setIsLoading(false);
           
-          // Réinitialiser le controller d'abandon
           if (abortControllerRef.current) {
             abortControllerRef.current.abort();
             abortControllerRef.current = null;
           }
         }
-      }, 10000); // 10 secondes timeout
+      }, 10000);
       
-      // Récupérer les données en parallèle pour améliorer les performances
       const [depositsResponse, withdrawalsResponse, transfersResponse] = await Promise.all([
         supabase.from('deposits').select('*').order('created_at', { ascending: false }),
         supabase.from('withdrawals').select('*').order('created_at', { ascending: false }),
         supabase.from('transfers').select('*').order('created_at', { ascending: false })
       ]);
       
-      // Effacer le timeout car nous avons reçu une réponse
       clearTimeout(loadingTimeout);
       
-      // Vérifier les erreurs
       if (depositsResponse.error) throw depositsResponse.error;
       if (withdrawalsResponse.error) throw withdrawalsResponse.error;
       if (transfersResponse.error) throw transfersResponse.error;
       
       if (!isMountedRef.current) return;
 
-      // Transformer en type Operation commun
+      console.log("Raw deposits data:", depositsResponse.data);
+      console.log("Raw withdrawals data:", withdrawalsResponse.data);
+      console.log("Raw transfers data:", transfersResponse.data);
+
       const allOperations = transformToOperations(
-        depositsResponse.data, 
-        withdrawalsResponse.data, 
-        transfersResponse.data
+        depositsResponse.data || [], 
+        withdrawalsResponse.data || [], 
+        transfersResponse.data || []
       );
       
-      // Trier par date (plus récent d'abord)
       allOperations.sort((a, b) => {
         const dateA = new Date(a.operation_date || a.date);
         const dateB = new Date(b.operation_date || b.date);
@@ -155,40 +144,22 @@ export const useFetchOperations = () => {
 
       console.log(`Fetched ${allOperations.length} operations (${depositsResponse.data?.length || 0} deposits, ${withdrawalsResponse.data?.length || 0} withdrawals, ${transfersResponse.data?.length || 0} transfers)`);
       
-      // Dédupliquer les opérations avant de les définir
       const uniqueOperations = deduplicateOperations(allOperations);
       
       if (!isMountedRef.current) return;
       
-      // Vérifier que nous avons effectivement obtenu des données avant d'effacer l'état d'erreur
-      if (uniqueOperations.length > 0) {
-        setOperations(uniqueOperations);
-        setError(null);
-        // Réinitialiser le compteur de tentatives en cas de succès
-        maxRetries.current = 3;
-      } else if (fetchAttempts < 2) {
-        // Si nous n'avons obtenu aucune donnée à la première tentative, réessayer une fois
-        console.log("No operations found, retrying automatically");
-        setTimeout(() => {
-          if (isMountedRef.current) {
-            fetchOperations(true);
-          }
-        }, 1000);
-        return;
-      } else {
-        console.log("No operations found after retry");
-      }
+      setOperations(uniqueOperations);
+      setError(null);
+      
+      maxRetries.current = 3;
     } catch (err: any) {
-      if (!isMountedRef.current) return;
       console.error('Error fetching operations:', err);
       setError(err.message);
       
-      // N'afficher le toast que si nous n'en avons pas montré récemment et s'il y a une vraie erreur
       if (force || fetchAttempts <= 1) {
         toast.error('Erreur lors de la récupération des opérations');
       }
       
-      // Auto-retry with exponential backoff if we have retries left
       if (maxRetries.current > 0) {
         const retryDelay = Math.min(2000 * Math.pow(2, 3 - maxRetries.current), 10000);
         console.log(`Will retry in ${retryDelay}ms, ${maxRetries.current} retries left`);
@@ -196,7 +167,6 @@ export const useFetchOperations = () => {
         
         setTimeout(() => {
           if (isMountedRef.current) {
-            console.log("Auto-retrying fetch after error");
             fetchOperations(true);
           }
         }, retryDelay);
@@ -206,28 +176,24 @@ export const useFetchOperations = () => {
         setIsLoading(false);
         fetchingRef.current = false;
         
-        // Effacer le controller d'abandon
         abortControllerRef.current = null;
       }
     }
   }, [lastFetchTime, fetchAttempts]);
 
-  // Fetch initial avec un délai pour éviter les conditions de course
   useEffect(() => {
     isMountedRef.current = true;
     
-    // Nettoyer tout timeout existant
     if (fetchTimeoutRef.current) {
       clearTimeout(fetchTimeoutRef.current);
     }
     
-    // Démarrer un nouveau fetch avec délai
     fetchTimeoutRef.current = setTimeout(() => {
       if (isMountedRef.current) {
-        setIsLoading(true); // S'assurer que l'état de chargement est défini avant le fetch initial
+        setIsLoading(true);
         fetchOperations(true);
       }
-    }, 100); // Réduit à 100ms au lieu de 500ms pour charger plus rapidement
+    }, 100);
     
     return () => {
       isMountedRef.current = false;
@@ -235,7 +201,6 @@ export const useFetchOperations = () => {
         clearTimeout(fetchTimeoutRef.current);
       }
       
-      // Annuler tout fetch en cours
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }

@@ -1,4 +1,3 @@
-
 import { useEffect, useCallback, useState, useRef } from "react";
 import { Operation } from "../types";
 import { useOperationsState } from "./useOperationsState";
@@ -39,8 +38,9 @@ export const useOperations = () => {
         setInitialLoadDone(true);
       }
     } else if (!fetchLoading && initialLoadDone) {
-      // If loading is complete but no operations were found
+      // If loading is complete but no operations were found, make sure to update state
       console.log("No operations found after loading completed");
+      setOperations([]);
     }
   }, [fetchedOperations, fetchLoading, initialLoadDone, setOperations]);
 
