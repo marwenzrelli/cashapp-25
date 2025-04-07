@@ -52,15 +52,17 @@ export const useOperationsFetcher = () => {
         setTimeout(() => reject(new Error('Fetch deposits timeout')), 12000);
       });
       
-      // Create the database query promise and execute it immediately to get a proper Promise
+      // Create the database query promise
       const queryPromise = supabase
         .from('deposits')
         .select('*')
-        .order('created_at', { ascending: false })
-        .then(result => result as SupabaseResponse<any[]>);
+        .order('created_at', { ascending: false });
       
-      // Race the promises with proper type handling
-      const result = await Promise.race([queryPromise, timeoutPromise]);
+      // Use Promise.race with proper typing
+      const result = await Promise.race([
+        queryPromise.then(res => res as unknown as SupabaseResponse<any[]>),
+        timeoutPromise
+      ]);
       
       if (result && 'data' in result) {
         if (result.error) {
@@ -95,17 +97,18 @@ export const useOperationsFetcher = () => {
         setTimeout(() => reject(new Error('Fetch withdrawals timeout')), 12000);
       });
       
-      // Create the database query promise and execute it immediately to get a proper Promise
+      // Create the database query promise
       const queryPromise = supabase
         .from('withdrawals')
         .select('*')
-        .order('created_at', { ascending: false })
-        .then(result => result as SupabaseResponse<any[]>);
+        .order('created_at', { ascending: false });
       
-      // Race the promises with proper type handling
-      const result = await Promise.race([queryPromise, timeoutPromise]);
+      // Use Promise.race with proper typing
+      const result = await Promise.race([
+        queryPromise.then(res => res as unknown as SupabaseResponse<any[]>),
+        timeoutPromise
+      ]);
       
-      // Type guard to ensure result is from queryPromise, not timeoutPromise
       if (result && 'data' in result) {
         if (result.error) {
           console.error('Error fetching withdrawals:', result.error);
@@ -139,17 +142,18 @@ export const useOperationsFetcher = () => {
         setTimeout(() => reject(new Error('Fetch transfers timeout')), 12000);
       });
       
-      // Create the database query promise and execute it immediately to get a proper Promise
+      // Create the database query promise
       const queryPromise = supabase
         .from('transfers')
         .select('*')
-        .order('created_at', { ascending: false })
-        .then(result => result as SupabaseResponse<any[]>);
+        .order('created_at', { ascending: false });
       
-      // Race the promises with proper type handling
-      const result = await Promise.race([queryPromise, timeoutPromise]);
+      // Use Promise.race with proper typing
+      const result = await Promise.race([
+        queryPromise.then(res => res as unknown as SupabaseResponse<any[]>),
+        timeoutPromise
+      ]);
       
-      // Type guard to ensure result is from queryPromise, not timeoutPromise
       if (result && 'data' in result) {
         if (result.error) {
           console.error('Error fetching transfers:', result.error);
