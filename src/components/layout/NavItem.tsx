@@ -3,19 +3,19 @@ import { Link } from "react-router-dom";
 import { LucideIcon } from "lucide-react";
 
 interface NavItemProps {
-  path: string;
+  to: string;
   label: string;
   icon: LucideIcon;
   currentPath: string;
   onClick?: () => void;
 }
 
-export const NavItem = ({ path, label, icon: Icon, currentPath, onClick }: NavItemProps) => {
-  const isActive = currentPath === path;
+export const NavItem = ({ to, label, icon: Icon, currentPath, onClick }: NavItemProps) => {
+  const isActive = currentPath === to;
   
   return (
     <Link
-      to={path}
+      to={to}
       onClick={onClick}
       className={`flex items-center space-x-2 px-3 py-2 rounded-md transition-all duration-300 ${
         isActive
@@ -32,12 +32,12 @@ export const NavItem = ({ path, label, icon: Icon, currentPath, onClick }: NavIt
         style={{
           color: isActive
             ? "#FFFFFF"
-            : path === "/dashboard" ? "#9b87f5"
-            : path === "/clients" ? "#0EA5E9"
-            : path === "/deposits" ? "#10B981"
-            : path === "/withdrawals" ? "#EF4444"
-            : path === "/transfers" ? "#8B5CF6"
-            : path === "/statistics" ? "#F97316"
+            : to === "/dashboard" ? "#9b87f5"
+            : to === "/clients" ? "#0EA5E9"
+            : to === "/deposits" ? "#10B981"
+            : to === "/withdrawals" ? "#EF4444"
+            : to === "/transfers" ? "#8B5CF6"
+            : to === "/statistics" ? "#F97316"
             : "#D946EF"
         }}
         strokeWidth={isActive ? 2.5 : 2}

@@ -185,7 +185,7 @@ const SearchOperations = () => {
           <div className="flex flex-col items-center justify-center text-red-500">
             <p>Erreur lors du chargement des opérations: {error}</p>
             <Button 
-              onClick={() => refreshOperations(true)} 
+              onClick={() => refreshOperations()}
               variant="outline"
               className="mt-4"
             >

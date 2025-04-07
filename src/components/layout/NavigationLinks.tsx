@@ -11,19 +11,81 @@ import {
   Settings,
   Search
 } from "lucide-react";
+import { UserRole } from "@/types/admin";
 
-export const NavigationLinks = () => {
+interface NavigationLinksProps {
+  className?: string;
+  onClick?: () => void;
+  currentPath?: string;
+  userRole?: UserRole | null;
+}
+
+export const NavigationLinks = ({ className, onClick, currentPath, userRole }: NavigationLinksProps) => {
   return (
-    <div className="space-y-1">
-      <NavItem to="/dashboard" icon={<LayoutDashboard size={18} />} label="Tableau de bord" />
-      <NavItem to="/clients" icon={<Users size={18} />} label="Clients" />
-      <NavItem to="/deposits" icon={<ArrowDownToLine size={18} />} label="Versements" />
-      <NavItem to="/withdrawals" icon={<ArrowUpFromLine size={18} />} label="Retraits" />
-      <NavItem to="/transfers" icon={<ArrowLeftRight size={18} />} label="Virements" />
-      <NavItem to="/statistics" icon={<BarChart2 size={18} />} label="Statistiques" />
-      <NavItem to="/operations" icon={<ClipboardList size={18} />} label="Opérations" />
-      <NavItem to="/search" icon={<Search size={18} />} label="Recherche" />
-      <NavItem to="/administration" icon={<Settings size={18} />} label="Administration" />
+    <div className={className || "space-y-1"}>
+      <NavItem 
+        to="/dashboard" 
+        icon={LayoutDashboard} 
+        label="Tableau de bord" 
+        currentPath={currentPath || ""} 
+        onClick={onClick}
+      />
+      <NavItem 
+        to="/clients" 
+        icon={Users} 
+        label="Clients" 
+        currentPath={currentPath || ""} 
+        onClick={onClick}
+      />
+      <NavItem 
+        to="/deposits" 
+        icon={ArrowDownToLine} 
+        label="Versements" 
+        currentPath={currentPath || ""} 
+        onClick={onClick}
+      />
+      <NavItem 
+        to="/withdrawals" 
+        icon={ArrowUpFromLine} 
+        label="Retraits" 
+        currentPath={currentPath || ""} 
+        onClick={onClick}
+      />
+      <NavItem 
+        to="/transfers" 
+        icon={ArrowLeftRight} 
+        label="Virements" 
+        currentPath={currentPath || ""} 
+        onClick={onClick}
+      />
+      <NavItem 
+        to="/statistics" 
+        icon={BarChart2} 
+        label="Statistiques" 
+        currentPath={currentPath || ""} 
+        onClick={onClick}
+      />
+      <NavItem 
+        to="/operations" 
+        icon={ClipboardList} 
+        label="Opérations" 
+        currentPath={currentPath || ""} 
+        onClick={onClick}
+      />
+      <NavItem 
+        to="/search" 
+        icon={Search} 
+        label="Recherche" 
+        currentPath={currentPath || ""} 
+        onClick={onClick}
+      />
+      <NavItem 
+        to="/administration" 
+        icon={Settings} 
+        label="Administration" 
+        currentPath={currentPath || ""} 
+        onClick={onClick}
+      />
     </div>
   );
 };
