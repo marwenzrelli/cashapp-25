@@ -1,11 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { OperationFilters } from "@/features/operations/components/OperationFilters";
 import { useOperations } from "@/features/operations/hooks/useOperations";
 import { DeleteOperationDialog } from "@/features/operations/components/DeleteOperationDialog";
 import { OperationsHeader } from "@/features/operations/components/OperationsHeader";
 import { generatePDF } from "@/features/operations/utils/pdf-generator";
-import { toast } from "sonner";
 import { useOperationsFilter } from "@/features/operations/hooks/useOperationsFilter";
 import { OperationsLoading } from "@/features/operations/components/OperationsLoading";
 import { OperationsLoadingTimeout } from "@/features/operations/components/OperationsLoadingTimeout";
@@ -58,13 +56,11 @@ const Operations = () => {
     fetchOperations
   });
 
-  // Log operations count to help with debugging
   useEffect(() => {
     console.log(`Operations page - Total operations: ${allOperations.length}`);
     console.log(`Operations page - Filtered operations: ${filteredOperations.length}`);
   }, [allOperations.length, filteredOperations.length]);
 
-  // Export PDF functionality
   const handleExportPDF = () => {
     generatePDF(filteredOperations, filterType, filterClient, dateRange);
   };
