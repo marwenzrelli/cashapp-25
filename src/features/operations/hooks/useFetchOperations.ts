@@ -6,24 +6,83 @@ import { toast } from 'sonner';
 
 export const useFetchOperations = () => {
   const [operations, setOperations] = useState<Operation[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false); // Start with not loading
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [lastFetchTime, setLastFetchTime] = useState<number>(0);
   const [fetchAttempts, setFetchAttempts] = useState<number>(0);
+  
   const isMountedRef = useRef<boolean>(true);
   const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const fetchingRef = useRef<boolean>(false);
   const maxRetries = useRef<number>(3);
   const abortControllerRef = useRef<AbortController | null>(null);
 
+  // Fonction pour transformer les données en type Operation
+  const transformToOperations = (
+    deposits: any[] = [], 
+    withdrawals: any[] = [], 
+    transfers: any[] = []
+  ): Operation[] => {
+    const transformedDeposits: Operation[] = deposits.map(deposit => ({
+      id: deposit.id.toString(),
+      type: 'deposit',
+      amount: deposit.amount,
+      date: deposit.created_at,
+      operation_date: deposit.operation_date,
+      description: deposit.notes || 'Versement',
+      fromClient: deposit.client_name,
+      client_id: deposit.client_id,
+      status: deposit.status
+    }));
+    
+    const transformedWithdrawals: Operation[] = withdrawals.map(withdrawal => ({
+      id: withdrawal.id.toString(),
+      type: 'withdrawal',
+      amount: withdrawal.amount,
+      date: withdrawal.created_at,
+      operation_date: withdrawal.operation_date,
+      description: withdrawal.notes || 'Retrait',
+      fromClient: withdrawal.client_name,
+      client_id: withdrawal.client_id,
+      status: withdrawal.status
+    }));
+    
+    const transformedTransfers: Operation[] = transfers.map(transfer => ({
+      id: transfer.id.toString(),
+      type: 'transfer',
+      amount: transfer.amount,
+      date: transfer.created_at,
+      operation_date: transfer.operation_date,
+      description: transfer.reason || 'Virement',
+      fromClient: transfer.from_client,
+      toClient: transfer.to_client,
+      status: transfer.status
+    }));
+
+    return [...transformedDeposits, ...transformedWithdrawals, ...transformedTransfers];
+  };
+
+  // Fonction pour dédupliquer les opérations
+  const deduplicateOperations = (operations: Operation[]): Operation[] => {
+    const uniqueMap = new Map<string, Operation>();
+    operations.forEach(op => {
+      const key = `${op.type}-${op.id}`;
+      if (!uniqueMap.has(key)) {
+        uniqueMap.set(key, op);
+      }
+    });
+    return Array.from(uniqueMap.values());
+  };
+
+  // Fonction pour récupérer les opérations
   const fetchOperations = useCallback(async (force: boolean = false) => {
-    // If a request is already in progress and not forced, don't start another
+    // Si une requête est déjà en cours et pas forcée, ne pas en démarrer une autre
     if (fetchingRef.current && !force) {
       console.log("Une requête est déjà en cours, ignorant cette requête");
       return;
     }
     
-    // If last fetch was less than 2 seconds ago and not forced, don't fetch again
+    // Si le dernier fetch était il y a moins de 2 secondes et pas forcé, ne pas fetch à nouveau
     const now = Date.now();
     if (!force && now - lastFetchTime < 2000) {
       console.log(`Dernier fetch il y a ${now - lastFetchTime}ms, ignorant cette requête`);
@@ -33,12 +92,12 @@ export const useFetchOperations = () => {
     try {
       if (!isMountedRef.current) return;
       
-      // Cancel any in-progress fetch
+      // Annuler toute requête en cours
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
       
-      // Create a new abort controller
+      // Créer un nouveau controller d'abandon
       abortControllerRef.current = new AbortController();
       
       fetchingRef.current = true;
@@ -48,123 +107,67 @@ export const useFetchOperations = () => {
       
       console.log("Fetching operations, attempt #", fetchAttempts + 1);
       
-      // Setup a timeout to automatically reset the loading state if the fetch takes too long
+      // Configurer un timeout pour réinitialiser l'état de chargement si le fetch prend trop de temps
       const loadingTimeout = setTimeout(() => {
         if (fetchingRef.current && isMountedRef.current) {
           console.warn("Fetch operation timeout - resetting loading state");
           fetchingRef.current = false;
           setIsLoading(false);
           
-          // Reset the abort controller
+          // Réinitialiser le controller d'abandon
           if (abortControllerRef.current) {
             abortControllerRef.current.abort();
             abortControllerRef.current = null;
           }
         }
-      }, 10000); // 10 seconds timeout (reduced from 15)
+      }, 10000); // 10 secondes timeout
       
-      // Fetch deposits with client_id
-      const { data: deposits, error: depositsError } = await supabase
-        .from('deposits')
-        .select('*')
-        .order('created_at', { ascending: false });
+      // Récupérer les données en parallèle pour améliorer les performances
+      const [depositsResponse, withdrawalsResponse, transfersResponse] = await Promise.all([
+        supabase.from('deposits').select('*').order('created_at', { ascending: false }),
+        supabase.from('withdrawals').select('*').order('created_at', { ascending: false }),
+        supabase.from('transfers').select('*').order('created_at', { ascending: false })
+      ]);
       
-      // Clear the timeout as we got a response
+      // Effacer le timeout car nous avons reçu une réponse
       clearTimeout(loadingTimeout);
       
-      if (depositsError) throw depositsError;
+      // Vérifier les erreurs
+      if (depositsResponse.error) throw depositsResponse.error;
+      if (withdrawalsResponse.error) throw withdrawalsResponse.error;
+      if (transfersResponse.error) throw transfersResponse.error;
       
-      // Fetch withdrawals with client_id
-      const { data: withdrawals, error: withdrawalsError } = await supabase
-        .from('withdrawals')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (withdrawalsError) throw withdrawalsError;
-      
-      // Fetch transfers
-      const { data: transfers, error: transfersError } = await supabase
-        .from('transfers')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (transfersError) throw transfersError;
-
       if (!isMountedRef.current) return;
 
-      // Transform to common Operation type, CONVERTING ID TO STRING
-      const transformedDeposits: Operation[] = (deposits || []).map(deposit => ({
-        id: deposit.id.toString(), // Convert number to string
-        type: 'deposit',
-        amount: deposit.amount,
-        date: deposit.created_at,
-        operation_date: deposit.operation_date,
-        description: deposit.notes || 'Versement',
-        fromClient: deposit.client_name,
-        client_id: deposit.client_id,
-        status: deposit.status
-      }));
+      // Transformer en type Operation commun
+      const allOperations = transformToOperations(
+        depositsResponse.data, 
+        withdrawalsResponse.data, 
+        transfersResponse.data
+      );
       
-      const transformedWithdrawals: Operation[] = (withdrawals || []).map(withdrawal => ({
-        id: withdrawal.id.toString(), // Convert number to string
-        type: 'withdrawal',
-        amount: withdrawal.amount,
-        date: withdrawal.created_at,
-        operation_date: withdrawal.operation_date,
-        description: withdrawal.notes || 'Retrait',
-        fromClient: withdrawal.client_name,
-        client_id: withdrawal.client_id,
-        status: withdrawal.status
-      }));
-      
-      const transformedTransfers: Operation[] = (transfers || []).map(transfer => ({
-        id: transfer.id.toString(), // Convert number to string
-        type: 'transfer',
-        amount: transfer.amount,
-        date: transfer.created_at,
-        operation_date: transfer.operation_date,
-        description: transfer.reason || 'Virement',
-        fromClient: transfer.from_client,
-        toClient: transfer.to_client,
-        status: transfer.status
-      }));
-
-      const allOperations = [
-        ...transformedDeposits,
-        ...transformedWithdrawals,
-        ...transformedTransfers
-      ];
-      
-      // Sort by date (most recent first)
+      // Trier par date (plus récent d'abord)
       allOperations.sort((a, b) => {
         const dateA = new Date(a.operation_date || a.date);
         const dateB = new Date(b.operation_date || b.date);
         return dateB.getTime() - dateA.getTime();
       });
 
-      console.log(`Fetched ${allOperations.length} operations (${transformedDeposits.length} deposits, ${transformedWithdrawals.length} withdrawals, ${transformedTransfers.length} transfers)`);
+      console.log(`Fetched ${allOperations.length} operations (${depositsResponse.data?.length || 0} deposits, ${withdrawalsResponse.data?.length || 0} withdrawals, ${transfersResponse.data?.length || 0} transfers)`);
       
-      // Deduplicate operations before setting them
-      const uniqueMap = new Map<string, Operation>();
-      allOperations.forEach(op => {
-        const key = `${op.type}-${op.id}`;
-        if (!uniqueMap.has(key)) {
-          uniqueMap.set(key, op);
-        }
-      });
-      
-      const uniqueOperations = Array.from(uniqueMap.values());
+      // Dédupliquer les opérations avant de les définir
+      const uniqueOperations = deduplicateOperations(allOperations);
       
       if (!isMountedRef.current) return;
       
-      // Verify that we actually got data before clearing error state
+      // Vérifier que nous avons effectivement obtenu des données avant d'effacer l'état d'erreur
       if (uniqueOperations.length > 0) {
         setOperations(uniqueOperations);
         setError(null);
-        // Reset retry counter on success
+        // Réinitialiser le compteur de tentatives en cas de succès
         maxRetries.current = 3;
       } else if (fetchAttempts < 2) {
-        // If we didn't get any data on the first attempt, try again once
+        // Si nous n'avons obtenu aucune donnée à la première tentative, réessayer une fois
         console.log("No operations found, retrying automatically");
         setTimeout(() => {
           if (isMountedRef.current) {
@@ -180,7 +183,7 @@ export const useFetchOperations = () => {
       console.error('Error fetching operations:', err);
       setError(err.message);
       
-      // Only show toast if we haven't shown one recently and there's a real error
+      // N'afficher le toast que si nous n'en avons pas montré récemment et s'il y a une vraie erreur
       if (force || fetchAttempts <= 1) {
         toast.error('Erreur lors de la récupération des opérations');
       }
@@ -203,28 +206,28 @@ export const useFetchOperations = () => {
         setIsLoading(false);
         fetchingRef.current = false;
         
-        // Clear the abort controller
+        // Effacer le controller d'abandon
         abortControllerRef.current = null;
       }
     }
   }, [lastFetchTime, fetchAttempts]);
 
-  // Initial fetch with a delay to avoid race conditions
+  // Fetch initial avec un délai pour éviter les conditions de course
   useEffect(() => {
     isMountedRef.current = true;
     
-    // Clean up any existing timeout
+    // Nettoyer tout timeout existant
     if (fetchTimeoutRef.current) {
       clearTimeout(fetchTimeoutRef.current);
     }
     
-    // Start a new fetch with delay
+    // Démarrer un nouveau fetch avec délai
     fetchTimeoutRef.current = setTimeout(() => {
       if (isMountedRef.current) {
-        setIsLoading(true); // Make sure loading state is set before the initial fetch
+        setIsLoading(true); // S'assurer que l'état de chargement est défini avant le fetch initial
         fetchOperations(true);
       }
-    }, 100); // Reduced to 100ms instead of 500ms to load faster
+    }, 100); // Réduit à 100ms au lieu de 500ms pour charger plus rapidement
     
     return () => {
       isMountedRef.current = false;
@@ -232,7 +235,7 @@ export const useFetchOperations = () => {
         clearTimeout(fetchTimeoutRef.current);
       }
       
-      // Cancel any in-progress fetch
+      // Annuler tout fetch en cours
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
