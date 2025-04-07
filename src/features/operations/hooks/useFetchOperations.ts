@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Operation } from '../types';
 import { toast } from 'sonner';
@@ -8,10 +8,18 @@ export const useFetchOperations = () => {
   const [operations, setOperations] = useState<Operation[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
 
-  const fetchOperations = async () => {
+  const fetchOperations = useCallback(async () => {
+    // If last fetch was less than 1 second ago, don't fetch again (prevent multiple quick fetches)
+    const now = Date.now();
+    if (now - lastFetchTime < 1000) {
+      return;
+    }
+    
     try {
       setIsLoading(true);
+      setLastFetchTime(now);
       
       // Fetch deposits with client_id
       const { data: deposits, error: depositsError } = await supabase
@@ -80,18 +88,6 @@ export const useFetchOperations = () => {
         ...transformedTransfers
       ];
       
-      // Special debug for pepsi men
-      const pepsiOperations = allOperations.filter(op => 
-        (op.client_id === 4) || 
-        (op.fromClient && op.fromClient.toLowerCase() === 'pepsi men') ||
-        (op.toClient && op.toClient.toLowerCase() === 'pepsi men')
-      );
-      
-      if (pepsiOperations.length > 0) {
-        console.log(`Found ${pepsiOperations.length} operations for pepsi men`);
-        console.log(`Pepsi Men Withdrawal IDs: ${pepsiOperations.filter(op => op.type === 'withdrawal').map(op => op.id).join(', ')}`);
-      }
-      
       // Sort by date (most recent first)
       allOperations.sort((a, b) => {
         const dateA = new Date(a.operation_date || a.date);
@@ -108,12 +104,12 @@ export const useFetchOperations = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [lastFetchTime]);
 
   // Initial fetch
   useEffect(() => {
     fetchOperations();
-  }, []);
+  }, [fetchOperations]);
 
   return { operations, isLoading, error, refreshOperations: fetchOperations };
 };

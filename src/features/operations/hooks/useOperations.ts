@@ -1,5 +1,5 @@
 
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { Operation } from "../types";
 import { useOperationsState } from "./useOperationsState";
 import { useFetchOperations } from "./useFetchOperations";
@@ -22,10 +22,14 @@ export const useOperations = () => {
   // Use fetchOperations instead of fetchAllOperations
   const { operations: fetchedOperations, isLoading: fetchLoading, error: fetchError, refreshOperations } = useFetchOperations();
   const { deleteOperation: deleteOperationLogic, confirmDeleteOperation: confirmDeleteOperationLogic } = useDeleteOperation(refreshOperations, setIsLoading);
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
 
   // Update local operations when fetchedOperations change
   useEffect(() => {
-    setOperations(fetchedOperations);
+    if (fetchedOperations.length > 0) {
+      setOperations(fetchedOperations);
+      setInitialLoadDone(true);
+    }
   }, [fetchedOperations, setOperations]);
 
   // Fonction pour dédupliquer des opérations basées sur leur ID
@@ -44,21 +48,25 @@ export const useOperations = () => {
 
   // Initialize operations on component mount
   useEffect(() => {
-    const initOperations = async () => {
-      await refreshOperations();
-      
-      // Dédupliquer les opérations après les avoir récupérées
-      if (operations.length > 0) {
-        const uniqueOperations = deduplicateOperations(operations);
-        if (uniqueOperations.length !== operations.length) {
-          console.log(`Dédupliqué ${operations.length - uniqueOperations.length} opérations`);
-          setOperations(uniqueOperations);
+    if (!initialLoadDone) {
+      const initOperations = async () => {
+        console.log("Initializing operations...");
+        await refreshOperations();
+        
+        // Dédupliquer les opérations après les avoir récupérées
+        if (operations.length > 0) {
+          const uniqueOperations = deduplicateOperations(operations);
+          if (uniqueOperations.length !== operations.length) {
+            console.log(`Dédupliqué ${operations.length - uniqueOperations.length} opérations`);
+            setOperations(uniqueOperations);
+          }
         }
-      }
-    };
-    
-    initOperations();
-  }, []);
+        setInitialLoadDone(true);
+      };
+      
+      initOperations();
+    }
+  }, [initialLoadDone, operations.length, refreshOperations, setOperations]);
 
   // Set up real-time subscription to operations
   useEffect(() => {

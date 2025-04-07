@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { OperationFilters } from "@/features/operations/components/OperationFilters";
 import { useOperations } from "@/features/operations/hooks/useOperations";
 import { DeleteOperationDialog } from "@/features/operations/components/DeleteOperationDialog";
@@ -20,14 +20,23 @@ const Operations = () => {
     showDeleteDialog, 
     setShowDeleteDialog, 
     confirmDeleteOperation,
-    operationToDelete
+    operationToDelete,
+    fetchOperations
   } = useOperations();
+  
   const [filterType, setFilterType] = useState<string | null>(null);
   const [filterClient, setFilterClient] = useState("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [itemsPerPage, setItemsPerPage] = useState("10");
   const [currentPage, setCurrentPage] = useState(1);
+  const [isFiltering, setIsFiltering] = useState(false);
 
+  // Fetch operations on initial load
+  useEffect(() => {
+    fetchOperations();
+  }, [fetchOperations]);
+
+  // Filter operations with loading state
   const filteredOperations = operations.filter((op) => {
     // Filtrage par type
     const matchesType = !filterType || op.type === filterType;
@@ -38,17 +47,27 @@ const Operations = () => {
     // Filtrage par date
     const matchesDate =
       (!dateRange?.from ||
-        new Date(op.date) >= new Date(dateRange.from)) &&
+        new Date(op.operation_date || op.date) >= new Date(dateRange.from)) &&
       (!dateRange?.to ||
-        new Date(op.date) <= new Date(dateRange.to));
+        new Date(op.operation_date || op.date) <= new Date(dateRange.to));
     
     return matchesType && matchesClient && matchesDate;
   });
 
+  // Reset the filtering state after a brief delay
+  useEffect(() => {
+    setIsFiltering(true);
+    const timeout = setTimeout(() => {
+      setIsFiltering(false);
+    }, 300);
+    
+    return () => clearTimeout(timeout);
+  }, [filterType, filterClient, dateRange]);
+
   // Format dates for display
   const operationsWithFormattedDates = filteredOperations.map(op => ({
     ...op,
-    formattedDate: formatDateTime(op.date)
+    formattedDate: formatDateTime(op.operation_date || op.date)
   }));
 
   // Pagination des opérations
@@ -95,7 +114,7 @@ const Operations = () => {
 
       <OperationsList 
         operations={paginatedOperations} 
-        isLoading={isLoading} 
+        isLoading={isLoading || isFiltering} 
         onDelete={deleteOperation} 
       />
       

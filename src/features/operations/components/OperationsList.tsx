@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { User, Trash2, CalendarIcon, ClockIcon } from "lucide-react";
 import { getTypeStyle, getTypeIcon, getTypeLabel } from "@/features/operations/utils/operation-helpers";
 import { formatOperationId, getAmountColor } from "../utils/display-helpers";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface OperationsListProps {
   operations: Operation[];
@@ -25,17 +26,77 @@ export const OperationsList = ({ operations, isLoading, onDelete }: OperationsLi
     });
   };
 
+  // Render loading skeletons
+  const renderSkeletons = () => {
+    return Array(5).fill(0).map((_, index) => (
+      <TableRow key={`skeleton-${index}`}>
+        <TableCell><Skeleton className="h-8 w-24" /></TableCell>
+        <TableCell><Skeleton className="h-8 w-16" /></TableCell>
+        <TableCell><Skeleton className="h-8 w-24" /></TableCell>
+        <TableCell><Skeleton className="h-8 w-32" /></TableCell>
+        <TableCell><Skeleton className="h-8 w-32" /></TableCell>
+        <TableCell><Skeleton className="h-8 w-24" /></TableCell>
+        <TableCell><Skeleton className="h-8 w-8" /></TableCell>
+      </TableRow>
+    ));
+  };
+
+  // Render mobile skeletons
+  const renderMobileSkeletons = () => {
+    return Array(3).fill(0).map((_, index) => (
+      <div key={`mobile-skeleton-${index}`} className="p-4 bg-white dark:bg-gray-800 rounded-lg border shadow-sm w-full">
+        <div className="flex items-center justify-between mb-3">
+          <Skeleton className="h-10 w-24" />
+          <Skeleton className="h-10 w-24" />
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-8 w-3/4" />
+        </div>
+      </div>
+    ));
+  };
+
   if (isLoading) {
     return (
-      <div className="flex justify-center py-10">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
+      <Card className="w-full overflow-hidden">
+        <CardHeader className="px-4 sm:px-6">
+          <CardTitle className="text-lg sm:text-xl">Liste des opérations</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          {/* Loading skeletons for desktop */}
+          <div className="hidden md:block overflow-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="whitespace-nowrap">Type</TableHead>
+                  <TableHead className="whitespace-nowrap">ID</TableHead>
+                  <TableHead className="whitespace-nowrap">Date</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead className="whitespace-nowrap">Client(s)</TableHead>
+                  <TableHead className="text-center whitespace-nowrap">Montant</TableHead>
+                  <TableHead className="text-center whitespace-nowrap">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {renderSkeletons()}
+              </TableBody>
+            </Table>
+          </div>
+          
+          {/* Loading skeletons for mobile */}
+          <div className="md:hidden space-y-3 p-3 w-full">
+            {renderMobileSkeletons()}
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   if (operationsWithFormattedDates.length === 0) {
     return (
-      <div className="text-center py-10">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 text-center">
         <p className="text-muted-foreground">Aucune opération trouvée</p>
       </div>
     );
