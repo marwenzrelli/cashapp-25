@@ -11,7 +11,7 @@ interface LoadingIndicatorProps {
   fullscreen?: boolean;
   fadeIn?: boolean;
   showImmediately?: boolean;
-  debounceMs?: number; // New prop to control debounce time
+  debounceMs?: number;
 }
 
 export const LoadingIndicator = ({
@@ -22,7 +22,7 @@ export const LoadingIndicator = ({
   fullscreen = false,
   fadeIn = true,
   showImmediately = false,
-  debounceMs = 300 // Default debounce of 300ms
+  debounceMs = 300
 }: LoadingIndicatorProps) => {
   const [visible, setVisible] = useState(!fadeIn || showImmediately);
   const [shouldRender, setShouldRender] = useState(showImmediately);

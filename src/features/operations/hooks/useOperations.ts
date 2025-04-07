@@ -23,14 +23,19 @@ export const useOperations = () => {
   const { operations: fetchedOperations, isLoading: fetchLoading, error: fetchError, refreshOperations } = useFetchOperations();
   const { deleteOperation: deleteOperationLogic, confirmDeleteOperation: confirmDeleteOperationLogic } = useDeleteOperation(refreshOperations, setIsLoading);
   const [initialLoadDone, setInitialLoadDone] = useState(false);
+  const [dataError, setDataError] = useState<string | null>(null);
 
   // Update local operations when fetchedOperations change
   useEffect(() => {
-    if (fetchedOperations.length > 0) {
+    if (fetchedOperations.length > 0 || (!fetchLoading && initialLoadDone)) {
+      console.log(`Updating operations state with ${fetchedOperations.length} operations`);
       setOperations(fetchedOperations);
-      setInitialLoadDone(true);
+      
+      if (!initialLoadDone) {
+        setInitialLoadDone(true);
+      }
     }
-  }, [fetchedOperations, setOperations]);
+  }, [fetchedOperations, fetchLoading, initialLoadDone, setOperations]);
 
   // Fonction pour dédupliquer des opérations basées sur leur ID
   const deduplicateOperations = (ops: Operation[]): Operation[] => {
@@ -46,27 +51,18 @@ export const useOperations = () => {
     return Array.from(uniqueOps.values());
   };
 
-  // Initialize operations on component mount
+  // Ensure initial load completes
   useEffect(() => {
-    if (!initialLoadDone) {
-      const initOperations = async () => {
-        console.log("Initializing operations...");
-        await refreshOperations();
-        
-        // Dédupliquer les opérations après les avoir récupérées
-        if (operations.length > 0) {
-          const uniqueOperations = deduplicateOperations(operations);
-          if (uniqueOperations.length !== operations.length) {
-            console.log(`Dédupliqué ${operations.length - uniqueOperations.length} opérations`);
-            setOperations(uniqueOperations);
-          }
-        }
-        setInitialLoadDone(true);
-      };
+    if (!initialLoadDone && !fetchLoading && fetchedOperations.length === 0) {
+      // If we finished loading but have no operations, let's try one more time
+      const timer = setTimeout(() => {
+        console.log("No operations found after initial load, trying one more time");
+        refreshOperations(true);
+      }, 1000);
       
-      initOperations();
+      return () => clearTimeout(timer);
     }
-  }, [initialLoadDone, operations.length, refreshOperations, setOperations]);
+  }, [initialLoadDone, fetchLoading, fetchedOperations.length, refreshOperations]);
 
   // Set up real-time subscription to operations
   useEffect(() => {
@@ -118,7 +114,7 @@ export const useOperations = () => {
   const refreshOperationsWithFeedback = async () => {
     try {
       setIsLoading(true);
-      await refreshOperations();
+      await refreshOperations(true);
       
       // Dédupliquer les opérations après rafraîchissement
       if (operations.length > 0) {
@@ -138,10 +134,29 @@ export const useOperations = () => {
     }
   };
 
+  // Check if we're in a stalled loading state
+  useEffect(() => {
+    let loadingTimer: NodeJS.Timeout;
+    
+    if (isLoading || fetchLoading) {
+      loadingTimer = setTimeout(() => {
+        if (isLoading || fetchLoading) {
+          console.log("Loading operations is taking too long, attempting to recover");
+          setIsLoading(false);
+          refreshOperations(true);
+        }
+      }, 10000); // If loading for more than 10 seconds, try to recover
+    }
+    
+    return () => {
+      if (loadingTimer) clearTimeout(loadingTimer);
+    };
+  }, [isLoading, fetchLoading, refreshOperations, setIsLoading]);
+
   return {
     operations,
     isLoading: isLoading || fetchLoading,
-    error: fetchError,
+    error: fetchError || dataError,
     fetchOperations: refreshOperations,
     refreshOperations: refreshOperationsWithFeedback,
     deleteOperation,

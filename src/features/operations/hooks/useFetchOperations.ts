@@ -9,17 +9,21 @@ export const useFetchOperations = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [lastFetchTime, setLastFetchTime] = useState<number>(0);
+  const [fetchAttempts, setFetchAttempts] = useState<number>(0);
 
-  const fetchOperations = useCallback(async () => {
-    // If last fetch was less than 1 second ago, don't fetch again (prevent multiple quick fetches)
+  const fetchOperations = useCallback(async (force: boolean = false) => {
+    // If last fetch was less than 1 second ago and not forced, don't fetch again
     const now = Date.now();
-    if (now - lastFetchTime < 1000) {
+    if (!force && now - lastFetchTime < 1000) {
       return;
     }
     
     try {
       setIsLoading(true);
       setLastFetchTime(now);
+      setFetchAttempts(prev => prev + 1);
+      
+      console.log("Fetching operations, attempt #", fetchAttempts + 1);
       
       // Fetch deposits with client_id
       const { data: deposits, error: depositsError } = await supabase
@@ -95,6 +99,8 @@ export const useFetchOperations = () => {
         return dateB.getTime() - dateA.getTime();
       });
 
+      console.log(`Fetched ${allOperations.length} operations (${transformedDeposits.length} deposits, ${transformedWithdrawals.length} withdrawals, ${transformedTransfers.length} transfers)`);
+      
       setOperations(allOperations);
       setError(null);
     } catch (err: any) {
@@ -104,11 +110,15 @@ export const useFetchOperations = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [lastFetchTime]);
+  }, [lastFetchTime, fetchAttempts]);
 
-  // Initial fetch
+  // Initial fetch with a delay to avoid race conditions
   useEffect(() => {
-    fetchOperations();
+    const timer = setTimeout(() => {
+      fetchOperations(true);
+    }, 300);
+    
+    return () => clearTimeout(timer);
   }, [fetchOperations]);
 
   return { operations, isLoading, error, refreshOperations: fetchOperations };

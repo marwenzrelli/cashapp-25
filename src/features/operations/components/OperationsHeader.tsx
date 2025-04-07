@@ -1,31 +1,57 @@
 
 import { Button } from "@/components/ui/button";
-import { Printer, DownloadIcon } from "lucide-react";
+import { 
+  Download, 
+  Printer,
+  RefreshCcw
+} from "lucide-react";
 
 interface OperationsHeaderProps {
   onExportPDF: () => void;
   onPrint: () => void;
+  onRefresh: () => void;
 }
 
-export const OperationsHeader = ({ onExportPDF, onPrint }: OperationsHeaderProps) => {
+export const OperationsHeader = ({ 
+  onExportPDF, 
+  onPrint,
+  onRefresh
+}: OperationsHeaderProps) => {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
       <div>
-        <h1 className="text-3xl font-bold">Opérations</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Opérations</h1>
         <p className="text-muted-foreground">
-          Gérez et visualisez toutes les opérations
+          Consultez et gérez toutes les opérations financières
         </p>
       </div>
-      <div className="flex flex-col sm:flex-row gap-2">
-        <Button variant="outline" onClick={onExportPDF} className="flex items-center gap-2">
-          <DownloadIcon className="h-4 w-4" />
-          <span className="hidden sm:inline">Exporter en PDF</span>
-          <span className="sm:hidden">PDF</span>
+      <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-start sm:justify-end">
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-9"
+          onClick={onRefresh}
+        >
+          <RefreshCcw className="h-4 w-4 mr-2" />
+          Actualiser
         </Button>
-        <Button variant="outline" onClick={onPrint} className="flex items-center gap-2">
-          <Printer className="h-4 w-4" />
-          <span className="hidden sm:inline">Imprimer</span>
-          <span className="sm:hidden">Imprimer</span>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-9"
+          onClick={onExportPDF}
+        >
+          <Download className="h-4 w-4 mr-2" />
+          Exporter PDF
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-9"
+          onClick={onPrint}
+        >
+          <Printer className="h-4 w-4 mr-2" />
+          Imprimer
         </Button>
       </div>
     </div>
