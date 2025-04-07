@@ -3,6 +3,11 @@ import { useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+interface SupabaseResponse<T> {
+  data: T | null;
+  error: Error | null;
+}
+
 /**
  * Hook that provides functions to fetch operations data from Supabase
  */
@@ -48,7 +53,7 @@ export const useOperationsFetcher = () => {
       });
       
       // Create the database query promise
-      const queryPromise = supabase
+      const queryPromise: Promise<SupabaseResponse<any[]>> = supabase
         .from('deposits')
         .select('*')
         .order('created_at', { ascending: false });
@@ -56,21 +61,18 @@ export const useOperationsFetcher = () => {
       // Race the promises with proper type handling
       const result = await Promise.race([queryPromise, timeoutPromise]);
       
-      // Type guard to ensure result is from queryPromise, not timeoutPromise
-      if (result && typeof result === 'object' && 'data' in result) {
-        const response = result;
-        
-        if (response.error) {
-          console.error('Error fetching deposits:', response.error);
+      // We now know result is of type SupabaseResponse<any[]>
+      if (result && 'data' in result) {
+        if (result.error) {
+          console.error('Error fetching deposits:', result.error);
           toast.error('Erreur lors de la récupération des versements');
-          throw response.error;
+          throw result.error;
         }
         
-        console.log(`Fetched ${response.data?.length || 0} deposits`);
-        return response.data || [];
+        console.log(`Fetched ${result.data?.length || 0} deposits`);
+        return result.data || [];
       }
       
-      // This should not happen due to the rejected promise in timeoutPromise
       return [];
     } catch (error) {
       console.error('Error in fetchDeposits:', error);
@@ -94,7 +96,7 @@ export const useOperationsFetcher = () => {
       });
       
       // Create the database query promise
-      const queryPromise = supabase
+      const queryPromise: Promise<SupabaseResponse<any[]>> = supabase
         .from('withdrawals')
         .select('*')
         .order('created_at', { ascending: false });
@@ -103,20 +105,17 @@ export const useOperationsFetcher = () => {
       const result = await Promise.race([queryPromise, timeoutPromise]);
       
       // Type guard to ensure result is from queryPromise, not timeoutPromise
-      if (result && typeof result === 'object' && 'data' in result) {
-        const response = result;
-        
-        if (response.error) {
-          console.error('Error fetching withdrawals:', response.error);
+      if (result && 'data' in result) {
+        if (result.error) {
+          console.error('Error fetching withdrawals:', result.error);
           toast.error('Erreur lors de la récupération des retraits');
-          throw response.error;
+          throw result.error;
         }
         
-        console.log(`Fetched ${response.data?.length || 0} withdrawals`);
-        return response.data || [];
+        console.log(`Fetched ${result.data?.length || 0} withdrawals`);
+        return result.data || [];
       }
       
-      // This should not happen due to the rejected promise in timeoutPromise
       return [];
     } catch (error) {
       console.error('Error in fetchWithdrawals:', error);
@@ -140,7 +139,7 @@ export const useOperationsFetcher = () => {
       });
       
       // Create the database query promise
-      const queryPromise = supabase
+      const queryPromise: Promise<SupabaseResponse<any[]>> = supabase
         .from('transfers')
         .select('*')
         .order('created_at', { ascending: false });
@@ -149,17 +148,15 @@ export const useOperationsFetcher = () => {
       const result = await Promise.race([queryPromise, timeoutPromise]);
       
       // Type guard to ensure result is from queryPromise, not timeoutPromise
-      if (result && typeof result === 'object' && 'data' in result) {
-        const response = result;
-        
-        if (response.error) {
-          console.error('Error fetching transfers:', response.error);
+      if (result && 'data' in result) {
+        if (result.error) {
+          console.error('Error fetching transfers:', result.error);
           toast.error('Erreur lors de la récupération des virements');
-          throw response.error;
+          throw result.error;
         }
         
-        console.log(`Fetched ${response.data?.length || 0} transfers`);
-        return response.data || [];
+        console.log(`Fetched ${result.data?.length || 0} transfers`);
+        return result.data || [];
       }
       
       return [];
@@ -205,7 +202,8 @@ export const useOperationsFetcher = () => {
       return { deposits: [], withdrawals: [], transfers: [] };
     } catch (error) {
       console.error('Error fetching all operations:', error);
-      if (error instanceof Error && error.message === 'Fetch operations timeout') {
+      if (error && typeof error === 'object' && 'message' in error && 
+          error.message === 'Fetch operations timeout') {
         toast.error('Délai d\'attente dépassé lors de la récupération des opérations');
       }
       // Return empty arrays so the UI can still render
