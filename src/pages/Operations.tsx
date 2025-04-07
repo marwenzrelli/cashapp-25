@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { OperationFilters } from "@/features/operations/components/OperationFilters";
 import { useOperations } from "@/features/operations/hooks/useOperations";
 import { DeleteOperationDialog } from "@/features/operations/components/DeleteOperationDialog";
@@ -12,6 +12,7 @@ import { generatePDF } from "@/features/operations/utils/pdf-generator";
 import { operationMatchesSearch } from "@/features/operations/utils/display-helpers";
 import { TransferPagination } from "@/features/transfers/components/TransferPagination";
 import { LoadingIndicator } from "@/components/ui/loading-indicator";
+import { toast } from "sonner";
 
 const Operations = () => {
   const { 
@@ -34,6 +35,9 @@ const Operations = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isFiltering, setIsFiltering] = useState(false);
   const [initialLoadAttempted, setInitialLoadAttempted] = useState(false);
+  const [stableOperations, setStableOperations] = useState<Operation[]>([]);
+  const lastRefreshTimeRef = useRef<number>(Date.now());
+  const manualRefreshClickedRef = useRef<boolean>(false);
 
   // Fetch operations on initial load
   useEffect(() => {
@@ -41,11 +45,26 @@ const Operations = () => {
       console.log("Initial operations fetch");
       fetchOperations(true);
       setInitialLoadAttempted(true);
+      lastRefreshTimeRef.current = Date.now();
     }
   }, [fetchOperations, initialLoadAttempted]);
 
-  // Filter operations with loading state
-  const filteredOperations = operations.filter((op) => {
+  // Stabilisez les opérations pour éviter les clignotements
+  useEffect(() => {
+    // Après le chargement initial ou un rafraîchissement manuel, mettre à jour les opérations stables
+    const shouldUpdateStableOperations = 
+      (!isLoading && operations.length > 0) ||
+      (manualRefreshClickedRef.current && !isLoading);
+    
+    if (shouldUpdateStableOperations) {
+      console.log(`Updating stable operations with ${operations.length} operations`);
+      setStableOperations(operations);
+      manualRefreshClickedRef.current = false;
+    }
+  }, [operations, isLoading]);
+
+  // Filtrer les opérations stables (pas les opérations qui changent en temps réel)
+  const filteredOperations = stableOperations.filter((op) => {
     // Filtrage par type
     const matchesType = !filterType || op.type === filterType;
     
@@ -100,11 +119,28 @@ const Operations = () => {
     return true; // Return true to indicate successful deletion
   };
 
-  // Handle manual refresh
+  // Handle manual refresh with throttling
   const handleManualRefresh = () => {
+    const now = Date.now();
+    const timeSinceLastRefresh = now - lastRefreshTimeRef.current;
+    
+    // Limiter les rafraîchissements manuels à un toutes les 3 secondes
+    if (timeSinceLastRefresh < 3000) {
+      toast.info(`Attendez ${Math.ceil((3000 - timeSinceLastRefresh) / 1000)} secondes avant de rafraîchir à nouveau`);
+      return;
+    }
+    
     console.log("Manual refresh triggered");
+    manualRefreshClickedRef.current = true;
+    lastRefreshTimeRef.current = now;
     refreshOperations();
   };
+
+  // Déterminer si nous devons afficher un chargement, une erreur ou le contenu
+  const showInitialLoading = isLoading && stableOperations.length === 0;
+  const showError = !isLoading && error && stableOperations.length === 0;
+  const showEmptyState = !isLoading && !error && stableOperations.length === 0 && initialLoadAttempted;
+  const showContent = stableOperations.length > 0 || isLoading;
 
   return (
     <div className="space-y-6">
@@ -123,7 +159,7 @@ const Operations = () => {
         setDate={setDateRange}
       />
 
-      {isLoading && operations.length === 0 && (
+      {showInitialLoading && (
         <div className="py-12 flex justify-center">
           <LoadingIndicator 
             text="Chargement des opérations..." 
@@ -133,7 +169,7 @@ const Operations = () => {
         </div>
       )}
 
-      {!isLoading && error && (
+      {showError && (
         <div className="rounded-lg bg-red-50 p-6 text-center">
           <p className="text-red-600">
             Erreur lors du chargement des opérations. Veuillez rafraîchir la page.
@@ -147,7 +183,7 @@ const Operations = () => {
         </div>
       )}
 
-      {!isLoading && !error && operations.length === 0 && initialLoadAttempted && (
+      {showEmptyState && (
         <div className="rounded-lg bg-gray-50 p-6 text-center">
           <p className="text-muted-foreground">
             Aucune opération trouvée. Créez des versements, retraits ou virements pour les voir ici.
@@ -155,7 +191,7 @@ const Operations = () => {
         </div>
       )}
 
-      {(operations.length > 0 || isLoading) && (
+      {showContent && (
         <>
           <TransferPagination
             itemsPerPage={itemsPerPage}
@@ -171,6 +207,18 @@ const Operations = () => {
             isLoading={isLoading || isFiltering} 
             onDelete={deleteOperation} 
           />
+          
+          {isLoading && stableOperations.length > 0 && (
+            <div className="py-2 flex justify-center">
+              <LoadingIndicator 
+                text="Actualisation..." 
+                size="sm" 
+                fadeIn={true}
+                showImmediately={false}
+                debounceMs={500}
+              />
+            </div>
+          )}
         </>
       )}
       

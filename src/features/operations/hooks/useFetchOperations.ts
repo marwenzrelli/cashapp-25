@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Operation } from '../types';
 import { toast } from 'sonner';
@@ -10,15 +10,26 @@ export const useFetchOperations = () => {
   const [error, setError] = useState<string | null>(null);
   const [lastFetchTime, setLastFetchTime] = useState<number>(0);
   const [fetchAttempts, setFetchAttempts] = useState<number>(0);
+  const isMountedRef = useRef<boolean>(true);
+  const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchOperations = useCallback(async (force: boolean = false) => {
-    // If last fetch was less than 1 second ago and not forced, don't fetch again
+    // Si une requête est déjà en cours et ce n'est pas forcé, ne pas en lancer une autre
+    if (!force && isLoading) {
+      console.log("Une requête est déjà en cours, ignorant cette requête");
+      return;
+    }
+    
+    // Si dernier fetch était il y a moins de 2 secondes et pas forcé, ne pas fetch à nouveau
     const now = Date.now();
-    if (!force && now - lastFetchTime < 1000) {
+    if (!force && now - lastFetchTime < 2000) {
+      console.log(`Dernier fetch il y a ${now - lastFetchTime}ms, ignorant cette requête`);
       return;
     }
     
     try {
+      if (!isMountedRef.current) return;
+      
       setIsLoading(true);
       setLastFetchTime(now);
       setFetchAttempts(prev => prev + 1);
@@ -48,6 +59,8 @@ export const useFetchOperations = () => {
         .order('created_at', { ascending: false });
       
       if (transfersError) throw transfersError;
+
+      if (!isMountedRef.current) return;
 
       // Transform to common Operation type, CONVERTING ID TO STRING
       const transformedDeposits: Operation[] = (deposits || []).map(deposit => ({
@@ -101,24 +114,54 @@ export const useFetchOperations = () => {
 
       console.log(`Fetched ${allOperations.length} operations (${transformedDeposits.length} deposits, ${transformedWithdrawals.length} withdrawals, ${transformedTransfers.length} transfers)`);
       
-      setOperations(allOperations);
+      // Dédupliquer les opérations avant de les définir
+      const uniqueMap = new Map<string, Operation>();
+      allOperations.forEach(op => {
+        const key = `${op.type}-${op.id}`;
+        if (!uniqueMap.has(key)) {
+          uniqueMap.set(key, op);
+        }
+      });
+      
+      const uniqueOperations = Array.from(uniqueMap.values());
+      
+      if (!isMountedRef.current) return;
+      setOperations(uniqueOperations);
       setError(null);
     } catch (err: any) {
+      if (!isMountedRef.current) return;
       console.error('Error fetching operations:', err);
       setError(err.message);
       toast.error('Erreur lors de la récupération des opérations');
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
     }
-  }, [lastFetchTime, fetchAttempts]);
+  }, [lastFetchTime, fetchAttempts, isLoading]);
 
-  // Initial fetch with a delay to avoid race conditions
+  // Initial fetch avec un délai pour éviter les conditions de course
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchOperations(true);
-    }, 300);
+    isMountedRef.current = true;
     
-    return () => clearTimeout(timer);
+    // Nettoyer tout timeout existant
+    if (fetchTimeoutRef.current) {
+      clearTimeout(fetchTimeoutRef.current);
+    }
+    
+    // Démarrer un nouveau fetch avec délai
+    fetchTimeoutRef.current = setTimeout(() => {
+      if (isMountedRef.current) {
+        fetchOperations(true);
+      }
+    }, 500);
+    
+    return () => {
+      isMountedRef.current = false;
+      if (fetchTimeoutRef.current) {
+        clearTimeout(fetchTimeoutRef.current);
+      }
+    };
   }, [fetchOperations]);
 
   return { operations, isLoading, error, refreshOperations: fetchOperations };

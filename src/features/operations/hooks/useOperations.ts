@@ -1,5 +1,5 @@
 
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useCallback, useState, useRef } from "react";
 import { Operation } from "../types";
 import { useOperationsState } from "./useOperationsState";
 import { useFetchOperations } from "./useFetchOperations";
@@ -19,21 +19,24 @@ export const useOperations = () => {
     setShowDeleteDialog
   } = useOperationsState();
 
-  // Use fetchOperations instead of fetchAllOperations
   const { operations: fetchedOperations, isLoading: fetchLoading, error: fetchError, refreshOperations } = useFetchOperations();
   const { deleteOperation: deleteOperationLogic, confirmDeleteOperation: confirmDeleteOperationLogic } = useDeleteOperation(refreshOperations, setIsLoading);
   const [initialLoadDone, setInitialLoadDone] = useState(false);
   const [dataError, setDataError] = useState<string | null>(null);
+  const realtimeSubscribedRef = useRef(false);
 
   // Update local operations when fetchedOperations change
   useEffect(() => {
-    if (fetchedOperations.length > 0 || (!fetchLoading && initialLoadDone)) {
+    if (fetchedOperations.length > 0) {
       console.log(`Updating operations state with ${fetchedOperations.length} operations`);
       setOperations(fetchedOperations);
       
       if (!initialLoadDone) {
         setInitialLoadDone(true);
       }
+    } else if (!fetchLoading && initialLoadDone) {
+      // Si le chargement est terminé mais qu'aucune opération n'a été trouvée
+      console.log("No operations found after loading completed");
     }
   }, [fetchedOperations, fetchLoading, initialLoadDone, setOperations]);
 
@@ -42,7 +45,7 @@ export const useOperations = () => {
     const uniqueOps = new Map<string, Operation>();
     
     for (const op of ops) {
-      const uniqueId = op.id.toString();
+      const uniqueId = `${op.type}-${op.id}`;
       if (!uniqueOps.has(uniqueId)) {
         uniqueOps.set(uniqueId, op);
       }
@@ -66,6 +69,11 @@ export const useOperations = () => {
 
   // Set up real-time subscription to operations
   useEffect(() => {
+    if (realtimeSubscribedRef.current) return;
+    
+    realtimeSubscribedRef.current = true;
+    console.log("Setting up realtime subscription for operations");
+    
     const channel = supabase
       .channel('operations-realtime')
       .on('postgres_changes', { 
@@ -92,10 +100,14 @@ export const useOperations = () => {
         console.log('Transfer change detected, refreshing operations');
         refreshOperations();
       })
-      .subscribe();
+      .subscribe((status) => {
+        console.log(`Realtime subscription status: ${status}`);
+      });
 
     return () => {
+      console.log("Cleaning up realtime subscription");
       supabase.removeChannel(channel);
+      realtimeSubscribedRef.current = false;
     };
   }, [refreshOperations]);
 
@@ -107,11 +119,15 @@ export const useOperations = () => {
 
   // Wrapper for confirm delete to pass the current operation to delete
   const confirmDeleteOperation = async () => {
+    if (!operationToDelete) {
+      console.error("No operation to delete");
+      return;
+    }
     await confirmDeleteOperationLogic(operationToDelete);
   };
 
   // Function to refresh operations with UI feedback
-  const refreshOperationsWithFeedback = async () => {
+  const refreshOperationsWithFeedback = useCallback(async () => {
     try {
       setIsLoading(true);
       await refreshOperations(true);
@@ -132,7 +148,7 @@ export const useOperations = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [operations, refreshOperations, setIsLoading, setOperations]);
 
   // Check if we're in a stalled loading state
   useEffect(() => {
