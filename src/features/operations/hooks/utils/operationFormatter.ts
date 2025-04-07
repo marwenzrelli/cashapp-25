@@ -13,8 +13,9 @@ export const formatOperationsWithDates = (operations: Operation[]): Operation[] 
     if (operationDate) {
       if (typeof operationDate === 'string') {
         dateObj = new Date(operationDate);
-      } else if (operationDate instanceof Date) {
-        dateObj = operationDate;
+      } else if (operationDate && typeof operationDate === 'object' && 'getTime' in operationDate) {
+        // Check if it's a Date object by checking if it has the getTime method
+        dateObj = operationDate as Date;
       } else {
         // For safety, create a new date
         dateObj = new Date();
