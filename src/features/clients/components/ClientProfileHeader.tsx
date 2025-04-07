@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Client } from "../types";
@@ -34,6 +35,7 @@ export function ClientProfileHeader({
 
   // Calculate display balance
   const displayBalance = clientBalance !== null ? clientBalance : client.solde;
+  
   return <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
       <div>
         <Button variant="outline" size="sm" onClick={navigateToClients} className="mb-2">
@@ -41,9 +43,13 @@ export function ClientProfileHeader({
           Retour aux clients
         </Button>
         
-        {/* Removing the redundant solde display here */}
+        {/* Display the balance here */}
+        <div className="flex items-center gap-2">
+          <span className="font-bold text-lg">Solde:</span>
+          <span className={`text-lg font-semibold ${displayBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            {formatAmount(displayBalance)}
+          </span>
+        </div>
       </div>
-      
-      
     </div>;
 }

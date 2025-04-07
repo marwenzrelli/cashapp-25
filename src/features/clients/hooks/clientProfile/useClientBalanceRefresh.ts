@@ -1,5 +1,5 @@
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Client } from "@/features/clients/types";
@@ -10,10 +10,13 @@ export const useClientBalanceRefresh = (
   setRealTimeBalance: (balance: number) => void,
   refetchClient: () => void
 ) => {
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
   const refreshClientBalance = useCallback(async () => {
     if (!clientId || !client) return;
     
     try {
+      setIsRefreshing(true);
       console.log("Manual balance refresh for client:", clientId);
       
       const clientFullName = `${client.prenom} ${client.nom}`;
@@ -92,8 +95,10 @@ export const useClientBalanceRefresh = (
     } catch (error) {
       console.error("Error refreshing balance:", error);
       toast.error("Erreur lors de l'actualisation du solde");
+    } finally {
+      setIsRefreshing(false);
     }
   }, [clientId, client, setRealTimeBalance, refetchClient]);
 
-  return { refreshClientBalance };
+  return { refreshClientBalance, isRefreshing };
 };

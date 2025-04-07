@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Client } from "../types";
 import { ClientQRCode } from "./ClientQRCode";
@@ -35,9 +36,7 @@ export const ClientPersonalInfo = ({
   const [depositDialogOpen, setDepositDialogOpen] = useState(false);
   const [withdrawalDialogOpen, setWithdrawalDialogOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [didInitialRefresh, setDidInitialRefresh] = useState(false);
   const [refreshDisabled, setRefreshDisabled] = useState(false);
-  const initialRefreshTimerRef = useRef<NodeJS.Timeout | null>(null);
   const refreshCooldownTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isMobile = useIsMobile();
   
@@ -51,9 +50,6 @@ export const ClientPersonalInfo = ({
 
   useEffect(() => {
     return () => {
-      if (initialRefreshTimerRef.current) {
-        clearTimeout(initialRefreshTimerRef.current);
-      }
       if (refreshCooldownTimerRef.current) {
         clearTimeout(refreshCooldownTimerRef.current);
       }
@@ -75,7 +71,6 @@ export const ClientPersonalInfo = ({
     
     try {
       await refreshClientBalance();
-      toast.success("Solde du client actualisé avec succès");
     } catch (error) {
       console.error("Error refreshing client balance:", error);
       toast.error("Erreur lors de l'actualisation du solde");
@@ -85,7 +80,7 @@ export const ClientPersonalInfo = ({
       refreshCooldownTimerRef.current = setTimeout(() => {
         setRefreshDisabled(false);
         refreshCooldownTimerRef.current = null;
-      }, 10000);
+      }, 5000); // Reduced cooldown to 5 seconds
     }
   };
 
@@ -107,6 +102,9 @@ export const ClientPersonalInfo = ({
     console.log("Export function not provided");
   };
 
+  // Use real-time balance if available, otherwise fall back to client.solde
+  const displayBalance = clientBalance !== null ? clientBalance : client.solde;
+
   return (
     <Card className="overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300">
       <CardHeader className="bg-gradient-to-r from-primary/10 to-transparent pb-4">
@@ -122,7 +120,7 @@ export const ClientPersonalInfo = ({
               size="sm" 
               onClick={handleRefreshBalance} 
               disabled={isRefreshing || refreshDisabled}
-              className="px-[23px] bg-white/70 dark:bg-gray-800/70"
+              className="px-[20px] bg-white/70 dark:bg-gray-800/70"
             >
               <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
               {isRefreshing ? 'Actualisation...' : 'Actualiser le solde'}
@@ -142,7 +140,12 @@ export const ClientPersonalInfo = ({
       <CardContent className="p-5">
         <div className="flex flex-col md:flex-row gap-6 justify-between">
           <div className="w-full md:w-3/5">
-            <PersonalInfoFields client={client} formatAmount={formatAmount} showBalance={true} realTimeBalance={clientBalance} />
+            <PersonalInfoFields 
+              client={client} 
+              formatAmount={formatAmount} 
+              showBalance={true} 
+              realTimeBalance={displayBalance} 
+            />
           </div>
           
           {client && client.id && (

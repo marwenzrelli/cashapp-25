@@ -18,11 +18,11 @@ export const useRealTimeBalance = (clientId: number | null) => {
     }));
   }, [clientId]);
   
-  // Set up a real-time subscription for client balance - limited to once
+  // Set up a real-time subscription for client balance
   useEffect(() => {
     if (!clientId) return;
     
-    // Limit connection attempts
+    // Limit connection attempts to prevent excessive connections
     if (connectionAttemptRef.current >= 2) {
       console.log("Max connection attempts reached for balance updates");
       return;
@@ -59,7 +59,7 @@ export const useRealTimeBalance = (clientId: number | null) => {
       
     channelRef.current = channel;
 
-    // Set up a subscription for operations affecting this client - without automatic refresh
+    // Set up a subscription for operations affecting this client
     const operationsChannel = supabase
       .channel(`client-operations-${clientId}`)
       .on('postgres_changes', {
@@ -68,8 +68,8 @@ export const useRealTimeBalance = (clientId: number | null) => {
         table: 'deposits'
       }, (payload) => {
         console.log("Deposit operation detected:", payload);
-        // Only notify about operation changes without auto-refresh
         toast.info("Un nouveau versement a été détecté");
+        refreshOperations();
       })
       .on('postgres_changes', {
         event: '*',
@@ -77,8 +77,8 @@ export const useRealTimeBalance = (clientId: number | null) => {
         table: 'withdrawals'
       }, (payload) => {
         console.log("Withdrawal operation detected:", payload);
-        // Only notify about operation changes without auto-refresh
         toast.info("Un nouveau retrait a été détecté");
+        refreshOperations();
       })
       .on('postgres_changes', {
         event: '*',
@@ -86,8 +86,8 @@ export const useRealTimeBalance = (clientId: number | null) => {
         table: 'transfers'
       }, (payload) => {
         console.log("Transfer operation detected:", payload);
-        // Only notify about operation changes without auto-refresh
         toast.info("Un nouveau transfert a été détecté");
+        refreshOperations();
       })
       .subscribe();
 
@@ -104,7 +104,7 @@ export const useRealTimeBalance = (clientId: number | null) => {
         operationsChannelRef.current = null;
       }
     };
-  }, [clientId]);
+  }, [clientId, refreshOperations]);
 
   return { realTimeBalance, setRealTimeBalance };
 };
