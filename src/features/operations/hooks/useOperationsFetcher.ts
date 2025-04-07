@@ -47,23 +47,31 @@ export const useOperationsFetcher = () => {
         setTimeout(() => reject(new Error('Fetch deposits timeout')), 12000);
       });
       
-      // Create the database query promise with proper typing
+      // Create the database query promise
       const queryPromise = supabase
         .from('deposits')
         .select('*')
         .order('created_at', { ascending: false });
       
       // Race the promises with proper type handling
-      const response = await Promise.race([queryPromise, timeoutPromise]);
+      const result = await Promise.race([queryPromise, timeoutPromise]);
       
-      if ('error' in response) {
-        console.error('Error fetching deposits:', response.error);
-        toast.error('Erreur lors de la récupération des versements');
-        throw response.error;
+      // Type guard to ensure result is from queryPromise, not timeoutPromise
+      if (result && typeof result === 'object' && 'data' in result) {
+        const response = result;
+        
+        if (response.error) {
+          console.error('Error fetching deposits:', response.error);
+          toast.error('Erreur lors de la récupération des versements');
+          throw response.error;
+        }
+        
+        console.log(`Fetched ${response.data?.length || 0} deposits`);
+        return response.data || [];
       }
       
-      console.log(`Fetched ${response.data?.length || 0} deposits`);
-      return response.data || [];
+      // This should not happen due to the rejected promise in timeoutPromise
+      return [];
     } catch (error) {
       console.error('Error in fetchDeposits:', error);
       throw error;
@@ -85,23 +93,31 @@ export const useOperationsFetcher = () => {
         setTimeout(() => reject(new Error('Fetch withdrawals timeout')), 12000);
       });
       
-      // Create the database query promise with proper typing
+      // Create the database query promise
       const queryPromise = supabase
         .from('withdrawals')
         .select('*')
         .order('created_at', { ascending: false });
       
       // Race the promises with proper type handling
-      const response = await Promise.race([queryPromise, timeoutPromise]);
+      const result = await Promise.race([queryPromise, timeoutPromise]);
       
-      if ('error' in response) {
-        console.error('Error fetching withdrawals:', response.error);
-        toast.error('Erreur lors de la récupération des retraits');
-        throw response.error;
+      // Type guard to ensure result is from queryPromise, not timeoutPromise
+      if (result && typeof result === 'object' && 'data' in result) {
+        const response = result;
+        
+        if (response.error) {
+          console.error('Error fetching withdrawals:', response.error);
+          toast.error('Erreur lors de la récupération des retraits');
+          throw response.error;
+        }
+        
+        console.log(`Fetched ${response.data?.length || 0} withdrawals`);
+        return response.data || [];
       }
       
-      console.log(`Fetched ${response.data?.length || 0} withdrawals`);
-      return response.data || [];
+      // This should not happen due to the rejected promise in timeoutPromise
+      return [];
     } catch (error) {
       console.error('Error in fetchWithdrawals:', error);
       throw error;
@@ -123,23 +139,30 @@ export const useOperationsFetcher = () => {
         setTimeout(() => reject(new Error('Fetch transfers timeout')), 12000);
       });
       
-      // Create the database query promise with proper typing
+      // Create the database query promise
       const queryPromise = supabase
         .from('transfers')
         .select('*')
         .order('created_at', { ascending: false });
       
       // Race the promises with proper type handling
-      const response = await Promise.race([queryPromise, timeoutPromise]);
+      const result = await Promise.race([queryPromise, timeoutPromise]);
       
-      if ('error' in response) {
-        console.error('Error fetching transfers:', response.error);
-        toast.error('Erreur lors de la récupération des virements');
-        throw response.error;
+      // Type guard to ensure result is from queryPromise, not timeoutPromise
+      if (result && typeof result === 'object' && 'data' in result) {
+        const response = result;
+        
+        if (response.error) {
+          console.error('Error fetching transfers:', response.error);
+          toast.error('Erreur lors de la récupération des virements');
+          throw response.error;
+        }
+        
+        console.log(`Fetched ${response.data?.length || 0} transfers`);
+        return response.data || [];
       }
       
-      console.log(`Fetched ${response.data?.length || 0} transfers`);
-      return response.data || [];
+      return [];
     } catch (error) {
       console.error('Error in fetchTransfers:', error);
       return [];
@@ -157,7 +180,7 @@ export const useOperationsFetcher = () => {
       
       // Set a timeout to ensure we don't hang forever
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Fetch operations timeout')), 20000); // Increased from 15s to 20s
+        setTimeout(() => reject(new Error('Fetch operations timeout')), 20000);
       });
       
       const fetchPromise = Promise.all([
@@ -167,17 +190,22 @@ export const useOperationsFetcher = () => {
       ]);
       
       // Race the fetch against the timeout
-      const [deposits, withdrawals, transfers] = await Promise.race([
-        fetchPromise,
-        timeoutPromise
-      ]) as [any[], any[], any[]];
+      const result = await Promise.race([fetchPromise, timeoutPromise]);
       
-      console.log(`fetchAllOperations completed with ${deposits.length} deposits, ${withdrawals.length} withdrawals, ${transfers.length} transfers`);
+      // Type guard to ensure we have the fetchPromise result
+      if (Array.isArray(result) && result.length === 3) {
+        const [deposits, withdrawals, transfers] = result;
+        
+        console.log(`fetchAllOperations completed with ${deposits.length} deposits, ${withdrawals.length} withdrawals, ${transfers.length} transfers`);
+        
+        return { deposits, withdrawals, transfers };
+      }
       
-      return { deposits, withdrawals, transfers };
+      // This should not happen due to the rejected promise in timeoutPromise
+      return { deposits: [], withdrawals: [], transfers: [] };
     } catch (error) {
       console.error('Error fetching all operations:', error);
-      if (error instanceof Error && error.message === 'Timeout') {
+      if (error instanceof Error && error.message === 'Fetch operations timeout') {
         toast.error('Délai d\'attente dépassé lors de la récupération des opérations');
       }
       // Return empty arrays so the UI can still render

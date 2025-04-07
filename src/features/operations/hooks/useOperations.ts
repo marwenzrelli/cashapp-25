@@ -22,9 +22,13 @@ export const useOperations = () => {
   } = useOperationsState();
 
   const { operations: fetchedOperations, isLoading: fetchLoading, error: fetchError, refreshOperations } = useFetchOperations();
-  const { deleteOperation: deleteOperationLogic, confirmDeleteOperation: confirmDeleteOperationLogic } = useDeleteOperation(refreshOperations, setIsLoading);
-  const { cleanupRealtime, setupRealtimeSubscription } = useOperationsRealtime(refreshOperations);
-  const { refreshOperationsWithFeedback } = useOperationsRefresh(refreshOperations, setIsLoading);
+  
+  // Fix for TypeScript errors - ensure the function signatures match
+  const refreshOps = useCallback((force: boolean = false) => refreshOperations(force), [refreshOperations]);
+  
+  const { deleteOperation: deleteOperationLogic, confirmDeleteOperation: confirmDeleteOperationLogic } = useDeleteOperation(refreshOps, setIsLoading);
+  const { cleanupRealtime, setupRealtimeSubscription } = useOperationsRealtime(refreshOps);
+  const { refreshOperationsWithFeedback } = useOperationsRefresh(refreshOps, setIsLoading);
   
   const [initialLoadDone, setInitialLoadDone] = useState(false);
   const [dataError, setDataError] = useState<string | null>(null);
@@ -59,12 +63,12 @@ export const useOperations = () => {
         
         console.log(`useOperations: No operations found after initial load, retrying (${loadRetryCount + 1}/3)`);
         setLoadRetryCount(prev => prev + 1);
-        refreshOperations(true);
+        refreshOps(true);
       }, 2000);
       
       return () => clearTimeout(timer);
     }
-  }, [initialLoadDone, fetchLoading, fetchedOperations.length, refreshOperations, loadRetryCount]);
+  }, [initialLoadDone, fetchLoading, fetchedOperations.length, refreshOps, loadRetryCount]);
 
   // Clean up on unmount
   useEffect(() => {
@@ -114,7 +118,7 @@ export const useOperations = () => {
     operations,
     isLoading: isLoading || fetchLoading,
     error: fetchError || dataError,
-    fetchOperations: refreshOperations,
+    fetchOperations: refreshOps,
     refreshOperations: refreshOperationsWithFeedback,
     deleteOperation,
     showDeleteDialog,

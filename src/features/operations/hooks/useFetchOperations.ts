@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Operation } from '../types';
 import { toast } from 'sonner';
@@ -29,7 +28,7 @@ export const useFetchOperations = () => {
   const { fetchAllOperations } = useOperationsFetcher();
 
   // Fetch operations function with retry logic
-  const fetchOperations = useCallback(async (force: boolean = false) => {
+  const fetchOperations = useCallback(async (force: boolean = false): Promise<void> => {
     // Skip if already fetching and not forced
     if (fetchingRef.current && !force) {
       console.log("Une requête est déjà en cours, ignorant cette requête");
