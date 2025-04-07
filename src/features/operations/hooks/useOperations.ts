@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Operation } from "../types";
 import { useOperationsState } from "./useOperationsState";
@@ -21,13 +20,7 @@ export const useOperations = () => {
     setShowDeleteDialog
   } = useOperationsState();
 
-  const { 
-    operations: fetchedOperations, 
-    isLoading: fetchLoading, 
-    error: fetchError, 
-    refreshOperations,
-    setUseMockData: setMockData 
-  } = useFetchOperations();
+  const { operations: fetchedOperations, isLoading: fetchLoading, error: fetchError, refreshOperations } = useFetchOperations();
   
   const refreshOps = useCallback((force: boolean = false): Promise<void> => {
     return refreshOperations(force);
@@ -104,12 +97,6 @@ export const useOperations = () => {
     return await confirmDeleteOperationLogic(operationToDelete);
   }, [operationToDelete, confirmDeleteOperationLogic]);
 
-  const setUseMockData = useCallback((useMocks: boolean) => {
-    if (setMockData) {
-      setMockData(useMocks);
-    }
-  }, [setMockData]);
-
   useEffect(() => {
     isMountedRef.current = true;
     return () => {
@@ -127,7 +114,6 @@ export const useOperations = () => {
     showDeleteDialog,
     setShowDeleteDialog,
     confirmDeleteOperation,
-    operationToDelete,
-    setUseMockData
+    operationToDelete
   };
 };

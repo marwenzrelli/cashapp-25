@@ -10,7 +10,7 @@ import { fetchOperationsCore } from './utils/fetchOperationsCore';
  */
 export const useFetchOperations = () => {
   const [operations, setOperations] = useState<Operation[]>([]);
-  const { fetchAllOperations, setUseMocks } = useOperationsFetcher();
+  const { fetchAllOperations } = useOperationsFetcher();
   
   const {
     isLoading,
@@ -23,13 +23,6 @@ export const useFetchOperations = () => {
     setLastFetchTime,
     incrementFetchAttempts
   } = useFetchStateManager();
-
-  // Enable or disable mock data usage
-  const setUseMockData = useCallback((useMocks: boolean) => {
-    if (setUseMocks) {
-      setUseMocks(useMocks);
-    }
-  }, [setUseMocks]);
 
   // Fetch operations function with retry logic
   const fetchOperations = useCallback(async (force: boolean = false): Promise<void> => {
@@ -140,11 +133,5 @@ export const useFetchOperations = () => {
     }
   }, [fetchOperations, setIsLoading, controls.isMountedRef]);
 
-  return { 
-    operations, 
-    isLoading, 
-    error, 
-    refreshOperations: fetchOperations,
-    setUseMockData
-  };
+  return { operations, isLoading, error, refreshOperations: fetchOperations };
 };

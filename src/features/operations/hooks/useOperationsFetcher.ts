@@ -4,7 +4,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { formatOperationsWithDates } from './utils/operationFormatter';
 import { transformToOperations, deduplicateOperations, sortOperationsByDate } from './utils/operationTransformers';
-import { mockDeposits, mockWithdrawals, mockTransfers } from '../data/mock-operations';
 
 interface SupabaseResponse<T> {
   data: T | null;
@@ -16,7 +15,6 @@ interface SupabaseResponse<T> {
  */
 export const useOperationsFetcher = () => {
   const abortControllersRef = useRef<Map<string, AbortController>>(new Map());
-  const shouldUseMocksRef = useRef<boolean>(false);
   
   /**
    * Creates and registers a new AbortController
@@ -44,31 +42,16 @@ export const useOperationsFetcher = () => {
   }, []);
   
   /**
-   * Enable or disable using mock data as fallback
-   */
-  const setUseMocks = useCallback((useMocks: boolean) => {
-    shouldUseMocksRef.current = useMocks;
-    if (useMocks) {
-      console.log('Using mock operations data as fallback');
-    }
-  }, []);
-  
-  /**
-   * Fetches deposits from Supabase or mocks if enabled
+   * Fetches deposits from Supabase
    */
   const fetchDeposits = useCallback(async () => {
     console.log('Fetching deposits...');
     const controller = createAbortController('deposits');
     
     try {
-      if (shouldUseMocksRef.current) {
-        console.log('Using mock deposits data');
-        return mockDeposits;
-      }
-      
-      // Extended timeout to 60s to handle slow connections
+      // Extended timeout to 30s to handle slow connections
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Fetch deposits timeout')), 60000);
+        setTimeout(() => reject(new Error('Fetch deposits timeout')), 30000);
       });
       
       // Create the database query promise
@@ -87,11 +70,6 @@ export const useOperationsFetcher = () => {
         if (result.error) {
           console.error('Error fetching deposits:', result.error);
           toast.error('Erreur lors de la récupération des versements');
-          
-          if (shouldUseMocksRef.current) {
-            console.log('Falling back to mock deposits');
-            return mockDeposits;
-          }
           return [];
         }
         
@@ -99,18 +77,9 @@ export const useOperationsFetcher = () => {
         return result.data || [];
       }
       
-      if (shouldUseMocksRef.current) {
-        console.log('Falling back to mock deposits after timeout');
-        return mockDeposits;
-      }
       return [];
     } catch (error) {
       console.error('Error in fetchDeposits:', error);
-      
-      if (shouldUseMocksRef.current) {
-        console.log('Falling back to mock deposits after error');
-        return mockDeposits;
-      }
       // Return empty array on error to avoid breaking the UI
       return [];
     } finally {
@@ -119,21 +88,16 @@ export const useOperationsFetcher = () => {
   }, [createAbortController, removeAbortController]);
 
   /**
-   * Fetches withdrawals from Supabase or mocks if enabled
+   * Fetches withdrawals from Supabase
    */
   const fetchWithdrawals = useCallback(async () => {
     console.log('Fetching withdrawals...');
     const controller = createAbortController('withdrawals');
     
     try {
-      if (shouldUseMocksRef.current) {
-        console.log('Using mock withdrawals data');
-        return mockWithdrawals;
-      }
-      
-      // Extended timeout to 60s to handle slow connections
+      // Extended timeout to 30s to handle slow connections
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Fetch withdrawals timeout')), 60000);
+        setTimeout(() => reject(new Error('Fetch withdrawals timeout')), 30000);
       });
       
       // Create the database query promise
@@ -152,11 +116,6 @@ export const useOperationsFetcher = () => {
         if (result.error) {
           console.error('Error fetching withdrawals:', result.error);
           toast.error('Erreur lors de la récupération des retraits');
-          
-          if (shouldUseMocksRef.current) {
-            console.log('Falling back to mock withdrawals');
-            return mockWithdrawals;
-          }
           return [];
         }
         
@@ -164,18 +123,9 @@ export const useOperationsFetcher = () => {
         return result.data || [];
       }
       
-      if (shouldUseMocksRef.current) {
-        console.log('Falling back to mock withdrawals after timeout');
-        return mockWithdrawals;
-      }
       return [];
     } catch (error) {
       console.error('Error in fetchWithdrawals:', error);
-      
-      if (shouldUseMocksRef.current) {
-        console.log('Falling back to mock withdrawals after error');
-        return mockWithdrawals;
-      }
       // Return empty array on error to avoid breaking the UI
       return [];
     } finally {
@@ -184,21 +134,16 @@ export const useOperationsFetcher = () => {
   }, [createAbortController, removeAbortController]);
 
   /**
-   * Fetches transfers from Supabase or mocks if enabled
+   * Fetches transfers from Supabase
    */
   const fetchTransfers = useCallback(async () => {
     console.log('Fetching transfers...');
     const controller = createAbortController('transfers');
     
     try {
-      if (shouldUseMocksRef.current) {
-        console.log('Using mock transfers data');
-        return mockTransfers;
-      }
-      
-      // Extended timeout to 60s to handle slow connections
+      // Extended timeout to 30s to handle slow connections
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Fetch transfers timeout')), 60000);
+        setTimeout(() => reject(new Error('Fetch transfers timeout')), 30000);
       });
       
       // Create the database query promise
@@ -217,11 +162,6 @@ export const useOperationsFetcher = () => {
         if (result.error) {
           console.error('Error fetching transfers:', result.error);
           toast.error('Erreur lors de la récupération des virements');
-          
-          if (shouldUseMocksRef.current) {
-            console.log('Falling back to mock transfers');
-            return mockTransfers;
-          }
           return [];
         }
         
@@ -229,18 +169,9 @@ export const useOperationsFetcher = () => {
         return result.data || [];
       }
       
-      if (shouldUseMocksRef.current) {
-        console.log('Falling back to mock transfers after timeout');
-        return mockTransfers;
-      }
       return [];
     } catch (error) {
       console.error('Error in fetchTransfers:', error);
-      
-      if (shouldUseMocksRef.current) {
-        console.log('Falling back to mock transfers after error');
-        return mockTransfers;
-      }
       return [];
     } finally {
       removeAbortController('transfers');
@@ -254,24 +185,15 @@ export const useOperationsFetcher = () => {
     try {
       console.log('Starting fetchAllOperations...');
       
-      // Extended timeout to 90s
+      // Extended timeout to 45s
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Fetch operations timeout')), 90000);
+        setTimeout(() => reject(new Error('Fetch operations timeout')), 45000);
       });
       
       const fetchPromise = Promise.all([
-        fetchDeposits().catch(err => {
-          console.error('Error in fetchDeposits promise:', err);
-          return shouldUseMocksRef.current ? mockDeposits : [];
-        }),
-        fetchWithdrawals().catch(err => {
-          console.error('Error in fetchWithdrawals promise:', err);
-          return shouldUseMocksRef.current ? mockWithdrawals : [];
-        }),
-        fetchTransfers().catch(err => {
-          console.error('Error in fetchTransfers promise:', err);
-          return shouldUseMocksRef.current ? mockTransfers : [];
-        })
+        fetchDeposits().catch(() => []),
+        fetchWithdrawals().catch(() => []),
+        fetchTransfers().catch(() => [])
       ]);
       
       // Race the fetch against the timeout
@@ -306,19 +228,6 @@ export const useOperationsFetcher = () => {
       }
       
       console.log('fetchAllOperations completed with no results (should not happen)');
-      
-      if (shouldUseMocksRef.current) {
-        console.log('Using mock data as fallback after fetch failure');
-        const mockOperations = transformToOperations(mockDeposits, mockWithdrawals, mockTransfers);
-        const formattedMockOperations = formatOperationsWithDates(sortOperationsByDate(deduplicateOperations(mockOperations)));
-        return { 
-          deposits: mockDeposits, 
-          withdrawals: mockWithdrawals, 
-          transfers: mockTransfers, 
-          allOperations: formattedMockOperations 
-        };
-      }
-      
       return { deposits: [], withdrawals: [], transfers: [], allOperations: [] };
     } catch (error) {
       console.error('Error fetching all operations:', error);
@@ -329,18 +238,6 @@ export const useOperationsFetcher = () => {
         toast.error('Délai d\'attente dépassé lors de la récupération des opérations');
       } else {
         toast.error('Erreur lors de la récupération des opérations');
-      }
-      
-      if (shouldUseMocksRef.current) {
-        console.log('Using mock data as fallback after error');
-        const mockOperations = transformToOperations(mockDeposits, mockWithdrawals, mockTransfers);
-        const formattedMockOperations = formatOperationsWithDates(sortOperationsByDate(deduplicateOperations(mockOperations)));
-        return { 
-          deposits: mockDeposits, 
-          withdrawals: mockWithdrawals, 
-          transfers: mockTransfers, 
-          allOperations: formattedMockOperations 
-        };
       }
       
       // We still return empty arrays so the UI can render an empty state
@@ -361,7 +258,6 @@ export const useOperationsFetcher = () => {
     fetchWithdrawals,
     fetchTransfers,
     fetchAllOperations,
-    cleanupAbortControllers,
-    setUseMocks
+    cleanupAbortControllers
   };
 };

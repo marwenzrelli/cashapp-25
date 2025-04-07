@@ -2,22 +2,18 @@
 import { useEffect, useState, useRef } from "react";
 import { LoadingIndicator } from "@/components/ui/loading-indicator";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, AlertCircle, Database } from "lucide-react";
+import { RefreshCw, AlertCircle } from "lucide-react";
 
 interface OperationsLoadingProps {
   loadingDuration: number;
   showNetworkError: boolean;
   onForceRefresh: () => void;
-  showMockDataOption?: boolean;
-  onUseMockData?: () => void;
 }
 
 export const OperationsLoading = ({ 
   loadingDuration, 
   showNetworkError, 
-  onForceRefresh,
-  showMockDataOption = false,
-  onUseMockData
+  onForceRefresh 
 }: OperationsLoadingProps) => {
   return (
     <div className="py-12 flex flex-col items-center justify-center">
@@ -27,26 +23,16 @@ export const OperationsLoading = ({
         showImmediately={true}
       />
       
-      <div className="flex flex-col sm:flex-row gap-3 mt-6">
+      {loadingDuration > 5 && (
         <Button 
           onClick={onForceRefresh}
           variant="outline"
+          className="mt-6"
         >
           <RefreshCw className="mr-2 h-4 w-4" />
           Force l'actualisation
         </Button>
-
-        {showMockDataOption && onUseMockData && (
-          <Button 
-            onClick={onUseMockData}
-            variant="outline"
-            className="bg-yellow-50 border-yellow-300 hover:bg-yellow-100 text-yellow-800"
-          >
-            <Database className="mr-2 h-4 w-4" />
-            Utiliser les données de démonstration
-          </Button>
-        )}
-      </div>
+      )}
       
       {showNetworkError && (
         <div className="mt-6 max-w-md p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-center">

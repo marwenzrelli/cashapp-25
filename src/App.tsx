@@ -11,7 +11,6 @@ import Withdrawals from "./pages/Withdrawals";
 import Transfers from "./pages/Transfers";
 import Statistics from "./pages/Statistics";
 import Operations from "./pages/Operations";
-import SearchOperations from "./pages/SearchOperations";
 import Administration from "./pages/Administration";
 import NotFound from "./pages/NotFound";
 import SupervisorCreation from "./pages/SupervisorCreation";
@@ -44,7 +43,6 @@ function App() {
             <Route path="/transfers" element={<Transfers />} />
             <Route path="/statistics" element={<Statistics />} />
             <Route path="/operations" element={<Operations />} />
-            <Route path="/search" element={<SearchOperations />} />
             <Route path="/administration" element={<Administration />} />
             <Route path="*" element={<NotFound />} />
           </Route>
