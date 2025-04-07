@@ -1,5 +1,5 @@
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Operation } from "../types";
 import { useOperationsState } from "./useOperationsState";
 import { useFetchOperations } from "./useFetchOperations";
@@ -8,6 +8,8 @@ import { useOperationsRealtime } from "./useOperationsRealtime";
 import { useOperationsRefresh } from "./useOperationsRefresh";
 
 export const useOperations = () => {
+  const isMountedRef = useRef(true);
+
   const {
     operations,
     setOperations,
@@ -30,6 +32,8 @@ export const useOperations = () => {
 
   // Update local operations when fetchedOperations change
   useEffect(() => {
+    if (!isMountedRef.current) return;
+
     if (fetchedOperations.length > 0) {
       console.log(`useOperations: Updating operations state with ${fetchedOperations.length} operations`);
       setOperations(fetchedOperations);
@@ -46,9 +50,13 @@ export const useOperations = () => {
 
   // Ensure initial load completes and retry if needed
   useEffect(() => {
+    if (!isMountedRef.current) return;
+
     if (!initialLoadDone && !fetchLoading && fetchedOperations.length === 0 && loadRetryCount < 3) {
       // If we finished loading but have no operations, let's try one more time
       const timer = setTimeout(() => {
+        if (!isMountedRef.current) return;
+        
         console.log(`useOperations: No operations found after initial load, retrying (${loadRetryCount + 1}/3)`);
         setLoadRetryCount(prev => prev + 1);
         refreshOperations(true);
@@ -62,13 +70,14 @@ export const useOperations = () => {
   useEffect(() => {
     return () => {
       console.log("useOperations: Cleaning up on unmount");
+      isMountedRef.current = false;
       cleanupRealtime();
     };
   }, [cleanupRealtime]);
 
   // Retry setup realtime subscription if it fails
   useEffect(() => {
-    if (!initialLoadDone) return;
+    if (!initialLoadDone || !isMountedRef.current) return;
     
     // Setup realtime subscription when initial data is loaded
     console.log("Setting up realtime subscription after initial data load");
@@ -77,18 +86,29 @@ export const useOperations = () => {
 
   // Wrapper for delete operation to update state
   const deleteOperation = useCallback(async (operation: Operation) => {
+    if (!isMountedRef.current) return;
     setOperationToDelete(operation);
     setShowDeleteDialog(true);
   }, [setOperationToDelete, setShowDeleteDialog]);
 
   // Wrapper for confirm delete to pass the current operation to delete
   const confirmDeleteOperation = useCallback(async () => {
+    if (!isMountedRef.current) return false;
+    
     if (!operationToDelete) {
       console.error("No operation to delete");
       return false;
     }
     return await confirmDeleteOperationLogic(operationToDelete);
   }, [operationToDelete, confirmDeleteOperationLogic]);
+
+  // Initialisation du montage
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   return {
     operations,

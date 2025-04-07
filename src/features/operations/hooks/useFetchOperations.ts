@@ -28,6 +28,7 @@ export const useFetchOperations = () => {
   
   const { fetchAllOperations } = useOperationsFetcher();
 
+  // Fetch operations function with retry logic
   const fetchOperations = useCallback(async (force: boolean = false) => {
     // Skip if already fetching and not forced
     if (fetchingRef.current && !force) {
@@ -60,7 +61,11 @@ export const useFetchOperations = () => {
       console.log("Fetching operations, attempt #", fetchAttempts + 1);
       
       // Set a timeout to prevent fetching from hanging indefinitely
-      const loadingTimeout = setTimeout(() => {
+      if (fetchTimeoutRef.current) {
+        clearTimeout(fetchTimeoutRef.current);
+      }
+      
+      fetchTimeoutRef.current = setTimeout(() => {
         if (fetchingRef.current && isMountedRef.current) {
           console.warn("Fetch operation timeout - resetting loading state");
           fetchingRef.current = false;
@@ -71,12 +76,15 @@ export const useFetchOperations = () => {
             abortControllerRef.current = null;
           }
         }
-      }, 10000);
+      }, 15000); // Increased timeout from 10s to 15s
       
       // Fetch all operations
       const { deposits, withdrawals, transfers } = await fetchAllOperations();
       
-      clearTimeout(loadingTimeout);
+      if (fetchTimeoutRef.current) {
+        clearTimeout(fetchTimeoutRef.current);
+        fetchTimeoutRef.current = null;
+      }
       
       if (!isMountedRef.current) return;
 
@@ -104,8 +112,11 @@ export const useFetchOperations = () => {
         if (operationDate) {
           if (typeof operationDate === 'string') {
             dateObj = new Date(operationDate);
-          } else {
+          } else if (operationDate instanceof Date) {
             dateObj = operationDate;
+          } else {
+            // For safety, create a new date
+            dateObj = new Date();
           }
         } else {
           dateObj = new Date();
@@ -131,63 +142,72 @@ export const useFetchOperations = () => {
       
       maxRetries.current = 3;  // Reset max retries on success
     } catch (err: any) {
+      if (!isMountedRef.current) return;
+      
       console.error('Error fetching operations:', err);
       setError(err.message || 'Erreur inconnue');
       
       // Show toast for first attempt or forced refresh
-      if (force || fetchAttempts <= 1) {
+      if ((force || fetchAttempts <= 1) && isMountedRef.current) {
         toast.error('Erreur lors de la récupération des opérations');
       }
       
       // Retry logic
-      if (maxRetries.current > 0) {
+      if (maxRetries.current > 0 && isMountedRef.current) {
         const retryDelay = calculateRetryDelay(3, maxRetries.current);
         console.log(`Will retry in ${retryDelay}ms, ${maxRetries.current} retries left`);
         maxRetries.current--;
         
         // Schedule retry
-        setTimeout(() => {
+        const retryTimer = setTimeout(() => {
           if (isMountedRef.current) {
             fetchOperations(true);
           }
         }, retryDelay);
+        
+        // Clean up if component unmounts
+        return () => clearTimeout(retryTimer);
       }
     } finally {
       if (isMountedRef.current) {
         setIsLoading(false);
         fetchingRef.current = false;
         
-        abortControllerRef.current = null;
+        if (abortControllerRef.current) {
+          abortControllerRef.current = null;
+        }
       }
     }
   }, [lastFetchTime, fetchAttempts, fetchAllOperations]);
 
-  // Initial fetch when component mounts
+  // Ensure we clean up on unmount
   useEffect(() => {
-    console.log("useFetchOperations mounted");
     isMountedRef.current = true;
+    console.log("useFetchOperations mounted");
     
-    if (fetchTimeoutRef.current) {
-      clearTimeout(fetchTimeoutRef.current);
-    }
-    
-    // Initiate fetch immediately
-    setIsLoading(true);
-    fetchOperations(true);
-    
-    // Cleanup on unmount
     return () => {
       console.log("useFetchOperations unmounting");
       isMountedRef.current = false;
       
       if (fetchTimeoutRef.current) {
         clearTimeout(fetchTimeoutRef.current);
+        fetchTimeoutRef.current = null;
       }
       
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
+        abortControllerRef.current = null;
       }
     };
+  }, []);
+
+  // Initial fetch when component mounts
+  useEffect(() => {
+    if (!isMountedRef.current) return;
+    
+    // Initiate fetch immediately
+    setIsLoading(true);
+    fetchOperations(true);
   }, [fetchOperations]);
 
   return { operations, isLoading, error, refreshOperations: fetchOperations };
