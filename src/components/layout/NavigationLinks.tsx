@@ -1,56 +1,29 @@
 
-import { Link } from "react-router-dom";
-import { LayoutDashboard, Users, ArrowDownCircle, ArrowUpCircle, ArrowLeftRight, LineChart, Search, Shield, LucideIcon } from "lucide-react";
 import { NavItem } from "./NavItem";
-import { UserRole } from "@/types/admin";
+import {
+  LayoutDashboard,
+  Users,
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  ArrowLeftRight,
+  BarChart2,
+  ClipboardList,
+  Settings,
+  Search
+} from "lucide-react";
 
-interface NavigationLinksProps {
-  className?: string;
-  onClick?: () => void;
-  currentPath: string;
-  userRole: UserRole | null;
-}
-
-interface NavItemType {
-  path: string;
-  label: string;
-  icon: LucideIcon;
-  roles?: UserRole[];
-}
-
-export const NavigationLinks = ({ className = "", onClick = () => {}, currentPath, userRole }: NavigationLinksProps) => {
-  console.log("NavigationLinks - userRole:", userRole);
-  
-  const navItems: NavItemType[] = [
-    { path: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
-    { path: "/clients", label: "Clients", icon: Users },
-    { path: "/deposits", label: "Versements", icon: ArrowDownCircle },
-    { path: "/withdrawals", label: "Retraits", icon: ArrowUpCircle },
-    { path: "/transfers", label: "Virements", icon: ArrowLeftRight },
-    { path: "/statistics", label: "Statistiques", icon: LineChart, roles: ['supervisor', 'manager'] },
-    { path: "/operations", label: "Recherche", icon: Search },
-    { path: "/administration", label: "Administration", icon: Shield, roles: ['supervisor'] },
-    // The temporary link to admin-utility has been removed
-  ];
-
-  const filteredNavItems = navItems.filter(item => {
-    if (!item.roles) return true;
-    if (!userRole) return false;
-    return item.roles.includes(userRole);
-  });
-
+export const NavigationLinks = () => {
   return (
-    <div className={className}>
-      {filteredNavItems.map((item) => (
-        <NavItem
-          key={item.path}
-          path={item.path}
-          label={item.label}
-          icon={item.icon}
-          currentPath={currentPath}
-          onClick={onClick}
-        />
-      ))}
+    <div className="space-y-1">
+      <NavItem to="/dashboard" icon={<LayoutDashboard size={18} />} label="Tableau de bord" />
+      <NavItem to="/clients" icon={<Users size={18} />} label="Clients" />
+      <NavItem to="/deposits" icon={<ArrowDownToLine size={18} />} label="Versements" />
+      <NavItem to="/withdrawals" icon={<ArrowUpFromLine size={18} />} label="Retraits" />
+      <NavItem to="/transfers" icon={<ArrowLeftRight size={18} />} label="Virements" />
+      <NavItem to="/statistics" icon={<BarChart2 size={18} />} label="Statistiques" />
+      <NavItem to="/operations" icon={<ClipboardList size={18} />} label="Opérations" />
+      <NavItem to="/search" icon={<Search size={18} />} label="Recherche" />
+      <NavItem to="/administration" icon={<Settings size={18} />} label="Administration" />
     </div>
   );
 };

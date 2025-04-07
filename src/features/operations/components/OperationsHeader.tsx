@@ -3,8 +3,10 @@ import { Button } from "@/components/ui/button";
 import { 
   Download, 
   Printer,
-  RefreshCcw
+  RefreshCcw,
+  Search
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface OperationsHeaderProps {
   onExportPDF: () => void;
@@ -35,6 +37,7 @@ export const OperationsHeader = ({
           <RefreshCcw className="h-4 w-4 mr-2" />
           Actualiser
         </Button>
+        
         <Button
           variant="outline"
           size="sm"
@@ -44,6 +47,7 @@ export const OperationsHeader = ({
           <Download className="h-4 w-4 mr-2" />
           Exporter PDF
         </Button>
+        
         <Button
           variant="outline"
           size="sm"
@@ -52,6 +56,18 @@ export const OperationsHeader = ({
         >
           <Printer className="h-4 w-4 mr-2" />
           Imprimer
+        </Button>
+        
+        <Button
+          variant="default"
+          size="sm"
+          className="h-9"
+          asChild
+        >
+          <Link to="/search">
+            <Search className="h-4 w-4 mr-2" />
+            Recherche avancée
+          </Link>
         </Button>
       </div>
     </div>
