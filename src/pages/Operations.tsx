@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { OperationFilters } from "@/features/operations/components/OperationFilters";
 import { useOperations } from "@/features/operations/hooks/useOperations";
@@ -12,6 +11,7 @@ import { OperationsLoadingTimeout } from "@/features/operations/components/Opera
 import { OperationsError } from "@/features/operations/components/OperationsError";
 import { OperationsEmptyState } from "@/features/operations/components/OperationsEmptyState";
 import { OperationsContent } from "@/features/operations/components/OperationsContent";
+import { Operation } from "@/features/operations/types"; // Added the missing import
 
 const Operations = () => {
   const { 
