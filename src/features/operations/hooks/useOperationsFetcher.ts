@@ -2,6 +2,8 @@
 import { useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { formatOperationsWithDates } from './utils/operationFormatter';
+import { transformToOperations, deduplicateOperations, sortOperationsByDate } from './utils/operationTransformers';
 
 interface SupabaseResponse<T> {
   data: T | null;
@@ -47,9 +49,9 @@ export const useOperationsFetcher = () => {
     const controller = createAbortController('deposits');
     
     try {
-      // Increased timeout from 12s to 20s
+      // Extended timeout to 30s to handle slow connections
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Fetch deposits timeout')), 20000);
+        setTimeout(() => reject(new Error('Fetch deposits timeout')), 30000);
       });
       
       // Create the database query promise
@@ -93,9 +95,9 @@ export const useOperationsFetcher = () => {
     const controller = createAbortController('withdrawals');
     
     try {
-      // Increased timeout from 12s to 20s
+      // Extended timeout to 30s to handle slow connections
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Fetch withdrawals timeout')), 20000);
+        setTimeout(() => reject(new Error('Fetch withdrawals timeout')), 30000);
       });
       
       // Create the database query promise
@@ -139,9 +141,9 @@ export const useOperationsFetcher = () => {
     const controller = createAbortController('transfers');
     
     try {
-      // Increased timeout from 12s to 20s
+      // Extended timeout to 30s to handle slow connections
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Fetch transfers timeout')), 20000);
+        setTimeout(() => reject(new Error('Fetch transfers timeout')), 30000);
       });
       
       // Create the database query promise
@@ -183,9 +185,9 @@ export const useOperationsFetcher = () => {
     try {
       console.log('Starting fetchAllOperations...');
       
-      // Increased timeout from 20s to 30s
+      // Extended timeout to 45s
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Fetch operations timeout')), 30000);
+        setTimeout(() => reject(new Error('Fetch operations timeout')), 45000);
       });
       
       const fetchPromise = Promise.all([
@@ -202,13 +204,31 @@ export const useOperationsFetcher = () => {
         const [deposits, withdrawals, transfers] = result;
         
         console.log(`fetchAllOperations completed with ${deposits.length} deposits, ${withdrawals.length} withdrawals, ${transfers.length} transfers`);
-        console.log('Raw data - deposits:', deposits.length, ', withdrawals:', withdrawals.length, ', transfers:', transfers.length);
         
-        return { deposits, withdrawals, transfers };
+        // Transform raw data into unified Operation objects
+        const allOperations = transformToOperations(deposits, withdrawals, transfers);
+        
+        // Deduplicate operations
+        const uniqueOperations = deduplicateOperations(allOperations);
+        
+        // Sort operations by date
+        const sortedOperations = sortOperationsByDate(uniqueOperations);
+        
+        // Format dates for display
+        const formattedOperations = formatOperationsWithDates(sortedOperations);
+        
+        console.log(`Processing completed: ${formattedOperations.length} total operations ready for display`);
+        
+        return { 
+          deposits, 
+          withdrawals, 
+          transfers,
+          allOperations: formattedOperations 
+        };
       }
       
       console.log('fetchAllOperations completed with no results (should not happen)');
-      return { deposits: [], withdrawals: [], transfers: [] };
+      return { deposits: [], withdrawals: [], transfers: [], allOperations: [] };
     } catch (error) {
       console.error('Error fetching all operations:', error);
       
@@ -216,10 +236,12 @@ export const useOperationsFetcher = () => {
       if (error && typeof error === 'object' && 'message' in error && 
           error.message === 'Fetch operations timeout') {
         toast.error('Délai d\'attente dépassé lors de la récupération des opérations');
+      } else {
+        toast.error('Erreur lors de la récupération des opérations');
       }
       
       // We still return empty arrays so the UI can render an empty state
-      return { deposits: [], withdrawals: [], transfers: [] };
+      return { deposits: [], withdrawals: [], transfers: [], allOperations: [] };
     }
   }, [fetchDeposits, fetchWithdrawals, fetchTransfers]);
 
