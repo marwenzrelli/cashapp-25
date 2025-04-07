@@ -52,19 +52,24 @@ export const useOperationsFetcher = () => {
    */
   const fetchTransfers = useCallback(async () => {
     console.log('Fetching transfers...');
-    const response = await supabase
-      .from('transfers')
-      .select('*')
-      .order('created_at', { ascending: false });
+    try {
+      const response = await supabase
+        .from('transfers')
+        .select('*')
+        .order('created_at', { ascending: false });
+        
+      if (response.error) {
+        console.error('Error fetching transfers:', response.error);
+        toast.error('Erreur lors de la récupération des virements');
+        throw response.error;
+      }
       
-    if (response.error) {
-      console.error('Error fetching transfers:', response.error);
-      toast.error('Erreur lors de la récupération des virements');
-      throw response.error;
+      console.log(`Fetched ${response.data?.length || 0} transfers`);
+      return response.data || [];
+    } catch (error) {
+      console.error('Error in fetchTransfers:', error);
+      return [];
     }
-    
-    console.log(`Fetched ${response.data?.length || 0} transfers`);
-    return response.data || [];
   }, []);
 
   /**
@@ -73,18 +78,37 @@ export const useOperationsFetcher = () => {
   const fetchAllOperations = useCallback(async () => {
     try {
       console.log('Starting fetchAllOperations...');
-      const [deposits, withdrawals, transfers] = await Promise.all([
+      
+      // Set a timeout to ensure we don't hang forever
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Fetch operations timeout')), 15000);
+      });
+      
+      const fetchPromise = Promise.all([
         fetchDeposits(),
         fetchWithdrawals(),
         fetchTransfers()
       ]);
+      
+      // Race the fetch against the timeout
+      const [deposits, withdrawals, transfers] = await Promise.race([
+        fetchPromise,
+        timeoutPromise.then(() => {
+          console.warn('Fetch operations timed out');
+          throw new Error('Timeout');
+        })
+      ]) as [any[], any[], any[]];
       
       console.log(`fetchAllOperations completed with ${deposits.length} deposits, ${withdrawals.length} withdrawals, ${transfers.length} transfers`);
       
       return { deposits, withdrawals, transfers };
     } catch (error) {
       console.error('Error fetching all operations:', error);
-      throw error;
+      if (error instanceof Error && error.message === 'Timeout') {
+        toast.error('Délai d\'attente dépassé lors de la récupération des opérations');
+      }
+      // Return empty arrays so the UI can still render
+      return { deposits: [], withdrawals: [], transfers: [] };
     }
   }, [fetchDeposits, fetchWithdrawals, fetchTransfers]);
 

@@ -8,15 +8,19 @@ export const useOperationsRealtime = (refreshOperations: (force: boolean) => voi
   const isSubscribedRef = useRef<boolean>(false);
 
   const setupRealtimeSubscription = useCallback(() => {
+    console.log('Setting up realtime subscription for operations...');
     try {
       // Cleanup any existing channel before creating a new one
       if (channelRef.current) {
+        console.log('Cleaning up existing channel before creating a new one');
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }
 
       // Create a new channel for listening to database changes
-      const channel = supabase.channel('operations-changes');
+      const channelName = `operations-changes-${Date.now()}`;
+      console.log(`Creating new channel: ${channelName}`);
+      const channel = supabase.channel(channelName);
       channelRef.current = channel;
 
       // Subscribe to deposits changes
@@ -28,8 +32,8 @@ export const useOperationsRealtime = (refreshOperations: (force: boolean) => voi
             schema: 'public',
             table: 'deposits'
           },
-          () => {
-            console.log('Realtime event received for deposits');
+          (payload) => {
+            console.log('Realtime event received for deposits:', payload.eventType);
             refreshOperations(true);
           }
         )
@@ -40,8 +44,8 @@ export const useOperationsRealtime = (refreshOperations: (force: boolean) => voi
             schema: 'public',
             table: 'withdrawals'
           },
-          () => {
-            console.log('Realtime event received for withdrawals');
+          (payload) => {
+            console.log('Realtime event received for withdrawals:', payload.eventType);
             refreshOperations(true);
           }
         )
@@ -52,18 +56,26 @@ export const useOperationsRealtime = (refreshOperations: (force: boolean) => voi
             schema: 'public',
             table: 'transfers'
           },
-          () => {
-            console.log('Realtime event received for transfers');
+          (payload) => {
+            console.log('Realtime event received for transfers:', payload.eventType);
             refreshOperations(true);
           }
         )
         .subscribe((status) => {
           console.log(`Realtime subscription status: ${status}`);
           isSubscribedRef.current = status === 'SUBSCRIBED';
+          
+          if (status === 'SUBSCRIBED') {
+            console.log('Successfully subscribed to realtime updates for operations');
+          } else if (status === 'CHANNEL_ERROR') {
+            console.error('Error subscribing to realtime updates');
+            toast.error('Erreur de connexion temps réel');
+          }
         });
 
     } catch (error) {
       console.error('Error setting up realtime subscription:', error);
+      toast.error('Erreur de connexion temps réel');
     }
   }, [refreshOperations]);
 
@@ -82,6 +94,7 @@ export const useOperationsRealtime = (refreshOperations: (force: boolean) => voi
 
   // Set up realtime subscription when component mounts
   useEffect(() => {
+    console.log('useOperationsRealtime effect running');
     setupRealtimeSubscription();
     
     // Clean up subscription when component unmounts
@@ -92,6 +105,7 @@ export const useOperationsRealtime = (refreshOperations: (force: boolean) => voi
 
   return {
     cleanupRealtime,
+    setupRealtimeSubscription,
     isSubscribed: isSubscribedRef.current
   };
 };

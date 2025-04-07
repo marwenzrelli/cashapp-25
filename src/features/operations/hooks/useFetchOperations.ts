@@ -95,17 +95,36 @@ export const useFetchOperations = () => {
       
       if (!isMountedRef.current) return;
       
-      // Formater les dates pour l'affichage
-      const formattedOperations = uniqueOperations.map(op => ({
-        ...op,
-        formattedDate: new Date(op.operation_date || op.date).toLocaleString('fr-FR', {
+      // Format dates for display
+      const formattedOperations = uniqueOperations.map(op => {
+        const operationDate = op.operation_date || op.date;
+        let dateObj;
+        
+        // Handle various date formats
+        if (operationDate) {
+          if (typeof operationDate === 'string') {
+            dateObj = new Date(operationDate);
+          } else {
+            dateObj = operationDate;
+          }
+        } else {
+          dateObj = new Date();
+        }
+        
+        // Format date for French locale
+        const formattedDate = dateObj.toLocaleString('fr-FR', {
           day: '2-digit',
           month: '2-digit',
           year: 'numeric',
           hour: '2-digit',
           minute: '2-digit'
-        })
-      }));
+        });
+        
+        return {
+          ...op,
+          formattedDate
+        };
+      });
       
       setOperations(formattedOperations);
       setError(null);
@@ -113,7 +132,7 @@ export const useFetchOperations = () => {
       maxRetries.current = 3;  // Reset max retries on success
     } catch (err: any) {
       console.error('Error fetching operations:', err);
-      setError(err.message);
+      setError(err.message || 'Erreur inconnue');
       
       // Show toast for first attempt or forced refresh
       if (force || fetchAttempts <= 1) {
@@ -145,6 +164,7 @@ export const useFetchOperations = () => {
 
   // Initial fetch when component mounts
   useEffect(() => {
+    console.log("useFetchOperations mounted");
     isMountedRef.current = true;
     
     if (fetchTimeoutRef.current) {
@@ -157,6 +177,7 @@ export const useFetchOperations = () => {
     
     // Cleanup on unmount
     return () => {
+      console.log("useFetchOperations unmounting");
       isMountedRef.current = false;
       
       if (fetchTimeoutRef.current) {
