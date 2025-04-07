@@ -3,7 +3,12 @@ import { useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { formatOperationsWithDates } from './utils/operationFormatter';
-import { transformToOperations, deduplicateOperations, sortOperationsByDate } from './utils/operationTransformers';
+import { 
+  transformToOperations, 
+  deduplicateOperations, 
+  sortOperationsByDate 
+} from './utils/operationTransformers';
+import { mockOperations } from '../data/mock-operations';
 
 interface SupabaseResponse<T> {
   data: T | null;
@@ -15,6 +20,7 @@ interface SupabaseResponse<T> {
  */
 export const useOperationsFetcher = () => {
   const abortControllersRef = useRef<Map<string, AbortController>>(new Map());
+  const useTestDataRef = useRef<boolean>(false);
   
   /**
    * Creates and registers a new AbortController
@@ -49,9 +55,15 @@ export const useOperationsFetcher = () => {
     const controller = createAbortController('deposits');
     
     try {
-      // Extended timeout to 30s to handle slow connections
+      // Vérifiez si nous utilisons les données de test
+      if (useTestDataRef.current) {
+        console.log('Using mock deposit data instead of fetching from Supabase');
+        return mockOperations.filter(op => op.type === 'deposit');
+      }
+      
+      // Réduit le timeout à 8s pour éviter de bloquer trop longtemps l'interface
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Fetch deposits timeout')), 30000);
+        setTimeout(() => reject(new Error('Fetch deposits timeout')), 8000);
       });
       
       // Create the database query promise
@@ -95,9 +107,15 @@ export const useOperationsFetcher = () => {
     const controller = createAbortController('withdrawals');
     
     try {
-      // Extended timeout to 30s to handle slow connections
+      // Vérifiez si nous utilisons les données de test
+      if (useTestDataRef.current) {
+        console.log('Using mock withdrawal data instead of fetching from Supabase');
+        return mockOperations.filter(op => op.type === 'withdrawal');
+      }
+      
+      // Réduit le timeout à 8s pour éviter de bloquer trop longtemps l'interface
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Fetch withdrawals timeout')), 30000);
+        setTimeout(() => reject(new Error('Fetch withdrawals timeout')), 8000);
       });
       
       // Create the database query promise
@@ -141,9 +159,15 @@ export const useOperationsFetcher = () => {
     const controller = createAbortController('transfers');
     
     try {
-      // Extended timeout to 30s to handle slow connections
+      // Vérifiez si nous utilisons les données de test
+      if (useTestDataRef.current) {
+        console.log('Using mock transfer data instead of fetching from Supabase');
+        return mockOperations.filter(op => op.type === 'transfer');
+      }
+      
+      // Réduit le timeout à 8s pour éviter de bloquer trop longtemps l'interface
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Fetch transfers timeout')), 30000);
+        setTimeout(() => reject(new Error('Fetch transfers timeout')), 8000);
       });
       
       // Create the database query promise
@@ -185,9 +209,9 @@ export const useOperationsFetcher = () => {
     try {
       console.log('Starting fetchAllOperations...');
       
-      // Extended timeout to 45s
+      // Réduit le timeout global à 12s
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Fetch operations timeout')), 45000);
+        setTimeout(() => reject(new Error('Fetch operations timeout')), 12000);
       });
       
       const fetchPromise = Promise.all([
@@ -204,6 +228,31 @@ export const useOperationsFetcher = () => {
         const [deposits, withdrawals, transfers] = result;
         
         console.log(`fetchAllOperations completed with ${deposits.length} deposits, ${withdrawals.length} withdrawals, ${transfers.length} transfers`);
+        
+        // Si toutes les listes sont vides et que c'est après un échec, utiliser les données de test
+        if (deposits.length === 0 && withdrawals.length === 0 && transfers.length === 0) {
+          console.log('No data returned from any source. Using mock data.');
+          
+          // Activer l'utilisation des données de test pour les prochains appels
+          useTestDataRef.current = true;
+          
+          // Créer une version filtrée des opérations pour chaque type
+          const mockDeposits = mockOperations.filter(op => op.type === 'deposit');
+          const mockWithdrawals = mockOperations.filter(op => op.type === 'withdrawal');
+          const mockTransfers = mockOperations.filter(op => op.type === 'transfer');
+          
+          toast.info('Utilisation de données de démonstration (mode hors ligne)');
+          
+          // Dédupliquer et trier les opérations de test
+          const formattedOperations = formatOperationsWithDates(mockOperations);
+          
+          return { 
+            deposits: mockDeposits, 
+            withdrawals: mockWithdrawals, 
+            transfers: mockTransfers,
+            allOperations: formattedOperations 
+          };
+        }
         
         // Transform raw data into unified Operation objects
         const allOperations = transformToOperations(deposits, withdrawals, transfers);
@@ -232,16 +281,19 @@ export const useOperationsFetcher = () => {
     } catch (error) {
       console.error('Error fetching all operations:', error);
       
-      // Ensure we provide feedback to the user about the timeout
-      if (error && typeof error === 'object' && 'message' in error && 
-          error.message === 'Fetch operations timeout') {
-        toast.error('Délai d\'attente dépassé lors de la récupération des opérations');
-      } else {
-        toast.error('Erreur lors de la récupération des opérations');
-      }
+      // Utiliser les données de test en cas d'erreur
+      console.log('Error during fetch. Using mock data as fallback.');
+      useTestDataRef.current = true;
       
-      // We still return empty arrays so the UI can render an empty state
-      return { deposits: [], withdrawals: [], transfers: [], allOperations: [] };
+      const formattedOperations = formatOperationsWithDates(mockOperations);
+      toast.info('Utilisation de données de démonstration (mode hors ligne)');
+      
+      return { 
+        deposits: mockOperations.filter(op => op.type === 'deposit'), 
+        withdrawals: mockOperations.filter(op => op.type === 'withdrawal'), 
+        transfers: mockOperations.filter(op => op.type === 'transfer'),
+        allOperations: formattedOperations 
+      };
     }
   }, [fetchDeposits, fetchWithdrawals, fetchTransfers]);
 

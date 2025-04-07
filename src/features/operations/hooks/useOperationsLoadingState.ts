@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { Operation } from "../types";
 import { toast } from "sonner";
@@ -41,11 +42,12 @@ export const useOperationsLoadingState = ({
         clearTimeout(loadingTimeoutRef.current);
       }
       
+      // Réduit le temps avant d'afficher le message de timeout à 5 secondes
       loadingTimeoutRef.current = setTimeout(() => {
         if (isLoading) {
           setLoadingTimeout(true);
         }
-      }, 7000);
+      }, 5000);
       
       if (loadingTimerRef.current) {
         clearInterval(loadingTimerRef.current);
@@ -56,7 +58,8 @@ export const useOperationsLoadingState = ({
           const duration = Math.floor((Date.now() - loadingStartTimeRef.current) / 1000);
           setLoadingDuration(duration);
           
-          if (duration > 15 && !showNetworkError) {
+          // Affiche l'avertissement réseau après 8 secondes au lieu de 15
+          if (duration > 8 && !showNetworkError) {
             setShowNetworkError(true);
           }
         }
@@ -80,6 +83,7 @@ export const useOperationsLoadingState = ({
       
       setLoadingTimeout(false);
       
+      // On réessaie automatiquement après un timeout
       fetchOperations(true);
     }
   }, [fetchOperations, isLoading, loadingTimeout, initialLoadAttempted, operations.length]);
@@ -109,8 +113,9 @@ export const useOperationsLoadingState = ({
     const now = Date.now();
     const timeSinceLastRefresh = now - lastRefreshTimeRef.current;
     
-    if (timeSinceLastRefresh < 3000) {
-      toast.info(`Attendez ${Math.ceil((3000 - timeSinceLastRefresh) / 1000)} secondes avant de rafraîchir à nouveau`);
+    // Réduit le temps entre les rafraîchissements à 2 secondes
+    if (timeSinceLastRefresh < 2000) {
+      toast.info(`Attendez ${Math.ceil((2000 - timeSinceLastRefresh) / 1000)} secondes avant de rafraîchir à nouveau`);
       return;
     }
     

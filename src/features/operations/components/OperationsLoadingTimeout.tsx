@@ -10,8 +10,11 @@ export const OperationsLoadingTimeout = ({ onForceRefresh }: OperationsLoadingTi
   return (
     <div className="rounded-lg bg-yellow-50 p-6 text-center">
       <AlertCircle className="h-6 w-6 text-yellow-600 mx-auto mb-2" />
-      <p className="text-yellow-700 mb-4">
+      <p className="text-yellow-700 font-medium mb-2">
         Le chargement des opérations prend plus de temps que prévu.
+      </p>
+      <p className="text-sm text-yellow-600 mb-4">
+        Cela peut être dû à une connexion lente ou à un problème de serveur. Vous pouvez continuer à attendre ou essayer les options ci-dessous.
       </p>
       <div className="flex flex-col sm:flex-row justify-center gap-3">
         <Button 
