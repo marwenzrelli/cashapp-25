@@ -1,8 +1,18 @@
+
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { Operation } from '../types';
 import { toast } from 'sonner';
+import { useOperationsFetcher } from './useOperationsFetcher';
+import { 
+  transformToOperations, 
+  deduplicateOperations, 
+  sortOperationsByDate 
+} from './utils/operationTransformers';
+import { calculateRetryDelay, shouldRetry } from './utils/retryLogic';
 
+/**
+ * Main hook for fetching operations with state management, error handling, and retry logic
+ */
 export const useFetchOperations = () => {
   const [operations, setOperations] = useState<Operation[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -15,68 +25,17 @@ export const useFetchOperations = () => {
   const fetchingRef = useRef<boolean>(false);
   const maxRetries = useRef<number>(3);
   const abortControllerRef = useRef<AbortController | null>(null);
-
-  const transformToOperations = (
-    deposits: any[] = [], 
-    withdrawals: any[] = [], 
-    transfers: any[] = []
-  ): Operation[] => {
-    const transformedDeposits: Operation[] = deposits.map(deposit => ({
-      id: deposit.id.toString(),
-      type: 'deposit',
-      amount: deposit.amount,
-      date: deposit.created_at,
-      operation_date: deposit.operation_date,
-      description: deposit.notes || 'Versement',
-      fromClient: deposit.client_name,
-      client_id: deposit.client_id,
-      status: deposit.status
-    }));
-    
-    const transformedWithdrawals: Operation[] = withdrawals.map(withdrawal => ({
-      id: withdrawal.id.toString(),
-      type: 'withdrawal',
-      amount: withdrawal.amount,
-      date: withdrawal.created_at,
-      operation_date: withdrawal.operation_date,
-      description: withdrawal.notes || 'Retrait',
-      fromClient: withdrawal.client_name,
-      client_id: withdrawal.client_id,
-      status: withdrawal.status
-    }));
-    
-    const transformedTransfers: Operation[] = transfers.map(transfer => ({
-      id: transfer.id.toString(),
-      type: 'transfer',
-      amount: transfer.amount,
-      date: transfer.created_at,
-      operation_date: transfer.operation_date,
-      description: transfer.reason || 'Virement',
-      fromClient: transfer.from_client,
-      toClient: transfer.to_client,
-      status: transfer.status
-    }));
-
-    return [...transformedDeposits, ...transformedWithdrawals, ...transformedTransfers];
-  };
-
-  const deduplicateOperations = (operations: Operation[]): Operation[] => {
-    const uniqueMap = new Map<string, Operation>();
-    operations.forEach(op => {
-      const key = `${op.type}-${op.id}`;
-      if (!uniqueMap.has(key)) {
-        uniqueMap.set(key, op);
-      }
-    });
-    return Array.from(uniqueMap.values());
-  };
+  
+  const { fetchAllOperations } = useOperationsFetcher();
 
   const fetchOperations = useCallback(async (force: boolean = false) => {
+    // Skip if already fetching and not forced
     if (fetchingRef.current && !force) {
       console.log("Une requête est déjà en cours, ignorant cette requête");
       return;
     }
     
+    // Rate limiting to prevent excessive fetching
     const now = Date.now();
     if (!force && now - lastFetchTime < 2000) {
       console.log(`Dernier fetch il y a ${now - lastFetchTime}ms, ignorant cette requête`);
@@ -86,6 +45,7 @@ export const useFetchOperations = () => {
     try {
       if (!isMountedRef.current) return;
       
+      // Cancel any in-progress requests
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
@@ -99,6 +59,7 @@ export const useFetchOperations = () => {
       
       console.log("Fetching operations, attempt #", fetchAttempts + 1);
       
+      // Set a timeout to prevent fetching from hanging indefinitely
       const loadingTimeout = setTimeout(() => {
         if (fetchingRef.current && isMountedRef.current) {
           console.warn("Fetch operation timeout - resetting loading state");
@@ -112,59 +73,50 @@ export const useFetchOperations = () => {
         }
       }, 10000);
       
-      const [depositsResponse, withdrawalsResponse, transfersResponse] = await Promise.all([
-        supabase.from('deposits').select('*').order('created_at', { ascending: false }),
-        supabase.from('withdrawals').select('*').order('created_at', { ascending: false }),
-        supabase.from('transfers').select('*').order('created_at', { ascending: false })
-      ]);
+      // Fetch all operations
+      const { deposits, withdrawals, transfers } = await fetchAllOperations();
       
       clearTimeout(loadingTimeout);
       
-      if (depositsResponse.error) throw depositsResponse.error;
-      if (withdrawalsResponse.error) throw withdrawalsResponse.error;
-      if (transfersResponse.error) throw transfersResponse.error;
-      
       if (!isMountedRef.current) return;
 
-      console.log("Raw deposits data:", depositsResponse.data);
-      console.log("Raw withdrawals data:", withdrawalsResponse.data);
-      console.log("Raw transfers data:", transfersResponse.data);
+      console.log("Raw deposits data:", deposits);
+      console.log("Raw withdrawals data:", withdrawals);
+      console.log("Raw transfers data:", transfers);
 
-      const allOperations = transformToOperations(
-        depositsResponse.data || [], 
-        withdrawalsResponse.data || [], 
-        transfersResponse.data || []
-      );
+      // Transform the data
+      const allOperations = transformToOperations(deposits, withdrawals, transfers);
       
-      allOperations.sort((a, b) => {
-        const dateA = new Date(a.operation_date || a.date);
-        const dateB = new Date(b.operation_date || b.date);
-        return dateB.getTime() - dateA.getTime();
-      });
-
-      console.log(`Fetched ${allOperations.length} operations (${depositsResponse.data?.length || 0} deposits, ${withdrawalsResponse.data?.length || 0} withdrawals, ${transfersResponse.data?.length || 0} transfers)`);
+      // Sort operations by date
+      const sortedOperations = sortOperationsByDate(allOperations);
       
-      const uniqueOperations = deduplicateOperations(allOperations);
+      console.log(`Fetched ${allOperations.length} operations (${deposits.length || 0} deposits, ${withdrawals.length || 0} withdrawals, ${transfers.length || 0} transfers)`);
+      
+      // Deduplicate operations
+      const uniqueOperations = deduplicateOperations(sortedOperations);
       
       if (!isMountedRef.current) return;
       
       setOperations(uniqueOperations);
       setError(null);
       
-      maxRetries.current = 3;
+      maxRetries.current = 3;  // Reset max retries on success
     } catch (err: any) {
       console.error('Error fetching operations:', err);
       setError(err.message);
       
+      // Show toast for first attempt or forced refresh
       if (force || fetchAttempts <= 1) {
         toast.error('Erreur lors de la récupération des opérations');
       }
       
+      // Retry logic
       if (maxRetries.current > 0) {
-        const retryDelay = Math.min(2000 * Math.pow(2, 3 - maxRetries.current), 10000);
+        const retryDelay = calculateRetryDelay(3, maxRetries.current);
         console.log(`Will retry in ${retryDelay}ms, ${maxRetries.current} retries left`);
         maxRetries.current--;
         
+        // Schedule retry
         setTimeout(() => {
           if (isMountedRef.current) {
             fetchOperations(true);
@@ -179,8 +131,9 @@ export const useFetchOperations = () => {
         abortControllerRef.current = null;
       }
     }
-  }, [lastFetchTime, fetchAttempts]);
+  }, [lastFetchTime, fetchAttempts, fetchAllOperations]);
 
+  // Initial fetch when component mounts
   useEffect(() => {
     isMountedRef.current = true;
     
@@ -195,8 +148,10 @@ export const useFetchOperations = () => {
       }
     }, 100);
     
+    // Cleanup on unmount
     return () => {
       isMountedRef.current = false;
+      
       if (fetchTimeoutRef.current) {
         clearTimeout(fetchTimeoutRef.current);
       }
