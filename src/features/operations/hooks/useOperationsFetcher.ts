@@ -42,15 +42,19 @@ export const useOperationsFetcher = () => {
     const controller = createAbortController('deposits');
     
     try {
-      const response = await Promise.race([
-        supabase
-          .from('deposits')
-          .select('*')
-          .order('created_at', { ascending: false }),
-        new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Fetch deposits timeout')), 12000);
-        })
-      ]);
+      // Create a timeout promise
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Fetch deposits timeout')), 12000);
+      });
+      
+      // Create the database query promise with proper typing
+      const queryPromise = supabase
+        .from('deposits')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      // Race the promises with proper type handling
+      const response = await Promise.race([queryPromise, timeoutPromise]);
       
       if ('error' in response) {
         console.error('Error fetching deposits:', response.error);
@@ -76,15 +80,19 @@ export const useOperationsFetcher = () => {
     const controller = createAbortController('withdrawals');
     
     try {
-      const response = await Promise.race([
-        supabase
-          .from('withdrawals')
-          .select('*')
-          .order('created_at', { ascending: false }),
-        new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Fetch withdrawals timeout')), 12000);
-        })
-      ]);
+      // Create a timeout promise
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Fetch withdrawals timeout')), 12000);
+      });
+      
+      // Create the database query promise with proper typing
+      const queryPromise = supabase
+        .from('withdrawals')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      // Race the promises with proper type handling
+      const response = await Promise.race([queryPromise, timeoutPromise]);
       
       if ('error' in response) {
         console.error('Error fetching withdrawals:', response.error);
@@ -110,15 +118,19 @@ export const useOperationsFetcher = () => {
     const controller = createAbortController('transfers');
     
     try {
-      const response = await Promise.race([
-        supabase
-          .from('transfers')
-          .select('*')
-          .order('created_at', { ascending: false }),
-        new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Fetch transfers timeout')), 12000);
-        })
-      ]);
+      // Create a timeout promise
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Fetch transfers timeout')), 12000);
+      });
+      
+      // Create the database query promise with proper typing
+      const queryPromise = supabase
+        .from('transfers')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      // Race the promises with proper type handling
+      const response = await Promise.race([queryPromise, timeoutPromise]);
       
       if ('error' in response) {
         console.error('Error fetching transfers:', response.error);
@@ -144,7 +156,7 @@ export const useOperationsFetcher = () => {
       console.log('Starting fetchAllOperations...');
       
       // Set a timeout to ensure we don't hang forever
-      const timeoutPromise = new Promise((_, reject) => {
+      const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => reject(new Error('Fetch operations timeout')), 20000); // Increased from 15s to 20s
       });
       
@@ -157,10 +169,7 @@ export const useOperationsFetcher = () => {
       // Race the fetch against the timeout
       const [deposits, withdrawals, transfers] = await Promise.race([
         fetchPromise,
-        timeoutPromise.then(() => {
-          console.warn('Fetch operations timed out');
-          throw new Error('Timeout');
-        })
+        timeoutPromise
       ]) as [any[], any[], any[]];
       
       console.log(`fetchAllOperations completed with ${deposits.length} deposits, ${withdrawals.length} withdrawals, ${transfers.length} transfers`);
