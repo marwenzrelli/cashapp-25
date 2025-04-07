@@ -1,12 +1,12 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useOperations } from "@/features/operations/hooks/useOperations";
 import { DateRange } from "react-day-picker";
-import { Search, Filter, Calendar, RefreshCw } from "lucide-react";
+import { Search, Filter, Calendar, RefreshCw, AlertCircle } from "lucide-react";
 import { OperationsList } from "@/features/operations/components/OperationsList";
 import { DeleteOperationDialog } from "@/features/operations/components/DeleteOperationDialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { operationMatchesSearch } from "@/features/operations/utils/display-helpers";
 import { LoadingIndicator } from "@/components/ui/loading-indicator";
+import { toast } from "sonner";
 
 const SearchOperations = () => {
   const { 
@@ -37,6 +38,8 @@ const SearchOperations = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [isRetrying, setIsRetrying] = useState(false);
 
   const handleSearch = () => {
     setIsSearching(true);
@@ -74,12 +77,26 @@ const SearchOperations = () => {
     setHasSearched(false);
   };
 
+  const handleRetry = useCallback(() => {
+    if (isRetrying) return;
+    
+    setIsRetrying(true);
+    setRetryCount(prev => prev + 1);
+    
+    toast.info("Tentative de récupération des opérations...");
+    
+    refreshOperations()
+      .finally(() => {
+        setIsRetrying(false);
+      });
+  }, [refreshOperations, isRetrying]);
+
   // Reset search when new operations load
   useEffect(() => {
     if (hasSearched && searchTerm) {
       handleSearch();
     }
-  }, [allOperations]);
+  }, [allOperations, hasSearched, searchTerm]);
 
   const handleTypeChange = (value: string) => {
     setType(value === "all" ? null : value);
@@ -176,6 +193,24 @@ const SearchOperations = () => {
         <Card className="p-8">
           <div className="flex flex-col items-center justify-center">
             <LoadingIndicator size="lg" text="Chargement des opérations..." />
+            {retryCount > 0 && (
+              <p className="mt-2 text-sm text-muted-foreground">
+                Tentative {retryCount}/3 de récupération des données...
+              </p>
+            )}
+            {retryCount >= 1 && (
+              <div className="mt-4">
+                <Button 
+                  onClick={handleRetry}
+                  variant="outline"
+                  disabled={isRetrying}
+                  className="mt-2"
+                >
+                  <RefreshCw className={cn("mr-2 h-4 w-4", isRetrying && "animate-spin")} />
+                  {isRetrying ? "Tentative en cours..." : "Forcer le rafraîchissement"}
+                </Button>
+              </div>
+            )}
           </div>
         </Card>
       )}
@@ -183,15 +218,26 @@ const SearchOperations = () => {
       {error && !hasSearched && (
         <Card className="p-8">
           <div className="flex flex-col items-center justify-center text-red-500">
-            <p>Erreur lors du chargement des opérations: {error}</p>
-            <Button 
-              onClick={() => refreshOperations()}
-              variant="outline"
-              className="mt-4"
-            >
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Réessayer
-            </Button>
+            <AlertCircle className="h-8 w-8 mb-2" />
+            <p className="text-center mb-4">Erreur lors du chargement des opérations: {error}</p>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button 
+                onClick={handleRetry}
+                variant="outline"
+                disabled={isRetrying}
+                className="flex items-center"
+              >
+                <RefreshCw className={cn("mr-2 h-4 w-4", isRetrying && "animate-spin")} />
+                {isRetrying ? "Tentative en cours..." : "Réessayer"}
+              </Button>
+              <Button 
+                onClick={() => window.location.reload()}
+                variant="default"
+                className="bg-red-500 hover:bg-red-600 text-white"
+              >
+                Recharger la page
+              </Button>
+            </div>
           </div>
         </Card>
       )}
