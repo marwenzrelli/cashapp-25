@@ -26,6 +26,7 @@ export const useOperations = () => {
   const realtimeSubscribedRef = useRef(false);
   const channelRef = useRef<any>(null);
   const [subscriptionAttempts, setSubscriptionAttempts] = useState(0);
+  const connectionCheckTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Update local operations when fetchedOperations change
   useEffect(() => {
@@ -69,6 +70,45 @@ export const useOperations = () => {
     }
   }, [initialLoadDone, fetchLoading, fetchedOperations.length, refreshOperations]);
 
+  // Connection check timer to verify network connectivity
+  useEffect(() => {
+    // Setup periodic connection check
+    connectionCheckTimerRef.current = setInterval(() => {
+      if (!channelRef.current || subscriptionAttempts > 5) {
+        console.log("Checking Supabase connection...");
+        
+        // Ping Supabase to check connection
+        supabase.from('deposits').select('count').limit(1).then(
+          () => {
+            console.log("Supabase connection active");
+            
+            // If we have a lot of subscription attempts but no channel, retry subscription
+            if (subscriptionAttempts > 5 && !channelRef.current) {
+              console.log("Connection is working but no realtime subscription. Re-establishing...");
+              setSubscriptionAttempts(0);
+              
+              // Remove any existing channel
+              if (channelRef.current) {
+                supabase.removeChannel(channelRef.current);
+                channelRef.current = null;
+                realtimeSubscribedRef.current = false;
+              }
+            }
+          },
+          (error) => {
+            console.error("Supabase connection check failed:", error);
+          }
+        );
+      }
+    }, 30000); // Every 30 seconds
+    
+    return () => {
+      if (connectionCheckTimerRef.current) {
+        clearInterval(connectionCheckTimerRef.current);
+      }
+    };
+  }, [subscriptionAttempts]);
+
   // Set up real-time subscription to operations with improved error handling
   useEffect(() => {
     // Nettoyage de la souscription précédente si elle existe
@@ -85,8 +125,11 @@ export const useOperations = () => {
       console.log("Setting up realtime subscription for operations, attempt:", subscriptionAttempts + 1);
       setSubscriptionAttempts(prev => prev + 1);
       
+      // Use a unique channel ID to prevent collisions
+      const channelId = `operations-realtime-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      
       const channel = supabase
-        .channel('operations-realtime-' + Date.now())
+        .channel(channelId)
         .on('postgres_changes', { 
           event: '*', 
           schema: 'public', 
@@ -119,17 +162,31 @@ export const useOperations = () => {
           } else if (status === 'CHANNEL_ERROR') {
             console.error("Channel error occurred");
             realtimeSubscribedRef.current = false;
+            
+            // Don't immediately retry - wait for the next effect cycle
+            setTimeout(() => {
+              channelRef.current = null;
+            }, 1000);
           }
         });
         
-      // Si la souscription n'est pas établie après 5 secondes, considérer comme échec
+      // Si la souscription n'est pas établie après 8 secondes, considérer comme échec
       const timeout = setTimeout(() => {
-        if (!realtimeSubscribedRef.current && subscriptionAttempts < 3) {
-          console.log("Realtime subscription timeout, retrying...");
-          supabase.removeChannel(channel);
-          setSubscriptionAttempts(prev => prev + 1);
+        if (!realtimeSubscribedRef.current) {
+          console.log("Realtime subscription timeout");
+          
+          if (channel) {
+            supabase.removeChannel(channel);
+          }
+          
+          // Only retry if we haven't made too many attempts
+          if (subscriptionAttempts < 5) {
+            console.log("Will retry subscription later");
+          } else {
+            console.log("Too many subscription attempts, pausing realtime features");
+          }
         }
-      }, 5000);
+      }, 8000);
       
       return () => {
         clearTimeout(timeout);
@@ -195,15 +252,17 @@ export const useOperations = () => {
         if (isLoading || fetchLoading) {
           console.log("Loading operations is taking too long, attempting to recover");
           setIsLoading(false);
-          refreshOperations(true);
+          
+          // Don't auto-refresh here as it might cause an infinite loop
+          // Just reset the loading state and let the user refresh manually
         }
-      }, 10000); // If loading for more than 10 seconds, try to recover
+      }, 15000); // If loading for more than 15 seconds, reset loading state
     }
     
     return () => {
       if (loadingTimer) clearTimeout(loadingTimer);
     };
-  }, [isLoading, fetchLoading, refreshOperations, setIsLoading]);
+  }, [isLoading, fetchLoading, setIsLoading]);
 
   return {
     operations,

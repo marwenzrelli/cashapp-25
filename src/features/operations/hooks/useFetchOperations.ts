@@ -13,6 +13,7 @@ export const useFetchOperations = () => {
   const isMountedRef = useRef<boolean>(true);
   const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const fetchingRef = useRef<boolean>(false);
+  const maxRetries = useRef<number>(3);
 
   const fetchOperations = useCallback(async (force: boolean = false) => {
     // Si une requête est déjà en cours et ce n'est pas forcé, ne pas en lancer une autre
@@ -38,11 +39,23 @@ export const useFetchOperations = () => {
       
       console.log("Fetching operations, attempt #", fetchAttempts + 1);
       
+      // Setup a timeout to automatically reset the loading state if the fetch takes too long
+      const loadingTimeout = setTimeout(() => {
+        if (fetchingRef.current && isMountedRef.current) {
+          console.warn("Fetch operation timeout - resetting loading state");
+          fetchingRef.current = false;
+          setIsLoading(false);
+        }
+      }, 15000); // 15 seconds timeout
+      
       // Fetch deposits with client_id
       const { data: deposits, error: depositsError } = await supabase
         .from('deposits')
         .select('*')
         .order('created_at', { ascending: false });
+      
+      // Clear the timeout as we got a response
+      clearTimeout(loadingTimeout);
       
       if (depositsError) throw depositsError;
       
@@ -128,20 +141,55 @@ export const useFetchOperations = () => {
       const uniqueOperations = Array.from(uniqueMap.values());
       
       if (!isMountedRef.current) return;
-      setOperations(uniqueOperations);
-      setError(null);
+      
+      // Verify that we actually got data before clearing error state
+      if (uniqueOperations.length > 0) {
+        setOperations(uniqueOperations);
+        setError(null);
+        // Reset retry counter on success
+        maxRetries.current = 3;
+      } else if (fetchAttempts < 2) {
+        // If we didn't get any data on the first attempt, try again once
+        console.log("No operations found, retrying automatically");
+        setTimeout(() => {
+          if (isMountedRef.current) {
+            fetchOperations(true);
+          }
+        }, 1000);
+        return;
+      } else {
+        console.log("No operations found after retry");
+      }
     } catch (err: any) {
       if (!isMountedRef.current) return;
       console.error('Error fetching operations:', err);
       setError(err.message);
-      toast.error('Erreur lors de la récupération des opérations');
+      
+      // Only show toast if we haven't shown one recently and there's a real error
+      if (force || fetchAttempts <= 1) {
+        toast.error('Erreur lors de la récupération des opérations');
+      }
+      
+      // Auto-retry with exponential backoff if we have retries left
+      if (maxRetries.current > 0) {
+        const retryDelay = Math.min(2000 * Math.pow(2, 3 - maxRetries.current), 10000);
+        console.log(`Will retry in ${retryDelay}ms, ${maxRetries.current} retries left`);
+        maxRetries.current--;
+        
+        setTimeout(() => {
+          if (isMountedRef.current) {
+            console.log("Auto-retrying fetch after error");
+            fetchOperations(true);
+          }
+        }, retryDelay);
+      }
     } finally {
       if (isMountedRef.current) {
         setIsLoading(false);
         fetchingRef.current = false;
       }
     }
-  }, [lastFetchTime, fetchAttempts, isLoading]);
+  }, [lastFetchTime, fetchAttempts]);
 
   // Initial fetch avec un délai pour éviter les conditions de course
   useEffect(() => {

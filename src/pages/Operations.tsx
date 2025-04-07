@@ -14,7 +14,7 @@ import { TransferPagination } from "@/features/transfers/components/TransferPagi
 import { LoadingIndicator } from "@/components/ui/loading-indicator";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, AlertCircle } from "lucide-react";
 
 const Operations = () => {
   const { 
@@ -39,9 +39,13 @@ const Operations = () => {
   const [initialLoadAttempted, setInitialLoadAttempted] = useState(false);
   const [stableOperations, setStableOperations] = useState<Operation[]>([]);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const [loadingDuration, setLoadingDuration] = useState(0);
+  const [showNetworkError, setShowNetworkError] = useState(false);
   const lastRefreshTimeRef = useRef<number>(Date.now());
   const manualRefreshClickedRef = useRef<boolean>(false);
   const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const loadingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const loadingStartTimeRef = useRef<number>(0);
 
   // Fetch operations on initial load
   useEffect(() => {
@@ -50,24 +54,64 @@ const Operations = () => {
       fetchOperations(true);
       setInitialLoadAttempted(true);
       lastRefreshTimeRef.current = Date.now();
+      loadingStartTimeRef.current = Date.now();
       
       // Set a loading timeout to detect stalled loading
       if (loadingTimeoutRef.current) {
         clearTimeout(loadingTimeoutRef.current);
       }
+      
       loadingTimeoutRef.current = setTimeout(() => {
         if (isLoading) {
           setLoadingTimeout(true);
         }
-      }, 15000);
+      }, 10000); // Reduced from 15s to 10s
+      
+      // Start a timer to show how long we've been loading
+      if (loadingTimerRef.current) {
+        clearInterval(loadingTimerRef.current);
+      }
+      
+      loadingTimerRef.current = setInterval(() => {
+        if (isLoading) {
+          const duration = Math.floor((Date.now() - loadingStartTimeRef.current) / 1000);
+          setLoadingDuration(duration);
+          
+          // After 20 seconds of loading, show network error suggestion
+          if (duration > 20 && !showNetworkError) {
+            setShowNetworkError(true);
+          }
+        }
+      }, 1000);
     }
     
     return () => {
       if (loadingTimeoutRef.current) {
         clearTimeout(loadingTimeoutRef.current);
       }
+      if (loadingTimerRef.current) {
+        clearInterval(loadingTimerRef.current);
+      }
     };
-  }, [fetchOperations, initialLoadAttempted, isLoading]);
+  }, [fetchOperations, initialLoadAttempted, isLoading, showNetworkError]);
+
+  // Reset loading timer when loading state changes
+  useEffect(() => {
+    if (isLoading) {
+      if (!loadingStartTimeRef.current) {
+        loadingStartTimeRef.current = Date.now();
+      }
+    } else {
+      loadingStartTimeRef.current = 0;
+      setLoadingDuration(0);
+      setShowNetworkError(false);
+      
+      if (loadingTimerRef.current) {
+        clearInterval(loadingTimerRef.current);
+        loadingTimerRef.current = null;
+      }
+    }
+  }, [isLoading]);
 
   // Stabilisez les opérations pour éviter les clignotements
   useEffect(() => {
@@ -155,6 +199,7 @@ const Operations = () => {
     manualRefreshClickedRef.current = true;
     lastRefreshTimeRef.current = now;
     setLoadingTimeout(false);
+    setShowNetworkError(false);
     refreshOperations();
   };
 
@@ -164,14 +209,15 @@ const Operations = () => {
     manualRefreshClickedRef.current = true;
     lastRefreshTimeRef.current = Date.now();
     setLoadingTimeout(false);
+    setShowNetworkError(false);
     
-    // Forcer une actualisation complète
+    // Force discard previous request state
     fetchOperations(true);
   };
 
   // Déterminer si nous devons afficher un chargement, une erreur ou le contenu
   const showInitialLoading = isLoading && stableOperations.length === 0 && !loadingTimeout;
-  const showLoggingTimeout = loadingTimeout && stableOperations.length === 0;
+  const showLoadingTimeout = loadingTimeout && stableOperations.length === 0;
   const showError = !isLoading && error && stableOperations.length === 0;
   const showEmptyState = !isLoading && !error && stableOperations.length === 0 && initialLoadAttempted && !loadingTimeout;
   const showContent = stableOperations.length > 0 || isLoading;
@@ -194,16 +240,39 @@ const Operations = () => {
       />
 
       {showInitialLoading && (
-        <div className="py-12 flex justify-center">
+        <div className="py-12 flex flex-col items-center justify-center">
           <LoadingIndicator 
-            text="Chargement des opérations..." 
+            text={`Chargement des opérations... ${loadingDuration > 5 ? `(${loadingDuration}s)` : ''}`}
             size="lg" 
             showImmediately={true}
           />
+          
+          {loadingDuration > 8 && (
+            <Button 
+              onClick={handleForceRefresh}
+              variant="outline"
+              className="mt-6"
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Actualiser
+            </Button>
+          )}
+          
+          {showNetworkError && (
+            <div className="mt-6 max-w-md p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
+              <AlertCircle className="h-5 w-5 text-yellow-600 mx-auto mb-2" />
+              <p className="text-sm text-yellow-700 mb-2">
+                Le chargement prend plus de temps que prévu.
+              </p>
+              <p className="text-xs text-yellow-600">
+                Vérifiez votre connexion réseau ou essayez d'actualiser la page.
+              </p>
+            </div>
+          )}
         </div>
       )}
       
-      {showLoggingTimeout && (
+      {showLoadingTimeout && (
         <div className="rounded-lg bg-yellow-50 p-6 text-center">
           <p className="text-yellow-700 mb-4">
             Le chargement des opérations prend plus de temps que prévu.
@@ -220,15 +289,19 @@ const Operations = () => {
 
       {showError && (
         <div className="rounded-lg bg-red-50 p-6 text-center">
-          <p className="text-red-600">
-            Erreur lors du chargement des opérations. Veuillez rafraîchir la page.
+          <p className="text-red-600 mb-2">
+            Erreur lors du chargement des opérations.
           </p>
-          <button 
+          <p className="text-sm text-red-500 mb-4">
+            {error}
+          </p>
+          <Button 
             onClick={handleManualRefresh}
-            className="mt-4 px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
+            variant="destructive"
           >
+            <RefreshCw className="mr-2 h-4 w-4" />
             Réessayer
-          </button>
+          </Button>
         </div>
       )}
 
