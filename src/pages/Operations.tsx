@@ -57,10 +57,10 @@ const Operations = () => {
     fetchOperations
   });
 
+  // Simplified version - no detailed logging
   useEffect(() => {
-    console.log(`Operations page - Total operations: ${allOperations.length}`);
-    console.log(`Operations page - Filtered operations: ${filteredOperations.length}`);
-  }, [allOperations.length, filteredOperations.length]);
+    console.log(`Operations page loaded with ${allOperations.length} operations`);
+  }, [allOperations.length]);
 
   const handleExportPDF = () => {
     generatePDF(filteredOperations, filterType, filterClient, dateRange);

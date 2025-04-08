@@ -26,11 +26,10 @@ export const OperationsContent = ({
     setCurrentPage(1);
   }, [filteredOperations.length]);
   
-  // Pagination of operations
-  const paginatedOperations = filteredOperations.slice(
-    (currentPage - 1) * parseInt(itemsPerPage),
-    currentPage * parseInt(itemsPerPage)
-  );
+  // Calculate paginated operations directly to avoid recomputation
+  const startIndex = (currentPage - 1) * parseInt(itemsPerPage);
+  const endIndex = startIndex + parseInt(itemsPerPage);
+  const paginatedOperations = filteredOperations.slice(startIndex, endIndex);
 
   return (
     <>
@@ -54,9 +53,9 @@ export const OperationsContent = ({
           <LoadingIndicator 
             text="Actualisation..." 
             size="sm" 
-            fadeIn={true}
-            showImmediately={false}
-            debounceMs={500}
+            fadeIn={false}
+            showImmediately={true}
+            debounceMs={0}
           />
         </div>
       )}

@@ -12,50 +12,58 @@ export const useOperationsFilter = (operations: Operation[]) => {
   const [isFiltering, setIsFiltering] = useState(false);
   const [filteredOperations, setFilteredOperations] = useState<Operation[]>([]);
 
-  // Use useMemo for more efficient filtering
+  // Optimized filtering with useMemo and minimal computation
   const computedFilteredOperations = useMemo(() => {
+    // Short circuit if no operations
+    if (!operations.length) return [];
+    
     // Start filtering process
     setIsFiltering(true);
     
-    const filtered = operations.filter((op) => {
-      // Filter by type
-      if (filterType && op.type !== filterType) {
-        return false;
-      }
-      
-      // Filter by client search
-      if (filterClient && !operationMatchesSearch(op, filterClient)) {
-        return false;
-      }
-      
-      // Filter by date range
-      if (dateRange?.from && dateRange?.to) {
-        const opDate = new Date(op.operation_date || op.date);
-        if (opDate < dateRange.from || opDate > dateRange.to) {
-          return false;
-        }
-      }
-      
-      return true;
-    });
+    // Fast filter implementation
+    const filtered = filterType || filterClient || (dateRange?.from && dateRange?.to) 
+      ? operations.filter((op) => {
+          // Skip filtering if no filters are applied
+          if (!filterType && !filterClient && !(dateRange?.from && dateRange?.to)) {
+            return true;
+          }
+          
+          // Filter by type - fast check first
+          if (filterType && op.type !== filterType) {
+            return false;
+          }
+          
+          // Filter by client search
+          if (filterClient && !operationMatchesSearch(op, filterClient)) {
+            return false;
+          }
+          
+          // Filter by date range
+          if (dateRange?.from && dateRange?.to) {
+            const opDate = new Date(op.operation_date || op.date);
+            if (opDate < dateRange.from || opDate > dateRange.to) {
+              return false;
+            }
+          }
+          
+          return true;
+        })
+      : operations;
 
-    // Format dates for display
+    // Format dates for display - only for filtered operations
     return filtered.map(op => ({
       ...op,
       formattedDate: formatDateTime(op.operation_date || op.date)
     }));
   }, [operations, filterType, filterClient, dateRange]);
 
-  // Update filtered operations with short debounce
+  // Update filtered operations without delay
   useEffect(() => {
+    // Set filtered operations immediately
     setFilteredOperations(computedFilteredOperations);
     
-    // Reset filtering state after a brief delay
-    const timeout = setTimeout(() => {
-      setIsFiltering(false);
-    }, 100); // Reduced to 100ms for faster feedback
-    
-    return () => clearTimeout(timeout);
+    // Reset filtering state without delay
+    setIsFiltering(false);
   }, [computedFilteredOperations]);
 
   return {

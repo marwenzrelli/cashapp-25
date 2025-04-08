@@ -17,12 +17,12 @@ export interface FetchControls {
 }
 
 /**
- * Hook to manage fetch state and controls
+ * Simplified hook to manage fetch state and controls
  */
 export const useFetchStateManager = () => {
-  // State
+  // State with default values
   const [state, setState] = useState<FetchState>({
-    isLoading: true,
+    isLoading: false,
     error: null,
     lastFetchTime: 0,
     fetchAttempts: 0
@@ -33,32 +33,29 @@ export const useFetchStateManager = () => {
     isMountedRef: useRef<boolean>(true),
     fetchTimeoutRef: useRef<NodeJS.Timeout | null>(null),
     fetchingRef: useRef<boolean>(false),
-    maxRetries: useRef<number>(3),
+    maxRetries: useRef<number>(1), // Reduced retries
     abortControllerRef: useRef<AbortController | null>(null)
   };
   
-  const updateState = (updates: Partial<FetchState>) => {
-    setState(prev => ({ ...prev, ...updates }));
-  };
-  
+  // State setters
   const setIsLoading = (isLoading: boolean) => {
-    updateState({ isLoading });
+    setState(prev => ({ ...prev, isLoading }));
   };
   
   const setError = (error: string | null) => {
-    updateState({ error });
+    setState(prev => ({ ...prev, error }));
   };
   
   const setLastFetchTime = (lastFetchTime: number) => {
-    updateState({ lastFetchTime });
+    setState(prev => ({ ...prev, lastFetchTime }));
   };
   
   const incrementFetchAttempts = () => {
-    updateState({ fetchAttempts: state.fetchAttempts + 1 });
+    setState(prev => ({ ...prev, fetchAttempts: prev.fetchAttempts + 1 }));
   };
   
   const resetFetchAttempts = () => {
-    updateState({ fetchAttempts: 0 });
+    setState(prev => ({ ...prev, fetchAttempts: 0 }));
   };
   
   return {

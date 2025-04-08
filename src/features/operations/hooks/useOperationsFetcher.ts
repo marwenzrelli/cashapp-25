@@ -6,39 +6,22 @@ import { mockOperations } from '../data/mock-operations';
 
 /**
  * Hook that provides functions to fetch operations data
- * Simplified to always use mock data for better performance
+ * Always uses mock data for better performance
  */
 export const useOperationsFetcher = () => {
   /**
-   * Fetches all operation types
+   * Fetches all operation types synchronously without delays
    */
   const fetchAllOperations = useCallback(async () => {
-    try {
-      console.log('Starting fetchAllOperations...');
-      
-      // Always use test data for demonstration and best performance
-      console.log('Using mock data for all operations');
-      const formattedOperations = formatOperationsWithDates(mockOperations);
-      
-      return { 
-        deposits: mockOperations.filter(op => op.type === 'deposit'), 
-        withdrawals: mockOperations.filter(op => op.type === 'withdrawal'), 
-        transfers: mockOperations.filter(op => op.type === 'transfer'),
-        allOperations: formattedOperations 
-      };
-    } catch (error) {
-      console.error('Error in fetchAllOperations:', error);
-      
-      // Even in case of error, return mock data
-      const formattedOperations = formatOperationsWithDates(mockOperations);
-      
-      return { 
-        deposits: mockOperations.filter(op => op.type === 'deposit'), 
-        withdrawals: mockOperations.filter(op => op.type === 'withdrawal'), 
-        transfers: mockOperations.filter(op => op.type === 'transfer'),
-        allOperations: formattedOperations 
-      };
-    }
+    // Immediately return mock data without any delays or error simulation
+    const formattedOperations = formatOperationsWithDates(mockOperations);
+    
+    return { 
+      deposits: mockOperations.filter(op => op.type === 'deposit'), 
+      withdrawals: mockOperations.filter(op => op.type === 'withdrawal'), 
+      transfers: mockOperations.filter(op => op.type === 'transfer'),
+      allOperations: formattedOperations 
+    };
   }, []);
 
   return {

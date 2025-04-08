@@ -23,15 +23,12 @@ export const useOperationsLoadingState = ({
   const [forcedRefresh, setForcedRefresh] = useState(false);
   
   const lastRefreshTimeRef = useRef<number>(Date.now());
-  const manualRefreshClickedRef = useRef<boolean>(false);
   const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const loadingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const loadingStartTimeRef = useRef<number>(0);
-  const initialFetchAttemptRef = useRef<number>(0);
 
   useEffect(() => {
     if (!initialLoadAttempted) {
-      console.log("Initial operations fetch");
       setInitialLoadAttempted(true);
       lastRefreshTimeRef.current = Date.now();
       loadingStartTimeRef.current = Date.now();
@@ -43,28 +40,12 @@ export const useOperationsLoadingState = ({
         clearTimeout(loadingTimeoutRef.current);
       }
       
-      // Reduced timeout to 3 seconds
+      // Reduced timeout to 2 seconds
       loadingTimeoutRef.current = setTimeout(() => {
         if (isLoading) {
           setLoadingTimeout(true);
         }
-      }, 3000);
-      
-      if (loadingTimerRef.current) {
-        clearInterval(loadingTimerRef.current);
-      }
-      
-      loadingTimerRef.current = setInterval(() => {
-        if (isLoading) {
-          const duration = Math.floor((Date.now() - loadingStartTimeRef.current) / 1000);
-          setLoadingDuration(duration);
-          
-          // Show network warning after 5 seconds
-          if (duration > 5 && !showNetworkError) {
-            setShowNetworkError(true);
-          }
-        }
-      }, 1000);
+      }, 2000);
     }
     
     return () => {
@@ -75,18 +56,7 @@ export const useOperationsLoadingState = ({
         clearInterval(loadingTimerRef.current);
       }
     };
-  }, [fetchOperations, initialLoadAttempted, isLoading, showNetworkError]);
-
-  // Auto-retry logic
-  useEffect(() => {
-    if (isLoading && loadingTimeout && initialLoadAttempted && operations.length === 0 && initialFetchAttemptRef.current < 2) {
-      initialFetchAttemptRef.current += 1;
-      console.log(`Auto-retrying initial fetch, attempt #${initialFetchAttemptRef.current}`);
-      
-      setLoadingTimeout(false);
-      fetchOperations(true);
-    }
-  }, [fetchOperations, isLoading, loadingTimeout, initialLoadAttempted, operations.length]);
+  }, [fetchOperations, initialLoadAttempted, isLoading]);
 
   // Reset states when loading state changes
   useEffect(() => {
@@ -111,18 +81,9 @@ export const useOperationsLoadingState = ({
   }, [isLoading, forcedRefresh]);
 
   const handleManualRefresh = () => {
-    const now = Date.now();
-    const timeSinceLastRefresh = now - lastRefreshTimeRef.current;
-    
-    // Reduce time between refreshes to 1 second
-    if (timeSinceLastRefresh < 1000) {
-      toast.info(`Attendez ${Math.ceil((1000 - timeSinceLastRefresh) / 1000)} secondes avant de rafraîchir à nouveau`);
-      return;
-    }
-    
+    // Allow immediate refresh
     console.log("Manual refresh triggered");
-    manualRefreshClickedRef.current = true;
-    lastRefreshTimeRef.current = now;
+    lastRefreshTimeRef.current = Date.now();
     setLoadingTimeout(false);
     setShowNetworkError(false);
     fetchOperations(true);
@@ -130,7 +91,6 @@ export const useOperationsLoadingState = ({
 
   const handleForceRefresh = () => {
     console.log("Force refresh triggered");
-    manualRefreshClickedRef.current = true;
     lastRefreshTimeRef.current = Date.now();
     setLoadingTimeout(false);
     setShowNetworkError(false);
