@@ -23,86 +23,62 @@ export const useFetchOperations = () => {
     incrementFetchAttempts
   } = useFetchStateManager();
 
-  // Fetch operations function with retry logic
+  // Simplified fetch operations function with better performance
   const fetchOperations = useCallback(async (force: boolean = false): Promise<void> => {
     console.log('fetchOperations called, force:', force);
     
+    // Return early if we're already fetching and this isn't a forced refresh
+    if (isLoading && !force) {
+      console.log('Already loading and not forced, returning early');
+      return;
+    }
+    
+    // Don't fetch if we've fetched recently and this isn't a forced refresh
+    const now = Date.now();
+    const timeSinceLastFetch = now - lastFetchTime;
+    if (!force && lastFetchTime > 0 && timeSinceLastFetch < 15000) { // Reduced caching to 15 seconds
+      console.log(`Skipping fetch - last fetch was ${timeSinceLastFetch}ms ago`);
+      return;
+    }
+    
     try {
-      controls.fetchingRef.current = true;
-      
-      // Return early if we're already fetching and this isn't a forced refresh
-      if (isLoading && !force) {
-        console.log('Already loading and not forced, returning early');
-        return;
-      }
-      
-      // Don't fetch if we've fetched recently and this isn't a forced refresh
-      const now = Date.now();
-      const timeSinceLastFetch = now - lastFetchTime;
-      if (!force && lastFetchTime > 0 && timeSinceLastFetch < 30000) {
-        console.log(`Skipping fetch - last fetch was ${timeSinceLastFetch}ms ago`);
-        return;
-      }
-      
       // Start loading state
       setIsLoading(true);
       setError(null);
+      controls.fetchingRef.current = true;
       
-      // Use AbortController for this fetch
-      if (controls.abortControllerRef.current) {
-        controls.abortControllerRef.current.abort();
-      }
-      controls.abortControllerRef.current = new AbortController();
+      // Get mock data immediately to prevent UI freeze
+      const result = await fetchAllOperations();
       
-      // Simplified fetch with shorter timeout
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Fetch timeout')), 5000);
-      });
+      // Update state with results
+      setLastFetchTime(now);
+      setOperations(result.allOperations || []);
       
-      // Race between actual fetch and timeout
-      const fetchPromise = fetchAllOperations();
-      const result = await Promise.race([fetchPromise, timeoutPromise]);
-      
-      // Update state with results if component is still mounted
-      if (controls.isMountedRef.current) {
-        setLastFetchTime(now);
-        setIsLoading(false);
-        setOperations(result.allOperations || []);
-      }
     } catch (error: any) {
       console.error('Error in fetchOperations:', error);
+      setError(error.message || 'Une erreur est survenue');
       
-      if (controls.isMountedRef.current) {
-        setError(error.message || 'Une erreur est survenue');
-        setIsLoading(false);
-        
-        // Attempt to use fallback data
-        try {
-          const fallbackData = await fetchAllOperations();
-          if (fallbackData && fallbackData.allOperations) {
-            setOperations(fallbackData.allOperations);
-          }
-        } catch (fallbackError) {
-          console.error('Error fetching fallback data:', fallbackError);
+      // Try to use mock data as fallback
+      try {
+        const fallbackData = await fetchAllOperations();
+        if (fallbackData && fallbackData.allOperations) {
+          setOperations(fallbackData.allOperations);
         }
+      } catch (fallbackError) {
+        console.error('Error fetching fallback data:', fallbackError);
       }
     } finally {
+      setIsLoading(false);
       controls.fetchingRef.current = false;
-      
-      if (controls.abortControllerRef.current) {
-        controls.abortControllerRef.current = null;
-      }
     }
   }, [
     isLoading, 
     lastFetchTime, 
-    fetchAttempts,
     fetchAllOperations, 
     controls, 
     setIsLoading, 
     setError, 
-    setLastFetchTime, 
-    incrementFetchAttempts
+    setLastFetchTime
   ]);
 
   // Ensure we clean up on unmount
@@ -118,27 +94,20 @@ export const useFetchOperations = () => {
         clearTimeout(controls.fetchTimeoutRef.current);
         controls.fetchTimeoutRef.current = null;
       }
-      
-      if (controls.abortControllerRef.current) {
-        controls.abortControllerRef.current.abort();
-        controls.abortControllerRef.current = null;
-      }
     };
   }, [controls]);
 
-  // Initial fetch when component mounts
+  // Initial fetch when component mounts - with a very short delay
   useEffect(() => {
     if (controls.isMountedRef.current) {
-      // Short timeout to allow component to mount fully
       setTimeout(() => {
         if (controls.isMountedRef.current) {
           console.log("Initial fetch when component mounts");
-          setIsLoading(true);
           fetchOperations(true);
         }
-      }, 100);
+      }, 50); // Reduced delay to 50ms
     }
-  }, [fetchOperations, setIsLoading, controls.isMountedRef]);
+  }, [fetchOperations, controls.isMountedRef]);
 
   return { operations, isLoading, error, refreshOperations: fetchOperations };
 };

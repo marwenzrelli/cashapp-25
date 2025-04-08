@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { type Client } from "@/features/clients/types";
 
 export const useClientFilter = (clients: Client[], isOpen: boolean) => {
@@ -18,24 +18,28 @@ export const useClientFilter = (clients: Client[], isOpen: boolean) => {
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(clientSearch);
-    }, 300); // 300ms debounce delay
+    }, 200); // Reduced to 200ms for faster feedback
     
     return () => {
       clearTimeout(handler);
     };
   }, [clientSearch]);
 
-  // Filter clients based on debounced search
-  const filteredClients = clients.filter(client => {
-    if (!debouncedSearch.trim()) return true;
-    const fullName = `${client.prenom} ${client.nom}`.toLowerCase();
+  // Optimize filtering with useMemo
+  const filteredClients = useMemo(() => {
+    if (!debouncedSearch.trim()) return clients;
+    
     const searchTerm = debouncedSearch.toLowerCase().trim();
-
-    // Search by name, phone or ID
-    return fullName.includes(searchTerm) || 
-           (client.telephone && client.telephone.includes(searchTerm)) || 
-           client.id.toString().includes(searchTerm);
-  });
+    
+    return clients.filter(client => {
+      const fullName = `${client.prenom} ${client.nom}`.toLowerCase();
+      
+      // Search by name, phone or ID
+      return fullName.includes(searchTerm) || 
+             (client.telephone && client.telephone.includes(searchTerm)) || 
+             client.id.toString().includes(searchTerm);
+    });
+  }, [clients, debouncedSearch]);
 
   return {
     clientSearch,

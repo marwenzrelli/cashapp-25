@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Operation } from "../types";
 import { DateRange } from "react-day-picker";
 import { formatDateTime } from "../types";
@@ -12,41 +12,51 @@ export const useOperationsFilter = (operations: Operation[]) => {
   const [isFiltering, setIsFiltering] = useState(false);
   const [filteredOperations, setFilteredOperations] = useState<Operation[]>([]);
 
-  // Apply filters to operations
-  useEffect(() => {
+  // Use useMemo for more efficient filtering
+  const computedFilteredOperations = useMemo(() => {
+    // Start filtering process
+    setIsFiltering(true);
+    
     const filtered = operations.filter((op) => {
       // Filter by type
-      const matchesType = !filterType || op.type === filterType;
+      if (filterType && op.type !== filterType) {
+        return false;
+      }
       
-      // Use improved function for client search
-      const matchesClient = operationMatchesSearch(op, filterClient);
+      // Filter by client search
+      if (filterClient && !operationMatchesSearch(op, filterClient)) {
+        return false;
+      }
       
-      // Date filtering
-      const matchesDate =
-        (!dateRange?.from ||
-          new Date(op.operation_date || op.date) >= new Date(dateRange.from)) &&
-        (!dateRange?.to ||
-          new Date(op.operation_date || op.date) <= new Date(dateRange.to));
+      // Filter by date range
+      if (dateRange?.from && dateRange?.to) {
+        const opDate = new Date(op.operation_date || op.date);
+        if (opDate < dateRange.from || opDate > dateRange.to) {
+          return false;
+        }
+      }
       
-      return matchesType && matchesClient && matchesDate;
+      return true;
     });
 
     // Format dates for display
-    const formattedOperations = filtered.map(op => ({
+    return filtered.map(op => ({
       ...op,
       formattedDate: formatDateTime(op.operation_date || op.date)
     }));
+  }, [operations, filterType, filterClient, dateRange]);
 
-    setFilteredOperations(formattedOperations);
-
+  // Update filtered operations with short debounce
+  useEffect(() => {
+    setFilteredOperations(computedFilteredOperations);
+    
     // Reset filtering state after a brief delay
-    setIsFiltering(true);
     const timeout = setTimeout(() => {
       setIsFiltering(false);
-    }, 300);
+    }, 100); // Reduced to 100ms for faster feedback
     
     return () => clearTimeout(timeout);
-  }, [operations, filterType, filterClient, dateRange]);
+  }, [computedFilteredOperations]);
 
   return {
     filterType,
