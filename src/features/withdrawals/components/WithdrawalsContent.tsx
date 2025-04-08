@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { StandaloneWithdrawalForm } from "./standalone/StandaloneWithdrawalForm";
 import { WithdrawalTable } from "./WithdrawalTable";
@@ -13,6 +12,7 @@ import { TransferPagination } from "@/features/transfers/components/TransferPagi
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { DateRange } from "react-day-picker";
+import { WithdrawalTotals } from "./WithdrawalTotals";
 
 import { ExtendedClient } from "../hooks/form/withdrawalFormTypes";
 
@@ -102,7 +102,6 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
 
   const handleWithdrawalConfirm = async (withdrawal: any): Promise<void> => {
     try {
-      // Find the client ID based on the client name
       const client = clients.find(c => `${c.prenom} ${c.nom}` === withdrawal.client_name);
       const clientId = client ? client.id : undefined;
 
@@ -110,7 +109,7 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
         .from('withdrawals')
         .insert({
           client_name: withdrawal.client_name,
-          client_id: clientId, // Set the client_id if available
+          client_id: clientId,
           amount: withdrawal.amount,
           operation_date: withdrawal.date,
           notes: withdrawal.notes
@@ -129,6 +128,24 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
       toast.error("Erreur lors de la confirmation du retrait");
       throw error;
     }
+  };
+
+  const getDateRangeText = () => {
+    if (dateRange?.from && dateRange?.to) {
+      const fromDate = new Date(dateRange.from);
+      const toDate = new Date(dateRange.to);
+      
+      const formatDatePart = (date: Date) => {
+        return date.toLocaleDateString('fr-FR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        });
+      };
+      
+      return `du ${formatDatePart(fromDate)} au ${formatDatePart(toDate)}`;
+    }
+    return "pour toute la période";
   };
 
   return (
@@ -178,6 +195,12 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
         onDelete={handleDeleteWithdrawal} 
         findClientById={findClientById}
         dateRange={dateRange}
+      />
+      
+      <WithdrawalTotals 
+        withdrawals={withdrawals}
+        paginatedWithdrawals={paginatedWithdrawals}
+        dateRangeText={getDateRangeText()}
       />
 
       {showDialog && (
