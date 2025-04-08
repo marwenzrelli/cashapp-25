@@ -38,6 +38,16 @@ const Operations = () => {
   const [loadingDuration, setLoadingDuration] = useState(0);
   const [showNetworkError, setShowNetworkError] = useState(false);
   
+  // Log operation counts to verify all are being loaded
+  useEffect(() => {
+    if (allOperations.length > 0) {
+      console.log(`Total operations loaded: ${allOperations.length}`);
+      console.log(`Deposits: ${allOperations.filter(op => op.type === 'deposit').length}`);
+      console.log(`Withdrawals: ${allOperations.filter(op => op.type === 'withdrawal').length}`);
+      console.log(`Transfers: ${allOperations.filter(op => op.type === 'transfer').length}`);
+    }
+  }, [allOperations]);
+  
   // Compteur pour afficher la durée de chargement
   useEffect(() => {
     let timer: NodeJS.Timeout | null = null;
@@ -66,6 +76,11 @@ const Operations = () => {
   const handleExportPDF = () => {
     generatePDF(filteredOperations, filterType, filterClient, dateRange);
   };
+
+  // Force refresh on initial load
+  useEffect(() => {
+    refreshOperations(true);
+  }, [refreshOperations]);
 
   return (
     <div className="space-y-6">
@@ -107,7 +122,7 @@ const Operations = () => {
         <OperationsContent
           filteredOperations={filteredOperations}
           isLoading={isLoading}
-          isFiltering={filterType !== "all" || !!filterClient || !!dateRange}
+          isFiltering={filterType !== null || !!filterClient || !!(dateRange?.from && dateRange?.to)}
           onDelete={deleteOperation}
         />
       )}

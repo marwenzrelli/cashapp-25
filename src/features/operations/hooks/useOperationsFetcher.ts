@@ -14,7 +14,7 @@ export const useOperationsFetcher = () => {
     try {
       console.log('Fetching real operations from Supabase...');
       
-      // Récupérer les dépôts
+      // Récupérer les dépôts - ne pas limiter le nombre de résultats
       const { data: deposits, error: depositsError } = await supabase
         .from('deposits')
         .select('*')
@@ -22,7 +22,7 @@ export const useOperationsFetcher = () => {
       
       if (depositsError) throw depositsError;
       
-      // Récupérer les retraits
+      // Récupérer les retraits - ne pas limiter le nombre de résultats
       const { data: withdrawals, error: withdrawalsError } = await supabase
         .from('withdrawals')
         .select('*')
@@ -30,7 +30,7 @@ export const useOperationsFetcher = () => {
       
       if (withdrawalsError) throw withdrawalsError;
       
-      // Récupérer les transferts
+      // Récupérer les transferts - ne pas limiter le nombre de résultats
       const { data: transfers, error: transfersError } = await supabase
         .from('transfers')
         .select('*')

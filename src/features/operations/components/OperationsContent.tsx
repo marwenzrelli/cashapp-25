@@ -25,6 +25,10 @@ export const OperationsContent = ({
     setCurrentPage(1);
   }, [filteredOperations.length]);
   
+  useEffect(() => {
+    console.log(`OperationsContent: Displaying page ${currentPage} of ${Math.ceil(filteredOperations.length / parseInt(itemsPerPage))} pages (${itemsPerPage} items per page)`);
+  }, [currentPage, itemsPerPage, filteredOperations.length]);
+  
   // Calculer les opérations paginées directement
   const startIndex = (currentPage - 1) * parseInt(itemsPerPage);
   const endIndex = startIndex + parseInt(itemsPerPage);
@@ -45,6 +49,7 @@ export const OperationsContent = ({
         operations={paginatedOperations} 
         isLoading={isLoading} 
         onDelete={onDelete} 
+        totalOperations={filteredOperations.length}
       />
     </>
   );
