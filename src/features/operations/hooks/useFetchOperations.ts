@@ -5,7 +5,7 @@ import { useOperationsFetcher } from './useOperationsFetcher';
 import { useFetchStateManager } from './utils/fetchStateManager';
 
 /**
- * Simplified hook for fetching operations with better performance
+ * Ultra-simplified hook for fetching operations with maximum performance
  */
 export const useFetchOperations = () => {
   const [operations, setOperations] = useState<Operation[]>([]);
@@ -15,15 +15,14 @@ export const useFetchOperations = () => {
     isLoading,
     error,
     lastFetchTime,
-    controls,
     setIsLoading,
     setError,
     setLastFetchTime
   } = useFetchStateManager();
 
-  // Simplified fetch operations function - no delays, no complex logic
+  // Super simplified fetch operations function - no delays, no complex logic
   const fetchOperations = useCallback(async (force: boolean = false): Promise<void> => {
-    // Return early if we're already fetching and this isn't a forced refresh
+    // Don't re-fetch if already loading, unless forced
     if (isLoading && !force) return;
     
     try {
@@ -31,8 +30,8 @@ export const useFetchOperations = () => {
       setIsLoading(true);
       setError(null);
       
-      // Get mock data immediately without delays
-      const result = await fetchAllOperations();
+      // Get mock data immediately - use sync function for better performance
+      const result = fetchAllOperations();
       
       // Update state with results
       setLastFetchTime(Date.now());
@@ -45,9 +44,14 @@ export const useFetchOperations = () => {
     }
   }, [isLoading, fetchAllOperations, setIsLoading, setError, setLastFetchTime]);
 
-  // Initial fetch when component mounts - with no delay
+  // Initial fetch when component mounts - with minimal delay
   useEffect(() => {
-    fetchOperations(true);
+    // Use a minimal setTimeout to allow component to render first
+    const timer = setTimeout(() => {
+      fetchOperations(true);
+    }, 10);
+    
+    return () => clearTimeout(timer);
   }, [fetchOperations]);
 
   return { operations, isLoading, error, refreshOperations: fetchOperations };

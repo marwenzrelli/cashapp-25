@@ -1,6 +1,5 @@
 
 import { useCallback } from 'react';
-import { toast } from 'sonner';
 import { formatOperationsWithDates } from './utils/operationFormatter';
 import { mockOperations } from '../data/mock-operations';
 
@@ -12,8 +11,8 @@ export const useOperationsFetcher = () => {
   /**
    * Fetches all operation types synchronously without delays
    */
-  const fetchAllOperations = useCallback(async () => {
-    // Immediately return mock data without any delays or error simulation
+  const fetchAllOperations = useCallback(() => {
+    // Return mock data immediately - no async needed for better performance
     const formattedOperations = formatOperationsWithDates(mockOperations);
     
     return { 
@@ -25,9 +24,10 @@ export const useOperationsFetcher = () => {
   }, []);
 
   return {
-    fetchDeposits: async () => mockOperations.filter(op => op.type === 'deposit'),
-    fetchWithdrawals: async () => mockOperations.filter(op => op.type === 'withdrawal'),
-    fetchTransfers: async () => mockOperations.filter(op => op.type === 'transfer'),
+    // Convert to sync functions for better performance
+    fetchDeposits: () => mockOperations.filter(op => op.type === 'deposit'),
+    fetchWithdrawals: () => mockOperations.filter(op => op.type === 'withdrawal'),
+    fetchTransfers: () => mockOperations.filter(op => op.type === 'transfer'),
     fetchAllOperations,
     cleanupAbortControllers: () => {}
   };

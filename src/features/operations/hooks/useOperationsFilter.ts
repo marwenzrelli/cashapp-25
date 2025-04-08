@@ -3,7 +3,6 @@ import { useState, useEffect, useMemo } from "react";
 import { Operation } from "../types";
 import { DateRange } from "react-day-picker";
 import { formatDateTime } from "../types";
-import { operationMatchesSearch } from "../utils/display-helpers";
 
 export const useOperationsFilter = (operations: Operation[]) => {
   const [filterType, setFilterType] = useState<string | null>(null);
@@ -12,57 +11,70 @@ export const useOperationsFilter = (operations: Operation[]) => {
   const [isFiltering, setIsFiltering] = useState(false);
   const [filteredOperations, setFilteredOperations] = useState<Operation[]>([]);
 
-  // Optimized filtering with useMemo and minimal computation
+  // Ultra-optimized filtering with useMemo and minimal computation
   const computedFilteredOperations = useMemo(() => {
-    // Short circuit if no operations
+    // Abort if no operations to filter
     if (!operations.length) return [];
     
-    // Start filtering process
-    setIsFiltering(true);
+    // Skip filtering if no filters applied
+    if (!filterType && !filterClient && !(dateRange?.from && dateRange?.to)) {
+      return operations.map(op => ({
+        ...op,
+        formattedDate: formatDateTime(op.operation_date || op.date)
+      }));
+    }
     
     // Fast filter implementation
-    const filtered = filterType || filterClient || (dateRange?.from && dateRange?.to) 
-      ? operations.filter((op) => {
-          // Skip filtering if no filters are applied
-          if (!filterType && !filterClient && !(dateRange?.from && dateRange?.to)) {
-            return true;
-          }
-          
-          // Filter by type - fast check first
-          if (filterType && op.type !== filterType) {
-            return false;
-          }
-          
-          // Filter by client search
-          if (filterClient && !operationMatchesSearch(op, filterClient)) {
-            return false;
-          }
-          
-          // Filter by date range
-          if (dateRange?.from && dateRange?.to) {
-            const opDate = new Date(op.operation_date || op.date);
-            if (opDate < dateRange.from || opDate > dateRange.to) {
-              return false;
-            }
-          }
-          
-          return true;
-        })
-      : operations;
-
-    // Format dates for display - only for filtered operations
-    return filtered.map(op => ({
-      ...op,
-      formattedDate: formatDateTime(op.operation_date || op.date)
-    }));
+    const filtered = [];
+    const clientSearchLower = filterClient.toLowerCase();
+    
+    // Limit to first 100 matches for better performance
+    let matchCount = 0;
+    const maxMatches = 100;
+    
+    for (const op of operations) {
+      // Type filter check - fastest check first
+      if (filterType && op.type !== filterType) continue;
+      
+      // Client search filter
+      if (clientSearchLower) {
+        const clientName = (op.fromClient || '').toLowerCase();
+        const toClient = (op.toClient || '').toLowerCase();
+        const description = (op.description || '').toLowerCase();
+        
+        if (!clientName.includes(clientSearchLower) && 
+            !toClient.includes(clientSearchLower) && 
+            !description.includes(clientSearchLower) &&
+            !op.id.toString().includes(clientSearchLower)) {
+          continue;
+        }
+      }
+      
+      // Date range filter - more expensive so do it last
+      if (dateRange?.from && dateRange?.to) {
+        const opDate = new Date(op.operation_date || op.date);
+        if (opDate < dateRange.from || opDate > dateRange.to) {
+          continue;
+        }
+      }
+      
+      // This operation passed all filters
+      filtered.push({
+        ...op,
+        formattedDate: formatDateTime(op.operation_date || op.date)
+      });
+      
+      // Limit results for better performance
+      matchCount++;
+      if (matchCount >= maxMatches) break;
+    }
+    
+    return filtered;
   }, [operations, filterType, filterClient, dateRange]);
 
   // Update filtered operations without delay
   useEffect(() => {
-    // Set filtered operations immediately
     setFilteredOperations(computedFilteredOperations);
-    
-    // Reset filtering state without delay
     setIsFiltering(false);
   }, [computedFilteredOperations]);
 

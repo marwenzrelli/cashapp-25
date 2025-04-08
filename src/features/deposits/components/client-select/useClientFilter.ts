@@ -1,50 +1,43 @@
+
 import { useState, useEffect, useMemo } from "react";
 import { type Client } from "@/features/clients/types";
 
 export const useClientFilter = (clients: Client[], isOpen: boolean) => {
   const [clientSearch, setClientSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
   
-  // Reset search when dropdown closes
+  // Reset search when dropdown closes - immediate, no debounce
   useEffect(() => {
     if (!isOpen) {
       setClientSearch("");
-      setDebouncedSearch("");
     }
   }, [isOpen]);
 
-  // Optimize debounce for faster search feedback
-  useEffect(() => {
-    // Apply search immediately for short terms (faster UI feedback)
-    if (clientSearch.length <= 2) {
-      setDebouncedSearch(clientSearch);
-      return;
+  // Ultra-optimized filtering with no debounce for faster UI feedback
+  const filteredClients = useMemo(() => {
+    if (!clientSearch.trim()) return clients;
+    
+    const searchTerm = clientSearch.toLowerCase().trim();
+    
+    // Limit to first 10 matches for better performance
+    const matches: Client[] = [];
+    
+    // Simple, direct matching with early return for better performance
+    for (let i = 0; i < clients.length; i++) {
+      const client = clients[i];
+      const fullName = `${client.prenom} ${client.nom}`.toLowerCase();
+      
+      if (fullName.includes(searchTerm) || 
+          (client.telephone && client.telephone.includes(searchTerm)) || 
+          client.id.toString().includes(searchTerm)) {
+        matches.push(client);
+        
+        // Limit results for better performance
+        if (matches.length >= 10) break;
+      }
     }
     
-    // Otherwise use a short debounce
-    const handler = setTimeout(() => {
-      setDebouncedSearch(clientSearch);
-    }, 100); // Reduced to 100ms for faster feedback
-    
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [clientSearch]);
-
-  // Optimize filtering with simplified matching logic
-  const filteredClients = useMemo(() => {
-    if (!debouncedSearch.trim()) return clients;
-    
-    const searchTerm = debouncedSearch.toLowerCase().trim();
-    
-    // Simple, direct matching for better performance
-    return clients.filter(client => {
-      const fullName = `${client.prenom} ${client.nom}`.toLowerCase();
-      return fullName.includes(searchTerm) || 
-             (client.telephone && client.telephone.includes(searchTerm)) || 
-             client.id.toString().includes(searchTerm);
-    });
-  }, [clients, debouncedSearch]);
+    return matches;
+  }, [clients, clientSearch]);
 
   return {
     clientSearch,
