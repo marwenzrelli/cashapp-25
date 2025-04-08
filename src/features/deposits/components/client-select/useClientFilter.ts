@@ -5,23 +5,21 @@ import { type Client } from "@/features/clients/types";
 export const useClientFilter = (clients: Client[], isOpen: boolean) => {
   const [clientSearch, setClientSearch] = useState("");
   
-  // Reset search when dropdown closes - immediate, no debounce
+  // Reset on close
   useEffect(() => {
     if (!isOpen) {
       setClientSearch("");
     }
   }, [isOpen]);
 
-  // Ultra-optimized filtering with no debounce for faster UI feedback
+  // Filtrage optimisé avec limite de résultats
   const filteredClients = useMemo(() => {
-    if (!clientSearch.trim()) return clients;
+    if (!clientSearch.trim()) return clients.slice(0, 50); // Limiter à 50 résultats par défaut
     
     const searchTerm = clientSearch.toLowerCase().trim();
-    
-    // Limit to first 10 matches for better performance
     const matches: Client[] = [];
     
-    // Simple, direct matching with early return for better performance
+    // Recherche directe avec limite de résultats
     for (let i = 0; i < clients.length; i++) {
       const client = clients[i];
       const fullName = `${client.prenom} ${client.nom}`.toLowerCase();
@@ -30,9 +28,7 @@ export const useClientFilter = (clients: Client[], isOpen: boolean) => {
           (client.telephone && client.telephone.includes(searchTerm)) || 
           client.id.toString().includes(searchTerm)) {
         matches.push(client);
-        
-        // Limit results for better performance
-        if (matches.length >= 10) break;
+        if (matches.length >= 10) break; // Limiter à 10 résultats pour la recherche
       }
     }
     

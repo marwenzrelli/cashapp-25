@@ -1,34 +1,32 @@
 
 import { useCallback } from 'react';
-import { formatOperationsWithDates } from './utils/operationFormatter';
+import { Operation } from '../types';
 import { mockOperations } from '../data/mock-operations';
 
 /**
- * Hook that provides functions to fetch operations data
- * Always uses mock data for better performance
+ * Hook ultra-simplifié qui fournit des données de manière synchrone
+ * pour une performance maximale
  */
 export const useOperationsFetcher = () => {
-  /**
-   * Fetches all operation types synchronously without delays
-   */
-  const fetchAllOperations = useCallback(() => {
-    // Return mock data immediately - no async needed for better performance
-    const formattedOperations = formatOperationsWithDates(mockOperations);
-    
-    return { 
-      deposits: mockOperations.filter(op => op.type === 'deposit'), 
-      withdrawals: mockOperations.filter(op => op.type === 'withdrawal'), 
-      transfers: mockOperations.filter(op => op.type === 'transfer'),
-      allOperations: formattedOperations 
-    };
+  // Fonction synchrone qui retourne immédiatement les données
+  const getMockOperations = useCallback((): Operation[] => {
+    return mockOperations.map(op => ({
+      ...op,
+      formattedDate: new Date(op.operation_date || op.date).toLocaleDateString('fr-FR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    }));
   }, []);
 
   return {
-    // Convert to sync functions for better performance
-    fetchDeposits: () => mockOperations.filter(op => op.type === 'deposit'),
-    fetchWithdrawals: () => mockOperations.filter(op => op.type === 'withdrawal'),
-    fetchTransfers: () => mockOperations.filter(op => op.type === 'transfer'),
-    fetchAllOperations,
-    cleanupAbortControllers: () => {}
+    // Fonctions synchrones pour une meilleure performance
+    getOperations: getMockOperations,
+    getDeposits: () => getMockOperations().filter(op => op.type === 'deposit'),
+    getWithdrawals: () => getMockOperations().filter(op => op.type === 'withdrawal'),
+    getTransfers: () => getMockOperations().filter(op => op.type === 'transfer')
   };
 };

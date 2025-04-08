@@ -10,17 +10,14 @@ export interface FetchState {
 
 export interface FetchControls {
   isMountedRef: React.MutableRefObject<boolean>;
-  fetchTimeoutRef: React.MutableRefObject<NodeJS.Timeout | null>;
   fetchingRef: React.MutableRefObject<boolean>;
-  maxRetries: React.MutableRefObject<number>;
-  abortControllerRef: React.MutableRefObject<AbortController | null>;
 }
 
 /**
- * Simplified hook to manage fetch state and controls
+ * Hook ultra-simplifié pour gérer l'état de chargement
  */
 export const useFetchStateManager = () => {
-  // State with default values
+  // État avec valeurs par défaut
   const [state, setState] = useState<FetchState>({
     isLoading: false,
     error: null,
@@ -28,16 +25,13 @@ export const useFetchStateManager = () => {
     fetchAttempts: 0
   });
   
-  // Controls
+  // Contrôles simplifiés
   const controls: FetchControls = {
     isMountedRef: useRef<boolean>(true),
-    fetchTimeoutRef: useRef<NodeJS.Timeout | null>(null),
-    fetchingRef: useRef<boolean>(false),
-    maxRetries: useRef<number>(1), // Reduced retries
-    abortControllerRef: useRef<AbortController | null>(null)
+    fetchingRef: useRef<boolean>(false)
   };
   
-  // State setters
+  // Setters d'état
   const setIsLoading = (isLoading: boolean) => {
     setState(prev => ({ ...prev, isLoading }));
   };

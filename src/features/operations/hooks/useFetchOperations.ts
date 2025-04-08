@@ -1,58 +1,41 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { Operation } from '../types';
 import { useOperationsFetcher } from './useOperationsFetcher';
-import { useFetchStateManager } from './utils/fetchStateManager';
 
 /**
- * Ultra-simplified hook for fetching operations with maximum performance
+ * Hook ultra-simplifié pour récupérer les opérations avec performance maximale
  */
 export const useFetchOperations = () => {
   const [operations, setOperations] = useState<Operation[]>([]);
-  const { fetchAllOperations } = useOperationsFetcher();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { getOperations } = useOperationsFetcher();
   
-  const {
-    isLoading,
-    error,
-    lastFetchTime,
-    setIsLoading,
-    setError,
-    setLastFetchTime
-  } = useFetchStateManager();
-
-  // Super simplified fetch operations function - no delays, no complex logic
-  const fetchOperations = useCallback(async (force: boolean = false): Promise<void> => {
-    // Don't re-fetch if already loading, unless forced
-    if (isLoading && !force) return;
-    
+  // Fonction simplifiée qui charge les données immédiatement
+  const fetchOperations = useCallback(() => {
     try {
-      // Start loading state
       setIsLoading(true);
+      // Chargement synchrone, pas de delay
+      const data = getOperations();
+      setOperations(data);
       setError(null);
-      
-      // Get mock data immediately - use sync function for better performance
-      const result = fetchAllOperations();
-      
-      // Update state with results
-      setLastFetchTime(Date.now());
-      setOperations(result.allOperations || []);
-    } catch (error: any) {
-      console.error('Error in fetchOperations:', error);
-      setError(error.message || 'Une erreur est survenue');
+    } catch (err: any) {
+      console.error('Error fetching operations:', err);
+      setError(err.message || 'Erreur lors du chargement des données');
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, fetchAllOperations, setIsLoading, setError, setLastFetchTime]);
+  }, [getOperations]);
 
-  // Initial fetch when component mounts - with minimal delay
+  // Chargement initial
   useEffect(() => {
-    // Use a minimal setTimeout to allow component to render first
-    const timer = setTimeout(() => {
-      fetchOperations(true);
-    }, 10);
-    
-    return () => clearTimeout(timer);
+    fetchOperations();
   }, [fetchOperations]);
 
-  return { operations, isLoading, error, refreshOperations: fetchOperations };
+  return { 
+    operations, 
+    isLoading, 
+    error, 
+    refreshOperations: fetchOperations 
+  };
 };
