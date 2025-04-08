@@ -209,6 +209,23 @@ export const useOperationsFetcher = () => {
     try {
       console.log('Starting fetchAllOperations...');
       
+      // Activate test data for demonstration
+      useTestDataRef.current = true;
+      
+      // If using test data, return mock operations immediately
+      if (useTestDataRef.current) {
+        console.log('Using mock data for all operations');
+        const formattedOperations = formatOperationsWithDates(mockOperations);
+        toast.info('Utilisation de données de démonstration (mode hors ligne)');
+        
+        return { 
+          deposits: mockOperations.filter(op => op.type === 'deposit'), 
+          withdrawals: mockOperations.filter(op => op.type === 'withdrawal'), 
+          transfers: mockOperations.filter(op => op.type === 'transfer'),
+          allOperations: formattedOperations 
+        };
+      }
+      
       // Réduit le timeout global à 12s
       const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => reject(new Error('Fetch operations timeout')), 12000);
