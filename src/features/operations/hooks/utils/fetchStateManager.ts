@@ -11,6 +11,9 @@ export interface FetchState {
 export interface FetchControls {
   isMountedRef: React.MutableRefObject<boolean>;
   fetchingRef: React.MutableRefObject<boolean>;
+  fetchTimeoutRef: React.MutableRefObject<NodeJS.Timeout | null>;
+  abortControllerRef: React.MutableRefObject<AbortController | null>;
+  maxRetries: React.MutableRefObject<number>;
 }
 
 /**
@@ -25,10 +28,13 @@ export const useFetchStateManager = () => {
     fetchAttempts: 0
   });
   
-  // Contrôles simplifiés
+  // Contrôles avec références pour suivre l'état
   const controls: FetchControls = {
     isMountedRef: useRef<boolean>(true),
-    fetchingRef: useRef<boolean>(false)
+    fetchingRef: useRef<boolean>(false),
+    fetchTimeoutRef: useRef<NodeJS.Timeout | null>(null),
+    abortControllerRef: useRef<AbortController | null>(null),
+    maxRetries: useRef<number>(3)
   };
   
   // Setters d'état
