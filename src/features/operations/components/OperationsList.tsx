@@ -172,7 +172,7 @@ export const OperationsList = ({ operations, isLoading, onDelete }: OperationsLi
           
           {/* Totals section for desktop */}
           {operations.length > 0 && (
-            <TotalsSection operations={operations} />
+            <TotalsSection operations={operations} currency="TND" />
           )}
         </div>
 
@@ -243,7 +243,7 @@ export const OperationsList = ({ operations, isLoading, onDelete }: OperationsLi
           {/* Totals section for mobile */}
           {operations.length > 0 && (
             <div className="mt-4">
-              <TotalsSection operations={operations} />
+              <TotalsSection operations={operations} currency="TND" />
             </div>
           )}
         </div>

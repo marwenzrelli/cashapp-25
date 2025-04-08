@@ -4,9 +4,10 @@ import { cn } from "@/lib/utils";
 
 interface TotalsSectionProps {
   operations: Operation[];
+  currency?: string;
 }
 
-export const TotalsSection = ({ operations }: TotalsSectionProps) => {
+export const TotalsSection = ({ operations, currency = "TND" }: TotalsSectionProps) => {
   // Format number with 2 decimal places and comma separator
   const formatNumber = (num: number): string => {
     return num.toLocaleString('fr-FR', { 
@@ -39,15 +40,15 @@ export const TotalsSection = ({ operations }: TotalsSectionProps) => {
         <div className="space-y-1">
           <div className="flex justify-between">
             <span className="text-sm text-muted-foreground">Versements:</span>
-            <span className="font-medium text-green-600 dark:text-green-400">{formatNumber(totalDeposits)} TND</span>
+            <span className="font-medium text-green-600 dark:text-green-400">{formatNumber(totalDeposits)} {currency}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-sm text-muted-foreground">Retraits:</span>
-            <span className="font-medium text-red-600 dark:text-red-400">{formatNumber(totalWithdrawals)} TND</span>
+            <span className="font-medium text-red-600 dark:text-red-400">{formatNumber(totalWithdrawals)} {currency}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-sm text-muted-foreground">Virements:</span>
-            <span className="font-medium text-blue-600 dark:text-blue-400">{formatNumber(totalTransfers)} TND</span>
+            <span className="font-medium text-blue-600 dark:text-blue-400">{formatNumber(totalTransfers)} {currency}</span>
           </div>
         </div>
         
@@ -55,7 +56,7 @@ export const TotalsSection = ({ operations }: TotalsSectionProps) => {
           <div className="flex justify-between pt-1 border-t">
             <span className="font-medium">Mouvement Net:</span>
             <span className={cn("font-bold", netMovement >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400")}>
-              {formatNumber(netMovement)} TND
+              {formatNumber(netMovement)} {currency}
             </span>
           </div>
         </div>

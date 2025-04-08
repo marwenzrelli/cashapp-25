@@ -17,6 +17,14 @@ export const StatsCard = ({ withdrawals }: StatsCardProps) => {
     return "text-gray-600 dark:text-gray-400";
   };
 
+  // Format number with 2 decimal places and comma separator
+  const formatNumber = (num: number): string => {
+    return num.toLocaleString('fr-FR', { 
+      minimumFractionDigits: 2, 
+      maximumFractionDigits: 2 
+    });
+  };
+
   return (
     <Card className="border-primary/20">
       <CardHeader>
@@ -34,7 +42,7 @@ export const StatsCard = ({ withdrawals }: StatsCardProps) => {
             "font-medium",
             getAmountColor(totalAmount)
           )}>
-            Total des retraits: {totalAmount.toLocaleString()} TND
+            Total des retraits: {formatNumber(totalAmount)} TND
           </p>
         </div>
       </CardContent>
