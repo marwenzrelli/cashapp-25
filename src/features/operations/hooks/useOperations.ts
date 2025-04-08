@@ -36,7 +36,17 @@ export const useOperations = () => {
     
     try {
       const operationType = operationToDelete.type;
-      const operationId = operationToDelete.id.split('-')[1]; // Extraire l'ID numérique
+      const operationIdString = operationToDelete.id.split('-')[1]; // Extraire l'ID numérique sous forme de string
+      
+      // Convertir l'ID en nombre
+      const operationId = parseInt(operationIdString, 10);
+      
+      // Vérifier si la conversion a réussi
+      if (isNaN(operationId)) {
+        console.error("ID d'opération invalide:", operationIdString);
+        toast.error("Format d'ID invalide");
+        return false;
+      }
       
       let error = null;
       
@@ -45,19 +55,19 @@ export const useOperations = () => {
         const { error: deleteError } = await supabase
           .from('deposits')
           .delete()
-          .eq('id', operationId);
+          .eq('id', operationId); // Utiliser l'ID converti en nombre
         error = deleteError;
       } else if (operationType === 'withdrawal') {
         const { error: deleteError } = await supabase
           .from('withdrawals')
           .delete()
-          .eq('id', operationId);
+          .eq('id', operationId); // Utiliser l'ID converti en nombre
         error = deleteError;
       } else if (operationType === 'transfer') {
         const { error: deleteError } = await supabase
           .from('transfers')
           .delete()
-          .eq('id', operationId);
+          .eq('id', operationId); // Utiliser l'ID converti en nombre
         error = deleteError;
       }
       
