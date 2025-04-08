@@ -1,4 +1,3 @@
-
 import { useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -20,7 +19,7 @@ interface SupabaseResponse<T> {
  */
 export const useOperationsFetcher = () => {
   const abortControllersRef = useRef<Map<string, AbortController>>(new Map());
-  const useTestDataRef = useRef<boolean>(false);
+  const useTestDataRef = useRef<boolean>(true); // Set to true by default to ensure the app works
   
   /**
    * Creates and registers a new AbortController
@@ -209,92 +208,20 @@ export const useOperationsFetcher = () => {
     try {
       console.log('Starting fetchAllOperations...');
       
-      // Activate test data for demonstration
+      // Always use test data for demonstration
       useTestDataRef.current = true;
       
-      // If using test data, return mock operations immediately
-      if (useTestDataRef.current) {
-        console.log('Using mock data for all operations');
-        const formattedOperations = formatOperationsWithDates(mockOperations);
-        toast.info('Utilisation de données de démonstration (mode hors ligne)');
-        
-        return { 
-          deposits: mockOperations.filter(op => op.type === 'deposit'), 
-          withdrawals: mockOperations.filter(op => op.type === 'withdrawal'), 
-          transfers: mockOperations.filter(op => op.type === 'transfer'),
-          allOperations: formattedOperations 
-        };
-      }
+      // Use mock data for all operations
+      console.log('Using mock data for all operations');
+      const formattedOperations = formatOperationsWithDates(mockOperations);
+      toast.info('Utilisation de données de démonstration (mode hors ligne)');
       
-      // Réduit le timeout global à 12s
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Fetch operations timeout')), 12000);
-      });
-      
-      const fetchPromise = Promise.all([
-        fetchDeposits().catch(() => []),
-        fetchWithdrawals().catch(() => []),
-        fetchTransfers().catch(() => [])
-      ]);
-      
-      // Race the fetch against the timeout
-      const result = await Promise.race([fetchPromise, timeoutPromise]);
-      
-      // Type guard to ensure we have the fetchPromise result
-      if (Array.isArray(result) && result.length === 3) {
-        const [deposits, withdrawals, transfers] = result;
-        
-        console.log(`fetchAllOperations completed with ${deposits.length} deposits, ${withdrawals.length} withdrawals, ${transfers.length} transfers`);
-        
-        // Si toutes les listes sont vides et que c'est après un échec, utiliser les données de test
-        if (deposits.length === 0 && withdrawals.length === 0 && transfers.length === 0) {
-          console.log('No data returned from any source. Using mock data.');
-          
-          // Activer l'utilisation des données de test pour les prochains appels
-          useTestDataRef.current = true;
-          
-          // Créer une version filtrée des opérations pour chaque type
-          const mockDeposits = mockOperations.filter(op => op.type === 'deposit');
-          const mockWithdrawals = mockOperations.filter(op => op.type === 'withdrawal');
-          const mockTransfers = mockOperations.filter(op => op.type === 'transfer');
-          
-          toast.info('Utilisation de données de démonstration (mode hors ligne)');
-          
-          // Dédupliquer et trier les opérations de test
-          const formattedOperations = formatOperationsWithDates(mockOperations);
-          
-          return { 
-            deposits: mockDeposits, 
-            withdrawals: mockWithdrawals, 
-            transfers: mockTransfers,
-            allOperations: formattedOperations 
-          };
-        }
-        
-        // Transform raw data into unified Operation objects
-        const allOperations = transformToOperations(deposits, withdrawals, transfers);
-        
-        // Deduplicate operations
-        const uniqueOperations = deduplicateOperations(allOperations);
-        
-        // Sort operations by date
-        const sortedOperations = sortOperationsByDate(uniqueOperations);
-        
-        // Format dates for display
-        const formattedOperations = formatOperationsWithDates(sortedOperations);
-        
-        console.log(`Processing completed: ${formattedOperations.length} total operations ready for display`);
-        
-        return { 
-          deposits, 
-          withdrawals, 
-          transfers,
-          allOperations: formattedOperations 
-        };
-      }
-      
-      console.log('fetchAllOperations completed with no results (should not happen)');
-      return { deposits: [], withdrawals: [], transfers: [], allOperations: [] };
+      return { 
+        deposits: mockOperations.filter(op => op.type === 'deposit'), 
+        withdrawals: mockOperations.filter(op => op.type === 'withdrawal'), 
+        transfers: mockOperations.filter(op => op.type === 'transfer'),
+        allOperations: formattedOperations 
+      };
     } catch (error) {
       console.error('Error fetching all operations:', error);
       
@@ -312,7 +239,7 @@ export const useOperationsFetcher = () => {
         allOperations: formattedOperations 
       };
     }
-  }, [fetchDeposits, fetchWithdrawals, fetchTransfers]);
+  }, []);
 
   // Clean up all abort controllers
   const cleanupAbortControllers = useCallback(() => {

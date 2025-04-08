@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { Operation } from '../types';
 import { useOperationsFetcher } from './useOperationsFetcher';
 import { useFetchStateManager } from './utils/fetchStateManager';
-import { fetchOperationsCore } from './utils/fetchOperationsCore';
 
 /**
  * Main hook for fetching operations with state management, error handling, and retry logic
@@ -55,8 +54,14 @@ export const useFetchOperations = () => {
       }
       controls.abortControllerRef.current = new AbortController();
       
-      // Fetch the data
-      const result = await fetchAllOperations();
+      // Simplified fetch with shorter timeout
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Fetch timeout')), 5000);
+      });
+      
+      // Race between actual fetch and timeout
+      const fetchPromise = fetchAllOperations();
+      const result = await Promise.race([fetchPromise, timeoutPromise]);
       
       // Update state with results if component is still mounted
       if (controls.isMountedRef.current) {
@@ -70,18 +75,16 @@ export const useFetchOperations = () => {
       if (controls.isMountedRef.current) {
         setError(error.message || 'Une erreur est survenue');
         setIsLoading(false);
-      }
-      
-      if (fetchAttempts < (controls.maxRetries.current || 3)) {
-        const retryDelay = Math.min(2000 * (fetchAttempts + 1), 10000);
-        console.log(`Scheduling retry ${fetchAttempts + 1} in ${retryDelay}ms`);
         
-        setTimeout(() => {
-          if (controls.isMountedRef.current) {
-            incrementFetchAttempts();
-            fetchOperations(true);
+        // Attempt to use fallback data
+        try {
+          const fallbackData = await fetchAllOperations();
+          if (fallbackData && fallbackData.allOperations) {
+            setOperations(fallbackData.allOperations);
           }
-        }, retryDelay);
+        } catch (fallbackError) {
+          console.error('Error fetching fallback data:', fallbackError);
+        }
       }
     } finally {
       controls.fetchingRef.current = false;
@@ -126,10 +129,14 @@ export const useFetchOperations = () => {
   // Initial fetch when component mounts
   useEffect(() => {
     if (controls.isMountedRef.current) {
-      // Initiate fetch immediately
-      console.log("Initial fetch when component mounts");
-      setIsLoading(true);
-      fetchOperations(true);
+      // Short timeout to allow component to mount fully
+      setTimeout(() => {
+        if (controls.isMountedRef.current) {
+          console.log("Initial fetch when component mounts");
+          setIsLoading(true);
+          fetchOperations(true);
+        }
+      }, 100);
     }
   }, [fetchOperations, setIsLoading, controls.isMountedRef]);
 

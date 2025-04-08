@@ -36,18 +36,19 @@ export const useOperationsLoadingState = ({
       lastRefreshTimeRef.current = Date.now();
       loadingStartTimeRef.current = Date.now();
       
+      // Initial fetch of operations with force=true
       fetchOperations(true);
       
       if (loadingTimeoutRef.current) {
         clearTimeout(loadingTimeoutRef.current);
       }
       
-      // Réduit le temps avant d'afficher le message de timeout à 5 secondes
+      // Reduced timeout to 3 seconds
       loadingTimeoutRef.current = setTimeout(() => {
         if (isLoading) {
           setLoadingTimeout(true);
         }
-      }, 5000);
+      }, 3000);
       
       if (loadingTimerRef.current) {
         clearInterval(loadingTimerRef.current);
@@ -58,8 +59,8 @@ export const useOperationsLoadingState = ({
           const duration = Math.floor((Date.now() - loadingStartTimeRef.current) / 1000);
           setLoadingDuration(duration);
           
-          // Affiche l'avertissement réseau après 8 secondes au lieu de 15
-          if (duration > 8 && !showNetworkError) {
+          // Show network warning after 5 seconds
+          if (duration > 5 && !showNetworkError) {
             setShowNetworkError(true);
           }
         }
@@ -76,18 +77,18 @@ export const useOperationsLoadingState = ({
     };
   }, [fetchOperations, initialLoadAttempted, isLoading, showNetworkError]);
 
+  // Auto-retry logic
   useEffect(() => {
     if (isLoading && loadingTimeout && initialLoadAttempted && operations.length === 0 && initialFetchAttemptRef.current < 2) {
       initialFetchAttemptRef.current += 1;
       console.log(`Auto-retrying initial fetch, attempt #${initialFetchAttemptRef.current}`);
       
       setLoadingTimeout(false);
-      
-      // On réessaie automatiquement après un timeout
       fetchOperations(true);
     }
   }, [fetchOperations, isLoading, loadingTimeout, initialLoadAttempted, operations.length]);
 
+  // Reset states when loading state changes
   useEffect(() => {
     if (isLoading) {
       if (!loadingStartTimeRef.current) {
@@ -113,9 +114,9 @@ export const useOperationsLoadingState = ({
     const now = Date.now();
     const timeSinceLastRefresh = now - lastRefreshTimeRef.current;
     
-    // Réduit le temps entre les rafraîchissements à 2 secondes
-    if (timeSinceLastRefresh < 2000) {
-      toast.info(`Attendez ${Math.ceil((2000 - timeSinceLastRefresh) / 1000)} secondes avant de rafraîchir à nouveau`);
+    // Reduce time between refreshes to 1 second
+    if (timeSinceLastRefresh < 1000) {
+      toast.info(`Attendez ${Math.ceil((1000 - timeSinceLastRefresh) / 1000)} secondes avant de rafraîchir à nouveau`);
       return;
     }
     
@@ -138,6 +139,7 @@ export const useOperationsLoadingState = ({
     fetchOperations(true);
   };
 
+  // Calculated display states
   const showInitialLoading = isLoading && operations.length === 0 && !loadingTimeout;
   const showLoadingTimeout = loadingTimeout && operations.length === 0;
   const showError = !isLoading && error && operations.length === 0 && initialLoadAttempted && !loadingTimeout;
