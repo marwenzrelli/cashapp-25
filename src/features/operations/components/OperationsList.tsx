@@ -1,4 +1,3 @@
-
 import { Operation } from "@/features/operations/types";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -7,6 +6,7 @@ import { User, Trash2, CalendarIcon, ClockIcon } from "lucide-react";
 import { getTypeStyle, getTypeIcon, getTypeLabel } from "@/features/operations/utils/operation-helpers";
 import { formatOperationId, getAmountColor } from "../utils/display-helpers";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TotalsSection } from "./TotalsSection";
 
 interface OperationsListProps {
   operations: Operation[];
@@ -169,6 +169,11 @@ export const OperationsList = ({ operations, isLoading, onDelete }: OperationsLi
               ))}
             </TableBody>
           </Table>
+          
+          {/* Totals section for desktop */}
+          {operations.length > 0 && (
+            <TotalsSection operations={operations} />
+          )}
         </div>
 
         {/* Liste pour mobile */}
@@ -234,6 +239,13 @@ export const OperationsList = ({ operations, isLoading, onDelete }: OperationsLi
               </div>
             </div>
           ))}
+          
+          {/* Totals section for mobile */}
+          {operations.length > 0 && (
+            <div className="mt-4">
+              <TotalsSection operations={operations} />
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
