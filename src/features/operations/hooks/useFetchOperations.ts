@@ -2,45 +2,60 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Operation } from '../types';
 import { useOperationsFetcher } from './useOperationsFetcher';
+import { toast } from "sonner";
 
 /**
- * Hook ultra-simplifié pour récupérer les opérations avec performance maximale
+ * Hook pour récupérer les opérations depuis Supabase avec gestion d'erreurs
  */
 export const useFetchOperations = () => {
   const [operations, setOperations] = useState<Operation[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { getOperations } = useOperationsFetcher();
+  const { getOperations, getMockOperations } = useOperationsFetcher();
   
   // Références pour le contrôle du fetch
   const isMountedRef = useRef(true);
   const fetchingRef = useRef(false);
   
-  // Fonction simplifiée qui charge les données immédiatement
-  const fetchOperations = useCallback(() => {
+  // Fonction qui charge les données de façon asynchrone
+  const fetchOperations = useCallback(async (force = false) => {
+    // Éviter les requêtes multiples
+    if (fetchingRef.current && !force) {
+      console.log("Déjà en cours de chargement, ignorant cette requête");
+      return;
+    }
+    
     try {
-      if (fetchingRef.current) {
-        console.log("Déjà en cours de chargement, ignorant cette requête");
-        return;
-      }
-      
       fetchingRef.current = true;
       setIsLoading(true);
       
-      // Chargement synchrone, pas de delay
-      const data = getOperations();
-      setOperations(data);
-      setError(null);
+      console.log("Chargement des opérations depuis Supabase...");
+      const data = await getOperations();
       
-      fetchingRef.current = false;
+      if (isMountedRef.current) {
+        setOperations(data);
+        setError(null);
+      }
     } catch (err: any) {
       console.error('Error fetching operations:', err);
-      setError(err.message || 'Erreur lors du chargement des données');
-      fetchingRef.current = false;
+      
+      if (isMountedRef.current) {
+        setError(err.message || 'Erreur lors du chargement des données');
+        toast.error("Erreur de chargement", { 
+          description: "Affichage des données locales" 
+        });
+        
+        // Fallback aux données mock en cas d'erreur
+        const mockData = getMockOperations();
+        setOperations(mockData);
+      }
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current) {
+        setIsLoading(false);
+        fetchingRef.current = false;
+      }
     }
-  }, [getOperations]);
+  }, [getOperations, getMockOperations]);
 
   // Nettoyage lors du démontage
   useEffect(() => {
