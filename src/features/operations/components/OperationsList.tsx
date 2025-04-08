@@ -1,3 +1,4 @@
+
 import { Operation } from "@/features/operations/types";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -12,9 +13,10 @@ interface OperationsListProps {
   operations: Operation[];
   isLoading: boolean;
   onDelete: (operation: Operation) => void;
+  allOperations?: Operation[];
 }
 
-export const OperationsList = ({ operations, isLoading, onDelete }: OperationsListProps) => {
+export const OperationsList = ({ operations, isLoading, onDelete, allOperations = [] }: OperationsListProps) => {
   // Format transactions with formatted dates
   const operationsWithFormattedDates = operations;
 
@@ -170,9 +172,20 @@ export const OperationsList = ({ operations, isLoading, onDelete }: OperationsLi
             </TableBody>
           </Table>
           
-          {/* Totals section for desktop */}
+          {/* Page totals section for desktop */}
           {operations.length > 0 && (
-            <TotalsSection operations={operations} currency="TND" />
+            <div className="border-t border-dashed px-4 py-3 bg-muted/10">
+              <h3 className="font-medium mb-2">Totaux de la page</h3>
+              <TotalsSection operations={operations} currency="TND" />
+            </div>
+          )}
+          
+          {/* General totals section for desktop */}
+          {allOperations.length > 0 && allOperations.length !== operations.length && (
+            <div className="border-t px-4 py-3 bg-muted/20">
+              <h3 className="font-medium mb-2">Totaux généraux ({allOperations.length} opérations)</h3>
+              <TotalsSection operations={allOperations} currency="TND" />
+            </div>
           )}
         </div>
 
@@ -240,10 +253,19 @@ export const OperationsList = ({ operations, isLoading, onDelete }: OperationsLi
             </div>
           ))}
           
-          {/* Totals section for mobile */}
+          {/* Page totals section for mobile */}
           {operations.length > 0 && (
-            <div className="mt-4">
+            <div className="mt-4 p-4 border rounded-lg border-dashed bg-muted/10">
+              <h3 className="font-medium mb-2">Totaux de la page</h3>
               <TotalsSection operations={operations} currency="TND" />
+            </div>
+          )}
+          
+          {/* General totals section for mobile */}
+          {allOperations.length > 0 && allOperations.length !== operations.length && (
+            <div className="mt-4 p-4 border rounded-lg bg-muted/20">
+              <h3 className="font-medium mb-2">Totaux généraux ({allOperations.length} opérations)</h3>
+              <TotalsSection operations={allOperations} currency="TND" />
             </div>
           )}
         </div>

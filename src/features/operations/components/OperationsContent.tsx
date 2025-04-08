@@ -49,7 +49,7 @@ export const OperationsContent = ({
         operations={paginatedOperations} 
         isLoading={isLoading} 
         onDelete={onDelete} 
-        totalOperations={filteredOperations.length}
+        allOperations={filteredOperations}
       />
     </>
   );
