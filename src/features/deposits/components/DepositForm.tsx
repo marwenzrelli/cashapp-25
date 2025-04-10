@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface StandaloneDepositFormProps {
   clients: ExtendedClient[];
@@ -33,6 +34,8 @@ export const StandaloneDepositForm: React.FC<StandaloneDepositFormProps> = ({
   onSuccess
 }) => {
   const { currency } = useCurrency();
+  const isMobile = useIsMobile();
+  
   const {
     selectedClient,
     setSelectedClient,
@@ -68,7 +71,7 @@ export const StandaloneDepositForm: React.FC<StandaloneDepositFormProps> = ({
               value={selectedClient} 
               onValueChange={setSelectedClient}
             >
-              <SelectTrigger id="client">
+              <SelectTrigger id="client" className={isMobile ? "h-14" : ""}>
                 <SelectValue placeholder="Sélectionner un client" />
               </SelectTrigger>
               <SelectContent>
@@ -115,6 +118,7 @@ export const StandaloneDepositForm: React.FC<StandaloneDepositFormProps> = ({
               onChange={(e) => setAmount(e.target.value)}
               step="0.01"
               min="0"
+              className={isMobile ? "h-14 text-lg" : ""}
             />
           </div>
           
@@ -127,9 +131,9 @@ export const StandaloneDepositForm: React.FC<StandaloneDepositFormProps> = ({
                     <Button
                       id="date"
                       variant="outline" 
-                      className="w-full justify-start text-left font-normal relative pl-10"
+                      className={`w-full justify-start text-left font-normal relative pl-10 ${isMobile ? "h-14 text-lg" : ""}`}
                     >
-                      <CalendarIcon className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                      <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
                       {date ? format(date, "dd/MM/yyyy", { locale: fr }) : <span>Choisir une date</span>}
                     </Button>
                   </PopoverTrigger>
@@ -150,11 +154,11 @@ export const StandaloneDepositForm: React.FC<StandaloneDepositFormProps> = ({
                   id="time"
                   type="time"
                   step="1"
-                  className="pl-10 border rounded-lg bg-gray-50"
+                  className={`pl-10 border rounded-lg bg-gray-50 ${isMobile ? "h-14 text-lg" : ""}`}
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
                 />
-                <Clock className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
               </div>
             </div>
             <p className="text-xs text-muted-foreground">
@@ -169,12 +173,13 @@ export const StandaloneDepositForm: React.FC<StandaloneDepositFormProps> = ({
               placeholder="Entrez une description..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              className={isMobile ? "h-14 text-lg" : ""}
             />
           </div>
           
           <Button 
             type="submit" 
-            className="w-full bg-green-600 hover:bg-green-700" 
+            className={`w-full bg-green-600 hover:bg-green-700 ${isMobile ? "h-14 text-lg" : ""}`}
             disabled={isLoading}
           >
             {isLoading ? "En cours..." : "Effectuer le versement"}

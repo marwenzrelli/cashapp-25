@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { useState, useRef } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DatePickerFieldProps {
   date: Date;
@@ -19,6 +20,7 @@ interface DatePickerFieldProps {
 export const DatePickerField = ({ date, onDateChange }: DatePickerFieldProps) => {
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const isMobile = useIsMobile();
   
   const handleDateSelect = (newDate: Date | undefined) => {
     onDateChange(newDate);
@@ -36,10 +38,11 @@ export const DatePickerField = ({ date, onDateChange }: DatePickerFieldProps) =>
             variant={"outline"}
             className={cn(
               "w-full justify-start text-left font-normal",
-              !date && "text-muted-foreground"
+              !date && "text-muted-foreground",
+              isMobile && "h-14 text-base"
             )}
           >
-            <CalendarIcon className="mr-2 h-4 w-4" />
+            <CalendarIcon className="mr-2 h-5 w-5" />
             {date ? format(date, "P") : <span>Choisir une date</span>}
           </Button>
         </PopoverTrigger>

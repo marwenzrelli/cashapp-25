@@ -2,6 +2,17 @@
 import React from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { Button } from "@/components/ui/button";
+import { CalendarIcon, Clock } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DateFieldProps {
   value: string;
@@ -14,6 +25,8 @@ export const DateField: React.FC<DateFieldProps> = ({
   onChange, 
   id = "date" 
 }) => {
+  const isMobile = useIsMobile();
+  
   // Extract date and time components from the ISO string
   let dateValue = '';
   let timeValue = '';
@@ -46,22 +59,19 @@ export const DateField: React.FC<DateFieldProps> = ({
     }
   }
   
-  const handleDateChange = (newDate: string) => {
+  const handleDateChange = (newDate: Date | undefined) => {
     try {
       if (!newDate) return;
       
       // Get current date components from existing value
       const currentDate = new Date(value || new Date());
       
-      // Parse the new date string
-      const [year, month, day] = newDate.split('-').map(Number);
-      
       // Create a new date object with the new date but current time
       const newDateObj = new Date(currentDate);
-      newDateObj.setFullYear(year, month - 1, day);
+      newDateObj.setFullYear(newDate.getFullYear(), newDate.getMonth(), newDate.getDate());
       
       console.log("Date change:", {
-        newDate,
+        newDate: newDate.toString(),
         newDateObj: newDateObj.toString(),
         newISO: newDateObj.toISOString()
       });
@@ -99,28 +109,47 @@ export const DateField: React.FC<DateFieldProps> = ({
     }
   };
 
+  // Create a Date object from the ISO string
+  const dateObj = value ? new Date(value) : new Date();
+
   return (
-    <div className="space-y-2">
-      <Label htmlFor={id}>Date et heure du retrait</Label>
-      <div className="grid grid-cols-1 gap-2">
-        <div>
-          <Input
-            id={id}
-            type="date"
-            value={dateValue}
-            onChange={(e) => handleDateChange(e.target.value)}
-            className="transition-all focus-visible:ring-primary/50"
-          />
+    <div className="space-y-3">
+      <Label htmlFor={id} className="text-base">Date et heure du retrait</Label>
+      <div className="grid grid-cols-1 gap-4">
+        <div className="relative">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                id={id}
+                variant="outline" 
+                className={`w-full justify-start text-left font-normal relative pl-10 ${isMobile ? "h-14 text-lg" : ""}`}
+              >
+                <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
+                {format(dateObj, "dd/MM/yyyy", { locale: fr })}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={dateObj}
+                onSelect={handleDateChange}
+                initialFocus
+                className="pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
         </div>
-        <div>
+        
+        <div className="relative">
           <Input
             id={`${id}-time`}
             type="time" 
             step="1" // This allows seconds to be entered
             value={timeValue}
             onChange={(e) => handleTimeChange(e.target.value)}
-            className="transition-all focus-visible:ring-primary/50"
+            className={`pl-10 ${isMobile ? "h-14 text-lg" : ""}`}
           />
+          <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
         </div>
       </div>
     </div>

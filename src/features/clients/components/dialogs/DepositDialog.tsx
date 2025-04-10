@@ -4,6 +4,7 @@ import { Client } from "../../types";
 import { StandaloneDepositForm } from "@/features/deposits/components/DepositForm";
 import { Deposit } from "@/features/deposits/types";
 import { ExtendedClient } from "@/features/withdrawals/hooks/form/withdrawalFormTypes";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DepositDialogProps {
   client: Client;
@@ -20,6 +21,8 @@ export const DepositDialog = ({
   onConfirm,
   refreshClientBalance
 }: DepositDialogProps) => {
+  const isMobile = useIsMobile();
+  
   // Close dialog on success
   const handleSuccess = () => {
     onOpenChange(false);
@@ -38,7 +41,7 @@ export const DepositDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className={`${isMobile ? "max-w-[95%] p-4" : "max-w-md"}`}>
         <DialogHeader>
           <DialogTitle>Nouveau versement</DialogTitle>
         </DialogHeader>

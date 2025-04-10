@@ -1,5 +1,17 @@
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { CalendarIcon, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DateTimeFieldProps {
   date: Date;
@@ -9,6 +21,8 @@ interface DateTimeFieldProps {
 }
 
 export const DateTimeField = ({ date, setDate, time, setTime }: DateTimeFieldProps) => {
+  const isMobile = useIsMobile();
+  
   // Format date as YYYY-MM-DD in local time
   const formatDateValue = (date: Date): string => {
     const year = date.getFullYear();
@@ -40,25 +54,41 @@ export const DateTimeField = ({ date, setDate, time, setTime }: DateTimeFieldPro
   return (
     <div className="space-y-2">
       <Label htmlFor="date">Date et heure du versement</Label>
-      <div className="grid grid-cols-1 gap-2">
-        <div>
-          <Input
-            id="date"
-            type="date"
-            value={formatDateValue(date)}
-            onChange={handleDateChange}
-            className="transition-all focus-visible:ring-primary/50"
-          />
+      <div className="grid grid-cols-1 gap-4">
+        <div className="relative">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                id="date"
+                variant="outline" 
+                className={`w-full justify-start text-left font-normal relative pl-10 ${isMobile ? "h-14 text-lg" : ""}`}
+              >
+                <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
+                {date ? format(date, "dd/MM/yyyy", { locale: fr }) : <span>Choisir une date</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={(d) => d && setDate(d)}
+                initialFocus
+                className="pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
         </div>
-        <div>
+        
+        <div className="relative">
           <Input
             id="time"
             type="time"
             step="1" // Enable seconds selection
             value={time}
             onChange={(e) => setTime(e.target.value)}
-            className="transition-all focus-visible:ring-primary/50"
+            className={`pl-10 ${isMobile ? "h-14 text-lg" : ""}`}
           />
+          <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
         </div>
       </div>
     </div>

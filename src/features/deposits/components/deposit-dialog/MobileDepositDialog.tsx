@@ -10,8 +10,9 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Client } from "@/features/clients/types";
 import { Deposit } from "@/components/deposits/types";
-import { Loader2 } from "lucide-react";
+import { Loader2, Clock, CalendarIcon } from "lucide-react";
 import { SuccessMessage } from "./SuccessMessage";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface MobileDepositDialogProps {
   open: boolean;
@@ -48,6 +49,8 @@ export const MobileDepositDialog: React.FC<MobileDepositDialogProps> = ({
   isValid,
   showSuccess
 }) => {
+  const isMobile = useIsMobile();
+  
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="h-[90vh] overflow-y-auto w-full max-w-md">
@@ -63,7 +66,7 @@ export const MobileDepositDialog: React.FC<MobileDepositDialogProps> = ({
             <div className="space-y-3">
               <Label htmlFor="client" className="text-base">Client</Label>
               <Select value={formState.selectedClient} onValueChange={setSelectedClient}>
-                <SelectTrigger className="w-full h-12">
+                <SelectTrigger className="w-full h-14">
                   <SelectValue placeholder="Sélectionner un client" />
                 </SelectTrigger>
                 <SelectContent className="max-h-[300px]">
@@ -84,7 +87,7 @@ export const MobileDepositDialog: React.FC<MobileDepositDialogProps> = ({
                 placeholder="0.00"
                 value={formState.amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="h-12 text-lg"
+                className="h-14 text-lg"
               />
             </div>
             
@@ -96,11 +99,23 @@ export const MobileDepositDialog: React.FC<MobileDepositDialogProps> = ({
                   selected={formState.date}
                   onSelect={handleDateChange}
                   locale={fr}
-                  className="mx-auto"
+                  className="mx-auto pointer-events-auto"
                 />
               </div>
               <div className="text-center text-sm text-gray-500 bg-gray-50 dark:bg-gray-800/30 py-2 px-3 rounded-lg">
                 {format(formState.date, 'dd MMMM yyyy', { locale: fr })}
+              </div>
+              
+              <div className="relative mt-4">
+                <Label htmlFor="timeInput" className="text-base">Heure du versement</Label>
+                <div className="flex items-center mt-2">
+                  <Input
+                    id="timeInput"
+                    type="time"
+                    className="h-14 text-lg pl-10"
+                  />
+                  <Clock className="absolute left-3 h-5 w-5 text-gray-500" />
+                </div>
               </div>
             </div>
             
@@ -111,13 +126,13 @@ export const MobileDepositDialog: React.FC<MobileDepositDialogProps> = ({
                 placeholder="Entrez une description..."
                 value={formState.description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="h-12"
+                className="h-14"
               />
             </div>
             
             <Button
               type="submit"
-              className="w-full h-12 text-base mt-6"
+              className="w-full h-14 text-base mt-6"
               disabled={!isValid || isLoading}
             >
               {isLoading ? (
