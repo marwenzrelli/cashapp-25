@@ -8,17 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ExtendedClient } from "@/features/withdrawals/hooks/form/withdrawalFormTypes";
 import { Deposit } from "@/features/deposits/types";
-import { CalendarIcon, Clock, UserCircle } from "lucide-react";
+import { Clock, UserCircle } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { 
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { DatePickerField } from "../components/DatePickerField";
 
 interface StandaloneDepositFormProps {
   clients: ExtendedClient[];
@@ -125,40 +120,25 @@ export const StandaloneDepositForm: React.FC<StandaloneDepositFormProps> = ({
           <div className="space-y-2">
             <Label htmlFor="date">Date et heure du versement</Label>
             <div className="grid grid-cols-1 gap-2">
-              <div className="relative">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      id="date"
-                      variant="outline" 
-                      className={`w-full justify-start text-left font-normal relative pl-10 ${isMobile ? "h-14 text-lg" : ""}`}
-                    >
-                      <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
-                      {date ? format(date, "dd/MM/yyyy", { locale: fr }) : <span>Choisir une date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={date}
-                      onSelect={setDate}
-                      initialFocus
-                      className="pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
+              <DatePickerField 
+                date={date} 
+                onDateChange={(newDate) => newDate && setDate(newDate)} 
+                label="Date du versement"
+              />
               
               <div className="relative">
-                <Input
-                  id="time"
-                  type="time"
-                  step="1"
-                  className={`pl-10 border rounded-lg bg-gray-50 ${isMobile ? "h-14 text-lg" : ""}`}
-                  value={time}
-                  onChange={(e) => setTime(e.target.value)}
-                />
-                <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
+                <Label htmlFor="time">Heure</Label>
+                <div className="relative mt-1">
+                  <Input
+                    id="time"
+                    type="time"
+                    step="1"
+                    className={`pl-10 border rounded-lg bg-gray-50 ${isMobile ? "h-14 text-lg" : ""}`}
+                    value={time}
+                    onChange={(e) => setTime(e.target.value)}
+                  />
+                  <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
+                </div>
               </div>
             </div>
             <p className="text-xs text-muted-foreground">

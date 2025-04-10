@@ -15,9 +15,10 @@ import { useIsMobile } from "@/hooks/use-mobile";
 interface DatePickerFieldProps {
   date: Date;
   onDateChange: (date: Date | undefined) => void;
+  label?: string;
 }
 
-export const DatePickerField = ({ date, onDateChange }: DatePickerFieldProps) => {
+export const DatePickerField = ({ date, onDateChange, label = "Date" }: DatePickerFieldProps) => {
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const isMobile = useIsMobile();
@@ -30,7 +31,7 @@ export const DatePickerField = ({ date, onDateChange }: DatePickerFieldProps) =>
 
   return (
     <div className="space-y-2">
-      <Label>Date</Label>
+      <Label>{label}</Label>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -65,13 +66,13 @@ export const DatePickerField = ({ date, onDateChange }: DatePickerFieldProps) =>
               }
               initialFocus
               classNames={{
-                day: "h-10 w-10 text-center p-0 focus-visible:bg-primary/20 hover:bg-primary/20 aria-selected:bg-primary",
+                day: isMobile ? "h-12 w-12 text-center p-0 focus-visible:bg-primary/20 hover:bg-primary/20 aria-selected:bg-primary text-base" : "h-10 w-10 text-center p-0 focus-visible:bg-primary/20 hover:bg-primary/20 aria-selected:bg-primary",
                 caption: "px-4 py-2 flex items-center justify-between",
-                caption_label: "text-base font-medium",
+                caption_label: isMobile ? "text-lg font-medium" : "text-base font-medium",
                 nav_button: "h-9 w-9 bg-transparent p-0 opacity-70 hover:opacity-100",
                 table: "w-full border-collapse space-y-2",
-                head_cell: "text-muted-foreground w-10 font-normal text-[0.9rem]",
-                cell: "text-center text-sm p-0 relative h-10 w-10",
+                head_cell: isMobile ? "text-muted-foreground w-12 font-normal text-[1rem]" : "text-muted-foreground w-10 font-normal text-[0.9rem]",
+                cell: isMobile ? "text-center text-base p-0 relative h-12 w-12" : "text-center text-sm p-0 relative h-10 w-10",
               }}
             />
           </div>
@@ -84,7 +85,7 @@ export const DatePickerField = ({ date, onDateChange }: DatePickerFieldProps) =>
 export const Label = ({ children, htmlFor }: { children: React.ReactNode; htmlFor?: string }) => (
   <label
     htmlFor={htmlFor}
-    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+    className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70`}
   >
     {children}
   </label>

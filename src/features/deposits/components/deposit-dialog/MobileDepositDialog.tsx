@@ -5,12 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
+import { DatePickerField } from "../DatePickerField";
 import { Client } from "@/features/clients/types";
 import { Deposit } from "@/components/deposits/types";
-import { Loader2, Clock, CalendarIcon } from "lucide-react";
+import { Loader2, Clock } from "lucide-react";
 import { SuccessMessage } from "./SuccessMessage";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -92,19 +90,11 @@ export const MobileDepositDialog: React.FC<MobileDepositDialogProps> = ({
             </div>
             
             <div className="space-y-3">
-              <Label className="text-base">Date du versement</Label>
-              <div className="border rounded-lg p-4">
-                <Calendar
-                  mode="single"
-                  selected={formState.date}
-                  onSelect={handleDateChange}
-                  locale={fr}
-                  className="mx-auto pointer-events-auto"
-                />
-              </div>
-              <div className="text-center text-sm text-gray-500 bg-gray-50 dark:bg-gray-800/30 py-2 px-3 rounded-lg">
-                {format(formState.date, 'dd MMMM yyyy', { locale: fr })}
-              </div>
+              <DatePickerField 
+                date={formState.date} 
+                onDateChange={handleDateChange}
+                label="Date du versement"
+              />
               
               <div className="relative mt-4">
                 <Label htmlFor="timeInput" className="text-base">Heure du versement</Label>
@@ -114,7 +104,7 @@ export const MobileDepositDialog: React.FC<MobileDepositDialogProps> = ({
                     type="time"
                     className="h-14 text-lg pl-10"
                   />
-                  <Clock className="absolute left-3 h-5 w-5 text-gray-500" />
+                  <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
                 </div>
               </div>
             </div>
