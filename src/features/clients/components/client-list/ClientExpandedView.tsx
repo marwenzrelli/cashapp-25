@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Client } from "../../types";
 import { format } from "date-fns";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface ClientExpandedViewProps {
   client: Client;
@@ -9,6 +10,8 @@ interface ClientExpandedViewProps {
 }
 
 export const ClientExpandedView = ({ client, onView }: ClientExpandedViewProps) => {
+  const { currency } = useCurrency();
+  
   // Create sign prefix based on balance
   const signPrefix = client.solde >= 0 ? "+ " : "";
   
@@ -20,14 +23,14 @@ export const ClientExpandedView = ({ client, onView }: ClientExpandedViewProps) 
           <p className="truncate font-medium">{client.email || "Non renseigné"}</p>
         </div>
         <div className="bg-white dark:bg-gray-800/60 rounded-lg p-3">
-          <p className="text-muted-foreground text-xs mb-1">Solde</p>
+          <p className="text-muted-foreground text-xs mb-1">Solde réel</p>
           <div>
             <span className={`px-2 py-1 inline-block border rounded-md ${
               client.solde >= 0 
                 ? 'text-green-600 border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-900/30 dark:text-green-400' 
                 : 'text-red-600 border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-900/30 dark:text-red-400'
             }`}>
-              {signPrefix}{client.solde.toLocaleString()} TND
+              {signPrefix}{client.solde.toLocaleString()} {currency}
             </span>
           </div>
         </div>
