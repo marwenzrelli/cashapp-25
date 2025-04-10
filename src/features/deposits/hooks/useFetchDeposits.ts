@@ -14,7 +14,7 @@ export const useFetchDeposits = (
       
       const { data, error } = await supabase
         .from('deposits')
-        .select('*')
+        .select('*, clients(solde)')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -31,6 +31,7 @@ export const useFetchDeposits = (
           description: d.notes || '',
           client_name: d.client_name,
           client_id: d.client_id, // Now we're using the actual client_id
+          client_balance: d.clients?.solde || null, // Add the client balance from the joined clients table
           status: d.status,
           created_at: d.created_at,
           created_by: d.created_by || null,

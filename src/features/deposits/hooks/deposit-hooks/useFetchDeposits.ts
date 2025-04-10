@@ -24,10 +24,10 @@ export const useFetchDeposits = (
         console.log("Fetching deposits with authenticated session:", session.user.id);
       }
       
-      // Get deposits data with client_id included
+      // Get deposits data with client_id and client balance included through a join
       const { data, error } = await supabase
         .from('deposits')
-        .select('*')
+        .select('*, clients(solde)')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -60,7 +60,8 @@ export const useFetchDeposits = (
           date: displayDate,
           description: d.notes || '',
           client_name: d.client_name,
-          client_id: d.client_id, // Now we're using the actual client_id from the database
+          client_id: d.client_id,
+          client_balance: d.clients?.solde || null, // Add client balance from the joined clients table
           status: d.status,
           created_at: d.created_at,
           created_by: d.created_by || null,

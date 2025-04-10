@@ -1,4 +1,3 @@
-
 export interface Deposit {
   id: number;
   amount: number;
@@ -6,6 +5,7 @@ export interface Deposit {
   description: string;
   client_name: string;
   client_id?: string | number; // Updated to accept both string and number
+  client_balance?: number; // Added this property to fix the TypeScript error
   status: string;
   created_at: string;
   created_by: string | null;
