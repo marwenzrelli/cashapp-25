@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useDepositForm } from "./deposit-form/useDepositForm";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -7,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ExtendedClient } from "@/features/withdrawals/hooks/form/withdrawalFormTypes";
 import { Deposit } from "@/features/deposits/types";
-import { CalendarIcon, Clock } from "lucide-react";
+import { CalendarIcon, Clock, UserCircle } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { 
@@ -16,6 +17,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface StandaloneDepositFormProps {
   clients: ExtendedClient[];
@@ -30,6 +32,7 @@ export const StandaloneDepositForm: React.FC<StandaloneDepositFormProps> = ({
   refreshClientBalance,
   onSuccess
 }) => {
+  const { currency } = useCurrency();
   const {
     selectedClient,
     setSelectedClient,
@@ -44,6 +47,9 @@ export const StandaloneDepositForm: React.FC<StandaloneDepositFormProps> = ({
     isLoading,
     handleSubmit
   } = useDepositForm({ clients, onConfirm, refreshClientBalance, onSuccess });
+
+  // Find the selected client to display their balance
+  const selectedClientData = clients.find(client => client.id.toString() === selectedClient);
 
   return (
     <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-100 shadow-md">
@@ -68,11 +74,35 @@ export const StandaloneDepositForm: React.FC<StandaloneDepositFormProps> = ({
               <SelectContent>
                 {clients.map(client => (
                   <SelectItem key={client.id.toString()} value={client.id.toString()}>
-                    {client.prenom} {client.nom}
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <UserCircle className="h-4 w-4 text-primary/50" />
+                        <span>{client.prenom} {client.nom}</span>
+                      </div>
+                      <span className={`text-xs ${
+                        client.solde >= 0 
+                          ? "text-green-600 dark:text-green-400" 
+                          : "text-red-600 dark:text-red-400"
+                      }`}>
+                        Solde: {client.solde.toLocaleString()} {currency}
+                      </span>
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            
+            {selectedClientData && (
+              <div className="mt-2 px-3 py-2 rounded-md bg-blue-50 dark:bg-blue-900/20">
+                <span className={`text-sm font-medium ${
+                  selectedClientData.solde >= 0 
+                    ? "text-green-600 dark:text-green-400" 
+                    : "text-red-600 dark:text-red-400"
+                }`}>
+                  Solde actuel: {selectedClientData.solde.toLocaleString()} {currency}
+                </span>
+              </div>
+            )}
           </div>
           
           <div className="space-y-2">

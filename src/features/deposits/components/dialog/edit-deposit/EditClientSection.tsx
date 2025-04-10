@@ -53,7 +53,15 @@ export const EditClientSection: React.FC<EditClientSectionProps> = ({
         </SelectContent>
       </Select>
       {editForm.clientBalance && (
-        <p className="text-sm text-red-500">Solde: {editForm.clientBalance} {currency}</p>
+        <div className="mt-2 px-3 py-2 rounded-md bg-blue-50 dark:bg-blue-900/20">
+          <span className={`text-sm font-medium ${
+            parseFloat(editForm.clientBalance) >= 0 
+              ? "text-green-600 dark:text-green-400" 
+              : "text-red-600 dark:text-red-400"
+          }`}>
+            Solde actuel: {parseFloat(editForm.clientBalance).toLocaleString()} {currency}
+          </span>
+        </div>
       )}
     </div>
   );

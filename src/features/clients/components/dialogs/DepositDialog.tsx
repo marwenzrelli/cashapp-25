@@ -25,6 +25,17 @@ export const DepositDialog = ({
     onOpenChange(false);
   };
 
+  // Create an extended client with additional properties needed for the deposit form
+  const extendedClient: ExtendedClient = {
+    ...client,
+    dateCreation: client.date_creation || new Date().toISOString()
+  };
+
+  // Prepare a function to refresh a specific client's balance
+  const handleRefreshBalance = async (clientId: string) => {
+    return refreshClientBalance();
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
@@ -33,12 +44,9 @@ export const DepositDialog = ({
         </DialogHeader>
         
         <StandaloneDepositForm 
-          clients={[{
-            ...client,
-            dateCreation: client.date_creation || new Date().toISOString()
-          }]} 
+          clients={[extendedClient]} 
           onConfirm={onConfirm} 
-          refreshClientBalance={refreshClientBalance}
+          refreshClientBalance={handleRefreshBalance}
           onSuccess={handleSuccess} 
         />
       </DialogContent>
