@@ -70,7 +70,7 @@ export const ClientListItem = ({
         </div>
         <div className="pl-9">
           <span className="font-mono text-sm font-semibold px-2 py-1 rounded-md text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20">
-            {client.solde.toLocaleString()} {currency}
+            Solde: {client.solde.toLocaleString()} {currency}
           </span>
         </div>
       </div>

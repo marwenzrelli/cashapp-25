@@ -43,8 +43,12 @@ export const ClientSelect = ({
                 </span>
               </div>
               <div className="pl-6 mt-1">
-                <span className="font-mono text-sm px-2 py-1 rounded-md text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20">
-                  {client.solde.toLocaleString()} {currency}
+                <span className={`font-mono text-sm px-2 py-1 rounded-md ${
+                  client.solde >= 0 
+                    ? "text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20"
+                    : "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20"
+                }`}>
+                  Solde: {client.solde.toLocaleString()} {currency}
                 </span>
               </div>
             </SelectItem>

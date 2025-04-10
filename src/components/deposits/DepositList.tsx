@@ -4,6 +4,7 @@ import { UserCircle, ArrowUpCircle, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { type Deposit } from "./types";
 import { cn } from "@/lib/utils";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface DepositListProps {
   deposits: Deposit[];
@@ -12,6 +13,8 @@ interface DepositListProps {
 }
 
 export const DepositList = ({ deposits, onEdit, onDelete }: DepositListProps) => {
+  const { currency } = useCurrency();
+  
   const getAmountColor = (amount: number) => {
     if (amount > 0) return "text-green-600 dark:text-green-400";
     if (amount < 0) return "text-red-600 dark:text-red-400";
@@ -39,10 +42,24 @@ export const DepositList = ({ deposits, onEdit, onDelete }: DepositListProps) =>
                   <div className="absolute inset-0 animate-pulse rounded-full bg-primary/5" />
                 </div>
                 <div>
-                  <p className="font-medium">{deposit.client_name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    ID: {deposit.id}
-                  </p>
+                  <div className="flex flex-col">
+                    <p className="font-medium">{deposit.client_name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      ID: {deposit.id}
+                    </p>
+                  </div>
+                  {deposit.client_balance !== undefined && (
+                    <div className="mt-1">
+                      <span className={cn(
+                        "text-xs px-2 py-0.5 rounded-md border",
+                        deposit.client_balance >= 0
+                          ? "text-green-600 dark:text-green-400 border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800/30"
+                          : "text-red-600 dark:text-red-400 border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800/30"
+                      )}>
+                        Solde: {deposit.client_balance.toLocaleString()} {currency}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </td>
@@ -53,7 +70,7 @@ export const DepositList = ({ deposits, onEdit, onDelete }: DepositListProps) =>
               )}>
                 <ArrowUpCircle className="h-4 w-4" />
                 <span className="font-medium">
-                  {deposit.amount.toLocaleString()} €
+                  {deposit.amount.toLocaleString()} {currency}
                 </span>
               </div>
             </td>

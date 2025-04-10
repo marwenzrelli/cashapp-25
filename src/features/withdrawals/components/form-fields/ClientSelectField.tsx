@@ -113,7 +113,7 @@ export const ClientSelectField: React.FC<ClientSelectFieldProps> = ({
                     : "text-red-600 dark:text-red-400"
                 }`}
               >
-                {(realTimeBalances[client.id.toString()] ?? client.solde).toLocaleString()} {currency}
+                Solde: {(realTimeBalances[client.id.toString()] ?? client.solde).toLocaleString()} {currency}
               </span>
             </SelectItem>
           ))}

@@ -38,18 +38,22 @@ export const EditClientSection: React.FC<EditClientSectionProps> = ({
               value={`${client.prenom} ${client.nom}`}
               className="bg-purple-50 dark:bg-purple-900/20 my-1 rounded-md"
             >
-              {client.prenom} {client.nom}
-              {client.solde < 0 && (
-                <span className="ml-2 text-red-500">
-                  {client.solde.toLocaleString()} {currency}
+              <div className="flex flex-col gap-1">
+                <span>{client.prenom} {client.nom}</span>
+                <span className={`text-xs ${
+                  client.solde >= 0 
+                    ? "text-green-600 dark:text-green-400" 
+                    : "text-red-600 dark:text-red-400"
+                }`}>
+                  Solde: {client.solde.toLocaleString()} {currency}
                 </span>
-              )}
+              </div>
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
       {editForm.clientBalance && (
-        <p className="text-sm text-red-500">{editForm.clientBalance} {currency}</p>
+        <p className="text-sm text-red-500">Solde: {editForm.clientBalance} {currency}</p>
       )}
     </div>
   );

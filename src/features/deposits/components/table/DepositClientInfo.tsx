@@ -2,19 +2,23 @@
 import { UserCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { formatId } from "@/utils/formatId";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface DepositClientInfoProps {
   clientName: string;
   depositId: string | number; 
   clientId?: string | number | null;
+  clientBalance?: number | null;
 }
 
 export const DepositClientInfo = ({ 
   clientName,
   depositId,
-  clientId = null // Default to null if not provided
+  clientId = null,
+  clientBalance = null
 }: DepositClientInfoProps) => {
   const navigate = useNavigate();
+  const { currency } = useCurrency();
   
   // Handle click to navigate to client profile
   const handleClientClick = () => {
@@ -47,9 +51,21 @@ export const DepositClientInfo = ({
         >
           {clientName}
         </p>
-        <p className="text-xs text-muted-foreground mt-0.5 pl-1">
-          ID: {displayClientId}
-        </p>
+        <div className="flex items-center gap-2 mt-1">
+          <p className="text-xs text-muted-foreground pl-1">
+            ID: {displayClientId}
+          </p>
+          
+          {clientBalance !== null && (
+            <span className={`text-xs px-2 py-0.5 rounded-md border ${
+              clientBalance >= 0
+                ? "text-green-600 dark:text-green-400 border-green-200 bg-green-50 dark:bg-green-900/20"
+                : "text-red-600 dark:text-red-400 border-red-200 bg-red-50 dark:bg-red-900/20"
+            }`}>
+              Solde: {clientBalance.toLocaleString()} {currency}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
