@@ -1,6 +1,6 @@
 
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -11,14 +11,23 @@ import {
 import { cn } from "@/lib/utils";
 import { useState, useRef } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Input } from "@/components/ui/input";
 
 interface DatePickerFieldProps {
   date: Date;
   onDateChange: (date: Date | undefined) => void;
   label?: string;
+  time?: string;
+  onTimeChange?: (time: string) => void;
 }
 
-export const DatePickerField = ({ date, onDateChange, label = "Date" }: DatePickerFieldProps) => {
+export const DatePickerField = ({ 
+  date, 
+  onDateChange, 
+  label = "Date",
+  time,
+  onTimeChange
+}: DatePickerFieldProps) => {
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const isMobile = useIsMobile();
@@ -78,6 +87,25 @@ export const DatePickerField = ({ date, onDateChange, label = "Date" }: DatePick
           </div>
         </PopoverContent>
       </Popover>
+      
+      {onTimeChange && (
+        <div className="mt-2">
+          <Label>Heure</Label>
+          <div className="relative mt-1">
+            <Input
+              type="time"
+              step="1" // Enable seconds selection
+              value={time}
+              onChange={(e) => onTimeChange(e.target.value)}
+              className={cn(
+                "pl-10",
+                isMobile && "h-16 text-base"
+              )}
+            />
+            <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

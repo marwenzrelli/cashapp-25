@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DatePickerField } from "../DatePickerField";
 import { Client } from "@/features/clients/types";
 import { Deposit } from "@/components/deposits/types";
-import { Loader2, Clock } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { SuccessMessage } from "./SuccessMessage";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -22,11 +22,13 @@ interface MobileDepositDialogProps {
     amount: string;
     date: Date;
     description: string;
+    time?: string;
   };
   setSelectedClient: (clientId: string) => void;
   setAmount: (amount: string) => void;
   setDescription: (description: string) => void;
   handleDateChange: (date: Date | undefined) => void;
+  handleTimeChange?: (time: string) => void;
   handleSubmit: (e?: React.FormEvent) => Promise<void>;
   isLoading: boolean;
   isValid: boolean;
@@ -42,6 +44,7 @@ export const MobileDepositDialog: React.FC<MobileDepositDialogProps> = ({
   setAmount,
   setDescription,
   handleDateChange,
+  handleTimeChange,
   handleSubmit,
   isLoading,
   isValid,
@@ -89,25 +92,13 @@ export const MobileDepositDialog: React.FC<MobileDepositDialogProps> = ({
               />
             </div>
             
-            <div className="space-y-3">
-              <DatePickerField 
-                date={formState.date} 
-                onDateChange={handleDateChange}
-                label="Date du versement"
-              />
-              
-              <div className="relative mt-4 space-y-2">
-                <Label htmlFor="timeInput" className="text-base">Heure du versement</Label>
-                <div className="flex items-center mt-2">
-                  <Input
-                    id="timeInput"
-                    type="time"
-                    className="h-16 text-lg pl-12"
-                  />
-                  <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-6 w-6 text-gray-500" />
-                </div>
-              </div>
-            </div>
+            <DatePickerField 
+              date={formState.date} 
+              onDateChange={handleDateChange}
+              label="Date du versement"
+              time={formState.time}
+              onTimeChange={handleTimeChange}
+            />
             
             <div className="space-y-3">
               <Label htmlFor="description" className="text-base">Description (optionnel)</Label>

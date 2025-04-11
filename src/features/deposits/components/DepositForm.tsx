@@ -8,9 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ExtendedClient } from "@/features/withdrawals/hooks/form/withdrawalFormTypes";
 import { Deposit } from "@/features/deposits/types";
-import { Clock, UserCircle } from "lucide-react";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
+import { UserCircle } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { DatePickerField } from "../components/DatePickerField";
@@ -117,28 +115,13 @@ export const StandaloneDepositForm: React.FC<StandaloneDepositFormProps> = ({
             />
           </div>
           
-          <div className="space-y-4">
-            <DatePickerField 
-              date={date} 
-              onDateChange={(newDate) => newDate && setDate(newDate)} 
-              label="Date du versement"
-            />
-            
-            <div className="relative space-y-2">
-              <Label htmlFor="time">Heure</Label>
-              <div className="relative mt-1">
-                <Input
-                  id="time"
-                  type="time"
-                  step="1"
-                  className={`pl-10 border rounded-lg bg-gray-50 ${isMobile ? "h-16 text-lg" : ""}`}
-                  value={time}
-                  onChange={(e) => setTime(e.target.value)}
-                />
-                <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-6 w-6 text-gray-500" />
-              </div>
-            </div>
-          </div>
+          <DatePickerField 
+            date={date} 
+            onDateChange={(newDate) => newDate && setDate(newDate)} 
+            label="Date du versement"
+            time={time}
+            onTimeChange={setTime}
+          />
           
           <div className="space-y-2">
             <Label htmlFor="description">Description (optionnel)</Label>
