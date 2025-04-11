@@ -13,6 +13,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 interface DateFieldProps {
   value: string;
@@ -122,7 +123,10 @@ export const DateField: React.FC<DateFieldProps> = ({
               <Button
                 id={id}
                 variant="outline" 
-                className={`w-full justify-start text-left font-normal relative pl-10 ${isMobile ? "h-14 text-lg" : ""}`}
+                className={cn(
+                  "w-full justify-start text-left font-normal relative pl-10",
+                  isMobile && "h-14 text-lg"
+                )}
               >
                 <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
                 {format(dateObj, "dd/MM/yyyy", { locale: fr })}
@@ -147,7 +151,10 @@ export const DateField: React.FC<DateFieldProps> = ({
             step="1" // This allows seconds to be entered
             value={timeValue}
             onChange={(e) => handleTimeChange(e.target.value)}
-            className={`pl-10 ${isMobile ? "h-14 text-lg" : ""}`}
+            className={cn(
+              "pl-10",
+              isMobile && "h-14 text-lg"
+            )}
           />
           <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
         </div>
