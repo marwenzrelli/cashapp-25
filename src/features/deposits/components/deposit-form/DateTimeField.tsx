@@ -13,6 +13,7 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
 
 interface DateTimeFieldProps {
   date: Date;
@@ -23,6 +24,17 @@ interface DateTimeFieldProps {
 
 export const DateTimeField = ({ date, setDate, time, setTime }: DateTimeFieldProps) => {
   const isMobile = useIsMobile();
+  const [timeValue, setTimeValue] = useState(time);
+  
+  useEffect(() => {
+    setTimeValue(time);
+  }, [time]);
+  
+  const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newTime = e.target.value;
+    setTimeValue(newTime);
+    setTime(newTime);
+  };
 
   return (
     <div className="space-y-2">
@@ -60,8 +72,8 @@ export const DateTimeField = ({ date, setDate, time, setTime }: DateTimeFieldPro
             id="time"
             type="time"
             step="1" // Enable seconds selection
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
+            value={timeValue}
+            onChange={handleTimeChange}
             className={cn(
               "pl-10",
               isMobile && "h-16 text-lg"

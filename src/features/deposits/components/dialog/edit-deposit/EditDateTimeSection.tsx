@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Calendar, Clock } from "lucide-react";
@@ -17,6 +17,17 @@ export const EditDateTimeSection: React.FC<EditDateTimeSectionProps> = ({
   onEditFormChange
 }) => {
   const isMobile = useIsMobile();
+  const [timeValue, setTimeValue] = useState(editForm.time || "");
+  
+  useEffect(() => {
+    setTimeValue(editForm.time || "");
+  }, [editForm.time]);
+  
+  const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newTime = e.target.value;
+    setTimeValue(newTime);
+    onEditFormChange('time', newTime);
+  };
   
   return (
     <div className="space-y-2">
@@ -44,8 +55,8 @@ export const EditDateTimeSection: React.FC<EditDateTimeSectionProps> = ({
               "pl-10 border rounded-lg bg-gray-50",
               isMobile && "h-16 text-lg"
             )}
-            value={editForm.time || ""}
-            onChange={(e) => onEditFormChange('time', e.target.value)}
+            value={timeValue}
+            onChange={handleTimeChange}
           />
           <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
         </div>

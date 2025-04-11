@@ -46,6 +46,15 @@ export const DatePickerField = ({
     setOpen(false);
   };
 
+  // Handle time change with proper event bubbling
+  const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newTime = e.target.value;
+    setTimeValue(newTime);
+    if (onTimeChange) {
+      onTimeChange(newTime);
+    }
+  };
+
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
@@ -104,11 +113,7 @@ export const DatePickerField = ({
               type="time"
               step="1" // Enable seconds selection
               value={timeValue}
-              onChange={(e) => {
-                const newTime = e.target.value;
-                setTimeValue(newTime);
-                if (onTimeChange) onTimeChange(newTime);
-              }}
+              onChange={handleTimeChange}
               className={cn(
                 "pl-10",
                 isMobile && "h-16 text-lg"
