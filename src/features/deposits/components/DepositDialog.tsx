@@ -4,7 +4,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { StandaloneDepositForm } from "./DepositForm";
 import { Deposit } from "@/features/deposits/types";
 import { ExtendedClient } from "@/features/withdrawals/hooks/form/withdrawalFormTypes";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DepositDialogProps {
   open: boolean;
@@ -23,8 +22,6 @@ export const DepositDialog: React.FC<DepositDialogProps> = ({
   selectedClient,
   refreshClientBalance
 }) => {
-  const isMobile = useIsMobile();
-  
   // Filter clients if a client is selected
   const filteredClients = selectedClient
     ? clients.filter(client => client.id.toString() === selectedClient)
@@ -37,7 +34,7 @@ export const DepositDialog: React.FC<DepositDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={`${isMobile ? "max-w-[95%] p-4" : "max-w-md"}`}>
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Nouveau versement</DialogTitle>
         </DialogHeader>

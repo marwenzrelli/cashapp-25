@@ -13,7 +13,6 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { useEffect, useState } from "react";
 
 interface DateTimeFieldProps {
   date: Date;
@@ -24,16 +23,33 @@ interface DateTimeFieldProps {
 
 export const DateTimeField = ({ date, setDate, time, setTime }: DateTimeFieldProps) => {
   const isMobile = useIsMobile();
-  const [timeValue, setTimeValue] = useState(time);
   
-  useEffect(() => {
-    setTimeValue(time);
-  }, [time]);
-  
-  const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newTime = e.target.value;
-    setTimeValue(newTime);
-    setTime(newTime);
+  // Format date as YYYY-MM-DD in local time
+  const formatDateValue = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.value) {
+      try {
+        // Create a new date object based on the selected date but keep current time
+        const [year, month, day] = e.target.value.split('-').map(Number);
+        const newDate = new Date(date);
+        newDate.setFullYear(year, month - 1, day);
+        
+        console.log("Date change:", {
+          input: e.target.value,
+          newDate: newDate.toString()
+        });
+        
+        setDate(newDate);
+      } catch (error) {
+        console.error("Error parsing date input:", error);
+      }
+    }
   };
 
   return (
@@ -62,12 +78,6 @@ export const DateTimeField = ({ date, setDate, time, setTime }: DateTimeFieldPro
                 onSelect={(d) => d && setDate(d)}
                 initialFocus
                 className="pointer-events-auto"
-                classNames={{
-                  day: isMobile ? "h-14 w-14 text-center p-0 focus-visible:bg-primary/20 hover:bg-primary/20 aria-selected:bg-primary text-base" : "",
-                  caption_label: isMobile ? "text-lg font-medium" : "",
-                  head_cell: isMobile ? "text-muted-foreground w-14 font-normal text-[1rem]" : "",
-                  cell: isMobile ? "text-center text-base p-0 relative h-14 w-14" : "",
-                }}
               />
             </PopoverContent>
           </Popover>
@@ -78,8 +88,8 @@ export const DateTimeField = ({ date, setDate, time, setTime }: DateTimeFieldPro
             id="time"
             type="time"
             step="1" // Enable seconds selection
-            value={timeValue}
-            onChange={handleTimeChange}
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
             className={cn(
               "pl-10",
               isMobile && "h-16 text-lg"

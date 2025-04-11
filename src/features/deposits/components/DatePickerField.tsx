@@ -31,6 +31,7 @@ export const DatePickerField = ({
   const [open, setOpen] = useState(false);
   const [timeValue, setTimeValue] = useState(time || "");
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const timeInputRef = useRef<HTMLInputElement | null>(null);
   const isMobile = useIsMobile();
   
   // Synchronize internal state with external prop
@@ -46,14 +47,56 @@ export const DatePickerField = ({
     setOpen(false);
   };
 
-  // Handle time change with proper event bubbling
-  const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newTime = e.target.value;
-    setTimeValue(newTime);
-    if (onTimeChange) {
-      onTimeChange(newTime);
+  const handleTimeSelect = () => {
+    if (!onTimeChange) return;
+    
+    try {
+      // Instead of creating a dynamic hidden input, let's use an existing hidden input
+      // that we can reference with a ref
+      if (!timeInputRef.current) {
+        const input = document.createElement('input');
+        input.type = 'time';
+        input.step = '1'; // Enable seconds selection
+        input.value = timeValue || '';
+        input.style.position = 'fixed';
+        input.style.top = '0';
+        input.style.left = '0';
+        input.style.opacity = '0';
+        input.style.zIndex = '-1';
+        
+        const handleTimeChange = (e: Event) => {
+          const newTime = (e.target as HTMLInputElement).value;
+          console.log('Time selected:', newTime);
+          setTimeValue(newTime);
+          onTimeChange(newTime);
+        };
+        
+        input.addEventListener('change', handleTimeChange);
+        document.body.appendChild(input);
+        timeInputRef.current = input;
+      } else {
+        // Update the value if the input already exists
+        timeInputRef.current.value = timeValue || '';
+      }
+      
+      // Focus and click to open the time picker
+      if (timeInputRef.current) {
+        timeInputRef.current.focus();
+        timeInputRef.current.click();
+      }
+    } catch (error) {
+      console.error('Error showing time picker:', error);
     }
   };
+  
+  // Clean up the time input when component unmounts
+  useEffect(() => {
+    return () => {
+      if (timeInputRef.current && document.body.contains(timeInputRef.current)) {
+        document.body.removeChild(timeInputRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="space-y-2">
@@ -109,17 +152,34 @@ export const DatePickerField = ({
         <div className="mt-2">
           <Label>Heure</Label>
           <div className="relative mt-1">
-            <Input
-              type="time"
-              step="1" // Enable seconds selection
-              value={timeValue}
-              onChange={handleTimeChange}
+            <Button
+              variant="outline"
+              type="button"
               className={cn(
-                "pl-10",
-                isMobile && "h-16 text-lg"
+                "w-full pl-10 justify-start text-left font-normal",
+                isMobile && "h-16 text-base py-4"
               )}
+              onClick={(e) => {
+                e.preventDefault();
+                handleTimeSelect();
+              }}
+            >
+              <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
+              {timeValue || "Sélectionner l'heure"}
+            </Button>
+            
+            {/* Alternative direct input method for browsers that don't support time picker well */}
+            <Input 
+              type="time"
+              value={timeValue}
+              step="1"
+              className="hidden"
+              onChange={(e) => {
+                const newTime = e.target.value;
+                setTimeValue(newTime);
+                if (onTimeChange) onTimeChange(newTime);
+              }}
             />
-            <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
           </div>
         </div>
       )}
