@@ -64,7 +64,7 @@ export const MobileDepositDialog: React.FC<MobileDepositDialogProps> = ({
             <div className="space-y-3">
               <Label htmlFor="client" className="text-base">Client</Label>
               <Select value={formState.selectedClient} onValueChange={setSelectedClient}>
-                <SelectTrigger className="w-full h-14">
+                <SelectTrigger className="w-full h-16 text-base">
                   <SelectValue placeholder="Sélectionner un client" />
                 </SelectTrigger>
                 <SelectContent className="max-h-[300px]">
@@ -85,7 +85,7 @@ export const MobileDepositDialog: React.FC<MobileDepositDialogProps> = ({
                 placeholder="0.00"
                 value={formState.amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="h-14 text-lg"
+                className="h-16 text-lg"
               />
             </div>
             
@@ -96,15 +96,15 @@ export const MobileDepositDialog: React.FC<MobileDepositDialogProps> = ({
                 label="Date du versement"
               />
               
-              <div className="relative mt-4">
+              <div className="relative mt-4 space-y-2">
                 <Label htmlFor="timeInput" className="text-base">Heure du versement</Label>
                 <div className="flex items-center mt-2">
                   <Input
                     id="timeInput"
                     type="time"
-                    className="h-14 text-lg pl-10"
+                    className="h-16 text-lg pl-12"
                   />
-                  <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
+                  <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-6 w-6 text-gray-500" />
                 </div>
               </div>
             </div>
@@ -116,18 +116,18 @@ export const MobileDepositDialog: React.FC<MobileDepositDialogProps> = ({
                 placeholder="Entrez une description..."
                 value={formState.description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="h-14"
+                className="h-16 text-base"
               />
             </div>
             
             <Button
               type="submit"
-              className="w-full h-14 text-base mt-6"
+              className="w-full h-16 text-base mt-6"
               disabled={!isValid || isLoading}
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  <Loader2 className="mr-2 h-6 w-6 animate-spin" />
                   Traitement en cours...
                 </>
               ) : (

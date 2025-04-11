@@ -66,7 +66,7 @@ export const StandaloneDepositForm: React.FC<StandaloneDepositFormProps> = ({
               value={selectedClient} 
               onValueChange={setSelectedClient}
             >
-              <SelectTrigger id="client" className={isMobile ? "h-14" : ""}>
+              <SelectTrigger id="client" className={isMobile ? "h-16 text-base" : ""}>
                 <SelectValue placeholder="Sélectionner un client" />
               </SelectTrigger>
               <SelectContent>
@@ -113,37 +113,31 @@ export const StandaloneDepositForm: React.FC<StandaloneDepositFormProps> = ({
               onChange={(e) => setAmount(e.target.value)}
               step="0.01"
               min="0"
-              className={isMobile ? "h-14 text-lg" : ""}
+              className={isMobile ? "h-16 text-lg" : ""}
             />
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="date">Date et heure du versement</Label>
-            <div className="grid grid-cols-1 gap-2">
-              <DatePickerField 
-                date={date} 
-                onDateChange={(newDate) => newDate && setDate(newDate)} 
-                label="Date du versement"
-              />
-              
-              <div className="relative">
-                <Label htmlFor="time">Heure</Label>
-                <div className="relative mt-1">
-                  <Input
-                    id="time"
-                    type="time"
-                    step="1"
-                    className={`pl-10 border rounded-lg bg-gray-50 ${isMobile ? "h-14 text-lg" : ""}`}
-                    value={time}
-                    onChange={(e) => setTime(e.target.value)}
-                  />
-                  <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
-                </div>
+          <div className="space-y-4">
+            <DatePickerField 
+              date={date} 
+              onDateChange={(newDate) => newDate && setDate(newDate)} 
+              label="Date du versement"
+            />
+            
+            <div className="relative space-y-2">
+              <Label htmlFor="time">Heure</Label>
+              <div className="relative mt-1">
+                <Input
+                  id="time"
+                  type="time"
+                  step="1"
+                  className={`pl-10 border rounded-lg bg-gray-50 ${isMobile ? "h-16 text-lg" : ""}`}
+                  value={time}
+                  onChange={(e) => setTime(e.target.value)}
+                />
+                <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-6 w-6 text-gray-500" />
               </div>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Cette date sera utilisée comme date d'opération personnalisée (heure locale).
-            </p>
           </div>
           
           <div className="space-y-2">
@@ -153,13 +147,13 @@ export const StandaloneDepositForm: React.FC<StandaloneDepositFormProps> = ({
               placeholder="Entrez une description..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className={isMobile ? "h-14 text-lg" : ""}
+              className={isMobile ? "h-16 text-lg" : ""}
             />
           </div>
           
           <Button 
             type="submit" 
-            className={`w-full bg-green-600 hover:bg-green-700 ${isMobile ? "h-14 text-lg" : ""}`}
+            className={`w-full bg-green-600 hover:bg-green-700 ${isMobile ? "h-16 text-lg mt-4" : ""}`}
             disabled={isLoading}
           >
             {isLoading ? "En cours..." : "Effectuer le versement"}

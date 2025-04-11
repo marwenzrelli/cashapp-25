@@ -40,10 +40,10 @@ export const DatePickerField = ({ date, onDateChange, label = "Date" }: DatePick
             className={cn(
               "w-full justify-start text-left font-normal",
               !date && "text-muted-foreground",
-              isMobile && "h-14 text-base"
+              isMobile && "h-16 text-base py-4"
             )}
           >
-            <CalendarIcon className="mr-2 h-5 w-5" />
+            <CalendarIcon className={cn("mr-2", isMobile ? "h-6 w-6" : "h-5 w-5")} />
             {date ? format(date, "P") : <span>Choisir une date</span>}
           </Button>
         </PopoverTrigger>
@@ -66,13 +66,13 @@ export const DatePickerField = ({ date, onDateChange, label = "Date" }: DatePick
               }
               initialFocus
               classNames={{
-                day: isMobile ? "h-12 w-12 text-center p-0 focus-visible:bg-primary/20 hover:bg-primary/20 aria-selected:bg-primary text-base" : "h-10 w-10 text-center p-0 focus-visible:bg-primary/20 hover:bg-primary/20 aria-selected:bg-primary",
+                day: isMobile ? "h-14 w-14 text-center p-0 focus-visible:bg-primary/20 hover:bg-primary/20 aria-selected:bg-primary text-base" : "h-10 w-10 text-center p-0 focus-visible:bg-primary/20 hover:bg-primary/20 aria-selected:bg-primary",
                 caption: "px-4 py-2 flex items-center justify-between",
                 caption_label: isMobile ? "text-lg font-medium" : "text-base font-medium",
                 nav_button: "h-9 w-9 bg-transparent p-0 opacity-70 hover:opacity-100",
                 table: "w-full border-collapse space-y-2",
-                head_cell: isMobile ? "text-muted-foreground w-12 font-normal text-[1rem]" : "text-muted-foreground w-10 font-normal text-[0.9rem]",
-                cell: isMobile ? "text-center text-base p-0 relative h-12 w-12" : "text-center text-sm p-0 relative h-10 w-10",
+                head_cell: isMobile ? "text-muted-foreground w-14 font-normal text-[1rem]" : "text-muted-foreground w-10 font-normal text-[0.9rem]",
+                cell: isMobile ? "text-center text-base p-0 relative h-14 w-14" : "text-center text-sm p-0 relative h-10 w-10",
               }}
             />
           </div>
