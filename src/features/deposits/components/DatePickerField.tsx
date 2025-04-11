@@ -31,6 +31,7 @@ export const DatePickerField = ({
   const [open, setOpen] = useState(false);
   const [timeValue, setTimeValue] = useState(time || "");
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const timeInputRef = useRef<HTMLInputElement | null>(null);
   const isMobile = useIsMobile();
   
   // Synchronize internal state with external prop
@@ -50,52 +51,52 @@ export const DatePickerField = ({
     if (!onTimeChange) return;
     
     try {
-      // Create a hidden input for native time picker
-      const timeInput = document.createElement('input');
-      timeInput.type = 'time';
-      timeInput.step = '1'; // Enable seconds selection
-      timeInput.value = timeValue || '';
-      timeInput.style.position = 'fixed';
-      timeInput.style.top = '0';
-      timeInput.style.left = '0';
-      timeInput.style.opacity = '0';
-      timeInput.style.zIndex = '-1000';
-      document.body.appendChild(timeInput);
+      // Instead of creating a dynamic hidden input, let's use an existing hidden input
+      // that we can reference with a ref
+      if (!timeInputRef.current) {
+        const input = document.createElement('input');
+        input.type = 'time';
+        input.step = '1'; // Enable seconds selection
+        input.value = timeValue || '';
+        input.style.position = 'fixed';
+        input.style.top = '0';
+        input.style.left = '0';
+        input.style.opacity = '0';
+        input.style.zIndex = '-1';
+        
+        const handleTimeChange = (e: Event) => {
+          const newTime = (e.target as HTMLInputElement).value;
+          console.log('Time selected:', newTime);
+          setTimeValue(newTime);
+          onTimeChange(newTime);
+        };
+        
+        input.addEventListener('change', handleTimeChange);
+        document.body.appendChild(input);
+        timeInputRef.current = input;
+      } else {
+        // Update the value if the input already exists
+        timeInputRef.current.value = timeValue || '';
+      }
       
-      // Handle input events
-      const handleChange = (e: Event) => {
-        const newTime = (e.target as HTMLInputElement).value;
-        console.log('Time selected:', newTime);
-        setTimeValue(newTime);
-        onTimeChange(newTime);
-        cleanupInput();
-      };
-      
-      const cleanupInput = () => {
-        timeInput.removeEventListener('change', handleChange);
-        timeInput.removeEventListener('cancel', cleanupInput);
-        timeInput.removeEventListener('blur', handleBlur);
-        if (document.body.contains(timeInput)) {
-          document.body.removeChild(timeInput);
-        }
-      };
-      
-      const handleBlur = () => {
-        // Small delay to ensure the change event fires first
-        setTimeout(cleanupInput, 150);
-      };
-      
-      timeInput.addEventListener('change', handleChange);
-      timeInput.addEventListener('cancel', cleanupInput);
-      timeInput.addEventListener('blur', handleBlur);
-      
-      // Open the picker
-      timeInput.focus();
-      timeInput.click();
+      // Focus and click to open the time picker
+      if (timeInputRef.current) {
+        timeInputRef.current.focus();
+        timeInputRef.current.click();
+      }
     } catch (error) {
       console.error('Error showing time picker:', error);
     }
   };
+  
+  // Clean up the time input when component unmounts
+  useEffect(() => {
+    return () => {
+      if (timeInputRef.current && document.body.contains(timeInputRef.current)) {
+        document.body.removeChild(timeInputRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="space-y-2">
@@ -166,6 +167,19 @@ export const DatePickerField = ({
               <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
               {timeValue || "Sélectionner l'heure"}
             </Button>
+            
+            {/* Alternative direct input method for browsers that don't support time picker well */}
+            <Input 
+              type="time"
+              value={timeValue}
+              step="1"
+              className="hidden"
+              onChange={(e) => {
+                const newTime = e.target.value;
+                setTimeValue(newTime);
+                if (onTimeChange) onTimeChange(newTime);
+              }}
+            />
           </div>
         </div>
       )}
