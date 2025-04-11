@@ -62,6 +62,12 @@ export const DateTimeField = ({ date, setDate, time, setTime }: DateTimeFieldPro
                 onSelect={(d) => d && setDate(d)}
                 initialFocus
                 className="pointer-events-auto"
+                classNames={{
+                  day: isMobile ? "h-14 w-14 text-center p-0 focus-visible:bg-primary/20 hover:bg-primary/20 aria-selected:bg-primary text-base" : "",
+                  caption_label: isMobile ? "text-lg font-medium" : "",
+                  head_cell: isMobile ? "text-muted-foreground w-14 font-normal text-[1rem]" : "",
+                  cell: isMobile ? "text-center text-base p-0 relative h-14 w-14" : "",
+                }}
               />
             </PopoverContent>
           </Popover>
