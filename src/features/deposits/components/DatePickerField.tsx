@@ -33,7 +33,7 @@ export const DatePickerField = ({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const isMobile = useIsMobile();
   
-  // Synchroniser la valeur interne avec la prop externe
+  // Synchronize internal state with external prop
   useEffect(() => {
     if (time !== undefined) {
       setTimeValue(time);
@@ -49,37 +49,52 @@ export const DatePickerField = ({
   const handleTimeSelect = () => {
     if (!onTimeChange) return;
     
-    // Créer un input de type time masqué
-    const timeInput = document.createElement('input');
-    timeInput.type = 'time';
-    timeInput.step = '1'; // Activer la sélection des secondes
-    timeInput.value = timeValue || '';
-    timeInput.style.position = 'absolute';
-    timeInput.style.opacity = '0';
-    document.body.appendChild(timeInput);
-    
-    // Gérer les événements de l'input
-    timeInput.addEventListener('change', (e) => {
-      const newTime = (e.target as HTMLInputElement).value;
-      setTimeValue(newTime);
-      onTimeChange(newTime);
-      document.body.removeChild(timeInput);
-    });
-    
-    timeInput.addEventListener('cancel', () => {
-      document.body.removeChild(timeInput);
-    });
-    
-    timeInput.addEventListener('blur', () => {
-      setTimeout(() => {
+    try {
+      // Create a hidden input for native time picker
+      const timeInput = document.createElement('input');
+      timeInput.type = 'time';
+      timeInput.step = '1'; // Enable seconds selection
+      timeInput.value = timeValue || '';
+      timeInput.style.position = 'fixed';
+      timeInput.style.top = '0';
+      timeInput.style.left = '0';
+      timeInput.style.opacity = '0';
+      timeInput.style.zIndex = '-1000';
+      document.body.appendChild(timeInput);
+      
+      // Handle input events
+      const handleChange = (e: Event) => {
+        const newTime = (e.target as HTMLInputElement).value;
+        console.log('Time selected:', newTime);
+        setTimeValue(newTime);
+        onTimeChange(newTime);
+        cleanupInput();
+      };
+      
+      const cleanupInput = () => {
+        timeInput.removeEventListener('change', handleChange);
+        timeInput.removeEventListener('cancel', cleanupInput);
+        timeInput.removeEventListener('blur', handleBlur);
         if (document.body.contains(timeInput)) {
           document.body.removeChild(timeInput);
         }
-      }, 100);
-    });
-    
-    // Ouvrir le sélecteur
-    timeInput.click();
+      };
+      
+      const handleBlur = () => {
+        // Small delay to ensure the change event fires first
+        setTimeout(cleanupInput, 150);
+      };
+      
+      timeInput.addEventListener('change', handleChange);
+      timeInput.addEventListener('cancel', cleanupInput);
+      timeInput.addEventListener('blur', handleBlur);
+      
+      // Open the picker
+      timeInput.focus();
+      timeInput.click();
+    } catch (error) {
+      console.error('Error showing time picker:', error);
+    }
   };
 
   return (
@@ -138,6 +153,7 @@ export const DatePickerField = ({
           <div className="relative mt-1">
             <Button
               variant="outline"
+              type="button"
               className={cn(
                 "w-full pl-10 justify-start text-left font-normal",
                 isMobile && "h-16 text-base py-4"
