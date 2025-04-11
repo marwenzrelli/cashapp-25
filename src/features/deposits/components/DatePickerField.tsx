@@ -92,17 +92,34 @@ export const DatePickerField = ({
         <div className="mt-2">
           <Label>Heure</Label>
           <div className="relative mt-1">
-            <Input
-              type="time"
-              step="1" // Enable seconds selection
-              value={time}
-              onChange={(e) => onTimeChange(e.target.value)}
+            <Button
+              variant="outline"
               className={cn(
-                "pl-10",
-                isMobile && "h-16 text-base"
+                "w-full pl-10 justify-start text-left font-normal",
+                isMobile && "h-16 text-base py-4"
               )}
-            />
-            <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
+              onClick={(e) => {
+                e.preventDefault();
+                const timeInput = document.createElement('input');
+                timeInput.type = 'time';
+                timeInput.step = '1';
+                timeInput.value = time || '';
+                timeInput.style.position = 'absolute';
+                timeInput.style.opacity = '0';
+                document.body.appendChild(timeInput);
+                timeInput.addEventListener('change', (e) => {
+                  onTimeChange((e.target as HTMLInputElement).value);
+                  document.body.removeChild(timeInput);
+                });
+                timeInput.addEventListener('blur', () => {
+                  document.body.removeChild(timeInput);
+                });
+                timeInput.click();
+              }}
+            >
+              <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
+              {time || "Sélectionner l'heure"}
+            </Button>
           </div>
         </div>
       )}
