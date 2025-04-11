@@ -61,7 +61,7 @@ export const useDepositForm = ({
         description: description,
         created_at: new Date().toISOString(),
         status: "completed",
-        // Remove the 'updated_at' property as it doesn't exist in the Deposit type
+        created_by: null // Add the created_by property that was missing
       };
 
       console.log("Submitting deposit:", newDeposit);
