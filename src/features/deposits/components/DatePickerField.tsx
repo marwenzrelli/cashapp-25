@@ -9,7 +9,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Input } from "@/components/ui/input";
 
@@ -29,13 +29,57 @@ export const DatePickerField = ({
   onTimeChange
 }: DatePickerFieldProps) => {
   const [open, setOpen] = useState(false);
+  const [timeValue, setTimeValue] = useState(time || "");
   const buttonRef = useRef<HTMLButtonElement>(null);
   const isMobile = useIsMobile();
+  
+  // Synchroniser la valeur interne avec la prop externe
+  useEffect(() => {
+    if (time !== undefined) {
+      setTimeValue(time);
+    }
+  }, [time]);
   
   const handleDateSelect = (newDate: Date | undefined) => {
     onDateChange(newDate);
     // Close the popover immediately without animation
     setOpen(false);
+  };
+
+  const handleTimeSelect = () => {
+    if (!onTimeChange) return;
+    
+    // Créer un input de type time masqué
+    const timeInput = document.createElement('input');
+    timeInput.type = 'time';
+    timeInput.step = '1'; // Activer la sélection des secondes
+    timeInput.value = timeValue || '';
+    timeInput.style.position = 'absolute';
+    timeInput.style.opacity = '0';
+    document.body.appendChild(timeInput);
+    
+    // Gérer les événements de l'input
+    timeInput.addEventListener('change', (e) => {
+      const newTime = (e.target as HTMLInputElement).value;
+      setTimeValue(newTime);
+      onTimeChange(newTime);
+      document.body.removeChild(timeInput);
+    });
+    
+    timeInput.addEventListener('cancel', () => {
+      document.body.removeChild(timeInput);
+    });
+    
+    timeInput.addEventListener('blur', () => {
+      setTimeout(() => {
+        if (document.body.contains(timeInput)) {
+          document.body.removeChild(timeInput);
+        }
+      }, 100);
+    });
+    
+    // Ouvrir le sélecteur
+    timeInput.click();
   };
 
   return (
@@ -100,25 +144,11 @@ export const DatePickerField = ({
               )}
               onClick={(e) => {
                 e.preventDefault();
-                const timeInput = document.createElement('input');
-                timeInput.type = 'time';
-                timeInput.step = '1';
-                timeInput.value = time || '';
-                timeInput.style.position = 'absolute';
-                timeInput.style.opacity = '0';
-                document.body.appendChild(timeInput);
-                timeInput.addEventListener('change', (e) => {
-                  onTimeChange((e.target as HTMLInputElement).value);
-                  document.body.removeChild(timeInput);
-                });
-                timeInput.addEventListener('blur', () => {
-                  document.body.removeChild(timeInput);
-                });
-                timeInput.click();
+                handleTimeSelect();
               }}
             >
               <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
-              {time || "Sélectionner l'heure"}
+              {timeValue || "Sélectionner l'heure"}
             </Button>
           </div>
         </div>
