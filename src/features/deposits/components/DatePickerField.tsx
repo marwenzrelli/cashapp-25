@@ -109,7 +109,7 @@ export const DatePickerField = ({
             className={cn(
               "w-full justify-start text-left font-normal",
               !date && "text-muted-foreground",
-              isMobile && "h-16 text-base py-4"
+              isMobile && "h-14 text-base py-4"
             )}
           >
             <CalendarIcon className={cn("mr-2", isMobile ? "h-6 w-6" : "h-5 w-5")} />
@@ -157,7 +157,7 @@ export const DatePickerField = ({
               type="button"
               className={cn(
                 "w-full pl-10 justify-start text-left font-normal",
-                isMobile && "h-16 text-base py-4"
+                isMobile && "h-14 text-base py-4"
               )}
               onClick={(e) => {
                 e.preventDefault();

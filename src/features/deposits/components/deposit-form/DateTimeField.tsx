@@ -64,7 +64,7 @@ export const DateTimeField = ({ date, setDate, time, setTime }: DateTimeFieldPro
                 variant="outline" 
                 className={cn(
                   "w-full justify-start text-left font-normal relative pl-10",
-                  isMobile && "h-16 text-lg"
+                  isMobile && "h-14 text-lg"
                 )}
               >
                 <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
@@ -92,7 +92,7 @@ export const DateTimeField = ({ date, setDate, time, setTime }: DateTimeFieldPro
             onChange={(e) => setTime(e.target.value)}
             className={cn(
               "pl-10",
-              isMobile && "h-16 text-lg"
+              isMobile && "h-14 text-lg"
             )}
           />
           <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
