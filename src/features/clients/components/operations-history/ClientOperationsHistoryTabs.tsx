@@ -1,3 +1,4 @@
+
 import React from "react";
 import { ArrowUpCircle, ArrowDownCircle, RefreshCcw, List } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -25,52 +26,50 @@ export const ClientOperationsHistoryTabs = ({
   // Detect if on mobile
   const isMobile = useIsMobile();
   return <Tabs defaultValue="all" className="w-full">
-      {/* Separate card for tabs on mobile */}
-      <Card className="mb-4 shadow-sm my-0 py-0 px-0 mx-0">
-        <CardContent className="p-1 sm:p-2 px-0 py-0 mx-0">
-          <div className="flex flex-wrap items-center py-0 px-0">
-            <TabsList className={`${isMobile ? 'grid grid-cols-2 gap-2 w-full' : 'flex flex-wrap'} gap-2`}>
-              <TabsTrigger value="all" className="flex items-center justify-center gap-2 py-3">
-                <List className="h-4 w-4" />
-                {isMobile ? 'Toutes' : 'Toutes les opérations'}
-                <Badge variant="secondary" className="ml-1">{filteredOperations.length}</Badge>
-              </TabsTrigger>
-              <TabsTrigger value="deposits" className="flex items-center justify-center gap-2 py-3">
-                <ArrowUpCircle className="h-4 w-4" />
-                Versements
-                <Badge variant="secondary" className="ml-1">{depositsCount}</Badge>
-              </TabsTrigger>
-              <TabsTrigger value="withdrawals" className="flex items-center justify-center gap-2 py-3">
-                <ArrowDownCircle className="h-4 w-4" />
-                Retraits
-                <Badge variant="secondary" className="ml-1">{withdrawalsCount}</Badge>
-              </TabsTrigger>
-              <TabsTrigger value="transfers" className="flex items-center justify-center gap-2 py-3">
-                <RefreshCcw className="h-4 w-4" />
-                Virements
-                <Badge variant="secondary" className="ml-1">{transfersCount}</Badge>
-              </TabsTrigger>
-            </TabsList>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Separate card for content */}
+      {/* Card for content */}
       <Card className="shadow-sm">
         <CardContent className="p-0 sm:p-0">
-          <TabsContent value="all" className="w-full">
+          {/* Separate card for tabs moved here */}
+          <div className="border-b">
+            <div className="flex flex-wrap items-center py-0 px-0">
+              <TabsList className={`${isMobile ? 'grid grid-cols-2 gap-2 w-full' : 'flex flex-wrap'} gap-2 bg-transparent py-1 px-1`}>
+                <TabsTrigger value="all" className="flex items-center justify-center gap-2 py-2 text-xs">
+                  <List className="h-3 w-3" />
+                  {isMobile ? 'Tout' : 'Toutes les opérations'}
+                  <Badge variant="secondary" className="ml-1">{filteredOperations.length}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="deposits" className="flex items-center justify-center gap-2 py-2 text-xs">
+                  <ArrowUpCircle className="h-3 w-3" />
+                  Versements
+                  <Badge variant="secondary" className="ml-1">{depositsCount}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="withdrawals" className="flex items-center justify-center gap-2 py-2 text-xs">
+                  <ArrowDownCircle className="h-3 w-3" />
+                  Retraits
+                  <Badge variant="secondary" className="ml-1">{withdrawalsCount}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="transfers" className="flex items-center justify-center gap-2 py-2 text-xs">
+                  <RefreshCcw className="h-3 w-3" />
+                  Virements
+                  <Badge variant="secondary" className="ml-1">{transfersCount}</Badge>
+                </TabsTrigger>
+              </TabsList>
+            </div>
+          </div>
+
+          <TabsContent value="all" className="w-full m-0">
             <AllOperationsTab operations={filteredOperations} currency={currency} />
           </TabsContent>
 
-          <TabsContent value="deposits" className="w-full">
+          <TabsContent value="deposits" className="w-full m-0">
             <DepositOperationsTab operations={filteredOperations} currency={currency} />
           </TabsContent>
 
-          <TabsContent value="withdrawals" className="w-full">
+          <TabsContent value="withdrawals" className="w-full m-0">
             <WithdrawalOperationsTab operations={filteredOperations} currency={currency} />
           </TabsContent>
 
-          <TabsContent value="transfers" className="w-full">
+          <TabsContent value="transfers" className="w-full m-0">
             <TransferOperationsTab operations={filteredOperations} currency={currency} />
           </TabsContent>
         </CardContent>
