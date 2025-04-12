@@ -40,9 +40,10 @@ export const formatDateTime = (dateString: string) => {
  * Converts an ISO date string to separate date and time components
  * for input fields, respecting the local timezone
  * @param dateString - ISO date string to format
+ * @param isMobile - Whether to format for mobile (no seconds)
  * @returns Object with separated date and time strings
  */
-export const formatISODateTime = (dateString: string) => {
+export const formatISODateTime = (dateString: string, isMobile = false) => {
   if (!dateString) return { date: '', time: '' };
   
   try {
@@ -61,16 +62,26 @@ export const formatISODateTime = (dateString: string) => {
     const day = String(date.getDate()).padStart(2, '0');
     const formattedDate = `${year}-${month}-${day}`;
     
-    // Format time as HH:MM:SS for input type="time" using local time
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
-    const formattedTime = `${hours}:${minutes}:${seconds}`;
+    // Format time for desktop or mobile
+    let formattedTime;
+    if (isMobile) {
+      // For mobile: HH:MM 
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      formattedTime = `${hours}:${minutes}`;
+    } else {
+      // For desktop: HH:MM:SS
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const seconds = String(date.getSeconds()).padStart(2, '0');
+      formattedTime = `${hours}:${minutes}:${seconds}`;
+    }
     
     console.log("Formatted to local time:", {
       original: dateString,
       formatted: { date: formattedDate, time: formattedTime },
-      localDate: date.toString()
+      localDate: date.toString(),
+      isMobile
     });
     
     return { date: formattedDate, time: formattedTime };
@@ -83,7 +94,7 @@ export const formatISODateTime = (dateString: string) => {
 /**
  * Creates an ISO string from date and time inputs, properly handling timezone
  * @param dateString - Date string in YYYY-MM-DD format
- * @param timeString - Time string in HH:MM:SS format
+ * @param timeString - Time string in HH:MM or HH:MM:SS format
  * @returns ISO date string
  */
 export const createISOString = (dateString: string, timeString: string) => {
@@ -93,17 +104,21 @@ export const createISOString = (dateString: string, timeString: string) => {
     // Parse date components
     const [year, month, day] = dateString.split('-').map(Number);
     
-    // Parse time components (using defaults if not provided)
-    const [hours, minutes, seconds] = (timeString || '00:00:00').split(':').map(Number);
+    // Parse time components (handle both HH:MM and HH:MM:SS formats)
+    const timeParts = (timeString || '00:00:00').split(':').map(Number);
+    const hours = timeParts[0] || 0;
+    const minutes = timeParts[1] || 0;
+    const seconds = timeParts.length > 2 ? timeParts[2] : 0;
     
     // Create a date in local time zone
     const localDate = new Date();
     localDate.setFullYear(year, month - 1, day);
-    localDate.setHours(hours, minutes, seconds || 0);
+    localDate.setHours(hours, minutes, seconds);
     
     console.log("Created date from local inputs:", {
       dateInput: dateString,
       timeInput: timeString,
+      timeParts: { hours, minutes, seconds },
       localDate: localDate.toString(),
       resultingISO: localDate.toISOString()
     });

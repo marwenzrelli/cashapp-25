@@ -18,6 +18,14 @@ export const EditDateTimeSection: React.FC<EditDateTimeSectionProps> = ({
 }) => {
   const isMobile = useIsMobile();
   
+  // Format time for mobile display
+  let displayTime = editForm.time || "";
+  if (isMobile && displayTime.split(':').length > 2) {
+    // Strip seconds on mobile
+    const [hours, minutes] = displayTime.split(':');
+    displayTime = `${hours}:${minutes}`;
+  }
+  
   return (
     <div className="space-y-2">
       <Label htmlFor="depositDate" className="text-base font-medium">Date et heure d'opération</Label>
@@ -39,13 +47,14 @@ export const EditDateTimeSection: React.FC<EditDateTimeSectionProps> = ({
           <Input
             id="depositTime"
             type="time"
-            step="1"
+            step={isMobile ? "60" : "1"} // Minutes on mobile, seconds on desktop
             className={cn(
               "pl-10 border rounded-lg bg-gray-50",
               isMobile && "h-14 text-base"
             )}
-            value={editForm.time || ""}
+            value={displayTime}
             onChange={(e) => onEditFormChange('time', e.target.value)}
+            aria-label={`Heure ${isMobile ? 'format HH:MM' : 'format HH:MM:SS'}`}
           />
           <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
         </div>

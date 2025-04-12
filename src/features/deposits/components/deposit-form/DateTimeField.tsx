@@ -23,34 +23,16 @@ interface DateTimeFieldProps {
 
 export const DateTimeField = ({ date, setDate, time, setTime }: DateTimeFieldProps) => {
   const isMobile = useIsMobile();
-  
-  // Format date as YYYY-MM-DD in local time
-  const formatDateValue = (date: Date): string => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
 
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.value) {
-      try {
-        // Create a new date object based on the selected date but keep current time
-        const [year, month, day] = e.target.value.split('-').map(Number);
-        const newDate = new Date(date);
-        newDate.setFullYear(year, month - 1, day);
-        
-        console.log("Date change:", {
-          input: e.target.value,
-          newDate: newDate.toString()
-        });
-        
-        setDate(newDate);
-      } catch (error) {
-        console.error("Error parsing date input:", error);
-      }
-    }
-  };
+  // Format time input based on device type
+  let displayTime = time;
+  
+  // Ensure time format is appropriate for the device
+  if (time && isMobile && time.split(':').length > 2) {
+    // If on mobile and we have seconds, strip them
+    const [hours, minutes] = time.split(':');
+    displayTime = `${hours}:${minutes}`;
+  }
 
   return (
     <div className="space-y-2">
@@ -87,13 +69,14 @@ export const DateTimeField = ({ date, setDate, time, setTime }: DateTimeFieldPro
           <Input
             id="time"
             type="time"
-            step="1" // Enable seconds selection
-            value={time}
+            step={isMobile ? "60" : "1"} // Minutes on mobile, seconds on desktop
+            value={displayTime}
             onChange={(e) => setTime(e.target.value)}
             className={cn(
               "pl-10",
               isMobile && "h-14 text-lg"
             )}
+            aria-label={`Heure ${isMobile ? 'format HH:MM' : 'format HH:MM:SS'}`}
           />
           <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
         </div>
