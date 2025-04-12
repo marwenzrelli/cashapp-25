@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Operation } from "@/features/operations/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -53,17 +54,17 @@ export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = (
     }
   }, [operations, filteredOperations, clientId, isPepsiMen]);
   return <Card className="shadow-sm w-full text-center text-gray-950 px-0 py-0 my-0">
-      <CardHeader className="pb-3 px-[90px] py-0 text-center">
+      <CardHeader className="pb-3 px-4 sm:px-6 py-4 text-left border-b">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-          <CardTitle className="text-xl">Historique des opérations</CardTitle>
+          <CardTitle className="text-xl font-bold">Historique des opérations</CardTitle>
           <Button variant="outline" size="sm" onClick={refreshOperations} className="group">
             <RefreshCw className="h-4 w-4 mr-2 group-hover:animate-spin" strokeWidth={2} />
             Actualiser
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="px-0 sm:px-6">
-        <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6 px-4 sm:px-0">
+      <CardContent className="px-0 sm:px-0 w-full max-w-full">
+        <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6 px-4 sm:px-6">
           <div className="relative w-full">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Rechercher dans l'historique..." className="pl-9" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
