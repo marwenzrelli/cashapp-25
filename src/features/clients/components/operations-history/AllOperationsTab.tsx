@@ -33,10 +33,12 @@ export const AllOperationsTab = ({
 
       {/* Mobile version - only shown on mobile */}
       {isMobile && (
-        <OperationsMobileList 
-          operations={operations}
-          currency={currency}
-        />
+        <div className="py-1 px-2">
+          <OperationsMobileList 
+            operations={operations}
+            currency={currency}
+          />
+        </div>
       )}
     </>
   );

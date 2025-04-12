@@ -31,36 +31,37 @@ export const ClientOperationsHistoryTabs = ({
   
   return (
     <Tabs defaultValue="all" className="w-full">
-      {/* Navigation des onglets dans un espace séparé */}
-      <div className="mt-2 px-2 sm:px-4 py-2 bg-muted/20 rounded-md">
-        <TabsList className={`${isMobile ? 'grid grid-cols-2 gap-2 w-full' : 'flex flex-wrap'} gap-2 bg-transparent`}>
-          <TabsTrigger value="all" className="flex items-center justify-center gap-2 py-1.5 text-xs">
+      {/* Navigation des onglets dans un espace séparé avec une meilleure utilisation de l'espace */}
+      <div className="mt-2 mb-3 px-2 py-2 bg-muted/20 rounded-md">
+        <TabsList className="grid grid-cols-4 w-full bg-transparent">
+          <TabsTrigger value="all" className="flex items-center justify-center gap-1 py-1.5 text-xs">
             <List className="h-3 w-3" />
-            {isMobile ? 'Tout' : 'Toutes les opérations'}
-            <Badge variant="secondary" className="ml-1">{filteredOperations.length}</Badge>
+            <span>Tout</span>
+            <Badge variant="secondary" className="ml-1 px-1.5 py-0 min-w-5 h-5 flex items-center justify-center">{filteredOperations.length}</Badge>
           </TabsTrigger>
-          <TabsTrigger value="deposits" className="flex items-center justify-center gap-2 py-1.5 text-xs">
+          <TabsTrigger value="deposits" className="flex items-center justify-center gap-1 py-1.5 text-xs">
             <ArrowUpCircle className="h-3 w-3" />
-            Versements
-            <Badge variant="secondary" className="ml-1">{depositsCount}</Badge>
+            <span className={isMobile ? "hidden" : ""}>Versements</span>
+            <span className={isMobile ? "" : "hidden"}>Vers.</span>
+            <Badge variant="secondary" className="ml-1 px-1.5 py-0 min-w-5 h-5 flex items-center justify-center">{depositsCount}</Badge>
           </TabsTrigger>
-          <TabsTrigger value="withdrawals" className="flex items-center justify-center gap-2 py-1.5 text-xs">
+          <TabsTrigger value="withdrawals" className="flex items-center justify-center gap-1 py-1.5 text-xs">
             <ArrowDownCircle className="h-3 w-3" />
-            Retraits
-            <Badge variant="secondary" className="ml-1">{withdrawalsCount}</Badge>
+            <span className={isMobile ? "hidden" : ""}>Retraits</span>
+            <span className={isMobile ? "" : "hidden"}>Ret.</span>
+            <Badge variant="secondary" className="ml-1 px-1.5 py-0 min-w-5 h-5 flex items-center justify-center">{withdrawalsCount}</Badge>
           </TabsTrigger>
-          <TabsTrigger value="transfers" className="flex items-center justify-center gap-2 py-1.5 text-xs">
+          <TabsTrigger value="transfers" className="flex items-center justify-center gap-1 py-1.5 text-xs">
             <RefreshCcw className="h-3 w-3" />
-            Virements
-            <Badge variant="secondary" className="ml-1">{transfersCount}</Badge>
+            <span className={isMobile ? "hidden" : ""}>Virements</span>
+            <span className={isMobile ? "" : "hidden"}>Vir.</span>
+            <Badge variant="secondary" className="ml-1 px-1.5 py-0 min-w-5 h-5 flex items-center justify-center">{transfersCount}</Badge>
           </TabsTrigger>
         </TabsList>
       </div>
 
-      <Separator className="my-2" />
-
       {/* Sections de contenu */}
-      <Card className="shadow-sm border-0 rounded-none">
+      <Card className="shadow-sm border border-border/50 rounded-md">
         <CardContent className="p-0 sm:p-0">
           <TabsContent value="all" className="w-full m-0">
             <AllOperationsTab operations={filteredOperations} currency={currency} />
