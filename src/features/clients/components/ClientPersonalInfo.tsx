@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Client } from "../types";
 import { ClientQRCode } from "./ClientQRCode";
@@ -108,19 +107,19 @@ export const ClientPersonalInfo = ({
   return (
     <Card className="overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300">
       <CardHeader className="bg-gradient-to-r from-primary/10 to-transparent pb-4">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 w-full">
           <CardTitle className="flex items-center text-xl">
             Informations personnelles
             {clientId && <ClientIdBadge clientId={clientId} />}
           </CardTitle>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full md:w-auto justify-end">
             <Button 
               variant="outline" 
               size="sm" 
               onClick={handleRefreshBalance} 
               disabled={isRefreshing || refreshDisabled}
-              className="px-[20px] bg-white/70 dark:bg-gray-800/70"
+              className="px-[20px] bg-white/70 dark:bg-gray-800/70 w-full md:w-auto"
             >
               <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
               {isRefreshing ? 'Actualisation...' : 'Actualiser le solde'}
@@ -139,7 +138,7 @@ export const ClientPersonalInfo = ({
       </CardHeader>
       <CardContent className="p-5">
         <div className="flex flex-col md:flex-row gap-6 justify-between">
-          <div className="w-full md:w-3/5">
+          <div className="w-full md:w-3/4">
             <PersonalInfoFields 
               client={client} 
               formatAmount={formatAmount} 
@@ -149,7 +148,7 @@ export const ClientPersonalInfo = ({
           </div>
           
           {client && client.id && (
-            <div className="flex flex-col items-center space-y-4 w-full md:w-2/5">
+            <div className="flex flex-col items-center space-y-4 w-full md:w-1/4">
               <div className="flex justify-center w-full bg-white dark:bg-gray-800 p-4 rounded-xl shadow-inner" ref={qrCodeRef}>
                 <ClientQRCode 
                   clientId={typeof client.id === 'string' ? parseInt(client.id, 10) : client.id} 

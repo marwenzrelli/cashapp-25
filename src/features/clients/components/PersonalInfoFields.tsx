@@ -32,12 +32,12 @@ export const PersonalInfoFields = ({
   return (
     <div className="w-full space-y-6 rounded-lg">
       {/* Client primary info with gradient card */}
-      <div className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl p-5 shadow-sm">
-        <div className="flex items-center gap-4 mb-4">
+      <div className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl p-5 shadow-sm w-full">
+        <div className="flex items-center gap-4 mb-4 w-full">
           <div className="bg-primary/10 p-3 rounded-full">
             <User className="h-6 w-6 text-primary" />
           </div>
-          <div>
+          <div className="w-full">
             <h3 className="text-xl font-semibold tracking-tight">
               {client.prenom} {client.nom}
             </h3>
@@ -48,20 +48,20 @@ export const PersonalInfoFields = ({
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="flex items-center gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+          <div className="flex items-center gap-3 w-full">
             <Phone className="h-5 w-5 text-primary" />
-            <div>
+            <div className="w-full">
               <p className="text-xs text-muted-foreground">Téléphone</p>
-              <p className="font-medium">{client.telephone}</p>
+              <p className="font-medium w-full">{client.telephone}</p>
             </div>
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 w-full">
             <Mail className="h-5 w-5 text-primary" />
-            <div>
+            <div className="w-full">
               <p className="text-xs text-muted-foreground">Email</p>
-              <p className="font-medium overflow-hidden text-ellipsis">
+              <p className="font-medium w-full overflow-hidden text-ellipsis">
                 {client.email || "Non renseigné"}
               </p>
             </div>
@@ -70,13 +70,13 @@ export const PersonalInfoFields = ({
       </div>
       
       {/* Secondary info cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border shadow-sm hover:shadow-md transition-shadow duration-300">
-          <div className="flex items-center gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border shadow-sm hover:shadow-md transition-shadow duration-300 w-full">
+          <div className="flex items-center gap-3 w-full">
             <div className="bg-primary/10 p-2 rounded-full">
               <Calendar className="h-5 w-5 text-primary" />
             </div>
-            <div>
+            <div className="w-full">
               <p className="text-xs text-muted-foreground">Date de création</p>
               <p className="font-medium">
                 {format(new Date(client.date_creation || ""), "dd/MM/yyyy")}
@@ -86,15 +86,15 @@ export const PersonalInfoFields = ({
         </div>
         
         {showBalance && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border shadow-sm hover:shadow-md transition-shadow duration-300">
-            <div className="flex items-center gap-3">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border shadow-sm hover:shadow-md transition-shadow duration-300 w-full">
+            <div className="flex items-center gap-3 w-full">
               <div className="bg-primary/10 p-2 rounded-full">
                 <Wallet className="h-5 w-5 text-primary" />
               </div>
-              <div>
+              <div className="w-full">
                 <p className="text-xs text-muted-foreground">Solde</p>
                 <span className={cn(
-                  "font-medium px-3 py-1.5 mt-1 inline-block border rounded-md", 
+                  "font-medium px-3 py-1.5 mt-1 inline-block border rounded-md w-full", 
                   effectiveBalance >= 0 
                     ? "text-green-600 dark:text-green-400 border-green-200 dark:border-green-900/30 bg-green-50 dark:bg-green-900/20" 
                     : "text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/30 bg-red-50 dark:bg-red-900/20"
