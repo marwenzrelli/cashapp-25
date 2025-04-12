@@ -21,8 +21,14 @@ export const useUpdateDeposit = (
       
       if (updates.date) {
         // Use the provided date and time, ensuring time has a default value if not provided
-        operation_date = createISOString(updates.date, updates.time || '00:00:00');
-        console.log("Using provided date for operation_date:", operation_date);
+        // Always append seconds if they're missing from time input
+        const timeValue = updates.time || '00:00:00';
+        operation_date = createISOString(updates.date, timeValue);
+        console.log("Using provided date/time for operation_date:", {
+          date: updates.date,
+          time: timeValue,
+          result: operation_date
+        });
       } else {
         // Fallback to current date-time if no date is provided
         operation_date = new Date().toISOString();

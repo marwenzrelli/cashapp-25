@@ -24,12 +24,21 @@ interface DateTimeFieldProps {
 export const DateTimeField = ({ date, setDate, time, setTime }: DateTimeFieldProps) => {
   const isMobile = useIsMobile();
 
-  // Format time input based on device type
+  // Format time for display based on device
+  const handleTimeChange = (newTimeValue: string) => {
+    // On mobile, if user enters HH:MM and we need HH:MM:SS for backend
+    // automatically append :00 seconds when mobile format is detected
+    if (isMobile && newTimeValue.split(':').length === 2) {
+      setTime(`${newTimeValue}:00`);
+    } else {
+      setTime(newTimeValue);
+    }
+  };
+
+  // Format time input based on device type (for display purposes)
   let displayTime = time;
-  
-  // Ensure time format is appropriate for the device
   if (time && isMobile && time.split(':').length > 2) {
-    // If on mobile and we have seconds, strip them
+    // If on mobile and we have seconds, strip them for display
     const [hours, minutes] = time.split(':');
     displayTime = `${hours}:${minutes}`;
   }
@@ -71,7 +80,7 @@ export const DateTimeField = ({ date, setDate, time, setTime }: DateTimeFieldPro
             type="time"
             step={isMobile ? "60" : "1"} // Minutes on mobile, seconds on desktop
             value={displayTime}
-            onChange={(e) => setTime(e.target.value)}
+            onChange={(e) => handleTimeChange(e.target.value)}
             className={cn(
               "pl-10",
               isMobile && "h-14 text-lg"

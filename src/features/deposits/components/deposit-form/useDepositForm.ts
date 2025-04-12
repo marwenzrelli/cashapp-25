@@ -4,6 +4,8 @@ import { format } from "date-fns";
 import { Deposit } from "@/features/deposits/types";
 import { toast } from "sonner";
 import { ExtendedClient } from "@/features/withdrawals/hooks/form/withdrawalFormTypes";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { createISOString } from "../../hooks/utils/dateUtils";
 
 interface UseDepositFormProps {
   clients: ExtendedClient[];
@@ -16,9 +18,10 @@ export const useDepositForm = ({ clients, onConfirm, refreshClientBalance, onSuc
   const [selectedClient, setSelectedClient] = useState("");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState<Date>(new Date());
-  const [time, setTime] = useState(format(new Date(), "HH:mm:ss")); // Include seconds
+  const [time, setTime] = useState(format(new Date(), "HH:mm:ss")); // Always include seconds in the state
   const [description, setDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const isMobile = useIsMobile();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,18 +38,31 @@ export const useDepositForm = ({ clients, onConfirm, refreshClientBalance, onSuc
         return;
       }
 
-      // Split time string to get hours, minutes, and seconds
-      const [hours, minutes, seconds] = time.split(':').map(Number);
-      const depositDateTime = new Date(date);
-      depositDateTime.setHours(hours, minutes, seconds || 0); // Set seconds if available
+      // Create ISO string from date and time, ensuring proper format
+      const operationDate = createISOString(
+        format(date, "yyyy-MM-dd"), 
+        time
+      );
+
+      if (!operationDate) {
+        toast.error("Format de date ou d'heure invalide");
+        return;
+      }
 
       const newDeposit: Partial<Deposit> = {
         client_name: `${client.prenom} ${client.nom}`,
         client_id: client.id, // Include the client ID in the deposit
         amount: parseFloat(amount),
-        date: format(depositDateTime, "yyyy-MM-dd'T'HH:mm:ss"), // Include seconds
+        date: operationDate,
         description
       };
+
+      console.log("Envoi du dépôt avec date:", {
+        dateObject: date,
+        timeString: time,
+        resultIso: operationDate,
+        isMobile
+      });
 
       // Effectuer le dépôt
       const result = await onConfirm(newDeposit as Deposit);

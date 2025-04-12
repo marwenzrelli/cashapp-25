@@ -47,6 +47,28 @@ export const DatePickerField = ({
     setOpen(false);
   };
 
+  const handleTimeChange = (newTime: string) => {
+    if (!onTimeChange) return;
+    
+    // On mobile, if user enters HH:MM and we need HH:MM:SS for backend
+    // automatically append :00 seconds when mobile format is detected
+    if (isMobile && newTime.split(':').length === 2) {
+      onTimeChange(`${newTime}:00`);
+      setTimeValue(newTime); // Keep display time without seconds
+    } else {
+      onTimeChange(newTime);
+      setTimeValue(newTime);
+    }
+  };
+
+  // Format time for display
+  let displayTime = timeValue;
+  if (timeValue && isMobile && timeValue.split(':').length > 2) {
+    // If on mobile and we have seconds, strip them for display
+    const [hours, minutes] = timeValue.split(':');
+    displayTime = `${hours}:${minutes}`;
+  }
+
   const handleTimeSelect = () => {
     if (!onTimeChange) return;
     
@@ -56,27 +78,26 @@ export const DatePickerField = ({
       if (!timeInputRef.current) {
         const input = document.createElement('input');
         input.type = 'time';
-        input.step = '1'; // Enable seconds selection
-        input.value = timeValue || '';
+        input.step = isMobile ? '60' : '1'; // Enable seconds selection on desktop only
+        input.value = displayTime || '';
         input.style.position = 'fixed';
         input.style.top = '0';
         input.style.left = '0';
         input.style.opacity = '0';
         input.style.zIndex = '-1';
         
-        const handleTimeChange = (e: Event) => {
-          const newTime = (e.target as HTMLInputElement).value;
-          console.log('Time selected:', newTime);
-          setTimeValue(newTime);
-          onTimeChange(newTime);
+        const handleTimeInputChange = (e: Event) => {
+          const newTimeValue = (e.target as HTMLInputElement).value;
+          console.log('Time selected:', newTimeValue);
+          handleTimeChange(newTimeValue);
         };
         
-        input.addEventListener('change', handleTimeChange);
+        input.addEventListener('change', handleTimeInputChange);
         document.body.appendChild(input);
         timeInputRef.current = input;
       } else {
         // Update the value if the input already exists
-        timeInputRef.current.value = timeValue || '';
+        timeInputRef.current.value = displayTime || '';
       }
       
       // Focus and click to open the time picker
@@ -152,6 +173,7 @@ export const DatePickerField = ({
         <div className="mt-2">
           <Label>Heure</Label>
           <div className="relative mt-1">
+            {/* Pour la sélection de l'heure via un bouton */}
             <Button
               variant="outline"
               type="button"
@@ -165,19 +187,17 @@ export const DatePickerField = ({
               }}
             >
               <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
-              {timeValue || "Sélectionner l'heure"}
+              {displayTime || "Sélectionner l'heure"}
             </Button>
             
             {/* Alternative direct input method for browsers that don't support time picker well */}
             <Input 
               type="time"
-              value={timeValue}
-              step="1"
+              value={displayTime}
+              step={isMobile ? "60" : "1"} // Minutes for mobile, seconds for desktop
               className="hidden"
               onChange={(e) => {
-                const newTime = e.target.value;
-                setTimeValue(newTime);
-                if (onTimeChange) onTimeChange(newTime);
+                handleTimeChange(e.target.value);
               }}
             />
           </div>

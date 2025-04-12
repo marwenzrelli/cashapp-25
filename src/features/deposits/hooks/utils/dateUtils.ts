@@ -62,20 +62,11 @@ export const formatISODateTime = (dateString: string, isMobile = false) => {
     const day = String(date.getDate()).padStart(2, '0');
     const formattedDate = `${year}-${month}-${day}`;
     
-    // Format time for desktop or mobile
-    let formattedTime;
-    if (isMobile) {
-      // For mobile: HH:MM 
-      const hours = String(date.getHours()).padStart(2, '0');
-      const minutes = String(date.getMinutes()).padStart(2, '0');
-      formattedTime = `${hours}:${minutes}`;
-    } else {
-      // For desktop: HH:MM:SS
-      const hours = String(date.getHours()).padStart(2, '0');
-      const minutes = String(date.getMinutes()).padStart(2, '0');
-      const seconds = String(date.getSeconds()).padStart(2, '0');
-      formattedTime = `${hours}:${minutes}:${seconds}`;
-    }
+    // Always create HH:MM:SS format for internal state 
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    const formattedTime = `${hours}:${minutes}:${seconds}`;
     
     console.log("Formatted to local time:", {
       original: dateString,
@@ -104,16 +95,18 @@ export const createISOString = (dateString: string, timeString: string) => {
     // Parse date components
     const [year, month, day] = dateString.split('-').map(Number);
     
-    // Parse time components (handle both HH:MM and HH:MM:SS formats)
-    const timeParts = (timeString || '00:00:00').split(':').map(Number);
-    const hours = timeParts[0] || 0;
-    const minutes = timeParts[1] || 0;
-    const seconds = timeParts.length > 2 ? timeParts[2] : 0;
+    // Handle both HH:MM and HH:MM:SS formats
+    let hours = 0, minutes = 0, seconds = 0;
+    
+    const timeParts = timeString.split(':');
+    if (timeParts.length >= 1) hours = parseInt(timeParts[0]) || 0;
+    if (timeParts.length >= 2) minutes = parseInt(timeParts[1]) || 0;
+    if (timeParts.length >= 3) seconds = parseInt(timeParts[2]) || 0;
     
     // Create a date in local time zone
     const localDate = new Date();
     localDate.setFullYear(year, month - 1, day);
-    localDate.setHours(hours, minutes, seconds);
+    localDate.setHours(hours, minutes, seconds, 0);
     
     console.log("Created date from local inputs:", {
       dateInput: dateString,

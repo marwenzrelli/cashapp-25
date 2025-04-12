@@ -18,10 +18,22 @@ export const EditDateTimeSection: React.FC<EditDateTimeSectionProps> = ({
 }) => {
   const isMobile = useIsMobile();
   
-  // Format time for mobile display
+  // Format time for display based on device type
   let displayTime = editForm.time || "";
+  
+  // Handle time change with special handling for mobile
+  const handleTimeChange = (value: string) => {
+    // On mobile, if user enters HH:MM and we need HH:MM:SS for backend
+    // automatically append :00 seconds when mobile format is detected
+    if (isMobile && value.split(':').length === 2) {
+      onEditFormChange('time', `${value}:00`);
+    } else {
+      onEditFormChange('time', value);
+    }
+  };
+  
+  // For mobile display, strip seconds if present
   if (isMobile && displayTime.split(':').length > 2) {
-    // Strip seconds on mobile
     const [hours, minutes] = displayTime.split(':');
     displayTime = `${hours}:${minutes}`;
   }
@@ -53,7 +65,7 @@ export const EditDateTimeSection: React.FC<EditDateTimeSectionProps> = ({
               isMobile && "h-14 text-base"
             )}
             value={displayTime}
-            onChange={(e) => onEditFormChange('time', e.target.value)}
+            onChange={(e) => handleTimeChange(e.target.value)}
             aria-label={`Heure ${isMobile ? 'format HH:MM' : 'format HH:MM:SS'}`}
           />
           <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
