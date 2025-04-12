@@ -1,3 +1,4 @@
+
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Operation } from "@/features/operations/types";
@@ -54,7 +55,7 @@ export const OperationsMobileCard = ({
 
   // Determine which client name to show based on operation type
   const clientName = operation.type === "transfer" ? `${operation.fromClient || ''} → ${operation.toClient || ''}` : operation.fromClient || '';
-  return <div className="flex flex-col p-4 bg-white dark:bg-gray-800 rounded-lg border shadow-sm w-full px-[7px]">
+  return <div className="flex flex-col p-3 sm:p-4 bg-white dark:bg-gray-800 rounded-lg border shadow-sm w-full">
       <div className="flex items-center justify-between mb-3">
         {showType && <Badge variant="outline" className={cn("text-xs mr-2", typeBackgroundClass, operation.type === "deposit" ? "border-green-500 text-green-700 dark:text-green-400" : operation.type === "withdrawal" ? "border-red-500 text-red-700 dark:text-red-400" : "border-blue-500 text-blue-700 dark:text-blue-400")}>
             {operation.type === "deposit" ? "Dépôt" : operation.type === "withdrawal" ? "Retrait" : "Transfert"}
@@ -77,7 +78,7 @@ export const OperationsMobileCard = ({
       {/* Add client name display with icon */}
       <div className="flex items-center gap-1 mb-3 text-sm">
         <User className="h-3.5 w-3.5 text-muted-foreground" />
-        <span className="font-medium px-2 py-1 rounded-md bg-purple-50 dark:bg-purple-900/20">
+        <span className="font-medium px-2 py-1 rounded-md bg-purple-50 dark:bg-purple-900/20 overflow-hidden text-ellipsis">
           {clientName}
         </span>
       </div>
