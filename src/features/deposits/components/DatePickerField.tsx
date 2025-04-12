@@ -30,8 +30,9 @@ export const DatePickerField = ({
 }: DatePickerFieldProps) => {
   const [open, setOpen] = useState(false);
   const [timeValue, setTimeValue] = useState(time || "");
+  const [showTimeInput, setShowTimeInput] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const timeInputRef = useRef<HTMLInputElement | null>(null);
+  const timeInputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
   
   // Synchronize internal state with external prop
@@ -59,6 +60,11 @@ export const DatePickerField = ({
       onTimeChange(newTime);
       setTimeValue(newTime);
     }
+    
+    // Hide the time input after selection
+    if (newTime) {
+      setShowTimeInput(false);
+    }
   };
 
   // Format time for display
@@ -69,47 +75,18 @@ export const DatePickerField = ({
     displayTime = `${hours}:${minutes}`;
   }
 
-  const handleTimeSelect = () => {
-    if (!onTimeChange) return;
+  // Toggle time input visibility
+  const toggleTimeInput = () => {
+    setShowTimeInput(!showTimeInput);
     
-    try {
-      // Instead of creating a dynamic hidden input, let's use an existing hidden input
-      // that we can reference with a ref
-      if (!timeInputRef.current) {
-        const input = document.createElement('input');
-        input.type = 'time';
-        input.step = isMobile ? '60' : '1'; // Enable seconds selection on desktop only
-        input.value = displayTime || '';
-        input.style.position = 'fixed';
-        input.style.top = '0';
-        input.style.left = '0';
-        input.style.opacity = '0';
-        input.style.zIndex = '-1';
-        
-        const handleTimeInputChange = (e: Event) => {
-          const newTimeValue = (e.target as HTMLInputElement).value;
-          console.log('Time selected:', newTimeValue);
-          handleTimeChange(newTimeValue);
-        };
-        
-        input.addEventListener('change', handleTimeInputChange);
-        document.body.appendChild(input);
-        timeInputRef.current = input;
-      } else {
-        // Update the value if the input already exists
-        timeInputRef.current.value = displayTime || '';
-      }
-      
-      // Focus and click to open the time picker
-      if (timeInputRef.current) {
-        timeInputRef.current.focus();
-        timeInputRef.current.click();
-      }
-    } catch (error) {
-      console.error('Error showing time picker:', error);
+    // Focus the input when shown
+    if (!showTimeInput && timeInputRef.current) {
+      setTimeout(() => {
+        timeInputRef.current?.focus();
+      }, 50);
     }
   };
-  
+
   // Clean up the time input when component unmounts
   useEffect(() => {
     return () => {
@@ -155,6 +132,7 @@ export const DatePickerField = ({
                 date > new Date() || date < new Date("2023-01-01")
               }
               initialFocus
+              className="pointer-events-auto"
               classNames={{
                 day: isMobile ? "h-14 w-14 text-center p-0 focus-visible:bg-primary/20 hover:bg-primary/20 aria-selected:bg-primary text-base" : "h-10 w-10 text-center p-0 focus-visible:bg-primary/20 hover:bg-primary/20 aria-selected:bg-primary",
                 caption: "px-4 py-2 flex items-center justify-between",
@@ -173,7 +151,7 @@ export const DatePickerField = ({
         <div className="mt-2">
           <Label>Heure</Label>
           <div className="relative mt-1">
-            {/* Pour la sélection de l'heure via un bouton */}
+            {/* Time button to toggle time input */}
             <Button
               variant="outline"
               type="button"
@@ -183,23 +161,32 @@ export const DatePickerField = ({
               )}
               onClick={(e) => {
                 e.preventDefault();
-                handleTimeSelect();
+                toggleTimeInput();
               }}
             >
               <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
               {displayTime || "Sélectionner l'heure"}
             </Button>
             
-            {/* Alternative direct input method for browsers that don't support time picker well */}
-            <Input 
-              type="time"
-              value={displayTime}
-              step={isMobile ? "60" : "1"} // Minutes for mobile, seconds for desktop
-              className="hidden"
-              onChange={(e) => {
-                handleTimeChange(e.target.value);
-              }}
-            />
+            {/* Direct input field for time, visible when toggled */}
+            {showTimeInput && (
+              <div className="absolute inset-0 z-10 flex items-center">
+                <Input
+                  ref={timeInputRef}
+                  type="time"
+                  value={displayTime}
+                  step={isMobile ? "60" : "1"} // Minutes for mobile, seconds for desktop
+                  className={cn(
+                    "border-2 border-primary",
+                    isMobile && "h-14 text-base"
+                  )}
+                  onChange={(e) => {
+                    handleTimeChange(e.target.value);
+                  }}
+                  autoFocus
+                />
+              </div>
+            )}
           </div>
         </div>
       )}
