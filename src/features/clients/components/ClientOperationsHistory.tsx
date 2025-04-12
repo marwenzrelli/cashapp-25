@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Operation } from "@/features/operations/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +8,6 @@ import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { RefreshCw, Search, XCircle } from "lucide-react";
 import { ClientOperationsHistoryTabs } from "./operations-history/ClientOperationsHistoryTabs";
 import { Switch } from "@/components/ui/switch";
-
 interface ClientOperationsHistoryProps {
   operations: Operation[];
   selectedType: "all" | "deposit" | "withdrawal" | "transfer";
@@ -54,9 +52,8 @@ export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = (
       console.log(`Withdrawal IDs: ${withdrawals.map(w => w.id).join(', ')}`);
     }
   }, [operations, filteredOperations, clientId, isPepsiMen]);
-  
   return <Card className="shadow-sm w-full">
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-3 px-0">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <CardTitle className="text-xl">Historique des opérations</CardTitle>
           <Button variant="outline" size="sm" onClick={refreshOperations} className="group">
