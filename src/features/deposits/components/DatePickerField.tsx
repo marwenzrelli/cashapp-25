@@ -87,15 +87,6 @@ export const DatePickerField = ({
     }
   };
 
-  // Clean up the time input when component unmounts
-  useEffect(() => {
-    return () => {
-      if (timeInputRef.current && document.body.contains(timeInputRef.current)) {
-        document.body.removeChild(timeInputRef.current);
-      }
-    };
-  }, []);
-
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
