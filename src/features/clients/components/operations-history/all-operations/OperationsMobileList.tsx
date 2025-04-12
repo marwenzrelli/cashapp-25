@@ -1,15 +1,12 @@
-
 import { Operation } from "@/features/operations/types";
 import { cn } from "@/lib/utils";
 import { OperationsMobileCard } from "../OperationsMobileCard";
 import { formatNumber } from "./OperationTypeHelpers";
 import { TotalsSection } from "./TotalsSection";
-
 interface OperationsMobileListProps {
   operations: Operation[];
   currency: string;
 }
-
 export const OperationsMobileList = ({
   operations,
   currency
@@ -41,32 +38,17 @@ export const OperationsMobileList = ({
         return "";
     }
   };
-
-  return (
-    <div className="md:hidden space-y-3 w-full p-3">
-      {operations.map((operation) => (
-        <div 
-          key={operation.id}
-          className="w-full"
-        >
+  return <div className="md:hidden space-y-3 w-full p-3 px-0 py-0">
+      {operations.map(operation => <div key={operation.id} className="w-full">
           <div className="mb-2">
-            <OperationsMobileCard 
-              operation={operation}
-              formatAmount={(amount) => {
-                // Format the amount without adding symbols (let the component handle it)
-                return formatNumber(Math.abs(amount));
-              }}
-              currency={currency}
-              colorClass={getOperationTypeColor(operation.type)}
-              showType={true}
-              typeBackgroundClass={getTypeBackgroundColor(operation.type)}
-            />
+            <OperationsMobileCard operation={operation} formatAmount={amount => {
+          // Format the amount without adding symbols (let the component handle it)
+          return formatNumber(Math.abs(amount));
+        }} currency={currency} colorClass={getOperationTypeColor(operation.type)} showType={true} typeBackgroundClass={getTypeBackgroundColor(operation.type)} />
           </div>
-        </div>
-      ))}
+        </div>)}
       
       {/* Mobile Totals Card */}
       <TotalsSection operations={operations} currency={currency} isMobile={true} />
-    </div>
-  );
+    </div>;
 };
