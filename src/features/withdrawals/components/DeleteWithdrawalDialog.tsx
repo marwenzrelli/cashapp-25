@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { formatId } from "@/utils/formatId";
 import { Withdrawal } from "../types";
+import { formatAmount } from "@/utils/formatCurrency";
 
 interface DeleteWithdrawalDialogProps {
   open: boolean;
@@ -45,7 +46,7 @@ export const DeleteWithdrawalDialog: React.FC<DeleteWithdrawalDialogProps> = ({
                 <strong>Client:</strong> {withdrawal.client_name}
               </p>
               <p>
-                <strong>Montant:</strong> {withdrawal.amount.toLocaleString()} €
+                <strong>Montant:</strong> {formatAmount(withdrawal.amount, "TND")}
               </p>
               <p>
                 <strong>Date:</strong> {withdrawal.date}
