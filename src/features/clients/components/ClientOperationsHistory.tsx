@@ -68,10 +68,7 @@ export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = (
         </div>
       </CardHeader>
       <CardContent className="px-0 py-0 w-full max-w-full">
-        {/* Tabs navigation first (right below the refresh button) */}
-        <ClientOperationsHistoryTabs filteredOperations={filteredOperations} />
-        
-        {/* Search field below tabs */}
+        {/* Champ de recherche d'abord */}
         <div className="px-2 sm:px-3 py-2">
           <div className="relative w-full">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -88,6 +85,9 @@ export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = (
             )}
           </div>
         </div>
+
+        {/* Puis les onglets en dessous du champ de recherche */}
+        <ClientOperationsHistoryTabs filteredOperations={filteredOperations} />
       </CardContent>
     </Card>
   );

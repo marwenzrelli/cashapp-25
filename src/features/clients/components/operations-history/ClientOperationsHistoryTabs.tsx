@@ -30,7 +30,7 @@ export const ClientOperationsHistoryTabs = ({
   
   return (
     <Tabs defaultValue="all" className="w-full">
-      {/* Tabs navigation without card wrapper */}
+      {/* Navigation des onglets */}
       <div className="border-b">
         <div className="flex flex-wrap items-center py-1 px-2 sm:px-3">
           <TabsList className={`${isMobile ? 'grid grid-cols-2 gap-2 w-full' : 'flex flex-wrap'} gap-2 bg-transparent`}>
@@ -58,7 +58,7 @@ export const ClientOperationsHistoryTabs = ({
         </div>
       </div>
 
-      {/* Content sections in a card */}
+      {/* Sections de contenu */}
       <Card className="shadow-sm border-0 rounded-none">
         <CardContent className="p-0 sm:p-0">
           <TabsContent value="all" className="w-full m-0">
