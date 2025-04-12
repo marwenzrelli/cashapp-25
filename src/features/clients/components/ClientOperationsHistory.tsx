@@ -9,6 +9,7 @@ import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { RefreshCw, Search, XCircle } from "lucide-react";
 import { ClientOperationsHistoryTabs } from "./operations-history/ClientOperationsHistoryTabs";
 import { Switch } from "@/components/ui/switch";
+
 interface ClientOperationsHistoryProps {
   operations: Operation[];
   selectedType: "all" | "deposit" | "withdrawal" | "transfer";
@@ -26,6 +27,7 @@ interface ClientOperationsHistoryProps {
   clientId?: number;
   isPepsiMen?: boolean;
 }
+
 export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = ({
   operations,
   selectedType,
@@ -53,8 +55,10 @@ export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = (
       console.log(`Withdrawal IDs: ${withdrawals.map(w => w.id).join(', ')}`);
     }
   }, [operations, filteredOperations, clientId, isPepsiMen]);
-  return <Card className="shadow-sm w-full text-center text-gray-950 px-0 py-0 my-0">
-      <CardHeader className="pb-3 px-4 sm:px-6 py-4 text-left border-b">
+
+  return (
+    <Card className="shadow-sm w-full text-center text-gray-950 px-0 py-0 my-0">
+      <CardHeader className="pb-2 px-2 sm:px-3 py-3 text-left border-b">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <CardTitle className="text-xl font-bold">Historique des opérations</CardTitle>
           <Button variant="outline" size="sm" onClick={refreshOperations} className="group">
@@ -63,18 +67,26 @@ export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = (
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="px-0 sm:px-0 w-full max-w-full">
-        <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6 px-4 sm:px-6">
+      <CardContent className="px-0 py-0 w-full max-w-full">
+        <div className="flex flex-col sm:flex-row justify-between gap-2 mb-2 px-2 sm:px-3">
           <div className="relative w-full">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Rechercher dans l'historique..." className="pl-9" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
-            {searchTerm && <Button variant="ghost" size="sm" className="absolute right-0 top-0 h-full px-3" onClick={() => setSearchTerm("")}>
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Rechercher dans l'historique..." className="pl-8" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+            {searchTerm && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="absolute right-0 top-0 h-full px-2" 
+                onClick={() => setSearchTerm("")}
+              >
                 <XCircle className="h-4 w-4" />
-              </Button>}
+              </Button>
+            )}
           </div>
         </div>
 
         <ClientOperationsHistoryTabs filteredOperations={filteredOperations} />
       </CardContent>
-    </Card>;
+    </Card>
+  );
 };

@@ -50,22 +50,22 @@ export const PublicOperationsTabs = ({ operations, currency }: PublicOperationsT
   return (
     <Tabs defaultValue="all" className="w-full">
       <TabsList className="w-full flex overflow-x-auto no-scrollbar p-0 rounded-none border-b">
-        <TabsTrigger value="all" className="flex-1 text-xs sm:text-sm py-2">
+        <TabsTrigger value="all" className="flex-1 text-xs sm:text-sm py-1.5">
           Tout <span className="ml-1 text-xs opacity-75">({operations.length})</span>
         </TabsTrigger>
-        <TabsTrigger value="deposits" className="flex-1 text-xs sm:text-sm py-2">
+        <TabsTrigger value="deposits" className="flex-1 text-xs sm:text-sm py-1.5">
           <ArrowUpCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
           <span className="hidden xs:inline">Versements</span>
           <span className="xs:hidden">Vers.</span>
           <span className="ml-1 text-xs opacity-75">({operations.filter(op => op.type === "deposit").length})</span>
         </TabsTrigger>
-        <TabsTrigger value="withdrawals" className="flex-1 text-xs sm:text-sm py-2">
+        <TabsTrigger value="withdrawals" className="flex-1 text-xs sm:text-sm py-1.5">
           <ArrowDownCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
           <span className="hidden xs:inline">Retraits</span>
           <span className="xs:hidden">Ret.</span>
           <span className="ml-1 text-xs opacity-75">({operations.filter(op => op.type === "withdrawal").length})</span>
         </TabsTrigger>
-        <TabsTrigger value="transfers" className="flex-1 text-xs sm:text-sm py-2">
+        <TabsTrigger value="transfers" className="flex-1 text-xs sm:text-sm py-1.5">
           <RefreshCcw className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
           <span className="hidden xs:inline">Virements</span>
           <span className="xs:hidden">Vir.</span>
@@ -73,43 +73,43 @@ export const PublicOperationsTabs = ({ operations, currency }: PublicOperationsT
         </TabsTrigger>
       </TabsList>
 
-      <div className="px-0 py-2 sm:py-4">
-        <TabsContent value="all" className="mt-0">
+      <div className="px-0 py-1 sm:py-2 w-full">
+        <TabsContent value="all" className="mt-0 w-full">
           <PublicOperationsTable operations={operations} currency={currency} />
         </TabsContent>
 
-        <TabsContent value="deposits" className="mt-0">
+        <TabsContent value="deposits" className="mt-0 w-full">
           <PublicOperationsTable operations={operations.filter(op => op.type === "deposit")} currency={currency} />
         </TabsContent>
 
-        <TabsContent value="withdrawals" className="mt-0">
+        <TabsContent value="withdrawals" className="mt-0 w-full">
           <PublicOperationsTable operations={operations.filter(op => op.type === "withdrawal")} currency={currency} />
         </TabsContent>
 
-        <TabsContent value="transfers" className="mt-0">
+        <TabsContent value="transfers" className="mt-0 w-full">
           <PublicOperationsTable operations={operations.filter(op => op.type === "transfer")} currency={currency} />
         </TabsContent>
       </div>
 
       {/* Summary footer with totals */}
-      <Card className="mt-4 border-t">
-        <CardFooter className="px-4 py-3">
-          <div className="w-full grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="text-center p-2 bg-primary/5 rounded-lg">
-              <p className="text-sm text-muted-foreground">Versements</p>
-              <p className="text-lg font-semibold text-green-600">{depositsTotal.toLocaleString()} {currency}</p>
+      <Card className="mt-3 border-t w-full">
+        <CardFooter className="px-2 py-2 sm:px-3 sm:py-3 w-full">
+          <div className="w-full grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="text-center p-1.5 bg-primary/5 rounded-lg">
+              <p className="text-xs sm:text-sm text-muted-foreground">Versements</p>
+              <p className="text-base sm:text-lg font-semibold text-green-600">{depositsTotal.toLocaleString()} {currency}</p>
             </div>
-            <div className="text-center p-2 bg-primary/5 rounded-lg">
-              <p className="text-sm text-muted-foreground">Retraits</p>
-              <p className="text-lg font-semibold text-red-600">{withdrawalsTotal.toLocaleString()} {currency}</p>
+            <div className="text-center p-1.5 bg-primary/5 rounded-lg">
+              <p className="text-xs sm:text-sm text-muted-foreground">Retraits</p>
+              <p className="text-base sm:text-lg font-semibold text-red-600">{withdrawalsTotal.toLocaleString()} {currency}</p>
             </div>
-            <div className="text-center p-2 bg-primary/5 rounded-lg">
-              <p className="text-sm text-muted-foreground">Virements</p>
-              <p className="text-lg font-semibold text-blue-600">{transfersTotal.toLocaleString()} {currency}</p>
+            <div className="text-center p-1.5 bg-primary/5 rounded-lg">
+              <p className="text-xs sm:text-sm text-muted-foreground">Virements</p>
+              <p className="text-base sm:text-lg font-semibold text-blue-600">{transfersTotal.toLocaleString()} {currency}</p>
             </div>
-            <div className="text-center p-2 bg-primary/5 rounded-lg">
-              <p className="text-sm text-muted-foreground">Mouvement Net</p>
-              <p className={`text-lg font-semibold ${netMovement >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <div className="text-center p-1.5 bg-primary/5 rounded-lg">
+              <p className="text-xs sm:text-sm text-muted-foreground">Mouvement Net</p>
+              <p className={`text-base sm:text-lg font-semibold ${netMovement >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {netMovement.toLocaleString()} {currency}
               </p>
             </div>

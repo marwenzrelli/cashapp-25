@@ -31,36 +31,36 @@ export const ClientOperationsHistoryTabs = ({
   return (
     <Tabs defaultValue="all" className="w-full">
       {/* Compact tab navigation */}
-      <Card className="mb-2 shadow-sm border-b rounded-b-none">
+      <Card className="mb-1 shadow-sm border-b rounded-b-none">
         <CardContent className="p-0">
-          <TabsList className={`${isMobile ? 'grid grid-cols-2 gap-1' : 'flex'} w-full gap-1 p-1 bg-transparent`}>
-            <TabsTrigger value="all" className="flex items-center justify-center gap-1 py-2">
-              <List className="h-4 w-4" />
+          <TabsList className={`${isMobile ? 'grid grid-cols-2 gap-0.5' : 'flex'} w-full gap-0.5 p-0.5 bg-transparent`}>
+            <TabsTrigger value="all" className="flex items-center justify-center gap-0.5 py-1.5 text-xs sm:text-sm">
+              <List className="h-3.5 w-3.5" />
               {isMobile ? 'Toutes' : 'Toutes les opérations'}
-              <Badge variant="secondary" className="ml-1">{filteredOperations.length}</Badge>
+              <Badge variant="secondary" className="ml-0.5 text-xs">{filteredOperations.length}</Badge>
             </TabsTrigger>
-            <TabsTrigger value="deposits" className="flex items-center justify-center gap-1 py-2">
-              <ArrowUpCircle className="h-4 w-4" />
+            <TabsTrigger value="deposits" className="flex items-center justify-center gap-0.5 py-1.5 text-xs sm:text-sm">
+              <ArrowUpCircle className="h-3.5 w-3.5" />
               Versements
-              <Badge variant="secondary" className="ml-1">{depositsCount}</Badge>
+              <Badge variant="secondary" className="ml-0.5 text-xs">{depositsCount}</Badge>
             </TabsTrigger>
-            <TabsTrigger value="withdrawals" className="flex items-center justify-center gap-1 py-2">
-              <ArrowDownCircle className="h-4 w-4" />
+            <TabsTrigger value="withdrawals" className="flex items-center justify-center gap-0.5 py-1.5 text-xs sm:text-sm">
+              <ArrowDownCircle className="h-3.5 w-3.5" />
               Retraits
-              <Badge variant="secondary" className="ml-1">{withdrawalsCount}</Badge>
+              <Badge variant="secondary" className="ml-0.5 text-xs">{withdrawalsCount}</Badge>
             </TabsTrigger>
-            <TabsTrigger value="transfers" className="flex items-center justify-center gap-1 py-2">
-              <RefreshCcw className="h-4 w-4" />
+            <TabsTrigger value="transfers" className="flex items-center justify-center gap-0.5 py-1.5 text-xs sm:text-sm">
+              <RefreshCcw className="h-3.5 w-3.5" />
               Virements
-              <Badge variant="secondary" className="ml-1">{transfersCount}</Badge>
+              <Badge variant="secondary" className="ml-0.5 text-xs">{transfersCount}</Badge>
             </TabsTrigger>
           </TabsList>
         </CardContent>
       </Card>
 
       {/* Content area with no extra padding */}
-      <Card className="shadow-sm">
-        <CardContent className="p-0">
+      <Card className="shadow-sm w-full">
+        <CardContent className="p-0 w-full">
           <TabsContent value="all" className="w-full m-0 p-0">
             <AllOperationsTab operations={filteredOperations} currency={currency} />
           </TabsContent>
