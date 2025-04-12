@@ -1,4 +1,3 @@
-
 import React from "react";
 import { ArrowUpCircle, ArrowDownCircle, RefreshCcw, List } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -31,34 +30,22 @@ export const ClientOperationsHistoryTabs = ({
         <CardContent className="p-1 sm:p-2 px-0 py-0 mx-0">
           <div className="flex flex-wrap items-center px-2 py-2">
             <TabsList className={`${isMobile ? 'grid grid-cols-2 gap-2 w-full' : 'flex flex-wrap'} gap-2`}>
-              <TabsTrigger 
-                value="all" 
-                className="flex items-center justify-center gap-2 py-3 bg-purple-50 hover:bg-purple-100 dark:bg-purple-900/20 dark:hover:bg-purple-900/30 data-[state=active]:bg-purple-100 data-[state=active]:dark:bg-purple-900/40"
-              >
+              <TabsTrigger value="all" className="flex items-center justify-center gap-2 py-3">
                 <List className="h-4 w-4" />
                 {isMobile ? 'Toutes' : 'Toutes les opérations'}
                 <Badge variant="secondary" className="ml-1">{filteredOperations.length}</Badge>
               </TabsTrigger>
-              <TabsTrigger 
-                value="deposits" 
-                className="flex items-center justify-center gap-2 py-3 bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/30 data-[state=active]:bg-green-100 data-[state=active]:dark:bg-green-900/40"
-              >
+              <TabsTrigger value="deposits" className="flex items-center justify-center gap-2 py-3">
                 <ArrowUpCircle className="h-4 w-4" />
                 Versements
                 <Badge variant="secondary" className="ml-1">{depositsCount}</Badge>
               </TabsTrigger>
-              <TabsTrigger 
-                value="withdrawals" 
-                className="flex items-center justify-center gap-2 py-3 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 data-[state=active]:bg-red-100 data-[state=active]:dark:bg-red-900/40"
-              >
+              <TabsTrigger value="withdrawals" className="flex items-center justify-center gap-2 py-3">
                 <ArrowDownCircle className="h-4 w-4" />
                 Retraits
                 <Badge variant="secondary" className="ml-1">{withdrawalsCount}</Badge>
               </TabsTrigger>
-              <TabsTrigger 
-                value="transfers" 
-                className="flex items-center justify-center gap-2 py-3 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 data-[state=active]:bg-blue-100 data-[state=active]:dark:bg-blue-900/40"
-              >
+              <TabsTrigger value="transfers" className="flex items-center justify-center gap-2 py-3">
                 <RefreshCcw className="h-4 w-4" />
                 Virements
                 <Badge variant="secondary" className="ml-1">{transfersCount}</Badge>
