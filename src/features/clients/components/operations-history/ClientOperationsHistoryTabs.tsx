@@ -10,10 +10,12 @@ import { TransferOperationsTab } from "./TransferOperationsTab";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
+
 interface ClientOperationsHistoryTabsProps {
   filteredOperations: Operation[];
   currency?: string;
 }
+
 export const ClientOperationsHistoryTabs = ({
   filteredOperations,
   currency = "TND"
@@ -25,11 +27,13 @@ export const ClientOperationsHistoryTabs = ({
 
   // Detect if on mobile
   const isMobile = useIsMobile();
-  return <Tabs defaultValue="all" className="w-full">
+  
+  return (
+    <Tabs defaultValue="all" className="w-full">
       {/* Card for content */}
       <Card className="shadow-sm">
         <CardContent className="p-0 sm:p-0">
-          {/* Separate card for tabs moved here */}
+          {/* Moved the tabs down here, after search field would be in the parent component */}
           <div className="border-b">
             <div className="flex flex-wrap items-center py-0 px-0">
               <TabsList className={`${isMobile ? 'grid grid-cols-2 gap-2 w-full' : 'flex flex-wrap'} gap-2 bg-transparent py-1 px-1`}>
@@ -74,5 +78,6 @@ export const ClientOperationsHistoryTabs = ({
           </TabsContent>
         </CardContent>
       </Card>
-    </Tabs>;
+    </Tabs>
+  );
 };

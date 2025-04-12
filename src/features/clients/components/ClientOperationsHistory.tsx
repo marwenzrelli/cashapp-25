@@ -68,7 +68,8 @@ export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = (
         </div>
       </CardHeader>
       <CardContent className="px-0 py-0 w-full max-w-full">
-        <div className="flex flex-col sm:flex-row justify-between gap-2 mb-2 px-2 sm:px-3">
+        {/* Search field first */}
+        <div className="px-2 sm:px-3 py-2">
           <div className="relative w-full">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Rechercher dans l'historique..." className="pl-8" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
@@ -85,6 +86,7 @@ export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = (
           </div>
         </div>
 
+        {/* Then tabs (now they appear below the search field) */}
         <ClientOperationsHistoryTabs filteredOperations={filteredOperations} />
       </CardContent>
     </Card>
