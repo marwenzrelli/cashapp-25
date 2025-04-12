@@ -86,7 +86,7 @@ export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = (
           </div>
         </div>
 
-        {/* Puis les onglets en dessous du champ de recherche */}
+        {/* Puis les onglets en dessous du champ de recherche dans un espace séparé */}
         <ClientOperationsHistoryTabs filteredOperations={filteredOperations} />
       </CardContent>
     </Card>
