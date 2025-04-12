@@ -52,8 +52,8 @@ export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = (
       console.log(`Withdrawal IDs: ${withdrawals.map(w => w.id).join(', ')}`);
     }
   }, [operations, filteredOperations, clientId, isPepsiMen]);
-  return <Card className="shadow-sm w-full">
-      <CardHeader className="pb-3 px-[90px] py-0 text-justify">
+  return <Card className="shadow-sm w-full text-center text-gray-950">
+      <CardHeader className="pb-3 px-[90px] py-0 text-center">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <CardTitle className="text-xl">Historique des opérations</CardTitle>
           <Button variant="outline" size="sm" onClick={refreshOperations} className="group">
