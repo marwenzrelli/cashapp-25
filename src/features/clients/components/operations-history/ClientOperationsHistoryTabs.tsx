@@ -24,7 +24,7 @@ export const ClientOperationsHistoryTabs = ({
 
   // Detect if on mobile
   const isMobile = useIsMobile();
-  return <Tabs defaultValue="all" className="w-full">
+  return <Tabs defaultValue="all" className="w-full my-[52px] py-px px-0">
       {/* Separate card for tabs on mobile */}
       <Card className="mb-4 shadow-sm my-0 py-0 px-0 mx-0">
         <CardContent className="p-1 sm:p-2 px-0 py-0 mx-0">
@@ -40,7 +40,7 @@ export const ClientOperationsHistoryTabs = ({
                 Versements
                 <Badge variant="secondary" className="ml-1">{depositsCount}</Badge>
               </TabsTrigger>
-              <TabsTrigger value="withdrawals" className="flex items-center justify-center gap-2 px-0 my-0 py-[7px]">
+              <TabsTrigger value="withdrawals" className="flex items-center justify-center gap-2 py-3">
                 <ArrowDownCircle className="h-4 w-4" />
                 Retraits
                 <Badge variant="secondary" className="ml-1">{withdrawalsCount}</Badge>
