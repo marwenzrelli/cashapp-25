@@ -1,4 +1,3 @@
-
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Operation } from "@/features/operations/types";
@@ -6,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { CalendarClock, Clock, Hash, User } from "lucide-react";
 import { formatId } from "@/utils/formatId";
 import { cn } from "@/lib/utils";
-
 interface OperationsMobileCardProps {
   operation: Operation;
   formatAmount?: (amount: number) => string;
@@ -16,7 +14,6 @@ interface OperationsMobileCardProps {
   showId?: boolean;
   typeBackgroundClass?: string;
 }
-
 export const OperationsMobileCard = ({
   operation,
   formatAmount = amount => `${Math.round(amount).toLocaleString()}`,
@@ -54,36 +51,14 @@ export const OperationsMobileCard = ({
 
   // Use operation_date if available, otherwise fall back to date
   const operationDate = operation.operation_date || operation.date;
-  
+
   // Determine which client name to show based on operation type
-  const clientName = operation.type === "transfer" 
-    ? `${operation.fromClient || ''} → ${operation.toClient || ''}`
-    : operation.fromClient || '';
-  
-  return (
-    <div className="flex flex-col p-4 bg-white dark:bg-gray-800 rounded-lg border shadow-sm w-full">
+  const clientName = operation.type === "transfer" ? `${operation.fromClient || ''} → ${operation.toClient || ''}` : operation.fromClient || '';
+  return <div className="flex flex-col p-4 bg-white dark:bg-gray-800 rounded-lg border shadow-sm w-full px-[7px]">
       <div className="flex items-center justify-between mb-3">
-        {showType && (
-          <Badge 
-            variant="outline"
-            className={cn(
-              "text-xs mr-2",
-              typeBackgroundClass,
-              operation.type === "deposit" 
-                ? "border-green-500 text-green-700 dark:text-green-400"
-                : operation.type === "withdrawal" 
-                  ? "border-red-500 text-red-700 dark:text-red-400"
-                  : "border-blue-500 text-blue-700 dark:text-blue-400"
-            )}
-          >
-            {operation.type === "deposit" 
-              ? "Dépôt" 
-              : operation.type === "withdrawal" 
-                ? "Retrait" 
-                : "Transfert"
-            }
-          </Badge>
-        )}
+        {showType && <Badge variant="outline" className={cn("text-xs mr-2", typeBackgroundClass, operation.type === "deposit" ? "border-green-500 text-green-700 dark:text-green-400" : operation.type === "withdrawal" ? "border-red-500 text-red-700 dark:text-red-400" : "border-blue-500 text-blue-700 dark:text-blue-400")}>
+            {operation.type === "deposit" ? "Dépôt" : operation.type === "withdrawal" ? "Retrait" : "Transfert"}
+          </Badge>}
         <div className="flex-1 flex justify-between items-center">
           <div className="flex items-center gap-1">
             <Hash className="h-3 w-3 text-muted-foreground" />
@@ -91,15 +66,7 @@ export const OperationsMobileCard = ({
               {showId && operation.id}
             </span>
           </div>
-          <p className={`text-lg font-semibold px-3 py-1 rounded-md ${
-            colorClass || (
-              operation.type === "withdrawal" 
-                ? "text-red-500 bg-red-50 dark:bg-red-900/20" 
-                : operation.type === "deposit" 
-                  ? "text-green-500 bg-green-50 dark:bg-green-900/20" 
-                  : "text-blue-500 bg-blue-50 dark:bg-blue-900/20"
-            )}`}
-          >
+          <p className={`text-lg font-semibold px-3 py-1 rounded-md ${colorClass || (operation.type === "withdrawal" ? "text-red-500 bg-red-50 dark:bg-red-900/20" : operation.type === "deposit" ? "text-green-500 bg-green-50 dark:bg-green-900/20" : "text-blue-500 bg-blue-50 dark:bg-blue-900/20")}`}>
             {operation.type === "withdrawal" ? "- " : operation.type === "deposit" ? "+ " : ""}
             {formatAmount(operation.amount)}
             {currency && ` ${currency}`}
@@ -127,18 +94,13 @@ export const OperationsMobileCard = ({
         </div>
       </div>
       
-      {operation.description && (
-        <p className="text-sm text-gray-700 dark:text-gray-300 my-1 break-words p-2 bg-gray-50 dark:bg-gray-700/30 rounded-md">
+      {operation.description && <p className="text-sm text-gray-700 dark:text-gray-300 my-1 break-words p-2 bg-gray-50 dark:bg-gray-700/30 rounded-md">
           {operation.description}
-        </p>
-      )}
+        </p>}
       
-      {operation.type === "transfer" && (
-        <div className="text-xs text-muted-foreground border-t pt-2 mt-2">
+      {operation.type === "transfer" && <div className="text-xs text-muted-foreground border-t pt-2 mt-2">
           <p className="truncate px-2 py-1 my-0.5 rounded-md bg-orange-50 dark:bg-orange-900/20">De: {operation.fromClient}</p>
           <p className="truncate px-2 py-1 my-0.5 rounded-md bg-blue-50 dark:bg-blue-900/20">À: {operation.toClient}</p>
-        </div>
-      )}
-    </div>
-  );
+        </div>}
+    </div>;
 };
