@@ -4,9 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Operation } from "../types";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Calendar, Clock, User, ScrollText } from "lucide-react";
-import { format } from "date-fns";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatISODateTime } from "@/features/deposits/hooks/utils/dateUtils";
 
@@ -17,6 +16,12 @@ interface EditOperationDialogProps {
   onConfirm: (updatedOperation: Operation) => void;
 }
 
+// Interface for the form state that includes time separately
+interface EditableOperation extends Omit<Operation, 'date'> {
+  date: string;
+  time: string;
+}
+
 export const EditOperationDialog = ({
   open,
   onOpenChange,
@@ -24,24 +29,25 @@ export const EditOperationDialog = ({
   onConfirm,
 }: EditOperationDialogProps) => {
   const { currency } = useCurrency();
-  const [editedOperation, setEditedOperation] = useState<Operation | null>(operation);
+  const [editedOperation, setEditedOperation] = useState<EditableOperation | null>(null);
 
   // Update local state when operation prop changes
-  useState(() => {
+  useEffect(() => {
     if (operation) {
       // Format the date/time when initializing the form
-      const { date, time } = formatISODateTime(operation.date || operation.operation_date || "");
+      const dateTime = formatISODateTime(operation.operation_date || operation.date || "");
+      
       setEditedOperation({
         ...operation,
-        date,
-        time
+        date: dateTime.date,
+        time: dateTime.time
       });
     }
-  });
+  }, [operation]);
 
   if (!editedOperation) return null;
 
-  const handleChange = (field: keyof Operation, value: any) => {
+  const handleChange = (field: keyof EditableOperation, value: any) => {
     setEditedOperation(prev => {
       if (!prev) return prev;
       return { ...prev, [field]: value };
@@ -52,7 +58,7 @@ export const EditOperationDialog = ({
     if (editedOperation) {
       // Combine date and time before sending
       const combinedDate = new Date(editedOperation.date + "T" + editedOperation.time);
-      const updatedOperation = {
+      const updatedOperation: Operation = {
         ...editedOperation,
         operation_date: combinedDate.toISOString()
       };
@@ -105,11 +111,8 @@ export const EditOperationDialog = ({
             <div className="relative">
               <User className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
               <Input
-                value={editedOperation.fromClient || editedOperation.client_name || ""}
-                onChange={(e) => handleChange(
-                  editedOperation.type === 'transfer' ? 'fromClient' : 'client_name',
-                  e.target.value
-                )}
+                value={editedOperation.fromClient || ""}
+                onChange={(e) => handleChange('fromClient', e.target.value)}
                 className="pl-10"
               />
             </div>
