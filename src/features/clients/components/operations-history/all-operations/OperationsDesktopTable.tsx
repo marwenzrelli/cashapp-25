@@ -6,6 +6,8 @@ import { formatId } from "@/utils/formatId";
 import { format } from "date-fns";
 import { getOperationTypeColor, formatNumber } from "./OperationTypeHelpers";
 import { TotalsSection } from "./TotalsSection";
+import { useState } from "react";
+import { OperationDetailsModal } from "@/features/operations/components/OperationDetailsModal";
 
 interface OperationsDesktopTableProps {
   operations: Operation[];
@@ -16,6 +18,31 @@ export const OperationsDesktopTable = ({
   operations, 
   currency
 }: OperationsDesktopTableProps) => {
+  const [selectedOperation, setSelectedOperation] = useState<Operation | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleOpenModal = (operation: Operation) => {
+    setSelectedOperation(operation);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedOperation(null);
+    setIsModalOpen(false);
+  };
+
+  const handleEdit = (operation: Operation) => {
+    console.log("Edit operation:", operation);
+    // TODO: Implement edit functionality
+    setIsModalOpen(false);
+  };
+
+  const handleDelete = (operation: Operation) => {
+    console.log("Delete operation:", operation);
+    // TODO: Implement delete functionality
+    setIsModalOpen(false);
+  };
+
   return (
     <div className="hidden md:block overflow-x-auto w-full">
       <Table>
@@ -66,7 +93,10 @@ export const OperationsDesktopTable = ({
                   {operation.type === "withdrawal" && "Retrait"}
                   {operation.type === "transfer" && "Virement"}
                 </TableCell>
-                <TableCell className="font-mono text-xs text-muted-foreground">
+                <TableCell 
+                  className="font-mono text-xs text-muted-foreground hover:text-primary hover:cursor-pointer hover:underline"
+                  onClick={() => handleOpenModal(operation)}
+                >
                   #{operationId}
                 </TableCell>
                 <TableCell className="whitespace-nowrap text-xs">{formattedDate}</TableCell>
@@ -100,6 +130,14 @@ export const OperationsDesktopTable = ({
           </TableRow>
         </TableBody>
       </Table>
+
+      <OperationDetailsModal
+        operation={selectedOperation}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
     </div>
   );
 };
