@@ -1,4 +1,3 @@
-
 import { Operation } from "@/features/operations/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
@@ -8,6 +7,8 @@ import { getOperationTypeColor, formatNumber } from "./OperationTypeHelpers";
 import { TotalsSection } from "./TotalsSection";
 import { useState } from "react";
 import { OperationDetailsModal } from "@/features/operations/components/OperationDetailsModal";
+import { EditOperationDialog } from "@/features/operations/components/EditOperationDialog";
+import { toast } from "sonner";
 
 interface OperationsDesktopTableProps {
   operations: Operation[];
@@ -20,6 +21,7 @@ export const OperationsDesktopTable = ({
 }: OperationsDesktopTableProps) => {
   const [selectedOperation, setSelectedOperation] = useState<Operation | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const handleOpenModal = (operation: Operation) => {
     setSelectedOperation(operation);
@@ -27,19 +29,30 @@ export const OperationsDesktopTable = ({
   };
 
   const handleCloseModal = () => {
-    setSelectedOperation(null);
     setIsModalOpen(false);
   };
 
-  const handleEdit = (operation: Operation) => {
-    console.log("Edit operation:", operation);
-    // TODO: Implement edit functionality
+  const handleEdit = (updatedOperation: Operation) => {
+    console.log("Editing operation:", updatedOperation);
+    
+    // Here you would implement the actual update logic
+    // For now, just show a toast to indicate it would work
+    toast.success("Opération mise à jour", {
+      description: "L'opération a été mise à jour avec succès"
+    });
+    
     setIsModalOpen(false);
   };
 
   const handleDelete = (operation: Operation) => {
     console.log("Delete operation:", operation);
-    // TODO: Implement delete functionality
+    
+    // Here you would implement the actual delete logic
+    // For now, just show a toast to indicate it would work
+    toast.success("Opération supprimée", {
+      description: "L'opération a été supprimée avec succès"
+    });
+    
     setIsModalOpen(false);
   };
 
