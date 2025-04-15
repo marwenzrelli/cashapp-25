@@ -1,9 +1,10 @@
-
 import { Operation } from "../types";
 import { Button } from "@/components/ui/button";
 import { Edit2, Trash2, ArrowUpCircle, ArrowDownCircle, RefreshCcw, User, Hash } from "lucide-react";
 import { formatDateTime } from "../types";
 import { formatId } from "@/utils/formatId";
+import { useState } from "react";
+import { OperationIdActionModal } from "./OperationIdActionModal";
 
 interface OperationCardProps {
   operation: Operation;
@@ -68,6 +69,8 @@ const formatOperationId = (id: string) => {
 };
 
 export const OperationCard = ({ operation, onEdit, onDelete }: OperationCardProps) => {
+  const [showActionModal, setShowActionModal] = useState(false);
+
   return (
     <div className="group flex items-center justify-between p-3 hover:bg-muted/50 rounded-lg transition-colors border-b last:border-b-0">
       <div className="flex items-center gap-3 min-w-0">
@@ -78,10 +81,13 @@ export const OperationCard = ({ operation, onEdit, onDelete }: OperationCardProp
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <span className="font-medium truncate">{operation.description}</span>
-            <span className="text-xs text-muted-foreground flex items-center gap-1">
+            <button
+              onClick={() => setShowActionModal(true)}
+              className="text-xs text-muted-foreground flex items-center gap-1 hover:text-primary transition-colors"
+            >
               <Hash className="h-3 w-3" />
               {formatOperationId(operation.id.slice(0, 4))}
-            </span>
+            </button>
           </div>
           <div className="text-sm text-muted-foreground flex items-center gap-1.5 overflow-hidden">
             <span className="whitespace-nowrap">{operation.formattedDate || formatDateTime(operation.createdAt || operation.date)}</span>
@@ -133,6 +139,14 @@ export const OperationCard = ({ operation, onEdit, onDelete }: OperationCardProp
           </div>
         )}
       </div>
+
+      <OperationIdActionModal
+        open={showActionModal}
+        onOpenChange={setShowActionModal}
+        operation={operation}
+        onEdit={onEdit}
+        onDelete={onDelete}
+      />
     </div>
   );
 };
