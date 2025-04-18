@@ -3,10 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Client } from "../types";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { ClientIdBadge } from "./ClientIdBadge";
-import { User, Phone, Mail, Calendar, Wallet } from "lucide-react";
+import { User, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { PersonalInfoFields } from "./PersonalInfoFields";
 
 interface PublicClientPersonalInfoProps {
   client: Client;
@@ -28,7 +27,6 @@ export const PublicClientPersonalInfo = ({ client }: PublicClientPersonalInfoPro
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {/* Main info section */}
         <div className="space-y-4">
           {/* Client name and avatar */}
           <div className="flex items-center gap-3 bg-primary/5 p-3 rounded-lg">
@@ -41,10 +39,9 @@ export const PublicClientPersonalInfo = ({ client }: PublicClientPersonalInfoPro
             </div>
           </div>
 
-          {/* Contact info */}
-          <div className="grid grid-cols-1 gap-3">
+          {/* Contact info - Hidden on mobile */}
+          <div className="grid grid-cols-1 gap-3 hidden md:grid">
             <div className="flex items-center gap-3 bg-background/50 p-3 rounded-lg">
-              <Phone className="h-4 w-4 text-primary/70" />
               <div>
                 <p className="text-xs text-muted-foreground">Téléphone</p>
                 <p className="text-sm font-medium">{client.telephone}</p>
@@ -52,7 +49,6 @@ export const PublicClientPersonalInfo = ({ client }: PublicClientPersonalInfoPro
             </div>
 
             <div className="flex items-center gap-3 bg-background/50 p-3 rounded-lg">
-              <Mail className="h-4 w-4 text-primary/70" />
               <div>
                 <p className="text-xs text-muted-foreground">Email</p>
                 <p className="text-sm font-medium truncate">{client.email || "Non renseigné"}</p>
@@ -60,18 +56,20 @@ export const PublicClientPersonalInfo = ({ client }: PublicClientPersonalInfoPro
             </div>
           </div>
 
-          {/* Creation date and balance */}
-          <div className="grid grid-cols-1 gap-3">
+          {/* Creation date - Hidden on mobile */}
+          <div className="grid grid-cols-1 gap-3 hidden md:grid">
             <div className="flex items-center gap-3 bg-background/50 p-3 rounded-lg">
-              <Calendar className="h-4 w-4 text-primary/70" />
-              <div>
+              <div className="w-full">
                 <p className="text-xs text-muted-foreground">Date de création</p>
                 <p className="text-sm font-medium">
                   {format(new Date(client.date_creation || ""), "dd/MM/yyyy")}
                 </p>
               </div>
             </div>
+          </div>
 
+          {/* Balance section */}
+          <div className="grid grid-cols-1 gap-3">
             <div className="flex items-center gap-3 bg-background/50 p-3 rounded-lg">
               <Wallet className="h-4 w-4 text-primary/70" />
               <div className="w-full">
@@ -93,3 +91,4 @@ export const PublicClientPersonalInfo = ({ client }: PublicClientPersonalInfoPro
     </Card>
   );
 };
+
