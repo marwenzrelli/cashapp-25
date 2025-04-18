@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Client } from "../types";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { ClientIdBadge } from "./ClientIdBadge";
-import { Wallet } from "lucide-react";
+import { User, Phone, Mail, Calendar, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { PersonalInfoFields } from "./PersonalInfoFields";
@@ -20,33 +20,68 @@ export const PublicClientPersonalInfo = ({ client }: PublicClientPersonalInfoPro
   const formattedBalance = `${sign}${client.solde.toLocaleString()} ${currency}`;
   
   return (
-    <Card className="backdrop-blur-xl bg-white/50 dark:bg-gray-950/50 md:col-span-3 w-full rounded-lg border">
-      <CardHeader>
-        <CardTitle className="text-xl flex items-center justify-between">
-          Informations personnelles
+    <Card className="backdrop-blur-xl bg-white/50 dark:bg-gray-950/50 w-full rounded-lg border">
+      <CardHeader className="pb-4 space-y-0">
+        <CardTitle className="text-lg sm:text-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <span className="text-base sm:text-lg">Informations personnelles</span>
           <ClientIdBadge clientId={client.id} />
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid gap-6 md:grid-cols-3 w-full">
-          <div className="md:col-span-2 w-full">
-            <PersonalInfoFields 
-              client={client} 
-              showBalance={false}
-              showBalanceOnMobile={false}
-            />
+        {/* Main info section */}
+        <div className="space-y-4">
+          {/* Client name and avatar */}
+          <div className="flex items-center gap-3 bg-primary/5 p-3 rounded-lg">
+            <div className="bg-primary/10 p-2 rounded-full">
+              <User className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h3 className="font-semibold">{client.prenom} {client.nom}</h3>
+              <p className="text-xs text-muted-foreground">Client vérifié</p>
+            </div>
           </div>
-          <div className="mt-0 w-full">
-            <div className="flex items-start gap-3 w-full">
-              <Wallet className="h-6 w-6 text-primary mt-1" />
+
+          {/* Contact info */}
+          <div className="grid grid-cols-1 gap-3">
+            <div className="flex items-center gap-3 bg-background/50 p-3 rounded-lg">
+              <Phone className="h-4 w-4 text-primary/70" />
+              <div>
+                <p className="text-xs text-muted-foreground">Téléphone</p>
+                <p className="text-sm font-medium">{client.telephone}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 bg-background/50 p-3 rounded-lg">
+              <Mail className="h-4 w-4 text-primary/70" />
+              <div>
+                <p className="text-xs text-muted-foreground">Email</p>
+                <p className="text-sm font-medium truncate">{client.email || "Non renseigné"}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Creation date and balance */}
+          <div className="grid grid-cols-1 gap-3">
+            <div className="flex items-center gap-3 bg-background/50 p-3 rounded-lg">
+              <Calendar className="h-4 w-4 text-primary/70" />
+              <div>
+                <p className="text-xs text-muted-foreground">Date de création</p>
+                <p className="text-sm font-medium">
+                  {format(new Date(client.date_creation || ""), "dd/MM/yyyy")}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 bg-background/50 p-3 rounded-lg">
+              <Wallet className="h-4 w-4 text-primary/70" />
               <div className="w-full">
-                <p className="text-sm text-muted-foreground">Solde actuel</p>
-                <p className={cn(
-                  "text-3xl font-bold",
-                  client.solde >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
+                <p className="text-xs text-muted-foreground">Solde actuel</p>
+                <span className={cn(
+                  "text-lg font-semibold inline-block mt-0.5",
+                  client.solde >= 0 ? "text-green-600" : "text-red-600"
                 )}>
                   {formattedBalance}
-                </p>
+                </span>
                 <p className="text-xs text-muted-foreground mt-1">
                   Mis à jour le {format(new Date(), 'dd/MM/yyyy HH:mm')}
                 </p>
