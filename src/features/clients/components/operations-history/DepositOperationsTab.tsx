@@ -42,11 +42,11 @@ export const DepositOperationsTab = ({
           <TableHeader>
             <TableRow className="bg-muted/50">
               
-              <TableHead className="w-[10%] whitespace-nowrap font-medium">ID</TableHead>
-              <TableHead className="w-[15%] whitespace-nowrap font-medium">Date</TableHead>
-              <TableHead className="w-[25%] font-medium">Client</TableHead>
-              <TableHead className="w-[30%] font-medium">Description</TableHead>
-              <TableHead className="w-[15%] text-right whitespace-nowrap font-medium">Montant</TableHead>
+              <TableHead className="w-[10%] whitespace-nowrap font-medium">           ID</TableHead>
+              <TableHead className="w-[15%] whitespace-nowrap font-medium">               Date</TableHead>
+              <TableHead className="w-[25%] font-medium">                              Client</TableHead>
+              <TableHead className="w-[30%] font-medium">                               Description</TableHead>
+              <TableHead className="w-[15%] text-right whitespace-nowrap font-medium">Montant        </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
