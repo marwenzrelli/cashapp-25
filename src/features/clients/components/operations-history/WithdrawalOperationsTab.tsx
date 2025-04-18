@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Operation } from "@/features/operations/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -40,11 +41,11 @@ export const WithdrawalOperationsTab = ({
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
-              <TableHead className="w-[10%] whitespace-nowrap font-medium">          ID</TableHead>
-              <TableHead className="w-[15%] whitespace-nowrap font-medium">               Date</TableHead>
+              <TableHead className="w-[10%] whitespace-nowrap font-medium">          ID</TableHead>
+              <TableHead className="w-[15%] whitespace-nowrap font-medium">               Date</TableHead>
               
-              <TableHead className="w-[30%] font-medium">                                   Description</TableHead>
-              <TableHead className="w-[15%] text-right whitespace-nowrap font-medium">Montant       </TableHead>
+              <TableHead className="w-[30%] font-medium">                                   Description</TableHead>
+              <TableHead className="w-[15%] text-right whitespace-nowrap font-medium">Montant       </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -86,7 +87,7 @@ export const WithdrawalOperationsTab = ({
       <div className="md:hidden space-y-3 w-full p-3">
         {withdrawalOperations.map(operation => <div key={operation.id} className={cn("transition-colors", selectedOperations[operation.id] ? "border-l-4 border-red-500 pl-2" : "")} onClick={() => toggleSelection(operation.id)}>
             <div className="w-full">
-              <OperationsMobileCard key={operation.id} operation={operation} formatAmount={amount => `-${formatNumber(amount)}`} currency={currency} colorClass="text-red-600 dark:text-red-400" showType={false} />
+              <OperationsMobileCard key={operation.id} operation={operation} formatAmount={amount => formatNumber(amount)} currency={currency} colorClass="text-red-600 dark:text-red-400" showType={false} />
             </div>
           </div>)}
         
