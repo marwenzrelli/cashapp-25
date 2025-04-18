@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Operation } from "@/features/operations/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -6,7 +5,6 @@ import { OperationsMobileCard } from "./OperationsMobileCard";
 import { EmptyOperations } from "./EmptyOperations";
 import { formatId } from "@/utils/formatId";
 import { format } from "date-fns";
-import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 
 interface WithdrawalOperationsTabProps {
@@ -49,7 +47,6 @@ export const WithdrawalOperationsTab = ({
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
-              <TableHead className="w-[50px] text-center"></TableHead>
               <TableHead className="w-[10%] whitespace-nowrap font-medium">ID</TableHead>
               <TableHead className="w-[15%] whitespace-nowrap font-medium">Date</TableHead>
               <TableHead className="w-[25%] font-medium">Client</TableHead>
@@ -82,13 +79,6 @@ export const WithdrawalOperationsTab = ({
                   )}
                   onClick={() => toggleSelection(operation.id)}
                 >
-                  <TableCell className="w-[50px] p-2 text-center">
-                    <Checkbox 
-                      checked={isSelected}
-                      onCheckedChange={() => toggleSelection(operation.id)}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  </TableCell>
                   <TableCell className="font-mono text-xs text-muted-foreground">
                     #{operationId}
                   </TableCell>
@@ -104,7 +94,7 @@ export const WithdrawalOperationsTab = ({
             
             {/* Totals section for desktop */}
             <TableRow className="border-t-2 border-primary/20 bg-muted/30">
-              <TableCell colSpan={5} className="font-medium text-right">Total des retraits:</TableCell>
+              <TableCell colSpan={4} className="font-medium text-right">Total des retraits:</TableCell>
               <TableCell className="text-right font-medium text-red-600 dark:text-red-400">
                 -{formatNumber(totalWithdrawals)} {currency}
               </TableCell>
@@ -124,23 +114,15 @@ export const WithdrawalOperationsTab = ({
             )}
             onClick={() => toggleSelection(operation.id)}
           >
-            <div className="flex items-center mb-2">
-              <Checkbox 
-                checked={selectedOperations[operation.id] || false}
-                onCheckedChange={() => toggleSelection(operation.id)}
-                onClick={(e) => e.stopPropagation()}
-                className="mr-2"
+            <div className="w-full">
+              <OperationsMobileCard 
+                key={operation.id} 
+                operation={operation}
+                formatAmount={(amount) => `-${formatNumber(amount)}`}
+                currency={currency}
+                colorClass="text-red-600 dark:text-red-400"
+                showType={false}
               />
-              <div className="w-full">
-                <OperationsMobileCard 
-                  key={operation.id} 
-                  operation={operation}
-                  formatAmount={(amount) => `-${formatNumber(amount)}`}
-                  currency={currency}
-                  colorClass="text-red-600 dark:text-red-400"
-                  showType={false}
-                />
-              </div>
             </div>
           </div>
         ))}
