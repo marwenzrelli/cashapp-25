@@ -78,7 +78,7 @@ export const OperationsDesktopTable = ({
               <TableHead>                     Date</TableHead>
               <TableHead>                     Description</TableHead>
               <TableHead className="text-right">Montant        </TableHead>
-              <TableHead>           Client</TableHead>
+              
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
