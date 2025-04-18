@@ -1,5 +1,7 @@
 
 import { Operation } from "@/features/operations/types";
+import { ArrowUpRight, ArrowDownRight, ArrowLeftRight } from "lucide-react";
+import React from "react";
 
 // Determine color based on operation type
 export const getOperationTypeColor = (type: string): string => {
@@ -12,6 +14,34 @@ export const getOperationTypeColor = (type: string): string => {
       return "text-blue-600 dark:text-blue-400";
     default:
       return "";
+  }
+};
+
+// Get type-specific display text
+export const getOperationTypeDisplay = (type: string): string => {
+  switch (type) {
+    case "deposit":
+      return "Dépôt";
+    case "withdrawal":
+      return "Retrait";
+    case "transfer":
+      return "Transfert";
+    default:
+      return "Inconnu";
+  }
+};
+
+// Get icon based on operation type
+export const getOperationTypeIcon = (type: string) => {
+  switch (type) {
+    case "deposit":
+      return ArrowUpRight;
+    case "withdrawal":
+      return ArrowDownRight;
+    case "transfer":
+      return ArrowLeftRight;
+    default:
+      return ArrowUpRight;
   }
 };
 

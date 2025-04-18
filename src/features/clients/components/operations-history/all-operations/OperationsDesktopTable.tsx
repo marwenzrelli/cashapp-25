@@ -4,14 +4,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Operation } from "@/features/operations/types";
 import { format } from "date-fns";
 import { formatId } from "@/utils/formatId";
-import { ArrowUpRight, ArrowDownRight, ArrowLeftRight, MoreHorizontal } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, ArrowLeftRight } from "lucide-react";
 import { OperationDetailsModal } from "@/features/operations/components/OperationDetailsModal";
 import { DeleteOperationDialog } from "@/features/operations/components/DeleteOperationDialog";
 import { toast } from "sonner";
 import { useOperations } from "@/features/operations/hooks/useOperations";
 import { cn } from "@/lib/utils";
 import { TotalsSection } from "./TotalsSection";
-import { getOperationTypeDisplay, getOperationTypeIcon, getOperationTypeColor } from "./OperationTypeHelpers";
+import { getOperationTypeColor } from "./OperationTypeHelpers";
 
 interface OperationsDesktopTableProps {
   operations: Operation[];
@@ -82,6 +82,34 @@ export const OperationsDesktopTable = ({
       minimumFractionDigits: 3,
       maximumFractionDigits: 3
     });
+  };
+
+  // Get type-specific display text
+  const getOperationTypeDisplay = (type: string): string => {
+    switch (type) {
+      case "deposit":
+        return "Dépôt";
+      case "withdrawal":
+        return "Retrait";
+      case "transfer":
+        return "Transfert";
+      default:
+        return "Inconnu";
+    }
+  };
+
+  // Get icon component based on operation type
+  const getOperationTypeIcon = (type: string) => {
+    switch (type) {
+      case "deposit":
+        return ArrowUpRight;
+      case "withdrawal":
+        return ArrowDownRight;
+      case "transfer":
+        return ArrowLeftRight;
+      default:
+        return ArrowUpRight;
+    }
   };
 
   return (

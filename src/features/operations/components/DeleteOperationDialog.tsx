@@ -16,21 +16,21 @@ import { toast } from "sonner";
 interface DeleteOperationDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onDelete: () => Promise<boolean> | Promise<void>;
+  onConfirm: () => Promise<void>;
   operation: Operation | null;
 }
 
 export function DeleteOperationDialog({
   isOpen,
   onClose,
-  onDelete,
+  onConfirm,
   operation,
 }: DeleteOperationDialogProps) {
   if (!operation) return null;
 
   const handleDelete = async () => {
     try {
-      await onDelete();
+      await onConfirm();
       toast.success("Opération supprimée avec succès");
     } catch (error) {
       console.error("Erreur lors de la suppression:", error);

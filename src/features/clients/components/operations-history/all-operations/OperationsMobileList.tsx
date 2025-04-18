@@ -8,6 +8,7 @@ import { DeleteOperationDialog } from "@/features/operations/components/DeleteOp
 import { useOperations } from "@/features/operations/hooks/useOperations";
 import { toast } from "sonner";
 import { TotalsSection } from "./TotalsSection";
+import { getOperationTypeColor } from "./OperationTypeHelpers";
 
 interface OperationsMobileListProps {
   operations: Operation[];
@@ -86,20 +87,6 @@ export const OperationsMobileList = ({
     }
   };
 
-  // Get text color class based on operation type
-  const getColorClass = (type: string) => {
-    switch (type) {
-      case 'deposit':
-        return 'text-green-600 dark:text-green-400';
-      case 'withdrawal':
-        return 'text-red-600 dark:text-red-400';
-      case 'transfer':
-        return 'text-blue-600 dark:text-blue-400';
-      default:
-        return '';
-    }
-  };
-
   // Format amount with + or - prefix based on operation type
   const formatAmount = (amount: number, type: string): string => {
     const formattedAmount = amount.toLocaleString('fr-FR', {
@@ -121,8 +108,7 @@ export const OperationsMobileList = ({
             operation={operation} 
             formatAmount={(amount) => formatAmount(amount, operation.type)} 
             currency={currency}
-            colorClass={getColorClass(operation.type)}
-            icon={getOperationIcon(operation.type)}
+            colorClass={getOperationTypeColor(operation.type)}
           />
         </div>
       ))}

@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { CalendarClock, Clock, Hash, User } from "lucide-react";
 import { formatId } from "@/utils/formatId";
 import { cn } from "@/lib/utils";
+import { ReactNode } from "react";
+
 interface OperationsMobileCardProps {
   operation: Operation;
   formatAmount?: (amount: number) => string;
@@ -14,7 +16,9 @@ interface OperationsMobileCardProps {
   colorClass?: string;
   showId?: boolean;
   typeBackgroundClass?: string;
+  icon?: ReactNode; // Add icon prop
 }
+
 export const OperationsMobileCard = ({
   operation,
   formatAmount = amount => `${Math.round(amount).toLocaleString()}`,
@@ -22,7 +26,8 @@ export const OperationsMobileCard = ({
   showType = true,
   colorClass,
   showId = false,
-  typeBackgroundClass
+  typeBackgroundClass,
+  icon
 }: OperationsMobileCardProps) => {
   // Fonction sécurisée pour parser les dates
   const parseDate = (dateValue: string | Date): Date => {
@@ -55,6 +60,7 @@ export const OperationsMobileCard = ({
 
   // Determine which client name to show based on operation type
   const clientName = operation.type === "transfer" ? `${operation.fromClient || ''} → ${operation.toClient || ''}` : operation.fromClient || '';
+  
   return <div className="flex flex-col p-3 sm:p-4 bg-white dark:bg-gray-800 rounded-lg border shadow-sm w-full">
       <div className="flex items-center justify-between mb-3">
         {showType && <Badge variant="outline" className={cn("text-xs mr-2", typeBackgroundClass, operation.type === "deposit" ? "border-green-500 text-green-700 dark:text-green-400" : operation.type === "withdrawal" ? "border-red-500 text-red-700 dark:text-red-400" : "border-blue-500 text-blue-700 dark:text-blue-400")}>
