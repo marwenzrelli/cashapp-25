@@ -10,37 +10,37 @@ import { useClientBalanceRefresh } from "./clientProfile/useClientBalanceRefresh
 import { useOperationsVerification } from "./clientProfile/useOperationsVerification";
 
 export const useClientProfile = () => {
-  const { id } = useParams();
+  const { clientId } = useParams();
   const navigate = useNavigate();
   const { operations, refreshOperations } = useOperations();
   const qrCodeRef = useRef<HTMLDivElement>(null);
-  const clientId = id ? Number(id) : null;
+  const parsedClientId = clientId ? parseInt(clientId, 10) : null;
   
   // Determine if this is the pepsi men client
-  const isPepsiMen = useMemo(() => clientId === 4, [clientId]);
+  const isPepsiMen = useMemo(() => parsedClientId === 4, [parsedClientId]);
   
   // Debug to ensure ID is parsed correctly
-  console.log("useClientProfile - Raw ID from params:", id, "Parsed client ID:", clientId);
+  console.log("useClientProfile - Raw ID from params:", clientId, "Parsed client ID:", parsedClientId);
   
   // Get client data
-  const { client, isLoading, error, fetchClient } = useClientData(clientId);
+  const { client, isLoading, error, fetchClient } = useClientData(parsedClientId);
   
   // Refetch client manually
   const refetchClient = useCallback(() => {
-    if (clientId) {
-      console.log("Manual refetch of client data for ID:", clientId);
-      fetchClient(clientId);
+    if (parsedClientId) {
+      console.log("Manual refetch of client data for ID:", parsedClientId);
+      fetchClient(parsedClientId);
     } else {
       console.error("Cannot refetch: No client ID available");
     }
-  }, [clientId, fetchClient]);
+  }, [parsedClientId, fetchClient]);
   
   // Real-time balance tracking
-  const { realTimeBalance, setRealTimeBalance } = useRealTimeBalance(clientId);
+  const { realTimeBalance, setRealTimeBalance } = useRealTimeBalance(parsedClientId);
   
   // Client balance refresh functionality
   const { refreshClientBalance } = useClientBalanceRefresh(
-    clientId, 
+    parsedClientId, 
     client, 
     setRealTimeBalance, 
     refetchClient
@@ -81,16 +81,16 @@ export const useClientProfile = () => {
     console.log("Refreshing operations for client:", client?.id);
     await refreshOperations();
     // Optionally refresh client info to update balance
-    if (clientId) {
+    if (parsedClientId) {
       setTimeout(() => {
         refreshClientBalance();
       }, 500);
     }
-  }, [refreshOperations, client, clientId, refreshClientBalance]);
+  }, [refreshOperations, client, parsedClientId, refreshClientBalance]);
 
   return {
     client,
-    clientId,
+    clientId: parsedClientId,
     clientOperations,
     filteredOperations,
     isLoading,

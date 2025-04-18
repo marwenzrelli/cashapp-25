@@ -47,7 +47,7 @@ export const useClientData = (clientId: number | null) => {
         .from('clients')
         .select('*')
         .eq('id', id)
-        .maybeSingle();
+        .single();
       
       if (error) {
         console.error("Error fetching client:", error);

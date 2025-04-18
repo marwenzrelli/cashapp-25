@@ -1,7 +1,9 @@
+
 import { useClientProfile } from "@/features/clients/hooks/useClientProfile";
 import { ClientProfileHeader } from "@/features/clients/components/ClientProfileHeader";
 import { ClientInfoCards } from "@/features/clients/components/ClientInfoCards";
 import { ClientProfileTabs } from "@/features/clients/components/ClientProfileTabs";
+
 export default function ClientProfile() {
   const {
     client,
@@ -34,15 +36,52 @@ export default function ClientProfile() {
   const navigateToClients = () => navigate("/clients");
 
   // Process the error to ensure it's either null or an Error object
-  const processedError = error ? typeof error === 'object' ? error : new Error(String(error)) : null;
-  return <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-0 px-0 py-0">
-      <ClientProfileHeader client={client} clientId={clientId} clientBalance={clientBalance} isLoading={isLoading} formatAmount={formatAmount} refreshClientBalance={refreshClientBalance} navigateToClients={navigateToClients} error={processedError} />
+  const processedError = error ? (typeof error === 'string' ? new Error(error) : error as Error) : null;
 
-      {client && !isLoading && !error && <div className="space-y-6">
-          <ClientInfoCards client={client} clientId={clientId} clientOperations={clientOperations} exportToExcel={exportToExcel} exportToPDF={exportToPDF} formatAmount={formatAmount} />
+  return (
+    <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-0 px-0 py-0">
+      <ClientProfileHeader 
+        client={client} 
+        clientId={clientId} 
+        clientBalance={clientBalance} 
+        isLoading={isLoading} 
+        formatAmount={formatAmount} 
+        refreshClientBalance={refreshClientBalance} 
+        navigateToClients={navigateToClients} 
+        error={processedError} 
+      />
 
-          <ClientProfileTabs client={client} clientId={clientId} clientOperations={clientOperations} filteredOperations={filteredOperations} selectedType={selectedType} setSelectedType={setSelectedType} searchTerm={searchTerm} setSearchTerm={setSearchTerm} dateRange={dateRange} setDateRange={setDateRange} isCustomRange={isCustomRange} setIsCustomRange={setIsCustomRange} showAllDates={showAllDates} setShowAllDates={setShowAllDates} refreshClientOperations={refreshClientOperations} isPepsiMen={isPepsiMen} />
-        </div>}
+      {client && !isLoading && !error && (
+        <div className="space-y-6">
+          <ClientInfoCards 
+            client={client} 
+            clientId={clientId} 
+            clientOperations={clientOperations} 
+            exportToExcel={exportToExcel} 
+            exportToPDF={exportToPDF} 
+            formatAmount={formatAmount} 
+          />
+
+          <ClientProfileTabs 
+            client={client} 
+            clientId={clientId} 
+            clientOperations={clientOperations} 
+            filteredOperations={filteredOperations} 
+            selectedType={selectedType} 
+            setSelectedType={setSelectedType} 
+            searchTerm={searchTerm} 
+            setSearchTerm={setSearchTerm} 
+            dateRange={dateRange} 
+            setDateRange={setDateRange} 
+            isCustomRange={isCustomRange} 
+            setIsCustomRange={setIsCustomRange} 
+            showAllDates={showAllDates} 
+            setShowAllDates={setShowAllDates} 
+            refreshClientOperations={refreshClientOperations} 
+            isPepsiMen={isPepsiMen} 
+          />
+        </div>
+      )}
       
       {/* Hidden buttons to trigger dialogs */}
       <div className="hidden">
@@ -51,5 +90,6 @@ export default function ClientProfile() {
         <button id="exportExcel" onClick={exportToExcel}>Export to Excel</button>
         <button id="exportPDF" onClick={exportToPDF}>Export to PDF</button>
       </div>
-    </div>;
+    </div>
+  );
 }
