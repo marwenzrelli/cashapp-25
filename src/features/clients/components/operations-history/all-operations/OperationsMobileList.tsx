@@ -110,6 +110,7 @@ export const OperationsMobileList = ({
             formatAmount={(amount) => formatAmount(amount, operation.type)} 
             currency={currency}
             colorClass={getOperationTypeColor(operation.type)}
+            showId={true} 
           />
         </div>
       ))}
