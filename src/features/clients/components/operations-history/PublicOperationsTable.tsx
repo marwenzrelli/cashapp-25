@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -41,6 +40,19 @@ export const PublicOperationsTable: React.FC<PublicOperationsTableProps> = ({ op
     }
   };
 
+  const getOperationBadgeStyle = (type: string) => {
+    switch (type) {
+      case 'deposit':
+        return 'bg-green-50 text-green-700 border-green-200';
+      case 'withdrawal':
+        return 'bg-red-50 text-red-700 border-red-200';
+      case 'transfer':
+        return 'bg-blue-50 text-blue-700 border-blue-200';
+      default:
+        return 'bg-gray-50 text-gray-700 border-gray-200';
+    }
+  };
+
   return (
     <div className="w-full">
       <div className="overflow-x-auto w-full">
@@ -70,10 +82,13 @@ export const PublicOperationsTable: React.FC<PublicOperationsTableProps> = ({ op
                     {format(new Date(operation.operation_date || operation.date), 'dd/MM/yyyy HH:mm', { locale: fr })}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className="capitalize text-xs">
+                    <Badge 
+                      variant="outline" 
+                      className={`${getOperationBadgeStyle(operation.type)} text-xs capitalize`}
+                    >
                       {operation.type === 'deposit' ? 'Versement' : 
-                      operation.type === 'withdrawal' ? 'Retrait' : 
-                      'Virement'}
+                       operation.type === 'withdrawal' ? 'Retrait' : 
+                       'Virement'}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-xs">{operation.description}</TableCell>
