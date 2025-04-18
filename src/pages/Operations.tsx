@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { OperationFilters } from "@/features/operations/components/OperationFilters";
 import { useOperations } from "@/features/operations/hooks/useOperations";
@@ -168,6 +169,17 @@ const Operations = () => {
     refreshOperations(true);
   }, [refreshOperations]);
 
+  // Handle deletion with a boolean return
+  const handleDeleteConfirmation = async (): Promise<boolean> => {
+    try {
+      await confirmDeleteOperation();
+      return true;
+    } catch (error) {
+      console.error("Error in delete confirmation:", error);
+      return false;
+    }
+  };
+
   return (
     <div className="space-y-6">
       <OperationsHeader 
@@ -217,7 +229,7 @@ const Operations = () => {
       <DeleteOperationDialog
         isOpen={showDeleteDialog}
         onClose={() => setShowDeleteDialog(false)}
-        onConfirm={confirmDeleteOperation}
+        onDelete={handleDeleteConfirmation}
         operation={operationToDelete}
       />
       

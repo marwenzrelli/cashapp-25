@@ -16,9 +16,9 @@ import { toast } from "sonner";
 interface DeleteOperationDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => Promise<void>;
+  onConfirm?: () => Promise<void>;
   operation: Operation | null;
-  // Support for both naming conventions - this makes the component more flexible
+  // Support for both naming conventions and return types
   onDelete?: () => Promise<boolean>;
 }
 
@@ -41,7 +41,7 @@ export function DeleteOperationDialog({
         } else {
           toast.error("Erreur lors de la suppression");
         }
-      } else {
+      } else if (onConfirm) {
         await onConfirm();
         toast.success("Opération supprimée avec succès");
       }

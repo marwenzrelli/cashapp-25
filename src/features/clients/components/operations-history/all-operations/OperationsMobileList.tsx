@@ -50,8 +50,8 @@ export const OperationsMobileList = ({
     setIsDeleteDialogOpen(true);
   };
 
-  const confirmDeleteOperation = async () => {
-    if (!selectedOperation) return;
+  const confirmDeleteOperation = async (): Promise<boolean> => {
+    if (!selectedOperation) return false;
     
     try {
       await deleteOperation(selectedOperation);
@@ -131,7 +131,7 @@ export const OperationsMobileList = ({
       <DeleteOperationDialog
         isOpen={isDeleteDialogOpen}
         onClose={cancelDeleteOperation}
-        onConfirm={confirmDeleteOperation}
+        onDelete={confirmDeleteOperation}
         operation={selectedOperation}
       />
     </div>

@@ -27,11 +27,13 @@ import { toast } from "sonner";
 interface OperationsDesktopTableProps {
   operations: Operation[];
   updateOperation?: (operation: Operation) => Promise<void>;
+  currency?: string;
 }
 
 export const OperationsDesktopTable = ({ 
   operations,
-  updateOperation
+  updateOperation,
+  currency = "TND"
 }: OperationsDesktopTableProps) => {
   const [selectedOperation, setSelectedOperation] = useState<Operation | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
@@ -73,7 +75,7 @@ export const OperationsDesktopTable = ({
     setIsDeleteDialogOpen(true);
   };
 
-  const confirmDeleteOperation = async () => {
+  const confirmDeleteOperation = async (): Promise<boolean> => {
     try {
       // This would be implementation-specific, but for now, we'll just close the dialog
       setIsDeleteDialogOpen(false);
@@ -127,7 +129,7 @@ export const OperationsDesktopTable = ({
                   <TableCell className="text-right">
                     <span className={operation.type === 'withdrawal' ? 'text-red-600' : 'text-green-600'}>
                       {operation.type === 'withdrawal' ? '- ' : '+ '}
-                      {formatNumber(operation.amount)} TND
+                      {formatNumber(operation.amount)} {currency}
                     </span>
                   </TableCell>
                   <TableCell className="text-right">
@@ -180,7 +182,7 @@ export const OperationsDesktopTable = ({
       <DeleteOperationDialog
         isOpen={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
-        onConfirm={confirmDeleteOperation}
+        onDelete={confirmDeleteOperation}
         operation={selectedOperation}
       />
     </>
