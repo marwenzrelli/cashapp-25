@@ -1,3 +1,4 @@
+
 import { Operation } from "@/features/operations/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
@@ -32,7 +33,7 @@ export const OperationsDesktopTable = ({
     setIsModalOpen(false);
   };
 
-  const handleEdit = (updatedOperation: Operation) => {
+  const handleEdit = async (updatedOperation: Operation): Promise<void> => {
     console.log("Editing operation:", updatedOperation);
     
     // Here you would implement the actual update logic
@@ -42,6 +43,9 @@ export const OperationsDesktopTable = ({
     });
     
     setIsModalOpen(false);
+    
+    // Return a resolved promise to satisfy the type
+    return Promise.resolve();
   };
 
   const handleDelete = (operation: Operation) => {

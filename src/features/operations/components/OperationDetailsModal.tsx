@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Operation } from "../types";
@@ -10,7 +9,7 @@ interface OperationDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   operation: Operation | null;
-  onEdit: (updatedOperation: Operation) => Promise<void>; // Make sure this is a Promise
+  onEdit: (updatedOperation: Operation) => Promise<void>;
   onDelete: (operation: Operation) => void;
 }
 
@@ -62,13 +61,11 @@ export function OperationDetailsModal({
     }
   };
 
-  // Use the operation date if available, otherwise fall back to created date
   const displayDate = operation.operation_date || operation.date;
 
-  // Format the amount with or without a minus sign
   const formattedAmount = operation.type === 'withdrawal' 
-    ? `- ${formatAmount(operation.amount, 'XOF')}`
-    : formatAmount(operation.amount, 'XOF');
+    ? `- ${formatAmount(operation.amount, 'TND')}`
+    : formatAmount(operation.amount, 'TND');
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
