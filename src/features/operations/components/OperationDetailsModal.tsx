@@ -2,119 +2,134 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Operation } from "../types";
-import { Edit2, Trash2 } from "lucide-react";
-import { format } from "date-fns";
-import { formatNumber } from "@/features/clients/components/operations-history/all-operations/OperationTypeHelpers";
-import { useState } from "react";
-import { EditOperationDialog } from "./EditOperationDialog";
+import { formatDateTime } from "../types";
+import { formatAmount } from "@/utils/formatCurrency";
+import { ArrowDownRight, ArrowUpRight, ArrowLeftRight } from "lucide-react";
 
 interface OperationDetailsModalProps {
-  operation: Operation | null;
   isOpen: boolean;
   onClose: () => void;
-  onEdit: (operation: Operation) => void;
+  operation: Operation | null;
+  onEdit: (updatedOperation: Operation) => Promise<void>; // Make sure this is a Promise
   onDelete: (operation: Operation) => void;
 }
 
-export const OperationDetailsModal = ({
-  operation,
+export function OperationDetailsModal({
   isOpen,
   onClose,
+  operation,
   onEdit,
   onDelete
-}: OperationDetailsModalProps) => {
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-
+}: OperationDetailsModalProps) {
   if (!operation) return null;
 
+  const getOperationTypeIcon = () => {
+    switch (operation.type) {
+      case 'deposit':
+        return <ArrowUpRight className="h-5 w-5 text-green-500" />;
+      case 'withdrawal':
+        return <ArrowDownRight className="h-5 w-5 text-red-500" />;
+      case 'transfer':
+        return <ArrowLeftRight className="h-5 w-5 text-blue-500" />;
+      default:
+        return null;
+    }
+  };
+
+  const getOperationTypeText = () => {
+    switch (operation.type) {
+      case 'deposit':
+        return 'Versement';
+      case 'withdrawal':
+        return 'Retrait';
+      case 'transfer':
+        return 'Transfert';
+      default:
+        return 'Opération';
+    }
+  };
+
+  const getColorClass = () => {
+    switch (operation.type) {
+      case 'deposit':
+        return 'text-green-600';
+      case 'withdrawal':
+        return 'text-red-600';
+      case 'transfer':
+        return 'text-blue-600';
+      default:
+        return '';
+    }
+  };
+
+  // Use the operation date if available, otherwise fall back to created date
   const displayDate = operation.operation_date || operation.date;
-  const formattedDate = typeof displayDate === 'string'
-    ? format(new Date(displayDate), "dd/MM/yyyy HH:mm")
-    : format(displayDate, "dd/MM/yyyy HH:mm");
 
-  const handleEditClick = () => {
-    console.log("Edit operation:", operation);
-    setIsEditDialogOpen(true);
-  };
-
-  const handleEditConfirm = (updatedOperation: Operation) => {
-    onEdit(updatedOperation);
-    setIsEditDialogOpen(false);
-  };
+  // Format the amount with or without a minus sign
+  const formattedAmount = operation.type === 'withdrawal' 
+    ? `- ${formatAmount(operation.amount, 'XOF')}`
+    : formatAmount(operation.amount, 'XOF');
 
   return (
-    <>
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Détails de l'opération #{operation.id}</DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="font-medium">Type:</div>
-              <div className="capitalize">
-                {operation.type === "deposit" && "Versement"}
-                {operation.type === "withdrawal" && "Retrait"}
-                {operation.type === "transfer" && "Virement"}
-              </div>
-              
-              <div className="font-medium">Date:</div>
-              <div>{formattedDate}</div>
-              
-              <div className="font-medium">Montant:</div>
-              <div>
-                {operation.type === "withdrawal" ? "-" : 
-                 operation.type === "deposit" ? "+" : ""}
-                {formatNumber(operation.amount)} TND
-              </div>
-              
-              <div className="font-medium">Description:</div>
-              <div>{operation.description}</div>
-              
-              {operation.type === "transfer" ? (
-                <>
-                  <div className="font-medium">De:</div>
-                  <div>{operation.fromClient}</div>
-                  <div className="font-medium">À:</div>
-                  <div>{operation.toClient}</div>
-                </>
-              ) : (
-                <>
-                  <div className="font-medium">Client:</div>
-                  <div>{operation.fromClient}</div>
-                </>
-              )}
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center">
+            <span className="mr-2">{getOperationTypeIcon()}</span>
+            <span>{getOperationTypeText()}</span>
+          </DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <div className="text-sm text-muted-foreground">Montant</div>
+            <div className={`font-semibold text-lg ${getColorClass()}`}>
+              {formattedAmount}
             </div>
           </div>
-
-          <DialogFooter className="flex justify-between sm:justify-between">
-            <Button
-              variant="outline"
-              className="flex items-center gap-2 text-blue-600 hover:text-blue-700"
-              onClick={handleEditClick}
-            >
-              <Edit2 className="h-4 w-4" />
-              Modifier
-            </Button>
-            <Button
-              variant="outline"
-              className="flex items-center gap-2 text-red-600 hover:text-red-700"
-              onClick={() => onDelete(operation)}
-            >
-              <Trash2 className="h-4 w-4" />
-              Supprimer
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <EditOperationDialog
-        open={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
-        operation={operation}
-        onConfirm={handleEditConfirm}
-      />
-    </>
+          
+          <div className="flex justify-between items-center">
+            <div className="text-sm text-muted-foreground">Date</div>
+            <div>{formatDateTime(displayDate)}</div>
+          </div>
+          
+          <div className="flex justify-between items-start">
+            <div className="text-sm text-muted-foreground">
+              {operation.type === 'transfer' ? 'De' : 'Client'}
+            </div>
+            <div className="text-right">{operation.fromClient}</div>
+          </div>
+          
+          {operation.type === 'transfer' && operation.toClient && (
+            <div className="flex justify-between items-start">
+              <div className="text-sm text-muted-foreground">À</div>
+              <div className="text-right">{operation.toClient}</div>
+            </div>
+          )}
+          
+          {operation.description && (
+            <div className="flex justify-between items-start">
+              <div className="text-sm text-muted-foreground">Description</div>
+              <div className="text-right max-w-[250px] break-words">{operation.description}</div>
+            </div>
+          )}
+        </div>
+        
+        <DialogFooter className="sm:justify-between">
+          <Button 
+            variant="destructive" 
+            onClick={() => onDelete(operation)}
+          >
+            Supprimer
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => onEdit(operation).catch(error => console.error("Edit failed:", error))}
+          >
+            Modifier
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
-};
+}
