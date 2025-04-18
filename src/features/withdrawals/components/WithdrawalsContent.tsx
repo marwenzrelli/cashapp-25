@@ -1,21 +1,20 @@
-import React, { useState } from "react";
-import { StandaloneWithdrawalForm } from "./standalone/StandaloneWithdrawalForm";
+import React from "react";
 import { WithdrawalTable } from "./WithdrawalTable";
 import { WithdrawalHeader } from "./WithdrawalHeader";
-import { SearchBar } from "./SearchBar";
 import { DeleteWithdrawalDialog } from "./DeleteWithdrawalDialog";
 import { WithdrawalDialogContainer } from "./WithdrawalDialogContainer";
 import { NewWithdrawalButton } from "./NewWithdrawalButton";
+import { SearchSection } from "./sections/SearchSection";
+import { WithdrawalFormSection } from "./sections/WithdrawalFormSection";
 import { Withdrawal } from "../types";
 import { Client } from "@/features/clients/types";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { TransferPagination } from "@/features/transfers/components/TransferPagination";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { DateRange } from "react-day-picker";
 import { WithdrawalTotals } from "./WithdrawalTotals";
-
 import { ExtendedClient } from "../hooks/form/withdrawalFormTypes";
+import { useWithdrawalState } from "../hooks/useWithdrawalState";
 
 interface WithdrawalsContentProps {
   withdrawals: Withdrawal[];
@@ -58,35 +57,18 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
   dateRange,
   setDateRange = () => {}
 }) => {
-  const [showDialog, setShowDialog] = useState(false);
-  const [selectedClient, setSelectedClient] = useState<string>("");
-  const [selectedWithdrawal, setSelectedWithdrawal] = useState<Withdrawal | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-
-  const findClientById = (clientName: string) => {
-    const client = clients.find(c => `${c.prenom} ${c.nom}` === clientName);
-    return client ? {
-      ...client,
-      dateCreation: client.date_creation || new Date().toISOString()
-    } : null;
-  };
-
-  const handleDeleteWithdrawal = (withdrawal: Withdrawal) => {
-    setSelectedWithdrawal(withdrawal);
-    deleteWithdrawal(withdrawal);
-  };
-
-  const handleEdit = (withdrawal: Withdrawal) => {
-    setSelectedWithdrawal(withdrawal);
-    setSelectedClient(withdrawal.client_name);
-    setIsEditing(true);
-    setShowDialog(true);
-  };
-
-  const extendedClients: ExtendedClient[] = clients.map(client => ({
-    ...client,
-    dateCreation: client.date_creation || new Date().toISOString()
-  }));
+  const {
+    showDialog,
+    setShowDialog,
+    selectedClient,
+    setSelectedClient,
+    selectedWithdrawal,
+    setSelectedWithdrawal,
+    isEditing,
+    handleNewWithdrawal,
+    handleEdit,
+    findClientById
+  } = useWithdrawalState();
 
   const handleFetchWithdrawals = async (): Promise<void> => {
     try {
@@ -149,11 +131,10 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
     return "pour toute la période";
   };
 
-  const handleNewWithdrawal = () => {
-    setSelectedWithdrawal(null);
-    setIsEditing(false);
-    setShowDialog(true);
-  };
+  const extendedClients: ExtendedClient[] = clients.map(client => ({
+    ...client,
+    dateCreation: client.date_creation || new Date().toISOString()
+  }));
 
   return (
     <div className="space-y-8 animate-in w-full px-0 sm:px-0">
@@ -163,33 +144,21 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
         <NewWithdrawalButton onClick={handleNewWithdrawal} />
       </div>
 
-      <div className="w-full">
-        <StandaloneWithdrawalForm 
-          clients={extendedClients} 
-          onConfirm={handleWithdrawalConfirm} 
-          refreshClientBalance={refreshClientBalance} 
-        />
-      </div>
+      <WithdrawalFormSection
+        clients={extendedClients}
+        onConfirm={handleWithdrawalConfirm}
+        refreshClientBalance={refreshClientBalance}
+      />
 
-      <Card className="w-full mx-0">
-        <CardHeader>
-          <CardTitle>Recherche intelligente</CardTitle>
-          <CardDescription>
-            Trouvez rapidement un retrait
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <SearchBar
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            itemsPerPage={itemsPerPage}
-            onItemsPerPageChange={setItemsPerPage}
-            totalWithdrawals={withdrawals.length}
-            dateRange={dateRange}
-            onDateRangeChange={setDateRange}
-          />
-        </CardContent>
-      </Card>
+      <SearchSection
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        itemsPerPage={itemsPerPage}
+        onItemsPerPageChange={setItemsPerPage}
+        totalWithdrawals={withdrawals.length}
+        dateRange={dateRange}
+        onDateRangeChange={setDateRange}
+      />
 
       <TransferPagination
         itemsPerPage={itemsPerPage}
@@ -203,8 +172,8 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
       <WithdrawalTable 
         withdrawals={paginatedWithdrawals} 
         onEdit={handleEdit} 
-        onDelete={handleDeleteWithdrawal} 
-        findClientById={findClientById}
+        onDelete={deleteWithdrawal} 
+        findClientById={(clientName) => findClientById(clients, clientName)}
         dateRange={dateRange}
       />
       
