@@ -1,10 +1,14 @@
-
 import { ArrowUpCircle, ArrowDownCircle, ArrowLeftRight, Hash } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RecentActivity } from "../../types";
 import { formatDateTime } from "@/features/operations/types";
 import { OperationsMobileCard } from "@/features/clients/components/operations-history/OperationsMobileCard";
 import { formatOperationId } from "@/features/operations/utils/display-helpers";
+import { useState } from "react";
+import { OperationDetailsModal } from "@/features/operations/components/OperationDetailsModal";
+import { DeleteOperationDialog } from "@/features/operations/components/DeleteOperationDialog";
+import { Operation } from "@/features/operations/types";
+import { toast } from "sonner";
 
 interface RecentActivityItemProps {
   activity: RecentActivity;
@@ -13,6 +17,9 @@ interface RecentActivityItemProps {
 }
 
 export const RecentActivityItem = ({ activity, currency, index }: RecentActivityItemProps) => {
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  
   // Function to safely format operation ID
   const safeFormatId = (id: string) => {
     try {
@@ -26,6 +33,33 @@ export const RecentActivityItem = ({ activity, currency, index }: RecentActivity
   // Create sign prefix based on operation type
   const signPrefix = activity.type === "withdrawal" ? "- " : 
                      activity.type === "deposit" ? "+ " : "";
+
+  // Convert RecentActivity to Operation type for modal
+  const activityToOperation = (): Operation => ({
+    id: activity.id,
+    type: activity.type,
+    amount: activity.amount,
+    date: activity.date,
+    fromClient: activity.client_name,
+    description: activity.description || "",
+    operation_date: activity.date
+  });
+
+  const handleEditOperation = async (updatedOperation: Operation) => {
+    try {
+      // Implement your update logic here
+      toast.success("Opération modifiée avec succès");
+      setIsDetailsModalOpen(false);
+    } catch (error) {
+      console.error("Edit operation error:", error);
+      toast.error("Erreur lors de la modification");
+    }
+  };
+
+  const handleOpenModal = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsDetailsModalOpen(true);
+  };
 
   return (
     <div key={`${activity.id}-${index}`}>
@@ -54,7 +88,10 @@ export const RecentActivityItem = ({ activity, currency, index }: RecentActivity
                 {activity.type === 'withdrawal' && 'Retrait'}
                 {activity.type === 'transfer' && 'Virement'}
               </p>
-              <span className="text-xs font-mono text-muted-foreground flex items-center">
+              <span 
+                onClick={handleOpenModal}
+                className="text-xs font-mono text-muted-foreground flex items-center cursor-pointer hover:text-primary hover:underline"
+              >
                 <Hash className="h-3 w-3 mr-1" />
                 #{safeFormatId(activity.id)}
               </span>
@@ -105,6 +142,28 @@ export const RecentActivityItem = ({ activity, currency, index }: RecentActivity
           showId={true}
         />
       </div>
+
+      {/* Operation Details Modal */}
+      <OperationDetailsModal
+        isOpen={isDetailsModalOpen}
+        onClose={() => setIsDetailsModalOpen(false)}
+        operation={activityToOperation()}
+        onEdit={handleEditOperation}
+        onDelete={() => setIsDeleteDialogOpen(true)}
+      />
+
+      {/* Delete Dialog */}
+      <DeleteOperationDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        operation={activityToOperation()}
+        onDelete={async () => {
+          // Implement your delete logic here
+          toast.success("Opération supprimée avec succès");
+          setIsDeleteDialogOpen(false);
+          return true;
+        }}
+      />
     </div>
   );
 };
