@@ -1,4 +1,3 @@
-
 import { type Deposit } from "@/components/deposits/types";
 import { DepositClientInfo } from "./DepositClientInfo";
 import { DepositAmount } from "./DepositAmount";
@@ -8,58 +7,48 @@ import { DateRange } from "react-day-picker";
 import { formatDate } from "@/features/withdrawals/hooks/utils/formatUtils";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatId } from "@/utils/formatId";
-
 interface DesktopDepositsTableProps {
   deposits: Deposit[];
   onEdit: (deposit: Deposit) => void;
   onDelete: (deposit: Deposit) => void;
   dateRange?: DateRange;
 }
-
-export const DesktopDepositsTable = ({ 
-  deposits, 
-  onEdit, 
+export const DesktopDepositsTable = ({
+  deposits,
+  onEdit,
   onDelete,
   dateRange
 }: DesktopDepositsTableProps) => {
   // Get currency formatting from context
-  const { currency } = useCurrency();
-  
+  const {
+    currency
+  } = useCurrency();
+
   // Calculate total deposit amount
   const totalDeposits = deposits.reduce((total, deposit) => total + deposit.amount, 0);
-  
-  // Format date range for display - convert Date objects to ISO strings first
-  const dateRangeText = dateRange?.from && dateRange?.to 
-    ? `du ${formatDate(dateRange.from.toISOString())} au ${formatDate(dateRange.to.toISOString())}`
-    : "pour toute la période";
 
-  return (
-    <table className="w-full text-sm">
+  // Format date range for display - convert Date objects to ISO strings first
+  const dateRangeText = dateRange?.from && dateRange?.to ? `du ${formatDate(dateRange.from.toISOString())} au ${formatDate(dateRange.to.toISOString())}` : "pour toute la période";
+  return <table className="w-full text-sm">
       <thead className="bg-muted/50">
         <tr className="text-left">
-          <th className="p-3 font-medium">ID</th>
-          <th className="p-3 font-medium">Client</th>
+          <th className="p-3 font-medium">     ID</th>
+          <th className="p-3 font-medium">               Client</th>
           <th className="p-3 font-medium text-center">Montant</th>
-          <th className="p-3 font-medium">Date d'opération</th>
-          <th className="p-3 font-medium">Notes</th>
+          <th className="p-3 font-medium">            Date </th>
+          <th className="p-3 font-medium">                        Notes</th>
           <th className="p-3 font-medium text-center">Actions</th>
         </tr>
       </thead>
       <tbody>
-        {deposits.map((deposit) => {
-          const operationId = typeof deposit.id === 'number' 
-            ? formatId(deposit.id) 
-            : deposit.id;
-            
-          return (
-            <tr key={deposit.id.toString()} className="group border-b transition-colors hover:bg-muted/50">
+        {deposits.map(deposit => {
+        const operationId = typeof deposit.id === 'number' ? formatId(deposit.id) : deposit.id;
+        return <tr key={deposit.id.toString()} className="group border-b transition-colors hover:bg-muted/50">
               <td className="p-3 font-mono text-xs">{operationId}</td>
               <td className="p-3">
-                <DepositClientInfo 
-                  clientName={deposit.client_name} 
-                  depositId={deposit.id} // No need for toString here, updated interface accepts number
-                  clientId={deposit.client_id} // No need for toString here, updated interface accepts number
-                />
+                <DepositClientInfo clientName={deposit.client_name} depositId={deposit.id} // No need for toString here, updated interface accepts number
+            clientId={deposit.client_id} // No need for toString here, updated interface accepts number
+            />
               </td>
               <td className="p-3 text-center">
                 <DepositAmount amount={deposit.amount} />
@@ -69,19 +58,13 @@ export const DesktopDepositsTable = ({
               </td>
               <td className="p-3 text-muted-foreground">{deposit.description}</td>
               <td className="p-3 text-center">
-                <DepositActions 
-                  deposit={deposit} 
-                  onEdit={onEdit} 
-                  onDelete={onDelete} 
-                />
+                <DepositActions deposit={deposit} onEdit={onEdit} onDelete={onDelete} />
               </td>
-            </tr>
-          );
-        })}
+            </tr>;
+      })}
 
         {/* Total row */}
-        {deposits.length > 0 && (
-          <tr className="border-t-2 border-primary/20 font-medium">
+        {deposits.length > 0 && <tr className="border-t-2 border-primary/20 font-medium">
             <td colSpan={2} className="p-3 text-right">
               Total des versements {dateRangeText}:
             </td>
@@ -89,9 +72,7 @@ export const DesktopDepositsTable = ({
               {totalDeposits.toLocaleString()} {currency}
             </td>
             <td colSpan={3}></td>
-          </tr>
-        )}
+          </tr>}
       </tbody>
-    </table>
-  );
+    </table>;
 };
