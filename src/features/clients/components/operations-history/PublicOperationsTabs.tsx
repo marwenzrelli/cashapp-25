@@ -1,10 +1,11 @@
 
-import { ArrowUpCircle, ArrowDownCircle, RefreshCcw } from "lucide-react";
+import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Operation } from "@/features/operations/types";
 import { PublicOperationsTable } from "./PublicOperationsTable";
-import { useEffect } from "react";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Operation } from "@/features/operations/types";
+import { ArrowUpCircle, ArrowDownCircle, ArrowLeftRight, List } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 interface PublicOperationsTabsProps {
   operations: Operation[];
@@ -12,110 +13,87 @@ interface PublicOperationsTabsProps {
 }
 
 export const PublicOperationsTabs = ({ operations, currency }: PublicOperationsTabsProps) => {
-  // Log operations count for debugging
-  useEffect(() => {
-    console.log(`PublicOperationsTabs - Total operations: ${operations.length}`);
-    console.log(`PublicOperationsTabs - Operations by type:`,
-      {
-        deposits: operations.filter(op => op.type === "deposit").length,
-        withdrawals: operations.filter(op => op.type === "withdrawal").length,
-        transfers: operations.filter(op => op.type === "transfer").length
-      }
-    );
-    
-    // For debugging, log all operation types
-    const depositIds = operations.filter(op => op.type === "deposit").map(op => op.id).join(', ');
-    const withdrawalIds = operations.filter(op => op.type === "withdrawal").map(op => op.id).join(', ');
-    
-    console.log(`PublicOperationsTabs - Deposit IDs: ${depositIds}`);
-    console.log(`PublicOperationsTabs - Withdrawal IDs: ${withdrawalIds}`);
-  }, [operations]);
-
-  // Calculate totals for the summary footer
-  const depositsTotal = operations
-    .filter(op => op.type === "deposit")
-    .reduce((total, op) => total + op.amount, 0);
-    
-  const withdrawalsTotal = operations
-    .filter(op => op.type === "withdrawal")
-    .reduce((total, op) => total + op.amount, 0);
-    
-  const transfersTotal = operations
-    .filter(op => op.type === "transfer")
-    .reduce((total, op) => total + op.amount, 0);
-    
-  // Calculate net balance movement
-  const netMovement = depositsTotal - withdrawalsTotal;
+  // Count operations by type
+  const depositsCount = operations.filter(op => op.type === "deposit").length;
+  const withdrawalsCount = operations.filter(op => op.type === "withdrawal").length;
+  const transfersCount = operations.filter(op => op.type === "transfer").length;
 
   return (
     <Tabs defaultValue="all" className="w-full">
-      <TabsList className="w-full flex overflow-x-auto no-scrollbar p-0 rounded-none border-b">
-        <TabsTrigger value="all" className="flex-1 text-xs sm:text-sm py-1.5">
-          Tout <span className="ml-1 text-xs opacity-75">({operations.length})</span>
+      <TabsList className="grid grid-cols-4 w-full">
+        <TabsTrigger 
+          value="all" 
+          className="flex items-center justify-center gap-2 text-sm"
+        >
+          <List className="h-4 w-4" />
+          Tout
+          <Badge variant="secondary" className="ml-1">{operations.length}</Badge>
         </TabsTrigger>
-        <TabsTrigger value="deposits" className="flex-1 text-xs sm:text-sm py-1.5">
-          <ArrowUpCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-          <span className="hidden xs:inline">Versements</span>
-          <span className="xs:hidden">Vers.</span>
-          <span className="ml-1 text-xs opacity-75">({operations.filter(op => op.type === "deposit").length})</span>
+        
+        <TabsTrigger 
+          value="deposits" 
+          className={cn(
+            "flex items-center justify-center gap-2 text-sm",
+            "text-green-700 data-[state=active]:bg-green-50 data-[state=active]:text-green-800",
+            "hover:bg-green-50/50"
+          )}
+        >
+          <ArrowUpCircle className="h-4 w-4" />
+          Versements
+          <Badge variant="secondary" className="ml-1 bg-green-100 text-green-800">{depositsCount}</Badge>
         </TabsTrigger>
-        <TabsTrigger value="withdrawals" className="flex-1 text-xs sm:text-sm py-1.5">
-          <ArrowDownCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-          <span className="hidden xs:inline">Retraits</span>
-          <span className="xs:hidden">Ret.</span>
-          <span className="ml-1 text-xs opacity-75">({operations.filter(op => op.type === "withdrawal").length})</span>
+        
+        <TabsTrigger 
+          value="withdrawals" 
+          className={cn(
+            "flex items-center justify-center gap-2 text-sm",
+            "text-red-700 data-[state=active]:bg-red-50 data-[state=active]:text-red-800",
+            "hover:bg-red-50/50"
+          )}
+        >
+          <ArrowDownCircle className="h-4 w-4" />
+          Retraits
+          <Badge variant="secondary" className="ml-1 bg-red-100 text-red-800">{withdrawalsCount}</Badge>
         </TabsTrigger>
-        <TabsTrigger value="transfers" className="flex-1 text-xs sm:text-sm py-1.5">
-          <RefreshCcw className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-          <span className="hidden xs:inline">Virements</span>
-          <span className="xs:hidden">Vir.</span>
-          <span className="ml-1 text-xs opacity-75">({operations.filter(op => op.type === "transfer").length})</span>
+        
+        <TabsTrigger 
+          value="transfers" 
+          className={cn(
+            "flex items-center justify-center gap-2 text-sm",
+            "text-blue-700 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-800",
+            "hover:bg-blue-50/50"
+          )}
+        >
+          <ArrowLeftRight className="h-4 w-4" />
+          Virements
+          <Badge variant="secondary" className="ml-1 bg-blue-100 text-blue-800">{transfersCount}</Badge>
         </TabsTrigger>
       </TabsList>
 
-      <div className="px-0 py-1 sm:py-2 w-full">
-        <TabsContent value="all" className="mt-0 w-full">
-          <PublicOperationsTable operations={operations} currency={currency} />
-        </TabsContent>
-
-        <TabsContent value="deposits" className="mt-0 w-full">
-          <PublicOperationsTable operations={operations.filter(op => op.type === "deposit")} currency={currency} />
-        </TabsContent>
-
-        <TabsContent value="withdrawals" className="mt-0 w-full">
-          <PublicOperationsTable operations={operations.filter(op => op.type === "withdrawal")} currency={currency} />
-        </TabsContent>
-
-        <TabsContent value="transfers" className="mt-0 w-full">
-          <PublicOperationsTable operations={operations.filter(op => op.type === "transfer")} currency={currency} />
-        </TabsContent>
-      </div>
-
-      {/* Summary footer with totals */}
-      <Card className="mt-3 border-t w-full">
-        <CardFooter className="px-2 py-2 sm:px-3 sm:py-3 w-full">
-          <div className="w-full grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <div className="text-center p-1.5 bg-primary/5 rounded-lg">
-              <p className="text-xs sm:text-sm text-muted-foreground">Versements</p>
-              <p className="text-base sm:text-lg font-semibold text-green-600">{depositsTotal.toLocaleString()} {currency}</p>
-            </div>
-            <div className="text-center p-1.5 bg-primary/5 rounded-lg">
-              <p className="text-xs sm:text-sm text-muted-foreground">Retraits</p>
-              <p className="text-base sm:text-lg font-semibold text-red-600">{withdrawalsTotal.toLocaleString()} {currency}</p>
-            </div>
-            <div className="text-center p-1.5 bg-primary/5 rounded-lg">
-              <p className="text-xs sm:text-sm text-muted-foreground">Virements</p>
-              <p className="text-base sm:text-lg font-semibold text-blue-600">{transfersTotal.toLocaleString()} {currency}</p>
-            </div>
-            <div className="text-center p-1.5 bg-primary/5 rounded-lg">
-              <p className="text-xs sm:text-sm text-muted-foreground">Mouvement Net</p>
-              <p className={`text-base sm:text-lg font-semibold ${netMovement >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {netMovement.toLocaleString()} {currency}
-              </p>
-            </div>
-          </div>
-        </CardFooter>
-      </Card>
+      <TabsContent value="all">
+        <PublicOperationsTable operations={operations} currency={currency} />
+      </TabsContent>
+      
+      <TabsContent value="deposits">
+        <PublicOperationsTable 
+          operations={operations.filter(op => op.type === "deposit")} 
+          currency={currency}
+        />
+      </TabsContent>
+      
+      <TabsContent value="withdrawals">
+        <PublicOperationsTable 
+          operations={operations.filter(op => op.type === "withdrawal")} 
+          currency={currency}
+        />
+      </TabsContent>
+      
+      <TabsContent value="transfers">
+        <PublicOperationsTable 
+          operations={operations.filter(op => op.type === "transfer")} 
+          currency={currency}
+        />
+      </TabsContent>
     </Tabs>
   );
 };
