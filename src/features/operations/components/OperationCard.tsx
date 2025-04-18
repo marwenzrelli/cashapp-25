@@ -1,10 +1,9 @@
-
 import { Operation, formatDateTime } from "../types";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowDownRight, ArrowUpRight, ArrowLeftRight, Trash2, Calendar, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { formatAmount } from "@/utils/formatCurrency";
 
 interface OperationCardProps {
@@ -80,29 +79,50 @@ export const OperationCard = ({
       "print:break-inside-avoid print:mb-0"
     )}>
       <CardContent className="p-4 print:p-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="grid grid-cols-[auto,1fr,auto] gap-4 items-center">
+          <div className="flex items-center gap-2">
             <div className="p-2 rounded-full bg-muted print:hidden">
               {getOperationIcon()}
             </div>
-            
             <div>
               <h3 className="font-medium text-sm print:text-xs">
                 {getFormattedType()}
               </h3>
-              
-              <div className="flex items-center gap-1">
-                <Calendar className="h-3 w-3 text-muted-foreground" />
-                <p className="text-xs text-muted-foreground">
-                  {formatDateTime(displayDate || '')}
-                </p>
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Calendar className="h-3 w-3" />
+                {formatDateTime(displayDate || '')}
               </div>
             </div>
           </div>
-          
+
+          <div className="grid grid-cols-1 gap-2">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs font-medium text-muted-foreground">
+                  {type === 'transfer' ? 'De' : 'Client'}
+                </p>
+                <p className="text-sm truncate">{fromClient}</p>
+              </div>
+              
+              {type === 'transfer' && toClient && (
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">À</p>
+                  <p className="text-sm truncate">{toClient}</p>
+                </div>
+              )}
+            </div>
+            
+            {description && (
+              <div>
+                <p className="text-xs font-medium text-muted-foreground">Description</p>
+                <p className="text-sm">{description}</p>
+              </div>
+            )}
+          </div>
+
           <div className="flex items-center gap-2">
             <span className={cn(
-              "font-semibold",
+              "font-semibold whitespace-nowrap",
               getColorClass(),
               isMobile ? "text-base" : "text-lg"
             )}>
@@ -148,31 +168,6 @@ export const OperationCard = ({
                 </Tooltip>
               </TooltipProvider>
             </div>
-          </div>
-        </div>
-        
-        <div className="mt-2">
-          <div className="grid grid-cols-1 gap-2">
-            <div>
-              <p className="text-xs font-medium text-muted-foreground">
-                {type === 'transfer' ? 'De' : 'Client'}
-              </p>
-              <p className="text-sm truncate">{fromClient}</p>
-            </div>
-            
-            {type === 'transfer' && toClient && (
-              <div>
-                <p className="text-xs font-medium text-muted-foreground">À</p>
-                <p className="text-sm truncate">{toClient}</p>
-              </div>
-            )}
-            
-            {description && (
-              <div>
-                <p className="text-xs font-medium text-muted-foreground">Description</p>
-                <p className="text-sm">{description}</p>
-              </div>
-            )}
           </div>
         </div>
       </CardContent>
