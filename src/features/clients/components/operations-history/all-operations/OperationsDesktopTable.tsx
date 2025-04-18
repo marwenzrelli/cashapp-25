@@ -14,7 +14,7 @@ import {
   getOperationTypeDisplay, 
   getOperationTypeIcon 
 } from "./OperationTypeHelpers";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
@@ -45,7 +45,7 @@ export const OperationsDesktopTable = ({
 
   const formatDate = (dateString: string) => {
     try {
-      return format(parseISO(dateString), "dd MMMM yyyy", { locale: fr });
+      return format(new Date(dateString), "dd MMMM yyyy HH:mm", { locale: fr });
     } catch (error) {
       console.error("Date parsing error:", error);
       return dateString;
@@ -76,7 +76,6 @@ export const OperationsDesktopTable = ({
 
   const confirmDeleteOperation = async (): Promise<boolean> => {
     try {
-      // This would be implementation-specific, but for now, we'll just close the dialog
       setIsDeleteDialogOpen(false);
       toast.success("Opération supprimée avec succès");
       return true;
@@ -107,6 +106,8 @@ export const OperationsDesktopTable = ({
               const Icon = getOperationTypeIcon(operation.type);
               const typeColor = getOperationTypeColor(operation.type);
               
+              const displayDate = operation.operation_date || operation.date;
+              
               return (
                 <TableRow 
                   key={operation.id} 
@@ -130,7 +131,7 @@ export const OperationsDesktopTable = ({
                   >
                     {operation.id}
                   </TableCell>
-                  <TableCell>{formatDate(operation.date)}</TableCell>
+                  <TableCell>{formatDate(displayDate)}</TableCell>
                   <TableCell>{operation.description || "-"}</TableCell>
                   <TableCell className="text-right">
                     <span className={operation.type === 'withdrawal' ? 'text-red-600' : 'text-green-600'}>
@@ -171,7 +172,6 @@ export const OperationsDesktopTable = ({
         </Table>
       </div>
 
-      {/* Details modal */}
       {selectedOperation && (
         <OperationDetailsModal
           isOpen={isDetailsModalOpen}
@@ -185,7 +185,6 @@ export const OperationsDesktopTable = ({
         />
       )}
 
-      {/* Delete confirmation dialog */}
       <DeleteOperationDialog
         isOpen={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
