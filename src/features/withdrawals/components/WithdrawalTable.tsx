@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +10,6 @@ import { useNavigate } from "react-router-dom";
 import { formatId } from "@/utils/formatId";
 import { DateRange } from "react-day-picker";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-
 interface WithdrawalTableProps {
   withdrawals: Withdrawal[];
   onEdit: (withdrawal: Withdrawal) => void;
@@ -21,7 +19,6 @@ interface WithdrawalTableProps {
   }) | null;
   dateRange?: DateRange;
 }
-
 export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
   withdrawals,
   onEdit,
@@ -29,12 +26,13 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
   findClientById,
   dateRange
 }) => {
-  const { currency } = useCurrency();
+  const {
+    currency
+  } = useCurrency();
   const navigate = useNavigate();
-  
+
   // État pour suivre quel retrait est développé
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  
   const handleClientClick = (client: (Client & {
     dateCreation: string;
   }) | null) => {
@@ -42,20 +40,17 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
       navigate(`/clients/${client.id}`);
     }
   };
-  
+
   // Toggle expanded withdrawal
   const toggleExpanded = (id: string) => {
     setExpandedId(expandedId === id ? null : id);
   };
-  
+
   // Calculate the total amount for the displayed withdrawals
   const totalAmount = withdrawals.reduce((total, withdrawal) => total + withdrawal.amount, 0);
-  
+
   // Format date range for display - convert Date objects to ISO strings first
-  const dateRangeText = dateRange?.from && dateRange?.to 
-    ? `du ${formatDate(dateRange.from.toISOString())} au ${formatDate(dateRange.to.toISOString())}`
-    : "pour toute la période";
-  
+  const dateRangeText = dateRange?.from && dateRange?.to ? `du ${formatDate(dateRange.from.toISOString())} au ${formatDate(dateRange.to.toISOString())}` : "pour toute la période";
   return <Card className="w-full mx-0">
       <CardHeader>
         <div className="flex items-center justify-between">
@@ -71,11 +66,11 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr className="text-left">
-                <th className="p-3">ID</th>
-                <th className="p-3">Client</th>
+                <th className="p-3">   ID</th>
+                <th className="p-3">               Client</th>
                 <th className="p-3 text-center">Montant</th>
                 <th className="p-3">Date d'opération</th>
-                <th className="p-3">Notes</th>
+                <th className="p-3">                                       Notes</th>
                 <th className="p-3 text-center">Actions</th>
               </tr>
             </thead>
@@ -93,10 +88,7 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
                           <div className="absolute inset-0 animate-pulse rounded-full bg-primary/5" />
                         </div>
                         <div>
-                          <p 
-                            className="font-medium cursor-pointer hover:text-primary hover:underline transition-colors flex items-center gap-1 px-2 py-1 rounded-md bg-purple-50 dark:bg-purple-900/20"
-                            onClick={() => handleClientClick(client)}
-                          >
+                          <p className="font-medium cursor-pointer hover:text-primary hover:underline transition-colors flex items-center gap-1 px-2 py-1 rounded-md bg-purple-50 dark:bg-purple-900/20" onClick={() => handleClientClick(client)}>
                             {withdrawal.client_name}
                             
                           </p>
@@ -148,18 +140,11 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
         {/* Mobile Card View - Mise à jour avec Collapsible */}
         <div className="md:hidden space-y-3 w-full px-0">
           {withdrawals.map(withdrawal => {
-            const client = findClientById(withdrawal.client_name);
-            const formattedOperationDate = withdrawal.operation_date ? formatDate(withdrawal.operation_date) : "Date inconnue";
-            const operationId = formatId(withdrawal.id, 4);
-            const isExpanded = expandedId === withdrawal.id;
-            
-            return (
-              <Collapsible 
-                key={withdrawal.id} 
-                open={isExpanded}
-                onOpenChange={() => toggleExpanded(withdrawal.id)}
-                className="bg-gradient-to-br from-white to-red-50/30 dark:from-gray-800/95 dark:to-red-900/10 p-4 border border-red-100/40 dark:border-red-800/20 rounded-xl shadow-sm hover:shadow-md w-full transition-all duration-300 hover:translate-y-[-2px] backdrop-blur-sm animate-in"
-              >
+          const client = findClientById(withdrawal.client_name);
+          const formattedOperationDate = withdrawal.operation_date ? formatDate(withdrawal.operation_date) : "Date inconnue";
+          const operationId = formatId(withdrawal.id, 4);
+          const isExpanded = expandedId === withdrawal.id;
+          return <Collapsible key={withdrawal.id} open={isExpanded} onOpenChange={() => toggleExpanded(withdrawal.id)} className="bg-gradient-to-br from-white to-red-50/30 dark:from-gray-800/95 dark:to-red-900/10 p-4 border border-red-100/40 dark:border-red-800/20 rounded-xl shadow-sm hover:shadow-md w-full transition-all duration-300 hover:translate-y-[-2px] backdrop-blur-sm animate-in">
                 <CollapsibleTrigger className="w-full text-left">
                   <div>
                     <div className="flex items-center justify-between mb-2">
@@ -175,13 +160,10 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
                       </div>
                     </div>
                     
-                    <p 
-                      className="font-medium text-primary flex items-center cursor-pointer mb-2 px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-900/20" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleClientClick(client);
-                      }}
-                    >
+                    <p className="font-medium text-primary flex items-center cursor-pointer mb-2 px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-900/20" onClick={e => {
+                  e.stopPropagation();
+                  handleClientClick(client);
+                }}>
                       {withdrawal.client_name}
                     </p>
                     
@@ -190,61 +172,44 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
                       {formattedOperationDate}
                     </div>
                     
-                    {withdrawal.notes && (
-                      <p className="text-sm text-muted-foreground line-clamp-2 bg-gray-50/50 dark:bg-gray-800/30 px-3 py-1.5 rounded-lg">
+                    {withdrawal.notes && <p className="text-sm text-muted-foreground line-clamp-2 bg-gray-50/50 dark:bg-gray-800/30 px-3 py-1.5 rounded-lg">
                         {withdrawal.notes}
-                      </p>
-                    )}
+                      </p>}
                   </div>
                 </CollapsibleTrigger>
                 
                 <CollapsibleContent className="pt-2 animate-accordion-down">
                   <div className="flex justify-end gap-2 mt-1">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onEdit(withdrawal);
-                      }} 
-                      className="h-8 w-8 text-blue-600"
-                    >
+                    <Button variant="ghost" size="icon" onClick={e => {
+                  e.stopPropagation();
+                  onEdit(withdrawal);
+                }} className="h-8 w-8 text-blue-600">
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete(withdrawal);
-                      }} 
-                      className="h-8 w-8 text-red-600"
-                    >
+                    <Button variant="ghost" size="icon" onClick={e => {
+                  e.stopPropagation();
+                  onDelete(withdrawal);
+                }} className="h-8 w-8 text-red-600">
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </CollapsibleContent>
-              </Collapsible>
-            );
-          })}
+              </Collapsible>;
+        })}
           
-          {withdrawals.length === 0 && (
-            <div className="text-center py-4 text-muted-foreground">
+          {withdrawals.length === 0 && <div className="text-center py-4 text-muted-foreground">
               Aucun retrait trouvé
-            </div>
-          )}
+            </div>}
             
           {/* Mobile Total Section */}
-          {withdrawals.length > 0 && (
-            <div className="bg-muted/50 p-4 rounded-lg border mt-4">
+          {withdrawals.length > 0 && <div className="bg-muted/50 p-4 rounded-lg border mt-4">
               <div className="flex justify-between items-center">
                 <span className="font-semibold">Total {dateRangeText}:</span>
                 <span className="text-danger font-bold px-2 py-0.5 rounded-md text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20">
                   {totalAmount.toLocaleString()} {currency}
                 </span>
               </div>
-            </div>
-          )}
+            </div>}
         </div>
       </CardContent>
     </Card>;
