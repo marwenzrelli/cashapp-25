@@ -13,7 +13,6 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { DateRange } from "react-day-picker";
 import { WithdrawalTotals } from "./WithdrawalTotals";
-import { NewWithdrawalButton } from "./NewWithdrawalButton";
 
 import { ExtendedClient } from "../hooks/form/withdrawalFormTypes";
 
@@ -58,7 +57,6 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
   dateRange,
   setDateRange = () => {}
 }) => {
-  const [isNewDepositOpen, setIsNewDepositOpen] = React.useState(false);
   const [showDialog, setShowDialog] = useState(false);
   const [selectedClient, setSelectedClient] = useState<string>("");
   const [selectedWithdrawal, setSelectedWithdrawal] = useState<Withdrawal | null>(null);
@@ -151,15 +149,8 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
   };
 
   return (
-    <div className="space-y-8 animate-in px-2 sm:px-4 md:px-6 w-full">
-      <WithdrawalHeader 
-        withdrawals={withdrawals}
-        isLoading={false}
-      />
-      
-      <div className="w-full flex justify-center">
-        <NewWithdrawalButton onClick={() => setIsNewDepositOpen(true)} />
-      </div>
+    <div className="space-y-8 animate-in w-full px-0 sm:px-0">
+      <WithdrawalHeader withdrawals={withdrawals} />
 
       <div className="w-full">
         <StandaloneWithdrawalForm 
