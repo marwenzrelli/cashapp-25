@@ -41,7 +41,7 @@ export const DepositOperationsTab = ({
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
-              <TableHead className="w-[50px] text-center"></TableHead>
+              
               <TableHead className="w-[10%] whitespace-nowrap font-medium">ID</TableHead>
               <TableHead className="w-[15%] whitespace-nowrap font-medium">Date</TableHead>
               <TableHead className="w-[25%] font-medium">Client</TableHead>
@@ -61,9 +61,7 @@ export const DepositOperationsTab = ({
             // Check if operation is selected
             const isSelected = selectedOperations[operation.id] || false;
             return <TableRow key={operation.id} className={cn(isSelected ? "bg-green-50 dark:bg-green-900/20" : "", "transition-colors cursor-pointer hover:bg-muted/50")} onClick={() => toggleSelection(operation.id)}>
-                  <TableCell className="w-[50px] p-2 text-center">
-                    
-                  </TableCell>
+                  
                   <TableCell className="font-mono text-xs text-muted-foreground">
                     #{operationId}
                   </TableCell>
