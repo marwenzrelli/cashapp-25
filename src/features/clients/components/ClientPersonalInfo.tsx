@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Client } from "../types";
 import { ClientQRCode } from "./ClientQRCode";
@@ -12,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useClientBalanceRefresh } from "../hooks/operations/useClientBalanceRefresh";
 
 interface ClientPersonalInfoProps {
   client: Client;
@@ -39,6 +41,9 @@ export const ClientPersonalInfo = ({
   const refreshCooldownTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isMobile = useIsMobile();
   
+  // Get client balance refresh function if not provided through props
+  const { refreshClientBalance: refreshBalanceHook, isRefreshing: isRefreshingHook } = useClientBalanceRefresh();
+  
   console.log("ClientPersonalInfo - clientId:", clientId, "client:", client?.id, "realTimeBalance:", clientBalance);
 
   const {
@@ -56,7 +61,13 @@ export const ClientPersonalInfo = ({
   }, []);
 
   const handleRefreshBalance = async () => {
-    if (!refreshClientBalance) {
+    // Use the prop function if available, otherwise use the hook function
+    const refreshFunction = refreshClientBalance || 
+      (client && client.id ? 
+        async () => await refreshBalanceHook(client.id) : 
+        undefined);
+    
+    if (!refreshFunction) {
       toast.error("La fonction d'actualisation du solde n'est pas disponible");
       return;
     }
@@ -69,7 +80,8 @@ export const ClientPersonalInfo = ({
     setRefreshDisabled(true);
     
     try {
-      await refreshClientBalance();
+      await refreshFunction();
+      toast.success("Solde actualisé avec succès");
     } catch (error) {
       console.error("Error refreshing client balance:", error);
       toast.error("Erreur lors de l'actualisation du solde");
@@ -118,11 +130,11 @@ export const ClientPersonalInfo = ({
               variant="outline" 
               size="sm" 
               onClick={handleRefreshBalance} 
-              disabled={isRefreshing || refreshDisabled}
+              disabled={isRefreshing || refreshDisabled || isRefreshingHook}
               className="px-[20px] bg-white/70 dark:bg-gray-800/70 w-full md:w-auto"
             >
-              <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-              {isRefreshing ? 'Actualisation...' : 'Actualiser le solde'}
+              <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing || isRefreshingHook ? 'animate-spin' : ''}`} />
+              {isRefreshing || isRefreshingHook ? 'Actualisation...' : 'Actualiser le solde'}
             </Button>
             
             {!isMobile && (
