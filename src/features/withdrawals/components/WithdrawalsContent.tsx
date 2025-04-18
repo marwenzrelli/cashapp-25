@@ -1,3 +1,4 @@
+
 import React from "react";
 import { WithdrawalTable } from "./WithdrawalTable";
 import { WithdrawalHeader } from "./WithdrawalHeader";
@@ -5,15 +6,11 @@ import { DeleteWithdrawalDialog } from "./DeleteWithdrawalDialog";
 import { WithdrawalDialogContainer } from "./WithdrawalDialogContainer";
 import { NewWithdrawalButton } from "./NewWithdrawalButton";
 import { SearchSection } from "./sections/SearchSection";
-import { WithdrawalFormSection } from "./sections/WithdrawalFormSection";
 import { Withdrawal } from "../types";
 import { Client } from "@/features/clients/types";
 import { TransferPagination } from "@/features/transfers/components/TransferPagination";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { DateRange } from "react-day-picker";
 import { WithdrawalTotals } from "./WithdrawalTotals";
-import { ExtendedClient } from "../hooks/form/withdrawalFormTypes";
 import { useWithdrawalState } from "../hooks/useWithdrawalState";
 
 interface WithdrawalsContentProps {
@@ -83,36 +80,6 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
     }
   };
 
-  const handleWithdrawalConfirm = async (withdrawal: any): Promise<void> => {
-    try {
-      const client = clients.find(c => `${c.prenom} ${c.nom}` === withdrawal.client_name);
-      const clientId = client ? client.id : undefined;
-
-      const { error } = await supabase
-        .from('withdrawals')
-        .insert({
-          client_name: withdrawal.client_name,
-          client_id: clientId,
-          amount: withdrawal.amount,
-          operation_date: withdrawal.date,
-          notes: withdrawal.notes
-        });
-
-      if (error) {
-        console.error("Erreur lors de l'ajout du retrait:", error);
-        toast.error("Erreur lors de l'ajout du retrait");
-        throw error;
-      }
-
-      toast.success("Retrait ajouté avec succès");
-      await handleFetchWithdrawals();
-    } catch (error) {
-      console.error("Error confirming withdrawal:", error);
-      toast.error("Erreur lors de la confirmation du retrait");
-      throw error;
-    }
-  };
-
   const getDateRangeText = () => {
     if (dateRange?.from && dateRange?.to) {
       const fromDate = new Date(dateRange.from);
@@ -131,11 +98,6 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
     return "pour toute la période";
   };
 
-  const extendedClients: ExtendedClient[] = clients.map(client => ({
-    ...client,
-    dateCreation: client.date_creation || new Date().toISOString()
-  }));
-
   return (
     <div className="space-y-8 animate-in w-full px-0 sm:px-0">
       <WithdrawalHeader withdrawals={withdrawals} />
@@ -143,12 +105,6 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
       <div className="flex justify-center w-full">
         <NewWithdrawalButton onClick={handleNewWithdrawal} />
       </div>
-
-      <WithdrawalFormSection
-        clients={extendedClients}
-        onConfirm={handleWithdrawalConfirm}
-        refreshClientBalance={refreshClientBalance}
-      />
 
       <SearchSection
         searchTerm={searchTerm}
