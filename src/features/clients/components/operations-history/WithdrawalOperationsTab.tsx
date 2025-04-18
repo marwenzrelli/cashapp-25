@@ -42,7 +42,7 @@ export const WithdrawalOperationsTab = ({
             <TableRow className="bg-muted/50">
               <TableHead className="w-[10%] whitespace-nowrap font-medium">          ID</TableHead>
               <TableHead className="w-[15%] whitespace-nowrap font-medium">               Date</TableHead>
-              <TableHead className="w-[25%] font-medium">                               Client</TableHead>
+              
               <TableHead className="w-[30%] font-medium">                                   Description</TableHead>
               <TableHead className="w-[15%] text-right whitespace-nowrap font-medium">Montant       </TableHead>
             </TableRow>
@@ -63,7 +63,7 @@ export const WithdrawalOperationsTab = ({
                     #{operationId}
                   </TableCell>
                   <TableCell className="whitespace-nowrap">{formattedDate}</TableCell>
-                  <TableCell className="max-w-[200px] truncate">{operation.fromClient}</TableCell>
+                  
                   <TableCell className="max-w-[300px] truncate">{operation.description}</TableCell>
                   <TableCell className="text-right font-medium text-red-600 dark:text-red-400 whitespace-nowrap">
                     -{formatNumber(operation.amount)} {currency}
