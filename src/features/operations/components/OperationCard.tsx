@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ArrowDownRight, ArrowUpRight, ArrowLeftRight, Trash2, Calendar, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { formatAmount } from "@/utils/formatCurrency";
 
 interface OperationCardProps {
@@ -110,39 +110,43 @@ export const OperationCard = ({
             </span>
             
             <div className="flex items-center gap-1 print:hidden">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => onEdit(operation)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                    <span className="sr-only">Modifier</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Modifier l'opération</p>
-                </TooltipContent>
-              </Tooltip>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => onEdit(operation)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                      <span className="sr-only">Modifier</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Modifier l'opération</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    className="h-8 w-8 text-red-500 hover:text-red-700"
-                    onClick={() => onDelete(operation)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    <span className="sr-only">Supprimer</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Supprimer l'opération</p>
-                </TooltipContent>
-              </Tooltip>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      className="h-8 w-8 text-red-500 hover:text-red-700"
+                      onClick={() => onDelete(operation)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span className="sr-only">Supprimer</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Supprimer l'opération</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
         </div>

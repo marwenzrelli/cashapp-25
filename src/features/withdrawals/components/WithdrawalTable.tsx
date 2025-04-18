@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,8 @@ import { useNavigate } from "react-router-dom";
 import { formatId } from "@/utils/formatId";
 import { DateRange } from "react-day-picker";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
 interface WithdrawalTableProps {
   withdrawals: Withdrawal[];
   onEdit: (withdrawal: Withdrawal) => void;
@@ -66,11 +69,11 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr className="text-left">
-                <th className="p-3">   ID</th>
-                <th className="p-3">               Client</th>
+                <th className="p-3">   ID</th>
+                <th className="p-3">               Client</th>
                 <th className="p-3 text-center">Montant</th>
                 <th className="p-3">Date d'opération</th>
-                <th className="p-3">                                       Notes</th>
+                <th className="p-3">                                       Notes</th>
                 <th className="p-3 text-center">Actions</th>
               </tr>
             </thead>
@@ -112,14 +115,33 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
                     <td className="p-3 text-muted-foreground">{withdrawal.notes}</td>
                     <td className="p-3 text-center">
                       <div className="flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 ease-in-out">
-                        <Button variant="ghost" size="icon" onClick={() => onEdit(withdrawal)} className="relative hover:bg-blue-50 dark:hover:bg-blue-950/50 text-blue-600 hover:text-blue-600 transition-all duration-300">
-                          <Pencil className="h-4 w-4 transition-all duration-300 ease-in-out transform hover:scale-125 hover:rotate-[360deg]" />
-                          <span className="absolute inset-0 rounded-full bg-blue-100 dark:bg-blue-900/20 opacity-0 group-hover:opacity-100 animate-ping" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => onDelete(withdrawal)} className="relative hover:bg-red-50 dark:hover:bg-red-950/50 text-red-600 hover:text-red-600 transition-all duration-300">
-                          <Trash2 className="h-4 w-4 transition-all duration-300 ease-in-out transform hover:scale-125 hover:-translate-y-1" />
-                          <span className="absolute inset-0 rounded-full bg-red-100 dark:bg-red-900/20 opacity-0 group-hover:opacity-100 animate-ping" />
-                        </Button>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" onClick={() => onEdit(withdrawal)} className="relative hover:bg-blue-50 dark:hover:bg-blue-950/50 text-blue-600 hover:text-blue-600 transition-all duration-300">
+                                <Pencil className="h-4 w-4 transition-all duration-300 ease-in-out transform hover:scale-125 hover:rotate-[360deg]" />
+                                <span className="absolute inset-0 rounded-full bg-blue-100 dark:bg-blue-900/20 opacity-0 group-hover:opacity-100 animate-ping" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Modifier le retrait</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" onClick={() => onDelete(withdrawal)} className="relative hover:bg-red-50 dark:hover:bg-red-950/50 text-red-600 hover:text-red-600 transition-all duration-300">
+                                <Trash2 className="h-4 w-4 transition-all duration-300 ease-in-out transform hover:scale-125 hover:-translate-y-1" />
+                                <span className="absolute inset-0 rounded-full bg-red-100 dark:bg-red-900/20 opacity-0 group-hover:opacity-100 animate-ping" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Supprimer le retrait</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </div>
                     </td>
                   </tr>;
