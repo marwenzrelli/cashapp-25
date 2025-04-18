@@ -1,4 +1,3 @@
-
 /**
  * Formats a date string to a localized date-time format
  * @param dateString - ISO date string to format
@@ -16,14 +15,14 @@ export const formatDate = (dateString?: string | null) => {
       return "Date invalide";
     }
     
-    // Format using local time (French style)
+    // Format using local time (French style with 24h format)
     return date.toLocaleDateString('fr-FR', {
       day: '2-digit',
       month: '2-digit', 
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-      hour12: false
+      hour12: false // Force 24h format
     });
   } catch (error) {
     console.error("Error formatting date:", error);
