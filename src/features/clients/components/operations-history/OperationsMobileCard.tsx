@@ -7,7 +7,7 @@ import { CalendarClock, Clock, Hash, User } from "lucide-react";
 import { formatId } from "@/utils/formatId";
 import { cn } from "@/lib/utils";
 import { ReactNode } from "react";
-import { formatNumber } from "@/features/clients/components/operations-history/all-operations/OperationTypeHelpers";
+import { formatNumber } from "./all-operations/OperationTypeHelpers";
 
 interface OperationsMobileCardProps {
   operation: Operation;

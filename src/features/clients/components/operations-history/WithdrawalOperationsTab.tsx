@@ -6,6 +6,7 @@ import { EmptyOperations } from "./EmptyOperations";
 import { formatId } from "@/utils/formatId";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { formatNumber } from "./all-operations/OperationTypeHelpers";
 
 interface WithdrawalOperationsTabProps {
   operations: Operation[];
@@ -20,25 +21,14 @@ export const WithdrawalOperationsTab = ({
   selectedOperations = {},
   toggleSelection = () => {}
 }: WithdrawalOperationsTabProps) => {
-  // Filter only withdrawal operations
   const withdrawalOperations = operations.filter(operation => operation.type === "withdrawal");
   if (withdrawalOperations.length === 0) {
     return <EmptyOperations />;
   }
 
-  // Calculate total for withdrawals
   const totalWithdrawals = withdrawalOperations.reduce((total, op) => total + op.amount, 0);
 
-  // Format number with 2 decimal places and comma separator
-  const formatNumber = (num: number): string => {
-    return num.toLocaleString('fr-FR', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-  };
-
   return <>
-      {/* Desktop version */}
       <div className="hidden md:block overflow-x-auto">
         <Table>
           <TableHeader>
@@ -84,7 +74,6 @@ export const WithdrawalOperationsTab = ({
         </Table>
       </div>
 
-      {/* Mobile version */}
       <div className="md:hidden space-y-3 w-full p-3">
         {withdrawalOperations.map(operation => 
           <div 
@@ -96,7 +85,7 @@ export const WithdrawalOperationsTab = ({
               <OperationsMobileCard 
                 key={operation.id} 
                 operation={operation} 
-                formatAmount={amount => formatNumber(amount)} 
+                formatAmount={amount => `- ${formatNumber(amount)}`} 
                 currency={currency} 
                 colorClass="text-red-600 dark:text-red-400" 
                 showType={false} 
