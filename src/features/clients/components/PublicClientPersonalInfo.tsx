@@ -42,12 +42,7 @@ export const PublicClientPersonalInfo = ({
           <div className="grid grid-cols-1 gap-3 hidden md:grid">
             
 
-            <div className="flex items-center gap-3 bg-background/50 p-3 rounded-lg">
-              <div>
-                <p className="text-xs text-muted-foreground">Email</p>
-                <p className="text-sm font-medium truncate">{client.email || "Non renseigné"}</p>
-              </div>
-            </div>
+            
           </div>
 
           {/* Creation date - Hidden on mobile */}
