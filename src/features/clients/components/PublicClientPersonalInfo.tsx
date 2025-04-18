@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Client } from "../types";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -5,19 +6,19 @@ import { ClientIdBadge } from "./ClientIdBadge";
 import { User, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+
 interface PublicClientPersonalInfoProps {
   client: Client;
 }
 export const PublicClientPersonalInfo = ({
   client
 }: PublicClientPersonalInfoProps) => {
-  const {
-    currency
-  } = useCurrency();
+  const { currency } = useCurrency();
 
   // Format balance with explicit sign
   const sign = client.solde >= 0 ? "+" : "";
   const formattedBalance = `${sign}${client.solde.toLocaleString()} ${currency}`;
+  
   return <Card className="backdrop-blur-xl bg-white/50 dark:bg-gray-950/50 w-full rounded-lg border">
       <CardHeader className="pb-4 space-y-0">
         <CardTitle className="text-lg sm:text-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -26,7 +27,7 @@ export const PublicClientPersonalInfo = ({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
+        <div className="space-y-2">  {/* Changed from space-y-4 to space-y-2 */}
           {/* Client name and avatar */}
           <div className="flex items-center gap-3 bg-primary/5 p-3 rounded-lg">
             <div className="bg-primary/10 p-2 rounded-full">
@@ -40,8 +41,6 @@ export const PublicClientPersonalInfo = ({
 
           {/* Contact info - Hidden on mobile */}
           <div className="grid grid-cols-1 gap-3 hidden md:grid">
-            
-
             
           </div>
 
@@ -69,3 +68,4 @@ export const PublicClientPersonalInfo = ({
       </CardContent>
     </Card>;
 };
+
