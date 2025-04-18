@@ -1,11 +1,9 @@
-
 import React from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Operation } from "@/features/operations/types";
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { getOperationStatusBadge } from './utils';
 
 interface PublicOperationsTableProps {
   operations: Operation[];
@@ -29,6 +27,19 @@ export const PublicOperationsTable: React.FC<PublicOperationsTableProps> = ({ op
   // Calculate net movement (deposits - withdrawals)
   const netMovement = totalDeposits - totalWithdrawals;
 
+  const getRowBackgroundColor = (type: string) => {
+    switch (type) {
+      case 'deposit':
+        return 'bg-green-50/50 hover:bg-green-100/50';
+      case 'withdrawal':
+        return 'bg-red-50/50 hover:bg-red-100/50';
+      case 'transfer':
+        return 'bg-blue-50/50 hover:bg-blue-100/50';
+      default:
+        return '';
+    }
+  };
+
   return (
     <div className="w-full">
       <div className="overflow-x-auto w-full">
@@ -39,19 +50,21 @@ export const PublicOperationsTable: React.FC<PublicOperationsTableProps> = ({ op
               <TableHead>Type</TableHead>
               <TableHead>Description</TableHead>
               <TableHead className="text-right">Montant</TableHead>
-              <TableHead className="w-[80px] text-center">Statut</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {operations.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-20 text-center">
+                <TableCell colSpan={4} className="h-20 text-center">
                   Aucune opération trouvée.
                 </TableCell>
               </TableRow>
             ) : (
               operations.map((operation) => (
-                <TableRow key={operation.id}>
+                <TableRow 
+                  key={operation.id}
+                  className={getRowBackgroundColor(operation.type)}
+                >
                   <TableCell className="font-medium text-xs">
                     {format(new Date(operation.operation_date || operation.date), 'dd MMM yyyy', { locale: fr })}
                   </TableCell>
@@ -67,9 +80,6 @@ export const PublicOperationsTable: React.FC<PublicOperationsTableProps> = ({ op
                     <span className={`${operation.type === 'withdrawal' ? 'text-red-500' : 'text-green-500'}`}>
                       {operation.type === 'withdrawal' ? '-' : '+'}{operation.amount.toLocaleString()} {currency}
                     </span>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {getOperationStatusBadge(operation.status || 'completed')}
                   </TableCell>
                 </TableRow>
               ))
