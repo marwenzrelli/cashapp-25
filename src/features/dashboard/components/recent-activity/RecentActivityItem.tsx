@@ -1,3 +1,4 @@
+
 import { ArrowUpCircle, ArrowDownCircle, ArrowLeftRight, Hash } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RecentActivity } from "../../types";
@@ -9,6 +10,7 @@ import { OperationDetailsModal } from "@/features/operations/components/Operatio
 import { DeleteOperationDialog } from "@/features/operations/components/DeleteOperationDialog";
 import { Operation } from "@/features/operations/types";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface RecentActivityItemProps {
   activity: RecentActivity;
@@ -44,6 +46,66 @@ export const RecentActivityItem = ({ activity, currency, index }: RecentActivity
 
   const handleEditOperation = async (updatedOperation: Operation) => {
     try {
+      console.log("Saving edited operation:", updatedOperation);
+      
+      const operationType = updatedOperation.type;
+      const operationIdParts = updatedOperation.id.toString().split('-');
+      const operationIdString = operationIdParts.length > 1 ? operationIdParts[1] : operationIdParts[0];
+      const operationId = parseInt(operationIdString, 10);
+      
+      if (isNaN(operationId)) {
+        console.error("Invalid operation ID:", operationIdString);
+        toast.error("Format d'ID invalide");
+        return;
+      }
+      
+      let error = null;
+      
+      if (operationType === 'deposit') {
+        const { error: updateError } = await supabase
+          .from('deposits')
+          .update({
+            client_name: updatedOperation.fromClient,
+            amount: updatedOperation.amount,
+            operation_date: updatedOperation.operation_date,
+            notes: updatedOperation.description,
+            last_modified_at: new Date().toISOString()
+          })
+          .eq('id', operationId);
+        error = updateError;
+      } else if (operationType === 'withdrawal') {
+        const { error: updateError } = await supabase
+          .from('withdrawals')
+          .update({
+            client_name: updatedOperation.fromClient,
+            amount: updatedOperation.amount,
+            operation_date: updatedOperation.operation_date,
+            notes: updatedOperation.description,
+            last_modified_at: new Date().toISOString()
+          })
+          .eq('id', operationId);
+        error = updateError;
+      } else if (operationType === 'transfer') {
+        const { error: updateError } = await supabase
+          .from('transfers')
+          .update({
+            from_client: updatedOperation.fromClient,
+            to_client: updatedOperation.toClient,
+            amount: updatedOperation.amount,
+            operation_date: updatedOperation.operation_date,
+            reason: updatedOperation.description,
+            last_modified_at: new Date().toISOString()
+          })
+          .eq('id', operationId);
+        error = updateError;
+      }
+      
+      if (error) {
+        console.error("Error updating operation:", error);
+        toast.error(`Erreur lors de la mise à jour: ${error.message}`);
+        return;
+      }
+      
       toast.success("Opération modifiée avec succès");
       setIsDetailsModalOpen(false);
     } catch (error) {
