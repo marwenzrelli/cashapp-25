@@ -11,6 +11,8 @@ import { EditDepositDialog } from "./dialog/EditDepositDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ExtendedClient } from "@/features/withdrawals/hooks/form/withdrawalFormTypes";
 import { DateRange } from "react-day-picker";
+import { NewDepositButton } from "./NewDepositButton";
+import { NewDepositDialog } from "./deposit-dialog/NewDepositDialog";
 
 interface DepositsContentProps {
   deposits: Deposit[];
@@ -71,6 +73,9 @@ export const DepositsContent = ({
   dateRange,
   setDateRange
 }: DepositsContentProps) => {
+  // Add state for new deposit dialog
+  const [isNewDepositOpen, setIsNewDepositOpen] = React.useState(false);
+
   const {
     clients,
     refreshClientBalance,
@@ -113,12 +118,8 @@ export const DepositsContent = ({
         isLoading={isLoading}
       />
       
-      <div className="w-full">
-        <StandaloneDepositForm
-          clients={extendedClients}
-          onConfirm={handleCreateDeposit}
-          refreshClientBalance={handleRefreshClientBalance}
-        />
+      <div className="w-full flex justify-end">
+        <NewDepositButton onClick={() => setIsNewDepositOpen(true)} />
       </div>
 
       <div className="space-y-4 w-full">
@@ -167,6 +168,15 @@ export const DepositsContent = ({
           )
         )}
       </div>
+
+      {/* Add the new deposit dialog */}
+      <NewDepositDialog
+        isOpen={isNewDepositOpen}
+        onOpenChange={setIsNewDepositOpen}
+        clients={extendedClients}
+        onConfirm={handleCreateDeposit}
+        refreshClientBalance={handleRefreshClientBalance}
+      />
 
       <DeleteDepositDialog 
         isOpen={isDeleteDialogOpen} 
