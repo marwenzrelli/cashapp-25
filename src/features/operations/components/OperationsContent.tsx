@@ -1,7 +1,5 @@
 
-import { useState, useEffect } from "react";
-import { Operation } from "@/features/operations/types";
-import { TransferPagination } from "@/features/transfers/components/TransferPagination";
+import { Operation } from "../types";
 import { OperationsList } from "./OperationsList";
 
 interface OperationsContentProps {
@@ -9,48 +7,25 @@ interface OperationsContentProps {
   isLoading: boolean;
   isFiltering: boolean;
   onDelete: (operation: Operation) => void;
+  onEdit: (operation: Operation) => void;
 }
 
-export const OperationsContent = ({ 
-  filteredOperations, 
-  isLoading, 
-  isFiltering, 
-  onDelete 
+export const OperationsContent = ({
+  filteredOperations,
+  isLoading,
+  isFiltering,
+  onDelete,
+  onEdit
 }: OperationsContentProps) => {
-  const [itemsPerPage, setItemsPerPage] = useState("10");
-  const [currentPage, setCurrentPage] = useState(1);
-  
-  // Reset à la page 1 quand les opérations filtrées changent
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filteredOperations.length]);
-  
-  useEffect(() => {
-    console.log(`OperationsContent: Displaying page ${currentPage} of ${Math.ceil(filteredOperations.length / parseInt(itemsPerPage))} pages (${itemsPerPage} items per page)`);
-  }, [currentPage, itemsPerPage, filteredOperations.length]);
-  
-  // Calculer les opérations paginées directement
-  const startIndex = (currentPage - 1) * parseInt(itemsPerPage);
-  const endIndex = startIndex + parseInt(itemsPerPage);
-  const paginatedOperations = filteredOperations.slice(startIndex, endIndex);
-
   return (
-    <>
-      <TransferPagination
-        itemsPerPage={itemsPerPage}
-        setItemsPerPage={setItemsPerPage}
-        totalItems={filteredOperations.length}
-        currentPage={currentPage}
-        setCurrentPage={setCurrentPage}
-        label="opérations"
-      />
-
+    <div className="space-y-6 print:mt-0">
       <OperationsList 
-        operations={paginatedOperations} 
+        operations={filteredOperations} 
         isLoading={isLoading} 
-        onDelete={onDelete} 
-        allOperations={filteredOperations}
+        showEmptyMessage={isFiltering}
+        onDelete={onDelete}
+        onEdit={onEdit}
       />
-    </>
+    </div>
   );
 };

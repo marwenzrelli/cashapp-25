@@ -1,138 +1,181 @@
 
-import { Operation } from "../types";
+import { Operation, formatDateTime } from "../types";
+import { Card, CardContent } from "@/components/ui/card";
+import { ArrowDownRight, ArrowUpRight, ArrowLeftRight, Trash2, Calendar, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Edit2, Trash2, ArrowUpCircle, ArrowDownCircle, RefreshCcw, User, Hash } from "lucide-react";
-import { formatDateTime } from "../types";
-import { formatId } from "@/utils/formatId";
+import { cn } from "@/lib/utils";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { formatCurrency } from "@/utils/formatCurrency";
 
 interface OperationCardProps {
   operation: Operation;
-  onEdit?: (operation: Operation) => void;
-  onDelete?: (operation: Operation) => void;
+  currency: string;
+  onDelete: (operation: Operation) => void;
+  onEdit: (operation: Operation) => void;
+  isMobile: boolean;
 }
 
-const getTypeStyle = (type: Operation["type"]) => {
-  switch (type) {
-    case "deposit":
-      return "bg-green-50 text-green-600 dark:bg-green-950/50";
-    case "withdrawal":
-      return "bg-red-50 text-red-600 dark:bg-red-950/50";
-    case "transfer":
-      return "bg-purple-50 text-purple-600 dark:bg-purple-950/50";
-  }
-};
-
-const getAmountColor = (type: Operation["type"]) => {
-  switch (type) {
-    case "deposit":
-      return "text-green-600 dark:text-green-400";
-    case "withdrawal":
-      return "text-red-600 dark:text-red-400";
-    case "transfer":
-      return "text-purple-600 dark:text-purple-400";
-  }
-};
-
-const getTypeIcon = (type: Operation["type"]) => {
-  switch (type) {
-    case "deposit":
-      return <ArrowUpCircle className="h-4 w-4" />;
-    case "withdrawal":
-      return <ArrowDownCircle className="h-4 w-4" />;
-    case "transfer":
-      return <RefreshCcw className="h-4 w-4" />;
-  }
-};
-
-const getTypeLabel = (type: Operation["type"]) => {
-  switch (type) {
-    case "deposit":
-      return "Versement";
-    case "withdrawal":
-      return "Retrait";
-    case "transfer":
-      return "Virement";
-  }
-};
-
-// Format transaction ID to 6 digits
-const formatOperationId = (id: string) => {
-  // If the ID is numeric or can be converted to a number
-  if (!isNaN(Number(id))) {
-    // Pad with leading zeros to get 6 digits
-    return id.padStart(6, '0');
-  }
+export const OperationCard = ({ 
+  operation, 
+  currency,
+  onDelete,
+  onEdit,
+  isMobile
+}: OperationCardProps) => {
+  const { 
+    type, 
+    amount, 
+    date, 
+    operation_date, 
+    fromClient, 
+    toClient, 
+    description 
+  } = operation;
   
-  // For UUID format, take first 6 characters
-  return id.slice(0, 6);
-};
+  // Icon based on operation type
+  const getOperationIcon = () => {
+    switch (type) {
+      case 'deposit':
+        return <ArrowUpRight className="h-5 w-5 text-green-500" />;
+      case 'withdrawal':
+        return <ArrowDownRight className="h-5 w-5 text-red-500" />;
+      case 'transfer':
+        return <ArrowLeftRight className="h-5 w-5 text-blue-500" />;
+      default:
+        return null;
+    }
+  };
+  
+  // Color class based on operation type
+  const getColorClass = () => {
+    switch (type) {
+      case 'deposit':
+        return 'text-green-600';
+      case 'withdrawal':
+        return 'text-red-600';
+      case 'transfer':
+        return 'text-blue-600';
+      default:
+        return '';
+    }
+  };
+  
+  // Formatted operation type in French
+  const getFormattedType = () => {
+    switch (type) {
+      case 'deposit':
+        return 'Versement';
+      case 'withdrawal':
+        return 'Retrait';
+      case 'transfer':
+        return 'Transfert';
+      default:
+        return 'Opération';
+    }
+  };
+  
+  // Date to display
+  const displayDate = operation_date || date;
 
-export const OperationCard = ({ operation, onEdit, onDelete }: OperationCardProps) => {
   return (
-    <div className="group flex items-center justify-between p-3 hover:bg-muted/50 rounded-lg transition-colors border-b last:border-b-0">
-      <div className="flex items-center gap-3 min-w-0">
-        <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${getTypeStyle(operation.type)}`}>
-          {getTypeIcon(operation.type)}
-        </div>
-        
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="font-medium truncate">{operation.description}</span>
-            <span className="text-xs text-muted-foreground flex items-center gap-1">
-              <Hash className="h-3 w-3" />
-              {formatOperationId(operation.id.slice(0, 4))}
-            </span>
+    <Card className={cn(
+      "border shadow-sm print:shadow-none print:border-0",
+      "hover:shadow-md transition-shadow duration-200",
+      "print:break-inside-avoid print:mb-0"
+    )}>
+      <CardContent className="p-4 print:p-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-full bg-muted print:hidden">
+              {getOperationIcon()}
+            </div>
+            
+            <div>
+              <h3 className="font-medium text-sm print:text-xs">
+                {getFormattedType()}
+              </h3>
+              
+              <div className="flex items-center gap-1">
+                <Calendar className="h-3 w-3 text-muted-foreground" />
+                <p className="text-xs text-muted-foreground">
+                  {formatDateTime(displayDate || '')}
+                </p>
+              </div>
+            </div>
           </div>
-          <div className="text-sm text-muted-foreground flex items-center gap-1.5 overflow-hidden">
-            <span className="whitespace-nowrap">{operation.formattedDate || formatDateTime(operation.createdAt || operation.date)}</span>
-            <div className="flex items-center gap-1">
-              <User className="h-3 w-3" />
-              {operation.type === "transfer" ? (
-                <span className="truncate">
-                  De: {operation.fromClient} • À: {operation.toClient}
-                </span>
-              ) : (
-                <span className="truncate">
-                  {operation.fromClient}
-                </span>
-              )}
+          
+          <div className="flex items-center gap-2">
+            <span className={cn(
+              "font-semibold",
+              getColorClass(),
+              isMobile ? "text-base" : "text-lg"
+            )}>
+              {type === 'withdrawal' ? '- ' : ''}{formatCurrency(amount, currency)}
+            </span>
+            
+            <div className="flex items-center gap-1 print:hidden">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => onEdit(operation)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                    <span className="sr-only">Modifier</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Modifier l'opération</p>
+                </TooltipContent>
+              </Tooltip>
+              
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    className="h-8 w-8 text-red-500 hover:text-red-700"
+                    onClick={() => onDelete(operation)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    <span className="sr-only">Supprimer</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Supprimer l'opération</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
           </div>
         </div>
-      </div>
-
-      <div className="flex items-center gap-3">
-        <span className={`text-right font-semibold whitespace-nowrap ${getAmountColor(operation.type)}`}>
-          {operation.type === "withdrawal" ? "-" : ""}{Math.round(operation.amount)} TND
-        </span>
         
-        {(onEdit || onDelete) && (
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300">
-            {onEdit && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onEdit(operation)}
-                className="h-8 w-8 relative hover:bg-blue-50 dark:hover:bg-blue-950/50 text-blue-600 hover:text-blue-600"
-              >
-                <Edit2 className="h-4 w-4 transition-transform hover:scale-110" />
-                <span className="absolute inset-0 rounded-full bg-blue-100 dark:bg-blue-900/20 opacity-0 group-hover:opacity-100 animate-ping" />
-              </Button>
+        <div className="mt-2">
+          <div className="grid grid-cols-1 gap-2">
+            <div>
+              <p className="text-xs font-medium text-muted-foreground">
+                {type === 'transfer' ? 'De' : 'Client'}
+              </p>
+              <p className="text-sm truncate">{fromClient}</p>
+            </div>
+            
+            {type === 'transfer' && toClient && (
+              <div>
+                <p className="text-xs font-medium text-muted-foreground">À</p>
+                <p className="text-sm truncate">{toClient}</p>
+              </div>
             )}
-            {onDelete && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onDelete(operation)}
-                className="h-8 w-8 relative hover:bg-red-50 dark:hover:bg-red-950/50 text-red-600 hover:text-red-600"
-              >
-                <Trash2 className="h-4 w-4 transition-transform hover:scale-110" />
-                <span className="absolute inset-0 rounded-full bg-red-100 dark:bg-red-900/20 opacity-0 group-hover:opacity-100 animate-ping" />
-              </Button>
+            
+            {description && (
+              <div>
+                <p className="text-xs font-medium text-muted-foreground">Description</p>
+                <p className="text-sm">{description}</p>
+              </div>
             )}
           </div>
-        )}
-      </div>
-    </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };

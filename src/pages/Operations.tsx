@@ -11,6 +11,10 @@ import { OperationsError } from "@/features/operations/components/OperationsErro
 import { OperationsEmptyState } from "@/features/operations/components/OperationsEmptyState";
 import { OperationsContent } from "@/features/operations/components/OperationsContent";
 import { OperationsLoading } from "@/features/operations/components/OperationsLoading";
+import { EditOperationDialog } from "@/features/operations/components/EditOperationDialog";
+import { Operation } from "@/features/operations/types";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Operations = () => {
   const { 
@@ -37,6 +41,9 @@ const Operations = () => {
 
   const [loadingDuration, setLoadingDuration] = useState(0);
   const [showNetworkError, setShowNetworkError] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [operationToEdit, setOperationToEdit] = useState<Operation | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
   
   // Log operation counts to verify all are being loaded
   useEffect(() => {
@@ -75,6 +82,89 @@ const Operations = () => {
 
   const handleExportPDF = () => {
     generatePDF(filteredOperations, filterType, filterClient, dateRange);
+  };
+
+  // Function to handle editing an operation
+  const handleEdit = (operation: Operation) => {
+    console.log("Edit operation:", operation);
+    setOperationToEdit(operation);
+    setEditDialogOpen(true);
+  };
+  
+  // Function to update an operation
+  const handleUpdateOperation = async (updatedOperation: Operation) => {
+    if (!updatedOperation) return;
+    
+    setIsUpdating(true);
+    try {
+      console.log("Updating operation:", updatedOperation);
+      
+      const operationType = updatedOperation.type;
+      const operationIdString = updatedOperation.id.split('-')[1]; // Extract the ID part
+      const operationId = parseInt(operationIdString, 10);
+      
+      if (isNaN(operationId)) {
+        console.error("Invalid operation ID:", operationIdString);
+        toast.error("Format d'ID invalide");
+        return;
+      }
+      
+      let error = null;
+      
+      // Update based on operation type
+      if (operationType === 'deposit') {
+        const { error: updateError } = await supabase
+          .from('deposits')
+          .update({
+            client_name: updatedOperation.fromClient,
+            amount: updatedOperation.amount,
+            operation_date: updatedOperation.operation_date,
+            notes: updatedOperation.description,
+            last_modified_at: new Date().toISOString()
+          })
+          .eq('id', operationId);
+        error = updateError;
+      } else if (operationType === 'withdrawal') {
+        const { error: updateError } = await supabase
+          .from('withdrawals')
+          .update({
+            client_name: updatedOperation.fromClient,
+            amount: updatedOperation.amount,
+            operation_date: updatedOperation.operation_date,
+            notes: updatedOperation.description,
+            last_modified_at: new Date().toISOString()
+          })
+          .eq('id', operationId);
+        error = updateError;
+      } else if (operationType === 'transfer') {
+        const { error: updateError } = await supabase
+          .from('transfers')
+          .update({
+            from_client: updatedOperation.fromClient,
+            to_client: updatedOperation.toClient,
+            amount: updatedOperation.amount,
+            operation_date: updatedOperation.operation_date,
+            reason: updatedOperation.description,
+            last_modified_at: new Date().toISOString()
+          })
+          .eq('id', operationId);
+        error = updateError;
+      }
+      
+      if (error) {
+        console.error("Error updating operation:", error);
+        toast.error("Erreur lors de la mise à jour");
+        return;
+      }
+      
+      toast.success("Opération mise à jour avec succès");
+      refreshOperations(true);
+    } catch (error) {
+      console.error("Error updating operation:", error);
+      toast.error("Erreur lors de la mise à jour");
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   // Force refresh on initial load
@@ -124,6 +214,7 @@ const Operations = () => {
           isLoading={isLoading}
           isFiltering={filterType !== null || !!filterClient || !!(dateRange?.from && dateRange?.to)}
           onDelete={deleteOperation}
+          onEdit={handleEdit}
         />
       )}
       
@@ -132,6 +223,13 @@ const Operations = () => {
         onClose={() => setShowDeleteDialog(false)}
         onDelete={() => confirmDeleteOperation()}
         operation={operationToDelete}
+      />
+      
+      <EditOperationDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        operation={operationToEdit}
+        onConfirm={handleUpdateOperation}
       />
     </div>
   );

@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { Calendar, Clock, User, ScrollText } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatISODateTime } from "@/features/deposits/hooks/utils/dateUtils";
+import { toast } from "sonner";
 
 interface EditOperationDialogProps {
   open: boolean;
@@ -30,6 +31,7 @@ export const EditOperationDialog = ({
 }: EditOperationDialogProps) => {
   const { currency } = useCurrency();
   const [editedOperation, setEditedOperation] = useState<EditableOperation | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Update local state when operation prop changes
   useEffect(() => {
@@ -54,17 +56,47 @@ export const EditOperationDialog = ({
     });
   };
 
-  const handleConfirm = () => {
-    if (editedOperation) {
+  const handleConfirm = async () => {
+    if (!editedOperation) return;
+    
+    try {
+      setIsSubmitting(true);
+      
+      // Ensure date and time are valid
+      if (!editedOperation.date || !editedOperation.time) {
+        toast.error("Date et heure requises");
+        return;
+      }
+      
+      // Log what we're about to send
+      console.log("Saving operation with:", {
+        date: editedOperation.date,
+        time: editedOperation.time,
+        combinedDate: new Date(editedOperation.date + "T" + editedOperation.time)
+      });
+      
       // Combine date and time before sending
       const combinedDate = new Date(editedOperation.date + "T" + editedOperation.time);
+      
+      // Check if the date is valid
+      if (isNaN(combinedDate.getTime())) {
+        toast.error("Date ou heure invalide");
+        return;
+      }
+      
       const updatedOperation: Operation = {
         ...editedOperation,
         operation_date: combinedDate.toISOString()
       };
       
-      onConfirm(updatedOperation);
+      await onConfirm(updatedOperation);
+      toast.success("Opération modifiée avec succès");
       onOpenChange(false);
+    } catch (error) {
+      console.error("Error saving operation:", error);
+      toast.error("Erreur lors de la sauvegarde");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -96,7 +128,7 @@ export const EditOperationDialog = ({
                 <Clock className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
                 <Input
                   type="time"
-                  step="1"
+                  step="60"
                   value={editedOperation.time || ""}
                   onChange={(e) => handleChange('time', e.target.value)}
                   className="pl-10"
@@ -161,11 +193,11 @@ export const EditOperationDialog = ({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
             Annuler
           </Button>
-          <Button onClick={handleConfirm}>
-            Enregistrer les modifications
+          <Button onClick={handleConfirm} disabled={isSubmitting}>
+            {isSubmitting ? "Enregistrement..." : "Enregistrer les modifications"}
           </Button>
         </DialogFooter>
       </DialogContent>
