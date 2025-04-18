@@ -44,6 +44,7 @@ function App() {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/clients/:clientId/public" element={<PublicClientProfile />} />
+            <Route path="/public/client/:token" element={<PublicClientProfile />} />
             <Route path="/admin-utility" element={<AdminUtility />} />
             <Route path="/create-supervisor" element={<SupervisorCreation />} />
             <Route path="/" element={<Layout />}>

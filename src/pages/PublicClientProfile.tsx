@@ -10,7 +10,9 @@ import { showErrorToast, showSuccessToast } from "@/features/clients/hooks/utils
 import { supabase } from "@/integrations/supabase/client";
 
 const PublicClientProfile = () => {
-  const { token } = useParams<{ token: string }>();
+  // Get token from either clientId or token parameter
+  const { clientId, token: routeToken } = useParams<{ clientId?: string; token?: string }>();
+  const token = routeToken || clientId;
   const navigate = useNavigate();
   const initialCheckDone = useRef(false);
   const [pageReady, setPageReady] = useState(false);
@@ -86,7 +88,7 @@ const PublicClientProfile = () => {
         `${operations.length} opérations trouvées pour ${client.prenom} ${client.nom}`
       );
     }
-  }, [client, operations, isLoading, error, loadingTime]);
+  }, [client, operations, isLoading, error, loadingTime, token]);
 
   // Basic token format validation on component mount and trigger data fetch - run only once
   useEffect(() => {
