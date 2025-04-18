@@ -95,10 +95,11 @@ export const OperationsDesktopTable = ({
           <TableHeader>
             <TableRow>
               <TableHead>Type</TableHead>
+              <TableHead>ID</TableHead>
               <TableHead>Date</TableHead>
-              <TableHead>{operations[0]?.type === 'transfer' ? 'De' : 'Client'}</TableHead>
-              {operations[0]?.type === 'transfer' && <TableHead>À</TableHead>}
+              <TableHead>Description</TableHead>
               <TableHead className="text-right">Montant</TableHead>
+              <TableHead>Client</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -121,17 +122,16 @@ export const OperationsDesktopTable = ({
                       <span>{getOperationTypeDisplay(operation.type)}</span>
                     </div>
                   </TableCell>
+                  <TableCell>{operation.id}</TableCell>
                   <TableCell>{formatDate(operation.date)}</TableCell>
-                  <TableCell>{operation.fromClient}</TableCell>
-                  {operation.type === 'transfer' && (
-                    <TableCell>{operation.toClient}</TableCell>
-                  )}
+                  <TableCell>{operation.description || "-"}</TableCell>
                   <TableCell className="text-right">
                     <span className={operation.type === 'withdrawal' ? 'text-red-600' : 'text-green-600'}>
                       {operation.type === 'withdrawal' ? '- ' : '+ '}
                       {formatNumber(operation.amount)} {currency}
                     </span>
                   </TableCell>
+                  <TableCell>{operation.fromClient}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
