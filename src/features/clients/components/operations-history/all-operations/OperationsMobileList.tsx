@@ -94,7 +94,7 @@ export const OperationsMobileList = ({
       minimumFractionDigits: 3,
       maximumFractionDigits: 3
     });
-    return formattedAmount;
+    return type === 'withdrawal' ? `- ${formattedAmount}` : `+ ${formattedAmount}`;
   };
 
   return (
@@ -138,3 +138,4 @@ export const OperationsMobileList = ({
     </div>
   );
 };
+
