@@ -9,11 +9,13 @@ import { useIsMobile } from "@/hooks/use-mobile";
 interface AllOperationsTabProps {
   operations: Operation[];
   currency?: string;
+  updateOperation?: (operation: Operation) => Promise<void>;
 }
 
 export const AllOperationsTab = ({ 
   operations, 
-  currency = "TND"
+  currency = "TND",
+  updateOperation
 }: AllOperationsTabProps) => {
   const isMobile = useIsMobile();
   
@@ -28,6 +30,7 @@ export const AllOperationsTab = ({
         <OperationsDesktopTable 
           operations={operations}
           currency={currency}
+          updateOperation={updateOperation}
         />
       </div>
 
@@ -37,6 +40,7 @@ export const AllOperationsTab = ({
           <OperationsMobileList 
             operations={operations}
             currency={currency}
+            updateOperation={updateOperation}
           />
         </div>
       )}

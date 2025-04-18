@@ -1,160 +1,176 @@
 
-import { Operation } from "@/features/operations/types";
+import React, { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { cn } from "@/lib/utils";
-import { formatId } from "@/utils/formatId";
+import { Operation } from "@/features/operations/types";
 import { format } from "date-fns";
-import { getOperationTypeColor, formatNumber } from "./OperationTypeHelpers";
-import { TotalsSection } from "./TotalsSection";
-import { useState } from "react";
+import { formatId } from "@/utils/formatId";
+import { ArrowUpRight, ArrowDownRight, ArrowLeftRight, MoreHorizontal } from "lucide-react";
 import { OperationDetailsModal } from "@/features/operations/components/OperationDetailsModal";
-import { EditOperationDialog } from "@/features/operations/components/EditOperationDialog";
+import { DeleteOperationDialog } from "@/features/operations/components/DeleteOperationDialog";
 import { toast } from "sonner";
+import { useOperations } from "@/features/operations/hooks/useOperations";
+import { cn } from "@/lib/utils";
+import { TotalsSection } from "./TotalsSection";
+import { getOperationTypeDisplay, getOperationTypeIcon, getOperationTypeColor } from "./OperationTypeHelpers";
 
 interface OperationsDesktopTableProps {
   operations: Operation[];
-  currency: string;
+  currency?: string;
+  updateOperation?: (operation: Operation) => Promise<void>;
 }
 
 export const OperationsDesktopTable = ({ 
-  operations, 
-  currency
+  operations,
+  currency = "TND",
+  updateOperation
 }: OperationsDesktopTableProps) => {
+  const { refreshOperations, deleteOperation } = useOperations();
   const [selectedOperation, setSelectedOperation] = useState<Operation | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const handleOpenModal = (operation: Operation) => {
+  const handleRowClick = (operation: Operation) => {
     setSelectedOperation(operation);
-    setIsModalOpen(true);
+    setIsDetailsModalOpen(true);
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
+  const handleCloseDetailsModal = () => {
+    setIsDetailsModalOpen(false);
+    setSelectedOperation(null);
   };
 
-  const handleEdit = async (updatedOperation: Operation): Promise<void> => {
-    console.log("Editing operation:", updatedOperation);
+  const handleEditOperation = async (updatedOperation: Operation) => {
+    if (updateOperation) {
+      return updateOperation(updatedOperation);
+    }
+    toast.error("Fonction de modification non disponible");
+    return Promise.reject("Update function not available");
+  };
+
+  const handleDeleteOperation = (operation: Operation) => {
+    setSelectedOperation(operation);
+    setIsDetailsModalOpen(false);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteOperation = async () => {
+    if (!selectedOperation) return;
     
-    // Here you would implement the actual update logic
-    // For now, just show a toast to indicate it would work
-    toast.success("Opération mise à jour", {
-      description: "L'opération a été mise à jour avec succès"
+    try {
+      await deleteOperation(selectedOperation);
+      toast.success("Opération supprimée avec succès");
+      refreshOperations();
+    } catch (error) {
+      console.error("Delete operation error:", error);
+      toast.error("Erreur lors de la suppression", { 
+        description: typeof error === 'string' ? error : error instanceof Error ? error.message : "Une erreur s'est produite" 
+      });
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setSelectedOperation(null);
+    }
+  };
+
+  const cancelDeleteOperation = () => {
+    setIsDeleteDialogOpen(false);
+    setSelectedOperation(null);
+  };
+
+  // Format number with 3 decimal places and comma separator for Tunisian currency
+  const formatNumber = (num: number): string => {
+    return num.toLocaleString('fr-FR', {
+      minimumFractionDigits: 3,
+      maximumFractionDigits: 3
     });
-    
-    setIsModalOpen(false);
-    
-    // Return a resolved promise to satisfy the type
-    return Promise.resolve();
-  };
-
-  const handleDelete = (operation: Operation) => {
-    console.log("Delete operation:", operation);
-    
-    // Here you would implement the actual delete logic
-    // For now, just show a toast to indicate it would work
-    toast.success("Opération supprimée", {
-      description: "L'opération a été supprimée avec succès"
-    });
-    
-    setIsModalOpen(false);
   };
 
   return (
-    <div className="hidden md:block overflow-x-auto w-full">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-muted/50">
-            <TableHead className="w-[10%] whitespace-nowrap font-medium text-xs">Type</TableHead>
-            <TableHead className="w-[8%] whitespace-nowrap font-medium text-xs">ID</TableHead>
-            <TableHead className="w-[12%] whitespace-nowrap font-medium text-xs">Date</TableHead>
-            <TableHead className="w-[20%] font-medium text-xs">Description</TableHead>
-            <TableHead className="w-[12%] text-right whitespace-nowrap font-medium text-xs">Montant</TableHead>
-            <TableHead className="w-[15%] font-medium text-xs">Client</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {operations.map((operation) => {
-            // Use operation_date if available, otherwise fall back to date
-            const displayDate = operation.operation_date || operation.date;
-            const formattedDate = typeof displayDate === 'string' 
-              ? format(new Date(displayDate), "dd/MM/yyyy HH:mm") 
-              : format(displayDate, "dd/MM/yyyy HH:mm");
-            
-            // Format operation ID
-            const operationId = isNaN(parseInt(operation.id)) 
-              ? operation.id 
-              : formatId(parseInt(operation.id));
+    <>
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50">
+              <TableHead className="w-[5%]">Type</TableHead>
+              <TableHead className="w-[10%]">ID</TableHead>
+              <TableHead className="w-[15%]">Date</TableHead>
+              <TableHead className="w-[20%]">Client</TableHead>
+              <TableHead className="w-[30%]">Description</TableHead>
+              <TableHead className="w-[15%] text-right">Montant</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {operations.map((operation) => {
+              // Use operation_date if available, otherwise fall back to date
+              const displayDate = operation.operation_date || operation.date;
+              const formattedDate = typeof displayDate === 'string' 
+                ? format(new Date(displayDate), "dd/MM/yyyy HH:mm") 
+                : format(displayDate, "dd/MM/yyyy HH:mm");
               
-            // Background color based on operation type
-            const getTypeBackgroundColor = (type: string): string => {
-              switch (type) {
-                case "deposit":
-                  return "bg-green-100 dark:bg-green-900/30";
-                case "withdrawal":
-                  return "bg-red-100 dark:bg-red-900/30";
-                case "transfer":
-                  return "bg-blue-100 dark:bg-blue-900/30";
-                default:
-                  return "";
-              }
-            };
+              // Format operation ID
+              const operationId = isNaN(parseInt(operation.id)) 
+                ? operation.id 
+                : formatId(parseInt(operation.id));
               
-            return (
-              <TableRow 
-                key={operation.id} 
-                className="transition-colors hover:bg-muted/50"
-              >
-                <TableCell className={cn("whitespace-nowrap capitalize text-xs", getTypeBackgroundColor(operation.type))}>
-                  {operation.type === "deposit" && "Versement"}
-                  {operation.type === "withdrawal" && "Retrait"}
-                  {operation.type === "transfer" && "Virement"}
-                </TableCell>
-                <TableCell 
-                  className="font-mono text-xs text-muted-foreground hover:text-primary hover:cursor-pointer hover:underline"
-                  onClick={() => handleOpenModal(operation)}
+              // Get type-specific display properties
+              const typeDisplay = getOperationTypeDisplay(operation.type);
+              const TypeIcon = getOperationTypeIcon(operation.type);
+              const typeColor = getOperationTypeColor(operation.type);
+              const amountPrefix = operation.type === 'withdrawal' ? '- ' : '';
+              
+              return (
+                <TableRow 
+                  key={operation.id} 
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => handleRowClick(operation)}
                 >
-                  #{operationId}
-                </TableCell>
-                <TableCell className="whitespace-nowrap text-xs">{formattedDate}</TableCell>
-                <TableCell className="max-w-[200px] truncate text-xs">{operation.description}</TableCell>
-                <TableCell className={cn("text-right font-medium whitespace-nowrap text-xs", getOperationTypeColor(operation.type))}>
-                  {operation.type === "withdrawal" ? "-" : 
-                   operation.type === "deposit" ? "+" : ""}{formatNumber(operation.amount)} {currency}
-                </TableCell>
-                <TableCell className="max-w-[150px] truncate text-xs">
-                  {operation.type === "transfer" ? (
-                    <div className="flex flex-col">
-                      <span className="text-xs">De: {operation.fromClient}</span>
-                      <span className="text-xs">À: {operation.toClient}</span>
+                  <TableCell>
+                    <div className="flex items-center justify-center">
+                      <TypeIcon className={cn("h-5 w-5", typeColor)} />
                     </div>
-                  ) : (
-                    operation.fromClient
-                  )}
-                </TableCell>
-              </TableRow>
-            );
-          })}
-          
-          {/* Totals section */}
-          <TableRow className="border-t-2 border-primary/20 font-medium bg-muted/30">
-            <TableCell colSpan={4} className="text-right text-xs">
-              Totaux:
-            </TableCell>
-            <TableCell colSpan={2} className="px-2 text-xs">
-              <TotalsSection operations={operations} currency={currency} />
-            </TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
+                  </TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">
+                    #{operationId}
+                  </TableCell>
+                  <TableCell>{formattedDate}</TableCell>
+                  <TableCell className="max-w-[200px] truncate">
+                    {operation.fromClient}
+                    {operation.type === 'transfer' && operation.toClient && (
+                      <span className="text-xs text-muted-foreground block">
+                        → {operation.toClient}
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell className="max-w-[300px] truncate">
+                    {operation.description || <span className="text-muted-foreground italic">Aucune description</span>}
+                  </TableCell>
+                  <TableCell className={cn("text-right font-medium whitespace-nowrap", typeColor)}>
+                    {amountPrefix}{formatNumber(operation.amount)} {currency}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
 
+      <TotalsSection operations={operations} currency={currency} />
+
+      {/* Details modal */}
       <OperationDetailsModal
+        isOpen={isDetailsModalOpen}
+        onClose={handleCloseDetailsModal}
         operation={selectedOperation}
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
+        onEdit={handleEditOperation}
+        onDelete={handleDeleteOperation}
       />
-    </div>
+
+      {/* Delete confirmation dialog */}
+      <DeleteOperationDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={cancelDeleteOperation}
+        onConfirm={confirmDeleteOperation}
+        operation={selectedOperation}
+      />
+    </>
   );
 };

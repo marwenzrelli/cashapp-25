@@ -1,54 +1,152 @@
+
+import React, { useState } from "react";
 import { Operation } from "@/features/operations/types";
-import { cn } from "@/lib/utils";
 import { OperationsMobileCard } from "../OperationsMobileCard";
-import { formatNumber } from "./OperationTypeHelpers";
+import { ArrowUpRight, ArrowDownRight, ArrowLeftRight } from "lucide-react";
+import { OperationDetailsModal } from "@/features/operations/components/OperationDetailsModal";
+import { DeleteOperationDialog } from "@/features/operations/components/DeleteOperationDialog";
+import { useOperations } from "@/features/operations/hooks/useOperations";
+import { toast } from "sonner";
 import { TotalsSection } from "./TotalsSection";
+
 interface OperationsMobileListProps {
   operations: Operation[];
-  currency: string;
+  currency?: string;
+  updateOperation?: (operation: Operation) => Promise<void>;
 }
-export const OperationsMobileList = ({
-  operations,
-  currency
+
+export const OperationsMobileList = ({ 
+  operations, 
+  currency = "TND",
+  updateOperation
 }: OperationsMobileListProps) => {
-  // Determine color based on operation type
-  const getOperationTypeColor = (type: string): string => {
-    switch (type) {
-      case "deposit":
-        return "text-green-600 dark:text-green-400";
-      case "withdrawal":
-        return "text-red-600 dark:text-red-400";
-      case "transfer":
-        return "text-blue-600 dark:text-blue-400";
-      default:
-        return "";
+  const { refreshOperations, deleteOperation } = useOperations();
+  const [selectedOperation, setSelectedOperation] = useState<Operation | null>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  const handleCardClick = (operation: Operation) => {
+    setSelectedOperation(operation);
+    setIsDetailsModalOpen(true);
+  };
+
+  const handleCloseDetailsModal = () => {
+    setIsDetailsModalOpen(false);
+    setSelectedOperation(null);
+  };
+
+  const handleEditOperation = async (updatedOperation: Operation) => {
+    if (updateOperation) {
+      return updateOperation(updatedOperation);
+    }
+    toast.error("Fonction de modification non disponible");
+    return Promise.reject("Update function not available");
+  };
+
+  const handleDeleteOperation = (operation: Operation) => {
+    setSelectedOperation(operation);
+    setIsDetailsModalOpen(false);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteOperation = async () => {
+    if (!selectedOperation) return;
+    
+    try {
+      await deleteOperation(selectedOperation);
+      toast.success("Opération supprimée avec succès");
+      refreshOperations();
+    } catch (error) {
+      console.error("Delete operation error:", error);
+      toast.error("Erreur lors de la suppression", { 
+        description: typeof error === 'string' ? error : error instanceof Error ? error.message : "Une erreur s'est produite" 
+      });
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setSelectedOperation(null);
     }
   };
 
-  // Background color for the badge based on operation type
-  const getTypeBackgroundColor = (type: string): string => {
+  const cancelDeleteOperation = () => {
+    setIsDeleteDialogOpen(false);
+    setSelectedOperation(null);
+  };
+
+  // Get icon based on operation type
+  const getOperationIcon = (type: string) => {
     switch (type) {
-      case "deposit":
-        return "bg-green-100 dark:bg-green-900/30";
-      case "withdrawal":
-        return "bg-red-100 dark:bg-red-900/30";
-      case "transfer":
-        return "bg-blue-100 dark:bg-blue-900/30";
+      case 'deposit':
+        return <ArrowUpRight className="h-4 w-4 text-green-500" />;
+      case 'withdrawal':
+        return <ArrowDownRight className="h-4 w-4 text-red-500" />;
+      case 'transfer':
+        return <ArrowLeftRight className="h-4 w-4 text-blue-500" />;
       default:
-        return "";
+        return null;
     }
   };
-  return <div className="md:hidden space-y-3 w-full p-3 px-0 py-0">
-      {operations.map(operation => <div key={operation.id} className="w-full">
-          <div className="mb-2">
-            <OperationsMobileCard operation={operation} formatAmount={amount => {
-          // Format the amount without adding symbols (let the component handle it)
-          return formatNumber(Math.abs(amount));
-        }} currency={currency} colorClass={getOperationTypeColor(operation.type)} showType={true} typeBackgroundClass={getTypeBackgroundColor(operation.type)} />
-          </div>
-        </div>)}
-      
-      {/* Mobile Totals Card */}
-      <TotalsSection operations={operations} currency={currency} isMobile={true} />
-    </div>;
+
+  // Get text color class based on operation type
+  const getColorClass = (type: string) => {
+    switch (type) {
+      case 'deposit':
+        return 'text-green-600 dark:text-green-400';
+      case 'withdrawal':
+        return 'text-red-600 dark:text-red-400';
+      case 'transfer':
+        return 'text-blue-600 dark:text-blue-400';
+      default:
+        return '';
+    }
+  };
+
+  // Format amount with + or - prefix based on operation type
+  const formatAmount = (amount: number, type: string): string => {
+    const formattedAmount = amount.toLocaleString('fr-FR', {
+      minimumFractionDigits: 3,
+      maximumFractionDigits: 3
+    });
+    return type === 'withdrawal' ? `- ${formattedAmount}` : `+ ${formattedAmount}`;
+  };
+
+  return (
+    <div className="space-y-3">
+      {operations.map(operation => (
+        <div 
+          key={operation.id} 
+          className="cursor-pointer"
+          onClick={() => handleCardClick(operation)}
+        >
+          <OperationsMobileCard 
+            operation={operation} 
+            formatAmount={(amount) => formatAmount(amount, operation.type)} 
+            currency={currency}
+            colorClass={getColorClass(operation.type)}
+            icon={getOperationIcon(operation.type)}
+          />
+        </div>
+      ))}
+
+      <div className="mt-4">
+        <TotalsSection operations={operations} currency={currency} />
+      </div>
+
+      {/* Details modal */}
+      <OperationDetailsModal
+        isOpen={isDetailsModalOpen}
+        onClose={handleCloseDetailsModal}
+        operation={selectedOperation}
+        onEdit={handleEditOperation}
+        onDelete={handleDeleteOperation}
+      />
+
+      {/* Delete confirmation dialog */}
+      <DeleteOperationDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={cancelDeleteOperation}
+        onConfirm={confirmDeleteOperation}
+        operation={selectedOperation}
+      />
+    </div>
+  );
 };

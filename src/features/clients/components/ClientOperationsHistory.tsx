@@ -26,6 +26,7 @@ interface ClientOperationsHistoryProps {
   setShowAllDates?: (showAll: boolean) => void;
   clientId?: number;
   isPepsiMen?: boolean;
+  updateOperation?: (operation: Operation) => Promise<void>;
 }
 
 export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = ({
@@ -43,7 +44,8 @@ export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = (
   showAllDates = false,
   setShowAllDates = () => {},
   clientId,
-  isPepsiMen = false
+  isPepsiMen = false,
+  updateOperation
 }) => {
   // Log operations data for pepsi men for debugging
   React.useEffect(() => {
@@ -93,7 +95,10 @@ export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = (
 
         {/* Les onglets d'opérations avec une meilleure organisation de l'espace */}
         <div className="px-0 pb-0">
-          <ClientOperationsHistoryTabs filteredOperations={filteredOperations} />
+          <ClientOperationsHistoryTabs 
+            filteredOperations={filteredOperations} 
+            updateOperation={updateOperation}
+          />
         </div>
       </CardContent>
     </Card>

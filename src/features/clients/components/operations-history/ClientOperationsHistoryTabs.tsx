@@ -16,11 +16,13 @@ import { cn } from "@/lib/utils";
 interface ClientOperationsHistoryTabsProps {
   filteredOperations: Operation[];
   currency?: string;
+  updateOperation?: (operation: Operation) => Promise<void>;
 }
 
 export const ClientOperationsHistoryTabs = ({
   filteredOperations,
-  currency = "TND"
+  currency = "TND",
+  updateOperation
 }: ClientOperationsHistoryTabsProps) => {
   // Count operations by type
   const depositsCount = filteredOperations.filter(op => op.type === "deposit").length;
@@ -92,7 +94,7 @@ export const ClientOperationsHistoryTabs = ({
       <Card className="shadow-sm border border-border/50 rounded-md">
         <CardContent className="p-0 sm:p-0">
           <TabsContent value="all" className="w-full m-0">
-            <AllOperationsTab operations={filteredOperations} currency={currency} />
+            <AllOperationsTab operations={filteredOperations} currency={currency} updateOperation={updateOperation} />
           </TabsContent>
 
           <TabsContent value="deposits" className="w-full m-0">
