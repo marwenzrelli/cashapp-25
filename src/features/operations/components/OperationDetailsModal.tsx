@@ -4,6 +4,8 @@ import { Operation } from "../types";
 import { formatDateTime } from "../types";
 import { formatAmount } from "@/utils/formatCurrency";
 import { ArrowDownRight, ArrowUpRight, ArrowLeftRight } from "lucide-react";
+import { EditOperationDialog } from "@/features/operations/components/EditOperationDialog";
+import { useState } from "react";
 
 interface OperationDetailsModalProps {
   isOpen: boolean;
@@ -20,6 +22,8 @@ export function OperationDetailsModal({
   onEdit,
   onDelete
 }: OperationDetailsModalProps) {
+  const [showEditDialog, setShowEditDialog] = useState(false);
+
   if (!operation) return null;
 
   const getOperationTypeIcon = () => {
@@ -67,66 +71,89 @@ export function OperationDetailsModal({
     ? `- ${formatAmount(operation.amount, 'TND')}`
     : formatAmount(operation.amount, 'TND');
 
+  const handleEditClick = () => {
+    setShowEditDialog(true);
+  };
+
+  const handleEditComplete = async (updatedOperation: Operation) => {
+    try {
+      await onEdit(updatedOperation);
+      setShowEditDialog(false);
+      onClose();
+    } catch (error) {
+      console.error("Edit failed:", error);
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center">
-            <span className="mr-2">{getOperationTypeIcon()}</span>
-            <span>{getOperationTypeText()}</span>
-          </DialogTitle>
-        </DialogHeader>
-        
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <div className="text-sm text-muted-foreground">Montant</div>
-            <div className={`font-semibold text-lg ${getColorClass()}`}>
-              {formattedAmount}
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center">
+              <span className="mr-2">{getOperationTypeIcon()}</span>
+              <span>{getOperationTypeText()}</span>
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <div className="text-sm text-muted-foreground">Montant</div>
+              <div className={`font-semibold text-lg ${getColorClass()}`}>
+                {formattedAmount}
+              </div>
             </div>
-          </div>
-          
-          <div className="flex justify-between items-center">
-            <div className="text-sm text-muted-foreground">Date</div>
-            <div>{formatDateTime(displayDate)}</div>
-          </div>
-          
-          <div className="flex justify-between items-start">
-            <div className="text-sm text-muted-foreground">
-              {operation.type === 'transfer' ? 'De' : 'Client'}
+            
+            <div className="flex justify-between items-center">
+              <div className="text-sm text-muted-foreground">Date</div>
+              <div>{formatDateTime(displayDate)}</div>
             </div>
-            <div className="text-right">{operation.fromClient}</div>
-          </div>
-          
-          {operation.type === 'transfer' && operation.toClient && (
+            
             <div className="flex justify-between items-start">
-              <div className="text-sm text-muted-foreground">À</div>
-              <div className="text-right">{operation.toClient}</div>
+              <div className="text-sm text-muted-foreground">
+                {operation.type === 'transfer' ? 'De' : 'Client'}
+              </div>
+              <div className="text-right">{operation.fromClient}</div>
             </div>
-          )}
+            
+            {operation.type === 'transfer' && operation.toClient && (
+              <div className="flex justify-between items-start">
+                <div className="text-sm text-muted-foreground">À</div>
+                <div className="text-right">{operation.toClient}</div>
+              </div>
+            )}
+            
+            {operation.description && (
+              <div className="flex justify-between items-start">
+                <div className="text-sm text-muted-foreground">Description</div>
+                <div className="text-right max-w-[250px] break-words">{operation.description}</div>
+              </div>
+            )}
+          </div>
           
-          {operation.description && (
-            <div className="flex justify-between items-start">
-              <div className="text-sm text-muted-foreground">Description</div>
-              <div className="text-right max-w-[250px] break-words">{operation.description}</div>
-            </div>
-          )}
-        </div>
-        
-        <DialogFooter className="sm:justify-between">
-          <Button 
-            variant="destructive" 
-            onClick={() => onDelete(operation)}
-          >
-            Supprimer
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={() => onEdit(operation).catch(error => console.error("Edit failed:", error))}
-          >
-            Modifier
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <DialogFooter className="sm:justify-between">
+            <Button 
+              variant="destructive" 
+              onClick={() => onDelete(operation)}
+            >
+              Supprimer
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={handleEditClick}
+            >
+              Modifier
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <EditOperationDialog
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        operation={operation}
+        onConfirm={handleEditComplete}
+      />
+    </>
   );
 }
