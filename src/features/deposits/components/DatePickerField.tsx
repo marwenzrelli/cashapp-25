@@ -32,21 +32,23 @@ export const DatePickerField = ({
   const handleTimeChange = (newTime: string) => {
     if (!onTimeChange) return;
 
-    // On mobile, if user enters HH:MM and we need HH:MM:SS for backend
-    // automatically append :00 seconds when mobile format is detected
-    if (isMobile && newTime.split(':').length === 2) {
+    // Ensure time is in HH:MM:00 format
+    const timeParts = newTime.split(':');
+    if (timeParts.length === 2) {
       onTimeChange(`${newTime}:00`);
     } else {
       onTimeChange(newTime);
     }
   };
 
-  // Format time for display
+  // Ensure time is displayed in HH:MM format
   let displayTime = time;
-  if (time && isMobile && time.split(':').length > 2) {
-    // If on mobile and we have seconds, strip them for display
-    const [hours, minutes] = time.split(':');
-    displayTime = `${hours}:${minutes}`;
+  if (time) {
+    const timeParts = time.split(':');
+    // If more than 2 parts (including seconds), take only hours and minutes
+    if (timeParts.length > 2) {
+      displayTime = `${timeParts[0]}:${timeParts[1]}`;
+    }
   }
 
   return (
@@ -86,7 +88,7 @@ export const DatePickerField = ({
               type="time"
               value={displayTime}
               onChange={(e) => handleTimeChange(e.target.value)}
-              step={isMobile ? "60" : "1"} // Minutes for mobile, seconds for desktop
+              step="60" // Always use minutes step
               className={cn(
                 "pl-10",
                 isMobile && "h-14 text-base"
