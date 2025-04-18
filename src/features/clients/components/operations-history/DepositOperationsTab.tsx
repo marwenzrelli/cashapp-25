@@ -62,7 +62,7 @@ export const DepositOperationsTab = ({
             const isSelected = selectedOperations[operation.id] || false;
             return <TableRow key={operation.id} className={cn(isSelected ? "bg-green-50 dark:bg-green-900/20" : "", "transition-colors cursor-pointer hover:bg-muted/50")} onClick={() => toggleSelection(operation.id)}>
                   <TableCell className="w-[50px] p-2 text-center">
-                    <Checkbox checked={isSelected} onCheckedChange={() => toggleSelection(operation.id)} onClick={e => e.stopPropagation()} />
+                    
                   </TableCell>
                   <TableCell className="font-mono text-xs text-muted-foreground">
                     #{operationId}
