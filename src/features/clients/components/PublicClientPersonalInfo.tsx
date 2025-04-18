@@ -47,14 +47,7 @@ export const PublicClientPersonalInfo = ({
 
           {/* Creation date - Hidden on mobile */}
           <div className="grid grid-cols-1 gap-3 hidden md:grid">
-            <div className="flex items-center gap-3 bg-background/50 p-3 rounded-lg">
-              <div className="w-full">
-                <p className="text-xs text-muted-foreground">Date de création</p>
-                <p className="text-sm font-medium">
-                  {format(new Date(client.date_creation || ""), "dd/MM/yyyy")}
-                </p>
-              </div>
-            </div>
+            
           </div>
 
           {/* Balance section */}
