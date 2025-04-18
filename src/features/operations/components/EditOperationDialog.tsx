@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +16,6 @@ interface EditOperationDialogProps {
   onConfirm: (updatedOperation: Operation) => Promise<void>;
 }
 
-// Interface for the form state that includes time separately
 interface EditableOperation extends Omit<Operation, 'date'> {
   date: string;
   time: string;
@@ -33,10 +31,8 @@ export const EditOperationDialog = ({
   const [editedOperation, setEditedOperation] = useState<EditableOperation | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Update local state when operation prop changes
   useEffect(() => {
     if (operation) {
-      // Format the date/time when initializing the form
       const dateTime = formatISODateTime(operation.operation_date || operation.date || "");
       
       setEditedOperation({
@@ -62,23 +58,24 @@ export const EditOperationDialog = ({
     try {
       setIsSubmitting(true);
       
-      // Ensure date and time are valid
       if (!editedOperation.date || !editedOperation.time) {
         toast.error("Date et heure requises");
         return;
       }
       
-      // Log what we're about to send
+      let timeValue = editedOperation.time;
+      if (timeValue.split(':').length === 2) {
+        timeValue = `${timeValue}:00`;
+      }
+      
       console.log("Saving operation with:", {
         date: editedOperation.date,
-        time: editedOperation.time,
-        combinedDate: new Date(editedOperation.date + "T" + editedOperation.time)
+        time: timeValue,
+        combinedDate: new Date(editedOperation.date + "T" + timeValue)
       });
       
-      // Combine date and time before sending
-      const combinedDate = new Date(editedOperation.date + "T" + editedOperation.time);
+      const combinedDate = new Date(editedOperation.date + "T" + timeValue);
       
-      // Check if the date is valid
       if (isNaN(combinedDate.getTime())) {
         toast.error("Date ou heure invalide");
         return;
@@ -111,7 +108,6 @@ export const EditOperationDialog = ({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* Date and Time Section */}
           <div className="space-y-2">
             <Label className="text-base font-medium">Date et heure d'opération</Label>
             <div className="grid grid-cols-2 gap-4">
@@ -137,7 +133,6 @@ export const EditOperationDialog = ({
             </div>
           </div>
 
-          {/* Client Section */}
           <div className="space-y-2">
             <Label className="text-base font-medium">Client</Label>
             <div className="relative">
@@ -161,7 +156,6 @@ export const EditOperationDialog = ({
             )}
           </div>
 
-          {/* Amount Section */}
           <div className="space-y-2">
             <Label className="text-base font-medium">Montant</Label>
             <div className="relative">
@@ -177,7 +171,6 @@ export const EditOperationDialog = ({
             </div>
           </div>
 
-          {/* Description Section */}
           <div className="space-y-2">
             <Label className="text-base font-medium">Description</Label>
             <div className="relative">
