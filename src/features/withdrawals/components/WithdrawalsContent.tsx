@@ -154,7 +154,6 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
     <div className="space-y-8 animate-in px-2 sm:px-4 md:px-6 w-full">
       <WithdrawalHeader 
         withdrawals={withdrawals}
-        filteredDeposits={withdrawals}
         isLoading={false}
       />
       

@@ -5,9 +5,15 @@ import { type Withdrawal } from "../types";
 
 interface WithdrawalHeaderProps {
   withdrawals: Withdrawal[];
+  filteredDeposits?: Withdrawal[];
+  isLoading?: boolean;
 }
 
-export const WithdrawalHeader: React.FC<WithdrawalHeaderProps> = ({ withdrawals }) => {
+export const WithdrawalHeader: React.FC<WithdrawalHeaderProps> = ({ 
+  withdrawals,
+  filteredDeposits,
+  isLoading = false
+}) => {
   return (
     <div className="space-y-6">
       <div>
