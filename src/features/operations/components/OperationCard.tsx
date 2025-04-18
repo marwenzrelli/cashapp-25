@@ -1,11 +1,10 @@
-
 import { Operation, formatDateTime } from "../types";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowDownRight, ArrowUpRight, ArrowLeftRight, Trash2, Calendar, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { formatCurrency } from "@/utils/formatCurrency";
+import { formatAmount } from "@/utils/formatCurrency";
 
 interface OperationCardProps {
   operation: Operation;
@@ -32,7 +31,6 @@ export const OperationCard = ({
     description 
   } = operation;
   
-  // Icon based on operation type
   const getOperationIcon = () => {
     switch (type) {
       case 'deposit':
@@ -46,7 +44,6 @@ export const OperationCard = ({
     }
   };
   
-  // Color class based on operation type
   const getColorClass = () => {
     switch (type) {
       case 'deposit':
@@ -60,7 +57,6 @@ export const OperationCard = ({
     }
   };
   
-  // Formatted operation type in French
   const getFormattedType = () => {
     switch (type) {
       case 'deposit':
@@ -74,7 +70,6 @@ export const OperationCard = ({
     }
   };
   
-  // Date to display
   const displayDate = operation_date || date;
 
   return (
@@ -110,7 +105,7 @@ export const OperationCard = ({
               getColorClass(),
               isMobile ? "text-base" : "text-lg"
             )}>
-              {type === 'withdrawal' ? '- ' : ''}{formatCurrency(amount, currency)}
+              {type === 'withdrawal' ? '- ' : ''}{formatAmount(amount, currency as any)}
             </span>
             
             <div className="flex items-center gap-1 print:hidden">
