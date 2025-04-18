@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Operation } from "@/features/operations/types";
 import { 
@@ -122,7 +121,15 @@ export const OperationsDesktopTable = ({
                       <span>{getOperationTypeDisplay(operation.type)}</span>
                     </div>
                   </TableCell>
-                  <TableCell>{operation.id}</TableCell>
+                  <TableCell 
+                    className="cursor-pointer hover:underline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRowClick(operation);
+                    }}
+                  >
+                    {operation.id}
+                  </TableCell>
                   <TableCell>{formatDate(operation.date)}</TableCell>
                   <TableCell>{operation.description || "-"}</TableCell>
                   <TableCell className="text-right">
