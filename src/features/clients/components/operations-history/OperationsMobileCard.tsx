@@ -1,4 +1,3 @@
-
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Operation } from "@/features/operations/types";
@@ -7,6 +6,7 @@ import { CalendarClock, Clock, Hash, User } from "lucide-react";
 import { formatId } from "@/utils/formatId";
 import { cn } from "@/lib/utils";
 import { ReactNode } from "react";
+import { formatNumber } from "@/features/clients/components/operations-history/all-operations/OperationTypeHelpers";
 
 interface OperationsMobileCardProps {
   operation: Operation;
@@ -16,12 +16,12 @@ interface OperationsMobileCardProps {
   colorClass?: string;
   showId?: boolean;
   typeBackgroundClass?: string;
-  icon?: ReactNode; // Add icon prop
+  icon?: ReactNode;
 }
 
 export const OperationsMobileCard = ({
   operation,
-  formatAmount = amount => `${Math.round(amount).toLocaleString()}`,
+  formatAmount = amount => `${formatNumber(amount)}`,
   currency = "",
   showType = true,
   colorClass,
@@ -29,7 +29,6 @@ export const OperationsMobileCard = ({
   typeBackgroundClass,
   icon
 }: OperationsMobileCardProps) => {
-  // Fonction sécurisée pour parser les dates
   const parseDate = (dateValue: string | Date): Date => {
     if (dateValue instanceof Date) return dateValue;
     try {
@@ -42,7 +41,6 @@ export const OperationsMobileCard = ({
     }
   };
 
-  // Fonction sécurisée pour formater les dates
   const formatDate = (dateValue: string | Date, formatStr: string): string => {
     try {
       const date = parseDate(dateValue);
@@ -55,12 +53,10 @@ export const OperationsMobileCard = ({
     }
   };
 
-  // Use operation_date if available, otherwise fall back to date
   const operationDate = operation.operation_date || operation.date;
 
-  // Determine which client name to show based on operation type
   const clientName = operation.type === "transfer" ? `${operation.fromClient || ''} → ${operation.toClient || ''}` : operation.fromClient || '';
-  
+
   return <div className="flex flex-col p-3 sm:p-4 bg-white dark:bg-gray-800 rounded-lg border shadow-sm w-full">
       <div className="flex items-center justify-between mb-3">
         {showType && <Badge variant="outline" className={cn("text-xs mr-2", typeBackgroundClass, operation.type === "deposit" ? "border-green-500 text-green-700 dark:text-green-400" : operation.type === "withdrawal" ? "border-red-500 text-red-700 dark:text-red-400" : "border-blue-500 text-blue-700 dark:text-blue-400")}>
@@ -81,7 +77,6 @@ export const OperationsMobileCard = ({
         </div>
       </div>
       
-      {/* Add client name display with icon */}
       <div className="flex items-center gap-1 mb-3 text-sm">
         <User className="h-3.5 w-3.5 text-muted-foreground" />
         <span className="font-medium px-2 py-1 rounded-md bg-purple-50 dark:bg-purple-900/20 overflow-hidden text-ellipsis">
