@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -46,7 +47,7 @@ export const PublicOperationsTable: React.FC<PublicOperationsTableProps> = ({ op
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[100px]">Date</TableHead>
+              <TableHead className="w-[150px]">Date</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Description</TableHead>
               <TableHead className="text-right">Montant</TableHead>
@@ -66,7 +67,7 @@ export const PublicOperationsTable: React.FC<PublicOperationsTableProps> = ({ op
                   className={getRowBackgroundColor(operation.type)}
                 >
                   <TableCell className="font-medium text-xs">
-                    {format(new Date(operation.operation_date || operation.date), 'dd MMM yyyy', { locale: fr })}
+                    {format(new Date(operation.operation_date || operation.date), 'dd/MM/yyyy HH:mm', { locale: fr })}
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline" className="capitalize text-xs">
