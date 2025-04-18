@@ -217,7 +217,7 @@ const Operations = () => {
       <DeleteOperationDialog
         isOpen={showDeleteDialog}
         onClose={() => setShowDeleteDialog(false)}
-        onDelete={() => confirmDeleteOperation()}
+        onConfirm={confirmDeleteOperation}
         operation={operationToDelete}
       />
       

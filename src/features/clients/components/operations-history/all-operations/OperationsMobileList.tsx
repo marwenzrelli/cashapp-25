@@ -57,14 +57,15 @@ export const OperationsMobileList = ({
       await deleteOperation(selectedOperation);
       toast.success("Opération supprimée avec succès");
       refreshOperations();
+      setIsDeleteDialogOpen(false);
+      setSelectedOperation(null);
+      return true;
     } catch (error) {
       console.error("Delete operation error:", error);
       toast.error("Erreur lors de la suppression", { 
         description: typeof error === 'string' ? error : error instanceof Error ? error.message : "Une erreur s'est produite" 
       });
-    } finally {
-      setIsDeleteDialogOpen(false);
-      setSelectedOperation(null);
+      return false;
     }
   };
 

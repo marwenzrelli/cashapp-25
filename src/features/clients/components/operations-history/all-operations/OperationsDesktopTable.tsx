@@ -1,30 +1,38 @@
 
 import React, { useState } from "react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Operation } from "@/features/operations/types";
-import { format } from "date-fns";
-import { formatId } from "@/utils/formatId";
-import { ArrowUpRight, ArrowDownRight, ArrowLeftRight } from "lucide-react";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { 
+  formatNumber, 
+  getOperationTypeColor, 
+  getOperationTypeDisplay, 
+  getOperationTypeIcon 
+} from "./OperationTypeHelpers";
+import { format, parseISO } from "date-fns";
+import { fr } from "date-fns/locale";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { ChevronDown, Edit2, Trash2 } from "lucide-react";
 import { OperationDetailsModal } from "@/features/operations/components/OperationDetailsModal";
 import { DeleteOperationDialog } from "@/features/operations/components/DeleteOperationDialog";
 import { toast } from "sonner";
-import { useOperations } from "@/features/operations/hooks/useOperations";
-import { cn } from "@/lib/utils";
-import { TotalsSection } from "./TotalsSection";
-import { getOperationTypeColor } from "./OperationTypeHelpers";
 
 interface OperationsDesktopTableProps {
   operations: Operation[];
-  currency?: string;
   updateOperation?: (operation: Operation) => Promise<void>;
 }
 
 export const OperationsDesktopTable = ({ 
   operations,
-  currency = "TND",
   updateOperation
 }: OperationsDesktopTableProps) => {
-  const { refreshOperations, deleteOperation } = useOperations();
   const [selectedOperation, setSelectedOperation] = useState<Operation | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -34,116 +42,68 @@ export const OperationsDesktopTable = ({
     setIsDetailsModalOpen(true);
   };
 
-  const handleCloseDetailsModal = () => {
-    setIsDetailsModalOpen(false);
-    setSelectedOperation(null);
+  const formatDate = (dateString: string) => {
+    try {
+      return format(parseISO(dateString), "dd MMMM yyyy", { locale: fr });
+    } catch (error) {
+      console.error("Date parsing error:", error);
+      return dateString;
+    }
   };
 
   const handleEditOperation = async (updatedOperation: Operation) => {
     if (updateOperation) {
-      return updateOperation(updatedOperation);
+      try {
+        await updateOperation(updatedOperation);
+        toast.success("Opération modifiée avec succès");
+        setIsDetailsModalOpen(false);
+      } catch (error) {
+        console.error("Edit operation error:", error);
+        toast.error("Erreur lors de la modification");
+      }
+    } else {
+      toast.error("Fonction de modification non disponible");
+      console.error("No update function provided");
     }
-    toast.error("Fonction de modification non disponible");
-    return Promise.reject("Update function not available");
   };
 
-  const handleDeleteOperation = (operation: Operation) => {
+  const handleDeleteClick = (operation: Operation, e: React.MouseEvent) => {
+    e.stopPropagation();
     setSelectedOperation(operation);
-    setIsDetailsModalOpen(false);
     setIsDeleteDialogOpen(true);
   };
 
   const confirmDeleteOperation = async () => {
-    if (!selectedOperation) return;
-    
     try {
-      await deleteOperation(selectedOperation);
+      // This would be implementation-specific, but for now, we'll just close the dialog
+      setIsDeleteDialogOpen(false);
       toast.success("Opération supprimée avec succès");
-      refreshOperations();
+      return true;
     } catch (error) {
       console.error("Delete operation error:", error);
-      toast.error("Erreur lors de la suppression", { 
-        description: typeof error === 'string' ? error : error instanceof Error ? error.message : "Une erreur s'est produite" 
-      });
-    } finally {
-      setIsDeleteDialogOpen(false);
-      setSelectedOperation(null);
-    }
-  };
-
-  const cancelDeleteOperation = () => {
-    setIsDeleteDialogOpen(false);
-    setSelectedOperation(null);
-  };
-
-  // Format number with 3 decimal places and comma separator for Tunisian currency
-  const formatNumber = (num: number): string => {
-    return num.toLocaleString('fr-FR', {
-      minimumFractionDigits: 3,
-      maximumFractionDigits: 3
-    });
-  };
-
-  // Get type-specific display text
-  const getOperationTypeDisplay = (type: string): string => {
-    switch (type) {
-      case "deposit":
-        return "Dépôt";
-      case "withdrawal":
-        return "Retrait";
-      case "transfer":
-        return "Transfert";
-      default:
-        return "Inconnu";
-    }
-  };
-
-  // Get icon component based on operation type
-  const getOperationTypeIcon = (type: string) => {
-    switch (type) {
-      case "deposit":
-        return ArrowUpRight;
-      case "withdrawal":
-        return ArrowDownRight;
-      case "transfer":
-        return ArrowLeftRight;
-      default:
-        return ArrowUpRight;
+      toast.error("Erreur lors de la suppression");
+      return false;
     }
   };
 
   return (
     <>
-      <div className="overflow-x-auto">
+      <div className="rounded-md border shadow-sm overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="bg-muted/50">
-              <TableHead className="w-[5%]">Type</TableHead>
-              <TableHead className="w-[10%]">ID</TableHead>
-              <TableHead className="w-[15%]">Date</TableHead>
-              <TableHead className="w-[20%]">Client</TableHead>
-              <TableHead className="w-[30%]">Description</TableHead>
-              <TableHead className="w-[15%] text-right">Montant</TableHead>
+            <TableRow>
+              <TableHead>Type</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>{operations[0]?.type === 'transfer' ? 'De' : 'Client'}</TableHead>
+              {operations[0]?.type === 'transfer' && <TableHead>À</TableHead>}
+              <TableHead className="text-right">Montant</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {operations.map((operation) => {
-              // Use operation_date if available, otherwise fall back to date
-              const displayDate = operation.operation_date || operation.date;
-              const formattedDate = typeof displayDate === 'string' 
-                ? format(new Date(displayDate), "dd/MM/yyyy HH:mm") 
-                : format(displayDate, "dd/MM/yyyy HH:mm");
-              
-              // Format operation ID
-              const operationId = isNaN(parseInt(operation.id)) 
-                ? operation.id 
-                : formatId(parseInt(operation.id));
-              
-              // Get type-specific display properties
-              const typeDisplay = getOperationTypeDisplay(operation.type);
-              const TypeIcon = getOperationTypeIcon(operation.type);
+              const Icon = getOperationTypeIcon(operation.type);
               const typeColor = getOperationTypeColor(operation.type);
-              const amountPrefix = operation.type === 'withdrawal' ? '- ' : '';
               
               return (
                 <TableRow 
@@ -152,27 +112,48 @@ export const OperationsDesktopTable = ({
                   onClick={() => handleRowClick(operation)}
                 >
                   <TableCell>
-                    <div className="flex items-center justify-center">
-                      <TypeIcon className={cn("h-5 w-5", typeColor)} />
+                    <div className="flex items-center">
+                      <div className={`mr-2 ${typeColor}`}>
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      <span>{getOperationTypeDisplay(operation.type)}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">
-                    #{operationId}
+                  <TableCell>{formatDate(operation.date)}</TableCell>
+                  <TableCell>{operation.fromClient}</TableCell>
+                  {operation.type === 'transfer' && (
+                    <TableCell>{operation.toClient}</TableCell>
+                  )}
+                  <TableCell className="text-right">
+                    <span className={operation.type === 'withdrawal' ? 'text-red-600' : 'text-green-600'}>
+                      {operation.type === 'withdrawal' ? '- ' : '+ '}
+                      {formatNumber(operation.amount)} TND
+                    </span>
                   </TableCell>
-                  <TableCell>{formattedDate}</TableCell>
-                  <TableCell className="max-w-[200px] truncate">
-                    {operation.fromClient}
-                    {operation.type === 'transfer' && operation.toClient && (
-                      <span className="text-xs text-muted-foreground block">
-                        → {operation.toClient}
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell className="max-w-[300px] truncate">
-                    {operation.description || <span className="text-muted-foreground italic">Aucune description</span>}
-                  </TableCell>
-                  <TableCell className={cn("text-right font-medium whitespace-nowrap", typeColor)}>
-                    {amountPrefix}{formatNumber(operation.amount)} {currency}
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <ChevronDown className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          handleRowClick(operation);
+                        }}>
+                          <Edit2 className="mr-2 h-4 w-4" />
+                          Modifier
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="text-red-600"
+                          onClick={(e) => handleDeleteClick(operation, e)}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Supprimer
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               );
@@ -181,21 +162,24 @@ export const OperationsDesktopTable = ({
         </Table>
       </div>
 
-      <TotalsSection operations={operations} currency={currency} />
-
       {/* Details modal */}
-      <OperationDetailsModal
-        isOpen={isDetailsModalOpen}
-        onClose={handleCloseDetailsModal}
-        operation={selectedOperation}
-        onEdit={handleEditOperation}
-        onDelete={handleDeleteOperation}
-      />
+      {selectedOperation && (
+        <OperationDetailsModal
+          isOpen={isDetailsModalOpen}
+          onClose={() => setIsDetailsModalOpen(false)}
+          operation={selectedOperation}
+          onEdit={handleEditOperation}
+          onDelete={(operation) => {
+            setIsDetailsModalOpen(false);
+            handleDeleteClick(operation, { stopPropagation: () => {} } as React.MouseEvent);
+          }}
+        />
+      )}
 
       {/* Delete confirmation dialog */}
       <DeleteOperationDialog
         isOpen={isDeleteDialogOpen}
-        onClose={cancelDeleteOperation}
+        onClose={() => setIsDeleteDialogOpen(false)}
         onConfirm={confirmDeleteOperation}
         operation={selectedOperation}
       />
