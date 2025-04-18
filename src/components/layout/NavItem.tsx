@@ -11,11 +11,17 @@ interface NavItemProps {
 }
 
 export const NavItem = ({ path, label, icon: Icon, currentPath, onClick }: NavItemProps) => {
-  const isActive = currentPath === path;
+  // Special case for dashboard - map /dashboard to / for active state check
+  const isActive = path === "/dashboard" 
+    ? (currentPath === "/" || currentPath === "/dashboard")
+    : currentPath === path;
+  
+  // Map dashboard path to root for the Link
+  const linkPath = path === "/dashboard" ? "/" : path;
   
   return (
     <Link
-      to={path}
+      to={linkPath}
       onClick={onClick}
       className={`flex items-center space-x-2 px-3 py-2 rounded-md transition-all duration-300 ${
         isActive
