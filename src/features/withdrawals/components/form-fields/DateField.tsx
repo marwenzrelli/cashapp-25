@@ -43,27 +43,10 @@ export const DateField: React.FC<DateFieldProps> = ({
       const day = String(date.getDate()).padStart(2, '0');
       dateValue = `${year}-${month}-${day}`;
       
-      // Format time based on mobile or desktop
-      if (isMobile) {
-        // Format for mobile: HH:MM (24-hour format)
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        timeValue = `${hours}:${minutes}`;
-      } else {
-        // Format for desktop: HH:MM:SS (24-hour format)
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        const seconds = String(date.getSeconds()).padStart(2, '0');
-        timeValue = `${hours}:${minutes}:${seconds}`;
-      }
-      
-      console.log("Parsed local date/time values:", { 
-        original: value, 
-        localDate: date.toString(),
-        dateValue, 
-        timeValue,
-        isMobile
-      });
+      // Format time in 24-hour format for both mobile and desktop
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      timeValue = `${hours}:${minutes}`;
     } catch (error) {
       console.error("Error parsing date:", error);
     }
@@ -80,12 +63,6 @@ export const DateField: React.FC<DateFieldProps> = ({
       const newDateObj = new Date(currentDate);
       newDateObj.setFullYear(newDate.getFullYear(), newDate.getMonth(), newDate.getDate());
       
-      console.log("Date change:", {
-        newDate: newDate.toString(),
-        newDateObj: newDateObj.toString(),
-        newISO: newDateObj.toISOString()
-      });
-      
       // Preserve the time from the current value
       onChange(newDateObj.toISOString());
     } catch (error) {
@@ -100,22 +77,14 @@ export const DateField: React.FC<DateFieldProps> = ({
       // Get current date components from existing value
       const currentDate = new Date(value || new Date());
       
-      // Parse the time string - handle both formats (HH:MM and HH:MM:SS)
+      // Parse the time string 
       const timeParts = newTime.split(':');
       const hours = parseInt(timeParts[0], 10);
       const minutes = parseInt(timeParts[1], 10);
-      const seconds = timeParts.length > 2 ? parseInt(timeParts[2], 10) : 0;
       
       // Set the time components on the current date
       const newDateObj = new Date(currentDate);
-      newDateObj.setHours(hours, minutes, seconds);
-      
-      console.log("Time change:", {
-        newTime,
-        parsedParts: { hours, minutes, seconds },
-        newDateObj: newDateObj.toString(),
-        newISO: newDateObj.toISOString()
-      });
+      newDateObj.setHours(hours, minutes, 0); // Always set seconds to 0
       
       onChange(newDateObj.toISOString());
     } catch (error) {
@@ -125,10 +94,6 @@ export const DateField: React.FC<DateFieldProps> = ({
 
   // Create a Date object from the ISO string
   const dateObj = value ? new Date(value) : new Date();
-
-  // Customize time input based on device
-  const timeStep = isMobile ? "60" : "1"; // Minutes for mobile, seconds for desktop
-  const timeFormat = isMobile ? "HH:MM" : "HH:MM:SS";
 
   return (
     <div className="space-y-3">
@@ -165,14 +130,14 @@ export const DateField: React.FC<DateFieldProps> = ({
           <Input
             id={`${id}-time`}
             type="time" 
-            step={timeStep}
+            step="60"
             value={timeValue}
             onChange={(e) => handleTimeChange(e.target.value)}
             className={cn(
               "pl-10",
               isMobile && "h-14 text-lg"
             )}
-            aria-label={`Heure au format ${timeFormat}`}
+            aria-label="Heure au format HH:MM (24h)"
           />
           <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
         </div>
@@ -180,3 +145,4 @@ export const DateField: React.FC<DateFieldProps> = ({
     </div>
   );
 };
+
