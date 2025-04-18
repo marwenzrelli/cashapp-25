@@ -73,7 +73,6 @@ export const DepositsContent = ({
   dateRange,
   setDateRange
 }: DepositsContentProps) => {
-  // Add state for new deposit dialog
   const [isNewDepositOpen, setIsNewDepositOpen] = React.useState(false);
 
   const {
@@ -118,7 +117,7 @@ export const DepositsContent = ({
         isLoading={isLoading}
       />
       
-      <div className="w-full flex justify-end">
+      <div className="w-full flex justify-center">
         <NewDepositButton onClick={() => setIsNewDepositOpen(true)} />
       </div>
 
@@ -169,7 +168,6 @@ export const DepositsContent = ({
         )}
       </div>
 
-      {/* Add the new deposit dialog */}
       <NewDepositDialog
         isOpen={isNewDepositOpen}
         onOpenChange={setIsNewDepositOpen}
