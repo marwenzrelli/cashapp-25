@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Client } from "../types";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -6,20 +5,20 @@ import { ClientIdBadge } from "./ClientIdBadge";
 import { User, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-
 interface PublicClientPersonalInfoProps {
   client: Client;
 }
+export const PublicClientPersonalInfo = ({
+  client
+}: PublicClientPersonalInfoProps) => {
+  const {
+    currency
+  } = useCurrency();
 
-export const PublicClientPersonalInfo = ({ client }: PublicClientPersonalInfoProps) => {
-  const { currency } = useCurrency();
-  
   // Format balance with explicit sign
   const sign = client.solde >= 0 ? "+" : "";
   const formattedBalance = `${sign}${client.solde.toLocaleString()} ${currency}`;
-  
-  return (
-    <Card className="backdrop-blur-xl bg-white/50 dark:bg-gray-950/50 w-full rounded-lg border">
+  return <Card className="backdrop-blur-xl bg-white/50 dark:bg-gray-950/50 w-full rounded-lg border">
       <CardHeader className="pb-4 space-y-0">
         <CardTitle className="text-lg sm:text-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <span className="text-base sm:text-lg">Informations personnelles</span>
@@ -41,12 +40,7 @@ export const PublicClientPersonalInfo = ({ client }: PublicClientPersonalInfoPro
 
           {/* Contact info - Hidden on mobile */}
           <div className="grid grid-cols-1 gap-3 hidden md:grid">
-            <div className="flex items-center gap-3 bg-background/50 p-3 rounded-lg">
-              <div>
-                <p className="text-xs text-muted-foreground">Téléphone</p>
-                <p className="text-sm font-medium">{client.telephone}</p>
-              </div>
-            </div>
+            
 
             <div className="flex items-center gap-3 bg-background/50 p-3 rounded-lg">
               <div>
@@ -74,10 +68,7 @@ export const PublicClientPersonalInfo = ({ client }: PublicClientPersonalInfoPro
               <Wallet className="h-4 w-4 text-primary/70" />
               <div className="w-full">
                 <p className="text-xs text-muted-foreground">Solde actuel</p>
-                <span className={cn(
-                  "text-lg font-semibold inline-block mt-0.5",
-                  client.solde >= 0 ? "text-green-600" : "text-red-600"
-                )}>
+                <span className={cn("text-lg font-semibold inline-block mt-0.5", client.solde >= 0 ? "text-green-600" : "text-red-600")}>
                   {formattedBalance}
                 </span>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -88,7 +79,5 @@ export const PublicClientPersonalInfo = ({ client }: PublicClientPersonalInfoPro
           </div>
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
-
