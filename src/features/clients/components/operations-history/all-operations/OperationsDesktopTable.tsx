@@ -110,7 +110,7 @@ export const OperationsDesktopTable = ({
                       {formatNumber(operation.amount)} {currency}
                     </span>
                   </TableCell>
-                  <TableCell>{operation.fromClient}</TableCell>
+                  
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
