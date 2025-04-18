@@ -12,6 +12,7 @@ import { TransferPagination } from "@/features/transfers/components/TransferPagi
 import { DateRange } from "react-day-picker";
 import { WithdrawalTotals } from "./WithdrawalTotals";
 import { useWithdrawalState } from "../hooks/useWithdrawalState";
+import { toast } from "sonner";
 
 interface WithdrawalsContentProps {
   withdrawals: Withdrawal[];
