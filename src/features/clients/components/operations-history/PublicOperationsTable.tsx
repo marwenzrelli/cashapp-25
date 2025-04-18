@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -54,6 +53,9 @@ export const PublicOperationsTable: React.FC<PublicOperationsTableProps> = ({ op
     }
   };
 
+  // Check if we're showing a specific operation type
+  const showingSpecificType = operations.length > 0 && operations.every(op => op.type === operations[0].type);
+
   return (
     <div className="w-full">
       <div className="overflow-x-auto w-full">
@@ -61,7 +63,7 @@ export const PublicOperationsTable: React.FC<PublicOperationsTableProps> = ({ op
           <TableHeader>
             <TableRow>
               <TableHead className="w-[150px]">Date</TableHead>
-              <TableHead>Type</TableHead>
+              {!showingSpecificType && <TableHead>Type</TableHead>}
               <TableHead>Description</TableHead>
               <TableHead className="text-right">Montant</TableHead>
             </TableRow>
@@ -69,7 +71,7 @@ export const PublicOperationsTable: React.FC<PublicOperationsTableProps> = ({ op
           <TableBody>
             {operations.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="h-20 text-center">
+                <TableCell colSpan={showingSpecificType ? 3 : 4} className="h-20 text-center">
                   Aucune opération trouvée.
                 </TableCell>
               </TableRow>
@@ -82,16 +84,18 @@ export const PublicOperationsTable: React.FC<PublicOperationsTableProps> = ({ op
                   <TableCell className="font-medium text-xs">
                     {format(new Date(operation.operation_date || operation.date), 'dd/MM/yyyy HH:mm', { locale: fr })}
                   </TableCell>
-                  <TableCell>
-                    <Badge 
-                      variant="outline" 
-                      className={`${getOperationBadgeStyle(operation.type)} text-xs capitalize`}
-                    >
-                      {operation.type === 'deposit' ? 'Versement' : 
-                       operation.type === 'withdrawal' ? 'Retrait' : 
-                       'Virement'}
-                    </Badge>
-                  </TableCell>
+                  {!showingSpecificType && (
+                    <TableCell>
+                      <Badge 
+                        variant="outline" 
+                        className={`${getOperationBadgeStyle(operation.type)} text-xs capitalize`}
+                      >
+                        {operation.type === 'deposit' ? 'Versement' : 
+                         operation.type === 'withdrawal' ? 'Retrait' : 
+                         'Virement'}
+                      </Badge>
+                    </TableCell>
+                  )}
                   <TableCell className="text-xs">{operation.description}</TableCell>
                   <TableCell className="text-right text-xs">
                     <span className={`${operation.type === 'withdrawal' ? 'text-red-500' : 'text-green-500'}`}>
