@@ -20,7 +20,6 @@ export const RecentActivityItem = ({ activity, currency, index }: RecentActivity
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
-  // Function to safely format operation ID
   const safeFormatId = (id: string) => {
     try {
       return formatOperationId(id);
@@ -30,11 +29,9 @@ export const RecentActivityItem = ({ activity, currency, index }: RecentActivity
     }
   };
 
-  // Create sign prefix based on operation type
   const signPrefix = activity.type === "withdrawal" ? "- " : 
                      activity.type === "deposit" ? "+ " : "";
 
-  // Convert RecentActivity to Operation type for modal
   const activityToOperation = (): Operation => ({
     id: activity.id,
     type: activity.type,
@@ -47,7 +44,6 @@ export const RecentActivityItem = ({ activity, currency, index }: RecentActivity
 
   const handleEditOperation = async (updatedOperation: Operation) => {
     try {
-      // Implement your update logic here
       toast.success("Opération modifiée avec succès");
       setIsDetailsModalOpen(false);
     } catch (error) {
@@ -63,7 +59,6 @@ export const RecentActivityItem = ({ activity, currency, index }: RecentActivity
 
   return (
     <div key={`${activity.id}-${index}`}>
-      {/* Desktop version */}
       <div className="hidden md:flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/10 transition-colors">
         <div className="flex items-center gap-4">
           {activity.type === 'deposit' && (
@@ -97,6 +92,11 @@ export const RecentActivityItem = ({ activity, currency, index }: RecentActivity
               </span>
             </div>
             <p className="text-sm text-muted-foreground">{activity.client_name}</p>
+            {activity.description && (
+              <p className="text-sm text-muted-foreground/70 mt-1 max-w-[300px] truncate">
+                {activity.description}
+              </p>
+            )}
           </div>
         </div>
         <div className="flex flex-col items-end gap-1">
@@ -114,7 +114,6 @@ export const RecentActivityItem = ({ activity, currency, index }: RecentActivity
         </div>
       </div>
       
-      {/* Mobile version using OperationsMobileCard */}
       <div className="md:hidden">
         <OperationsMobileCard 
           operation={{
@@ -143,7 +142,6 @@ export const RecentActivityItem = ({ activity, currency, index }: RecentActivity
         />
       </div>
 
-      {/* Operation Details Modal */}
       <OperationDetailsModal
         isOpen={isDetailsModalOpen}
         onClose={() => setIsDetailsModalOpen(false)}
@@ -152,13 +150,11 @@ export const RecentActivityItem = ({ activity, currency, index }: RecentActivity
         onDelete={() => setIsDeleteDialogOpen(true)}
       />
 
-      {/* Delete Dialog */}
       <DeleteOperationDialog
         isOpen={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
         operation={activityToOperation()}
         onDelete={async () => {
-          // Implement your delete logic here
           toast.success("Opération supprimée avec succès");
           setIsDeleteDialogOpen(false);
           return true;
