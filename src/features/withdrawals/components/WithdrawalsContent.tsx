@@ -5,6 +5,7 @@ import { WithdrawalHeader } from "./WithdrawalHeader";
 import { SearchBar } from "./SearchBar";
 import { DeleteWithdrawalDialog } from "./DeleteWithdrawalDialog";
 import { WithdrawalDialogContainer } from "./WithdrawalDialogContainer";
+import { NewWithdrawalButton } from "./NewWithdrawalButton";
 import { Withdrawal } from "../types";
 import { Client } from "@/features/clients/types";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
@@ -148,9 +149,19 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
     return "pour toute la période";
   };
 
+  const handleNewWithdrawal = () => {
+    setSelectedWithdrawal(null);
+    setIsEditing(false);
+    setShowDialog(true);
+  };
+
   return (
     <div className="space-y-8 animate-in w-full px-0 sm:px-0">
       <WithdrawalHeader withdrawals={withdrawals} />
+
+      <div className="flex justify-center w-full">
+        <NewWithdrawalButton onClick={handleNewWithdrawal} />
+      </div>
 
       <div className="w-full">
         <StandaloneWithdrawalForm 
