@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { OperationFilters } from "@/features/operations/components/OperationFilters";
 import { useOperations } from "@/features/operations/hooks/useOperations";
@@ -45,7 +44,6 @@ const Operations = () => {
   const [operationToEdit, setOperationToEdit] = useState<Operation | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   
-  // Log operation counts to verify all are being loaded
   useEffect(() => {
     if (allOperations.length > 0) {
       console.log(`Total operations loaded: ${allOperations.length}`);
@@ -55,7 +53,6 @@ const Operations = () => {
     }
   }, [allOperations]);
   
-  // Compteur pour afficher la durée de chargement
   useEffect(() => {
     let timer: NodeJS.Timeout | null = null;
     let counter = 0;
@@ -65,7 +62,6 @@ const Operations = () => {
         counter += 1;
         setLoadingDuration(counter);
         
-        // Afficher un message réseau après 10 secondes
         if (counter >= 10 && !showNetworkError) {
           setShowNetworkError(true);
         }
@@ -84,23 +80,25 @@ const Operations = () => {
     generatePDF(filteredOperations, filterType, filterClient, dateRange);
   };
 
-  // Function to handle editing an operation
   const handleEdit = (operation: Operation) => {
     console.log("Edit operation:", operation);
     setOperationToEdit(operation);
     setEditDialogOpen(true);
   };
   
-  // Function to update an operation
-  const handleUpdateOperation = async (updatedOperation: Operation) => {
-    if (!updatedOperation) return;
+  const handleUpdateOperation = async (updatedOperation: Operation): Promise<void> => {
+    if (!updatedOperation) {
+      toast.error("Opération non valide");
+      return;
+    }
     
     setIsUpdating(true);
     try {
       console.log("Updating operation:", updatedOperation);
       
       const operationType = updatedOperation.type;
-      const operationIdString = updatedOperation.id.split('-')[1]; // Extract the ID part
+      const operationIdParts = updatedOperation.id.toString().split('-');
+      const operationIdString = operationIdParts.length > 1 ? operationIdParts[1] : operationIdParts[0];
       const operationId = parseInt(operationIdString, 10);
       
       if (isNaN(operationId)) {
@@ -111,7 +109,6 @@ const Operations = () => {
       
       let error = null;
       
-      // Update based on operation type
       if (operationType === 'deposit') {
         const { error: updateError } = await supabase
           .from('deposits')
@@ -153,21 +150,20 @@ const Operations = () => {
       
       if (error) {
         console.error("Error updating operation:", error);
-        toast.error("Erreur lors de la mise à jour");
+        toast.error(`Erreur lors de la mise à jour: ${error.message}`);
         return;
       }
       
       toast.success("Opération mise à jour avec succès");
-      refreshOperations(true);
-    } catch (error) {
+      await refreshOperations(true);
+    } catch (error: any) {
       console.error("Error updating operation:", error);
-      toast.error("Erreur lors de la mise à jour");
+      toast.error(`Erreur: ${error?.message || "Échec de la mise à jour"}`);
     } finally {
       setIsUpdating(false);
     }
   };
 
-  // Force refresh on initial load
   useEffect(() => {
     refreshOperations(true);
   }, [refreshOperations]);

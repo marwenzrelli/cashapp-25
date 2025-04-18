@@ -1,54 +1,51 @@
 
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
-import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Clients from "./pages/Clients";
 import ClientProfile from "./pages/ClientProfile";
-import PublicClientProfile from "./pages/PublicClientProfile";
 import Deposits from "./pages/Deposits";
 import Withdrawals from "./pages/Withdrawals";
 import Transfers from "./pages/Transfers";
-import Statistics from "./pages/Statistics";
 import Operations from "./pages/Operations";
+import Statistics from "./pages/Statistics";
 import Administration from "./pages/Administration";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/Login";
+import PublicClientProfile from "./pages/PublicClientProfile";
 import SupervisorCreation from "./pages/SupervisorCreation";
 import AdminUtility from "./pages/AdminUtility";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/sonner";
 import "./App.css";
 
-// Create a client
-const queryClient = new QueryClient();
-
 function App() {
+  useEffect(() => {
+    document.title = "Gestion de Transactions | Smart Talib";
+  }, []);
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <Router>
-        <Routes>
-          {/* Public routes - accessible without login */}
-          <Route path="/public/client/:token" element={<PublicClientProfile />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/create-supervisor" element={<SupervisorCreation />} />
-          <Route path="/admin-utility" element={<AdminUtility />} />
-          
-          {/* Protected routes - require login */}
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route element={<Layout />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/clients" element={<Clients />} />
-            <Route path="/clients/:id" element={<ClientProfile />} />
-            <Route path="/deposits" element={<Deposits />} />
-            <Route path="/withdrawals" element={<Withdrawals />} />
-            <Route path="/transfers" element={<Transfers />} />
-            <Route path="/statistics" element={<Statistics />} />
-            <Route path="/operations" element={<Operations />} />
-            <Route path="/administration" element={<Administration />} />
-            <Route path="*" element={<NotFound />} />
-          </Route>
-        </Routes>
-      </Router>
-    </QueryClientProvider>
+    <Router>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/clients/:clientId/public" element={<PublicClientProfile />} />
+        <Route path="/admin-utility" element={<AdminUtility />} />
+        <Route path="/create-supervisor" element={<SupervisorCreation />} />
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Dashboard />} />
+          <Route path="clients" element={<Clients />} />
+          <Route path="clients/:clientId" element={<ClientProfile />} />
+          <Route path="deposits" element={<Deposits />} />
+          <Route path="withdrawals" element={<Withdrawals />} />
+          <Route path="transfers" element={<Transfers />} />
+          <Route path="operations" element={<Operations />} />
+          <Route path="statistics" element={<Statistics />} />
+          <Route path="administration" element={<Administration />} />
+          <Route path="*" element={<NotFound />} />
+        </Route>
+      </Routes>
+      <Toaster position="top-right" richColors closeButton />
+    </Router>
   );
 }
 

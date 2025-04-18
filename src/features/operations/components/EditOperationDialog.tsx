@@ -14,7 +14,7 @@ interface EditOperationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   operation: Operation | null;
-  onConfirm: (updatedOperation: Operation) => void;
+  onConfirm: (updatedOperation: Operation) => Promise<void>;
 }
 
 // Interface for the form state that includes time separately
