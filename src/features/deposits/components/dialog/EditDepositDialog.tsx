@@ -77,14 +77,14 @@ export const EditDepositDialog: React.FC<EditDepositDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[400px] p-4 sm:p-6 overflow-y-auto max-h-[90vh]">
+      <DialogContent className="max-w-[400px] p-4 overflow-y-auto max-h-[90vh]">
         <DialogHeader 
           creationDate={creationDate}
           operationDate={operationDate}
           lastModified={lastModified}
         />
 
-        <div className="py-3 space-y-4">
+        <div className="space-y-3">
           <EditDateTimeSection 
             editForm={editForm}
             onEditFormChange={onEditFormChange}
@@ -107,7 +107,7 @@ export const EditDepositDialog: React.FC<EditDepositDialogProps> = ({
           />
         </div>
 
-        <hr className="mt-4" />
+        <hr className="mt-2 mb-2" />
 
         <DialogFooterButtons 
           onOpenChange={onOpenChange}
@@ -118,3 +118,4 @@ export const EditDepositDialog: React.FC<EditDepositDialogProps> = ({
     </Dialog>
   );
 };
+
