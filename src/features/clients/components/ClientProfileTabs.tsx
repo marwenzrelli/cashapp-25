@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ClientOperationsHistory } from "./ClientOperationsHistory";
@@ -10,6 +11,7 @@ import { Smartphone, Monitor } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { OperationsDetailCards } from "./OperationsDetailCards";
+
 interface ClientProfileTabsProps {
   client: Client;
   clientId: number;
@@ -27,7 +29,9 @@ interface ClientProfileTabsProps {
   setShowAllDates: (showAll: boolean) => void;
   refreshClientOperations: () => void;
   isPepsiMen: boolean;
+  updateOperation?: (operation: Operation) => Promise<void>;
 }
+
 export function ClientProfileTabs({
   client,
   clientId,
@@ -44,7 +48,8 @@ export function ClientProfileTabs({
   showAllDates,
   setShowAllDates,
   refreshClientOperations,
-  isPepsiMen
+  isPepsiMen,
+  updateOperation
 }: ClientProfileTabsProps) {
   const [showMobilePreview, setShowMobilePreview] = useState(false);
 
@@ -57,7 +62,9 @@ export function ClientProfileTabs({
       maximumFractionDigits: 3
     }).format(amount);
   };
-  return <div className="space-y-6">
+  
+  return (
+    <div className="space-y-6">
       <Card className="overflow-hidden border-none shadow-md">
         <Tabs defaultValue="operations" className="w-full">
           <TabsList className="w-full grid grid-cols-2 rounded-none bg-muted/50 p-0">
@@ -67,7 +74,24 @@ export function ClientProfileTabs({
           
           <div className="p-6 px-0 py-[4px]">
             <TabsContent value="operations" className="space-y-6 mt-0">
-              <ClientOperationsHistory operations={clientOperations} selectedType={selectedType} setSelectedType={setSelectedType} searchTerm={searchTerm} setSearchTerm={setSearchTerm} dateRange={dateRange} setDateRange={setDateRange} isCustomRange={isCustomRange} setIsCustomRange={setIsCustomRange} filteredOperations={filteredOperations} refreshOperations={refreshClientOperations} showAllDates={showAllDates} setShowAllDates={setShowAllDates} clientId={clientId} isPepsiMen={isPepsiMen} />
+              <ClientOperationsHistory 
+                operations={clientOperations} 
+                selectedType={selectedType} 
+                setSelectedType={setSelectedType} 
+                searchTerm={searchTerm} 
+                setSearchTerm={setSearchTerm} 
+                dateRange={dateRange} 
+                setDateRange={setDateRange} 
+                isCustomRange={isCustomRange} 
+                setIsCustomRange={setIsCustomRange} 
+                filteredOperations={filteredOperations} 
+                refreshOperations={refreshClientOperations} 
+                showAllDates={showAllDates} 
+                setShowAllDates={setShowAllDates} 
+                clientId={clientId} 
+                isPepsiMen={isPepsiMen} 
+                updateOperation={updateOperation}
+              />
             </TabsContent>
             
             <TabsContent value="public-preview" className="space-y-6 mt-0">
@@ -91,5 +115,6 @@ export function ClientProfileTabs({
 
       {/* Operations Detail Cards moved here at the bottom */}
       <OperationsDetailCards clientOperations={clientOperations} formatAmount={formatAmount} />
-    </div>;
+    </div>
+  );
 }

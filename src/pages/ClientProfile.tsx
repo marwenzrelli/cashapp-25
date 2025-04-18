@@ -31,7 +31,8 @@ export default function ClientProfile() {
     refreshClientBalance,
     refreshClientOperations,
     clientBalance,
-    isPepsiMen
+    isPepsiMen,
+    updateOperation
   } = useClientProfile();
   const navigateToClients = () => navigate("/clients");
 
@@ -78,7 +79,8 @@ export default function ClientProfile() {
             showAllDates={showAllDates} 
             setShowAllDates={setShowAllDates} 
             refreshClientOperations={refreshClientOperations} 
-            isPepsiMen={isPepsiMen} 
+            isPepsiMen={isPepsiMen}
+            updateOperation={updateOperation}
           />
         </div>
       )}

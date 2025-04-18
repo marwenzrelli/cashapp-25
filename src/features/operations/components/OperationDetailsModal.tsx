@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Operation } from "../types";
@@ -6,6 +7,7 @@ import { formatAmount } from "@/utils/formatCurrency";
 import { ArrowDownRight, ArrowUpRight, ArrowLeftRight } from "lucide-react";
 import { EditOperationDialog } from "@/features/operations/components/EditOperationDialog";
 import { useState } from "react";
+import { toast } from "sonner";
 
 interface OperationDetailsModalProps {
   isOpen: boolean;
@@ -23,6 +25,7 @@ export function OperationDetailsModal({
   onDelete
 }: OperationDetailsModalProps) {
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   if (!operation) return null;
 
@@ -77,11 +80,21 @@ export function OperationDetailsModal({
 
   const handleEditComplete = async (updatedOperation: Operation) => {
     try {
+      setIsEditing(true);
+      console.log("Editing operation:", updatedOperation);
+      
       await onEdit(updatedOperation);
+      
+      toast.success("Opération modifiée avec succès");
       setShowEditDialog(false);
       onClose();
     } catch (error) {
       console.error("Edit failed:", error);
+      toast.error("La modification a échoué", {
+        description: typeof error === 'string' ? error : (error instanceof Error ? error.message : "Une erreur s'est produite")
+      });
+    } finally {
+      setIsEditing(false);
     }
   };
 
@@ -135,12 +148,14 @@ export function OperationDetailsModal({
             <Button 
               variant="destructive" 
               onClick={() => onDelete(operation)}
+              disabled={isEditing}
             >
               Supprimer
             </Button>
             <Button 
               variant="outline" 
               onClick={handleEditClick}
+              disabled={isEditing}
             >
               Modifier
             </Button>
