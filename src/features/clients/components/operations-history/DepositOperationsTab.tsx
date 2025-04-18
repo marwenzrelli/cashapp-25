@@ -7,6 +7,8 @@ import { formatId } from "@/utils/formatId";
 import { format } from "date-fns";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
+import { formatNumber } from "./all-operations/OperationTypeHelpers";
+
 interface DepositOperationsTabProps {
   operations: Operation[];
   currency?: string;
@@ -28,13 +30,6 @@ export const DepositOperationsTab = ({
   // Calculate total for deposits
   const totalDeposits = depositOperations.reduce((total, op) => total + op.amount, 0);
 
-  // Format number with 2 decimal places and comma separator
-  const formatNumber = (num: number): string => {
-    return num.toLocaleString('fr-FR', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-  };
   return <>
       {/* Desktop version */}
       <div className="hidden md:block overflow-x-auto">
@@ -88,11 +83,15 @@ export const DepositOperationsTab = ({
       {/* Mobile version */}
       <div className="md:hidden space-y-3 w-full p-3">
         {depositOperations.map(operation => <div key={operation.id} className={cn("transition-colors", selectedOperations[operation.id] ? "border-l-4 border-green-500 pl-2" : "")} onClick={() => toggleSelection(operation.id)}>
-            <div className="flex items-center mb-2">
-              
-              <div className="w-full">
-                <OperationsMobileCard key={operation.id} operation={operation} formatAmount={amount => `+${formatNumber(amount)}`} currency={currency} colorClass="text-green-600 dark:text-green-400" showType={false} />
-              </div>
+            <div className="w-full">
+              <OperationsMobileCard 
+                key={operation.id} 
+                operation={operation} 
+                formatAmount={amount => `+ ${formatNumber(amount)}`} 
+                currency={currency} 
+                colorClass="text-green-600 dark:text-green-400" 
+                showType={false} 
+              />
             </div>
           </div>)}
         

@@ -1,3 +1,4 @@
+import React from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Operation } from "@/features/operations/types";
@@ -21,7 +22,10 @@ interface OperationsMobileCardProps {
 
 export const OperationsMobileCard = ({
   operation,
-  formatAmount = amount => `${formatNumber(amount)}`,
+  formatAmount = amount => 
+    operation.type === 'deposit' ? `+ ${formatNumber(amount)}` : 
+    operation.type === 'withdrawal' ? `- ${formatNumber(amount)}` : 
+    formatNumber(amount),
   currency = "",
   showType = true,
   colorClass,
@@ -70,7 +74,6 @@ export const OperationsMobileCard = ({
             </span>
           </div>
           <p className={`text-lg font-semibold px-3 py-1 rounded-md ${colorClass || (operation.type === "withdrawal" ? "text-red-500 bg-red-50 dark:bg-red-900/20" : operation.type === "deposit" ? "text-green-500 bg-green-50 dark:bg-green-900/20" : "text-blue-500 bg-blue-50 dark:bg-blue-900/20")}`}>
-            {operation.type === "withdrawal" ? "- " : operation.type === "deposit" ? "+ " : ""}
             {formatAmount(operation.amount)}
             {currency && ` ${currency}`}
           </p>
