@@ -1,4 +1,3 @@
-
 import React, { useMemo } from "react";
 import {
   Table,
@@ -11,6 +10,7 @@ import {
 import { Operation } from "@/features/operations/types";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { Badge } from "@/components/ui/badge";
 
 interface TreasuryTableProps {
   operations: Operation[];
@@ -49,6 +49,19 @@ export const TreasuryTable = ({ operations }: TreasuryTableProps) => {
     }).format(amount);
   };
 
+  const getOperationNatureBadge = (type: Operation['type']) => {
+    switch(type) {
+      case 'deposit':
+        return <Badge variant="outline" className="bg-green-50 text-green-700">Versement</Badge>;
+      case 'withdrawal':
+        return <Badge variant="outline" className="bg-red-50 text-red-700">Retrait</Badge>;
+      case 'transfer':
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700">Virement</Badge>;
+      default:
+        return <Badge variant="outline">Inconnu</Badge>;
+    }
+  };
+
   return (
     <div className="relative w-full overflow-auto">
       <Table>
@@ -56,6 +69,7 @@ export const TreasuryTable = ({ operations }: TreasuryTableProps) => {
           <TableRow>
             <TableHead>Date</TableHead>
             <TableHead>ID Opération</TableHead>
+            <TableHead>Nature</TableHead>
             <TableHead>Client</TableHead>
             <TableHead>Type</TableHead>
             <TableHead>Désignation</TableHead>
@@ -72,6 +86,7 @@ export const TreasuryTable = ({ operations }: TreasuryTableProps) => {
                   {format(new Date(operation.operation_date || operation.date), "dd/MM/yyyy HH:mm", { locale: fr })}
                 </TableCell>
                 <TableCell>{operation.id}</TableCell>
+                <TableCell>{getOperationNatureBadge(operation.type)}</TableCell>
                 <TableCell>
                   {operation.type === "transfer" 
                     ? `${operation.fromClient} → ${operation.toClient}`
@@ -102,7 +117,7 @@ export const TreasuryTable = ({ operations }: TreasuryTableProps) => {
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={8} className="text-center py-4 text-muted-foreground">
+              <TableCell colSpan={9} className="text-center py-4 text-muted-foreground">
                 Aucune opération à afficher
               </TableCell>
             </TableRow>
