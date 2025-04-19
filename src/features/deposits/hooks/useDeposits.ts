@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useCallback } from "react";
 import { useFetchDeposits } from "./useFetchDeposits";
 import { useDeleteDeposit } from "./deposit-hooks/useDeleteDeposit";
 import { useCreateDeposit } from "./deposit-hooks/useCreateDeposit";
@@ -44,11 +44,6 @@ export const useDeposits = () => {
   // Get the updateDeposit function
   const { updateDeposit } = useUpdateDeposit(memoizedFetchDeposits, setIsLoading);
 
-  // Fetch deposits on mount
-  useEffect(() => {
-    memoizedFetchDeposits();
-  }, [memoizedFetchDeposits]);
-
   return { 
     deposits,
     isLoading,
@@ -58,6 +53,8 @@ export const useDeposits = () => {
     confirmDeleteDeposit,
     setDepositToDelete,
     setShowDeleteDialog,
+    showDeleteDialog,
+    depositToDelete,
     fetchDeposits: memoizedFetchDeposits,
     refreshDeposits: memoizedFetchDeposits
   };

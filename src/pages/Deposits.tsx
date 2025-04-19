@@ -1,10 +1,14 @@
 
 import { DepositsContent } from "@/features/deposits/components/DepositsContent";
 import { useDepositsPage } from "@/features/deposits/hooks/useDepositsPage";
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Deposits = () => {
+  // Track whether this is the initial mount
+  const [isMounted, setIsMounted] = useState(false);
+  
   const {
     searchTerm, 
     setSearchTerm,
@@ -40,15 +44,23 @@ const Deposits = () => {
   // Memoize the fetchDeposits function to prevent re-renders
   const memoizedFetchDeposits = useCallback(() => {
     console.log("Memoized fetch deposits called");
-    fetchDeposits();
+    fetchDeposits().catch(error => {
+      console.error("Error fetching deposits:", error);
+      toast.error("Erreur de chargement", {
+        description: "Impossible de charger les versements"
+      });
+    });
   }, [fetchDeposits]);
 
   // Track authentication state and fetch deposits when auth changes
   useEffect(() => {
     console.log("Setting up auth state listener");
     
-    // Initial fetch
-    memoizedFetchDeposits();
+    if (!isMounted) {
+      setIsMounted(true);
+      // Initial fetch
+      memoizedFetchDeposits();
+    }
     
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -61,7 +73,7 @@ const Deposits = () => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [memoizedFetchDeposits]);
+  }, [memoizedFetchDeposits, isMounted]);
 
   // Debugging logs wrapped in a stable useEffect to prevent continuous logging
   useEffect(() => {
@@ -69,6 +81,10 @@ const Deposits = () => {
     console.log("Deposits page render - filtered deposits count:", filteredDeposits?.length);
     console.log("Deposits page render - paginated deposits count:", paginatedDeposits?.length);
   }, [deposits?.length, filteredDeposits?.length, paginatedDeposits?.length]);
+  
+  if (isLoading && deposits.length === 0) {
+    console.log("Deposits page is in loading state");
+  }
   
   return (
     <DepositsContent
