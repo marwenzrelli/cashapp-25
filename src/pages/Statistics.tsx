@@ -11,8 +11,7 @@ import { TreasuryTab } from "@/features/statistics/components/treasury/TreasuryT
 import { useEffect, useState, useMemo } from "react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Operation } from "@/features/operations/types";
-import { transformToOperations } from "@/features/operations/hooks/utils/operationTransformers";
+import { transformToOperations, deduplicateOperations, sortOperationsByDate } from "@/features/operations/hooks/utils/operationTransformers";
 
 const Statistics = () => {
   const { 
@@ -67,27 +66,30 @@ const Statistics = () => {
     
     // Log some sample data to verify what's coming in
     if (Array.isArray(filteredDeposits) && filteredDeposits.length > 0) {
-      console.log("Sample deposit:", filteredDeposits[0]);
+      console.log("Sample deposit for treasury:", filteredDeposits[0]);
     }
     
     const deposits = Array.isArray(filteredDeposits) ? filteredDeposits : [];
     const withdrawals = Array.isArray(filteredWithdrawals) ? filteredWithdrawals : [];
     const transfers = Array.isArray(filteredTransfers) ? filteredTransfers : [];
     
-    const operations = transformToOperations(deposits, withdrawals, transfers);
+    // Apply transformations
+    const transformedOperations = transformToOperations(deposits, withdrawals, transfers);
+    const uniqueOperations = deduplicateOperations(transformedOperations);
+    const sortedOperations = sortOperationsByDate(uniqueOperations);
     
     // Verify transformation result by operation type
-    const depositCount = operations.filter(op => op.type === 'deposit').length;
-    const withdrawalCount = operations.filter(op => op.type === 'withdrawal').length;
-    const transferCount = operations.filter(op => op.type === 'transfer').length;
+    const depositCount = sortedOperations.filter(op => op.type === 'deposit').length;
+    const withdrawalCount = sortedOperations.filter(op => op.type === 'withdrawal').length;
+    const transferCount = sortedOperations.filter(op => op.type === 'transfer').length;
     
-    console.log(`Transformed ${operations.length} total operations for treasury display:`, {
+    console.log(`Transformed ${sortedOperations.length} total operations for treasury display:`, {
       deposits: depositCount,
       withdrawals: withdrawalCount,
       transfers: transferCount
     });
     
-    return operations;
+    return sortedOperations;
   }, [filteredDeposits, filteredWithdrawals, filteredTransfers]);
 
   if (isLoading && !attempted && !usingCachedData) {

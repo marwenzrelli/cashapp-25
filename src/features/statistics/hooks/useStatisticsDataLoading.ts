@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { useDeposits } from "@/features/deposits/hooks/useDeposits";
@@ -124,6 +123,14 @@ export const useStatisticsDataLoading = () => {
   }, [deposits, withdrawals, transfersArray, stats, cachedData, isLoadingStats, isLoadingDeposits, isLoadingWithdrawals, timeoutExceeded]);
 
   const dataToUse = getDataToUse();
+
+  // Add debug logging to diagnose the issue
+  console.log("Statistics data loading:", {
+    depositsCount: Array.isArray(dataToUse.deposits) ? dataToUse.deposits.length : 0,
+    withdrawalsCount: Array.isArray(dataToUse.withdrawals) ? dataToUse.withdrawals.length : 0,
+    transfersCount: Array.isArray(dataToUse.transfersArray) ? dataToUse.transfersArray.length : 0,
+    usingCache: dataToUse.usingCachedData
+  });
 
   return {
     // Raw data

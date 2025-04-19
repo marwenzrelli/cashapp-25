@@ -11,41 +11,73 @@ export const transformToOperations = (
 ): Operation[] => {
   console.log(`Starting transformation with: ${deposits.length} deposits, ${withdrawals.length} withdrawals, ${transfers.length} transfers`);
   
-  const transformedDeposits: Operation[] = deposits.map(deposit => ({
-    id: deposit.id.toString(),
-    type: 'deposit',
-    amount: deposit.amount,
-    date: deposit.created_at,
-    operation_date: deposit.operation_date,
-    description: deposit.notes || 'Versement',
-    fromClient: deposit.client_name,
-    client_id: deposit.client_id,
-    status: deposit.status
-  }));
+  // Log a sample deposit to verify structure
+  if (deposits.length > 0) {
+    console.log("Sample deposit for transformation:", deposits[0]);
+  }
   
-  const transformedWithdrawals: Operation[] = withdrawals.map(withdrawal => ({
-    id: withdrawal.id.toString(),
-    type: 'withdrawal',
-    amount: withdrawal.amount,
-    date: withdrawal.created_at,
-    operation_date: withdrawal.operation_date,
-    description: withdrawal.notes || 'Retrait',
-    fromClient: withdrawal.client_name,
-    client_id: withdrawal.client_id,
-    status: withdrawal.status
-  }));
+  const transformedDeposits: Operation[] = deposits.map(deposit => {
+    try {
+      if (!deposit) return null;
+      
+      return {
+        id: (deposit.id || '').toString(),
+        type: 'deposit',
+        amount: deposit.amount || 0,
+        date: deposit.created_at || new Date().toISOString(),
+        operation_date: deposit.operation_date || deposit.created_at || new Date().toISOString(),
+        description: deposit.notes || 'Versement',
+        fromClient: deposit.client_name || 'Client inconnu',
+        client_id: deposit.client_id,
+        status: deposit.status || 'completed'
+      };
+    } catch (error) {
+      console.error("Error transforming deposit:", error, deposit);
+      return null;
+    }
+  }).filter(Boolean);
   
-  const transformedTransfers: Operation[] = transfers.map(transfer => ({
-    id: transfer.id.toString(),
-    type: 'transfer',
-    amount: transfer.amount,
-    date: transfer.created_at,
-    operation_date: transfer.operation_date,
-    description: transfer.reason || 'Virement',
-    fromClient: transfer.from_client,
-    toClient: transfer.to_client,
-    status: transfer.status
-  }));
+  const transformedWithdrawals: Operation[] = withdrawals.map(withdrawal => {
+    try {
+      if (!withdrawal) return null;
+      
+      return {
+        id: (withdrawal.id || '').toString(),
+        type: 'withdrawal',
+        amount: withdrawal.amount || 0,
+        date: withdrawal.created_at || new Date().toISOString(),
+        operation_date: withdrawal.operation_date || withdrawal.created_at || new Date().toISOString(),
+        description: withdrawal.notes || 'Retrait',
+        fromClient: withdrawal.client_name || 'Client inconnu',
+        client_id: withdrawal.client_id,
+        status: withdrawal.status || 'completed'
+      };
+    } catch (error) {
+      console.error("Error transforming withdrawal:", error, withdrawal);
+      return null;
+    }
+  }).filter(Boolean);
+  
+  const transformedTransfers: Operation[] = transfers.map(transfer => {
+    try {
+      if (!transfer) return null;
+      
+      return {
+        id: (transfer.id || '').toString(),
+        type: 'transfer',
+        amount: transfer.amount || 0,
+        date: transfer.created_at || new Date().toISOString(),
+        operation_date: transfer.operation_date || transfer.created_at || new Date().toISOString(),
+        description: transfer.reason || 'Virement',
+        fromClient: transfer.from_client || 'Client inconnu',
+        toClient: transfer.to_client || 'Client inconnu',
+        status: transfer.status || 'completed'
+      };
+    } catch (error) {
+      console.error("Error transforming transfer:", error, transfer);
+      return null;
+    }
+  }).filter(Boolean);
 
   console.log(`Transformed counts: ${transformedDeposits.length} deposits, ${transformedWithdrawals.length} withdrawals, ${transformedTransfers.length} transfers`);
   
