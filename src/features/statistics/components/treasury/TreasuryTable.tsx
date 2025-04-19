@@ -57,6 +57,7 @@ export const TreasuryTable = ({ operations }: TreasuryTableProps) => {
             <TableHead>Date</TableHead>
             <TableHead>ID Opération</TableHead>
             <TableHead>Client</TableHead>
+            <TableHead>Type</TableHead>
             <TableHead>Désignation</TableHead>
             <TableHead className="text-right">Solde avant</TableHead>
             <TableHead className="text-right">Montant</TableHead>
@@ -64,39 +65,48 @@ export const TreasuryTable = ({ operations }: TreasuryTableProps) => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {sortedOperations.map((operation) => (
-            <TableRow key={operation.id}>
-              <TableCell>
-                {format(new Date(operation.operation_date || operation.date), "dd/MM/yyyy HH:mm", { locale: fr })}
-              </TableCell>
-              <TableCell>{operation.id}</TableCell>
-              <TableCell>
-                {operation.type === "transfer" 
-                  ? `${operation.fromClient} → ${operation.toClient}`
-                  : operation.fromClient}
-              </TableCell>
-              <TableCell>
-                {operation.description || (
-                  operation.type === "deposit" ? "Versement" :
-                  operation.type === "withdrawal" ? "Retrait" :
-                  "Virement"
-                )}
-              </TableCell>
-              <TableCell className="text-right font-mono">
-                {formatCurrency(operation.balanceBefore)}
-              </TableCell>
-              <TableCell className={`text-right font-mono ${
-                operation.type === "withdrawal" ? "text-red-600" : 
-                operation.type === "deposit" ? "text-green-600" : 
-                "text-blue-600"
-              }`}>
-                {formatCurrency(operation.type === "withdrawal" ? -operation.amount : operation.amount)}
-              </TableCell>
-              <TableCell className="text-right font-mono">
-                {formatCurrency(operation.balanceAfter)}
+          {sortedOperations.length > 0 ? (
+            sortedOperations.map((operation) => (
+              <TableRow key={operation.id}>
+                <TableCell>
+                  {format(new Date(operation.operation_date || operation.date), "dd/MM/yyyy HH:mm", { locale: fr })}
+                </TableCell>
+                <TableCell>{operation.id}</TableCell>
+                <TableCell>
+                  {operation.type === "transfer" 
+                    ? `${operation.fromClient} → ${operation.toClient}`
+                    : operation.fromClient}
+                </TableCell>
+                <TableCell>
+                  {operation.type === "deposit" ? "Versement" :
+                   operation.type === "withdrawal" ? "Retrait" :
+                   "Virement"}
+                </TableCell>
+                <TableCell>
+                  {operation.description || ""}
+                </TableCell>
+                <TableCell className="text-right font-mono">
+                  {formatCurrency(operation.balanceBefore)}
+                </TableCell>
+                <TableCell className={`text-right font-mono ${
+                  operation.type === "withdrawal" ? "text-red-600" : 
+                  operation.type === "deposit" ? "text-green-600" : 
+                  "text-blue-600"
+                }`}>
+                  {formatCurrency(operation.type === "withdrawal" ? -operation.amount : operation.amount)}
+                </TableCell>
+                <TableCell className="text-right font-mono">
+                  {formatCurrency(operation.balanceAfter)}
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={8} className="text-center py-4 text-muted-foreground">
+                Aucune opération à afficher
               </TableCell>
             </TableRow>
-          ))}
+          )}
         </TableBody>
       </Table>
     </div>
