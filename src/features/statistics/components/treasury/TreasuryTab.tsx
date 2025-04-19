@@ -1,6 +1,7 @@
 
 import React from "react";
 import { TreasuryTable } from "./TreasuryTable";
+import { TreasuryTotals } from "./TreasuryTotals";
 import { Card, CardContent } from "@/components/ui/card";
 import { Operation } from "@/features/operations/types";
 
@@ -25,10 +26,13 @@ export const TreasuryTab = ({ operations, isLoading }: TreasuryTabProps) => {
   }
 
   return (
-    <Card>
-      <CardContent className="p-0">
-        <TreasuryTable operations={operations} />
-      </CardContent>
-    </Card>
+    <div className="space-y-6">
+      <Card>
+        <CardContent className="p-0">
+          <TreasuryTable operations={operations} />
+        </CardContent>
+      </Card>
+      <TreasuryTotals operations={operations} />
+    </div>
   );
 };
