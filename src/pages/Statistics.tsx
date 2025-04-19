@@ -1,3 +1,4 @@
+
 import { LoadingState } from "@/features/admin/components/administration/LoadingState";
 import { useStatisticsData } from "@/features/statistics/hooks/useStatisticsData";
 import { StatisticsHeader } from "@/features/statistics/components/StatisticsHeader";
@@ -15,6 +16,8 @@ const Statistics = () => {
   const { 
     stats,
     filteredDeposits,
+    filteredWithdrawals,
+    filteredTransfers,
     percentageChange,
     averageTransactionsPerDay,
     last30DaysData,
@@ -158,8 +161,8 @@ const Statistics = () => {
           <TreasuryTab 
             operations={[
               ...(Array.isArray(filteredDeposits) ? filteredDeposits : []),
-              ...(Array.isArray(withdrawals) ? withdrawals : []),
-              ...(Array.isArray(transfersArray) ? transfersArray : [])
+              ...(Array.isArray(filteredWithdrawals) ? filteredWithdrawals : []),
+              ...(Array.isArray(filteredTransfers) ? filteredTransfers : [])
             ]} 
             isLoading={isLoading}
           />
