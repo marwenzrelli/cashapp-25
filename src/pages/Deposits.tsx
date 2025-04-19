@@ -1,13 +1,13 @@
 
 import { DepositsContent } from "@/features/deposits/components/DepositsContent";
 import { useDepositsPage } from "@/features/deposits/hooks/useDepositsPage";
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const Deposits = () => {
-  // Track whether this is the initial mount
-  const [isMounted, setIsMounted] = useState(false);
+  // Track whether the auth listener was set up
+  const authListenerSetup = useRef(false);
   
   const {
     searchTerm, 
@@ -52,15 +52,15 @@ const Deposits = () => {
     });
   }, [fetchDeposits]);
 
-  // Track authentication state and fetch deposits when auth changes
+  // Set up auth listener only once and fetch deposits when auth changes
   useEffect(() => {
+    if (authListenerSetup.current) return;
+    authListenerSetup.current = true;
+    
     console.log("Setting up auth state listener");
     
-    if (!isMounted) {
-      setIsMounted(true);
-      // Initial fetch
-      memoizedFetchDeposits();
-    }
+    // Initial fetch on mount
+    memoizedFetchDeposits();
     
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -73,18 +73,17 @@ const Deposits = () => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [memoizedFetchDeposits, isMounted]);
+  }, [memoizedFetchDeposits]);
 
-  // Debugging logs wrapped in a stable useEffect to prevent continuous logging
+  // Debugging logs in a stable useEffect to prevent continuous logging
   useEffect(() => {
-    console.log("Deposits page render - deposits count:", deposits?.length);
-    console.log("Deposits page render - filtered deposits count:", filteredDeposits?.length);
-    console.log("Deposits page render - paginated deposits count:", paginatedDeposits?.length);
-  }, [deposits?.length, filteredDeposits?.length, paginatedDeposits?.length]);
-  
-  if (isLoading && deposits.length === 0) {
-    console.log("Deposits page is in loading state");
-  }
+    console.log("Deposits page render - counts:", {
+      deposits: deposits?.length || 0,
+      filtered: filteredDeposits?.length || 0,
+      paginated: paginatedDeposits?.length || 0,
+      loading: isLoading
+    });
+  }, [deposits?.length, filteredDeposits?.length, paginatedDeposits?.length, isLoading]);
   
   return (
     <DepositsContent

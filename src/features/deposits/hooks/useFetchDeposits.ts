@@ -3,12 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Deposit } from "@/features/deposits/types";
 import { formatDateTime } from "@/features/deposits/hooks/utils/dateUtils";
+import { useCallback } from "react";
 
 export const useFetchDeposits = (
   setDeposits: React.Dispatch<React.SetStateAction<Deposit[]>>,
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
-  const fetchDeposits = async () => {
+  const fetchDeposits = useCallback(async () => {
     try {
       console.log("Starting to fetch deposits from Supabase...");
       setIsLoading(true);
@@ -80,7 +81,7 @@ export const useFetchDeposits = (
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [setDeposits, setIsLoading]);
 
   return { fetchDeposits };
 };

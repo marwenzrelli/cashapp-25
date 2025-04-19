@@ -1,5 +1,5 @@
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useFetchDeposits } from "./useFetchDeposits";
 import { useDeleteDeposit } from "./deposit-hooks/useDeleteDeposit";
 import { useCreateDeposit } from "./deposit-hooks/useCreateDeposit";
@@ -19,6 +19,9 @@ export const useDeposits = () => {
     setShowDeleteDialog
   } = useDepositState();
 
+  // Use a ref to track if the initial fetch has been done
+  const initialFetchDone = useRef(false);
+
   // Get the fetchDeposits function from useFetchDeposits
   const { fetchDeposits } = useFetchDeposits(setDeposits, setIsLoading);
 
@@ -26,6 +29,7 @@ export const useDeposits = () => {
   const memoizedFetchDeposits = useCallback(async () => {
     console.log("Fetching deposits from useDeposits hook");
     await fetchDeposits();
+    initialFetchDone.current = true;
   }, [fetchDeposits]);
 
   // Get the deleteDeposit and confirmDeleteDeposit functions
@@ -44,10 +48,12 @@ export const useDeposits = () => {
   // Get the updateDeposit function
   const { updateDeposit } = useUpdateDeposit(memoizedFetchDeposits, setIsLoading);
 
-  // Fetch deposits on initial mount
+  // Fetch deposits on initial mount only, and don't re-run on deps changes
   useEffect(() => {
-    console.log("Initial fetch of deposits in useDeposits hook");
-    memoizedFetchDeposits();
+    if (!initialFetchDone.current) {
+      console.log("Initial fetch of deposits in useDeposits hook");
+      memoizedFetchDeposits();
+    }
   }, [memoizedFetchDeposits]);
 
   return { 

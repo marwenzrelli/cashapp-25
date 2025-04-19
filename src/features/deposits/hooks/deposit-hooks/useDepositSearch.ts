@@ -1,6 +1,6 @@
 
-import { useState, useEffect, useMemo } from "react";
-import { Deposit } from "@/components/deposits/types";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { Deposit } from "@/features/deposits/types";
 import { isWithinInterval } from "date-fns";
 import { DateRange } from "react-day-picker";
 
@@ -10,9 +10,31 @@ export const useDepositSearch = (deposits: Deposit[]) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
+  // Stabilized setters
+  const stableSetSearchTerm = useCallback((term: string) => {
+    setSearchTerm(term);
+  }, []);
+
+  const stableSetItemsPerPage = useCallback((value: string) => {
+    setItemsPerPage(value);
+  }, []);
+
+  const stableSetCurrentPage = useCallback((page: number) => {
+    setCurrentPage(page);
+  }, []);
+
+  const stableSetDateRange = useCallback((range: DateRange | undefined) => {
+    setDateRange(range);
+  }, []);
+
   // Filter deposits based on search term and date range
   const filteredDeposits = useMemo(() => {
-    if (!deposits) return [];
+    if (!deposits || deposits.length === 0) return [];
+    
+    // Skip filtering if no filters are active
+    if (!searchTerm && !dateRange?.from && !dateRange?.to) {
+      return deposits;
+    }
     
     return deposits.filter((deposit) => {
       // Search term filter
@@ -26,8 +48,8 @@ export const useDepositSearch = (deposits: Deposit[]) => {
       // Date range filter
       let dateMatch = true;
       if (dateRange?.from && dateRange?.to) {
-        const depositDate = new Date(deposit.operation_date || deposit.created_at);
         try {
+          const depositDate = new Date(deposit.operation_date || deposit.created_at);
           dateMatch = isWithinInterval(depositDate, {
             start: dateRange.from,
             end: dateRange.to
@@ -49,6 +71,8 @@ export const useDepositSearch = (deposits: Deposit[]) => {
 
   // Calculate paginated deposits
   const paginatedDeposits = useMemo(() => {
+    if (!filteredDeposits.length) return [];
+    
     const startIndex = (currentPage - 1) * parseInt(itemsPerPage);
     return filteredDeposits.slice(
       startIndex,
@@ -61,13 +85,13 @@ export const useDepositSearch = (deposits: Deposit[]) => {
 
   return {
     searchTerm,
-    setSearchTerm,
+    setSearchTerm: stableSetSearchTerm,
     itemsPerPage,
-    setItemsPerPage,
+    setItemsPerPage: stableSetItemsPerPage,
     currentPage,
-    setCurrentPage,
+    setCurrentPage: stableSetCurrentPage,
     dateRange,
-    setDateRange,
+    setDateRange: stableSetDateRange,
     filteredDeposits,
     paginatedDeposits,
     totalItems,
