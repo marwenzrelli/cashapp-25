@@ -26,7 +26,7 @@ export const PublicOperationsTabs = ({ operations, currency }: PublicOperationsT
           className="flex items-center justify-center gap-2 text-sm"
         >
           <List className="h-4 w-4" />
-          Tout
+          <span className="whitespace-nowrap">Tout</span>
           <Badge variant="secondary" className="ml-1">{operations.length}</Badge>
         </TabsTrigger>
         
@@ -39,7 +39,7 @@ export const PublicOperationsTabs = ({ operations, currency }: PublicOperationsT
           )}
         >
           <ArrowUpCircle className="h-4 w-4" />
-          Versements
+          <span className="whitespace-nowrap">Vers.</span>
           <Badge variant="secondary" className="ml-1 bg-green-100 text-green-800">{depositsCount}</Badge>
         </TabsTrigger>
         
@@ -52,7 +52,7 @@ export const PublicOperationsTabs = ({ operations, currency }: PublicOperationsT
           )}
         >
           <ArrowDownCircle className="h-4 w-4" />
-          Retraits
+          <span className="whitespace-nowrap">Ret.</span>
           <Badge variant="secondary" className="ml-1 bg-red-100 text-red-800">{withdrawalsCount}</Badge>
         </TabsTrigger>
         
@@ -65,7 +65,7 @@ export const PublicOperationsTabs = ({ operations, currency }: PublicOperationsT
           )}
         >
           <ArrowLeftRight className="h-4 w-4" />
-          Virements
+          <span className="whitespace-nowrap">Vir.</span>
           <Badge variant="secondary" className="ml-1 bg-blue-100 text-blue-800">{transfersCount}</Badge>
         </TabsTrigger>
       </TabsList>
