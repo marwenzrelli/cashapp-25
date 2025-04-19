@@ -9,6 +9,8 @@ export const transformToOperations = (
   withdrawals: any[] = [], 
   transfers: any[] = []
 ): Operation[] => {
+  console.log(`Starting transformation with: ${deposits.length} deposits, ${withdrawals.length} withdrawals, ${transfers.length} transfers`);
+  
   const transformedDeposits: Operation[] = deposits.map(deposit => ({
     id: deposit.id.toString(),
     type: 'deposit',
@@ -45,6 +47,8 @@ export const transformToOperations = (
     status: transfer.status
   }));
 
+  console.log(`Transformed counts: ${transformedDeposits.length} deposits, ${transformedWithdrawals.length} withdrawals, ${transformedTransfers.length} transfers`);
+  
   return [...transformedDeposits, ...transformedWithdrawals, ...transformedTransfers];
 };
 

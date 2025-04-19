@@ -1,3 +1,4 @@
+
 import { LoadingState } from "@/features/admin/components/administration/LoadingState";
 import { useStatisticsData } from "@/features/statistics/hooks/useStatisticsData";
 import { StatisticsHeader } from "@/features/statistics/components/StatisticsHeader";
@@ -64,13 +65,28 @@ const Statistics = () => {
       transfers: filteredTransfers?.length || 0
     });
     
+    // Log some sample data to verify what's coming in
+    if (Array.isArray(filteredDeposits) && filteredDeposits.length > 0) {
+      console.log("Sample deposit:", filteredDeposits[0]);
+    }
+    
     const deposits = Array.isArray(filteredDeposits) ? filteredDeposits : [];
     const withdrawals = Array.isArray(filteredWithdrawals) ? filteredWithdrawals : [];
     const transfers = Array.isArray(filteredTransfers) ? filteredTransfers : [];
     
     const operations = transformToOperations(deposits, withdrawals, transfers);
     
-    console.log(`Transformed ${operations.length} total operations for treasury display`);
+    // Verify transformation result by operation type
+    const depositCount = operations.filter(op => op.type === 'deposit').length;
+    const withdrawalCount = operations.filter(op => op.type === 'withdrawal').length;
+    const transferCount = operations.filter(op => op.type === 'transfer').length;
+    
+    console.log(`Transformed ${operations.length} total operations for treasury display:`, {
+      deposits: depositCount,
+      withdrawals: withdrawalCount,
+      transfers: transferCount
+    });
+    
     return operations;
   }, [filteredDeposits, filteredWithdrawals, filteredTransfers]);
 

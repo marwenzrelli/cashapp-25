@@ -24,6 +24,17 @@ interface TreasuryOperation extends Operation {
 
 export const TreasuryTable = ({ operations }: TreasuryTableProps) => {
   const sortedOperations = useMemo(() => {
+    // Log initial input to verify we're receiving all operation types
+    const depositCount = operations.filter(op => op.type === 'deposit').length;
+    const withdrawalCount = operations.filter(op => op.type === 'withdrawal').length;
+    const transferCount = operations.filter(op => op.type === 'transfer').length;
+    
+    console.log(`TreasuryTable received ${operations.length} operations:`, {
+      deposits: depositCount,
+      withdrawals: withdrawalCount,
+      transfers: transferCount
+    });
+    
     let runningBalance = 0;
     return [...operations]
       .sort((a, b) => {
