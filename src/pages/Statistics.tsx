@@ -1,16 +1,11 @@
 
-import { LoadingState } from "@/features/admin/components/administration/LoadingState";
 import { useStatisticsData } from "@/features/statistics/hooks/useStatisticsData";
 import { StatisticsHeader } from "@/features/statistics/components/StatisticsHeader";
-import { FilterSection } from "@/features/statistics/components/FilterSection";
-import { StatisticsCards } from "@/features/statistics/components/StatisticsCards";
-import { ChartSection } from "@/features/statistics/components/ChartSection";
-import { InsightsSection } from "@/features/statistics/components/InsightsSection";
 import { ErrorDisplay } from "@/features/statistics/components/ErrorDisplay";
-import { TreasuryTab } from "@/features/statistics/components/treasury/TreasuryTab";
-import { useEffect, useState, useMemo } from "react";
+import { StatisticsLoadingState } from "@/features/statistics/components/StatisticsLoadingState";
+import { StatisticsContent } from "@/features/statistics/components/StatisticsContent";
+import { useEffect, useMemo } from "react";
 import { toast } from "sonner";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { transformToOperations, deduplicateOperations, sortOperationsByDate } from "@/features/operations/hooks/utils/operationTransformers";
 
 const Statistics = () => {
@@ -32,20 +27,12 @@ const Statistics = () => {
     isLoading,
     isSyncing,
     error,
-    timeoutExceeded,
     hasValidData,
     attempted,
     setAttempted,
     usingCachedData,
     refreshData
   } = useStatisticsData();
-
-  const [activeTab, setActiveTab] = useState("overview");
-
-  // Log which tab is active for debugging
-  useEffect(() => {
-    console.log("Active tab:", activeTab);
-  }, [activeTab]);
 
   useEffect(() => {
     const forceShowTimeout = setTimeout(() => {
@@ -65,55 +52,23 @@ const Statistics = () => {
   }, [usingCachedData]);
 
   const treasuryOperations = useMemo(() => {
-    console.log("Generating treasury operations from:", {
-      deposits: filteredDeposits?.length || 0,
-      withdrawals: filteredWithdrawals?.length || 0, 
-      transfers: filteredTransfers?.length || 0
-    });
-    
-    // Log some sample data to verify what's coming in
-    if (Array.isArray(filteredDeposits) && filteredDeposits.length > 0) {
-      console.log("Sample deposit for treasury:", filteredDeposits[0]);
-    }
-    
     const deposits = Array.isArray(filteredDeposits) ? filteredDeposits : [];
     const withdrawals = Array.isArray(filteredWithdrawals) ? filteredWithdrawals : [];
     const transfers = Array.isArray(filteredTransfers) ? filteredTransfers : [];
     
-    // Apply transformations
     const transformedOperations = transformToOperations(deposits, withdrawals, transfers);
     const uniqueOperations = deduplicateOperations(transformedOperations);
-    const sortedOperations = sortOperationsByDate(uniqueOperations);
-    
-    // Verify transformation result by operation type
-    const depositCount = sortedOperations.filter(op => op.type === 'deposit').length;
-    const withdrawalCount = sortedOperations.filter(op => op.type === 'withdrawal').length;
-    const transferCount = sortedOperations.filter(op => op.type === 'transfer').length;
-    
-    console.log(`Transformed ${sortedOperations.length} total operations for treasury display:`, {
-      deposits: depositCount,
-      withdrawals: withdrawalCount,
-      transfers: transferCount
-    });
-    
-    return sortedOperations;
+    return sortOperationsByDate(uniqueOperations);
   }, [filteredDeposits, filteredWithdrawals, filteredTransfers]);
 
   if (isLoading && !attempted && !usingCachedData) {
     return (
-      <div className="space-y-8">
-        <StatisticsHeader 
-          isSyncing={isSyncing} 
-          isLoading={isLoading} 
-          refreshData={refreshData}
-          usingCachedData={usingCachedData}
-        />
-        
-        <LoadingState 
-          message="Chargement des statistiques en cours..."
-          variant="minimal"
-        />
-      </div>
+      <StatisticsLoadingState 
+        isSyncing={isSyncing}
+        isLoading={isLoading}
+        refreshData={refreshData}
+        usingCachedData={usingCachedData}
+      />
     );
   }
 
@@ -145,73 +100,26 @@ const Statistics = () => {
         usingCachedData={usingCachedData}
       />
 
-      <Tabs 
-        defaultValue="overview" 
-        className="w-full space-y-8"
-        value={activeTab}
-        onValueChange={setActiveTab}
-      >
-        <TabsList>
-          <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
-          <TabsTrigger value="treasury">Trésorerie</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="space-y-8">
-          <FilterSection
-            dateRange={dateRange}
-            setDateRange={setDateRange}
-            clientFilter={clientFilter}
-            setClientFilter={setClientFilter}
-            transactionType={transactionType}
-            setTransactionType={setTransactionType}
-          />
-
-          {(!hasValidData && attempted) ? (
-            <div className="p-6 rounded-lg border border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20 space-y-4">
-              <p className="text-center text-muted-foreground">
-                Certaines données n'ont pas pu être chargées correctement. 
-                <button 
-                  onClick={refreshData} 
-                  className="ml-2 text-primary hover:underline"
-                  disabled={isSyncing || isLoading}
-                >
-                  Réessayer
-                </button>
-              </p>
-            </div>
-          ) : null}
-          
-          <StatisticsCards
-            totalDeposits={stats.total_deposits || 0}
-            totalWithdrawals={stats.total_withdrawals || 0}
-            sentTransfers={stats.sent_transfers || 0}
-            transferCount={stats.transfer_count || 0}
-            netFlow={(stats.total_deposits || 0) - (stats.total_withdrawals || 0)}
-            clientCount={stats.client_count || 0}
-            percentageChange={percentageChange}
-            averageTransactionsPerDay={averageTransactionsPerDay}
-          />
-
-          <ChartSection
-            last30DaysData={last30DaysData}
-            topClients={topClients}
-          />
-
-          <InsightsSection
-            percentageChange={percentageChange}
-            averageTransactionsPerDay={averageTransactionsPerDay}
-            totalDeposits={stats.total_deposits || 0}
-            depositsLength={Array.isArray(filteredDeposits) ? filteredDeposits.length : 0}
-          />
-        </TabsContent>
-
-        <TabsContent value="treasury">
-          <TreasuryTab 
-            operations={treasuryOperations} 
-            isLoading={isLoading}
-          />
-        </TabsContent>
-      </Tabs>
+      <StatisticsContent
+        stats={stats}
+        filteredDeposits={filteredDeposits}
+        filteredWithdrawals={filteredWithdrawals}
+        filteredTransfers={filteredTransfers}
+        percentageChange={percentageChange}
+        averageTransactionsPerDay={averageTransactionsPerDay}
+        last30DaysData={last30DaysData}
+        topClients={topClients}
+        dateRange={dateRange}
+        setDateRange={setDateRange}
+        clientFilter={clientFilter}
+        setClientFilter={setClientFilter}
+        transactionType={transactionType}
+        setTransactionType={setTransactionType}
+        treasuryOperations={treasuryOperations}
+        isLoading={isLoading}
+        hasValidData={hasValidData}
+        attempted={attempted}
+      />
     </div>
   );
 };
