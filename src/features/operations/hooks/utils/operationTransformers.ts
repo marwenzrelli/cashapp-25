@@ -22,7 +22,7 @@ export const transformToOperations = (
       
       return {
         id: (deposit.id || '').toString(),
-        type: 'deposit',
+        type: 'deposit' as const,
         amount: deposit.amount || 0,
         date: deposit.created_at || new Date().toISOString(),
         operation_date: deposit.operation_date || deposit.created_at || new Date().toISOString(),
@@ -43,7 +43,7 @@ export const transformToOperations = (
       
       return {
         id: (withdrawal.id || '').toString(),
-        type: 'withdrawal',
+        type: 'withdrawal' as const,
         amount: withdrawal.amount || 0,
         date: withdrawal.created_at || new Date().toISOString(),
         operation_date: withdrawal.operation_date || withdrawal.created_at || new Date().toISOString(),
@@ -64,7 +64,7 @@ export const transformToOperations = (
       
       return {
         id: (transfer.id || '').toString(),
-        type: 'transfer',
+        type: 'transfer' as const,
         amount: transfer.amount || 0,
         date: transfer.created_at || new Date().toISOString(),
         operation_date: transfer.operation_date || transfer.created_at || new Date().toISOString(),
