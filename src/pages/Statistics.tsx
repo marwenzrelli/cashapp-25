@@ -57,14 +57,21 @@ const Statistics = () => {
     }
   }, [usingCachedData]);
 
-  // Transform filtered data into Operation objects for the TreasuryTab
   const treasuryOperations = useMemo(() => {
-    // Utiliser la fonction de transformation existante pour garantir un format cohérent
-    return transformToOperations(
-      Array.isArray(filteredDeposits) ? filteredDeposits : [],
-      Array.isArray(filteredWithdrawals) ? filteredWithdrawals : [],
-      Array.isArray(filteredTransfers) ? filteredTransfers : []
-    );
+    console.log("Generating treasury operations from:", {
+      deposits: filteredDeposits?.length || 0,
+      withdrawals: filteredWithdrawals?.length || 0, 
+      transfers: filteredTransfers?.length || 0
+    });
+    
+    const deposits = Array.isArray(filteredDeposits) ? filteredDeposits : [];
+    const withdrawals = Array.isArray(filteredWithdrawals) ? filteredWithdrawals : [];
+    const transfers = Array.isArray(filteredTransfers) ? filteredTransfers : [];
+    
+    const operations = transformToOperations(deposits, withdrawals, transfers);
+    
+    console.log(`Transformed ${operations.length} total operations for treasury display`);
+    return operations;
   }, [filteredDeposits, filteredWithdrawals, filteredTransfers]);
 
   if (isLoading && !attempted && !usingCachedData) {
