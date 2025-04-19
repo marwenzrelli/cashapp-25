@@ -14,7 +14,7 @@ export const useStatisticsDataLoading = () => {
   const dashboardData = useDashboardData();
   
   // Extract data from hooks
-  const { deposits, isLoading: isLoadingDeposits } = depositsData;
+  const { deposits, isLoading: isLoadingDeposits, refreshDeposits } = depositsData;
   const { withdrawals, isLoading: isLoadingWithdrawals } = withdrawalsData;
   const { transfers, isLoading: isLoadingTransfers } = transfersData;
   const { stats, isLoading: isLoadingStats, handleRefresh, error: dashboardError } = dashboardData;
@@ -32,6 +32,12 @@ export const useStatisticsDataLoading = () => {
     stats: any;
     timestamp: number;
   } | null>(null);
+  
+  // Force refresh deposits when statistics data is loaded
+  useEffect(() => {
+    console.log("Initial loading of deposits in statistics data loading");
+    refreshDeposits?.();
+  }, [refreshDeposits]);
   
   // Update local error state when dashboard error changes
   useEffect(() => {
@@ -61,6 +67,13 @@ export const useStatisticsDataLoading = () => {
         transfers: transfersArray,
         stats: stats ? { ...stats } : {},
         timestamp: Date.now()
+      });
+      
+      // Log what we're caching
+      console.log("Caching statistics data:", {
+        depositsCount: Array.isArray(deposits) ? deposits.length : 0,
+        withdrawalsCount: Array.isArray(withdrawals) ? withdrawals.length : 0,
+        transfersCount: transfersArray.length
       });
     }
   }, [isLoadingDeposits, isLoadingWithdrawals, isLoadingStats, deposits, withdrawals, transfersArray, stats]);
@@ -92,6 +105,11 @@ export const useStatisticsDataLoading = () => {
     setManualRefreshAttempt(prev => prev + 1);
     setError(null);
     try {
+      // Refresh deposits explicitly
+      if (refreshDeposits) {
+        await refreshDeposits();
+      }
+      
       await handleRefresh();
       toast.success("Données synchronisées avec succès");
     } catch (error: any) {
@@ -151,5 +169,6 @@ export const useStatisticsDataLoading = () => {
     
     // Actions
     refreshData,
+    refreshDeposits
   };
 };
