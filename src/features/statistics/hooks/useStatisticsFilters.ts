@@ -4,6 +4,7 @@ import { DateRange } from "react-day-picker";
 import { subDays } from "date-fns";
 
 export const useStatisticsFilters = () => {
+  // Initialize with a 30-day range but allow it to be undefined for all-time
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: subDays(new Date(), 30),
     to: new Date(),

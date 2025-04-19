@@ -11,6 +11,14 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 interface FilterSectionProps {
   dateRange: DateRange | undefined;
@@ -29,6 +37,17 @@ export const FilterSection = ({
   transactionType,
   setTransactionType
 }: FilterSectionProps) => {
+  const [showDatePicker, setShowDatePicker] = useState(true);
+
+  const handlePeriodChange = (value: string) => {
+    if (value === "all") {
+      setDateRange(undefined);
+      setShowDatePicker(false);
+    } else {
+      setShowDatePicker(true);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -40,8 +59,27 @@ export const FilterSection = ({
       <CardContent>
         <div className="grid gap-4 md:grid-cols-3">
           <div className="space-y-2">
-            <label className="text-sm font-medium">Période</label>
-            <DatePickerWithRange date={dateRange} onDateChange={setDateRange} />
+            <div className="flex justify-between items-center">
+              <label className="text-sm font-medium">Période</label>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    {showDatePicker ? "Période spécifique" : "Toute la période"}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onSelect={() => handlePeriodChange("specific")}>
+                    Période spécifique
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => handlePeriodChange("all")}>
+                    Toute la période
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            {showDatePicker && (
+              <DatePickerWithRange date={dateRange} onDateChange={setDateRange} />
+            )}
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium">Client</label>

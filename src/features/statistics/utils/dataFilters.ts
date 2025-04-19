@@ -11,9 +11,6 @@ interface FilteredData {
   operation_date?: string;
 }
 
-/**
- * Safely checks if a date is valid
- */
 const isValidDate = (dateStr: any): boolean => {
   if (!dateStr) return false;
   const date = new Date(dateStr);
@@ -27,34 +24,29 @@ export const filterData = (
   clientFilter: string,
   transactionType: "all" | "deposits" | "withdrawals" | "transfers"
 ) => {
-  // Validate input data
   if (!data || !Array.isArray(data)) {
     return [];
   }
   
   return data.filter(item => {
-    // Skip null/undefined items
     if (!item) return false;
     
     try {
-      // Get date from item
       const dateStr = item.operation_date || item.created_at;
       
-      // Skip items with invalid dates
       if (!isValidDate(dateStr)) {
         return false;
       }
       
       const itemDate = new Date(dateStr);
       
-      // Date range filtering
+      // If dateRange is undefined, don't filter by date (show all)
       const dateMatch = !dateRange?.from || !dateRange?.to || 
         isWithinInterval(itemDate, { 
           start: dateRange.from, 
           end: dateRange.to 
         });
       
-      // Client name filtering
       const clientName = item.client_name?.toLowerCase() || '';
       const fromClient = item.fromClient?.toLowerCase() || '';
       const toClient = item.toClient?.toLowerCase() || '';
@@ -65,7 +57,6 @@ export const filterData = (
           ? (fromClient.includes(searchTerm) || toClient.includes(searchTerm))
           : clientName.includes(searchTerm));
 
-      // Transaction type filtering
       const typeMatch = transactionType === "all" || 
         (transactionType === "deposits" && type === "deposits") ||
         (transactionType === "withdrawals" && type === "withdrawals") ||
@@ -73,7 +64,6 @@ export const filterData = (
 
       return dateMatch && clientMatch && typeMatch;
     } catch (err) {
-      // Silently handle errors to prevent console noise
       return false;
     }
   });
