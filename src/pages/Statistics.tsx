@@ -8,9 +8,10 @@ import { ChartSection } from "@/features/statistics/components/ChartSection";
 import { InsightsSection } from "@/features/statistics/components/InsightsSection";
 import { ErrorDisplay } from "@/features/statistics/components/ErrorDisplay";
 import { TreasuryTab } from "@/features/statistics/components/treasury/TreasuryTab";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Operation } from "@/features/operations/types";
 
 const Statistics = () => {
   const { 
@@ -55,6 +56,52 @@ const Statistics = () => {
       });
     }
   }, [usingCachedData]);
+
+  // Transform filtered data into Operation objects for the TreasuryTab
+  const treasuryOperations = useMemo(() => {
+    const mapDepositsToOperations = (deposits: any[]): Operation[] => {
+      return deposits.map(deposit => ({
+        id: deposit.id?.toString() || Math.random().toString(36).substr(2, 9),
+        type: "deposit",
+        amount: deposit.amount,
+        date: deposit.operation_date || deposit.created_at,
+        description: deposit.notes || "Versement",
+        fromClient: deposit.client_name,
+        status: deposit.status
+      }));
+    };
+
+    const mapWithdrawalsToOperations = (withdrawals: any[]): Operation[] => {
+      return withdrawals.map(withdrawal => ({
+        id: withdrawal.id?.toString() || Math.random().toString(36).substr(2, 9),
+        type: "withdrawal",
+        amount: withdrawal.amount,
+        date: withdrawal.operation_date || withdrawal.created_at,
+        description: withdrawal.notes || "Retrait",
+        fromClient: withdrawal.client_name,
+        status: withdrawal.status
+      }));
+    };
+
+    const mapTransfersToOperations = (transfers: any[]): Operation[] => {
+      return transfers.map(transfer => ({
+        id: transfer.id?.toString() || Math.random().toString(36).substr(2, 9),
+        type: "transfer",
+        amount: transfer.amount,
+        date: transfer.operation_date || transfer.created_at,
+        description: transfer.reason || "Virement",
+        fromClient: transfer.fromClient,
+        toClient: transfer.toClient,
+        status: transfer.status
+      }));
+    };
+
+    return [
+      ...mapDepositsToOperations(Array.isArray(filteredDeposits) ? filteredDeposits : []),
+      ...mapWithdrawalsToOperations(Array.isArray(filteredWithdrawals) ? filteredWithdrawals : []),
+      ...mapTransfersToOperations(Array.isArray(filteredTransfers) ? filteredTransfers : [])
+    ];
+  }, [filteredDeposits, filteredWithdrawals, filteredTransfers]);
 
   if (isLoading && !attempted && !usingCachedData) {
     return (
@@ -159,11 +206,7 @@ const Statistics = () => {
 
         <TabsContent value="treasury">
           <TreasuryTab 
-            operations={[
-              ...(Array.isArray(filteredDeposits) ? filteredDeposits : []),
-              ...(Array.isArray(filteredWithdrawals) ? filteredWithdrawals : []),
-              ...(Array.isArray(filteredTransfers) ? filteredTransfers : [])
-            ]} 
+            operations={treasuryOperations} 
             isLoading={isLoading}
           />
         </TabsContent>
