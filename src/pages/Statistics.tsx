@@ -40,6 +40,13 @@ const Statistics = () => {
     refreshData
   } = useStatisticsData();
 
+  const [activeTab, setActiveTab] = useState("overview");
+
+  // Log which tab is active for debugging
+  useEffect(() => {
+    console.log("Active tab:", activeTab);
+  }, [activeTab]);
+
   useEffect(() => {
     const forceShowTimeout = setTimeout(() => {
       setAttempted(true);
@@ -138,7 +145,12 @@ const Statistics = () => {
         usingCachedData={usingCachedData}
       />
 
-      <Tabs defaultValue="overview" className="w-full space-y-8">
+      <Tabs 
+        defaultValue="overview" 
+        className="w-full space-y-8"
+        value={activeTab}
+        onValueChange={setActiveTab}
+      >
         <TabsList>
           <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
           <TabsTrigger value="treasury">Trésorerie</TabsTrigger>

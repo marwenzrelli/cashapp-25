@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { useDeposits } from "@/features/deposits/hooks/useDeposits";
@@ -6,15 +7,17 @@ import { useTransfersList } from "@/features/transfers/hooks/useTransfersList";
 import { useDashboardData } from "@/features/dashboard/hooks/useDashboardData";
 
 export const useStatisticsDataLoading = () => {
-  const { deposits, isLoading: isLoadingDeposits } = useDeposits();
-  const { withdrawals, isLoading: isLoadingWithdrawals } = useWithdrawals();
-  const { transfers, isLoading: isLoadingTransfers } = useTransfersList();
-  const { 
-    stats, 
-    isLoading: isLoadingStats, 
-    handleRefresh, 
-    error: dashboardError 
-  } = useDashboardData();
+  // Initialize these hooks separately to avoid React queue errors
+  const depositsData = useDeposits();
+  const withdrawalsData = useWithdrawals();
+  const transfersData = useTransfersList();
+  const dashboardData = useDashboardData();
+  
+  // Extract data from hooks
+  const { deposits, isLoading: isLoadingDeposits } = depositsData;
+  const { withdrawals, isLoading: isLoadingWithdrawals } = withdrawalsData;
+  const { transfers, isLoading: isLoadingTransfers } = transfersData;
+  const { stats, isLoading: isLoadingStats, handleRefresh, error: dashboardError } = dashboardData;
 
   const transfersArray = Array.isArray(transfers) ? transfers : [];
 
