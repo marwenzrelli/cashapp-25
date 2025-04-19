@@ -45,7 +45,7 @@ export const ClientOperationsHistoryTabs = ({
             )}
           >
             <List className="h-3 w-3" />
-            <span>Tout</span>
+            <span className={isMobile ? "" : ""}>Tout</span>
             <Badge variant="secondary" className="ml-1 px-1.5 py-0 min-w-5 h-5 flex items-center justify-center">{filteredOperations.length}</Badge>
           </TabsTrigger>
           <TabsTrigger 
@@ -57,8 +57,7 @@ export const ClientOperationsHistoryTabs = ({
             )}
           >
             <ArrowUpCircle className="h-3 w-3" />
-            <span className={isMobile ? "hidden" : ""}>Versements</span>
-            <span className={isMobile ? "" : "hidden"}>Vers.</span>
+            <span className={isMobile ? "" : ""}>Vers.</span>
             <Badge variant="secondary" className="ml-1 px-1.5 py-0 min-w-5 h-5 flex items-center justify-center bg-green-100 text-green-800">{depositsCount}</Badge>
           </TabsTrigger>
           <TabsTrigger 
@@ -70,8 +69,7 @@ export const ClientOperationsHistoryTabs = ({
             )}
           >
             <ArrowDownCircle className="h-3 w-3" />
-            <span className={isMobile ? "hidden" : ""}>Retraits</span>
-            <span className={isMobile ? "" : "hidden"}>Ret.</span>
+            <span className={isMobile ? "" : ""}>Ret.</span>
             <Badge variant="secondary" className="ml-1 px-1.5 py-0 min-w-5 h-5 flex items-center justify-center bg-red-100 text-red-800">{withdrawalsCount}</Badge>
           </TabsTrigger>
           <TabsTrigger 
@@ -83,8 +81,7 @@ export const ClientOperationsHistoryTabs = ({
             )}
           >
             <RefreshCcw className="h-3 w-3" />
-            <span className={isMobile ? "hidden" : ""}>Virements</span>
-            <span className={isMobile ? "" : "hidden"}>Vir.</span>
+            <span className={isMobile ? "" : ""}>Vir.</span>
             <Badge variant="secondary" className="ml-1 px-1.5 py-0 min-w-5 h-5 flex items-center justify-center bg-blue-100 text-blue-800">{transfersCount}</Badge>
           </TabsTrigger>
         </TabsList>
