@@ -1,7 +1,7 @@
 
 import { DepositsContent } from "@/features/deposits/components/DepositsContent";
 import { useDepositsPage } from "@/features/deposits/hooks/useDepositsPage";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 const Deposits = () => {
@@ -37,31 +37,38 @@ const Deposits = () => {
     totalItems
   } = useDepositsPage();
 
+  // Memoize the fetchDeposits function to prevent re-renders
+  const memoizedFetchDeposits = useCallback(() => {
+    console.log("Memoized fetch deposits called");
+    fetchDeposits();
+  }, [fetchDeposits]);
+
   // Track authentication state and fetch deposits when auth changes
   useEffect(() => {
     console.log("Setting up auth state listener");
     
     // Initial fetch
-    fetchDeposits();
+    memoizedFetchDeposits();
     
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state changed:", event, session?.user?.id);
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        fetchDeposits();
+        memoizedFetchDeposits();
       }
     });
     
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [memoizedFetchDeposits]);
 
-  console.log("Deposits page render - deposits count:", deposits?.length);
-  console.log("Deposits page render - filtered deposits count:", filteredDeposits?.length);
-  console.log("Deposits page render - paginated deposits count:", paginatedDeposits?.length);
-  console.log("Deposits page render - isLoading:", isLoading);
-  console.log("Deposits page render - dateRange:", dateRange);
+  // Debugging logs wrapped in a stable useEffect to prevent continuous logging
+  useEffect(() => {
+    console.log("Deposits page render - deposits count:", deposits?.length);
+    console.log("Deposits page render - filtered deposits count:", filteredDeposits?.length);
+    console.log("Deposits page render - paginated deposits count:", paginatedDeposits?.length);
+  }, [deposits?.length, filteredDeposits?.length, paginatedDeposits?.length]);
   
   return (
     <DepositsContent

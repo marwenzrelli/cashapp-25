@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useState, useEffect, memo } from "react";
 import { DepositsTable } from "./DepositsTable";
 import { DepositsHeader } from "./DepositsHeader";
 import { SearchBar } from "./SearchBar";
@@ -44,7 +45,8 @@ interface DepositsContentProps {
   setDateRange?: (range: DateRange | undefined) => void;
 }
 
-export const DepositsContent = ({
+// Use memo to prevent unnecessary re-renders of the DepositsContent component
+export const DepositsContent = memo(({
   deposits,
   filteredDeposits,
   paginatedDeposits,
@@ -73,7 +75,7 @@ export const DepositsContent = ({
   dateRange,
   setDateRange
 }: DepositsContentProps) => {
-  const [isNewDepositOpen, setIsNewDepositOpen] = React.useState(false);
+  const [isNewDepositOpen, setIsNewDepositOpen] = useState(false);
 
   const {
     clients,
@@ -81,18 +83,26 @@ export const DepositsContent = ({
     fetchClients
   } = useClients();
   
-  React.useEffect(() => {
+  useEffect(() => {
     fetchClients();
   }, [fetchClients]);
 
-  console.log("DepositsContent render with:", {
-    depositsLength: deposits?.length,
-    filteredDepositsLength: filteredDeposits?.length,
-    paginatedDepositsLength: paginatedDeposits?.length,
-    isLoading,
-    selectedDepositForDeletion: selectedDeposit?.id,
-    dateRange
-  });
+  // Moved logging to an effect to prevent continuous re-renders
+  useEffect(() => {
+    console.log("DepositsContent render with:", {
+      depositsLength: deposits?.length,
+      filteredDepositsLength: filteredDeposits?.length,
+      paginatedDepositsLength: paginatedDeposits?.length,
+      isLoading,
+      selectedDepositForDeletion: selectedDeposit?.id
+    });
+  }, [
+    deposits?.length, 
+    filteredDeposits?.length, 
+    paginatedDeposits?.length, 
+    isLoading, 
+    selectedDeposit?.id
+  ]);
 
   const handleRefreshClientBalance = async (clientId: string): Promise<boolean> => {
     try {
@@ -194,4 +204,7 @@ export const DepositsContent = ({
       />
     </div>
   );
-};
+});
+
+// Add display name for debugging purposes
+DepositsContent.displayName = "DepositsContent";

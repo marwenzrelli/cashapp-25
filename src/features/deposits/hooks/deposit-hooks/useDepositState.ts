@@ -1,8 +1,9 @@
 
 import { useState } from "react";
-import { Deposit } from "@/components/deposits/types";
+import { Deposit } from "@/features/deposits/types";
 
 export const useDepositState = () => {
+  // Initialize with empty array instead of undefined to prevent unnecessary re-renders
   const [deposits, setDeposits] = useState<Deposit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [depositToDelete, setDepositToDelete] = useState<Deposit | null>(null);

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useFetchDeposits } from "./useFetchDeposits";
 import { useDeleteDeposit } from "./deposit-hooks/useDeleteDeposit";
 import { useCreateDeposit } from "./deposit-hooks/useCreateDeposit";
@@ -22,6 +22,12 @@ export const useDeposits = () => {
   // Get the fetchDeposits function from useFetchDeposits
   const { fetchDeposits } = useFetchDeposits(setDeposits, setIsLoading);
 
+  // Use useCallback to memoize the fetch function to prevent re-renders
+  const memoizedFetchDeposits = useCallback(async () => {
+    console.log("Fetching deposits from useDeposits hook");
+    await fetchDeposits();
+  }, [fetchDeposits]);
+
   // Get the deleteDeposit and confirmDeleteDeposit functions
   const { deleteDeposit, confirmDeleteDeposit } = useDeleteDeposit(
     deposits,
@@ -33,16 +39,15 @@ export const useDeposits = () => {
   );
 
   // Get the createDeposit function
-  const { createDeposit } = useCreateDeposit(fetchDeposits, setIsLoading);
+  const { createDeposit } = useCreateDeposit(memoizedFetchDeposits, setIsLoading);
 
   // Get the updateDeposit function
-  const { updateDeposit } = useUpdateDeposit(fetchDeposits, setIsLoading);
+  const { updateDeposit } = useUpdateDeposit(memoizedFetchDeposits, setIsLoading);
 
   // Fetch deposits on mount
   useEffect(() => {
-    console.log("Fetching deposits from useDeposits hook");
-    fetchDeposits();
-  }, [fetchDeposits]);
+    memoizedFetchDeposits();
+  }, [memoizedFetchDeposits]);
 
   return { 
     deposits,
@@ -53,7 +58,7 @@ export const useDeposits = () => {
     confirmDeleteDeposit,
     setDepositToDelete,
     setShowDeleteDialog,
-    fetchDeposits,
-    refreshDeposits: fetchDeposits
+    fetchDeposits: memoizedFetchDeposits,
+    refreshDeposits: memoizedFetchDeposits
   };
 };
