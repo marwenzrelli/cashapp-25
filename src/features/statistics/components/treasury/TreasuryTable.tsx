@@ -66,7 +66,7 @@ export const TreasuryTable = ({
             <TableHead>ID Opération</TableHead>
             <TableHead>Nature</TableHead>
             <TableHead>Client</TableHead>
-            <TableHead>Type</TableHead>
+            
             <TableHead>Désignation</TableHead>
             <TableHead className="text-right">Solde avant</TableHead>
             <TableHead className="text-right">Montant</TableHead>
