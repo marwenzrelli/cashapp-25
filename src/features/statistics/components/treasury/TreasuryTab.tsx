@@ -1,10 +1,9 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { TreasuryTable } from "./TreasuryTable";
 import { TreasuryTotals } from "./TreasuryTotals";
 import { Card, CardContent } from "@/components/ui/card";
 import { Operation } from "@/features/operations/types";
-import { DateRange } from "react-day-picker";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import {
   DropdownMenu,
@@ -13,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { filterByDateRange } from "../../utils/dateHelpers";
+import { useTreasuryDateFilter } from "../../hooks/useTreasuryDateFilter";
 
 interface TreasuryTabProps {
   operations: Operation[];
@@ -21,21 +20,13 @@ interface TreasuryTabProps {
 }
 
 export const TreasuryTab = ({ operations, isLoading }: TreasuryTabProps) => {
-  const [showDatePicker, setShowDatePicker] = useState(true);
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-
-  const handlePeriodChange = (value: string) => {
-    if (value === "all") {
-      setDateRange(undefined);
-      setShowDatePicker(false);
-    } else {
-      setShowDatePicker(true);
-    }
-  };
-
-  const filteredOperations = showDatePicker && dateRange?.from && dateRange?.to
-    ? filterByDateRange(operations, dateRange.from, dateRange.to)
-    : operations;
+  const {
+    showDatePicker,
+    dateRange,
+    setDateRange,
+    handlePeriodChange,
+    filteredOperations,
+  } = useTreasuryDateFilter(operations);
 
   if (isLoading) {
     return (
