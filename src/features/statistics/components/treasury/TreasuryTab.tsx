@@ -79,3 +79,4 @@ export const TreasuryTab = ({ operations, isLoading }: TreasuryTabProps) => {
     </div>
   );
 };
+
