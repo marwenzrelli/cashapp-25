@@ -5,7 +5,7 @@ import { Operation } from "@/features/operations/types";
 import { filterByDateRange } from "../utils/dateHelpers";
 
 export const useTreasuryDateFilter = (operations: Operation[]) => {
-  const [showDatePicker, setShowDatePicker] = useState(true);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
   const handlePeriodChange = (value: string) => {
