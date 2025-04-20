@@ -13,11 +13,12 @@ export const useTreasuryDateFilter = (operations: Operation[]) => {
       setDateRange(undefined);
       setShowDatePicker(false);
     } else {
+      setDateRange(undefined);
       setShowDatePicker(true);
     }
   };
 
-  const filteredOperations = showDatePicker && dateRange?.from && dateRange?.to
+  const filteredOperations = dateRange?.from && dateRange?.to
     ? filterByDateRange(operations, dateRange.from, dateRange.to)
     : operations;
 
