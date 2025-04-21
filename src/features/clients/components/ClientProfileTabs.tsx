@@ -3,11 +3,12 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ClientOperationsHistory } from "./ClientOperationsHistory";
 import { ClientPublicPreview } from "./ClientPublicPreview";
+import { AccountFlowTab } from "./operations-history/AccountFlowTab";
 import { Client } from "../types";
 import { Operation } from "@/features/operations/types";
 import { DateRange } from "react-day-picker";
 import { useState } from "react";
-import { Smartphone, Monitor } from "lucide-react";
+import { Smartphone, Monitor, FileText } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { OperationsDetailCards } from "./OperationsDetailCards";
@@ -67,8 +68,12 @@ export function ClientProfileTabs({
     <div className="space-y-6">
       <Card className="overflow-hidden border-none shadow-md">
         <Tabs defaultValue="operations" className="w-full">
-          <TabsList className="w-full grid grid-cols-2 rounded-none bg-muted/50 p-0">
+          <TabsList className="w-full grid grid-cols-3 rounded-none bg-muted/50 p-0">
             <TabsTrigger value="operations" className="rounded-none py-3 data-[state=active]:bg-background">Opérations</TabsTrigger>
+            <TabsTrigger value="flux" className="rounded-none py-3 data-[state=active]:bg-background">
+              <FileText className="h-4 w-4 mr-2" />
+              Flux de compte
+            </TabsTrigger>
             <TabsTrigger value="public-preview" className="rounded-none py-3 data-[state=active]:bg-background">Aperçu public</TabsTrigger>
           </TabsList>
           
@@ -90,6 +95,14 @@ export function ClientProfileTabs({
                 setShowAllDates={setShowAllDates} 
                 clientId={clientId} 
                 isPepsiMen={isPepsiMen} 
+                updateOperation={updateOperation}
+              />
+            </TabsContent>
+            
+            <TabsContent value="flux" className="space-y-6 mt-0">
+              <AccountFlowTab 
+                operations={clientOperations}
+                clientId={clientId}
                 updateOperation={updateOperation}
               />
             </TabsContent>
