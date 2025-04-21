@@ -67,6 +67,17 @@ export const OperationsDetailCards = ({
     return format(new Date(date), "dd/MM/yyyy");
   };
   
+  // Extract the numeric ID from the operation ID string
+  const extractNumericId = (operationId: string | number): string => {
+    if (typeof operationId === 'number') {
+      return operationId.toString();
+    }
+    
+    // If the ID is in format like "dep-123" or "wit-456", extract the numeric part
+    const parts = operationId.toString().split('-');
+    return parts.length > 1 ? parts[1] : parts[0];
+  };
+  
   // Return JSX instead of void
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -84,7 +95,7 @@ export const OperationsDetailCards = ({
               {deposits.map((deposit) => (
                 <li key={deposit.id} className="flex justify-between items-center text-sm border-b pb-2 last:border-0">
                   <div>
-                    <p className="font-medium">{formatId(deposit.id)}</p>
+                    <p className="font-medium">{formatId(extractNumericId(deposit.id))}</p>
                     <p className="text-muted-foreground text-xs">{formatOperationDate(deposit.createdAt)}</p>
                   </div>
                   <span className="font-semibold text-green-600">{formatAmount(deposit.amount)}</span>
@@ -111,7 +122,7 @@ export const OperationsDetailCards = ({
               {displayWithdrawals.map((withdrawal) => (
                 <li key={withdrawal.id} className="flex justify-between items-center text-sm border-b pb-2 last:border-0">
                   <div>
-                    <p className="font-medium">{formatId(withdrawal.id)}</p>
+                    <p className="font-medium">{formatId(extractNumericId(withdrawal.id))}</p>
                     <p className="text-muted-foreground text-xs">{formatOperationDate(withdrawal.createdAt)}</p>
                   </div>
                   <span className="font-semibold text-red-600">{formatAmount(withdrawal.amount)}</span>
@@ -138,7 +149,7 @@ export const OperationsDetailCards = ({
               {transfers.map((transfer) => (
                 <li key={transfer.id} className="flex justify-between items-center text-sm border-b pb-2 last:border-0">
                   <div>
-                    <p className="font-medium">{formatId(transfer.id)}</p>
+                    <p className="font-medium">{formatId(extractNumericId(transfer.id))}</p>
                     <p className="text-muted-foreground text-xs">{formatOperationDate(transfer.createdAt)}</p>
                   </div>
                   <span className="font-semibold text-blue-600">{formatAmount(transfer.amount)}</span>
