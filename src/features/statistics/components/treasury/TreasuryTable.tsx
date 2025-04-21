@@ -1,16 +1,20 @@
+
 import React, { useMemo } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Operation } from "@/features/operations/types";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
+
 interface TreasuryTableProps {
   operations: Operation[];
 }
+
 interface TreasuryOperation extends Operation {
   balanceBefore: number;
   balanceAfter: number;
 }
+
 export const TreasuryTable = ({
   operations
 }: TreasuryTableProps) => {
@@ -24,6 +28,7 @@ export const TreasuryTable = ({
       withdrawals: withdrawalCount,
       transfers: transferCount
     });
+
     let runningBalance = 0;
     return [...operations].sort((a, b) => {
       const dateA = new Date(a.operation_date || a.date);
@@ -40,12 +45,14 @@ export const TreasuryTable = ({
       };
     });
   }, [operations]);
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
       currency: 'TND'
     }).format(amount);
   };
+
   const getOperationNatureBadge = (type: Operation['type']) => {
     switch (type) {
       case 'deposit':
@@ -58,7 +65,31 @@ export const TreasuryTable = ({
         return <Badge variant="outline">Inconnu</Badge>;
     }
   };
-  return <div className="relative w-full overflow-auto">
+
+  const getBalanceClass = (amount: number) => {
+    if (amount > 0) {
+      return "text-green-600 font-semibold font-mono";
+    } else if (amount < 0) {
+      return "text-red-600 font-semibold font-mono";
+    }
+    return "font-semibold font-mono";
+  };
+
+  const getAmountClass = (type: Operation['type']) => {
+    switch (type) {
+      case "withdrawal":
+        return "text-red-600 font-semibold font-mono";
+      case "deposit":
+        return "text-green-600 font-semibold font-mono";
+      case "transfer":
+        return "text-blue-600 font-semibold font-mono";
+      default:
+        return "font-semibold font-mono";
+    }
+  };
+
+  return (
+    <div className="relative w-full overflow-auto">
       <Table>
         <TableHeader>
           <TableRow>
@@ -66,7 +97,6 @@ export const TreasuryTable = ({
             <TableHead>ID Opération</TableHead>
             <TableHead>Nature</TableHead>
             <TableHead>Client</TableHead>
-            
             <TableHead>Désignation</TableHead>
             <TableHead className="text-right">Solde avant</TableHead>
             <TableHead className="text-right">Montant</TableHead>
@@ -74,36 +104,40 @@ export const TreasuryTable = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {sortedOperations.length > 0 ? sortedOperations.map(operation => <TableRow key={operation.id}>
-                <TableCell>
-                  {format(new Date(operation.operation_date || operation.date), "dd/MM/yyyy HH:mm", {
-              locale: fr
-            })}
-                </TableCell>
-                <TableCell>{operation.id}</TableCell>
-                <TableCell>{getOperationNatureBadge(operation.type)}</TableCell>
-                <TableCell>
-                  {operation.type === "transfer" ? `${operation.fromClient} → ${operation.toClient}` : operation.fromClient}
-                </TableCell>
-                
-                <TableCell>
-                  {operation.description || ""}
-                </TableCell>
-                <TableCell className="text-right font-mono">
-                  {formatCurrency(operation.balanceBefore)}
-                </TableCell>
-                <TableCell className={`text-right font-mono ${operation.type === "withdrawal" ? "text-red-600" : operation.type === "deposit" ? "text-green-600" : "text-blue-600"}`}>
-                  {formatCurrency(operation.type === "withdrawal" ? -operation.amount : operation.amount)}
-                </TableCell>
-                <TableCell className="text-right font-mono">
-                  {formatCurrency(operation.balanceAfter)}
-                </TableCell>
-              </TableRow>) : <TableRow>
+          {sortedOperations.length > 0 ? sortedOperations.map(operation => (
+            <TableRow key={operation.id}>
+              <TableCell>
+                {format(new Date(operation.operation_date || operation.date), "dd/MM/yyyy HH:mm", {
+                  locale: fr
+                })}
+              </TableCell>
+              <TableCell>{operation.id}</TableCell>
+              <TableCell>{getOperationNatureBadge(operation.type)}</TableCell>
+              <TableCell>
+                {operation.type === "transfer" ? `${operation.fromClient} → ${operation.toClient}` : operation.fromClient}
+              </TableCell>
+              <TableCell>
+                {operation.description || ""}
+              </TableCell>
+              <TableCell className={`text-right ${getBalanceClass(operation.balanceBefore)}`}>
+                {formatCurrency(operation.balanceBefore)}
+              </TableCell>
+              <TableCell className={`text-right ${getAmountClass(operation.type)}`}>
+                {formatCurrency(operation.type === "withdrawal" ? -operation.amount : operation.amount)}
+              </TableCell>
+              <TableCell className={`text-right ${getBalanceClass(operation.balanceAfter)}`}>
+                {formatCurrency(operation.balanceAfter)}
+              </TableCell>
+            </TableRow>
+          )) : (
+            <TableRow>
               <TableCell colSpan={9} className="text-center py-4 text-muted-foreground">
                 Aucune opération à afficher
               </TableCell>
-            </TableRow>}
+            </TableRow>
+          )}
         </TableBody>
       </Table>
-    </div>;
+    </div>
+  );
 };
