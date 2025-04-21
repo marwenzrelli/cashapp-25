@@ -84,8 +84,12 @@ export const AccountFlowMobileView = ({ operations, updateOperation }: AccountFl
 
   const handleOperationUpdate = async (updatedOperation: Operation) => {
     if (updateOperation) {
-      await updateOperation(updatedOperation);
-      setIsEditDialogOpen(false);
+      try {
+        await updateOperation(updatedOperation);
+        setIsEditDialogOpen(false);
+      } catch (error) {
+        console.error("Erreur lors de la mise à jour de l'opération:", error);
+      }
     }
   };
 

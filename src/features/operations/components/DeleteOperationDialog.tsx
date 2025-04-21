@@ -38,18 +38,18 @@ export function DeleteOperationDialog({
         const success = await onDelete();
         if (success) {
           toast.success("Opération supprimée avec succès");
+          onClose(); // Fermer le dialogue après succès
         } else {
           toast.error("Erreur lors de la suppression");
         }
       } else if (onConfirm) {
         await onConfirm();
         toast.success("Opération supprimée avec succès");
+        onClose(); // Fermer le dialogue après succès
       }
     } catch (error) {
       console.error("Erreur lors de la suppression:", error);
       toast.error("Erreur lors de la suppression");
-    } finally {
-      onClose();
     }
   };
 

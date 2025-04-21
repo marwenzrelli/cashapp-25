@@ -36,7 +36,7 @@ export const useOperations = () => {
     
     try {
       const operationType = operationToDelete.type;
-      const operationIdString = operationToDelete.id.split('-')[1]; // Extraire l'ID numérique sous forme de string
+      const operationIdString = operationToDelete.id.toString().split('-')[1]; // Extraire l'ID numérique sous forme de string
       
       // Convertir l'ID en nombre
       const operationId = parseInt(operationIdString, 10);
@@ -77,12 +77,15 @@ export const useOperations = () => {
         return false;
       }
       
-      toast.success("Opération supprimée avec succès");
-      
-      // On rafraîchit après suppression 
+      // On rafraîchit après suppression - forcer le rafraîchissement complet
       setShowDeleteDialog(false);
       setOperationToDelete(undefined);
-      refreshOperations(true);
+      
+      // Attendre un court instant pour s'assurer que la suppression est terminée côté serveur
+      setTimeout(() => {
+        refreshOperations(true);
+      }, 500);
+      
       return true;
     } catch (err) {
       console.error("Erreur lors de la suppression:", err);

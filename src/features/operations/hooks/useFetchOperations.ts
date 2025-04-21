@@ -16,12 +16,20 @@ export const useFetchOperations = () => {
   // Références pour le contrôle du fetch
   const isMountedRef = useRef(true);
   const fetchingRef = useRef(false);
+  const lastFetchTimeRef = useRef<number>(0);
   
   // Fonction qui charge les données de façon asynchrone
   const fetchOperations = useCallback(async (force = false) => {
-    // Éviter les requêtes multiples
+    // Éviter les requêtes multiples rapprochées, sauf si forcé
+    const now = Date.now();
     if (fetchingRef.current && !force) {
       console.log("Déjà en cours de chargement, ignorant cette requête");
+      return;
+    }
+    
+    // Rate limiting sauf si force=true
+    if (!force && now - lastFetchTimeRef.current < 2000) {
+      console.log("Trop de requêtes rapprochées, ignorant cette requête");
       return;
     }
     
@@ -29,12 +37,15 @@ export const useFetchOperations = () => {
       fetchingRef.current = true;
       setIsLoading(true);
       
-      console.log("Chargement des opérations depuis Supabase...");
-      const data = await getOperations();
+      console.log("Chargement des opérations depuis Supabase...", force ? "(rafraîchissement forcé)" : "");
+      // Ajouter un paramètre aléatoire pour éviter le cache
+      const cacheBuster = force ? `?timestamp=${Date.now()}` : '';
+      const data = await getOperations(cacheBuster);
       
       if (isMountedRef.current) {
         setOperations(data);
         setError(null);
+        lastFetchTimeRef.current = now;
       }
     } catch (err: any) {
       console.error('Error fetching operations:', err);
