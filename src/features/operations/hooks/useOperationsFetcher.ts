@@ -1,6 +1,7 @@
 
 import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { Operation } from '../types';
 import { mockOperations } from '../data/mock-operations';  // Corrigé le chemin et le nom
 
 export const useOperationsFetcher = () => {
