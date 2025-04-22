@@ -71,7 +71,7 @@ export const OperationsMobileList = ({
         setIsDeleteDialogOpen(false);
         setSelectedOperation(null);
         
-        // Explicitly call refreshOperations without an argument
+        // Call refreshOperations without any arguments
         await refreshOperations();
         return true;
       } else {
