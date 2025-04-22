@@ -71,7 +71,7 @@ export const OperationsMobileList = ({
         setIsDeleteDialogOpen(false);
         setSelectedOperation(null);
         
-        // Explicitly call refreshOperations with false to match its expected signature
+        // Use the optional parameter with false
         await refreshOperations(false);
         return true;
       } else {
