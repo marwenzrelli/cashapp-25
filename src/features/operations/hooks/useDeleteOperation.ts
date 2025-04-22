@@ -38,20 +38,31 @@ export const useDeleteOperation = (
       
       let success = false;
       
+      // Extraire l'ID numérique de l'opération
+      const operationIdParts = operationToDelete.id.toString().split('-');
+      const operationIdString = operationIdParts.length > 1 ? operationIdParts[1] : operationIdParts[0];
+      const operationId = parseInt(operationIdString, 10);
+      
+      if (isNaN(operationId)) {
+        throw new Error(`ID d'opération invalide: ${operationToDelete.id}`);
+      }
+      
+      console.log(`Parsed operation ID: ${operationId}`);
+      
       switch (operationToDelete.type) {
         case "deposit":
           console.log("Handling deposit deletion");
-          success = await handleDepositDeletion(operationToDelete.id, userId);
+          success = await handleDepositDeletion(operationId, userId);
           break;
           
         case "withdrawal":
           console.log("Handling withdrawal deletion");
-          success = await handleWithdrawalDeletion(operationToDelete.id, userId);
+          success = await handleWithdrawalDeletion(operationId, userId);
           break;
           
         case "transfer":
           console.log("Handling transfer deletion");
-          success = await handleTransferDeletion(operationToDelete.id, userId);
+          success = await handleTransferDeletion(operationId, userId);
           break;
           
         default:
@@ -64,7 +75,13 @@ export const useDeleteOperation = (
       if (success) {
         console.log("Operation deleted successfully, refreshing operations list");
         toast.success("Opération supprimée avec succès");
+        
+        // Attendre un court instant pour s'assurer que la suppression est terminée côté serveur
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Rafraîchir la liste des opérations
         await fetchAllOperations();
+        
         return true;
       } else {
         throw new Error("Échec de la suppression de l'opération");

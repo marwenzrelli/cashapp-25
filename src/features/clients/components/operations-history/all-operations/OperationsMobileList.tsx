@@ -21,7 +21,7 @@ export const OperationsMobileList = ({
   currency = "TND",
   updateOperation
 }: OperationsMobileListProps) => {
-  const { deleteOperation, refreshOperations } = useOperations();
+  const { deleteOperation, confirmDeleteOperation, refreshOperations } = useOperations();
   const [selectedOperation, setSelectedOperation] = useState<Operation | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -58,16 +58,26 @@ export const OperationsMobileList = ({
     setIsDeleteDialogOpen(true);
   };
 
-  const confirmDeleteOperation = async (): Promise<boolean> => {
+  const performDeleteOperation = async (): Promise<boolean> => {
     if (!selectedOperation) return false;
     
     try {
-      await deleteOperation(selectedOperation);
-      toast.success("Opération supprimée avec succès");
-      setIsDeleteDialogOpen(false);
-      refreshOperations();
-      setSelectedOperation(null);
-      return true;
+      console.log("Tentative de suppression de l'opération:", selectedOperation);
+      const success = await confirmDeleteOperation(selectedOperation);
+      console.log("Résultat de la suppression:", success);
+      
+      if (success) {
+        toast.success("Opération supprimée avec succès");
+        setIsDeleteDialogOpen(false);
+        setSelectedOperation(null);
+        await refreshOperations(); // Force refresh to update the list
+        return true;
+      } else {
+        toast.error("Erreur lors de la suppression", { 
+          description: "L'opération n'a pas pu être supprimée"
+        });
+        return false;
+      }
     } catch (error) {
       console.error("Delete operation error:", error);
       toast.error("Erreur lors de la suppression", { 
@@ -137,7 +147,7 @@ export const OperationsMobileList = ({
       <DeleteOperationDialog
         isOpen={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
-        onDelete={confirmDeleteOperation}
+        onDelete={performDeleteOperation}
         operation={selectedOperation}
       />
     </div>
