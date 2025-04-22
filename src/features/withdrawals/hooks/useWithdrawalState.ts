@@ -22,6 +22,12 @@ export const useWithdrawalState = () => {
     setIsEditing(true);
     setShowDialog(true);
   };
+  
+  const handleDelete = (withdrawal: Withdrawal) => {
+    // Make sure we're setting the selected withdrawal before showing the delete dialog
+    setSelectedWithdrawal(withdrawal);
+    return withdrawal;
+  };
 
   const findClientById = (clients: Client[], clientName: string) => {
     const client = clients.find(c => `${c.prenom} ${c.nom}` === clientName);
@@ -42,6 +48,7 @@ export const useWithdrawalState = () => {
     setIsEditing,
     handleNewWithdrawal,
     handleEdit,
+    handleDelete,
     findClientById
   };
 };

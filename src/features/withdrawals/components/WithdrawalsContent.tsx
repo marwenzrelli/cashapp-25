@@ -65,6 +65,7 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
     isEditing,
     handleNewWithdrawal,
     handleEdit,
+    handleDelete,
     findClientById
   } = useWithdrawalState();
 
@@ -79,6 +80,15 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
       });
       return Promise.reject(error);
     }
+  };
+
+  const handleDeleteWithdrawal = (withdrawal: Withdrawal) => {
+    // First set the selected withdrawal using our state hook
+    setSelectedWithdrawal(handleDelete(withdrawal));
+    // Then show the delete dialog
+    setShowDeleteDialog(true);
+    // Finally call the passed in delete function
+    deleteWithdrawal(withdrawal);
   };
 
   const getDateRangeText = () => {
@@ -129,7 +139,7 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
       <WithdrawalTable 
         withdrawals={paginatedWithdrawals} 
         onEdit={handleEdit} 
-        onDelete={deleteWithdrawal} 
+        onDelete={handleDeleteWithdrawal} 
         findClientById={(clientName) => findClientById(clients, clientName)}
         dateRange={dateRange}
       />

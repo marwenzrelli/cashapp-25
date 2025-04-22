@@ -13,6 +13,7 @@ import {
 import { formatId } from "@/utils/formatId";
 import { Withdrawal } from "../types";
 import { formatAmount } from "@/utils/formatCurrency";
+import { Button } from "@/components/ui/button";
 
 interface DeleteWithdrawalDialogProps {
   open: boolean;
@@ -30,6 +31,11 @@ export const DeleteWithdrawalDialog: React.FC<DeleteWithdrawalDialogProps> = ({
   if (!withdrawal) {
     return null;
   }
+
+  const handleConfirm = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    await onConfirm();
+  };
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -57,14 +63,13 @@ export const DeleteWithdrawalDialog: React.FC<DeleteWithdrawalDialogProps> = ({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Annuler</AlertDialogCancel>
-          <AlertDialogAction 
-            onClick={(e) => {
-              e.preventDefault();
-              onConfirm();
-            }}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-          >
-            Supprimer
+          <AlertDialogAction asChild>
+            <Button 
+              onClick={handleConfirm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Supprimer
+            </Button>
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
