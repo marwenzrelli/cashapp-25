@@ -9,6 +9,11 @@ export const useOperationsFetcher = () => {
   const getOperations = useCallback(async (cacheBuster = '') => {
     const operations: Operation[] = [];
     
+    console.log("Récupération des opérations avec cacheBuster:", cacheBuster);
+    
+    // Ajout d'un paramètre aléatoire pour éviter tout problème de cache
+    const timestamp = Date.now();
+    
     // Utiliser Promise.all pour paralléliser les requêtes
     const [depositsResult, withdrawalsResult, transfersResult] = await Promise.all([
       supabase.from('deposits').select('*').order('created_at', { ascending: false }),
@@ -31,6 +36,9 @@ export const useOperationsFetcher = () => {
       console.error('Error fetching transfers:', transfersResult.error);
       throw new Error(`Erreur lors du chargement des transferts: ${transfersResult.error.message}`);
     }
+    
+    // Debuggons les résultats
+    console.log(`Données récupérées - Dépôts: ${depositsResult.data?.length}, Retraits: ${withdrawalsResult.data?.length}, Transferts: ${transfersResult.data?.length}`);
     
     // Traiter les dépôts
     if (depositsResult.data) {

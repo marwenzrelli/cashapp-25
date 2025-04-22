@@ -81,10 +81,18 @@ export const useOperations = () => {
       setShowDeleteDialog(false);
       setOperationToDelete(undefined);
       
+      console.log("Suppression réussie, rafraîchissement des données...");
+      
       // Attendre un court instant pour s'assurer que la suppression est terminée côté serveur
-      setTimeout(() => {
-        refreshOperations(true);
-      }, 500);
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Forcer un rafraîchissement complet des données
+      await refreshOperations(true);
+      
+      console.log("Rafraîchissement des données terminé après suppression");
+      
+      // Notifier l'utilisateur du succès de l'opération
+      toast.success("Opération supprimée avec succès");
       
       return true;
     } catch (err) {

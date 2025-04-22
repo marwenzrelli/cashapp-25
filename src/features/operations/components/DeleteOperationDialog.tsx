@@ -33,18 +33,26 @@ export function DeleteOperationDialog({
 
   const handleDelete = async () => {
     try {
+      console.log("Tentative de suppression de l'opération:", operation.id);
+      
       // Use onDelete if provided, otherwise fall back to onConfirm
       if (onDelete) {
+        console.log("Appel de la fonction onDelete");
         const success = await onDelete();
+        
         if (success) {
-          toast.success("Opération supprimée avec succès");
+          console.log("Suppression réussie via onDelete");
+          // Le toast est maintenant géré dans useOperations pour éviter les notifications en double
           onClose(); // Fermer le dialogue après succès
         } else {
+          console.error("Échec de la suppression via onDelete");
           toast.error("Erreur lors de la suppression");
         }
       } else if (onConfirm) {
+        console.log("Appel de la fonction onConfirm");
         await onConfirm();
-        toast.success("Opération supprimée avec succès");
+        console.log("Suppression réussie via onConfirm");
+        // Le toast est maintenant géré dans useOperations pour éviter les notifications en double
         onClose(); // Fermer le dialogue après succès
       }
     } catch (error) {

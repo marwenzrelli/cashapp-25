@@ -1,4 +1,3 @@
-
 import { useRef, useCallback, useMemo, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useOperations } from "@/features/operations/hooks/useOperations";
@@ -19,16 +18,12 @@ export const useClientProfile = () => {
   const qrCodeRef = useRef<HTMLDivElement>(null);
   const parsedClientId = clientId ? parseInt(clientId, 10) : null;
   
-  // Determine if this is the pepsi men client
   const isPepsiMen = useMemo(() => parsedClientId === 4, [parsedClientId]);
   
-  // Debug to ensure ID is parsed correctly
   console.log("useClientProfile - Raw ID from params:", clientId, "Parsed client ID:", parsedClientId);
   
-  // Get client data
   const { client, isLoading, error, fetchClient } = useClientData(parsedClientId);
   
-  // Refetch client manually
   const refetchClient = useCallback(() => {
     if (parsedClientId) {
       console.log("Manual refetch of client data for ID:", parsedClientId);
@@ -38,10 +33,8 @@ export const useClientProfile = () => {
     }
   }, [parsedClientId, fetchClient]);
   
-  // Real-time balance tracking
   const { realTimeBalance, setRealTimeBalance } = useRealTimeBalance(parsedClientId);
   
-  // Client balance refresh functionality
   const { refreshClientBalance } = useClientBalanceRefresh(
     parsedClientId, 
     client, 
@@ -49,7 +42,6 @@ export const useClientProfile = () => {
     refetchClient
   );
   
-  // Filter operations
   const {
     clientOperations,
     filteredOperations,
@@ -66,17 +58,14 @@ export const useClientProfile = () => {
     isPepsiMen: isPepsiClient
   } = useClientOperationsFilter(operations, client);
   
-  // Verify operations when client is loaded
   useOperationsVerification(client, operations, clientOperations, refreshClientBalance);
   
-  // Export functionality
   const { formatAmount, exportToExcel, exportToPDF } = useClientProfileExport(
     client, 
     clientOperations,
     qrCodeRef
   );
 
-  // Function to update operation
   const updateOperation = async (updatedOperation: Operation): Promise<void> => {
     try {
       console.log("Updating operation in profile page:", updatedOperation);
@@ -137,7 +126,6 @@ export const useClientProfile = () => {
         throw new Error(`Erreur lors de la mise à jour: ${error.message}`);
       }
       
-      // Refresh operations list and balance
       await refreshClientOperations();
     } catch (error: any) {
       console.error("Error updating operation:", error);
@@ -145,22 +133,25 @@ export const useClientProfile = () => {
     }
   };
 
-  // Get effective balance (real-time or from client object)
   const effectiveBalance = realTimeBalance !== null ? realTimeBalance : client?.solde;
 
-  // Function to refresh operations data and update client data if needed
   const refreshClientOperations = useCallback(async () => {
     console.log("Refreshing operations for client:", client?.id);
-    await refreshOperations();
-    // Optionally refresh client info to update balance
-    if (parsedClientId) {
-      setTimeout(() => {
+    try {
+      await refreshOperations(true);
+      
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      if (parsedClientId) {
+        console.log("Actualisation du solde du client après rafraîchissement des opérations");
         refreshClientBalance();
-      }, 500);
+      }
+    } catch (error) {
+      console.error("Erreur lors du rafraîchissement des opérations:", error);
+      toast.error("Erreur lors de l'actualisation des données");
     }
   }, [refreshOperations, client, parsedClientId, refreshClientBalance]);
 
-  // Effect to refresh operations when component mounts
   useEffect(() => {
     if (client && client.id) {
       refreshClientOperations();
@@ -193,7 +184,7 @@ export const useClientProfile = () => {
     refreshClientBalance,
     refreshClientOperations,
     clientBalance: effectiveBalance,
-    isPepsiMen, // Export this flag
-    updateOperation // Add the update operation function
+    isPepsiMen,
+    updateOperation
   };
 };
