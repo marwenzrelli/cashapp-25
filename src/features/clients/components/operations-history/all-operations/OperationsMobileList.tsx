@@ -70,7 +70,8 @@ export const OperationsMobileList = ({
         toast.success("Opération supprimée avec succès");
         setIsDeleteDialogOpen(false);
         setSelectedOperation(null);
-        // Fix: Call refreshOperations without arguments
+        
+        // Removed the parameter from refreshOperations()
         await refreshOperations();
         return true;
       } else {
