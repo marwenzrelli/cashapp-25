@@ -85,9 +85,7 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
   const handleDeleteWithdrawal = (withdrawal: Withdrawal) => {
     // First set the selected withdrawal using our state hook
     setSelectedWithdrawal(handleDelete(withdrawal));
-    // Then show the delete dialog
-    setShowDeleteDialog(true);
-    // Finally call the passed in delete function
+    // Then call the passed in delete function which will show the dialog
     deleteWithdrawal(withdrawal);
   };
 
