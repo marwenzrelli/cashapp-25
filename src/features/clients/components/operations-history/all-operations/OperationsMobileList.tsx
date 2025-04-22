@@ -21,7 +21,7 @@ export const OperationsMobileList = ({
   currency = "TND",
   updateOperation
 }: OperationsMobileListProps) => {
-  const { refreshOperations, deleteOperation } = useOperations();
+  const { deleteOperation, refreshOperations } = useOperations();
   const [selectedOperation, setSelectedOperation] = useState<Operation | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -38,7 +38,15 @@ export const OperationsMobileList = ({
 
   const handleEditOperation = async (updatedOperation: Operation) => {
     if (updateOperation) {
-      return updateOperation(updatedOperation);
+      try {
+        await updateOperation(updatedOperation);
+        toast.success("Opération modifiée avec succès");
+        setIsDetailsModalOpen(false);
+      } catch (error) {
+        console.error("Edit operation error:", error);
+        toast.error("Erreur lors de la modification");
+      }
+      return Promise.resolve();
     }
     toast.error("Fonction de modification non disponible");
     return Promise.reject("Update function not available");
@@ -56,8 +64,8 @@ export const OperationsMobileList = ({
     try {
       await deleteOperation(selectedOperation);
       toast.success("Opération supprimée avec succès");
-      refreshOperations();
       setIsDeleteDialogOpen(false);
+      refreshOperations();
       setSelectedOperation(null);
       return true;
     } catch (error) {
@@ -67,11 +75,6 @@ export const OperationsMobileList = ({
       });
       return false;
     }
-  };
-
-  const cancelDeleteOperation = () => {
-    setIsDeleteDialogOpen(false);
-    setSelectedOperation(null);
   };
 
   // Get icon based on operation type
@@ -133,11 +136,10 @@ export const OperationsMobileList = ({
       {/* Delete confirmation dialog */}
       <DeleteOperationDialog
         isOpen={isDeleteDialogOpen}
-        onClose={cancelDeleteOperation}
+        onClose={() => setIsDeleteDialogOpen(false)}
         onDelete={confirmDeleteOperation}
         operation={selectedOperation}
       />
     </div>
   );
 };
-
