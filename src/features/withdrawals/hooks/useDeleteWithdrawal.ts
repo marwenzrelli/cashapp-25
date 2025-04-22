@@ -100,6 +100,9 @@ export const useDeleteWithdrawal = (fetchWithdrawals: () => Promise<void>) => {
       toast.success("Retrait supprimé avec succès");
       
       await fetchWithdrawals();
+      // Make sure we clear state and close the dialog
+      setShowDeleteDialog(false);
+      setWithdrawalToDelete(null);
       return true;
     } catch (error: any) {
       console.error("Erreur lors de la suppression du retrait:", error);
@@ -109,8 +112,6 @@ export const useDeleteWithdrawal = (fetchWithdrawals: () => Promise<void>) => {
       return false;
     } finally {
       setLoading(false);
-      setWithdrawalToDelete(null);
-      setShowDeleteDialog(false);
     }
   };
 

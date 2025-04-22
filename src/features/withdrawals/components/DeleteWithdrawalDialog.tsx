@@ -34,7 +34,8 @@ export const DeleteWithdrawalDialog: React.FC<DeleteWithdrawalDialogProps> = ({
 
   const handleConfirm = async (e: React.MouseEvent) => {
     e.preventDefault();
-    await onConfirm();
+    const success = await onConfirm();
+    // No need to manually close the dialog here as it's now handled in the hook
   };
 
   return (
