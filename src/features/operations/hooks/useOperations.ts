@@ -29,14 +29,15 @@ export const useOperations = () => {
   }, []);
 
   // Confirmer la suppression
-  const confirmDeleteOperation = useCallback(async () => {
-    if (!operationToDelete) return false;
+  const confirmDeleteOperation = useCallback(async (operation?: Operation): Promise<boolean> => {
+    const opToDelete = operation || operationToDelete;
+    if (!opToDelete) return false;
     
     setIsProcessing(true);
     
     try {
-      const operationType = operationToDelete.type;
-      const operationIdString = operationToDelete.id.toString().split('-')[1]; // Extraire l'ID numérique sous forme de string
+      const operationType = opToDelete.type;
+      const operationIdString = opToDelete.id.toString().split('-')[1]; // Extraire l'ID numérique sous forme de string
       
       // Convertir l'ID en nombre
       const operationId = parseInt(operationIdString, 10);

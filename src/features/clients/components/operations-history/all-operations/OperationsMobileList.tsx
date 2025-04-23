@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Operation } from "@/features/operations/types";
 import { OperationsMobileCard } from "../OperationsMobileCard";
@@ -63,7 +62,7 @@ export const OperationsMobileList = ({
     
     try {
       console.log("Tentative de suppression de l'opération:", selectedOperation);
-      const success = await confirmDeleteOperation(selectedOperation);
+      const success = await confirmDeleteOperation();
       console.log("Résultat de la suppression:", success);
       
       if (success) {
@@ -71,7 +70,7 @@ export const OperationsMobileList = ({
         setIsDeleteDialogOpen(false);
         setSelectedOperation(null);
         
-        // Call refreshOperations without any arguments
+        // Call refreshOperations without arguments
         await refreshOperations();
         return true;
       } else {
@@ -89,7 +88,6 @@ export const OperationsMobileList = ({
     }
   };
 
-  // Get icon based on operation type
   const getOperationIcon = (type: string) => {
     switch (type) {
       case 'deposit':
@@ -103,7 +101,6 @@ export const OperationsMobileList = ({
     }
   };
 
-  // Format amount with + or - prefix based on operation type
   const formatAmount = (amount: number, type: string): string => {
     const formattedAmount = amount.toLocaleString('fr-FR', {
       minimumFractionDigits: 3,
