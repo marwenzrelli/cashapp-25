@@ -72,7 +72,7 @@ export const OperationsMobileList = ({
         setSelectedOperation(null);
         
         // Call refreshOperations without any arguments
-        await refreshOperations();
+        await refreshOperations(); // No argument passed
         return true;
       } else {
         toast.error("Erreur lors de la suppression", { 
