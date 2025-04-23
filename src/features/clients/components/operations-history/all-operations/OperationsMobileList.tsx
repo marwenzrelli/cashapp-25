@@ -71,8 +71,8 @@ export const OperationsMobileList = ({
         setIsDeleteDialogOpen(false);
         setSelectedOperation(null);
         
-        // Call refreshOperations without any arguments
-        await refreshOperations();
+        // Call refreshOperations with true to force refresh
+        await refreshOperations(true);
         return true;
       } else {
         toast.error("Erreur lors de la suppression", { 
