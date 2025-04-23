@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Operation } from "@/features/operations/types";
 import { OperationsMobileCard } from "../OperationsMobileCard";
@@ -62,7 +63,8 @@ export const OperationsMobileList = ({
     
     try {
       console.log("Tentative de suppression de l'opération:", selectedOperation);
-      const success = await confirmDeleteOperation();
+      // Pass the selectedOperation to confirmDeleteOperation
+      const success = await confirmDeleteOperation(selectedOperation);
       console.log("Résultat de la suppression:", success);
       
       if (success) {
