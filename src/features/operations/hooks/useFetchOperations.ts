@@ -43,6 +43,7 @@ export const useFetchOperations = () => {
       const data = await getOperations(cacheBuster);
       
       if (isMountedRef.current) {
+        console.log("Données reçues:", data.length, "opérations");
         setOperations(data);
         setError(null);
         lastFetchTimeRef.current = now;

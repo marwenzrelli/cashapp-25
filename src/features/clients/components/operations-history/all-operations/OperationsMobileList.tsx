@@ -63,7 +63,8 @@ export const OperationsMobileList = ({
     
     try {
       console.log("Tentative de suppression de l'opération:", selectedOperation);
-      // Pass the selectedOperation to confirmDeleteOperation
+      
+      // Pass the operation explicitly to confirmDeleteOperation
       const success = await confirmDeleteOperation(selectedOperation);
       console.log("Résultat de la suppression:", success);
       
@@ -72,7 +73,10 @@ export const OperationsMobileList = ({
         setIsDeleteDialogOpen(false);
         setSelectedOperation(null);
         
-        // Force refresh with true parameter
+        // Wait a moment before refreshing to ensure backend processing is complete
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Force refresh with true parameter and wait for it to complete
         await refreshOperations(true);
         return true;
       } else {

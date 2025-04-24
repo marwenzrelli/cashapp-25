@@ -31,79 +31,99 @@ export const useOperations = () => {
   // Confirmer la suppression
   const confirmDeleteOperation = useCallback(async (operation?: Operation): Promise<boolean> => {
     const opToDelete = operation || operationToDelete;
-    if (!opToDelete) return false;
+    if (!opToDelete) {
+      console.error("Aucune opération sélectionnée pour la suppression");
+      toast.error("Aucune opération sélectionnée");
+      return false;
+    }
     
     setIsProcessing(true);
+    console.log("Début de la suppression pour l'opération:", opToDelete.id, "type:", opToDelete.type);
     
     try {
       const operationType = opToDelete.type;
-      const operationIdString = opToDelete.id.toString().split('-')[1]; // Extraire l'ID numérique sous forme de string
+      // Extract the numeric part of the operation ID
+      const operationIdString = typeof opToDelete.id === 'string' 
+        ? opToDelete.id.toString().split('-')[1] || opToDelete.id 
+        : opToDelete.id.toString();
       
-      // Convertir l'ID en nombre
+      // Convert the ID to a number
       const operationId = parseInt(operationIdString, 10);
       
-      // Vérifier si la conversion a réussi
+      // Check if the conversion was successful
       if (isNaN(operationId)) {
         console.error("ID d'opération invalide:", operationIdString);
         toast.error("Format d'ID invalide");
         return false;
       }
       
-      let error = null;
+      console.log("ID d'opération parsé:", operationId);
       
-      // Suppression en fonction du type d'opération
-      if (operationType === 'deposit') {
-        const { error: deleteError } = await supabase
-          .from('deposits')
-          .delete()
-          .eq('id', operationId); // Utiliser l'ID converti en nombre
-        error = deleteError;
-      } else if (operationType === 'withdrawal') {
-        const { error: deleteError } = await supabase
-          .from('withdrawals')
-          .delete()
-          .eq('id', operationId); // Utiliser l'ID converti en nombre
-        error = deleteError;
-      } else if (operationType === 'transfer') {
-        const { error: deleteError } = await supabase
-          .from('transfers')
-          .delete()
-          .eq('id', operationId); // Utiliser l'ID converti en nombre
-        error = deleteError;
+      let error = null;
+      let success = false;
+      
+      // Delete according to operation type
+      switch (operationType) {
+        case 'deposit':
+          console.log("Suppression d'un dépôt avec ID:", operationId);
+          const { error: depositError } = await supabase
+            .from('deposits')
+            .delete()
+            .eq('id', operationId);
+          error = depositError;
+          success = !depositError;
+          break;
+          
+        case 'withdrawal':
+          console.log("Suppression d'un retrait avec ID:", operationId);
+          const { error: withdrawalError } = await supabase
+            .from('withdrawals')
+            .delete()
+            .eq('id', operationId);
+          error = withdrawalError;
+          success = !withdrawalError;
+          break;
+          
+        case 'transfer':
+          console.log("Suppression d'un transfert avec ID:", operationId);
+          const { error: transferError } = await supabase
+            .from('transfers')
+            .delete()
+            .eq('id', operationId);
+          error = transferError;
+          success = !transferError;
+          break;
+          
+        default:
+          console.error("Type d'opération inconnu:", operationType);
+          toast.error("Type d'opération invalide");
+          return false;
       }
       
       if (error) {
         console.error("Erreur lors de la suppression:", error);
-        toast.error("Erreur lors de la suppression");
+        toast.error("Erreur lors de la suppression", {
+          description: error.message
+        });
         return false;
       }
       
-      // On rafraîchit après suppression - forcer le rafraîchissement complet
+      console.log("Suppression réussie. Nettoyage de l'état local.");
       setShowDeleteDialog(false);
       setOperationToDelete(undefined);
       
-      console.log("Suppression réussie, rafraîchissement des données...");
+      // Wait briefly for the database to process the deletion
+      await new Promise(resolve => setTimeout(resolve, 300));
       
-      // Attendre un court instant pour s'assurer que la suppression est terminée côté serveur
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Forcer un rafraîchissement complet des données
-      await refreshOperations(true);
-      
-      console.log("Rafraîchissement des données terminé après suppression");
-      
-      // Notifier l'utilisateur du succès de l'opération
-      toast.success("Opération supprimée avec succès");
-      
-      return true;
+      return success;
     } catch (err) {
-      console.error("Erreur lors de la suppression:", err);
+      console.error("Erreur durant la suppression:", err);
       toast.error("Erreur lors de la suppression");
       return false;
     } finally {
       setIsProcessing(false);
     }
-  }, [operationToDelete, refreshOperations]);
+  }, [operationToDelete]);
 
   return {
     operations,
