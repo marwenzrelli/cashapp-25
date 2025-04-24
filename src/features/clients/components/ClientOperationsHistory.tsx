@@ -21,7 +21,7 @@ interface ClientOperationsHistoryProps {
   isCustomRange: boolean;
   setIsCustomRange: (isCustom: boolean) => void;
   filteredOperations: Operation[];
-  refreshOperations: () => void;
+  refreshOperations: () => Promise<void>;
   showAllDates?: boolean;
   setShowAllDates?: (showAll: boolean) => void;
   clientId?: number;
@@ -63,7 +63,7 @@ export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = (
       <CardHeader className="pb-2 px-3 py-3 text-left border-b bg-card">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <CardTitle className="text-xl font-bold">Historique des opérations</CardTitle>
-          <Button variant="outline" size="sm" onClick={refreshOperations} className="group">
+          <Button variant="outline" size="sm" onClick={() => refreshOperations()} className="group">
             <RefreshCw className="h-4 w-4 mr-2 group-hover:animate-spin" strokeWidth={2} />
             Actualiser
           </Button>

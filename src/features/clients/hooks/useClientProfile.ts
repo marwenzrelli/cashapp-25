@@ -1,3 +1,4 @@
+
 import { useRef, useCallback, useMemo, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useOperations } from "@/features/operations/hooks/useOperations";
@@ -135,7 +136,7 @@ export const useClientProfile = () => {
 
   const effectiveBalance = realTimeBalance !== null ? realTimeBalance : client?.solde;
 
-  const refreshClientOperations = useCallback(async () => {
+  const refreshClientOperations = useCallback(async (): Promise<void> => {
     console.log("Refreshing operations for client:", client?.id);
     try {
       await refreshOperations(true);
@@ -144,17 +145,20 @@ export const useClientProfile = () => {
       
       if (parsedClientId) {
         console.log("Actualisation du solde du client après rafraîchissement des opérations");
-        refreshClientBalance();
+        await refreshClientBalance();
       }
     } catch (error) {
       console.error("Erreur lors du rafraîchissement des opérations:", error);
       toast.error("Erreur lors de l'actualisation des données");
+      throw error; // Re-throw the error to maintain Promise rejection
     }
   }, [refreshOperations, client, parsedClientId, refreshClientBalance]);
 
   useEffect(() => {
     if (client && client.id) {
-      refreshClientOperations();
+      refreshClientOperations().catch(error => {
+        console.error("Error in initial operations refresh:", error);
+      });
     }
   }, [client?.id]);
 
