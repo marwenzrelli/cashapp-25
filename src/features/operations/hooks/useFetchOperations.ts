@@ -50,12 +50,15 @@ export const useFetchOperations = () => {
       setIsLoading(true);
       
       console.log("Chargement des opérations depuis Supabase...", force ? "(rafraîchissement forcé)" : "");
-      // Ajouter un paramètre aléatoire pour éviter le cache
-      const cacheBuster = force ? `?timestamp=${Date.now()}&force=${forceRefreshCountRef.current}` : '';
+      // Ajouter un paramètre aléatoire pour éviter le cache et l'historique des rafraîchissements forcés
+      const cacheBuster = force 
+        ? `?timestamp=${Date.now()}&force=${forceRefreshCountRef.current}&r=${Math.random().toString(36).substring(7)}` 
+        : '';
       const data = await getOperations(cacheBuster);
       
       if (isMountedRef.current) {
         console.log("Données reçues:", data.length, "opérations");
+        console.log("Types d'opérations:", data.map(op => op.type).join(', '));
         setOperations(data);
         setError(null);
         lastFetchTimeRef.current = now;
@@ -67,7 +70,13 @@ export const useFetchOperations = () => {
           setTimeout(() => {
             console.log("Effectuant un second rafraîchissement après suppression...");
             fetchOperations(true);
-          }, 3500);
+          }, 4000); // Augmenter le délai pour s'assurer que les données sont bien à jour
+          
+          // Puis un troisième rafraîchissement encore plus tard
+          setTimeout(() => {
+            console.log("Effectuant un troisième rafraîchissement après suppression...");
+            fetchOperations(true);
+          }, 8000);
         }
       }
     } catch (err: any) {
@@ -84,7 +93,7 @@ export const useFetchOperations = () => {
           setTimeout(() => {
             console.log("Nouvelle tentative après erreur...");
             fetchOperations(true);
-          }, 2000 * retryCountRef.current); // Backoff exponentiel
+          }, 2000 * Math.pow(1.5, retryCountRef.current - 1)); // Backoff exponentiel
           
           return;
         }
@@ -117,10 +126,17 @@ export const useFetchOperations = () => {
     fetchOperations();
   }, [fetchOperations]);
 
+  // Exposer les méthodes et l'état
   return { 
     operations, 
     isLoading, 
     error, 
-    refreshOperations: fetchOperations 
+    refreshOperations: fetchOperations,
+    isMountedRef,
+    fetchingRef,
+    lastFetchTimeRef,
+    forceRefreshRef,
+    forceRefreshCountRef,
+    retryCountRef
   };
 };

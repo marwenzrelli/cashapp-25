@@ -1,3 +1,4 @@
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,6 +34,7 @@ export function DeleteOperationDialog({
   const [internalLoading, setInternalLoading] = useState(false);
   const effectiveLoading = isLoading || internalLoading;
   
+  // Réinitialiser l'état de chargement quand la boîte de dialogue s'ouvre/ferme
   useEffect(() => {
     setInternalLoading(false);
   }, [isOpen]);
@@ -53,8 +55,36 @@ export function DeleteOperationDialog({
   };
 
   const displayDate = operation.operation_date || operation.date;
+  
+  // Extraire l'ID approprié pour l'affichage
+  const getDisplayId = () => {
+    const id = operation.id;
+    const idStr = String(id);
+    
+    // Pour les formats comme "withdrawal-123" ou "wit-123"
+    if (idStr.includes('-')) {
+      const parts = idStr.split('-');
+      return `${parts[0]} #${parts[1]}`;
+    }
+    
+    // Pour les formats comme "wit123" (sans tiret)
+    if (idStr.match(/^[a-z]+\d+$/i)) {
+      const numericPart = idStr.replace(/\D/g, '');
+      const prefix = idStr.replace(/\d+/g, '');
+      return `${prefix} #${numericPart}`;
+    }
+    
+    // Pour les IDs numériques
+    return `#${idStr}`;
+  };
 
   const handleConfirmDelete = async () => {
+    if (!operation) {
+      console.error("Aucune opération sélectionnée pour la suppression");
+      toast.error("Erreur", { description: "Aucune opération sélectionnée" });
+      return false;
+    }
+    
     try {
       console.log("Confirmation de suppression pour l'opération:", operation.id, "de type:", operation.type);
       console.log("Type de l'ID:", typeof operation.id);
@@ -67,19 +97,16 @@ export function DeleteOperationDialog({
       
       if (result) {
         console.log("Suppression réussie, fermeture de la boite de dialogue");
+        return true;
       } else {
         console.error("Échec de la suppression");
         toast.error("Échec de la suppression");
+        return false;
       }
-      
-      return result;
     } catch (error) {
       console.error("Erreur lors de la suppression:", error);
       toast.error("Une erreur est survenue");
       return false;
-    } finally {
-      // Garder l'état de chargement jusqu'à ce que le dialogue soit fermé par le parent
-      // setInternalLoading(false);
     }
   };
 
@@ -99,7 +126,7 @@ export function DeleteOperationDialog({
               {formatDateTime(displayDate)}.
             </p>
             <p className="font-semibold text-destructive">
-              ID: {operation.id} (Type: {operation.type})
+              {getDisplayId()} (Type: {operation.type})
             </p>
           </AlertDialogDescription>
         </AlertDialogHeader>

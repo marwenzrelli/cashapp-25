@@ -12,7 +12,8 @@ export const useDeleteWithdrawal = (fetchWithdrawals: () => Promise<void>) => {
 
   const deleteWithdrawal = (withdrawal: Withdrawal) => {
     console.log("Préparation de la suppression du retrait:", withdrawal);
-    setWithdrawalToDelete(withdrawal);
+    // Créer une copie profonde pour éviter les problèmes de référence
+    setWithdrawalToDelete(JSON.parse(JSON.stringify(withdrawal)));
     setShowDeleteDialog(true);
   };
 
@@ -25,7 +26,10 @@ export const useDeleteWithdrawal = (fetchWithdrawals: () => Promise<void>) => {
     setLoading(true);
     
     try {
-      console.log("Début de la suppression du retrait avec ID:", formatId(withdrawalToDelete.id, 4));
+      console.log("Début de la suppression du retrait avec ID:", 
+                  typeof withdrawalToDelete.id === 'string' ? 
+                  withdrawalToDelete.id : 
+                  formatId(withdrawalToDelete.id, 4));
       
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id;
@@ -35,10 +39,33 @@ export const useDeleteWithdrawal = (fetchWithdrawals: () => Promise<void>) => {
         throw new Error("Utilisateur non authentifié");
       }
       
-      // Récupérer les détails complets du retrait avant suppression
-      const withdrawalId = typeof withdrawalToDelete.id === 'string' 
-        ? parseInt(withdrawalToDelete.id, 10)
-        : withdrawalToDelete.id;
+      // Extraire l'ID numérique correct du retrait
+      let withdrawalId: number;
+      if (typeof withdrawalToDelete.id === 'string') {
+        // Pour les formats comme "wit-234"
+        if (withdrawalToDelete.id.includes('-')) {
+          const parts = withdrawalToDelete.id.split('-');
+          withdrawalId = parseInt(parts[parts.length - 1], 10);
+        } 
+        // Pour les formats comme "wit234"
+        else if (withdrawalToDelete.id.match(/^[a-z]+\d+$/i)) {
+          withdrawalId = parseInt(withdrawalToDelete.id.replace(/\D/g, ''), 10);
+        } 
+        // Pour les formats numériques en string
+        else {
+          withdrawalId = parseInt(withdrawalToDelete.id, 10);
+        }
+      } else {
+        withdrawalId = withdrawalToDelete.id;
+      }
+        
+      if (isNaN(withdrawalId)) {
+        console.error("Format d'ID invalide:", withdrawalToDelete.id);
+        toast.error("Format d'ID invalide");
+        throw new Error("ID de retrait invalide");
+      }
+      
+      console.log("ID de retrait extrait pour suppression:", withdrawalId);
         
       const { data: withdrawalData, error: fetchError } = await supabase
         .from('withdrawals')
@@ -102,8 +129,21 @@ export const useDeleteWithdrawal = (fetchWithdrawals: () => Promise<void>) => {
       // Fermer le dialogue avant de rafraîchir les données
       setShowDeleteDialog(false);
       
+      // Attendre un peu avant de rafraîchir pour laisser le temps à la base de données
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
       // Rafraîchir les données après avoir fermé le dialogue
       await fetchWithdrawals();
+      
+      // Rafraîchir une seconde fois après un délai pour s'assurer que les données sont à jour
+      setTimeout(async () => {
+        try {
+          await fetchWithdrawals();
+        } catch (error) {
+          console.error("Erreur lors du second rafraîchissement:", error);
+        }
+      }, 5000);
+      
       return true;
     } catch (error: any) {
       console.error("Erreur lors de la suppression du retrait:", error);

@@ -34,7 +34,7 @@ export const OperationsMobileList = ({
       const timeoutId = setTimeout(() => {
         console.log("Rafraîchissement forcé après suppression...", refreshTrigger);
         refreshOperations(true);
-      }, 3500);
+      }, 5000); // Augmenter le délai à 5 secondes pour s'assurer que la base de données a le temps de propager les changements
       
       return () => clearTimeout(timeoutId);
     }
@@ -100,19 +100,19 @@ export const OperationsMobileList = ({
         setIsDeleteDialogOpen(false);
         setSelectedOperation(null);
         
-        // Incrémenter le déclencheur de rafraîchissement
+        // Attendre avant de rafraîchir pour s'assurer que le traitement backend est terminé
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Incrémenter le déclencheur de rafraîchissement et planifier plusieurs rafraîchissements
         setRefreshTrigger(prev => prev + 1);
         
-        // Attendre avant de rafraîchir pour s'assurer que le traitement backend est terminé
-        await new Promise(resolve => setTimeout(resolve, 4000));
-        
-        // Forcer le rafraîchissement avec le paramètre true et attendre sa fin
+        // Forcer le rafraîchissement immédiatement avec le paramètre true
         await refreshOperations(true);
         
-        // Après un court délai, effectuer un second rafraîchissement
-        setTimeout(() => {
-          refreshOperations(true);
-        }, 3000);
+        // Planifier une séquence de rafraîchissements
+        setTimeout(() => refreshOperations(true), 2000);
+        setTimeout(() => refreshOperations(true), 5000);  
+        setTimeout(() => refreshOperations(true), 8000);
         
         return true;
       } else {

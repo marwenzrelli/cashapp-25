@@ -11,6 +11,7 @@ export const useOperations = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const refreshTriggerRef = useRef(0);
+  const deleteAttemptsRef = useRef(0);
 
   // Récupération des données
   const { operations, isLoading, error, refreshOperations } = useFetchOperations();
@@ -42,7 +43,7 @@ export const useOperations = () => {
     const idString = String(operation.id);
     console.log(`Parsing operation ID: ${idString}, type: ${typeof idString}`);
     
-    // Pour les IDs de format "wit-123" ou "deposit-123"
+    // Pour les IDs de format "withdrawal-123" ou "wit-123"
     if (idString.includes('-')) {
       const parts = idString.split('-');
       const idPart = parts[parts.length - 1];
@@ -88,6 +89,12 @@ export const useOperations = () => {
     }
   };
 
+  // Petit délai avant de rafraîchir les données
+  const delayedRefresh = useCallback(async (delay: number = 2000, force: boolean = true) => {
+    await new Promise(resolve => setTimeout(resolve, delay));
+    return refreshOperations(force);
+  }, [refreshOperations]);
+
   // Confirmer la suppression
   const confirmDeleteOperation = useCallback(async (operation?: Operation): Promise<boolean> => {
     const opToDelete = operation || operationToDelete;
@@ -100,6 +107,7 @@ export const useOperations = () => {
     
     setIsProcessing(true);
     console.log("Début de la suppression pour l'opération:", opToDelete.id, "type:", opToDelete.type);
+    console.log("Contenu complet de l'opération:", JSON.stringify(opToDelete));
     
     try {
       const operationType = opToDelete.type;
@@ -115,6 +123,10 @@ export const useOperations = () => {
       }
       
       console.log("ID d'opération parsé:", operationId);
+      
+      // Incrémenter le compteur de tentatives
+      deleteAttemptsRef.current += 1;
+      console.log(`Tentative de suppression #${deleteAttemptsRef.current}`);
       
       let error = null;
       let success = false;
@@ -162,6 +174,15 @@ export const useOperations = () => {
         toast.error("Erreur lors de la suppression", {
           description: error.message
         });
+        
+        // Si c'est une erreur critique mais qu'on n'a pas encore fait beaucoup de tentatives, 
+        // on peut réessayer automatiquement
+        if (deleteAttemptsRef.current < 3) {
+          console.log(`Réessai automatique #${deleteAttemptsRef.current}`);
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          return confirmDeleteOperation(operation);
+        }
+        
         return false;
       }
       
@@ -171,26 +192,28 @@ export const useOperations = () => {
         setOperationToDelete(null);
       }
       
+      // Réinitialiser le compteur de tentatives
+      deleteAttemptsRef.current = 0;
+      
       // Attendre que la base de données traite la suppression
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 3000));
       
       // Incrémenter le compteur de rafraîchissement
       refreshTriggerRef.current += 1;
       
-      // Forcer un rafraîchissement des opérations avec force=true
-      await refreshOperations(true);
-      
-      // Second refresh après un délai plus long pour s'assurer que les données sont à jour
-      setTimeout(() => {
-        console.log(`Second rafraîchissement forcé après suppression (#${refreshTriggerRef.current})`);
-        refreshOperations(true);
+      // Séquence de rafraîchissements avec délais croissants
+      try {
+        console.log(`Premier rafraîchissement après suppression (#${refreshTriggerRef.current})`);
+        await refreshOperations(true);
         
-        // Troisième rafraîchissement après un délai encore plus long
-        setTimeout(() => {
-          console.log(`Troisième rafraîchissement forcé après suppression (#${refreshTriggerRef.current})`);
-          refreshOperations(true);
-        }, 3000);
-      }, 3000);
+        console.log(`Second rafraîchissement après 3s (#${refreshTriggerRef.current})`);
+        await delayedRefresh(3000);
+        
+        console.log(`Troisième rafraîchissement après 6s (#${refreshTriggerRef.current})`);
+        await delayedRefresh(6000);
+      } catch (refreshError) {
+        console.error("Erreur pendant le rafraîchissement:", refreshError);
+      }
       
       toast.success("Opération supprimée avec succès");
       return success;
@@ -203,7 +226,7 @@ export const useOperations = () => {
         setIsProcessing(false);
       }
     }
-  }, [operationToDelete, refreshOperations]);
+  }, [operationToDelete, refreshOperations, delayedRefresh]);
 
   return {
     operations,
@@ -215,6 +238,7 @@ export const useOperations = () => {
     setShowDeleteDialog,
     confirmDeleteOperation,
     operationToDelete,
-    isProcessing
+    isProcessing,
+    delayedRefresh
   };
 };
