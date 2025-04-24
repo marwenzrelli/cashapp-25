@@ -28,7 +28,7 @@ interface ClientProfileTabsProps {
   setIsCustomRange: (isCustom: boolean) => void;
   showAllDates: boolean;
   setShowAllDates: (showAll: boolean) => void;
-  refreshClientOperations: () => void;
+  refreshClientOperations: () => Promise<void>;
   isPepsiMen: boolean;
   updateOperation?: (operation: Operation) => Promise<void>;
 }
@@ -64,6 +64,15 @@ export function ClientProfileTabs({
     }).format(amount);
   };
   
+  // Ensure refreshClientOperations is properly wrapped to return a Promise
+  const handleRefreshOperations = async (): Promise<void> => {
+    try {
+      await refreshClientOperations();
+    } catch (error) {
+      console.error("Error refreshing operations in tabs:", error);
+    }
+  };
+  
   return (
     <div className="space-y-6">
       <Card className="overflow-hidden border-none shadow-md">
@@ -90,7 +99,7 @@ export function ClientProfileTabs({
                 isCustomRange={isCustomRange} 
                 setIsCustomRange={setIsCustomRange} 
                 filteredOperations={filteredOperations} 
-                refreshOperations={refreshClientOperations} 
+                refreshOperations={handleRefreshOperations} 
                 showAllDates={showAllDates} 
                 setShowAllDates={setShowAllDates} 
                 clientId={clientId} 
