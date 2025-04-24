@@ -36,7 +36,9 @@ export function DeleteOperationDialog({
   
   // Réinitialiser l'état de chargement quand la boîte de dialogue s'ouvre/ferme
   useEffect(() => {
-    setInternalLoading(false);
+    if (!isOpen) {
+      setInternalLoading(false);
+    }
   }, [isOpen]);
   
   if (!operation) return null;
@@ -58,8 +60,9 @@ export function DeleteOperationDialog({
   
   // Extraire l'ID approprié pour l'affichage
   const getDisplayId = () => {
-    const id = operation.id;
-    const idStr = String(id);
+    if (!operation.id) return "#inconnu";
+    
+    const idStr = String(operation.id);
     
     // Pour les formats comme "withdrawal-123" ou "wit-123"
     if (idStr.includes('-')) {
@@ -86,7 +89,8 @@ export function DeleteOperationDialog({
     }
     
     try {
-      console.log("Confirmation de suppression pour l'opération:", operation.id, "de type:", operation.type);
+      console.log("Confirmation de suppression pour l'opération:", operation);
+      console.log("ID de l'opération:", operation.id, "Type:", operation.type);
       console.log("Type de l'ID:", typeof operation.id);
       
       setInternalLoading(true);
@@ -107,6 +111,10 @@ export function DeleteOperationDialog({
       console.error("Erreur lors de la suppression:", error);
       toast.error("Une erreur est survenue");
       return false;
+    } finally {
+      if (!isOpen) {
+        setInternalLoading(false);
+      }
     }
   };
 

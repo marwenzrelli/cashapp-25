@@ -5,40 +5,28 @@ import { OperationsMobileCard } from "../OperationsMobileCard";
 import { ArrowUpRight, ArrowDownRight, ArrowLeftRight } from "lucide-react";
 import { OperationDetailsModal } from "@/features/operations/components/OperationDetailsModal";
 import { DeleteOperationDialog } from "@/features/operations/components/DeleteOperationDialog";
-import { useOperations } from "@/features/operations/hooks/useOperations";
 import { toast } from "sonner";
 import { TotalsSection } from "./TotalsSection";
 import { getOperationTypeColor } from "./OperationTypeHelpers";
+import { deleteOperation } from "@/features/operations/utils/deletionUtils";
 
 interface OperationsMobileListProps {
   operations: Operation[];
   currency?: string;
   updateOperation?: (operation: Operation) => Promise<void>;
+  onOperationDeleted?: () => Promise<void>;
 }
 
 export const OperationsMobileList = ({ 
   operations, 
   currency = "TND",
-  updateOperation
+  updateOperation,
+  onOperationDeleted
 }: OperationsMobileListProps) => {
-  const { deleteOperation, confirmDeleteOperation, refreshOperations, isProcessing } = useOperations();
   const [selectedOperation, setSelectedOperation] = useState<Operation | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-  // Effet pour surveiller les modifications de opérations et forcer un rafraîchissement
-  useEffect(() => {
-    if (refreshTrigger > 0) {
-      const timeoutId = setTimeout(() => {
-        console.log("Rafraîchissement forcé après suppression...", refreshTrigger);
-        refreshOperations(true);
-      }, 5000); // Augmenter le délai à 5 secondes pour s'assurer que la base de données a le temps de propager les changements
-      
-      return () => clearTimeout(timeoutId);
-    }
-  }, [refreshTrigger, refreshOperations]);
 
   const handleCardClick = (operation: Operation) => {
     // Créer une copie profonde de l'opération pour éviter les problèmes de référence
@@ -59,7 +47,9 @@ export const OperationsMobileList = ({
         setIsDetailsModalOpen(false);
         
         // Forcer le rafraîchissement après modification
-        await refreshOperations(true);
+        if (onOperationDeleted) {
+          await onOperationDeleted();
+        }
       } catch (error) {
         console.error("Edit operation error:", error);
         toast.error("Erreur lors de la modification");
@@ -88,12 +78,8 @@ export const OperationsMobileList = ({
       setIsDeleting(true);
       console.log("OperationsMobileList - Tentative de suppression de l'opération:", selectedOperation.id, "type:", selectedOperation.type);
       
-      // Faire une copie fraîche de l'opération sélectionnée
-      const opToDelete = JSON.parse(JSON.stringify(selectedOperation));
-      console.log("OperationsMobileList - Suppression avec opération:", opToDelete);
-      
-      // Passer explicitement l'opération à confirmDeleteOperation
-      const success = await confirmDeleteOperation(opToDelete);
+      // Utiliser la nouvelle fonction de suppression centralisée
+      const success = await deleteOperation(selectedOperation);
       console.log("OperationsMobileList - Résultat de la suppression:", success);
       
       if (success) {
@@ -103,16 +89,17 @@ export const OperationsMobileList = ({
         // Attendre avant de rafraîchir pour s'assurer que le traitement backend est terminé
         await new Promise(resolve => setTimeout(resolve, 2000));
         
-        // Incrémenter le déclencheur de rafraîchissement et planifier plusieurs rafraîchissements
-        setRefreshTrigger(prev => prev + 1);
-        
-        // Forcer le rafraîchissement immédiatement avec le paramètre true
-        await refreshOperations(true);
-        
-        // Planifier une séquence de rafraîchissements
-        setTimeout(() => refreshOperations(true), 2000);
-        setTimeout(() => refreshOperations(true), 5000);  
-        setTimeout(() => refreshOperations(true), 8000);
+        // Notifier le parent pour rafraîchir les données
+        if (onOperationDeleted) {
+          await onOperationDeleted();
+          
+          // Double rafraîchissement pour s'assurer que les données sont à jour
+          setTimeout(async () => {
+            if (onOperationDeleted) {
+              await onOperationDeleted();
+            }
+          }, 3000);
+        }
         
         return true;
       } else {
@@ -192,7 +179,7 @@ export const OperationsMobileList = ({
         onClose={() => setIsDeleteDialogOpen(false)}
         onDelete={performDeleteOperation}
         operation={selectedOperation}
-        isLoading={isDeleting || isProcessing}
+        isLoading={isDeleting}
       />
     </div>
   );

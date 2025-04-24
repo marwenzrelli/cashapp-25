@@ -98,6 +98,7 @@ export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = (
           <ClientOperationsHistoryTabs 
             filteredOperations={filteredOperations} 
             updateOperation={updateOperation}
+            onOperationDeleted={refreshOperations}
           />
         </div>
       </CardContent>

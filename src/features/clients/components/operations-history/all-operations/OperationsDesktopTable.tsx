@@ -2,159 +2,239 @@
 import React, { useState } from "react";
 import { Operation } from "@/features/operations/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { formatNumber, getOperationTypeColor, getOperationTypeDisplay, getOperationTypeIcon } from "./OperationTypeHelpers";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, Edit2, Trash2 } from "lucide-react";
+import { MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { format, parseISO } from "date-fns";
+import { fr } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 import { OperationDetailsModal } from "@/features/operations/components/OperationDetailsModal";
 import { DeleteOperationDialog } from "@/features/operations/components/DeleteOperationDialog";
 import { toast } from "sonner";
 import { useOperations } from "@/features/operations/hooks/useOperations";
+import { deleteOperation } from "@/features/operations/utils/deletionUtils";
+import { TotalsSection } from "./TotalsSection";
 
 interface OperationsDesktopTableProps {
   operations: Operation[];
-  updateOperation?: (operation: Operation) => Promise<void>;
   currency?: string;
+  updateOperation?: (operation: Operation) => Promise<void>;
+  onOperationDeleted?: () => Promise<void>;
 }
 
 export const OperationsDesktopTable = ({
   operations,
+  currency = "TND",
   updateOperation,
-  currency = "TND"
+  onOperationDeleted
 }: OperationsDesktopTableProps) => {
-  const { deleteOperation, refreshOperations } = useOperations();
+  const { refreshOperations } = useOperations();
   const [selectedOperation, setSelectedOperation] = useState<Operation | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleRowClick = (operation: Operation) => {
-    setSelectedOperation(operation);
-    setIsDetailsModalOpen(true);
-  };
-
-  const formatDate = (dateString: string) => {
+  // Fonction pour formater les dates
+  const formatDate = (dateString: string): string => {
     try {
-      return format(new Date(dateString), "dd MMMM yyyy HH:mm", {
-        locale: fr
-      });
-    } catch (error) {
-      console.error("Date parsing error:", error);
-      return dateString;
+      const date = parseISO(dateString);
+      return format(date, "dd MMM yyyy HH:mm", { locale: fr });
+    } catch (e) {
+      return "Date invalide";
     }
   };
 
-  const handleEditOperation = async (updatedOperation: Operation) => {
+  // Formatter les montants avec le symbole du devise
+  const formatAmount = (amount: number): string => {
+    return new Intl.NumberFormat('fr-TN', {
+      style: 'currency',
+      currency: currency,
+      minimumFractionDigits: 3,
+      maximumFractionDigits: 3
+    }).format(amount);
+  };
+
+  // Obtenir la couleur pour le type d'opération
+  const getTypeColor = (type: string): string => {
+    switch (type) {
+      case 'deposit':
+        return "bg-green-100 hover:bg-green-200 text-green-800";
+      case 'withdrawal':
+        return "bg-red-100 hover:bg-red-200 text-red-800";
+      case 'transfer':
+        return "bg-blue-100 hover:bg-blue-200 text-blue-800";
+      default:
+        return "bg-gray-100 hover:bg-gray-200 text-gray-800";
+    }
+  };
+
+  // Label pour le type d'opération
+  const getTypeLabel = (type: string): string => {
+    switch (type) {
+      case 'deposit':
+        return "Versement";
+      case 'withdrawal':
+        return "Retrait";
+      case 'transfer':
+        return "Transfert";
+      default:
+        return type;
+    }
+  };
+
+  // Obtenir un ID formaté pour l'affichage
+  const getFormattedId = (id: string | number): string => {
+    const idStr = String(id);
+    
+    if (idStr.includes('-')) {
+      const parts = idStr.split('-');
+      return `${parts[0]} #${parts[1]}`;
+    } else if (idStr.match(/^[a-z]+\d+$/i)) {
+      const numericPart = idStr.replace(/\D/g, '');
+      const prefix = idStr.replace(/\d+/g, '');
+      return `${prefix} #${numericPart}`;
+    }
+    
+    return `#${idStr}`;
+  };
+
+  // Gérer le clic sur l'action d'édition
+  const handleEditClick = (operation: Operation) => {
+    setSelectedOperation(JSON.parse(JSON.stringify(operation)));
+    setIsDetailsModalOpen(true);
+  };
+
+  // Gérer le clic sur l'action de suppression
+  const handleDeleteClick = (operation: Operation) => {
+    setSelectedOperation(JSON.parse(JSON.stringify(operation)));
+    setIsDeleteDialogOpen(true);
+  };
+
+  // Confirmer la modification d'une opération
+  const handleOperationUpdate = async (updatedOperation: Operation) => {
     if (updateOperation) {
       try {
         await updateOperation(updatedOperation);
         toast.success("Opération modifiée avec succès");
         setIsDetailsModalOpen(false);
+        
+        if (onOperationDeleted) {
+          await onOperationDeleted();
+        }
       } catch (error) {
-        console.error("Edit operation error:", error);
+        console.error("Erreur lors de la mise à jour de l'opération:", error);
         toast.error("Erreur lors de la modification");
       }
     } else {
+      console.warn("Fonction updateOperation non disponible");
       toast.error("Fonction de modification non disponible");
-      console.error("No update function provided");
     }
   };
 
-  const handleDeleteClick = (operation: Operation, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setSelectedOperation(operation);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const confirmDeleteOperation = async (): Promise<boolean> => {
-    if (!selectedOperation) return false;
-
-    try {
-      // Actually perform the delete operation
-      await deleteOperation(selectedOperation);
-      setIsDeleteDialogOpen(false);
-      toast.success("Opération supprimée avec succès");
-      refreshOperations(); // Refresh the operations list after deletion
-      return true;
-    } catch (error) {
-      console.error("Delete operation error:", error);
-      toast.error("Erreur lors de la suppression");
+  // Confirmer la suppression d'une opération
+  const performDeleteOperation = async (): Promise<boolean> => {
+    if (!selectedOperation) {
+      toast.error("Aucune opération sélectionnée");
       return false;
+    }
+    
+    setIsDeleting(true);
+    
+    try {
+      const success = await deleteOperation(selectedOperation);
+      
+      if (success) {
+        setIsDeleteDialogOpen(false);
+        
+        // Attendre un peu avant de rafraîchir
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Notifier le parent pour rafraîchir les données
+        if (onOperationDeleted) {
+          await onOperationDeleted();
+          
+          // Double rafraîchissement pour s'assurer que les données sont à jour
+          setTimeout(async () => {
+            if (onOperationDeleted) {
+              await onOperationDeleted();
+            }
+          }, 3000);
+        }
+        
+        return true;
+      } else {
+        toast.error("Erreur lors de la suppression");
+        return false;
+      }
+    } catch (error) {
+      console.error("Erreur lors de la suppression:", error);
+      toast.error("Une erreur s'est produite");
+      return false;
+    } finally {
+      setIsDeleting(false);
     }
   };
 
   return (
-    <>
-      <div className="rounded-md border shadow-sm overflow-hidden">
-        <Table>
+    <div>
+      <div className="rounded-md border overflow-hidden">
+        <Table className="w-full">
           <TableHeader>
-            <TableRow>
-              <TableHead>Type</TableHead>
-              <TableHead>ID</TableHead>
+            <TableRow className="bg-muted/50">
+              <TableHead className="w-[100px]">ID</TableHead>
               <TableHead>Date</TableHead>
+              <TableHead>Type</TableHead>
               <TableHead>Description</TableHead>
               <TableHead className="text-right">Montant</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="w-[80px] text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {operations.map(operation => {
-              const Icon = getOperationTypeIcon(operation.type);
-              const typeColor = getOperationTypeColor(operation.type);
-              const displayDate = operation.operation_date || operation.date;
-              
-              return (
-                <TableRow 
-                  key={operation.id} 
-                  className="cursor-pointer hover:bg-muted/50" 
-                  onClick={() => handleRowClick(operation)}
-                >
+            {operations.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="h-24 text-center">
+                  Aucune opération trouvée
+                </TableCell>
+              </TableRow>
+            ) : (
+              operations.map((operation, index) => (
+                <TableRow key={`${operation.id}-${index}`} className="hover:bg-muted/50">
+                  <TableCell className="font-medium">
+                    {getFormattedId(operation.id)}
+                  </TableCell>
                   <TableCell>
-                    <div className="flex items-center">
-                      <div className={`mr-2 ${typeColor}`}>
-                        <Icon className="h-4 w-4" />
-                      </div>
-                      <span>{getOperationTypeDisplay(operation.type)}</span>
-                    </div>
+                    {formatDate(operation.operation_date || operation.date)}
                   </TableCell>
-                  <TableCell 
-                    className="cursor-pointer hover:underline" 
-                    onClick={e => {
-                      e.stopPropagation();
-                      handleRowClick(operation);
-                    }}
-                  >
-                    {operation.id}
+                  <TableCell>
+                    <Badge className={cn("font-normal", getTypeColor(operation.type))}>
+                      {getTypeLabel(operation.type)}
+                    </Badge>
                   </TableCell>
-                  <TableCell>{formatDate(displayDate)}</TableCell>
-                  <TableCell>{operation.description || "-"}</TableCell>
-                  <TableCell className="text-right">
-                    <span className={operation.type === 'withdrawal' ? 'text-red-600' : 'text-green-600'}>
-                      {operation.type === 'withdrawal' ? '- ' : '+ '}
-                      {formatNumber(operation.amount)} {currency}
-                    </span>
+                  <TableCell className="max-w-[200px] truncate">
+                    {operation.description || "-"}
+                  </TableCell>
+                  <TableCell className="text-right font-medium">
+                    {formatAmount(operation.amount)}
                   </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                          <ChevronDown className="h-4 w-4" />
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <span className="sr-only">Ouvrir le menu</span>
+                          <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        {updateOperation && (
+                          <DropdownMenuItem onClick={() => handleEditClick(operation)}>
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Modifier
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem 
-                          onClick={e => {
-                            e.stopPropagation();
-                            handleRowClick(operation);
-                          }}
-                        >
-                          <Edit2 className="mr-2 h-4 w-4" />
-                          Modifier
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          className="text-red-600" 
-                          onClick={e => handleDeleteClick(operation, e)}
+                          onClick={() => handleDeleteClick(operation)} 
+                          className="text-destructive focus:text-destructive"
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
                           Supprimer
@@ -163,33 +243,33 @@ export const OperationsDesktopTable = ({
                     </DropdownMenu>
                   </TableCell>
                 </TableRow>
-              );
-            })}
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
 
-      {selectedOperation && (
-        <OperationDetailsModal 
-          isOpen={isDetailsModalOpen} 
-          onClose={() => setIsDetailsModalOpen(false)} 
-          operation={selectedOperation} 
-          onEdit={handleEditOperation} 
-          onDelete={operation => {
-            setIsDetailsModalOpen(false);
-            handleDeleteClick(operation, {
-              stopPropagation: () => {}
-            } as React.MouseEvent);
-          }} 
-        />
-      )}
+      <div className="mt-4">
+        <TotalsSection operations={operations} currency={currency} />
+      </div>
 
-      <DeleteOperationDialog 
-        isOpen={isDeleteDialogOpen} 
-        onClose={() => setIsDeleteDialogOpen(false)} 
-        onDelete={confirmDeleteOperation} 
-        operation={selectedOperation} 
+      {/* Details/Edit modal */}
+      <OperationDetailsModal 
+        isOpen={isDetailsModalOpen}
+        onClose={() => setIsDetailsModalOpen(false)}
+        operation={selectedOperation}
+        onEdit={handleOperationUpdate}
+        onDelete={handleDeleteClick}
       />
-    </>
+      
+      {/* Delete confirmation dialog */}
+      <DeleteOperationDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onDelete={performDeleteOperation}
+        operation={selectedOperation}
+        isLoading={isDeleting}
+      />
+    </div>
   );
 };

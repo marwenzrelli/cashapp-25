@@ -1,6 +1,120 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Operation } from "../types";
+
+/**
+ * Fonction utilitaire qui extrait l'ID numérique d'une opération
+ */
+export const parseOperationId = (operationId: string | number): number => {
+  // Si l'ID est déjà un nombre, le retourner
+  if (typeof operationId === 'number') {
+    return operationId;
+  }
+  
+  // Convertir en chaîne pour le traitement
+  const idString = String(operationId);
+  console.log(`Parsing operation ID: ${idString}, type: ${typeof idString}`);
+  
+  // Pour les IDs de format "withdrawal-123" ou "wit-123"
+  if (idString.includes('-')) {
+    const parts = idString.split('-');
+    const idPart = parts[parts.length - 1];
+    console.log(`ID après split: ${idPart}`);
+    
+    const numericId = parseInt(idPart, 10);
+    
+    if (isNaN(numericId)) {
+      console.error(`Impossible de convertir l'ID en nombre: ${idPart}`);
+      throw new Error(`Format d'ID invalide: ${idString}`);
+    }
+    
+    console.log(`ID numérique extrait: ${numericId}`);
+    return numericId;
+  } 
+  // Pour les IDs de format "wit123" (sans tiret)
+  else if (idString.match(/^[a-z]+\d+$/i)) {
+    // Suppression de tous les caractères non-numériques
+    const idPart = idString.replace(/\D/g, '');
+    console.log(`ID après extraction numérique: ${idPart}`);
+    
+    const numericId = parseInt(idPart, 10);
+    
+    if (isNaN(numericId)) {
+      console.error(`Impossible de convertir l'ID en nombre: ${idPart}`);
+      throw new Error(`Format d'ID invalide: ${idString}`);
+    }
+    
+    console.log(`ID numérique extrait: ${numericId}`);
+    return numericId;
+  } 
+  // Pour les IDs purement numériques en string
+  else {
+    const numericId = parseInt(idString, 10);
+    
+    if (isNaN(numericId)) {
+      console.error(`Impossible de convertir l'ID en nombre: ${idString}`);
+      throw new Error(`Format d'ID invalide: ${idString}`);
+    }
+    
+    console.log(`ID numérique extrait: ${numericId}`);
+    return numericId;
+  }
+};
+
+/**
+ * Fonction générique pour la suppression d'opérations (retrait, dépôt, transfert)
+ */
+export const deleteOperation = async (operation: Operation): Promise<boolean> => {
+  if (!operation) {
+    console.error("Aucune opération fournie pour la suppression");
+    toast.error("Erreur", { description: "Aucune opération sélectionnée" });
+    return false;
+  }
+
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+    
+    if (!userId) {
+      toast.error("Vous devez être connecté pour supprimer une opération");
+      throw new Error("Utilisateur non authentifié");
+    }
+    
+    const operationType = operation.type;
+    
+    // Obtenir un ID numérique à partir de différents formats possibles
+    let operationId: number;
+    try {
+      operationId = parseOperationId(operation.id);
+    } catch (error) {
+      console.error("Erreur lors du parsing de l'ID:", error);
+      toast.error("Format d'ID invalide");
+      return false;
+    }
+    
+    console.log(`Suppression d'opération - ID parsé: ${operationId}, type: ${operationType}`);
+    
+    switch (operationType) {
+      case 'withdrawal': 
+        return await handleWithdrawalDeletion(operationId, userId);
+      case 'deposit':
+        return await handleDepositDeletion(operationId, userId);
+      case 'transfer':
+        return await handleTransferDeletion(operationId, userId);
+      default:
+        console.error("Type d'opération non supporté:", operationType);
+        toast.error(`Type d'opération non supporté: ${operationType}`);
+        return false;
+    }
+  } catch (error: any) {
+    console.error("Erreur lors de la suppression:", error);
+    toast.error("Erreur de suppression", { 
+      description: error.message || "Une erreur s'est produite" 
+    });
+    return false;
+  }
+};
 
 /**
  * Utilitaire pour supprimer un dépôt et garder une trace dans deleted_deposits
@@ -71,6 +185,7 @@ export const handleDepositDeletion = async (depositId: number, userId: string | 
     }
     
     console.log("Dépôt supprimé avec succès:", depositId);
+    toast.success("Dépôt supprimé avec succès");
     return true;
   } catch (error: any) {
     console.error("Erreur lors de la suppression du dépôt:", error);
@@ -150,6 +265,7 @@ export const handleWithdrawalDeletion = async (withdrawalId: number, userId: str
     }
     
     console.log("Retrait supprimé avec succès:", withdrawalId);
+    toast.success("Retrait supprimé avec succès");
     return true;
   } catch (error: any) {
     console.error("Erreur lors de la suppression du retrait:", error);
@@ -229,6 +345,7 @@ export const handleTransferDeletion = async (transferId: number, userId: string 
     }
     
     console.log("Transfert supprimé avec succès:", transferId);
+    toast.success("Transfert supprimé avec succès");
     return true;
   } catch (error: any) {
     console.error("Erreur lors de la suppression du transfert:", error);
