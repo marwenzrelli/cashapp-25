@@ -1,82 +1,83 @@
 
-import { 
-  AlertDialog, 
-  AlertDialogAction, 
-  AlertDialogCancel, 
-  AlertDialogContent, 
-  AlertDialogDescription, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Operation } from "../types";
-import { toast } from "sonner";
+import { formatDateTime } from "../types";
+import { Loader2 } from "lucide-react";
 
 interface DeleteOperationDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm?: () => Promise<void>;
+  onDelete: () => Promise<boolean>;
   operation: Operation | null;
-  // Support for both naming conventions and return types
-  onDelete?: () => Promise<boolean>;
+  isLoading?: boolean;
 }
 
 export function DeleteOperationDialog({
   isOpen,
   onClose,
-  onConfirm,
-  operation,
   onDelete,
+  operation,
+  isLoading = false
 }: DeleteOperationDialogProps) {
   if (!operation) return null;
 
-  const handleDelete = async () => {
-    try {
-      console.log("Tentative de suppression de l'opération:", operation.id);
-      
-      // Use onDelete if provided, otherwise fall back to onConfirm
-      if (onDelete) {
-        console.log("Appel de la fonction onDelete");
-        const success = await onDelete();
-        
-        if (success) {
-          console.log("Suppression réussie via onDelete");
-          // Le toast est maintenant géré dans useOperations pour éviter les notifications en double
-          onClose(); // Fermer le dialogue après succès
-        } else {
-          console.error("Échec de la suppression via onDelete");
-          toast.error("Erreur lors de la suppression");
-        }
-      } else if (onConfirm) {
-        console.log("Appel de la fonction onConfirm");
-        await onConfirm();
-        console.log("Suppression réussie via onConfirm");
-        // Le toast est maintenant géré dans useOperations pour éviter les notifications en double
-        onClose(); // Fermer le dialogue après succès
-      }
-    } catch (error) {
-      console.error("Erreur lors de la suppression:", error);
-      toast.error("Erreur lors de la suppression");
+  // Déterminer le type d'opération en français
+  const getOperationTypeText = () => {
+    switch (operation.type) {
+      case 'deposit':
+        return 'ce versement';
+      case 'withdrawal':
+        return 'ce retrait';
+      case 'transfer':
+        return 'ce transfert';
+      default:
+        return 'cette opération';
     }
+  };
+
+  // Formatter la date d'opération pour l'affichage
+  const displayDate = operation.operation_date || operation.date;
+
+  const handleConfirmDelete = async () => {
+    await onDelete();
   };
 
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Supprimer l'opération</AlertDialogTitle>
-          <AlertDialogDescription>
-            Êtes-vous sûr de vouloir supprimer cette opération ? Cette action ne peut pas être annulée.
+          <AlertDialogTitle>Êtes-vous sûr de vouloir supprimer {getOperationTypeText()} ?</AlertDialogTitle>
+          <AlertDialogDescription className="space-y-2">
+            <p>
+              Cette action est irréversible et supprimera définitivement {getOperationTypeText()} du{" "}
+              {formatDateTime(displayDate)}.
+            </p>
+            <p className="font-semibold text-destructive">
+              ID: {operation.id}
+            </p>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Annuler</AlertDialogCancel>
-          <AlertDialogAction asChild>
-            <Button variant="destructive" onClick={handleDelete}>
-              Supprimer
-            </Button>
-          </AlertDialogAction>
+          <AlertDialogCancel disabled={isLoading}>Annuler</AlertDialogCancel>
+          <Button 
+            onClick={handleConfirmDelete} 
+            variant="destructive" 
+            disabled={isLoading}
+            className="flex items-center gap-2"
+          >
+            {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+            {isLoading ? "Suppression..." : "Supprimer"}
+          </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

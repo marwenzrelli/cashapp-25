@@ -25,6 +25,7 @@ export const OperationsMobileList = ({
   const [selectedOperation, setSelectedOperation] = useState<Operation | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleCardClick = (operation: Operation) => {
     setSelectedOperation(operation);
@@ -62,9 +63,10 @@ export const OperationsMobileList = ({
     if (!selectedOperation) return false;
     
     try {
+      setIsDeleting(true);
       console.log("Tentative de suppression de l'opération:", selectedOperation);
       
-      // Pass the operation explicitly to confirmDeleteOperation
+      // Passer explicitement l'opération à confirmDeleteOperation
       const success = await confirmDeleteOperation(selectedOperation);
       console.log("Résultat de la suppression:", success);
       
@@ -73,10 +75,10 @@ export const OperationsMobileList = ({
         setIsDeleteDialogOpen(false);
         setSelectedOperation(null);
         
-        // Wait a moment before refreshing to ensure backend processing is complete
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Attendre un moment avant de rafraîchir pour s'assurer que le traitement backend est terminé
+        await new Promise(resolve => setTimeout(resolve, 800));
         
-        // Force refresh with true parameter and wait for it to complete
+        // Forcer le rafraîchissement avec le paramètre true et attendre sa fin
         await refreshOperations(true);
         return true;
       } else {
@@ -91,6 +93,8 @@ export const OperationsMobileList = ({
         description: typeof error === 'string' ? error : error instanceof Error ? error.message : "Une erreur s'est produite" 
       });
       return false;
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -154,6 +158,7 @@ export const OperationsMobileList = ({
         onClose={() => setIsDeleteDialogOpen(false)}
         onDelete={performDeleteOperation}
         operation={selectedOperation}
+        isLoading={isDeleting}
       />
     </div>
   );

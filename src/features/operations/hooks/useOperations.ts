@@ -42,16 +42,14 @@ export const useOperations = () => {
     
     try {
       const operationType = opToDelete.type;
-      // Extract the numeric part of the operation ID
-      const operationIdString = typeof opToDelete.id === 'string' 
-        ? opToDelete.id 
-        : String(opToDelete.id); // Using String() instead of toString() for better type safety
+      // Extraire l'ID numérique de l'opération de façon sécurisée
+      const operationIdString = String(opToDelete.id); // Conversion sécurisée en string
       
-      // Parse the ID - checking if it contains a hyphen and extracting the numeric part if needed
+      // Analyser l'ID - vérifier s'il contient un tiret et extraire la partie numérique si nécessaire
       const idParts = operationIdString.split('-');
       const operationId = parseInt(idParts.length > 1 ? idParts[1] : operationIdString, 10);
       
-      // Check if the conversion was successful
+      // Vérifier si la conversion a réussi
       if (isNaN(operationId)) {
         console.error("ID d'opération invalide:", operationIdString);
         toast.error("Format d'ID invalide");
@@ -63,7 +61,7 @@ export const useOperations = () => {
       let error = null;
       let success = false;
       
-      // Delete according to operation type
+      // Suppression selon le type d'opération
       switch (operationType) {
         case 'deposit':
           console.log("Suppression d'un dépôt avec ID:", operationId);
@@ -113,7 +111,7 @@ export const useOperations = () => {
       setShowDeleteDialog(false);
       setOperationToDelete(undefined);
       
-      // Wait briefly for the database to process the deletion
+      // Attendre brièvement que la base de données traite la suppression
       await new Promise(resolve => setTimeout(resolve, 300));
       
       return success;
