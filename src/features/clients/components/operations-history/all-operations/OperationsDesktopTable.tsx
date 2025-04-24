@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Operation } from "@/features/operations/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -205,7 +206,8 @@ export const OperationsDesktopTable = ({
                   </TableCell>
                   <TableCell className="text-right font-medium">
                     <span className={cn(
-                      operation.type === 'withdrawal' ? 'text-red-600' : '',
+                      operation.type === 'withdrawal' ? 'text-red-600' : 
+                      operation.type === 'deposit' ? 'text-green-600' : '',
                       'font-medium'
                     )}>
                       {formatAmount(operation.amount, operation.type)}
