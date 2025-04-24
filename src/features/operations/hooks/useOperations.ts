@@ -44,11 +44,12 @@ export const useOperations = () => {
       const operationType = opToDelete.type;
       // Extract the numeric part of the operation ID
       const operationIdString = typeof opToDelete.id === 'string' 
-        ? opToDelete.id.toString().split('-')[1] || opToDelete.id 
-        : opToDelete.id.toString();
+        ? opToDelete.id 
+        : String(opToDelete.id); // Using String() instead of toString() for better type safety
       
-      // Convert the ID to a number
-      const operationId = parseInt(operationIdString, 10);
+      // Parse the ID - checking if it contains a hyphen and extracting the numeric part if needed
+      const idParts = operationIdString.split('-');
+      const operationId = parseInt(idParts.length > 1 ? idParts[1] : operationIdString, 10);
       
       // Check if the conversion was successful
       if (isNaN(operationId)) {
