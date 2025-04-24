@@ -229,10 +229,10 @@ export const handleWithdrawalDeletion = async (withdrawalId: number, userId: str
     }
     
     // Préparer les données à insérer dans deleted_withdrawals
+    // Removed client_id from the logEntry since it doesn't exist in the deleted_withdrawals table
     const logEntry = {
       original_id: withdrawalData.id,
       client_name: withdrawalData.client_name,
-      client_id: withdrawalData.client_id,
       amount: Number(withdrawalData.amount),
       operation_date: withdrawalData.operation_date || withdrawalData.created_at,
       notes: withdrawalData.notes || null,
