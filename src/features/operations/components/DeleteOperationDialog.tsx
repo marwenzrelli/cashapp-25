@@ -1,4 +1,3 @@
-
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Operation } from "../types";
 import { formatDateTime } from "../types";
 import { Loader2, Trash2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 interface DeleteOperationDialogProps {
   isOpen: boolean;
@@ -29,9 +30,15 @@ export function DeleteOperationDialog({
   operation,
   isLoading = false
 }: DeleteOperationDialogProps) {
+  const [internalLoading, setInternalLoading] = useState(false);
+  const effectiveLoading = isLoading || internalLoading;
+  
+  useEffect(() => {
+    setInternalLoading(false);
+  }, [isOpen]);
+  
   if (!operation) return null;
 
-  // Déterminer le type d'opération en français
   const getOperationTypeText = () => {
     switch (operation.type) {
       case 'deposit':
@@ -45,12 +52,35 @@ export function DeleteOperationDialog({
     }
   };
 
-  // Formatter la date d'opération pour l'affichage
   const displayDate = operation.operation_date || operation.date;
 
   const handleConfirmDelete = async () => {
-    console.log("Confirmation de suppression pour l'opération:", operation.id, "de type:", operation.type);
-    await onDelete();
+    try {
+      console.log("Confirmation de suppression pour l'opération:", operation.id, "de type:", operation.type);
+      console.log("Type de l'ID:", typeof operation.id);
+      
+      setInternalLoading(true);
+      
+      const result = await onDelete();
+      
+      console.log("Résultat de la suppression:", result);
+      
+      if (result) {
+        console.log("Suppression réussie, fermeture de la boite de dialogue");
+      } else {
+        console.error("Échec de la suppression");
+        toast.error("Échec de la suppression");
+      }
+      
+      return result;
+    } catch (error) {
+      console.error("Erreur lors de la suppression:", error);
+      toast.error("Une erreur est survenue");
+      return false;
+    } finally {
+      // Garder l'état de chargement jusqu'à ce que le dialogue soit fermé par le parent
+      // setInternalLoading(false);
+    }
   };
 
   return (
@@ -74,15 +104,15 @@ export function DeleteOperationDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isLoading}>Annuler</AlertDialogCancel>
+          <AlertDialogCancel disabled={effectiveLoading}>Annuler</AlertDialogCancel>
           <Button 
             onClick={handleConfirmDelete} 
             variant="destructive" 
-            disabled={isLoading}
+            disabled={effectiveLoading}
             className="flex items-center gap-2"
           >
-            {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-            {isLoading ? "Suppression en cours..." : "Supprimer"}
+            {effectiveLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+            {effectiveLoading ? "Suppression en cours..." : "Supprimer"}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

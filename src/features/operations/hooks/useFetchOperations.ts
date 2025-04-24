@@ -19,6 +19,8 @@ export const useFetchOperations = () => {
   const lastFetchTimeRef = useRef<number>(0);
   const forceRefreshRef = useRef(false);
   const forceRefreshCountRef = useRef(0);
+  const retryCountRef = useRef(0);
+  const maxRetries = 5;
   
   // Fonction qui charge les données de façon asynchrone
   const fetchOperations = useCallback(async (force = false) => {
@@ -57,6 +59,7 @@ export const useFetchOperations = () => {
         setOperations(data);
         setError(null);
         lastFetchTimeRef.current = now;
+        retryCountRef.current = 0;
         
         // Si c'était un forçage, planifier un second rafraîchissement après un délai
         if (forceRefreshRef.current) {
@@ -64,7 +67,7 @@ export const useFetchOperations = () => {
           setTimeout(() => {
             console.log("Effectuant un second rafraîchissement après suppression...");
             fetchOperations(true);
-          }, 2500);
+          }, 3500);
         }
       }
     } catch (err: any) {
@@ -72,6 +75,20 @@ export const useFetchOperations = () => {
       
       if (isMountedRef.current) {
         setError(err.message || 'Erreur lors du chargement des données');
+        
+        // Si c'est un force refresh, on peut réessayer quelques fois
+        if (force && retryCountRef.current < maxRetries) {
+          retryCountRef.current += 1;
+          console.log(`Tentative de rafraîchissement #${retryCountRef.current}/${maxRetries}`);
+          
+          setTimeout(() => {
+            console.log("Nouvelle tentative après erreur...");
+            fetchOperations(true);
+          }, 2000 * retryCountRef.current); // Backoff exponentiel
+          
+          return;
+        }
+        
         toast.error("Erreur de chargement", { 
           description: "Affichage des données locales" 
         });

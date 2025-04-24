@@ -10,6 +10,7 @@ export const useOperations = () => {
   const [operationToDelete, setOperationToDelete] = useState<Operation | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const refreshTriggerRef = useRef(0);
 
   // Récupération des données
   const { operations, isLoading, error, refreshOperations } = useFetchOperations();
@@ -25,9 +26,67 @@ export const useOperations = () => {
   // Supprimer une opération
   const deleteOperation = useCallback((operation: Operation) => {
     console.log("deleteOperation appelé avec", operation);
-    setOperationToDelete(operation);
+    // Faire une copie complète pour éviter les problèmes de référence
+    setOperationToDelete(JSON.parse(JSON.stringify(operation)));
     setShowDeleteDialog(true);
   }, []);
+
+  // Fonction pour parser l'ID d'une opération en fonction de son format
+  const parseOperationId = (operation: Operation): number => {
+    // Vérifier que l'opération existe
+    if (!operation || !operation.id) {
+      throw new Error("Opération ou ID invalide");
+    }
+    
+    // Convertir l'ID en chaîne pour le traitement
+    const idString = String(operation.id);
+    console.log(`Parsing operation ID: ${idString}, type: ${typeof idString}`);
+    
+    // Pour les IDs de format "wit-123" ou "deposit-123"
+    if (idString.includes('-')) {
+      const parts = idString.split('-');
+      const idPart = parts[parts.length - 1];
+      console.log(`ID après split: ${idPart}`);
+      
+      const numericId = parseInt(idPart, 10);
+      
+      if (isNaN(numericId)) {
+        console.error(`Impossible de convertir l'ID en nombre: ${idPart}`);
+        throw new Error(`Format d'ID invalide: ${idString}`);
+      }
+      
+      console.log(`ID numérique extrait: ${numericId}`);
+      return numericId;
+    } 
+    // Pour les IDs de format "wit123" (sans tiret)
+    else if (idString.match(/^[a-z]+\d+$/i)) {
+      // Suppression de tous les caractères non-numériques
+      const idPart = idString.replace(/\D/g, '');
+      console.log(`ID après extraction numérique: ${idPart}`);
+      
+      const numericId = parseInt(idPart, 10);
+      
+      if (isNaN(numericId)) {
+        console.error(`Impossible de convertir l'ID en nombre: ${idPart}`);
+        throw new Error(`Format d'ID invalide: ${idString}`);
+      }
+      
+      console.log(`ID numérique extrait: ${numericId}`);
+      return numericId;
+    } 
+    // Pour les IDs purement numériques
+    else {
+      const numericId = parseInt(idString, 10);
+      
+      if (isNaN(numericId)) {
+        console.error(`Impossible de convertir l'ID en nombre: ${idString}`);
+        throw new Error(`Format d'ID invalide: ${idString}`);
+      }
+      
+      console.log(`ID numérique extrait: ${numericId}`);
+      return numericId;
+    }
+  };
 
   // Confirmer la suppression
   const confirmDeleteOperation = useCallback(async (operation?: Operation): Promise<boolean> => {
@@ -45,27 +104,12 @@ export const useOperations = () => {
     try {
       const operationType = opToDelete.type;
       
-      // Extraire correctement l'ID numérique, peu importe le format
+      // Utiliser la fonction parseOperationId pour extraire l'ID numérique
       let operationId: number;
-      const idString = String(opToDelete.id);
-      
-      // Format commun possible: "deposit-123", "wit-123" ou simplement "123"
-      if (idString.includes('-')) {
-        const parts = idString.split('-');
-        const idPart = parts[parts.length - 1];
-        operationId = parseInt(idPart, 10);
-      } else if (idString.startsWith('wit')) { 
-        // Format spécial pour les retraits de pepsi men (peut-être "wit123")
-        const idPart = idString.replace(/\D/g, ''); // Supprimer tous les caractères non numériques
-        operationId = parseInt(idPart, 10);
-      } else {
-        // Si c'est déjà un nombre sans préfixe
-        operationId = parseInt(idString, 10);
-      }
-      
-      // Vérifier si la conversion a réussi
-      if (isNaN(operationId)) {
-        console.error("ID d'opération invalide après traitement:", idString, "=>", operationId);
+      try {
+        operationId = parseOperationId(opToDelete);
+      } catch (error) {
+        console.error("Erreur lors du parsing de l'ID:", error);
         toast.error("Format d'ID invalide");
         return false;
       }
@@ -128,15 +172,24 @@ export const useOperations = () => {
       }
       
       // Attendre que la base de données traite la suppression
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Incrémenter le compteur de rafraîchissement
+      refreshTriggerRef.current += 1;
       
       // Forcer un rafraîchissement des opérations avec force=true
       await refreshOperations(true);
       
       // Second refresh après un délai plus long pour s'assurer que les données sont à jour
       setTimeout(() => {
-        console.log("Second rafraîchissement forcé après suppression");
+        console.log(`Second rafraîchissement forcé après suppression (#${refreshTriggerRef.current})`);
         refreshOperations(true);
+        
+        // Troisième rafraîchissement après un délai encore plus long
+        setTimeout(() => {
+          console.log(`Troisième rafraîchissement forcé après suppression (#${refreshTriggerRef.current})`);
+          refreshOperations(true);
+        }, 3000);
       }, 3000);
       
       toast.success("Opération supprimée avec succès");

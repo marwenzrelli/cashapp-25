@@ -34,14 +34,15 @@ export const OperationsMobileList = ({
       const timeoutId = setTimeout(() => {
         console.log("Rafraîchissement forcé après suppression...", refreshTrigger);
         refreshOperations(true);
-      }, 2500);
+      }, 3500);
       
       return () => clearTimeout(timeoutId);
     }
   }, [refreshTrigger, refreshOperations]);
 
   const handleCardClick = (operation: Operation) => {
-    setSelectedOperation(operation);
+    // Créer une copie profonde de l'opération pour éviter les problèmes de référence
+    setSelectedOperation(JSON.parse(JSON.stringify(operation)));
     setIsDetailsModalOpen(true);
   };
 
@@ -71,7 +72,8 @@ export const OperationsMobileList = ({
 
   const handleDeleteOperation = (operation: Operation) => {
     console.log("OperationsMobileList - handleDeleteOperation:", operation);
-    setSelectedOperation({...operation}); // Créer une copie pour éviter les problèmes de référence
+    // Créer une copie profonde pour éviter les problèmes de référence
+    setSelectedOperation(JSON.parse(JSON.stringify(operation)));
     setIsDetailsModalOpen(false);
     setIsDeleteDialogOpen(true);
   };
@@ -87,7 +89,7 @@ export const OperationsMobileList = ({
       console.log("OperationsMobileList - Tentative de suppression de l'opération:", selectedOperation.id, "type:", selectedOperation.type);
       
       // Faire une copie fraîche de l'opération sélectionnée
-      const opToDelete = {...selectedOperation};
+      const opToDelete = JSON.parse(JSON.stringify(selectedOperation));
       console.log("OperationsMobileList - Suppression avec opération:", opToDelete);
       
       // Passer explicitement l'opération à confirmDeleteOperation
@@ -102,7 +104,7 @@ export const OperationsMobileList = ({
         setRefreshTrigger(prev => prev + 1);
         
         // Attendre avant de rafraîchir pour s'assurer que le traitement backend est terminé
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        await new Promise(resolve => setTimeout(resolve, 4000));
         
         // Forcer le rafraîchissement avec le paramètre true et attendre sa fin
         await refreshOperations(true);
@@ -110,7 +112,7 @@ export const OperationsMobileList = ({
         // Après un court délai, effectuer un second rafraîchissement
         setTimeout(() => {
           refreshOperations(true);
-        }, 2000);
+        }, 3000);
         
         return true;
       } else {
