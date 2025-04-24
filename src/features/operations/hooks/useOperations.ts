@@ -44,12 +44,24 @@ export const useOperations = () => {
     
     try {
       const operationType = opToDelete.type;
-      // Conversion sécurisée en string (pas de toString qui peut causer des erreurs)
+      
+      // Utiliser String() pour une conversion sécurisée en string
       const operationIdString = String(opToDelete.id);
       
-      // Analyser l'ID - vérifier s'il contient un tiret et extraire la partie numérique si nécessaire
-      const idParts = operationIdString.split('-');
-      const operationId = parseInt(idParts.length > 1 ? idParts[1] : operationIdString, 10);
+      // Extraire l'ID numérique - s'assurer de traiter correctement les formats "type-id"
+      let operationId: number;
+      
+      if (operationIdString.includes('-')) {
+        const parts = operationIdString.split('-');
+        if (parts.length > 1) {
+          operationId = parseInt(parts[1], 10);
+        } else {
+          throw new Error("Format d'ID invalide");
+        }
+      } else {
+        // Si c'est déjà un nombre sans préfixe
+        operationId = parseInt(operationIdString, 10);
+      }
       
       // Vérifier si la conversion a réussi
       if (isNaN(operationId)) {
@@ -110,14 +122,21 @@ export const useOperations = () => {
       }
       
       console.log("Suppression réussie. Nettoyage de l'état local.");
-      setShowDeleteDialog(false);
-      setOperationToDelete(null);
+      if (isMounted.current) {
+        setShowDeleteDialog(false);
+        setOperationToDelete(null);
+      }
       
-      // Attendre brièvement que la base de données traite la suppression
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Attendre que la base de données traite la suppression
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Forcer un rafraîchissement des opérations
+      // Forcer un rafraîchissement des opérations avec force=true
       await refreshOperations(true);
+      
+      // Second refresh après un court délai (pour s'assurer que les données sont à jour)
+      setTimeout(() => {
+        refreshOperations(true);
+      }, 1500);
       
       toast.success("Opération supprimée avec succès");
       return success;
@@ -126,7 +145,9 @@ export const useOperations = () => {
       toast.error("Erreur lors de la suppression");
       return false;
     } finally {
-      setIsProcessing(false);
+      if (isMounted.current) {
+        setIsProcessing(false);
+      }
     }
   }, [operationToDelete, refreshOperations]);
 
@@ -139,6 +160,7 @@ export const useOperations = () => {
     showDeleteDialog,
     setShowDeleteDialog,
     confirmDeleteOperation,
-    operationToDelete
+    operationToDelete,
+    isProcessing
   };
 };

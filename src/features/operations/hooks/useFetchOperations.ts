@@ -17,11 +17,13 @@ export const useFetchOperations = () => {
   const isMountedRef = useRef(true);
   const fetchingRef = useRef(false);
   const lastFetchTimeRef = useRef<number>(0);
+  const forceRefreshRef = useRef(false);
   
   // Fonction qui charge les données de façon asynchrone
   const fetchOperations = useCallback(async (force = false) => {
-    // Éviter les requêtes multiples rapprochées, sauf si forcé
+    // Si force=true, on va ignorer les contrôles de durée et de fetch en cours
     const now = Date.now();
+    
     if (fetchingRef.current && !force) {
       console.log("Déjà en cours de chargement, ignorant cette requête");
       return;
@@ -31,6 +33,11 @@ export const useFetchOperations = () => {
     if (!force && now - lastFetchTimeRef.current < 2000) {
       console.log("Trop de requêtes rapprochées, ignorant cette requête");
       return;
+    }
+    
+    // Si force=true, marquer pour un second refresh
+    if (force) {
+      forceRefreshRef.current = true;
     }
     
     try {
@@ -47,6 +54,15 @@ export const useFetchOperations = () => {
         setOperations(data);
         setError(null);
         lastFetchTimeRef.current = now;
+        
+        // Si c'était un forçage, planifier un second rafraîchissement après un délai
+        if (forceRefreshRef.current) {
+          forceRefreshRef.current = false;
+          setTimeout(() => {
+            console.log("Effectuant un second rafraîchissement après suppression...");
+            fetchOperations(true);
+          }, 2000);
+        }
       }
     } catch (err: any) {
       console.error('Error fetching operations:', err);

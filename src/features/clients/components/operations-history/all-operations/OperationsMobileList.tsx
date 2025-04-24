@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Operation } from "@/features/operations/types";
 import { OperationsMobileCard } from "../OperationsMobileCard";
 import { ArrowUpRight, ArrowDownRight, ArrowLeftRight } from "lucide-react";
@@ -21,11 +21,24 @@ export const OperationsMobileList = ({
   currency = "TND",
   updateOperation
 }: OperationsMobileListProps) => {
-  const { deleteOperation, confirmDeleteOperation, refreshOperations } = useOperations();
+  const { deleteOperation, confirmDeleteOperation, refreshOperations, isProcessing } = useOperations();
   const [selectedOperation, setSelectedOperation] = useState<Operation | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Effet pour surveiller les modifications de opérations et forcer un rafraîchissement
+  useEffect(() => {
+    if (refreshTrigger > 0) {
+      const timeoutId = setTimeout(() => {
+        console.log("Rafraîchissement forcé après suppression...");
+        refreshOperations(true);
+      }, 1500);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [refreshTrigger, refreshOperations]);
 
   const handleCardClick = (operation: Operation) => {
     setSelectedOperation(operation);
@@ -81,11 +94,15 @@ export const OperationsMobileList = ({
         setIsDeleteDialogOpen(false);
         setSelectedOperation(null);
         
+        // Incrémenter le déclencheur de rafraîchissement
+        setRefreshTrigger(prev => prev + 1);
+        
         // Attendre plus longtemps avant de rafraîchir pour s'assurer que le traitement backend est terminé
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 1500));
         
         // Forcer le rafraîchissement avec le paramètre true et attendre sa fin
         await refreshOperations(true);
+        
         return true;
       } else {
         toast.error("Erreur lors de la suppression", { 
@@ -164,7 +181,7 @@ export const OperationsMobileList = ({
         onClose={() => setIsDeleteDialogOpen(false)}
         onDelete={performDeleteOperation}
         operation={selectedOperation}
-        isLoading={isDeleting}
+        isLoading={isDeleting || isProcessing}
       />
     </div>
   );
