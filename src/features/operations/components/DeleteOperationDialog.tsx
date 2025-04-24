@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Operation } from "../types";
 import { formatDateTime } from "../types";
-import { Loader2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 
 interface DeleteOperationDialogProps {
   isOpen: boolean;
@@ -49,6 +49,7 @@ export function DeleteOperationDialog({
   const displayDate = operation.operation_date || operation.date;
 
   const handleConfirmDelete = async () => {
+    console.log("Confirmation de suppression pour l'opération:", operation.id);
     await onDelete();
   };
 
@@ -56,7 +57,12 @@ export function DeleteOperationDialog({
     <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Êtes-vous sûr de vouloir supprimer {getOperationTypeText()} ?</AlertDialogTitle>
+          <AlertDialogTitle className="flex items-center gap-2">
+            <div className="rounded-lg bg-red-50 dark:bg-red-950/50 p-2 text-red-600">
+              <Trash2 className="h-5 w-5" />
+            </div>
+            Êtes-vous sûr de vouloir supprimer {getOperationTypeText()} ?
+          </AlertDialogTitle>
           <AlertDialogDescription className="space-y-2">
             <p>
               Cette action est irréversible et supprimera définitivement {getOperationTypeText()} du{" "}

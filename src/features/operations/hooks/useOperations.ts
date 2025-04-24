@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const useOperations = () => {
   // État local
-  const [operationToDelete, setOperationToDelete] = useState<Operation | undefined>(undefined);
+  const [operationToDelete, setOperationToDelete] = useState<Operation | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -24,6 +24,7 @@ export const useOperations = () => {
 
   // Supprimer une opération
   const deleteOperation = useCallback((operation: Operation) => {
+    console.log("deleteOperation appelé avec", operation);
     setOperationToDelete(operation);
     setShowDeleteDialog(true);
   }, []);
@@ -31,6 +32,7 @@ export const useOperations = () => {
   // Confirmer la suppression
   const confirmDeleteOperation = useCallback(async (operation?: Operation): Promise<boolean> => {
     const opToDelete = operation || operationToDelete;
+    
     if (!opToDelete) {
       console.error("Aucune opération sélectionnée pour la suppression");
       toast.error("Aucune opération sélectionnée");
@@ -42,8 +44,8 @@ export const useOperations = () => {
     
     try {
       const operationType = opToDelete.type;
-      // Extraire l'ID numérique de l'opération de façon sécurisée
-      const operationIdString = String(opToDelete.id); // Conversion sécurisée en string
+      // Conversion sécurisée en string (pas de toString qui peut causer des erreurs)
+      const operationIdString = String(opToDelete.id);
       
       // Analyser l'ID - vérifier s'il contient un tiret et extraire la partie numérique si nécessaire
       const idParts = operationIdString.split('-');
@@ -109,11 +111,15 @@ export const useOperations = () => {
       
       console.log("Suppression réussie. Nettoyage de l'état local.");
       setShowDeleteDialog(false);
-      setOperationToDelete(undefined);
+      setOperationToDelete(null);
       
       // Attendre brièvement que la base de données traite la suppression
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise(resolve => setTimeout(resolve, 500));
       
+      // Forcer un rafraîchissement des opérations
+      await refreshOperations(true);
+      
+      toast.success("Opération supprimée avec succès");
       return success;
     } catch (err) {
       console.error("Erreur durant la suppression:", err);
@@ -122,7 +128,7 @@ export const useOperations = () => {
     } finally {
       setIsProcessing(false);
     }
-  }, [operationToDelete]);
+  }, [operationToDelete, refreshOperations]);
 
   return {
     operations,

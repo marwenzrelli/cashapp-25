@@ -43,6 +43,9 @@ export const OperationsMobileList = ({
         await updateOperation(updatedOperation);
         toast.success("Opération modifiée avec succès");
         setIsDetailsModalOpen(false);
+        
+        // Forcer le rafraîchissement après modification
+        await refreshOperations(true);
       } catch (error) {
         console.error("Edit operation error:", error);
         toast.error("Erreur lors de la modification");
@@ -54,29 +57,32 @@ export const OperationsMobileList = ({
   };
 
   const handleDeleteOperation = (operation: Operation) => {
+    console.log("OperationsMobileList - handleDeleteOperation:", operation);
     setSelectedOperation(operation);
     setIsDetailsModalOpen(false);
     setIsDeleteDialogOpen(true);
   };
 
   const performDeleteOperation = async (): Promise<boolean> => {
-    if (!selectedOperation) return false;
+    if (!selectedOperation) {
+      console.error("OperationsMobileList - Aucune opération sélectionnée pour la suppression");
+      return false;
+    }
     
     try {
       setIsDeleting(true);
-      console.log("Tentative de suppression de l'opération:", selectedOperation);
+      console.log("OperationsMobileList - Tentative de suppression de l'opération:", selectedOperation);
       
       // Passer explicitement l'opération à confirmDeleteOperation
       const success = await confirmDeleteOperation(selectedOperation);
-      console.log("Résultat de la suppression:", success);
+      console.log("OperationsMobileList - Résultat de la suppression:", success);
       
       if (success) {
-        toast.success("Opération supprimée avec succès");
         setIsDeleteDialogOpen(false);
         setSelectedOperation(null);
         
-        // Attendre un moment avant de rafraîchir pour s'assurer que le traitement backend est terminé
-        await new Promise(resolve => setTimeout(resolve, 800));
+        // Attendre plus longtemps avant de rafraîchir pour s'assurer que le traitement backend est terminé
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
         // Forcer le rafraîchissement avec le paramètre true et attendre sa fin
         await refreshOperations(true);
@@ -88,7 +94,7 @@ export const OperationsMobileList = ({
         return false;
       }
     } catch (error) {
-      console.error("Delete operation error:", error);
+      console.error("OperationsMobileList - Delete operation error:", error);
       toast.error("Erreur lors de la suppression", { 
         description: typeof error === 'string' ? error : error instanceof Error ? error.message : "Une erreur s'est produite" 
       });
