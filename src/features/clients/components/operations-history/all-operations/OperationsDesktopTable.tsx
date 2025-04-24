@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Operation } from "@/features/operations/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -35,7 +34,6 @@ export const OperationsDesktopTable = ({
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Fonction pour formater les dates
   const formatDate = (dateString: string): string => {
     try {
       const date = parseISO(dateString);
@@ -45,17 +43,17 @@ export const OperationsDesktopTable = ({
     }
   };
 
-  // Formatter les montants avec le symbole du devise
-  const formatAmount = (amount: number): string => {
-    return new Intl.NumberFormat('fr-TN', {
+  const formatAmount = (amount: number, type: Operation['type']): string => {
+    const formattedNumber = new Intl.NumberFormat('fr-TN', {
       style: 'currency',
       currency: currency,
       minimumFractionDigits: 3,
       maximumFractionDigits: 3
     }).format(amount);
+
+    return type === 'withdrawal' ? `- ${formattedNumber}` : formattedNumber;
   };
 
-  // Obtenir la couleur pour le type d'opération
   const getTypeColor = (type: string): string => {
     switch (type) {
       case 'deposit':
@@ -69,7 +67,6 @@ export const OperationsDesktopTable = ({
     }
   };
 
-  // Label pour le type d'opération
   const getTypeLabel = (type: string): string => {
     switch (type) {
       case 'deposit':
@@ -83,7 +80,6 @@ export const OperationsDesktopTable = ({
     }
   };
 
-  // Obtenir un ID formaté pour l'affichage
   const getFormattedId = (id: string | number): string => {
     const idStr = String(id);
     
@@ -99,19 +95,16 @@ export const OperationsDesktopTable = ({
     return `#${idStr}`;
   };
 
-  // Gérer le clic sur l'action d'édition
   const handleEditClick = (operation: Operation) => {
     setSelectedOperation(JSON.parse(JSON.stringify(operation)));
     setIsDetailsModalOpen(true);
   };
 
-  // Gérer le clic sur l'action de suppression
   const handleDeleteClick = (operation: Operation) => {
     setSelectedOperation(JSON.parse(JSON.stringify(operation)));
     setIsDeleteDialogOpen(true);
   };
 
-  // Confirmer la modification d'une opération
   const handleOperationUpdate = async (updatedOperation: Operation) => {
     if (updateOperation) {
       try {
@@ -132,7 +125,6 @@ export const OperationsDesktopTable = ({
     }
   };
 
-  // Confirmer la suppression d'une opération
   const performDeleteOperation = async (): Promise<boolean> => {
     if (!selectedOperation) {
       toast.error("Aucune opération sélectionnée");
@@ -147,14 +139,11 @@ export const OperationsDesktopTable = ({
       if (success) {
         setIsDeleteDialogOpen(false);
         
-        // Attendre un peu avant de rafraîchir
         await new Promise(resolve => setTimeout(resolve, 2000));
         
-        // Notifier le parent pour rafraîchir les données
         if (onOperationDeleted) {
           await onOperationDeleted();
           
-          // Double rafraîchissement pour s'assurer que les données sont à jour
           setTimeout(async () => {
             if (onOperationDeleted) {
               await onOperationDeleted();
@@ -215,7 +204,12 @@ export const OperationsDesktopTable = ({
                     {operation.description || "-"}
                   </TableCell>
                   <TableCell className="text-right font-medium">
-                    {formatAmount(operation.amount)}
+                    <span className={cn(
+                      operation.type === 'withdrawal' ? 'text-red-600' : '',
+                      'font-medium'
+                    )}>
+                      {formatAmount(operation.amount, operation.type)}
+                    </span>
                   </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
@@ -253,7 +247,6 @@ export const OperationsDesktopTable = ({
         <TotalsSection operations={operations} currency={currency} />
       </div>
 
-      {/* Details/Edit modal */}
       <OperationDetailsModal 
         isOpen={isDetailsModalOpen}
         onClose={() => setIsDetailsModalOpen(false)}
@@ -262,7 +255,6 @@ export const OperationsDesktopTable = ({
         onDelete={handleDeleteClick}
       />
       
-      {/* Delete confirmation dialog */}
       <DeleteOperationDialog
         isOpen={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
