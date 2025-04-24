@@ -32,9 +32,9 @@ export const OperationsMobileList = ({
   useEffect(() => {
     if (refreshTrigger > 0) {
       const timeoutId = setTimeout(() => {
-        console.log("Rafraîchissement forcé après suppression...");
+        console.log("Rafraîchissement forcé après suppression...", refreshTrigger);
         refreshOperations(true);
-      }, 1500);
+      }, 2500);
       
       return () => clearTimeout(timeoutId);
     }
@@ -71,7 +71,7 @@ export const OperationsMobileList = ({
 
   const handleDeleteOperation = (operation: Operation) => {
     console.log("OperationsMobileList - handleDeleteOperation:", operation);
-    setSelectedOperation(operation);
+    setSelectedOperation({...operation}); // Créer une copie pour éviter les problèmes de référence
     setIsDetailsModalOpen(false);
     setIsDeleteDialogOpen(true);
   };
@@ -84,10 +84,14 @@ export const OperationsMobileList = ({
     
     try {
       setIsDeleting(true);
-      console.log("OperationsMobileList - Tentative de suppression de l'opération:", selectedOperation);
+      console.log("OperationsMobileList - Tentative de suppression de l'opération:", selectedOperation.id, "type:", selectedOperation.type);
+      
+      // Faire une copie fraîche de l'opération sélectionnée
+      const opToDelete = {...selectedOperation};
+      console.log("OperationsMobileList - Suppression avec opération:", opToDelete);
       
       // Passer explicitement l'opération à confirmDeleteOperation
-      const success = await confirmDeleteOperation(selectedOperation);
+      const success = await confirmDeleteOperation(opToDelete);
       console.log("OperationsMobileList - Résultat de la suppression:", success);
       
       if (success) {
@@ -97,11 +101,16 @@ export const OperationsMobileList = ({
         // Incrémenter le déclencheur de rafraîchissement
         setRefreshTrigger(prev => prev + 1);
         
-        // Attendre plus longtemps avant de rafraîchir pour s'assurer que le traitement backend est terminé
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // Attendre avant de rafraîchir pour s'assurer que le traitement backend est terminé
+        await new Promise(resolve => setTimeout(resolve, 3000));
         
         // Forcer le rafraîchissement avec le paramètre true et attendre sa fin
         await refreshOperations(true);
+        
+        // Après un court délai, effectuer un second rafraîchissement
+        setTimeout(() => {
+          refreshOperations(true);
+        }, 2000);
         
         return true;
       } else {

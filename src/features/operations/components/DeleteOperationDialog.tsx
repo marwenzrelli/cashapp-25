@@ -49,7 +49,7 @@ export function DeleteOperationDialog({
   const displayDate = operation.operation_date || operation.date;
 
   const handleConfirmDelete = async () => {
-    console.log("Confirmation de suppression pour l'opération:", operation.id);
+    console.log("Confirmation de suppression pour l'opération:", operation.id, "de type:", operation.type);
     await onDelete();
   };
 
@@ -69,7 +69,7 @@ export function DeleteOperationDialog({
               {formatDateTime(displayDate)}.
             </p>
             <p className="font-semibold text-destructive">
-              ID: {operation.id}
+              ID: {operation.id} (Type: {operation.type})
             </p>
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -82,7 +82,7 @@ export function DeleteOperationDialog({
             className="flex items-center gap-2"
           >
             {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-            {isLoading ? "Suppression..." : "Supprimer"}
+            {isLoading ? "Suppression en cours..." : "Supprimer"}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

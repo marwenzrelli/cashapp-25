@@ -45,27 +45,27 @@ export const useOperations = () => {
     try {
       const operationType = opToDelete.type;
       
-      // Utiliser String() pour une conversion sécurisée en string
-      const operationIdString = String(opToDelete.id);
-      
-      // Extraire l'ID numérique - s'assurer de traiter correctement les formats "type-id"
+      // Extraire correctement l'ID numérique, peu importe le format
       let operationId: number;
+      const idString = String(opToDelete.id);
       
-      if (operationIdString.includes('-')) {
-        const parts = operationIdString.split('-');
-        if (parts.length > 1) {
-          operationId = parseInt(parts[1], 10);
-        } else {
-          throw new Error("Format d'ID invalide");
-        }
+      // Format commun possible: "deposit-123", "wit-123" ou simplement "123"
+      if (idString.includes('-')) {
+        const parts = idString.split('-');
+        const idPart = parts[parts.length - 1];
+        operationId = parseInt(idPart, 10);
+      } else if (idString.startsWith('wit')) { 
+        // Format spécial pour les retraits de pepsi men (peut-être "wit123")
+        const idPart = idString.replace(/\D/g, ''); // Supprimer tous les caractères non numériques
+        operationId = parseInt(idPart, 10);
       } else {
         // Si c'est déjà un nombre sans préfixe
-        operationId = parseInt(operationIdString, 10);
+        operationId = parseInt(idString, 10);
       }
       
       // Vérifier si la conversion a réussi
       if (isNaN(operationId)) {
-        console.error("ID d'opération invalide:", operationIdString);
+        console.error("ID d'opération invalide après traitement:", idString, "=>", operationId);
         toast.error("Format d'ID invalide");
         return false;
       }
@@ -128,15 +128,16 @@ export const useOperations = () => {
       }
       
       // Attendre que la base de données traite la suppression
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
       // Forcer un rafraîchissement des opérations avec force=true
       await refreshOperations(true);
       
-      // Second refresh après un court délai (pour s'assurer que les données sont à jour)
+      // Second refresh après un délai plus long pour s'assurer que les données sont à jour
       setTimeout(() => {
+        console.log("Second rafraîchissement forcé après suppression");
         refreshOperations(true);
-      }, 1500);
+      }, 3000);
       
       toast.success("Opération supprimée avec succès");
       return success;

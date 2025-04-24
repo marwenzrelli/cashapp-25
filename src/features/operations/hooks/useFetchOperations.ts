@@ -18,6 +18,7 @@ export const useFetchOperations = () => {
   const fetchingRef = useRef(false);
   const lastFetchTimeRef = useRef<number>(0);
   const forceRefreshRef = useRef(false);
+  const forceRefreshCountRef = useRef(0);
   
   // Fonction qui charge les données de façon asynchrone
   const fetchOperations = useCallback(async (force = false) => {
@@ -30,14 +31,16 @@ export const useFetchOperations = () => {
     }
     
     // Rate limiting sauf si force=true
-    if (!force && now - lastFetchTimeRef.current < 2000) {
+    if (!force && now - lastFetchTimeRef.current < 1000) {
       console.log("Trop de requêtes rapprochées, ignorant cette requête");
       return;
     }
     
-    // Si force=true, marquer pour un second refresh
+    // Si force=true, marquer pour un second refresh et incrémenter le compteur
     if (force) {
       forceRefreshRef.current = true;
+      forceRefreshCountRef.current += 1;
+      console.log(`Rafraîchissement forcé #${forceRefreshCountRef.current}`);
     }
     
     try {
@@ -46,7 +49,7 @@ export const useFetchOperations = () => {
       
       console.log("Chargement des opérations depuis Supabase...", force ? "(rafraîchissement forcé)" : "");
       // Ajouter un paramètre aléatoire pour éviter le cache
-      const cacheBuster = force ? `?timestamp=${Date.now()}` : '';
+      const cacheBuster = force ? `?timestamp=${Date.now()}&force=${forceRefreshCountRef.current}` : '';
       const data = await getOperations(cacheBuster);
       
       if (isMountedRef.current) {
@@ -61,7 +64,7 @@ export const useFetchOperations = () => {
           setTimeout(() => {
             console.log("Effectuant un second rafraîchissement après suppression...");
             fetchOperations(true);
-          }, 2000);
+          }, 2500);
         }
       }
     } catch (err: any) {
