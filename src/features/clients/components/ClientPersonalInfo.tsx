@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Client } from "../types";
 import { ClientQRCode } from "./ClientQRCode";
@@ -41,11 +40,10 @@ export const ClientPersonalInfo = ({
   const refreshCooldownTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isMobile = useIsMobile();
   
-  // Get client balance refresh function if not provided through props
-  const { refreshClientBalance: refreshBalanceHook, isRefreshing: isRefreshingHook } = useClientBalanceRefresh();
-  
   console.log("ClientPersonalInfo - clientId:", clientId, "client:", client?.id, "realTimeBalance:", clientBalance);
 
+  const { refreshClientBalance: refreshBalanceHook, isRefreshing: isRefreshingHook } = useClientBalanceRefresh();
+  
   const {
     handleDeposit,
     handleWithdrawal,
@@ -61,7 +59,6 @@ export const ClientPersonalInfo = ({
   }, []);
 
   const handleRefreshBalance = async () => {
-    // Use the prop function if available, otherwise use the hook function
     const refreshFunction = refreshClientBalance || 
       (client && client.id ? 
         async () => await refreshBalanceHook(client.id) : 
@@ -87,26 +84,35 @@ export const ClientPersonalInfo = ({
       toast.error("Erreur lors de l'actualisation du solde");
     } finally {
       setIsRefreshing(false);
-      
       refreshCooldownTimerRef.current = setTimeout(() => {
         setRefreshDisabled(false);
         refreshCooldownTimerRef.current = null;
-      }, 5000); // Reduced cooldown to 5 seconds
+      }, 5000);
     }
   };
 
-  const handleDepositRefresh = async (): Promise<boolean> => {
+  const handleDepositSuccess = async () => {
     if (client && client.id) {
-      return await refreshBalance(client.id);
+      await refreshBalance(client.id);
+      setDepositDialogOpen(false);
+      setTimeout(async () => {
+        if (client && client.id) {
+          await refreshBalance(client.id);
+        }
+      }, 2000);
     }
-    return false;
   };
 
-  const handleWithdrawalRefresh = async (): Promise<boolean> => {
+  const handleWithdrawalSuccess = async () => {
     if (client && client.id) {
-      return await refreshBalance(client.id);
+      await refreshBalance(client.id);
+      setWithdrawalDialogOpen(false);
+      setTimeout(async () => {
+        if (client && client.id) {
+          await refreshBalance(client.id);
+        }
+      }, 2000);
     }
-    return false;
   };
 
   const dummyExport = () => {
@@ -183,9 +189,21 @@ export const ClientPersonalInfo = ({
         </div>
       </CardContent>
       
-      <DepositDialog client={client} open={depositDialogOpen} onOpenChange={setDepositDialogOpen} onConfirm={handleDeposit} refreshClientBalance={handleDepositRefresh} />
+      <DepositDialog 
+        client={client} 
+        open={depositDialogOpen} 
+        onOpenChange={setDepositDialogOpen} 
+        onConfirm={handleDeposit} 
+        refreshClientBalance={handleDepositSuccess} 
+      />
       
-      <WithdrawalDialog client={client} open={withdrawalDialogOpen} onOpenChange={setWithdrawalDialogOpen} onConfirm={handleWithdrawal} refreshClientBalance={handleWithdrawalRefresh} />
+      <WithdrawalDialog 
+        client={client} 
+        open={withdrawalDialogOpen} 
+        onOpenChange={setWithdrawalDialogOpen} 
+        onConfirm={handleWithdrawal} 
+        refreshClientBalance={handleWithdrawalSuccess} 
+      />
     </Card>
   );
 };
