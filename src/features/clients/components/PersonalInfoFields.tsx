@@ -29,6 +29,12 @@ export const PersonalInfoFields = ({
   // Use real-time balance if available, otherwise fall back to client.solde
   const effectiveBalance = realTimeBalance !== null ? realTimeBalance : client.solde;
   
+  console.log("PersonalInfoFields displaying balance:", {
+    realTimeBalance,
+    clientSolde: client.solde,
+    effectiveBalance
+  });
+  
   return (
     <div className="w-full space-y-6 rounded-lg">
       {/* Client primary info with gradient card */}

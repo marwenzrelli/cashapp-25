@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Client } from "../types";
 import { ClientQRCode } from "./ClientQRCode";
@@ -14,6 +13,7 @@ import { RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useClientBalanceRefresh } from "../hooks/operations/useClientBalanceRefresh";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ClientPersonalInfoProps {
   client: Client;
@@ -38,10 +38,11 @@ export const ClientPersonalInfo = ({
   const [withdrawalDialogOpen, setWithdrawalDialogOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshDisabled, setRefreshDisabled] = useState(false);
+  const [localBalance, setLocalBalance] = useState<number | null>(clientBalance);
   const refreshCooldownTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isMobile = useIsMobile();
   
-  console.log("ClientPersonalInfo - clientId:", clientId, "client:", client?.id, "realTimeBalance:", clientBalance);
+  console.log("ClientPersonalInfo - clientId:", clientId, "client:", client?.id, "clientBalance:", clientBalance, "localBalance:", localBalance);
 
   const { refreshClientBalance: refreshBalanceHook, isRefreshing: isRefreshingHook } = useClientBalanceRefresh();
   
@@ -50,6 +51,12 @@ export const ClientPersonalInfo = ({
     handleWithdrawal,
     refreshClientBalance: refreshBalance
   } = useClientOperations(client, clientId, refetchClient);
+
+  useEffect(() => {
+    if (clientBalance !== null) {
+      setLocalBalance(clientBalance);
+    }
+  }, [clientBalance]);
 
   useEffect(() => {
     return () => {
@@ -80,6 +87,22 @@ export const ClientPersonalInfo = ({
     try {
       await refreshFunction();
       toast.success("Solde actualisé avec succès");
+      
+      if (client && client.id) {
+        const result = await refreshBalance(client.id);
+        if (result) {
+          const numericId = typeof client.id === 'string' ? parseInt(client.id, 10) : client.id;
+          const { data } = await supabase
+            .from('clients')
+            .select('solde')
+            .eq('id', numericId)
+            .single();
+            
+          if (data) {
+            setLocalBalance(data.solde);
+          }
+        }
+      }
     } catch (error) {
       console.error("Error refreshing client balance:", error);
       toast.error("Erreur lors de l'actualisation du solde");
@@ -98,20 +121,42 @@ export const ClientPersonalInfo = ({
         await refreshBalance(client.id);
         setDepositDialogOpen(false);
         
-        // Schedule another refresh after a short delay
+        const numericId = typeof client.id === 'string' ? parseInt(client.id, 10) : client.id;
+        const { data } = await supabase
+          .from('clients')
+          .select('solde')
+          .eq('id', numericId)
+          .single();
+          
+        if (data) {
+          setLocalBalance(data.solde);
+        }
+        
         setTimeout(async () => {
           if (client && client.id) {
-            await refreshBalance(client.id);
+            const result = await refreshBalance(client.id);
+            
+            if (result) {
+              const { data: refreshedData } = await supabase
+                .from('clients')
+                .select('solde')
+                .eq('id', numericId)
+                .single();
+                
+              if (refreshedData) {
+                setLocalBalance(refreshedData.solde);
+              }
+            }
           }
         }, 2000);
         
-        return true; // Return true to indicate success
+        return true;
       } catch (error) {
         console.error("Error during deposit refresh:", error);
-        return false; // Return false if there was an error
+        return false;
       }
     }
-    return false; // Return false if client or client.id is missing
+    return false;
   };
 
   const handleWithdrawalSuccess = async (): Promise<boolean> => {
@@ -120,28 +165,49 @@ export const ClientPersonalInfo = ({
         await refreshBalance(client.id);
         setWithdrawalDialogOpen(false);
         
-        // Schedule another refresh after a short delay
+        const numericId = typeof client.id === 'string' ? parseInt(client.id, 10) : client.id;
+        const { data } = await supabase
+          .from('clients')
+          .select('solde')
+          .eq('id', numericId)
+          .single();
+          
+        if (data) {
+          setLocalBalance(data.solde);
+        }
+        
         setTimeout(async () => {
           if (client && client.id) {
-            await refreshBalance(client.id);
+            const result = await refreshBalance(client.id);
+            
+            if (result) {
+              const { data: refreshedData } = await supabase
+                .from('clients')
+                .select('solde')
+                .eq('id', numericId)
+                .single();
+                
+              if (refreshedData) {
+                setLocalBalance(refreshedData.solde);
+              }
+            }
           }
         }, 2000);
         
-        return true; // Return true to indicate success
+        return true;
       } catch (error) {
         console.error("Error during withdrawal refresh:", error);
-        return false; // Return false if there was an error
+        return false;
       }
     }
-    return false; // Return false if client or client.id is missing
+    return false;
   };
 
   const dummyExport = () => {
     console.log("Export function not provided");
   };
 
-  // Use real-time balance if available, otherwise fall back to client.solde
-  const displayBalance = clientBalance !== null ? clientBalance : client.solde;
+  const displayBalance = localBalance !== null ? localBalance : (clientBalance !== null ? clientBalance : client.solde);
 
   return (
     <Card className="overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300">
