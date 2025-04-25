@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Client } from "../types";
 import { ClientQRCode } from "./ClientQRCode";
@@ -91,28 +92,48 @@ export const ClientPersonalInfo = ({
     }
   };
 
-  const handleDepositSuccess = async () => {
+  const handleDepositSuccess = async (): Promise<boolean> => {
     if (client && client.id) {
-      await refreshBalance(client.id);
-      setDepositDialogOpen(false);
-      setTimeout(async () => {
-        if (client && client.id) {
-          await refreshBalance(client.id);
-        }
-      }, 2000);
+      try {
+        await refreshBalance(client.id);
+        setDepositDialogOpen(false);
+        
+        // Schedule another refresh after a short delay
+        setTimeout(async () => {
+          if (client && client.id) {
+            await refreshBalance(client.id);
+          }
+        }, 2000);
+        
+        return true; // Return true to indicate success
+      } catch (error) {
+        console.error("Error during deposit refresh:", error);
+        return false; // Return false if there was an error
+      }
     }
+    return false; // Return false if client or client.id is missing
   };
 
-  const handleWithdrawalSuccess = async () => {
+  const handleWithdrawalSuccess = async (): Promise<boolean> => {
     if (client && client.id) {
-      await refreshBalance(client.id);
-      setWithdrawalDialogOpen(false);
-      setTimeout(async () => {
-        if (client && client.id) {
-          await refreshBalance(client.id);
-        }
-      }, 2000);
+      try {
+        await refreshBalance(client.id);
+        setWithdrawalDialogOpen(false);
+        
+        // Schedule another refresh after a short delay
+        setTimeout(async () => {
+          if (client && client.id) {
+            await refreshBalance(client.id);
+          }
+        }, 2000);
+        
+        return true; // Return true to indicate success
+      } catch (error) {
+        console.error("Error during withdrawal refresh:", error);
+        return false; // Return false if there was an error
+      }
     }
+    return false; // Return false if client or client.id is missing
   };
 
   const dummyExport = () => {
