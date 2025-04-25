@@ -27,7 +27,7 @@ export const PersonalInfoFields = ({
   const formatDisplayAmount = formatAmount || formatCurrency;
   
   // Use real-time balance if available, otherwise fall back to client.solde
-  const effectiveBalance = realTimeBalance !== null ? realTimeBalance : client.solde;
+  const effectiveBalance = typeof realTimeBalance === 'number' ? realTimeBalance : client.solde;
   
   console.log("PersonalInfoFields displaying balance:", {
     realTimeBalance,
