@@ -163,12 +163,14 @@ export function OperationDetailsModal({
         </DialogContent>
       </Dialog>
 
-      <EditOperationDialog
-        open={showEditDialog}
-        onOpenChange={setShowEditDialog}
-        operation={operation}
-        onConfirm={handleEditComplete}
-      />
+      {isOpen && (
+        <EditOperationDialog
+          open={showEditDialog}
+          onOpenChange={setShowEditDialog}
+          operation={operation}
+          onConfirm={handleEditComplete}
+        />
+      )}
     </>
   );
 }

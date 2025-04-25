@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,7 +33,7 @@ export const EditOperationDialog = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (operation) {
+    if (open && operation) {
       const dateTime = formatISODateTime(operation.operation_date || operation.date || "");
       
       setEditedOperation({
@@ -41,9 +42,9 @@ export const EditOperationDialog = ({
         time: dateTime.time
       });
     }
-  }, [operation]);
+  }, [open, operation]);
 
-  if (!editedOperation) return null;
+  if (!editedOperation || !open) return null;
 
   const handleChange = (field: keyof EditableOperation, value: any) => {
     setEditedOperation(prev => {
