@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Operation } from "@/features/operations/types";
 import { format, parseISO } from "date-fns";
@@ -7,7 +6,6 @@ import { getTypeStyle, getTypeIcon, getTypeLabel } from "@/features/operations/u
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useFormatAmount } from "@/utils/formatAmount";
 
 interface AccountFlowMobileViewProps {
   operations: (Operation & { balanceBefore: number, balanceAfter: number })[];
@@ -16,7 +14,6 @@ interface AccountFlowMobileViewProps {
 
 export const AccountFlowMobileView = ({ operations, updateOperation }: AccountFlowMobileViewProps) => {
   const isMobile = useIsMobile();
-  const formatAmount = useFormatAmount();
   const operationsWithBalance = operations;
 
   const formatDateTime = (dateString: string) => {
@@ -25,6 +22,10 @@ export const AccountFlowMobileView = ({ operations, updateOperation }: AccountFl
     } catch (e) {
       return "Date invalide";
     }
+  };
+
+  const formatAmount = (amount: number): string => {
+    return amount.toFixed(3).replace(/,/g, '');
   };
 
   const getAmountClass = (type: string) => {
@@ -68,7 +69,6 @@ export const AccountFlowMobileView = ({ operations, updateOperation }: AccountFl
               onClick={() => updateOperation ? handleCardClick(op) : undefined}
             >
               <CardContent className="p-3">
-                {/* Header with Date, ID and Type */}
                 <div className="flex flex-col space-y-2 mb-2">
                   <div className="flex justify-between items-start">
                     <div>
@@ -85,8 +85,6 @@ export const AccountFlowMobileView = ({ operations, updateOperation }: AccountFl
                     </Badge>
                   </div>
                 </div>
-
-                {/* Balance Information */}
                 <div className="grid grid-cols-3 gap-2 text-sm border-t pt-2">
                   <div className="flex flex-col">
                     <span className="text-xs text-muted-foreground mb-0.5">Solde avant</span>
