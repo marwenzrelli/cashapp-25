@@ -75,24 +75,6 @@ export const AccountFlowMobileView = ({ operations, updateOperation }: AccountFl
     return "";
   };
 
-  const handleCardClick = (operation: Operation) => {
-    if (updateOperation) {
-      setSelectedOperation(operation);
-      setIsEditDialogOpen(true);
-    }
-  };
-
-  const handleOperationUpdate = async (updatedOperation: Operation) => {
-    if (updateOperation) {
-      try {
-        await updateOperation(updatedOperation);
-        setIsEditDialogOpen(false);
-      } catch (error) {
-        console.error("Erreur lors de la mise à jour de l'opération:", error);
-      }
-    }
-  };
-
   if (displayOperations.length === 0) {
     return (
       <Card className="mt-4">
@@ -108,8 +90,7 @@ export const AccountFlowMobileView = ({ operations, updateOperation }: AccountFl
       {displayOperations.map((op) => (
         <Card 
           key={op.id} 
-          className="shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-          onClick={() => handleCardClick(op)}
+          className="shadow-sm"
         >
           <CardContent className="p-4">
             <div className="flex justify-between items-start mb-2">
@@ -146,15 +127,6 @@ export const AccountFlowMobileView = ({ operations, updateOperation }: AccountFl
           </CardContent>
         </Card>
       ))}
-      
-      {selectedOperation && (
-        <EditOperationDialog 
-          open={isEditDialogOpen}
-          onOpenChange={setIsEditDialogOpen}
-          operation={selectedOperation}
-          onConfirm={handleOperationUpdate}
-        />
-      )}
     </div>
   );
 };
