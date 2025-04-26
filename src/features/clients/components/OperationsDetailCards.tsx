@@ -4,6 +4,7 @@ import { ArrowUpCircle, ArrowDownCircle, RefreshCcw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Operation } from "@/features/operations/types";
 import { formatId } from "@/utils/formatId";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface OperationsDetailCardsProps {
   clientOperations: Operation[];
@@ -14,6 +15,16 @@ export const OperationsDetailCards = ({
   clientOperations,
   formatAmount
 }: OperationsDetailCardsProps) => {
+  const isMobile = useIsMobile();
+
+  // Modify the formatAmount to handle mobile and desktop differently
+  const mobileAwareFormatAmount = (amount: number): string => {
+    if (isMobile) {
+      return Math.round(amount).toString();
+    }
+    return formatAmount(amount);
+  };
+
   // Critical Withdrawal IDs that must be prioritized for display
   const criticalWithdrawalIds = ['72', '73', '74', '75', '76', '77', '78'];
 
@@ -39,28 +50,6 @@ export const OperationsDetailCards = ({
   const deposits = clientOperations.filter(op => op.type === "deposit").slice(0, 3);
   const transfers = clientOperations.filter(op => op.type === "transfer").slice(0, 3);
   
-  if (isPepsiMen) {
-    // Log all withdrawal IDs for debugging
-    const allWithdrawalIds = clientOperations.filter(op => op.type === "withdrawal").map(op => op.id);
-    console.log(`OperationsDetailCards for pepsi men:`);
-    console.log(`- Found ${displayWithdrawals.length} withdrawals to display (showing max 3)`);
-    console.log(`- All withdrawals: ${withdrawals.length}`);
-    console.log(`- All withdrawal IDs: ${allWithdrawalIds.join(', ')}`);
-
-    // Check specifically for critical IDs
-    const hasCriticalIds = criticalWithdrawalIds.some(id => allWithdrawalIds.includes(id));
-    console.log(`- Has critical IDs 72-78: ${hasCriticalIds}`);
-
-    // List all found critical IDs
-    const foundCriticalIds = criticalWithdrawalIds.filter(id => allWithdrawalIds.includes(id));
-    console.log(`- Found critical IDs: ${foundCriticalIds.join(', ')}`);
-
-    // Check for specific critical withdrawals
-    if (criticalWithdrawals.length > 0) {
-      console.log(`- Critical withdrawals to display: ${criticalWithdrawals.map(w => w.id).join(', ')}`);
-    }
-  }
-
   // Format date helper
   const formatOperationDate = (date: string | Date) => {
     if (!date) return "";
@@ -78,7 +67,6 @@ export const OperationsDetailCards = ({
     return parts.length > 1 ? parts[1] : parts[0];
   };
   
-  // Return JSX instead of void
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {/* Recent Deposits */}
@@ -98,7 +86,7 @@ export const OperationsDetailCards = ({
                     <p className="font-medium">{formatId(extractNumericId(deposit.id))}</p>
                     <p className="text-muted-foreground text-xs">{formatOperationDate(deposit.createdAt)}</p>
                   </div>
-                  <span className="font-semibold text-green-600">{formatAmount(deposit.amount)}</span>
+                  <span className="font-semibold text-green-600">{mobileAwareFormatAmount(deposit.amount)}</span>
                 </li>
               ))}
             </ul>
@@ -125,7 +113,7 @@ export const OperationsDetailCards = ({
                     <p className="font-medium">{formatId(extractNumericId(withdrawal.id))}</p>
                     <p className="text-muted-foreground text-xs">{formatOperationDate(withdrawal.createdAt)}</p>
                   </div>
-                  <span className="font-semibold text-red-600">{formatAmount(withdrawal.amount)}</span>
+                  <span className="font-semibold text-red-600">{mobileAwareFormatAmount(withdrawal.amount)}</span>
                 </li>
               ))}
             </ul>
@@ -152,7 +140,7 @@ export const OperationsDetailCards = ({
                     <p className="font-medium">{formatId(extractNumericId(transfer.id))}</p>
                     <p className="text-muted-foreground text-xs">{formatOperationDate(transfer.createdAt)}</p>
                   </div>
-                  <span className="font-semibold text-blue-600">{formatAmount(transfer.amount)}</span>
+                  <span className="font-semibold text-blue-600">{mobileAwareFormatAmount(transfer.amount)}</span>
                 </li>
               ))}
             </ul>
@@ -164,3 +152,4 @@ export const OperationsDetailCards = ({
     </div>
   );
 };
+
