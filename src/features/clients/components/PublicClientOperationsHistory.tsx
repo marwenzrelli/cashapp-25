@@ -2,9 +2,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Operation } from "@/features/operations/types";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { PublicOperationsTabs } from "./operations-history/PublicOperationsTabs";
-import { useState, useEffect } from "react";
-import { Switch } from "@/components/ui/switch";
 import { DateRange } from "react-day-picker";
 import { subDays } from "date-fns";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
@@ -12,6 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PublicAccountFlowTab } from "./operations-history/PublicAccountFlowTab";
 import { FileText, List } from "lucide-react";
 import { ClientOperationsHistoryTabs } from "./operations-history/ClientOperationsHistoryTabs";
+import { Switch } from "@/components/ui/switch";
+import { useState, useEffect } from "react";
 
 interface PublicClientOperationsHistoryProps {
   operations: Operation[];

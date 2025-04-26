@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Operation } from "@/features/operations/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -5,7 +6,6 @@ import { OperationsMobileCard } from "./OperationsMobileCard";
 import { EmptyOperations } from "./EmptyOperations";
 import { formatId } from "@/utils/formatId";
 import { format } from "date-fns";
-import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { formatNumber } from "./all-operations/OperationTypeHelpers";
 import { useFormatAmount } from "@/hooks/use-format-amount";
@@ -40,11 +40,11 @@ export const DepositOperationsTab = ({
           <TableHeader>
             <TableRow className="bg-muted/50">
               
-              <TableHead className="w-[10%] whitespace-nowrap font-medium">           ID</TableHead>
-              <TableHead className="w-[15%] whitespace-nowrap font-medium">               Date</TableHead>
+              <TableHead className="w-[10%] whitespace-nowrap font-medium">           ID</TableHead>
+              <TableHead className="w-[15%] whitespace-nowrap font-medium">               Date</TableHead>
               
-              <TableHead className="w-[30%] font-medium">                               Description</TableHead>
-              <TableHead className="w-[15%] text-right whitespace-nowrap font-medium">Montant        </TableHead>
+              <TableHead className="w-[30%] font-medium">                               Description</TableHead>
+              <TableHead className="w-[15%] text-right whitespace-nowrap font-medium">Montant        </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

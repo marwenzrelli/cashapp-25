@@ -1,6 +1,7 @@
 
 import { Operation } from "@/features/operations/types";
 import { cn } from "@/lib/utils";
+import { useFormatAmount } from "@/hooks/use-format-amount";
 
 interface TotalsSectionProps {
   operations: Operation[];
@@ -9,13 +10,8 @@ interface TotalsSectionProps {
 }
 
 export const TotalsSection = ({ operations, currency, isMobile = false }: TotalsSectionProps) => {
-  // Format number with 2 decimal places and comma separator
-  const formatNumber = (num: number): string => {
-    return num.toLocaleString('fr-FR', { 
-      minimumFractionDigits: 2, 
-      maximumFractionDigits: 2 
-    });
-  };
+  // Use our hook for proper number formatting
+  const { formatAmount } = useFormatAmount();
 
   // Calculate totals by operation type
   const totalDeposits = operations
@@ -41,19 +37,19 @@ export const TotalsSection = ({ operations, currency, isMobile = false }: Totals
           <div className="flex justify-between items-center">
             <span className="text-sm">Versements:</span>
             <span className="font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded">
-              {formatNumber(totalDeposits)} {currency}
+              {formatAmount(totalDeposits)} {currency}
             </span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm">Retraits:</span>
             <span className="font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded">
-              {formatNumber(totalWithdrawals)} {currency}
+              {formatAmount(totalWithdrawals)} {currency}
             </span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm">Virements:</span>
             <span className="font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded">
-              {formatNumber(totalTransfers)} {currency}
+              {formatAmount(totalTransfers)} {currency}
             </span>
           </div>
           <div className="flex justify-between items-center pt-2 border-t mt-2">
@@ -64,7 +60,7 @@ export const TotalsSection = ({ operations, currency, isMobile = false }: Totals
                 ? "text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20" 
                 : "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20"
             )}>
-              {formatNumber(netMovement)} {currency}
+              {formatAmount(netMovement)} {currency}
             </span>
           </div>
         </div>
@@ -76,20 +72,20 @@ export const TotalsSection = ({ operations, currency, isMobile = false }: Totals
     <div className="space-y-1">
       <div className="flex justify-between">
         <span className="text-sm text-muted-foreground">Versements:</span>
-        <span className="font-medium text-green-600 dark:text-green-400">{formatNumber(totalDeposits)} {currency}</span>
+        <span className="font-medium text-green-600 dark:text-green-400">{formatAmount(totalDeposits)} {currency}</span>
       </div>
       <div className="flex justify-between">
         <span className="text-sm text-muted-foreground">Retraits:</span>
-        <span className="font-medium text-red-600 dark:text-red-400">{formatNumber(totalWithdrawals)} {currency}</span>
+        <span className="font-medium text-red-600 dark:text-red-400">{formatAmount(totalWithdrawals)} {currency}</span>
       </div>
       <div className="flex justify-between">
         <span className="text-sm text-muted-foreground">Virements:</span>
-        <span className="font-medium text-blue-600 dark:text-blue-400">{formatNumber(totalTransfers)} {currency}</span>
+        <span className="font-medium text-blue-600 dark:text-blue-400">{formatAmount(totalTransfers)} {currency}</span>
       </div>
       <div className="flex justify-between pt-1 border-t">
         <span className="font-medium">Mouvement Net:</span>
         <span className={cn("font-bold", netMovement >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400")}>
-          {formatNumber(netMovement)} {currency}
+          {formatAmount(netMovement)} {currency}
         </span>
       </div>
     </div>

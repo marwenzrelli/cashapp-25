@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Operation } from "@/features/operations/types";
 import { OperationsMobileCard } from "../OperationsMobileCard";
@@ -9,6 +8,7 @@ import { toast } from "sonner";
 import { TotalsSection } from "./TotalsSection";
 import { getOperationTypeColor } from "./OperationTypeHelpers";
 import { deleteOperation } from "@/features/operations/utils/deletionUtils";
+import { useFormatAmount } from "@/features/operations/hooks/useFormatAmount";
 
 interface OperationsMobileListProps {
   operations: Operation[];
@@ -29,7 +29,6 @@ export const OperationsMobileList = ({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleCardClick = (operation: Operation) => {
-    // Créer une copie profonde de l'opération pour éviter les problèmes de référence
     setSelectedOperation(JSON.parse(JSON.stringify(operation)));
     setIsDetailsModalOpen(true);
   };
@@ -46,7 +45,6 @@ export const OperationsMobileList = ({
         toast.success("Opération modifiée avec succès");
         setIsDetailsModalOpen(false);
         
-        // Forcer le rafraîchissement après modification
         if (onOperationDeleted) {
           await onOperationDeleted();
         }
@@ -62,7 +60,6 @@ export const OperationsMobileList = ({
 
   const handleDeleteOperation = (operation: Operation) => {
     console.log("OperationsMobileList - handleDeleteOperation:", operation);
-    // Créer une copie profonde pour éviter les problèmes de référence
     setSelectedOperation(JSON.parse(JSON.stringify(operation)));
     setIsDetailsModalOpen(false);
     setIsDeleteDialogOpen(true);
@@ -78,7 +75,6 @@ export const OperationsMobileList = ({
       setIsDeleting(true);
       console.log("OperationsMobileList - Tentative de suppression de l'opération:", selectedOperation.id, "type:", selectedOperation.type);
       
-      // Utiliser la nouvelle fonction de suppression centralisée
       const success = await deleteOperation(selectedOperation);
       console.log("OperationsMobileList - Résultat de la suppression:", success);
       
@@ -86,14 +82,11 @@ export const OperationsMobileList = ({
         setIsDeleteDialogOpen(false);
         setSelectedOperation(null);
         
-        // Attendre avant de rafraîchir pour s'assurer que le traitement backend est terminé
         await new Promise(resolve => setTimeout(resolve, 2000));
         
-        // Notifier le parent pour rafraîchir les données
         if (onOperationDeleted) {
           await onOperationDeleted();
           
-          // Double rafraîchissement pour s'assurer que les données sont à jour
           setTimeout(async () => {
             if (onOperationDeleted) {
               await onOperationDeleted();
@@ -133,10 +126,8 @@ export const OperationsMobileList = ({
   };
 
   const formatAmount = (amount: number, type: string): string => {
-    const formattedAmount = amount.toLocaleString('fr-FR', {
-      minimumFractionDigits: 3,
-      maximumFractionDigits: 3
-    });
+    const { formatAmount: formatAmountFn } = useFormatAmount();
+    const formattedAmount = formatAmountFn(amount);
     return type === 'withdrawal' ? `- ${formattedAmount}` : 
            type === 'deposit' ? `+ ${formattedAmount}` : 
            formattedAmount;
@@ -164,7 +155,6 @@ export const OperationsMobileList = ({
         <TotalsSection operations={operations} currency={currency} />
       </div>
 
-      {/* Details modal */}
       <OperationDetailsModal
         isOpen={isDetailsModalOpen}
         onClose={handleCloseDetailsModal}
@@ -173,7 +163,6 @@ export const OperationsMobileList = ({
         onDelete={handleDeleteOperation}
       />
 
-      {/* Delete confirmation dialog */}
       <DeleteOperationDialog
         isOpen={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
