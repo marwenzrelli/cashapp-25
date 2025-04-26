@@ -1,4 +1,3 @@
-
 import React from "react";
 import { ArrowUpCircle, ArrowDownCircle, RefreshCcw, List } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,7 +9,6 @@ import { TransferOperationsTab } from "./TransferOperationsTab";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 interface ClientOperationsHistoryTabsProps {
@@ -36,7 +34,6 @@ export const ClientOperationsHistoryTabs = ({
   
   return (
     <Tabs defaultValue="all" className="w-full">
-      {/* Navigation des onglets dans un espace séparé avec une meilleure utilisation de l'espace */}
       <div className="mt-2 mb-3 px-2 py-2 bg-muted/20 rounded-md">
         <TabsList className="grid grid-cols-4 w-full bg-transparent">
           <TabsTrigger 
@@ -89,7 +86,6 @@ export const ClientOperationsHistoryTabs = ({
         </TabsList>
       </div>
 
-      {/* Sections de contenu */}
       <Card className="shadow-sm border border-border/50 rounded-md">
         <CardContent className="p-0 sm:p-0">
           <TabsContent value="all" className="w-full m-0">

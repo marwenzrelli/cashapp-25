@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Operation } from "@/features/operations/types";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -10,6 +11,7 @@ import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PublicAccountFlowTab } from "./operations-history/PublicAccountFlowTab";
 import { FileText, List } from "lucide-react";
+import { ClientOperationsHistoryTabs } from "./operations-history/ClientOperationsHistoryTabs";
 
 interface PublicClientOperationsHistoryProps {
   operations: Operation[];
@@ -98,11 +100,18 @@ export const PublicClientOperationsHistory = ({ operations, clientId }: PublicCl
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="list" className="p-0 sm:p-6">
-            <PublicOperationsTabs operations={operations} currency={currency} />
+          <TabsContent value="list" className="p-0">
+            <Card className="shadow-sm border border-border/50 rounded-md">
+              <CardContent className="p-0 sm:p-0">
+                <ClientOperationsHistoryTabs 
+                  filteredOperations={displayedOperations}
+                  currency={currency}
+                />
+              </CardContent>
+            </Card>
           </TabsContent>
           
-          <TabsContent value="flow" className="p-0 sm:p-6">
+          <TabsContent value="flow" className="p-0">
             <PublicAccountFlowTab operations={operations} />
           </TabsContent>
         </Tabs>
