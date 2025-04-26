@@ -1,3 +1,4 @@
+
 import { useIsMobile } from "./use-mobile";
 
 export const useFormatAmount = () => {
@@ -5,8 +6,8 @@ export const useFormatAmount = () => {
 
   return {
     formatAmount: (amount: number): string => {
+      // On mobile, always return the integer part only
       if (isMobile) {
-        // On mobile, just return the integer part
         return Math.round(amount).toString();
       }
       // On desktop, keep the existing format with 3 decimal places
