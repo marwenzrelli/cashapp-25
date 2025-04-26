@@ -95,7 +95,7 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
     }
   };
 
-  const handleOperationUpdate = async (updatedOperation: Operation) => {
+  const handleOperationUpdate = async (updatedOperation: Operation): Promise<void> => {
     if (updateOperation) {
       await updateOperation(updatedOperation);
       setIsEditDialogOpen(false);
@@ -106,8 +106,8 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
     <>
       {/* Mobile view */}
       <AccountFlowMobileView 
-        operations={operations} 
-        updateOperation={updateOperation} 
+        operations={displayOperations}
+        updateOperation={updateOperation}
       />
 
       {/* Desktop view */}

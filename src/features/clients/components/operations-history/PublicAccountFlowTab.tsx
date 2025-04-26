@@ -1,3 +1,4 @@
+
 import { Operation } from "@/features/operations/types";
 import { useMemo } from "react";
 import { Card } from "@/components/ui/card";
@@ -8,15 +9,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { format, parseISO } from "date-fns";
 import { getTypeStyle, getTypeIcon, getTypeLabel } from "@/features/operations/utils/operation-helpers";
+
 interface PublicAccountFlowTabProps {
   operations: Operation[];
 }
+
 export const PublicAccountFlowTab = ({
   operations
 }: PublicAccountFlowTabProps) => {
-  const {
-    currency
-  } = useCurrency();
+  const { currency } = useCurrency();
 
   // Sort operations by date and calculate running balance
   const processedOperations = useMemo(() => {
@@ -50,6 +51,7 @@ export const PublicAccountFlowTab = ({
     // Return sorted from newest to oldest for display
     return opsWithBalance.reverse();
   }, [operations]);
+
   const formatDateTime = (dateString: string) => {
     try {
       return format(parseISO(dateString), "dd/MM/yyyy HH:mm");
@@ -57,6 +59,7 @@ export const PublicAccountFlowTab = ({
       return "Date invalide";
     }
   };
+
   const formatAmount = (amount: number): string => {
     return new Intl.NumberFormat('fr-TN', {
       style: 'currency',
@@ -65,13 +68,16 @@ export const PublicAccountFlowTab = ({
       maximumFractionDigits: 3
     }).format(amount);
   };
+
   const getAmountClass = (type: string) => {
     if (type === "deposit") return "text-green-600";
     if (type === "withdrawal") return "text-red-600";
     if (type === "transfer") return "text-blue-600";
     return "";
   };
-  return <Card className="mt-4">
+
+  return (
+    <Card className="mt-4">
       <ScrollArea className="h-[600px] w-full rounded-md">
         {/* Mobile view */}
         <AccountFlowMobileView operations={processedOperations} />
@@ -81,20 +87,24 @@ export const PublicAccountFlowTab = ({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[120px]">              Date</TableHead>
-                <TableHead className="w-[100px]">             ID</TableHead>
-                <TableHead className="w-[120px]">  Type</TableHead>
-                <TableHead className="w-[150px] text-right">Solde avant.   </TableHead>
-                <TableHead className="w-[120px] text-right">Montant.     </TableHead>
-                <TableHead className="w-[150px] text-right">Solde après.    </TableHead>
+                <TableHead className="w-[120px]">Date</TableHead>
+                <TableHead className="w-[100px]">ID</TableHead>
+                <TableHead className="w-[120px]">Type</TableHead>
+                <TableHead className="w-[150px] text-right">Solde avant</TableHead>
+                <TableHead className="w-[120px] text-right">Montant</TableHead>
+                <TableHead className="w-[150px] text-right">Solde après</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {processedOperations.length === 0 ? <TableRow>
+              {processedOperations.length === 0 ? (
+                <TableRow>
                   <TableCell colSpan={6} className="h-24 text-center">
                     Aucune opération trouvée
                   </TableCell>
-                </TableRow> : processedOperations.map(op => <TableRow key={op.id}>
+                </TableRow>
+              ) : (
+                processedOperations.map((op: any) => (
+                  <TableRow key={op.id}>
                     <TableCell className="font-medium">
                       {formatDateTime(op.operation_date || op.date)}
                     </TableCell>
@@ -114,10 +124,13 @@ export const PublicAccountFlowTab = ({
                     <TableCell className="text-right font-semibold">
                       {formatAmount(op.balanceAfter)}
                     </TableCell>
-                  </TableRow>)}
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
       </ScrollArea>
-    </Card>;
+    </Card>
+  );
 };
