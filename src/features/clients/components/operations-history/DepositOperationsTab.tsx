@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { formatNumber } from "./all-operations/OperationTypeHelpers";
+import { useFormatAmount } from "@/hooks/use-format-amount";
 
 interface DepositOperationsTabProps {
   operations: Operation[];
@@ -21,6 +22,8 @@ export const DepositOperationsTab = ({
   selectedOperations = {},
   toggleSelection = () => {}
 }: DepositOperationsTabProps) => {
+  const { formatAmount } = useFormatAmount();
+  
   // Filter only deposit operations
   const depositOperations = operations.filter(operation => operation.type === "deposit");
   if (depositOperations.length === 0) {
@@ -82,25 +85,30 @@ export const DepositOperationsTab = ({
 
       {/* Mobile version */}
       <div className="md:hidden space-y-3 w-full p-3">
-        {depositOperations.map(operation => <div key={operation.id} className={cn("transition-colors", selectedOperations[operation.id] ? "border-l-4 border-green-500 pl-2" : "")} onClick={() => toggleSelection(operation.id)}>
+        {depositOperations.map(operation => (
+          <div 
+            key={operation.id} 
+            className={cn("transition-colors", selectedOperations[operation.id] ? "border-l-4 border-green-500 pl-2" : "")} 
+            onClick={() => toggleSelection(operation.id)}
+          >
             <div className="w-full">
               <OperationsMobileCard 
                 key={operation.id} 
                 operation={operation} 
-                formatAmount={amount => `+ ${formatNumber(amount)}`} 
+                formatAmount={amount => `+ ${formatAmount(amount)}`} 
                 currency={currency} 
                 colorClass="text-green-600 dark:text-green-400" 
                 showType={false} 
               />
             </div>
-          </div>)}
+          </div>
+        ))}
         
-        {/* Totals section for mobile */}
         <div className="mt-8 border-t-2 border-primary/20 pt-4">
           <div className="flex justify-between items-center">
             <span className="font-medium">Total des versements:</span>
             <span className="font-medium text-green-600 dark:text-green-400">
-              +{formatNumber(totalDeposits)} {currency}
+              +{formatAmount(totalDeposits)} {currency}
             </span>
           </div>
         </div>

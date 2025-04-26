@@ -7,23 +7,30 @@ import { formatId } from "@/utils/formatId";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { formatNumber } from "./all-operations/OperationTypeHelpers";
+import { useFormatAmount } from "@/hooks/use-format-amount";
+
 interface WithdrawalOperationsTabProps {
   operations: Operation[];
   currency?: string;
   selectedOperations?: Record<string, boolean>;
   toggleSelection?: (id: string) => void;
 }
+
 export const WithdrawalOperationsTab = ({
   operations,
   currency = "TND",
   selectedOperations = {},
   toggleSelection = () => {}
 }: WithdrawalOperationsTabProps) => {
+  const { formatAmount } = useFormatAmount();
+
   const withdrawalOperations = operations.filter(operation => operation.type === "withdrawal");
   if (withdrawalOperations.length === 0) {
     return <EmptyOperations />;
   }
+
   const totalWithdrawals = withdrawalOperations.reduce((total, op) => total + op.amount, 0);
+
   return <>
       <div className="hidden md:block overflow-x-auto">
         <Table>
@@ -66,17 +73,30 @@ export const WithdrawalOperationsTab = ({
       </div>
 
       <div className="md:hidden space-y-3 w-full p-3">
-        {withdrawalOperations.map(operation => <div key={operation.id} className={cn("transition-colors", selectedOperations[operation.id] ? "border-l-4 border-red-500 pl-2" : "")} onClick={() => toggleSelection(operation.id)}>
+        {withdrawalOperations.map(operation => (
+          <div 
+            key={operation.id} 
+            className={cn("transition-colors", selectedOperations[operation.id] ? "border-l-4 border-red-500 pl-2" : "")} 
+            onClick={() => toggleSelection(operation.id)}
+          >
             <div className="w-full">
-              <OperationsMobileCard key={operation.id} operation={operation} formatAmount={amount => `- ${formatNumber(amount)}`} currency={currency} colorClass="text-red-600 dark:text-red-400" showType={false} />
+              <OperationsMobileCard 
+                key={operation.id} 
+                operation={operation} 
+                formatAmount={amount => `- ${formatAmount(amount)}`} 
+                currency={currency} 
+                colorClass="text-red-600 dark:text-red-400" 
+                showType={false} 
+              />
             </div>
-          </div>)}
+          </div>
+        ))}
         
         <div className="mt-8 border-t-2 border-primary/20 pt-4">
           <div className="flex justify-between items-center">
             <span className="font-medium">Total des retraits:</span>
             <span className="font-medium text-red-600 dark:text-red-400">
-              - {formatNumber(totalWithdrawals)} {currency}
+              - {formatAmount(totalWithdrawals)} {currency}
             </span>
           </div>
         </div>

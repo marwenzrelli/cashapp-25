@@ -8,6 +8,7 @@ import { formatId } from "@/utils/formatId";
 import { cn } from "@/lib/utils";
 import { ReactNode } from "react";
 import { formatNumber } from "./all-operations/OperationTypeHelpers";
+import { useFormatAmount } from "@/hooks/use-format-amount";
 
 interface OperationsMobileCardProps {
   operation: Operation;
@@ -22,10 +23,7 @@ interface OperationsMobileCardProps {
 
 export const OperationsMobileCard = ({
   operation,
-  formatAmount = amount => 
-    operation.type === 'deposit' ? `+ ${formatNumber(amount)}` : 
-    operation.type === 'withdrawal' ? `- ${formatNumber(amount)}` : 
-    formatNumber(amount),
+  formatAmount: customFormatAmount,
   currency = "",
   showType = true,
   colorClass,
@@ -33,6 +31,17 @@ export const OperationsMobileCard = ({
   typeBackgroundClass,
   icon
 }: OperationsMobileCardProps) => {
+  const { formatAmount: defaultFormatAmount } = useFormatAmount();
+  
+  const formatAmountValue = (amount: number) => {
+    if (customFormatAmount) {
+      return customFormatAmount(amount);
+    }
+    return operation.type === 'deposit' ? `+ ${defaultFormatAmount(amount)}` : 
+           operation.type === 'withdrawal' ? `- ${defaultFormatAmount(amount)}` : 
+           defaultFormatAmount(amount);
+  };
+
   const parseDate = (dateValue: string | Date): Date => {
     if (dateValue instanceof Date) return dateValue;
     try {
@@ -74,7 +83,7 @@ export const OperationsMobileCard = ({
             </span>
           </div>
           <p className={`text-lg font-semibold px-3 py-1 rounded-md ${colorClass || (operation.type === "withdrawal" ? "text-red-500 bg-red-50 dark:bg-red-900/20" : operation.type === "deposit" ? "text-green-500 bg-green-50 dark:bg-green-900/20" : "text-blue-500 bg-blue-50 dark:bg-blue-900/20")}`}>
-            {formatAmount(operation.amount)}
+            {formatAmountValue(operation.amount)}
             {currency && ` ${currency}`}
           </p>
         </div>
