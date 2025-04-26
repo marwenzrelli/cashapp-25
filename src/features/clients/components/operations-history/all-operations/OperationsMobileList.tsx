@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-import { Operation } from "@/features/operations/types";
+import React, { useState } from "react";
 import { OperationsMobileCard } from "../OperationsMobileCard";
 import { ArrowUpRight, ArrowDownRight, ArrowLeftRight } from "lucide-react";
 import { OperationDetailsModal } from "@/features/operations/components/OperationDetailsModal";
@@ -8,7 +7,7 @@ import { toast } from "sonner";
 import { TotalsSection } from "./TotalsSection";
 import { getOperationTypeColor } from "./OperationTypeHelpers";
 import { deleteOperation } from "@/features/operations/utils/deletionUtils";
-import { useFormatAmount } from "@/features/operations/hooks/useFormatAmount";
+import { useFormatAmount } from "@/hooks/use-format-amount";
 
 interface OperationsMobileListProps {
   operations: Operation[];
