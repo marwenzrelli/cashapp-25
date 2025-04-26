@@ -59,7 +59,14 @@ export const AccountFlowMobileView = ({ operations, updateOperation }: AccountFl
 
   return (
     <div className="space-y-3 md:hidden">
-      <ScrollArea className="h-[600px] w-full pb-2" style={{ height: isMobile ? 'calc(100vh - 350px)' : '600px' }}>
+      <ScrollArea 
+        className="w-full" 
+        style={{ 
+          height: isMobile ? 'calc(100vh - 280px)' : '600px',
+          minHeight: '400px',
+          maxHeight: '80vh'
+        }}
+      >
         <div className="px-1 py-1">
           {operationsWithBalance.map((op: any) => (
             <Card 
@@ -69,7 +76,7 @@ export const AccountFlowMobileView = ({ operations, updateOperation }: AccountFl
             >
               <CardContent className="p-3">
                 {/* Header with Date, ID and Type */}
-                <div className="flex flex-col space-y-2 mb-3">
+                <div className="flex flex-col space-y-2 mb-2">
                   <div className="flex justify-between items-start">
                     <div>
                       <div className="text-sm font-medium">
@@ -87,19 +94,19 @@ export const AccountFlowMobileView = ({ operations, updateOperation }: AccountFl
                 </div>
 
                 {/* Balance Information */}
-                <div className="grid grid-cols-3 gap-1 text-sm">
+                <div className="grid grid-cols-3 gap-2 text-sm border-t pt-2">
                   <div className="flex flex-col">
-                    <span className="text-xs text-muted-foreground mb-1">Solde avant</span>
+                    <span className="text-xs text-muted-foreground mb-0.5">Solde avant</span>
                     <span className="font-medium text-xs">{formatAmount(op.balanceBefore)}</span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-xs text-muted-foreground mb-1">Montant</span>
+                    <span className="text-xs text-muted-foreground mb-0.5">Montant</span>
                     <span className={`${getAmountClass(op.type)} text-xs`}>
                       {op.type === "withdrawal" ? "- " : ""}{formatAmount(op.amount)}
                     </span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-xs text-muted-foreground mb-1">Solde après</span>
+                    <span className="text-xs text-muted-foreground mb-0.5">Solde après</span>
                     <span className="font-bold text-xs">{formatAmount(op.balanceAfter)}</span>
                   </div>
                 </div>
@@ -111,3 +118,4 @@ export const AccountFlowMobileView = ({ operations, updateOperation }: AccountFl
     </div>
   );
 };
+
