@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Operation } from "@/features/operations/types";
 import { format, parseISO } from "date-fns";
@@ -25,7 +26,12 @@ export const AccountFlowMobileView = ({ operations, updateOperation }: AccountFl
   };
 
   const formatAmount = (amount: number): string => {
-    return amount.toFixed(3).replace(/,/g, '');
+    return new Intl.NumberFormat('fr-TN', {
+      style: 'currency',
+      currency: 'TND',
+      minimumFractionDigits: 3,
+      maximumFractionDigits: 3
+    }).format(amount);
   };
 
   const getAmountClass = (type: string) => {
@@ -69,6 +75,7 @@ export const AccountFlowMobileView = ({ operations, updateOperation }: AccountFl
               onClick={() => updateOperation ? handleCardClick(op) : undefined}
             >
               <CardContent className="p-3">
+                {/* Header with Date, ID and Type */}
                 <div className="flex flex-col space-y-2 mb-2">
                   <div className="flex justify-between items-start">
                     <div>
@@ -85,6 +92,8 @@ export const AccountFlowMobileView = ({ operations, updateOperation }: AccountFl
                     </Badge>
                   </div>
                 </div>
+
+                {/* Balance Information */}
                 <div className="grid grid-cols-3 gap-2 text-sm border-t pt-2">
                   <div className="flex flex-col">
                     <span className="text-xs text-muted-foreground mb-0.5">Solde avant</span>
@@ -109,3 +118,4 @@ export const AccountFlowMobileView = ({ operations, updateOperation }: AccountFl
     </div>
   );
 };
+
