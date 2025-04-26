@@ -93,12 +93,13 @@ export const PublicAccountFlowTab = ({
                 <TableHead className="w-[150px] text-right">Solde avant</TableHead>
                 <TableHead className="w-[120px] text-right">Montant</TableHead>
                 <TableHead className="w-[150px] text-right">Solde après</TableHead>
+                <TableHead className="w-[200px]">Description</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {processedOperations.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center">
+                  <TableCell colSpan={7} className="h-24 text-center">
                     Aucune opération trouvée
                   </TableCell>
                 </TableRow>
@@ -123,6 +124,9 @@ export const PublicAccountFlowTab = ({
                     </TableCell>
                     <TableCell className="text-right font-semibold">
                       {formatAmount(op.balanceAfter)}
+                    </TableCell>
+                    <TableCell className="max-w-[200px] truncate">
+                      {op.description || "-"}
                     </TableCell>
                   </TableRow>
                 ))
