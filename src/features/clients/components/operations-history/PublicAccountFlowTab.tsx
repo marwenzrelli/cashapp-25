@@ -78,12 +78,12 @@ export const PublicAccountFlowTab = ({
 
   return (
     <Card className="mt-4">
-      <ScrollArea className="h-[600px] w-full rounded-md">
-        {/* Mobile view */}
-        <AccountFlowMobileView operations={processedOperations} />
+      {/* Mobile view */}
+      <AccountFlowMobileView operations={processedOperations} />
 
-        {/* Desktop view */}
-        <div className="hidden md:block">
+      {/* Desktop view */}
+      <div className="hidden md:block">
+        <ScrollArea className="h-[600px] w-full rounded-md">
           <Table>
             <TableHeader>
               <TableRow>
@@ -129,8 +129,8 @@ export const PublicAccountFlowTab = ({
               )}
             </TableBody>
           </Table>
-        </div>
-      </ScrollArea>
+        </ScrollArea>
+      </div>
     </Card>
   );
 };

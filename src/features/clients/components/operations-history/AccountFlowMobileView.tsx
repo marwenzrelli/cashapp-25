@@ -6,53 +6,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getTypeStyle, getTypeIcon, getTypeLabel } from "@/features/operations/utils/operation-helpers";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface AccountFlowMobileViewProps {
-  operations: Operation[];
+  operations: (Operation & { balanceBefore: number, balanceAfter: number })[];
   updateOperation?: (operation: Operation) => Promise<void>;
 }
 
 export const AccountFlowMobileView = ({ operations, updateOperation }: AccountFlowMobileViewProps) => {
-  // Sort operations from newest to oldest
-  const sortedOperations = operations.sort((a, b) => {
-    const dateA = new Date(a.operation_date || a.date);
-    const dateB = new Date(b.operation_date || b.date);
-    return dateB.getTime() - dateA.getTime();
-  });
-
-  // Calculate running balance for each operation
-  const displayOperations = sortedOperations.reverse().reduce((acc: any[], op, index, array) => {
-    // Start with the oldest operations (we reversed the array)
-    const amount = op.amount;
-    const previousOp = index > 0 ? acc[index - 1] : null;
-    let previousBalance = previousOp ? previousOp.balanceAfter : 0;
-    
-    // For withdrawals, we subtract from the balance
-    // For deposits, we add to the balance
-    // For transfers, it depends on if the client is sending or receiving
-    let balanceChange = 0;
-    if (op.type === "deposit") {
-      balanceChange = amount;
-    } else if (op.type === "withdrawal") {
-      balanceChange = -amount;
-    } else if (op.type === "transfer") {
-      // If this client is the sender, it's negative; if receiver, it's positive
-      balanceChange = -amount; // Assuming current view is for the sender
-    }
-    
-    const balanceAfter = previousBalance + balanceChange;
-
-    acc.push({
-      ...op,
-      balanceBefore: previousBalance,
-      balanceAfter: balanceAfter
-    });
-    
-    return acc;
-  }, []);
-
-  // Reverse back to show newest first
-  const operationsWithBalance = [...displayOperations].reverse();
+  const isMobile = useIsMobile();
+  const operationsWithBalance = operations;
 
   const formatDateTime = (dateString: string) => {
     try {
@@ -96,52 +59,54 @@ export const AccountFlowMobileView = ({ operations, updateOperation }: AccountFl
 
   return (
     <div className="space-y-3 md:hidden">
-      <ScrollArea className="h-[600px]">
-        {operationsWithBalance.map((op: any) => (
-          <Card 
-            key={op.id} 
-            className="mb-3 shadow-sm" 
-            onClick={() => updateOperation ? handleCardClick(op) : undefined}
-          >
-            <CardContent className="p-4">
-              {/* Header with Date, ID and Type */}
-              <div className="flex flex-col space-y-2 mb-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <div className="text-sm font-medium">
-                      {formatDateTime(op.operation_date || op.date)}
+      <ScrollArea className="h-[600px] w-full pb-2" style={{ height: isMobile ? 'calc(100vh - 350px)' : '600px' }}>
+        <div className="px-1 py-1">
+          {operationsWithBalance.map((op: any) => (
+            <Card 
+              key={op.id} 
+              className="mb-3 border shadow-sm" 
+              onClick={() => updateOperation ? handleCardClick(op) : undefined}
+            >
+              <CardContent className="p-3">
+                {/* Header with Date, ID and Type */}
+                <div className="flex flex-col space-y-2 mb-3">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="text-sm font-medium">
+                        {formatDateTime(op.operation_date || op.date)}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        ID: {op.id.toString().split('-')[1] || op.id}
+                      </div>
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      ID: {op.id.toString().split('-')[1] || op.id}
-                    </div>
+                    <Badge className={`${getTypeStyle(op.type)} flex items-center gap-1 whitespace-nowrap`}>
+                      {getTypeIcon(op.type)}
+                      {getTypeLabel(op.type)}
+                    </Badge>
                   </div>
-                  <Badge className={`${getTypeStyle(op.type)} flex items-center gap-1`}>
-                    {getTypeIcon(op.type)}
-                    {getTypeLabel(op.type)}
-                  </Badge>
                 </div>
-              </div>
 
-              {/* Balance Information */}
-              <div className="grid grid-cols-3 gap-2 text-sm">
-                <div className="flex flex-col">
-                  <span className="text-xs text-muted-foreground mb-1">Solde avant</span>
-                  <span className="font-medium">{formatAmount(op.balanceBefore)}</span>
+                {/* Balance Information */}
+                <div className="grid grid-cols-3 gap-1 text-sm">
+                  <div className="flex flex-col">
+                    <span className="text-xs text-muted-foreground mb-1">Solde avant</span>
+                    <span className="font-medium text-xs">{formatAmount(op.balanceBefore)}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs text-muted-foreground mb-1">Montant</span>
+                    <span className={`${getAmountClass(op.type)} text-xs`}>
+                      {op.type === "withdrawal" ? "- " : ""}{formatAmount(op.amount)}
+                    </span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs text-muted-foreground mb-1">Solde après</span>
+                    <span className="font-bold text-xs">{formatAmount(op.balanceAfter)}</span>
+                  </div>
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-xs text-muted-foreground mb-1">Montant</span>
-                  <span className={getAmountClass(op.type)}>
-                    {op.type === "withdrawal" ? "- " : ""}{formatAmount(op.amount)}
-                  </span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xs text-muted-foreground mb-1">Solde après</span>
-                  <span className="font-bold">{formatAmount(op.balanceAfter)}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </ScrollArea>
     </div>
   );
