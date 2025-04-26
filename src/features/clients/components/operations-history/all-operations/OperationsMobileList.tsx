@@ -1,4 +1,6 @@
+
 import React, { useState } from "react";
+import { Operation } from "@/features/operations/types";
 import { OperationsMobileCard } from "../OperationsMobileCard";
 import { ArrowUpRight, ArrowDownRight, ArrowLeftRight } from "lucide-react";
 import { OperationDetailsModal } from "@/features/operations/components/OperationDetailsModal";
