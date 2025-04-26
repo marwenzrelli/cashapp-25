@@ -7,7 +7,7 @@ import { formatId } from "@/utils/formatId";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { formatNumber } from "./all-operations/OperationTypeHelpers";
-import { useFormatAmount } from "@/hooks/useFormatAmount";
+import { useFormatAmount } from "@/hooks/use-format-amount";
 
 interface WithdrawalOperationsTabProps {
   operations: Operation[];

@@ -8,7 +8,7 @@ import { format } from "date-fns";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { formatNumber } from "./all-operations/OperationTypeHelpers";
-import { useFormatAmount } from "@/hooks/useFormatAmount";
+import { useFormatAmount } from "@/hooks/use-format-amount";
 
 interface DepositOperationsTabProps {
   operations: Operation[];
