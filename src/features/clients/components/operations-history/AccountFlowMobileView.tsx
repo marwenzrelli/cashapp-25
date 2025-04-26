@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Operation } from "@/features/operations/types";
 import { format, parseISO } from "date-fns";
@@ -7,7 +6,6 @@ import { getTypeStyle, getTypeIcon, getTypeLabel } from "@/features/operations/u
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useFormatAmount } from "@/hooks/use-format-amount";
 
 interface AccountFlowMobileViewProps {
   operations: (Operation & { balanceBefore: number, balanceAfter: number })[];
@@ -16,7 +14,6 @@ interface AccountFlowMobileViewProps {
 
 export const AccountFlowMobileView = ({ operations, updateOperation }: AccountFlowMobileViewProps) => {
   const isMobile = useIsMobile();
-  const { formatAmount } = useFormatAmount();
   const operationsWithBalance = operations;
 
   const formatDateTime = (dateString: string) => {
@@ -25,6 +22,10 @@ export const AccountFlowMobileView = ({ operations, updateOperation }: AccountFl
     } catch (e) {
       return "Date invalide";
     }
+  };
+
+  const formatAmount = (amount: number): string => {
+    return amount.toFixed(3).replace(/,/g, '');
   };
 
   const getAmountClass = (type: string) => {
