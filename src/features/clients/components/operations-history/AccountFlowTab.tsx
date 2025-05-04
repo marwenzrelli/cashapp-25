@@ -120,6 +120,7 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
                   <TableHead className="w-[120px]">Date</TableHead>
                   <TableHead className="w-[100px]">ID</TableHead>
                   <TableHead className="w-[120px]">Type</TableHead>
+                  <TableHead>Description</TableHead>
                   <TableHead className="w-[150px] text-right">Solde avant</TableHead>
                   <TableHead className="w-[120px] text-right">Montant</TableHead>
                   <TableHead className="w-[150px] text-right">Solde après</TableHead>
@@ -128,7 +129,7 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
               <TableBody>
                 {displayOperations.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
+                    <TableCell colSpan={7} className="h-24 text-center">
                       Aucune opération trouvée
                     </TableCell>
                   </TableRow>
@@ -148,6 +149,9 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
                           {getTypeIcon(op.type)}
                           {getTypeLabel(op.type)}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="max-w-[200px] truncate">
+                        {op.description || "-"}
                       </TableCell>
                       <TableCell className="text-right">
                         {formatAmount(op.balanceBefore)}

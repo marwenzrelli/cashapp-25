@@ -83,6 +83,13 @@ export const AccountFlowMobileView = ({ operations, updateOperation }: AccountFl
                       {getTypeLabel(op.type)}
                     </Badge>
                   </div>
+                  
+                  {/* Description field */}
+                  {op.description && (
+                    <div className="text-xs text-muted-foreground border-t pt-1">
+                      {op.description}
+                    </div>
+                  )}
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-sm border-t pt-2">
                   <div className="flex flex-col">

@@ -7,10 +7,11 @@ import { subDays } from "date-fns";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PublicAccountFlowTab } from "./operations-history/PublicAccountFlowTab";
-import { FileText, List } from "lucide-react";
+import { FileText, List, Search } from "lucide-react";
 import { ClientOperationsHistoryTabs } from "./operations-history/ClientOperationsHistoryTabs";
 import { Switch } from "@/components/ui/switch";
 import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 
 interface PublicClientOperationsHistoryProps {
   operations: Operation[];
@@ -25,6 +26,8 @@ export const PublicClientOperationsHistory = ({ operations, clientId }: PublicCl
     from: subDays(new Date(), 30),
     to: new Date()
   });
+  const [pendingDateRange, setPendingDateRange] = useState<DateRange | undefined>(dateRange);
+  const [filteredOperations, setFilteredOperations] = useState<Operation[]>(operations);
   
   useEffect(() => {
     if (isPepsiMen && !showAllOperations) {
@@ -43,23 +46,39 @@ export const PublicClientOperationsHistory = ({ operations, clientId }: PublicCl
       console.log(`PublicClientOperationsHistory - Total withdrawals for pepsi men: ${allWithdrawals.length}`);
       console.log(`Withdrawal IDs: ${allWithdrawals.map(w => w.id).join(', ')}`);
     }
-  }, [operations, isPepsiMen, clientId, showAllOperations]);
+
+    // Filter operations based on date range when not showing all
+    if (showAllOperations) {
+      setFilteredOperations(operations);
+    } else {
+      filterOperationsByDate();
+    }
+  }, [operations, isPepsiMen, clientId, showAllOperations, dateRange]);
   
-  const displayedOperations = showAllOperations 
-    ? operations 
-    : operations.filter(op => {
-        const opDate = new Date(op.operation_date || op.date);
-        if (dateRange?.from && dateRange?.to) {
-          const from = new Date(dateRange.from);
-          const to = new Date(dateRange.to);
-          to.setHours(23, 59, 59, 999);
-          return opDate >= from && opDate <= to;
-        } else {
-          const thirtyDaysAgo = new Date();
-          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-          return opDate >= thirtyDaysAgo;
-        }
-      });
+  const filterOperationsByDate = () => {
+    if (!dateRange?.from || !dateRange?.to) {
+      setFilteredOperations(operations);
+      return;
+    }
+    
+    const filtered = operations.filter(op => {
+      const opDate = new Date(op.operation_date || op.date);
+      const from = new Date(dateRange.from!);
+      const to = new Date(dateRange.to!);
+      to.setHours(23, 59, 59, 999);
+      return opDate >= from && opDate <= to;
+    });
+    
+    setFilteredOperations(filtered);
+  };
+
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    setPendingDateRange(range);
+  };
+
+  const applyDateFilter = () => {
+    setDateRange(pendingDateRange);
+  };
   
   return (
     <Card className="shadow-sm max-w-full w-full overflow-hidden">
@@ -73,17 +92,30 @@ export const PublicClientOperationsHistory = ({ operations, clientId }: PublicCl
               onCheckedChange={setShowAllOperations}
               disabled={isPepsiMen}
             />
+            <span className="text-sm text-muted-foreground">Afficher toutes les opérations</span>
           </div>
         </div>
       </CardHeader>
       <CardContent className="p-0">
         {!showAllOperations && (
-          <div className="px-4 sm:px-0 mb-4 w-full">
-            <DatePickerWithRange
-              date={dateRange}
-              onDateChange={setDateRange}
-              className="w-full"
-            />
+          <div className="px-4 sm:px-6 mb-4 w-full">
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex-grow">
+                <DatePickerWithRange
+                  date={pendingDateRange}
+                  onDateChange={handleDateRangeChange}
+                  className="w-full"
+                />
+              </div>
+              <Button 
+                onClick={applyDateFilter} 
+                className="w-full sm:w-auto"
+                disabled={!pendingDateRange?.from || !pendingDateRange?.to}
+              >
+                <Search className="h-4 w-4 mr-2" />
+                Appliquer
+              </Button>
+            </div>
           </div>
         )}
         
@@ -103,7 +135,7 @@ export const PublicClientOperationsHistory = ({ operations, clientId }: PublicCl
             <Card className="shadow-sm border border-border/50 rounded-md">
               <CardContent className="p-0 sm:p-0">
                 <ClientOperationsHistoryTabs 
-                  filteredOperations={displayedOperations}
+                  filteredOperations={filteredOperations}
                   currency={currency}
                 />
               </CardContent>
@@ -111,7 +143,7 @@ export const PublicClientOperationsHistory = ({ operations, clientId }: PublicCl
           </TabsContent>
           
           <TabsContent value="flow" className="p-0">
-            <PublicAccountFlowTab operations={operations} />
+            <PublicAccountFlowTab operations={filteredOperations} />
           </TabsContent>
         </Tabs>
       </CardContent>
