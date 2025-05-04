@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { ClientPersonalInfo } from "./ClientPersonalInfo";
 import { Client } from "../types";
@@ -9,7 +8,6 @@ import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { subMonths } from "date-fns";
-
 interface ClientInfoCardsProps {
   client: Client;
   clientId: number;
@@ -18,7 +16,6 @@ interface ClientInfoCardsProps {
   exportToPDF: () => void;
   formatAmount: (amount: number) => string;
 }
-
 export function ClientInfoCards({
   client,
   clientId,
@@ -34,63 +31,32 @@ export function ClientInfoCards({
   const [showAllDates, setShowAllDates] = useState(true);
 
   // Filter operations based on date range
-  const filteredOperations = showAllDates 
-    ? clientOperations 
-    : clientOperations.filter(op => {
-        const opDate = new Date(op.operation_date || op.date);
-        return dateRange?.from && dateRange?.to 
-          ? opDate >= dateRange.from && opDate <= dateRange.to 
-          : true;
-      });
+  const filteredOperations = showAllDates ? clientOperations : clientOperations.filter(op => {
+    const opDate = new Date(op.operation_date || op.date);
+    return dateRange?.from && dateRange?.to ? opDate >= dateRange.from && opDate <= dateRange.to : true;
+  });
 
   // Calculate balances
   const calculateBalances = () => {
-    const deposits = filteredOperations
-      .filter(op => op.type === "deposit")
-      .reduce((sum, op) => sum + op.amount, 0);
-    
-    const withdrawals = filteredOperations
-      .filter(op => op.type === "withdrawal")
-      .reduce((sum, op) => sum + op.amount, 0);
-    
-    const transfers = filteredOperations
-      .filter(op => op.type === "transfer")
-      .reduce((sum, op) => sum + op.amount, 0);
-    
-    return { deposits, withdrawals, transfers };
+    const deposits = filteredOperations.filter(op => op.type === "deposit").reduce((sum, op) => sum + op.amount, 0);
+    const withdrawals = filteredOperations.filter(op => op.type === "withdrawal").reduce((sum, op) => sum + op.amount, 0);
+    const transfers = filteredOperations.filter(op => op.type === "transfer").reduce((sum, op) => sum + op.amount, 0);
+    return {
+      deposits,
+      withdrawals,
+      transfers
+    };
   };
-
   const balances = calculateBalances();
-
-  return (
-    <div className="space-y-6">
-      <ClientPersonalInfo 
-        client={client} 
-        clientId={clientId} 
-        formatAmount={formatAmount}
-        clientBalance={client.solde}
-      />
+  return <div className="space-y-6">
+      <ClientPersonalInfo client={client} clientId={clientId} formatAmount={formatAmount} clientBalance={client.solde} />
       
       <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-medium flex items-center justify-between">
-            <span>Résumé des opérations</span>
-            <div className="flex items-center space-x-2">
-              <Switch 
-                id="show-all-periods" 
-                checked={showAllDates} 
-                onCheckedChange={setShowAllDates}
-              />
-              <Label htmlFor="show-all-periods">Toutes les périodes</Label>
-            </div>
-          </CardTitle>
-        </CardHeader>
+        
         <CardContent>
-          {!showAllDates && (
-            <div className="mb-4">
+          {!showAllDates && <div className="mb-4">
               <DatePickerWithRange date={dateRange} onDateChange={setDateRange} />
-            </div>
-          )}
+            </div>}
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
@@ -110,6 +76,5 @@ export function ClientInfoCards({
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 }
