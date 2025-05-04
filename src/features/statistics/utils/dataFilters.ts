@@ -43,6 +43,7 @@ export const filterData = (
       const dateStr = item.operation_date || item.created_at;
       
       if (!isValidDate(dateStr)) {
+        console.log(`Invalid date: ${dateStr}`);
         return false;
       }
       
@@ -57,6 +58,10 @@ export const filterData = (
         
         try {
           dateMatch = isWithinInterval(itemDate, { start: startDate, end: endDate });
+          
+          if (!dateMatch) {
+            console.log(`Item excluded - date ${itemDate.toISOString()} outside range ${startDate.toISOString()} to ${endDate.toISOString()}`);
+          }
         } catch (error) {
           console.error("Date interval error:", error);
           dateMatch = false;

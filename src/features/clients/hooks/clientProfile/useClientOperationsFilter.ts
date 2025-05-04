@@ -128,13 +128,25 @@ export const useClientOperationsFilter = (
       if (!showAllDates && dateRange.from && dateRange.to) {
         try {
           const opDate = new Date(op.operation_date || op.date);
+          
+          // Validate the date
+          if (isNaN(opDate.getTime())) {
+            console.error(`Invalid date for operation ${op.id}: ${op.operation_date || op.date}`);
+            return false;
+          }
+          
+          // Use proper date boundaries for accurate comparison
           const startDate = startOfDay(dateRange.from);
           const endDate = endOfDay(dateRange.to);
           
-          // Use isWithinInterval for more reliable date comparison
-          if (!isWithinInterval(opDate, { start: startDate, end: endDate })) {
-            return false;
+          const isInRange = isWithinInterval(opDate, { start: startDate, end: endDate });
+          
+          // Debug log for date filtering
+          if (!isInRange) {
+            console.log(`Operation ${op.id} excluded - date ${opDate.toISOString()} outside range ${startDate.toISOString()} to ${endDate.toISOString()}`);
           }
+          
+          return isInRange;
         } catch (err) {
           console.error("Error in date filtering:", err, op);
           return false; // Exclude operations with invalid dates

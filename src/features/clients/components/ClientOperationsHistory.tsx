@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DateRange } from "react-day-picker";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
-import { RefreshCw, Search, XCircle } from "lucide-react";
+import { RefreshCw, Search, XCircle, Calendar, Check } from "lucide-react";
 import { ClientOperationsHistoryTabs } from "./operations-history/ClientOperationsHistoryTabs";
 import { Switch } from "@/components/ui/switch";
 
@@ -47,6 +47,9 @@ export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = (
   isPepsiMen = false,
   updateOperation
 }) => {
+  // State for pending date range before confirmation
+  const [pendingDateRange, setPendingDateRange] = React.useState<DateRange | undefined>(dateRange);
+
   // Log operations data for pepsi men for debugging
   React.useEffect(() => {
     if (isPepsiMen) {
@@ -81,6 +84,16 @@ export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = (
     }
   }, [operations, filteredOperations, clientId, isPepsiMen, dateRange, showAllDates]);
 
+  // Initialize pendingDateRange when dateRange changes
+  React.useEffect(() => {
+    setPendingDateRange(dateRange);
+  }, [dateRange]);
+
+  // Function to apply the date filter
+  const applyDateFilter = () => {
+    setDateRange(pendingDateRange);
+  };
+
   return (
     <Card className="shadow-sm w-full text-center text-gray-950 px-0 py-0 my-0 overflow-hidden">
       <CardHeader className="pb-2 px-3 py-3 text-left border-b bg-card">
@@ -93,30 +106,69 @@ export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = (
         </div>
       </CardHeader>
       <CardContent className="px-0 py-0 w-full max-w-full">
-        {/* Champ de recherche avec meilleur design */}
+        {/* Search and filter section */}
         <div className="px-3 py-3 border-b">
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Rechercher dans l'historique..." 
-              className="pl-9 py-2 h-10 bg-background/60" 
-              value={searchTerm} 
-              onChange={e => setSearchTerm(e.target.value)} 
-            />
-            {searchTerm && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0" 
-                onClick={() => setSearchTerm("")}
-              >
-                <XCircle className="h-4 w-4" />
-              </Button>
+          <div className="flex flex-col gap-3">
+            {/* Search input */}
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder="Rechercher dans l'historique..." 
+                className="pl-9 py-2 h-10 bg-background/60" 
+                value={searchTerm} 
+                onChange={e => setSearchTerm(e.target.value)} 
+              />
+              {searchTerm && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0" 
+                  onClick={() => setSearchTerm("")}
+                >
+                  <XCircle className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+
+            {/* Date filter section */}
+            <div className="flex items-start gap-2">
+              <div className="flex items-center gap-2 mb-2">
+                <Switch 
+                  checked={!showAllDates}
+                  onCheckedChange={(checked) => setShowAllDates(!checked)}
+                  id="show-date-range"
+                />
+                <label htmlFor="show-date-range" className="text-sm">
+                  Filtrer par période
+                </label>
+              </div>
+            </div>
+
+            {/* Date picker and confirm button */}
+            {!showAllDates && (
+              <div className="flex flex-col sm:flex-row gap-2 items-start">
+                <div className="flex-grow">
+                  <DatePickerWithRange
+                    date={pendingDateRange}
+                    onDateChange={setPendingDateRange}
+                    className="w-full"
+                  />
+                </div>
+                <Button 
+                  onClick={applyDateFilter} 
+                  className="w-full sm:w-auto flex items-center gap-2"
+                  variant="outline"
+                  disabled={!pendingDateRange?.from || !pendingDateRange?.to}
+                >
+                  <Check className="h-4 w-4" />
+                  Confirmer la période
+                </Button>
+              </div>
             )}
           </div>
         </div>
 
-        {/* Les onglets d'opérations avec une meilleure organisation de l'espace */}
+        {/* Operations tabs */}
         <div className="px-0 pb-0">
           <ClientOperationsHistoryTabs 
             filteredOperations={filteredOperations} 
