@@ -61,14 +61,32 @@ export const PublicClientOperationsHistory = ({ operations, clientId }: PublicCl
       return;
     }
     
+    // Ensure we're working with fresh Date objects to avoid reference issues
+    const from = new Date(dateRange.from);
+    const to = new Date(dateRange.to);
+    
+    // Set time to beginning and end of day for proper comparison
+    from.setHours(0, 0, 0, 0);
+    to.setHours(23, 59, 59, 999);
+    
+    console.log(`Filtering operations from ${from.toISOString()} to ${to.toISOString()}`);
+    
     const filtered = operations.filter(op => {
       const opDate = new Date(op.operation_date || op.date);
-      const from = new Date(dateRange.from!);
-      const to = new Date(dateRange.to!);
-      to.setHours(23, 59, 59, 999);
-      return opDate >= from && opDate <= to;
+      // Set time to noon to avoid timezone issues
+      opDate.setHours(12, 0, 0, 0);
+      
+      const isInRange = opDate >= from && opDate <= to;
+      
+      // Debug log for filtering
+      if (!isInRange) {
+        console.log(`Excluding operation ${op.id} with date ${opDate.toISOString()}`);
+      }
+      
+      return isInRange;
     });
     
+    console.log(`Filtered from ${operations.length} to ${filtered.length} operations`);
     setFilteredOperations(filtered);
   };
 

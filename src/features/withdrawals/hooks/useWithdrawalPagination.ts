@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Withdrawal } from "../types";
 import { containsPartialText } from "@/features/operations/utils/display-helpers";
 import { DateRange } from "react-day-picker";
-import { isWithinInterval } from "date-fns";
+import { isWithinInterval, startOfDay, endOfDay } from "date-fns";
 
 export const useWithdrawalPagination = (withdrawals: Withdrawal[]) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -42,9 +42,13 @@ export const useWithdrawalPagination = (withdrawals: Withdrawal[]) => {
     if (dateRange?.from && dateRange?.to) {
       const withdrawalDate = new Date(withdrawal.operation_date || withdrawal.created_at);
       try {
+        // Use proper date boundaries for comparison
+        const startDate = startOfDay(dateRange.from);
+        const endDate = endOfDay(dateRange.to);
+        
         dateMatch = isWithinInterval(withdrawalDate, {
-          start: dateRange.from,
-          end: dateRange.to
+          start: startDate,
+          end: endDate
         });
       } catch (error) {
         console.error("Error checking date interval:", error);

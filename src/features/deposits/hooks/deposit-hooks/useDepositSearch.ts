@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Deposit } from "@/features/deposits/types";
-import { isWithinInterval } from "date-fns";
+import { isWithinInterval, startOfDay, endOfDay } from "date-fns";
 import { DateRange } from "react-day-picker";
 
 export const useDepositSearch = (deposits: Deposit[]) => {
@@ -50,9 +50,13 @@ export const useDepositSearch = (deposits: Deposit[]) => {
       if (dateRange?.from && dateRange?.to) {
         try {
           const depositDate = new Date(deposit.operation_date || deposit.created_at);
+          // Use proper date boundaries for comparison
+          const startDate = startOfDay(dateRange.from);
+          const endDate = endOfDay(dateRange.to);
+          
           dateMatch = isWithinInterval(depositDate, {
-            start: dateRange.from,
-            end: dateRange.to
+            start: startDate,
+            end: endDate
           });
         } catch (error) {
           console.error("Error checking date interval:", error);

@@ -1,5 +1,5 @@
 
-import { isWithinInterval } from "date-fns";
+import { isWithinInterval, startOfDay, endOfDay } from "date-fns";
 import { DateRange } from "react-day-picker";
 
 interface FilteredData {
@@ -41,11 +41,14 @@ export const filterData = (
       const itemDate = new Date(dateStr);
       
       // If dateRange is undefined, don't filter by date (show all)
-      const dateMatch = !dateRange?.from || !dateRange?.to || 
-        isWithinInterval(itemDate, { 
-          start: dateRange.from, 
-          end: dateRange.to 
-        });
+      let dateMatch = true;
+      if (dateRange?.from && dateRange?.to) {
+        // Use proper date boundaries for comparison
+        const startDate = startOfDay(dateRange.from);
+        const endDate = endOfDay(dateRange.to);
+        
+        dateMatch = isWithinInterval(itemDate, { start: startDate, end: endDate });
+      }
       
       const clientName = item.client_name?.toLowerCase() || '';
       const fromClient = item.fromClient?.toLowerCase() || '';
@@ -64,6 +67,7 @@ export const filterData = (
 
       return dateMatch && clientMatch && typeMatch;
     } catch (err) {
+      console.error("Error filtering data:", err);
       return false;
     }
   });
