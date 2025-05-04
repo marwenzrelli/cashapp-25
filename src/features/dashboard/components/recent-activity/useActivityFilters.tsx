@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { DateRange } from "react-day-picker";
-import { isWithinInterval, parseISO } from "date-fns";
+import { isWithinInterval, parseISO, startOfDay, endOfDay } from "date-fns";
 import { RecentActivity } from "../../types";
 
 export const useActivityFilters = (activities: RecentActivity[]) => {
@@ -31,7 +31,11 @@ export const useActivityFilters = (activities: RecentActivity[]) => {
 
   // Filter activities based on search and filters
   const filteredActivities = useMemo(() => {
-    if (!activities) return [];
+    if (!activities || activities.length === 0) {
+      return [];
+    }
+
+    console.log(`Filtering ${activities.length} activities with searchTerm=${searchTerm}, operationType=${operationType}, dateRange present: ${!!dateRange?.from && !!dateRange?.to}`);
 
     return activities.filter(activity => {
       // Filter by search term
@@ -47,10 +51,25 @@ export const useActivityFilters = (activities: RecentActivity[]) => {
       if (dateRange?.from && dateRange?.to) {
         try {
           const activityDate = parseISO(activity.date);
+          
+          // Check if date is valid
+          if (isNaN(activityDate.getTime())) {
+            console.error(`Invalid activity date: ${activity.date}`);
+            return false;
+          }
+          
+          // Use proper date boundaries
+          const startDate = startOfDay(dateRange.from);
+          const endDate = endOfDay(dateRange.to);
+          
           dateMatch = isWithinInterval(activityDate, { 
-            start: dateRange.from, 
-            end: dateRange.to 
+            start: startDate, 
+            end: endDate 
           });
+          
+          if (!dateMatch) {
+            console.log(`Activity excluded - date ${activityDate.toISOString()} outside range ${startDate.toISOString()} to ${endDate.toISOString()}`);
+          }
         } catch (error) {
           console.error("Error parsing date:", error);
           dateMatch = false;

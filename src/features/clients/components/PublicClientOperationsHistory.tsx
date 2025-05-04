@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Operation } from "@/features/operations/types";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { DateRange } from "react-day-picker";
-import { subDays } from "date-fns";
+import { subDays, startOfDay, endOfDay, isWithinInterval } from "date-fns";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PublicAccountFlowTab } from "./operations-history/PublicAccountFlowTab";
@@ -62,28 +62,33 @@ export const PublicClientOperationsHistory = ({ operations, clientId }: PublicCl
     }
     
     // Ensure we're working with fresh Date objects to avoid reference issues
-    const from = new Date(dateRange.from);
-    const to = new Date(dateRange.to);
-    
-    // Set time to beginning and end of day for proper comparison
-    from.setHours(0, 0, 0, 0);
-    to.setHours(23, 59, 59, 999);
+    const from = startOfDay(new Date(dateRange.from));
+    const to = endOfDay(new Date(dateRange.to));
     
     console.log(`Filtering operations from ${from.toISOString()} to ${to.toISOString()}`);
     
     const filtered = operations.filter(op => {
-      const opDate = new Date(op.operation_date || op.date);
-      // Set time to noon to avoid timezone issues
-      opDate.setHours(12, 0, 0, 0);
-      
-      const isInRange = opDate >= from && opDate <= to;
-      
-      // Debug log for filtering
-      if (!isInRange) {
-        console.log(`Excluding operation ${op.id} with date ${opDate.toISOString()}`);
+      try {
+        const opDate = new Date(op.operation_date || op.date);
+        
+        // Check if date is valid
+        if (isNaN(opDate.getTime())) {
+          console.log(`Invalid date for operation ${op.id}: ${op.operation_date || op.date}`);
+          return false;
+        }
+        
+        const isInRange = isWithinInterval(opDate, { start: from, end: to });
+        
+        // Debug log for filtering
+        if (!isInRange) {
+          console.log(`Excluding operation ${op.id} with date ${opDate.toISOString()} - outside range`);
+        }
+        
+        return isInRange;
+      } catch (error) {
+        console.error(`Error filtering operation ${op.id}:`, error);
+        return false;
       }
-      
-      return isInRange;
     });
     
     console.log(`Filtered from ${operations.length} to ${filtered.length} operations`);

@@ -40,8 +40,15 @@ export const useWithdrawalPagination = (withdrawals: Withdrawal[]) => {
     // Date range filter
     let dateMatch = true;
     if (dateRange?.from && dateRange?.to) {
-      const withdrawalDate = new Date(withdrawal.operation_date || withdrawal.created_at);
       try {
+        const withdrawalDate = new Date(withdrawal.operation_date || withdrawal.created_at);
+        
+        // Check if the date is valid
+        if (isNaN(withdrawalDate.getTime())) {
+          console.error(`Invalid date: ${withdrawal.operation_date || withdrawal.created_at}`);
+          return false;
+        }
+        
         // Use proper date boundaries for comparison
         const startDate = startOfDay(dateRange.from);
         const endDate = endOfDay(dateRange.to);

@@ -56,7 +56,30 @@ export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = (
       console.log(`ClientOperationsHistory - Total withdrawals: ${withdrawals.length}`);
       console.log(`Withdrawal IDs: ${withdrawals.map(w => w.id).join(', ')}`);
     }
-  }, [operations, filteredOperations, clientId, isPepsiMen]);
+    
+    // Debug date range filtering
+    if (dateRange?.from && dateRange?.to && !showAllDates) {
+      console.log(`ClientOperationsHistory - Date range: ${dateRange.from.toISOString()} to ${dateRange.to.toISOString()}`);
+      console.log(`ClientOperationsHistory - ShowAllDates: ${showAllDates}`);
+      
+      // Check if any operations might be outside the date range
+      const fromDate = dateRange.from;
+      const toDate = dateRange.to;
+      let outsideRangeCount = 0;
+      
+      filteredOperations.forEach(op => {
+        const opDate = new Date(op.operation_date || op.date);
+        if (opDate < fromDate || opDate > toDate) {
+          outsideRangeCount++;
+          console.log(`Operation outside range: ${op.id}, date: ${opDate.toISOString()}`);
+        }
+      });
+      
+      if (outsideRangeCount > 0) {
+        console.warn(`Found ${outsideRangeCount} operations potentially outside date range!`);
+      }
+    }
+  }, [operations, filteredOperations, clientId, isPepsiMen, dateRange, showAllDates]);
 
   return (
     <Card className="shadow-sm w-full text-center text-gray-950 px-0 py-0 my-0 overflow-hidden">

@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Client } from '@/features/clients/types';
 import { Operation } from '@/features/operations/types';
-import { addDays, subDays, startOfDay, endOfDay } from 'date-fns';
+import { addDays, subDays, startOfDay, endOfDay, isWithinInterval } from 'date-fns';
 import { DateRange } from 'react-day-picker';
 
 export const useClientOperationsFilter = (
@@ -135,12 +135,32 @@ export const useClientOperationsFilter = (
       
       // Filter by date range only if not showing all dates
       if (!showAllDates && dateRange.from && dateRange.to) {
-        const opDate = new Date(op.operation_date || op.date);
-        const startDate = startOfDay(dateRange.from);
-        const endDate = endOfDay(dateRange.to);
-        
-        if (opDate < startDate || opDate > endDate) {
-          return false;
+        try {
+          const opDate = new Date(op.operation_date || op.date);
+          
+          // Check if date is valid
+          if (isNaN(opDate.getTime())) {
+            console.error(`Invalid operation date: ${op.operation_date || op.date} for operation ${op.id}`);
+            return false;
+          }
+          
+          const startDate = startOfDay(new Date(dateRange.from));
+          const endDate = endOfDay(new Date(dateRange.to));
+          
+          // Use isWithinInterval for more reliable date comparison
+          const isInRange = isWithinInterval(opDate, { 
+            start: startDate, 
+            end: endDate 
+          });
+          
+          if (!isInRange) {
+            console.log(`Operation ${op.id} with date ${opDate.toISOString()} excluded - outside range ${startDate.toISOString()} to ${endDate.toISOString()}`);
+          }
+          
+          return isInRange;
+        } catch (err) {
+          console.error("Error in date filtering:", err, op);
+          return false; // Exclude operations with invalid dates
         }
       }
       

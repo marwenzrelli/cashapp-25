@@ -25,8 +25,16 @@ export const filterData = (
   transactionType: "all" | "deposits" | "withdrawals" | "transfers"
 ) => {
   if (!data || !Array.isArray(data)) {
+    console.log("No data to filter or data is not an array");
     return [];
   }
+  
+  // If no filters are active, return all data
+  if (!dateRange?.from && !dateRange?.to && !clientFilter && transactionType === "all") {
+    return data;
+  }
+  
+  console.log(`Filtering data with type=${type}, clientFilter=${clientFilter}, dateRange=${dateRange?.from?.toISOString()} - ${dateRange?.to?.toISOString()}`);
   
   return data.filter(item => {
     if (!item) return false;
@@ -40,16 +48,22 @@ export const filterData = (
       
       const itemDate = new Date(dateStr);
       
-      // If dateRange is undefined, don't filter by date (show all)
+      // Date range filtering
       let dateMatch = true;
       if (dateRange?.from && dateRange?.to) {
         // Use proper date boundaries for comparison
         const startDate = startOfDay(dateRange.from);
         const endDate = endOfDay(dateRange.to);
         
-        dateMatch = isWithinInterval(itemDate, { start: startDate, end: endDate });
+        try {
+          dateMatch = isWithinInterval(itemDate, { start: startDate, end: endDate });
+        } catch (error) {
+          console.error("Date interval error:", error);
+          dateMatch = false;
+        }
       }
       
+      // Client name filtering
       const clientName = item.client_name?.toLowerCase() || '';
       const fromClient = item.fromClient?.toLowerCase() || '';
       const toClient = item.toClient?.toLowerCase() || '';
@@ -60,6 +74,7 @@ export const filterData = (
           ? (fromClient.includes(searchTerm) || toClient.includes(searchTerm))
           : clientName.includes(searchTerm));
 
+      // Transaction type filtering
       const typeMatch = transactionType === "all" || 
         (transactionType === "deposits" && type === "deposits") ||
         (transactionType === "withdrawals" && type === "withdrawals") ||

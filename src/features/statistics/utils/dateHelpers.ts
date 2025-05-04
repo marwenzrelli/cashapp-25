@@ -1,5 +1,5 @@
 
-import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
+import { format, subDays, startOfMonth, endOfMonth, isWithinInterval, startOfDay, endOfDay } from "date-fns";
 
 export const getMonthBoundaries = () => {
   const currentMonth = new Date();
@@ -37,6 +37,12 @@ const isValidDate = (date: any): boolean => {
 export const filterByDateRange = (items: any[], startDate: Date, endDate: Date, dateField: string = 'created_at') => {
   if (!Array.isArray(items)) return [];
   
+  // Use proper date boundaries for more accurate comparison
+  const start = startOfDay(startDate);
+  const end = endOfDay(endDate);
+  
+  console.log(`Filtering items by date range: ${start.toISOString()} to ${end.toISOString()}`);
+  
   return items.filter(item => {
     if (!item) return false;
     
@@ -48,10 +54,20 @@ export const filterByDateRange = (items: any[], startDate: Date, endDate: Date, 
       const itemDate = new Date(dateStr);
       
       // Skip invalid dates
-      if (isNaN(itemDate.getTime())) return false;
+      if (isNaN(itemDate.getTime())) {
+        console.log(`Skipping item with invalid date: ${dateStr}`);
+        return false;
+      }
       
-      return itemDate >= startDate && itemDate <= endDate;
+      const isInRange = isWithinInterval(itemDate, { start, end });
+      
+      if (!isInRange) {
+        // console.log(`Item with date ${itemDate.toISOString()} excluded - outside range`);
+      }
+      
+      return isInRange;
     } catch (error) {
+      console.error("Error filtering by date range:", error);
       return false;
     }
   });
@@ -117,4 +133,45 @@ export const generateLast30DaysData = (deposits: any[], withdrawals: any[], tran
       transactions: dayDeposits.length + dayWithdrawals.length + dayTransfers.length
     };
   }).reverse();
+};
+
+/**
+ * Creates date range boundaries for filtering with proper day boundaries
+ */
+export const createDateRangeBoundaries = (dateRange: { from?: Date, to?: Date } | undefined) => {
+  if (!dateRange?.from || !dateRange?.to) {
+    return null;
+  }
+  
+  return {
+    start: startOfDay(dateRange.from),
+    end: endOfDay(dateRange.to)
+  };
+};
+
+/**
+ * Checks if a date is within a date range with proper day boundaries
+ */
+export const isDateInRange = (date: Date | string, dateRange: { from?: Date, to?: Date } | undefined): boolean => {
+  if (!dateRange?.from || !dateRange?.to) {
+    return true; // No range provided means include all
+  }
+  
+  try {
+    const itemDate = new Date(date);
+    
+    // Skip invalid dates
+    if (isNaN(itemDate.getTime())) {
+      return false;
+    }
+    
+    // Use proper date boundaries
+    const start = startOfDay(dateRange.from);
+    const end = endOfDay(dateRange.to);
+    
+    return isWithinInterval(itemDate, { start, end });
+  } catch (error) {
+    console.error("Error checking if date is in range:", error);
+    return false;
+  }
 };

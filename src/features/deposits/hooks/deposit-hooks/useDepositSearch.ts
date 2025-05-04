@@ -29,12 +29,17 @@ export const useDepositSearch = (deposits: Deposit[]) => {
 
   // Filter deposits based on search term and date range
   const filteredDeposits = useMemo(() => {
-    if (!deposits || deposits.length === 0) return [];
+    if (!deposits || deposits.length === 0) {
+      console.log("No deposits to filter");
+      return [];
+    }
     
     // Skip filtering if no filters are active
     if (!searchTerm && !dateRange?.from && !dateRange?.to) {
       return deposits;
     }
+    
+    console.log(`Filtering ${deposits.length} deposits with searchTerm=${searchTerm}, dateRange=${dateRange?.from?.toISOString()} - ${dateRange?.to?.toISOString()}`);
     
     return deposits.filter((deposit) => {
       // Search term filter
@@ -50,6 +55,13 @@ export const useDepositSearch = (deposits: Deposit[]) => {
       if (dateRange?.from && dateRange?.to) {
         try {
           const depositDate = new Date(deposit.operation_date || deposit.created_at);
+          
+          // Check if the date is valid
+          if (isNaN(depositDate.getTime())) {
+            console.error(`Invalid date for deposit ${deposit.id}: ${deposit.operation_date || deposit.created_at}`);
+            return false;
+          }
+          
           // Use proper date boundaries for comparison
           const startDate = startOfDay(dateRange.from);
           const endDate = endOfDay(dateRange.to);
@@ -58,8 +70,12 @@ export const useDepositSearch = (deposits: Deposit[]) => {
             start: startDate,
             end: endDate
           });
+          
+          if (!dateMatch) {
+            console.log(`Deposit ${deposit.id} with date ${depositDate.toISOString()} excluded - outside range ${startDate.toISOString()} to ${endDate.toISOString()}`);
+          }
         } catch (error) {
-          console.error("Error checking date interval:", error);
+          console.error(`Error checking date interval for deposit ${deposit.id}:`, error);
           dateMatch = false;
         }
       }

@@ -31,17 +31,26 @@ export const useOperationsFilter = (operations: Operation[]) => {
         
         // Date range filtering
         if (dateRange?.from && dateRange?.to) {
-          const opDate = new Date(op.operation_date || op.date);
-          
-          // Normalize date boundaries for more accurate comparison
-          const startDate = startOfDay(dateRange.from);
-          const endDate = endOfDay(dateRange.to);
-          
           try {
-            if (!isWithinInterval(opDate, { start: startDate, end: endDate })) {
-              console.log(`Excluding operation ${op.id} with date ${opDate.toISOString()} - outside range ${startDate.toISOString()} to ${endDate.toISOString()}`);
+            const opDate = new Date(op.operation_date || op.date);
+            
+            // Check if the date is valid
+            if (isNaN(opDate.getTime())) {
+              console.error(`Invalid operation date: ${op.operation_date || op.date} for operation ${op.id}`);
               return false;
             }
+            
+            // Normalize date boundaries for more accurate comparison
+            const startDate = startOfDay(dateRange.from);
+            const endDate = endOfDay(dateRange.to);
+            
+            const isInRange = isWithinInterval(opDate, { start: startDate, end: endDate });
+            
+            if (!isInRange) {
+              console.log(`Excluding operation ${op.id} with date ${opDate.toISOString()} - outside range ${startDate.toISOString()} to ${endDate.toISOString()}`);
+            }
+            
+            return isInRange;
           } catch (error) {
             console.error("Error in date filtering:", error, op);
             return false;
