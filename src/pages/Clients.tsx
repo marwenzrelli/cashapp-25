@@ -167,7 +167,7 @@ const Clients = () => {
 
   return (
     <TooltipProvider>
-      <div className={`max-w-6xl mx-auto px-4 py-6 transition-opacity duration-500 ${pageReady ? 'opacity-100' : 'opacity-0'}`}>
+      <div className={`w-full max-w-[100vw] pb-8 px-0 transition-opacity duration-500 ${pageReady ? 'opacity-100' : 'opacity-0'}`}>
         {renderFloatingLoadingIndicator()}
         
         <ClientsPageContent
@@ -202,6 +202,6 @@ const Clients = () => {
       </div>
     </TooltipProvider>
   );
-}
+};
 
 export default Clients;
