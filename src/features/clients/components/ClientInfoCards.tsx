@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { ClientPersonalInfo } from "./ClientPersonalInfo";
 import { Client } from "../types";
@@ -7,7 +8,9 @@ import { DateRange } from "react-day-picker";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { subMonths } from "date-fns";
+
 interface ClientInfoCardsProps {
   client: Client;
   clientId: number;
@@ -16,6 +19,7 @@ interface ClientInfoCardsProps {
   exportToPDF: () => void;
   formatAmount: (amount: number) => string;
 }
+
 export function ClientInfoCards({
   client,
   clientId,
@@ -47,16 +51,20 @@ export function ClientInfoCards({
       transfers
     };
   };
+  
   const balances = calculateBalances();
-  return <div className="space-y-6">
+  
+  return (
+    <div className="space-y-6 max-w-4xl mx-auto">
       <ClientPersonalInfo client={client} clientId={clientId} formatAmount={formatAmount} clientBalance={client.solde} />
       
       <Card>
-        
-        <CardContent>
-          {!showAllDates && <div className="mb-4">
+        <CardContent className="pt-6">
+          {!showAllDates && (
+            <div className="mb-4">
               <DatePickerWithRange date={dateRange} onDateChange={setDateRange} />
-            </div>}
+            </div>
+          )}
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
@@ -76,5 +84,6 @@ export function ClientInfoCards({
           </div>
         </CardContent>
       </Card>
-    </div>;
+    </div>
+  );
 }

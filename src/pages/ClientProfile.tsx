@@ -40,7 +40,7 @@ export default function ClientProfile() {
   const processedError = error ? (typeof error === 'string' ? new Error(error) : error as Error) : null;
 
   return (
-    <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-0 px-0 py-0">
+    <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
       <ClientProfileHeader 
         client={client} 
         clientId={clientId} 
