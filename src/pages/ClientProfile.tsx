@@ -40,57 +40,59 @@ export default function ClientProfile() {
   const processedError = error ? (typeof error === 'string' ? new Error(error) : error as Error) : null;
 
   return (
-    <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-0 px-0 py-0">
-      <ClientProfileHeader 
-        client={client} 
-        clientId={clientId} 
-        clientBalance={clientBalance} 
-        isLoading={isLoading} 
-        formatAmount={formatAmount} 
-        refreshClientBalance={refreshClientBalance} 
-        navigateToClients={navigateToClients} 
-        error={processedError} 
-      />
+    <div className="flex justify-center w-full">
+      <div className="p-4 md:p-6 space-y-6 max-w-7xl w-full">
+        <ClientProfileHeader 
+          client={client} 
+          clientId={clientId} 
+          clientBalance={clientBalance} 
+          isLoading={isLoading} 
+          formatAmount={formatAmount} 
+          refreshClientBalance={refreshClientBalance} 
+          navigateToClients={navigateToClients} 
+          error={processedError} 
+        />
 
-      {client && !isLoading && !error && (
-        <div className="space-y-6">
-          <ClientInfoCards 
-            client={client} 
-            clientId={clientId} 
-            clientOperations={clientOperations} 
-            exportToExcel={exportToExcel} 
-            exportToPDF={exportToPDF} 
-            formatAmount={formatAmount} 
-          />
+        {client && !isLoading && !error && (
+          <div className="space-y-6">
+            <ClientInfoCards 
+              client={client} 
+              clientId={clientId} 
+              clientOperations={clientOperations} 
+              exportToExcel={exportToExcel} 
+              exportToPDF={exportToPDF} 
+              formatAmount={formatAmount} 
+            />
 
-          <ClientProfileTabs 
-            client={client} 
-            clientId={clientId} 
-            clientOperations={clientOperations} 
-            filteredOperations={filteredOperations} 
-            selectedType={selectedType} 
-            setSelectedType={setSelectedType} 
-            searchTerm={searchTerm} 
-            setSearchTerm={setSearchTerm} 
-            dateRange={dateRange} 
-            setDateRange={setDateRange} 
-            isCustomRange={isCustomRange} 
-            setIsCustomRange={setIsCustomRange} 
-            showAllDates={showAllDates} 
-            setShowAllDates={setShowAllDates} 
-            refreshClientOperations={refreshClientOperations} 
-            isPepsiMen={isPepsiMen}
-            updateOperation={updateOperation}
-          />
+            <ClientProfileTabs 
+              client={client} 
+              clientId={clientId} 
+              clientOperations={clientOperations} 
+              filteredOperations={filteredOperations} 
+              selectedType={selectedType} 
+              setSelectedType={setSelectedType} 
+              searchTerm={searchTerm} 
+              setSearchTerm={setSearchTerm} 
+              dateRange={dateRange} 
+              setDateRange={setDateRange} 
+              isCustomRange={isCustomRange} 
+              setIsCustomRange={setIsCustomRange} 
+              showAllDates={showAllDates} 
+              setShowAllDates={setShowAllDates} 
+              refreshClientOperations={refreshClientOperations} 
+              isPepsiMen={isPepsiMen}
+              updateOperation={updateOperation}
+            />
+          </div>
+        )}
+        
+        {/* Hidden buttons to trigger dialogs */}
+        <div className="hidden">
+          <button id="depositDialog" onClick={() => document.querySelector<HTMLElement>('[data-deposit-dialog-trigger]')?.click()}>Open Deposit</button>
+          <button id="withdrawalDialog" onClick={() => document.querySelector<HTMLElement>('[data-withdrawal-dialog-trigger]')?.click()}>Open Withdrawal</button>
+          <button id="exportExcel" onClick={exportToExcel}>Export to Excel</button>
+          <button id="exportPDF" onClick={exportToPDF}>Export to PDF</button>
         </div>
-      )}
-      
-      {/* Hidden buttons to trigger dialogs */}
-      <div className="hidden">
-        <button id="depositDialog" onClick={() => document.querySelector<HTMLElement>('[data-deposit-dialog-trigger]')?.click()}>Open Deposit</button>
-        <button id="withdrawalDialog" onClick={() => document.querySelector<HTMLElement>('[data-withdrawal-dialog-trigger]')?.click()}>Open Withdrawal</button>
-        <button id="exportExcel" onClick={exportToExcel}>Export to Excel</button>
-        <button id="exportPDF" onClick={exportToPDF}>Export to PDF</button>
       </div>
     </div>
   );
