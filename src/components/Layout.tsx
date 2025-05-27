@@ -37,8 +37,10 @@ const Layout = () => {
         setIsOpen={setIsOpen} 
         handleLogout={handleLogout} 
       />
-      <main className="w-full max-w-full px-0 py-0 sm:px-2">
-        <Outlet />
+      <main className="w-full flex justify-center">
+        <div className="w-full max-w-7xl px-2 sm:px-4 lg:px-6">
+          <Outlet />
+        </div>
       </main>
     </div>
   );
