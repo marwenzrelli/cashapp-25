@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useRef } from "react";
 import { Client } from "../../types";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,7 +23,7 @@ export const useFetchClients = (
   // Use a counter for fetch attempts
   const fetchAttemptsRef = useRef(0);
 
-  // Function to update client balances
+  // Function to update client balances with new transfer logic
   const updateClientBalances = async (clientsList: Client[]) => {
     if (!supabase || !clientsList.length) return;
     
@@ -45,21 +46,36 @@ export const useFetchClients = (
           try {
             const clientName = `${client.prenom} ${client.nom}`;
             
-            // Fetch deposits and withdrawals in parallel
-            const [depositsResult, withdrawalsResult] = await Promise.all([
-              supabase.from('deposits').select('amount').eq('client_name', clientName),
-              supabase.from('withdrawals').select('amount').eq('client_name', clientName)
+            // Fetch all operations in parallel with new transfer logic
+            const [depositsResult, withdrawalsResult, transfersReceivedResult, transfersSentResult] = await Promise.all([
+              supabase.from('deposits').select('amount').eq('client_name', clientName).eq('status', 'completed'),
+              supabase.from('withdrawals').select('amount').eq('client_name', clientName).eq('status', 'completed'),
+              supabase.from('transfers').select('amount').eq('to_client', clientName).eq('status', 'completed'),
+              supabase.from('transfers').select('amount').eq('from_client', clientName).eq('status', 'completed')
             ]);
             
             const deposits = depositsResult.data || [];
             const withdrawals = withdrawalsResult.data || [];
+            const transfersReceived = transfersReceivedResult.data || [];
+            const transfersSent = transfersSentResult.data || [];
             
             const depositsTotal = deposits.reduce((sum, d) => sum + Number(d.amount), 0);
             const withdrawalsTotal = withdrawals.reduce((sum, w) => sum + Number(w.amount), 0);
-            const balance = depositsTotal - withdrawalsTotal;
+            const transfersReceivedTotal = transfersReceived.reduce((sum, tr) => sum + Number(tr.amount), 0);
+            const transfersSentTotal = transfersSent.reduce((sum, ts) => sum + Number(ts.amount), 0);
+            
+            // New balance calculation: deposits + transfers received - withdrawals - transfers sent
+            const balance = depositsTotal + transfersReceivedTotal - withdrawalsTotal - transfersSentTotal;
+
+            console.log(`Balance calculated for ${clientName}: 
+              Deposits: ${depositsTotal}, 
+              Withdrawals: ${withdrawalsTotal}, 
+              Transfers Received: ${transfersReceivedTotal},
+              Transfers Sent: ${transfersSentTotal},
+              Final balance: ${balance}`);
 
             // Only update if balance has changed
-            if (client.solde !== balance) {
+            if (Math.abs(client.solde - balance) > 0.01) { // Use small threshold for floating point comparison
               // Update database
               const { error: updateError } = await supabase
                 .from('clients')
