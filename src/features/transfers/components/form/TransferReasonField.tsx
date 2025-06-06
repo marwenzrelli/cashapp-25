@@ -11,14 +11,20 @@ interface TransferReasonFieldProps {
 export const TransferReasonField = ({ value, onChange }: TransferReasonFieldProps) => {
   return (
     <div className="space-y-2">
-      <Label htmlFor="reason">Motif</Label>
+      <Label htmlFor="reason" className="text-sm font-medium">
+        Motif du virement
+      </Label>
       <Input
         id="reason"
-        placeholder="Motif du virement"
+        placeholder="Ex: Remboursement, Transfert familial..."
         value={value}
         onChange={(e) => onChange(e.target.value)}
         required
+        className="placeholder:text-muted-foreground/60"
       />
+      <p className="text-xs text-muted-foreground">
+        Précisez la raison du transfert
+      </p>
     </div>
   );
 };
