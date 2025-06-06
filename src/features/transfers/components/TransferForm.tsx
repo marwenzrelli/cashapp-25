@@ -1,7 +1,7 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { TransferClientSelect } from "./form/TransferClientSelect";
+import { ClientSearchField } from "./form/ClientSearchField";
 import { TransferAmountField } from "./form/TransferAmountField";
 import { TransferReasonField } from "./form/TransferReasonField";
 import { TransferSubmitButton } from "./form/TransferSubmitButton";
@@ -47,22 +47,23 @@ export const TransferForm = ({ onSuccess }: TransferFormProps) => {
             </div>
             
             <div className="grid gap-4 md:grid-cols-2">
-              <TransferClientSelect
+              <ClientSearchField
                 id="fromClient"
                 label="Compte émetteur"
                 clients={clients}
                 value={fromClient}
                 onChange={setFromClient}
-                placeholder="Sélectionner un client"
+                placeholder="Rechercher le client émetteur..."
+                disabledValue={toClient}
               />
 
-              <TransferClientSelect
+              <ClientSearchField
                 id="toClient"
                 label="Compte bénéficiaire"
                 clients={clients}
                 value={toClient}
                 onChange={setToClient}
-                placeholder="Sélectionner un client"
+                placeholder="Rechercher le client bénéficiaire..."
                 disabledValue={fromClient}
               />
             </div>
