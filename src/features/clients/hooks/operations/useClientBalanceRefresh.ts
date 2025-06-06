@@ -64,9 +64,32 @@ export function useClientBalanceRefresh() {
         return false;
       }
       
-      // Fixed: Calculate balance with proper type handling
+      // Get transfers received by this client (to_client)
+      const { data: transfersReceived, error: transfersReceivedError } = await supabase
+        .from('transfers')
+        .select('amount')
+        .eq('to_client', clientFullName)
+        .eq('status', 'completed');
+      
+      if (transfersReceivedError) {
+        console.error("Error retrieving transfers received:", transfersReceivedError);
+        return false;
+      }
+      
+      // Get transfers sent by this client (from_client)
+      const { data: transfersSent, error: transfersSentError } = await supabase
+        .from('transfers')
+        .select('amount')
+        .eq('from_client', clientFullName)
+        .eq('status', 'completed');
+      
+      if (transfersSentError) {
+        console.error("Error retrieving transfers sent:", transfersSentError);
+        return false;
+      }
+      
+      // Calculate totals with proper type handling
       const totalDeposits = deposits?.reduce((acc, dep) => {
-        // Handle any type of amount value safely
         const amount = typeof dep.amount === 'number' 
           ? dep.amount 
           : dep.amount ? parseFloat(String(dep.amount)) : 0;
@@ -74,19 +97,34 @@ export function useClientBalanceRefresh() {
       }, 0) || 0;
       
       const totalWithdrawals = withdrawals?.reduce((acc, wd) => {
-        // Handle any type of amount value safely
         const amount = typeof wd.amount === 'number' 
           ? wd.amount 
           : wd.amount ? parseFloat(String(wd.amount)) : 0;
         return acc + amount;
       }, 0) || 0;
       
-      // Fix floating point precision issues by rounding to 2 decimal places
-      const balance = parseFloat((totalDeposits - totalWithdrawals).toFixed(2));
+      const totalTransfersReceived = transfersReceived?.reduce((acc, tr) => {
+        const amount = typeof tr.amount === 'number' 
+          ? tr.amount 
+          : tr.amount ? parseFloat(String(tr.amount)) : 0;
+        return acc + amount;
+      }, 0) || 0;
+      
+      const totalTransfersSent = transfersSent?.reduce((acc, tr) => {
+        const amount = typeof tr.amount === 'number' 
+          ? tr.amount 
+          : tr.amount ? parseFloat(String(tr.amount)) : 0;
+        return acc + amount;
+      }, 0) || 0;
+      
+      // New balance calculation: deposits + transfers received - withdrawals - transfers sent
+      const balance = parseFloat((totalDeposits + totalTransfersReceived - totalWithdrawals - totalTransfersSent).toFixed(2));
       
       console.log(`Balance calculated for ${clientFullName}: 
         Deposits: ${totalDeposits}, 
         Withdrawals: ${totalWithdrawals}, 
+        Transfers Received: ${totalTransfersReceived},
+        Transfers Sent: ${totalTransfersSent},
         Final balance: ${balance}`);
       
       // Update balance in database

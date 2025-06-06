@@ -61,14 +61,42 @@ export const useRefreshClientBalance = (
         return false;
       }
       
-      // Calculate balance manually
+      // Get transfers received by this client (to_client)
+      const { data: transfersReceived, error: transfersReceivedError } = await supabase
+        .from('transfers')
+        .select('amount')
+        .eq('to_client', clientFullName);
+      
+      if (transfersReceivedError) {
+        console.error("Error retrieving transfers received:", transfersReceivedError);
+        return false;
+      }
+      
+      // Get transfers sent by this client (from_client)
+      const { data: transfersSent, error: transfersSentError } = await supabase
+        .from('transfers')
+        .select('amount')
+        .eq('from_client', clientFullName);
+      
+      if (transfersSentError) {
+        console.error("Error retrieving transfers sent:", transfersSentError);
+        return false;
+      }
+      
+      // Calculate balance manually with new formula
       const totalDeposits = deposits?.reduce((acc, dep) => acc + Number(dep.amount), 0) || 0;
       const totalWithdrawals = withdrawals?.reduce((acc, wd) => acc + Number(wd.amount), 0) || 0;
-      const balance = totalDeposits - totalWithdrawals;
+      const totalTransfersReceived = transfersReceived?.reduce((acc, tr) => acc + Number(tr.amount), 0) || 0;
+      const totalTransfersSent = transfersSent?.reduce((acc, tr) => acc + Number(tr.amount), 0) || 0;
+      
+      // New balance calculation: deposits + transfers received - withdrawals - transfers sent
+      const balance = totalDeposits + totalTransfersReceived - totalWithdrawals - totalTransfersSent;
       
       console.log(`Balance calculated for ${clientFullName}: 
         Deposits: ${totalDeposits}, 
         Withdrawals: ${totalWithdrawals}, 
+        Transfers Received: ${totalTransfersReceived},
+        Transfers Sent: ${totalTransfersSent},
         Final balance: ${balance}`);
       
       // Update balance in database
