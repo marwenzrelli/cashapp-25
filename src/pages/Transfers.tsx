@@ -10,11 +10,13 @@ import { TransferPagination } from "@/features/transfers/components/TransferPagi
 import { useTransfersList } from "@/features/transfers/hooks/useTransfersList";
 import { useTransferActions } from "@/features/transfers/hooks/useTransferActions";
 import { Loader2 } from "lucide-react";
+import { NewTransferButton } from "@/features/transfers/components/NewTransferButton";
 
 const Transfers = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [itemsPerPage, setItemsPerPage] = useState("10");
   const [currentPage, setCurrentPage] = useState(1);
+  const [showTransferForm, setShowTransferForm] = useState(false);
   
   const { transfers, isLoading, fetchTransfers } = useTransfersList();
   const {
@@ -38,6 +40,11 @@ const Transfers = () => {
   const startIndex = (currentPage - 1) * parseInt(itemsPerPage);
   const visibleTransfers = transfersArray.slice(startIndex, startIndex + parseInt(itemsPerPage));
 
+  const handleTransferSuccess = () => {
+    fetchTransfers();
+    setShowTransferForm(false);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
@@ -50,11 +57,21 @@ const Transfers = () => {
     <div className="container mx-auto p-6 space-y-8">
       <TransferHeader />
 
-      <div className="flex justify-center">
-        <div className="w-full max-w-2xl">
-          <TransferForm onSuccess={fetchTransfers} />
+      <NewTransferButton 
+        onClick={() => setShowTransferForm(true)}
+        isVisible={!showTransferForm}
+      />
+
+      {showTransferForm && (
+        <div className="flex justify-center">
+          <div className="w-full max-w-2xl">
+            <TransferForm 
+              onSuccess={handleTransferSuccess}
+              onCancel={() => setShowTransferForm(false)}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       <TransferPagination
         itemsPerPage={itemsPerPage}

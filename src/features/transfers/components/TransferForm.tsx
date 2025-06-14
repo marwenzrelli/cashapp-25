@@ -6,13 +6,15 @@ import { TransferAmountField } from "./form/TransferAmountField";
 import { TransferReasonField } from "./form/TransferReasonField";
 import { TransferSubmitButton } from "./form/TransferSubmitButton";
 import { useTransferForm } from "../hooks/useTransferForm";
-import { ArrowRightLeft, Users, CreditCard } from "lucide-react";
+import { ArrowRightLeft, Users, CreditCard, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface TransferFormProps {
   onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
-export const TransferForm = ({ onSuccess }: TransferFormProps) => {
+export const TransferForm = ({ onSuccess, onCancel }: TransferFormProps) => {
   const {
     isLoading,
     fromClient,
@@ -30,16 +32,28 @@ export const TransferForm = ({ onSuccess }: TransferFormProps) => {
   return (
     <Card className="shadow-lg border-0 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30">
       <CardHeader className="pb-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-lg">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-white/20 rounded-lg">
-            <ArrowRightLeft className="h-6 w-6" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-white/20 rounded-lg">
+              <ArrowRightLeft className="h-6 w-6" />
+            </div>
+            <div>
+              <CardTitle className="text-xl font-semibold">Nouveau virement</CardTitle>
+              <p className="text-blue-100 text-sm mt-1">
+                Transférer des fonds entre comptes clients
+              </p>
+            </div>
           </div>
-          <div>
-            <CardTitle className="text-xl font-semibold">Nouveau virement</CardTitle>
-            <p className="text-blue-100 text-sm mt-1">
-              Transférer des fonds entre comptes clients
-            </p>
-          </div>
+          {onCancel && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onCancel}
+              className="text-white hover:bg-white/20 rounded-full"
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          )}
         </div>
       </CardHeader>
       
@@ -108,8 +122,20 @@ export const TransferForm = ({ onSuccess }: TransferFormProps) => {
           <Separator className="bg-gradient-to-r from-transparent via-gray-300 to-transparent" />
 
           {/* Section Action */}
-          <div className="pt-2">
-            <TransferSubmitButton isLoading={isLoading} />
+          <div className="pt-2 flex gap-3">
+            {onCancel && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onCancel}
+                className="flex-1"
+              >
+                Annuler
+              </Button>
+            )}
+            <div className={onCancel ? "flex-1" : "w-full"}>
+              <TransferSubmitButton isLoading={isLoading} />
+            </div>
           </div>
         </form>
       </CardContent>
