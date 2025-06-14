@@ -47,48 +47,46 @@ const Transfers = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-4xl space-y-8 animate-in">
-        <TransferHeader />
+    <div className="container mx-auto p-6 space-y-8">
+      <TransferHeader />
 
-        <div className="flex justify-center">
-          <div className="w-full max-w-2xl">
-            <TransferForm onSuccess={fetchTransfers} />
-          </div>
+      <div className="flex justify-center">
+        <div className="w-full max-w-2xl">
+          <TransferForm onSuccess={fetchTransfers} />
         </div>
-
-        <TransferPagination
-          itemsPerPage={itemsPerPage}
-          setItemsPerPage={setItemsPerPage}
-          totalItems={transfersArray.length}
-          currentPage={currentPage}
-          setCurrentPage={setCurrentPage}
-        />
-
-        <TransferList
-          transfers={visibleTransfers}
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
-
-        <EditTransferDialog
-          isOpen={isEditDialogOpen}
-          onOpenChange={setIsEditDialogOpen}
-          transfer={selectedTransfer}
-          editForm={editForm}
-          onEditFormChange={setEditForm}
-          onConfirm={confirmEdit}
-        />
-
-        <DeleteTransferDialog
-          isOpen={isDeleteDialogOpen}
-          onOpenChange={setIsDeleteDialogOpen}
-          transfer={selectedTransfer}
-          onConfirm={confirmDelete}
-        />
       </div>
+
+      <TransferPagination
+        itemsPerPage={itemsPerPage}
+        setItemsPerPage={setItemsPerPage}
+        totalItems={transfersArray.length}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+      />
+
+      <TransferList
+        transfers={visibleTransfers}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
+
+      <EditTransferDialog
+        isOpen={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        transfer={selectedTransfer}
+        editForm={editForm}
+        onEditFormChange={setEditForm}
+        onConfirm={confirmEdit}
+      />
+
+      <DeleteTransferDialog
+        isOpen={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        transfer={selectedTransfer}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 };
