@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Input } from "@/components/ui/input";
 
@@ -26,7 +26,6 @@ export const DatePickerField = ({
   onTimeChange
 }: DatePickerFieldProps) => {
   const [open, setOpen] = useState(false);
-  const [showTimeInput, setShowTimeInput] = useState(false);
   const isMobile = useIsMobile();
 
   const handleTimeChange = (newTime: string) => {
@@ -73,10 +72,13 @@ export const DatePickerField = ({
               <Calendar
                 mode="single"
                 selected={date}
-                onSelect={onDateChange}
+                onSelect={(selectedDate) => {
+                  onDateChange(selectedDate);
+                  setOpen(false);
+                }}
                 locale={fr}
                 initialFocus
-                className="pointer-events-auto"
+                className="p-3"
               />
             </PopoverContent>
           </Popover>
