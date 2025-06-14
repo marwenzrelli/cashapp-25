@@ -39,6 +39,18 @@ export const StandaloneWithdrawalForm: React.FC<StandaloneWithdrawalFormProps> =
   // Find the selected client to display their balance
   const selectedClientData = clients.find(client => client.id.toString() === selectedClient);
 
+  // Convert date to ISO string for DateField
+  const dateValue = date.toISOString();
+
+  const handleDateChange = (value: string) => {
+    try {
+      const newDate = new Date(value);
+      setDate(newDate);
+    } catch (error) {
+      console.error("Error parsing date:", error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -155,9 +167,9 @@ export const StandaloneWithdrawalForm: React.FC<StandaloneWithdrawalFormProps> =
           </div>
           
           <DateField 
-            date={date} 
-            onDateChange={setDate} 
-            label="Date du retrait"
+            value={dateValue}
+            onChange={handleDateChange}
+            id="withdrawal-date"
           />
           
           <div className="space-y-2">
