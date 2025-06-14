@@ -12,8 +12,6 @@ import { EditDepositDialog } from "./dialog/EditDepositDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ExtendedClient } from "@/features/withdrawals/hooks/form/withdrawalFormTypes";
 import { DateRange } from "react-day-picker";
-import { NewDepositButton } from "./NewDepositButton";
-import { NewDepositDialog } from "./deposit-dialog/NewDepositDialog";
 
 interface DepositsContentProps {
   deposits: Deposit[];
@@ -75,8 +73,6 @@ export const DepositsContent = memo(({
   dateRange,
   setDateRange
 }: DepositsContentProps) => {
-  const [isNewDepositOpen, setIsNewDepositOpen] = useState(false);
-
   const {
     clients,
     refreshClientBalance,
@@ -104,21 +100,6 @@ export const DepositsContent = memo(({
     selectedDeposit?.id
   ]);
 
-  const handleRefreshClientBalance = async (clientId: string): Promise<boolean> => {
-    try {
-      await refreshClientBalance(parseInt(clientId, 10));
-      return true;
-    } catch (error) {
-      console.error("Error refreshing client balance:", error);
-      return false;
-    }
-  };
-
-  const extendedClients: ExtendedClient[] = clients.map(client => ({
-    ...client,
-    dateCreation: client.date_creation || new Date().toISOString()
-  }));
-
   return (
     <div className="space-y-8 animate-in px-2 sm:px-4 md:px-6 w-full">
       <DepositsHeader 
@@ -126,10 +107,6 @@ export const DepositsContent = memo(({
         filteredDeposits={filteredDeposits}
         isLoading={isLoading}
       />
-      
-      <div className="w-full flex justify-center">
-        <NewDepositButton onClick={() => setIsNewDepositOpen(true)} />
-      </div>
 
       <div className="space-y-4 w-full">
         <SearchBar
@@ -177,14 +154,6 @@ export const DepositsContent = memo(({
           )
         )}
       </div>
-
-      <NewDepositDialog
-        isOpen={isNewDepositOpen}
-        onOpenChange={setIsNewDepositOpen}
-        clients={extendedClients}
-        onConfirm={handleCreateDeposit}
-        refreshClientBalance={handleRefreshClientBalance}
-      />
 
       <DeleteDepositDialog 
         isOpen={isDeleteDialogOpen} 
