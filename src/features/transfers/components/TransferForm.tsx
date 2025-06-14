@@ -5,8 +5,9 @@ import { ClientSearchField } from "./form/ClientSearchField";
 import { TransferAmountField } from "./form/TransferAmountField";
 import { TransferReasonField } from "./form/TransferReasonField";
 import { TransferSubmitButton } from "./form/TransferSubmitButton";
+import { TransferDateTimeField } from "./form/TransferDateTimeField";
 import { useTransferForm } from "../hooks/useTransferForm";
-import { ArrowRightLeft, Users, CreditCard, X } from "lucide-react";
+import { ArrowRightLeft, Users, CreditCard, Calendar, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface TransferFormProps {
@@ -25,6 +26,10 @@ export const TransferForm = ({ onSuccess, onCancel }: TransferFormProps) => {
     setAmount,
     reason,
     setReason,
+    operationDate,
+    setOperationDate,
+    operationTime,
+    setOperationTime,
     clients,
     handleTransfer
   } = useTransferForm(onSuccess);
@@ -91,6 +96,27 @@ export const TransferForm = ({ onSuccess, onCancel }: TransferFormProps) => {
                 disabledValue={fromClient}
               />
             </div>
+          </div>
+
+          <Separator className="bg-gradient-to-r from-transparent via-gray-300 to-transparent" />
+
+          {/* Section Date et Heure */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 mb-4 p-3 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 rounded-lg border border-orange-200 dark:border-orange-800">
+              <div className="p-2 bg-orange-600 rounded-lg">
+                <Calendar className="h-4 w-4 text-white" />
+              </div>
+              <h3 className="text-sm font-semibold text-orange-800 dark:text-orange-200">
+                Date et heure de l'opération
+              </h3>
+            </div>
+            
+            <TransferDateTimeField
+              date={operationDate}
+              setDate={setOperationDate}
+              time={operationTime}
+              setTime={setOperationTime}
+            />
           </div>
 
           <Separator className="bg-gradient-to-r from-transparent via-gray-300 to-transparent" />
