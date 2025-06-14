@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ExtendedClient } from "@/features/withdrawals/hooks/form/withdrawalFormTypes";
 import { Deposit } from "@/features/deposits/types";
-import { UserCircle } from "lucide-react";
+import { UserCircle, X } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { DatePickerField } from "../components/DatePickerField";
@@ -17,14 +17,16 @@ interface StandaloneDepositFormProps {
   clients: ExtendedClient[];
   onConfirm: (deposit: Deposit) => Promise<boolean | void>;
   refreshClientBalance: (clientId: string) => Promise<boolean | void>;
-  onSuccess?: () => void; // Added success callback
+  onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
 export const StandaloneDepositForm: React.FC<StandaloneDepositFormProps> = ({
   clients,
   onConfirm,
   refreshClientBalance,
-  onSuccess
+  onSuccess,
+  onCancel
 }) => {
   const { currency } = useCurrency();
   const isMobile = useIsMobile();
@@ -50,10 +52,24 @@ export const StandaloneDepositForm: React.FC<StandaloneDepositFormProps> = ({
   return (
     <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-100 shadow-md">
       <CardHeader className="pb-3">
-        <CardTitle className="text-base text-green-700">Nouveau versement</CardTitle>
-        <CardDescription>
-          Effectuez un versement pour un client
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-base text-green-700">Nouveau versement</CardTitle>
+            <CardDescription>
+              Effectuez un versement pour un client
+            </CardDescription>
+          </div>
+          {onCancel && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onCancel}
+              className="text-green-700 hover:bg-green-100 rounded-full"
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          )}
+        </div>
       </CardHeader>
       
       <CardContent>
@@ -134,13 +150,25 @@ export const StandaloneDepositForm: React.FC<StandaloneDepositFormProps> = ({
             />
           </div>
           
-          <Button 
-            type="submit" 
-            className={`w-full bg-green-600 hover:bg-green-700 ${isMobile ? "h-16 text-lg mt-4" : ""}`}
-            disabled={isLoading}
-          >
-            {isLoading ? "En cours..." : "Effectuer le versement"}
-          </Button>
+          <div className="pt-2 flex gap-3">
+            {onCancel && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onCancel}
+                className="flex-1"
+              >
+                Annuler
+              </Button>
+            )}
+            <Button 
+              type="submit" 
+              className={`${onCancel ? "flex-1" : "w-full"} bg-green-600 hover:bg-green-700 ${isMobile ? "h-16 text-lg mt-4" : ""}`}
+              disabled={isLoading}
+            >
+              {isLoading ? "En cours..." : "Effectuer le versement"}
+            </Button>
+          </div>
         </form>
       </CardContent>
     </Card>

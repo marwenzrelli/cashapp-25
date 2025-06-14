@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { WithdrawalTable } from "./WithdrawalTable";
 import { WithdrawalHeader } from "./WithdrawalHeader";
 import { DeleteWithdrawalDialog } from "./DeleteWithdrawalDialog";
@@ -13,6 +13,7 @@ import { DateRange } from "react-day-picker";
 import { WithdrawalTotals } from "./WithdrawalTotals";
 import { useWithdrawalState } from "../hooks/useWithdrawalState";
 import { toast } from "sonner";
+import { StandaloneWithdrawalForm } from "./standalone/StandaloneWithdrawalForm";
 
 interface WithdrawalsContentProps {
   withdrawals: Withdrawal[];
@@ -55,6 +56,8 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
   dateRange,
   setDateRange = () => {}
 }) => {
+  const [showWithdrawalForm, setShowWithdrawalForm] = useState(false);
+
   const {
     showDialog,
     setShowDialog,
@@ -83,10 +86,13 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
   };
 
   const handleDeleteWithdrawal = (withdrawal: Withdrawal) => {
-    // First set the selected withdrawal using our state hook
     setSelectedWithdrawal(handleDelete(withdrawal));
-    // Then call the passed in delete function which will show the dialog
     deleteWithdrawal(withdrawal);
+  };
+
+  const handleWithdrawalSuccess = () => {
+    fetchWithdrawals();
+    setShowWithdrawalForm(false);
   };
 
   const getDateRangeText = () => {
@@ -107,13 +113,37 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
     return "pour toute la période";
   };
 
+  const extendedClients = clients.map(client => ({
+    ...client,
+    dateCreation: client.date_creation || new Date().toISOString()
+  }));
+
   return (
-    <div className="space-y-8 animate-in w-full px-0 sm:px-0">
+    <div className="container mx-auto p-6 space-y-8 animate-in w-full">
       <WithdrawalHeader withdrawals={withdrawals} />
 
-      <div className="flex justify-center w-full">
-        <NewWithdrawalButton onClick={handleNewWithdrawal} />
-      </div>
+      <NewWithdrawalButton 
+        onClick={() => setShowWithdrawalForm(true)}
+        isVisible={!showWithdrawalForm}
+      />
+
+      {showWithdrawalForm && (
+        <div className="flex justify-center">
+          <div className="w-full max-w-2xl">
+            <StandaloneWithdrawalForm
+              clients={extendedClients}
+              onConfirm={async (withdrawal) => {
+                // Handle withdrawal creation logic here
+                console.log("Creating withdrawal:", withdrawal);
+                return true;
+              }}
+              refreshClientBalance={refreshClientBalance}
+              onSuccess={handleWithdrawalSuccess}
+              onCancel={() => setShowWithdrawalForm(false)}
+            />
+          </div>
+        </div>
+      )}
 
       <SearchSection
         searchTerm={searchTerm}
