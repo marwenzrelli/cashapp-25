@@ -13,88 +13,107 @@ export const useDeleteDeposit = (
   setShowDeleteDialog: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
   const deleteDeposit = async (depositId: number): Promise<boolean> => {
-    console.log(`[DELETE] Starting deleteDeposit with ID: ${depositId} (type: ${typeof depositId})`);
+    console.log(`[DELETE-DEBUG] === DÉBUT DE LA SUPPRESSION ===`);
+    console.log(`[DELETE-DEBUG] ID reçu: ${depositId} (type: ${typeof depositId})`);
     
     if (!depositId || isNaN(depositId) || depositId <= 0) {
-      console.error("[DELETE] Invalid deposit ID:", depositId);
+      console.error("[DELETE-DEBUG] ❌ ERREUR: ID invalide:", depositId);
       toast.error("ID de versement invalide");
       return false;
     }
     
     try {
       setIsLoading(true);
-      console.log("[DELETE] Setting isLoading to true for deletion");
+      console.log("[DELETE-DEBUG] ✅ isLoading défini à true");
 
+      // Étape 1: Vérification de la session
+      console.log("[DELETE-DEBUG] === ÉTAPE 1: VÉRIFICATION SESSION ===");
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id;
-      console.log("[DELETE] User ID for deletion:", userId);
+      console.log("[DELETE-DEBUG] Session:", !!session);
+      console.log("[DELETE-DEBUG] User ID:", userId);
+      console.log("[DELETE-DEBUG] User email:", session?.user?.email);
 
       if (!userId) {
-        console.error("[DELETE] No authenticated user found");
+        console.error("[DELETE-DEBUG] ❌ ERREUR: Pas d'utilisateur connecté");
         toast.error("Vous devez être connecté pour supprimer un versement");
         return false;
       }
 
-      // Superviseur emails - toujours autorisés
+      // Étape 2: Vérification des permissions
+      console.log("[DELETE-DEBUG] === ÉTAPE 2: VÉRIFICATION PERMISSIONS ===");
       const supervisorEmails = [
         'marwen.zrelli.pro@icloud.com',
         'marwen.zrelli@gmail.com'
       ];
 
-      // Vérifier si c'est un superviseur par email d'abord
       const isSupervisorByEmail = session.user.email && 
         supervisorEmails.includes(session.user.email.toLowerCase());
 
-      if (isSupervisorByEmail) {
-        console.log("[DELETE] Superviseur reconnu par email:", session.user.email);
-      } else {
-        // Vérifier le rôle dans la base de données seulement si pas superviseur par email
+      console.log("[DELETE-DEBUG] Email utilisateur:", session.user.email);
+      console.log("[DELETE-DEBUG] Est superviseur par email:", isSupervisorByEmail);
+
+      if (!isSupervisorByEmail) {
+        console.log("[DELETE-DEBUG] Vérification du rôle dans la base de données...");
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', userId)
           .single();
 
+        console.log("[DELETE-DEBUG] Profil récupéré:", profile);
+        console.log("[DELETE-DEBUG] Erreur profil:", profileError);
+
         if (profileError) {
-          console.error("[DELETE] Error fetching user profile:", profileError);
+          console.error("[DELETE-DEBUG] ❌ ERREUR: Impossible de récupérer le profil:", profileError);
           toast.error("Erreur lors de la vérification des permissions");
           return false;
         }
 
         if (profile && !['supervisor', 'manager'].includes(profile.role)) {
-          console.error("[DELETE] User role insufficient for deletion:", profile.role);
+          console.error("[DELETE-DEBUG] ❌ ERREUR: Rôle insuffisant:", profile.role);
           toast.error("Seuls les superviseurs et managers peuvent supprimer des versements");
           return false;
         }
+
+        console.log("[DELETE-DEBUG] ✅ Permissions validées par rôle:", profile.role);
+      } else {
+        console.log("[DELETE-DEBUG] ✅ Permissions validées par email superviseur");
       }
 
-      console.log("[DELETE] Permissions verified, proceeding with deletion");
-
-      // Effectuer la suppression directement ici au lieu d'utiliser handleDepositDeletion
-      console.log(`[DELETE] Fetching deposit details for ID: ${depositId}`);
+      // Étape 3: Récupération des détails du dépôt
+      console.log("[DELETE-DEBUG] === ÉTAPE 3: RÉCUPÉRATION DÉPÔT ===");
+      console.log(`[DELETE-DEBUG] Récupération du dépôt ID: ${depositId}`);
       
-      // Récupérer les détails du dépôt avant suppression
       const { data: depositData, error: fetchError } = await supabase
         .from('deposits')
         .select('*')
         .eq('id', depositId)
         .single();
         
+      console.log("[DELETE-DEBUG] Données dépôt récupérées:", depositData);
+      console.log("[DELETE-DEBUG] Erreur récupération:", fetchError);
+        
       if (fetchError) {
-        console.error("[DELETE] Error fetching deposit details:", fetchError);
+        console.error("[DELETE-DEBUG] ❌ ERREUR: Impossible de récupérer le dépôt:", fetchError);
         toast.error("Erreur lors de la récupération des détails du dépôt");
         return false;
       }
       
       if (!depositData) {
-        console.error("[DELETE] No deposit data found for ID:", depositId);
+        console.error("[DELETE-DEBUG] ❌ ERREUR: Aucune donnée trouvée pour l'ID:", depositId);
         toast.error("Dépôt introuvable");
         return false;
       }
       
-      console.log("[DELETE] Deposit data found:", depositData);
+      console.log("[DELETE-DEBUG] ✅ Dépôt trouvé:", {
+        id: depositData.id,
+        client_name: depositData.client_name,
+        amount: depositData.amount
+      });
       
-      // Préparer les données à insérer dans deleted_deposits
+      // Étape 4: Préparation des données pour deleted_deposits
+      console.log("[DELETE-DEBUG] === ÉTAPE 4: PRÉPARATION LOG SUPPRESSION ===");
       const logEntry = {
         original_id: depositData.id,
         client_name: depositData.client_name,
@@ -105,110 +124,142 @@ export const useDeleteDeposit = (
         status: depositData.status
       };
       
-      console.log("[DELETE] Inserting into deleted_deposits:", logEntry);
+      console.log("[DELETE-DEBUG] Données à insérer dans deleted_deposits:", logEntry);
       
-      // Insérer dans la table des dépôts supprimés
-      const { error: logError } = await supabase
+      // Étape 5: Insertion dans deleted_deposits
+      console.log("[DELETE-DEBUG] === ÉTAPE 5: INSERTION DANS DELETED_DEPOSITS ===");
+      const { data: logData, error: logError } = await supabase
         .from('deleted_deposits')
-        .insert(logEntry);
+        .insert(logEntry)
+        .select();
+        
+      console.log("[DELETE-DEBUG] Données insérées:", logData);
+      console.log("[DELETE-DEBUG] Erreur insertion:", logError);
         
       if (logError) {
-        console.error("[DELETE] Error inserting into deleted_deposits:", logError);
+        console.error("[DELETE-DEBUG] ❌ ERREUR: Impossible d'insérer dans deleted_deposits:", logError);
+        console.error("[DELETE-DEBUG] Détails erreur:", {
+          message: logError.message,
+          details: logError.details,
+          hint: logError.hint,
+          code: logError.code
+        });
         toast.error("Erreur lors de l'enregistrement de la suppression");
         return false;
       }
       
-      console.log("[DELETE] Successfully logged deletion, now deleting original");
+      console.log("[DELETE-DEBUG] ✅ Insertion dans deleted_deposits réussie");
       
-      // Maintenant supprimer le dépôt original
-      const { error: deleteError } = await supabase
+      // Étape 6: Suppression du dépôt original
+      console.log("[DELETE-DEBUG] === ÉTAPE 6: SUPPRESSION DÉPÔT ORIGINAL ===");
+      const { data: deleteData, error: deleteError } = await supabase
         .from('deposits')
         .delete()
-        .eq('id', depositId);
+        .eq('id', depositId)
+        .select();
+        
+      console.log("[DELETE-DEBUG] Données supprimées:", deleteData);
+      console.log("[DELETE-DEBUG] Erreur suppression:", deleteError);
         
       if (deleteError) {
-        console.error("[DELETE] Error deleting deposit:", deleteError);
+        console.error("[DELETE-DEBUG] ❌ ERREUR: Impossible de supprimer le dépôt:", deleteError);
+        console.error("[DELETE-DEBUG] Détails erreur suppression:", {
+          message: deleteError.message,
+          details: deleteError.details,
+          hint: deleteError.hint,
+          code: deleteError.code
+        });
         toast.error("Erreur lors de la suppression du dépôt");
         return false;
       }
       
-      console.log("[DELETE] Deposit deleted successfully from database");
+      console.log("[DELETE-DEBUG] ✅ Suppression du dépôt réussie");
       
-      // Mettre à jour l'état local
-      console.log("[DELETE] Updating local state");
+      // Étape 7: Mise à jour de l'état local
+      console.log("[DELETE-DEBUG] === ÉTAPE 7: MISE À JOUR ÉTAT LOCAL ===");
+      console.log("[DELETE-DEBUG] Nombre de dépôts avant suppression:", deposits.length);
+      
       setDeposits(prevDeposits => {
         const filtered = prevDeposits.filter(deposit => {
-          // Handle both string and number IDs safely
           const depositIdToCompare = typeof deposit.id === 'string' ? 
             parseInt(String(deposit.id).replace(/\D/g, ''), 10) : 
             Number(deposit.id);
-          return depositIdToCompare !== depositId;
+          const shouldKeep = depositIdToCompare !== depositId;
+          if (!shouldKeep) {
+            console.log("[DELETE-DEBUG] Suppression du dépôt de l'état local:", deposit.id);
+          }
+          return shouldKeep;
         });
-        console.log(`[DELETE] Filtered deposits: ${prevDeposits.length} -> ${filtered.length}`);
+        console.log("[DELETE-DEBUG] Nombre de dépôts après suppression:", filtered.length);
         return filtered;
       });
       
+      console.log("[DELETE-DEBUG] ✅ État local mis à jour");
+      console.log("[DELETE-DEBUG] === SUPPRESSION TERMINÉE AVEC SUCCÈS ===");
+      
       toast.success("Versement supprimé avec succès");
       return true;
+      
     } catch (error) {
-      console.error("[DELETE] Error during deleteDeposit:", error);
+      console.error("[DELETE-DEBUG] ❌ ERREUR FATALE:", error);
+      console.error("[DELETE-DEBUG] Stack trace:", error instanceof Error ? error.stack : 'No stack trace');
       showErrorToast("Erreur lors de la suppression du versement", error);
       return false;
     } finally {
-      console.log("[DELETE] Setting isLoading to false");
+      console.log("[DELETE-DEBUG] Nettoyage: isLoading défini à false");
       setIsLoading(false);
     }
   };
 
   const confirmDeleteDeposit = async (): Promise<boolean> => {
-    console.log("[CONFIRM] confirmDeleteDeposit called with depositToDelete:", depositToDelete);
+    console.log("[CONFIRM-DEBUG] === DÉBUT CONFIRMATION SUPPRESSION ===");
+    console.log("[CONFIRM-DEBUG] depositToDelete:", depositToDelete);
     
     if (!depositToDelete) {
-      console.error("[CONFIRM] No deposit selected for deletion");
+      console.error("[CONFIRM-DEBUG] ❌ ERREUR: Aucun dépôt sélectionné");
       toast.error("Aucun versement sélectionné");
       return false;
     }
     
     try {
-      // Extract numeric ID with a more robust approach
+      // Extraction robuste de l'ID
       let depositId: number;
-      
-      // Get the ID value safely
       const idValue = depositToDelete.id;
-      console.log("[CONFIRM] Raw deposit ID:", idValue, "type:", typeof idValue);
       
-      // Handle different ID formats safely with proper type checking
+      console.log("[CONFIRM-DEBUG] ID brut:", idValue, "type:", typeof idValue);
+      
       if (typeof idValue === 'number') {
         depositId = idValue;
       } else {
-        // Convert to string safely and extract numeric part
         const stringValue = String(idValue);
         const numericPart = stringValue.replace(/\D/g, '');
         depositId = parseInt(numericPart, 10);
       }
       
+      console.log("[CONFIRM-DEBUG] ID extrait:", depositId);
+      
       if (isNaN(depositId) || depositId <= 0) {
-        console.error("[CONFIRM] Could not extract valid numeric ID from:", idValue);
+        console.error("[CONFIRM-DEBUG] ❌ ERREUR: ID invalide après extraction:", depositId);
         toast.error("Format d'ID invalide");
         return false;
       }
       
-      console.log(`[CONFIRM] Attempting to delete deposit with extracted ID: ${depositId}`);
-      
+      console.log(`[CONFIRM-DEBUG] Appel de deleteDeposit avec ID: ${depositId}`);
       const result = await deleteDeposit(depositId);
-      console.log("[CONFIRM] Delete operation result:", result);
+      
+      console.log("[CONFIRM-DEBUG] Résultat de deleteDeposit:", result);
       
       if (result) {
-        console.log("[CONFIRM] Successful deletion, clearing state");
+        console.log("[CONFIRM-DEBUG] ✅ Suppression réussie, nettoyage état");
         setDepositToDelete(null);
         setShowDeleteDialog(false);
         return true;
       } else {
-        console.error("[CONFIRM] Deletion failed");
+        console.error("[CONFIRM-DEBUG] ❌ Suppression échouée");
         return false;
       }
     } catch (error) {
-      console.error("[CONFIRM] Error in confirmDeleteDeposit:", error);
+      console.error("[CONFIRM-DEBUG] ❌ ERREUR dans confirmDeleteDeposit:", error);
       showErrorToast("Échec de la suppression du versement", error);
       return false;
     }
