@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { SystemUser } from "@/types/admin";
@@ -18,40 +19,47 @@ const Dashboard = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { currency } = useCurrency();
   const [currentUser, setCurrentUser] = useState<SystemUser | null>(null);
-  const { stats, isLoading, recentActivity, handleRefresh, error } = useDashboardData();
   const [isRecalculating, setIsRecalculating] = useState(false);
-  const [loadingStartTime, setLoadingStartTime] = useState<number>(Date.now());
+  const [hasInitialized, setHasInitialized] = useState(false);
+
+  // Simplified dashboard data loading
+  const { 
+    stats, 
+    isLoading, 
+    recentActivity, 
+    handleRefresh, 
+    error 
+  } = useDashboardData();
 
   useEffect(() => {
-    console.log("=== DASHBOARD DEBUG INFO ===");
-    console.log("Current URL:", window.location.href);
-    console.log("Dashboard mounted at:", new Date().toISOString());
-    console.log("Dashboard stats:", stats);
-    console.log("Dashboard isLoading:", isLoading);
-    console.log("Dashboard error:", error);
-    console.log("Dashboard recentActivity count:", recentActivity?.length || 0);
-    console.log("Loading duration:", Date.now() - loadingStartTime, "ms");
+    console.log("Dashboard mounted, checking auth state...");
     
-    // Check Supabase configuration
-    console.log("Supabase URL:", "https://jyqtmpbdicwofkhtvjyy.supabase.co");
-    console.log("Supabase Key configured:", "Yes");
-    
-    // Test auth state
-    supabase.auth.getSession().then(({ data: { session }, error: sessionError }) => {
-      console.log("Dashboard session check:", {
-        hasSession: !!session,
-        userId: session?.user?.id,
-        email: session?.user?.email,
-        error: sessionError
-      });
-    });
-  }, [stats, isLoading, error, recentActivity, loadingStartTime]);
+    const checkAuth = async () => {
+      try {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error("Auth error:", sessionError);
+          toast.error("Erreur d'authentification");
+          return;
+        }
 
-  useEffect(() => {
-    if (isLoading) {
-      setLoadingStartTime(Date.now());
-    }
-  }, [isLoading]);
+        if (!session) {
+          console.warn("No session found");
+          toast.error("Veuillez vous connecter");
+          return;
+        }
+
+        console.log("Session found for user:", session.user.email);
+        setHasInitialized(true);
+      } catch (error) {
+        console.error("Error checking auth:", error);
+        toast.error("Erreur lors de la vérification de l'authentification");
+      }
+    };
+
+    checkAuth();
+  }, []);
 
   const handleUpdateProfile = async (updatedUser: Partial<SystemUser>) => {
     try {
@@ -96,43 +104,47 @@ const Dashboard = () => {
     }
   };
 
-  // Show loading state with timeout
-  if (isLoading) {
-    const loadingDuration = Date.now() - loadingStartTime;
-    console.log("Dashboard is loading... Duration:", loadingDuration, "ms");
-    
+  // Show initialization loading
+  if (!hasInitialized) {
     return (
       <div className="space-y-8 animate-in w-full px-0 sm:px-0">
         <div className="text-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Chargement du tableau de bord...</p>
-          <p className="text-sm text-muted-foreground mt-2">
-            {loadingDuration > 5000 ? "Vérification de la connexion..." : ""}
-          </p>
-          {loadingDuration > 10000 && (
-            <div className="mt-4 space-y-2">
-              <p className="text-sm text-yellow-600">
-                Le chargement prend plus de temps que prévu
-              </p>
-              <button 
-                onClick={handleRefresh}
-                className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/90 text-sm"
-              >
-                Réessayer
-              </button>
-            </div>
-          )}
+          <p>Initialisation du tableau de bord...</p>
         </div>
       </div>
     );
   }
 
-  if (error) {
-    console.log("Dashboard has error:", error);
+  // Show loading state
+  if (isLoading) {
     return (
       <div className="space-y-8 animate-in w-full px-0 sm:px-0">
         <div className="text-center py-8">
-          <p className="text-red-500 mb-4">Erreur lors du chargement: {error}</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Chargement des données...</p>
+          <div className="mt-4">
+            <button 
+              onClick={handleRefresh}
+              className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/90 text-sm"
+            >
+              Actualiser
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="space-y-8 animate-in w-full px-0 sm:px-0">
+        <div className="text-center py-8">
+          <div className="text-red-500 mb-4">
+            <p className="font-medium">Erreur de chargement</p>
+            <p className="text-sm">{error}</p>
+          </div>
           <div className="space-y-2">
             <button 
               onClick={handleRefresh}
@@ -147,20 +159,14 @@ const Dashboard = () => {
               Recharger la page
             </button>
           </div>
-          <div className="mt-4 text-xs text-gray-500">
-            <p>URL: {window.location.href}</p>
-            <p>Timestamp: {new Date().toISOString()}</p>
-          </div>
         </div>
       </div>
     );
   }
 
-  console.log("Dashboard rendering with data");
-
   return (
     <div className="space-y-8 animate-in w-full px-0 sm:px-0">
-      <DashboardHeader isLoading={isLoading} onRefresh={handleRefresh} />
+      <DashboardHeader isLoading={false} onRefresh={handleRefresh} />
 
       <StatsCardGrid 
         stats={stats} 
@@ -170,12 +176,12 @@ const Dashboard = () => {
       />
 
       <div className="grid gap-6 md:grid-cols-2 w-full">
-        <TransactionTrends data={stats.monthly_stats} currency={currency} />
+        <TransactionTrends data={stats?.monthly_stats || []} currency={currency} />
         <AISuggestions stats={stats} />
       </div>
 
       <div className="space-y-2">
-        <RecentActivityCard activities={recentActivity} currency={currency} />
+        <RecentActivityCard activities={recentActivity || []} currency={currency} />
       </div>
 
       <EditProfileDialog
