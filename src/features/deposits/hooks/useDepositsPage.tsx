@@ -1,4 +1,3 @@
-
 import { useDeposits } from "@/features/deposits/hooks/useDeposits";
 import { useDepositSearch } from "./deposit-hooks/useDepositSearch";
 import { useDepositDialogs } from "./deposit-hooks/useDepositDialogs";
@@ -66,7 +65,8 @@ export const useDepositsPage = () => {
     editForm,
     selectedDeposit,
     setIsDeleting,
-    setSelectedDeposit
+    setSelectedDeposit,
+    depositToDelete
   });
 
   return {

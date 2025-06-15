@@ -13,7 +13,8 @@ interface UseDepositActionsProps {
   editForm: EditFormData;
   selectedDeposit: Deposit | null;
   setIsDeleting: (isDeleting: boolean) => void;
-  setSelectedDeposit?: (deposit: Deposit | null) => void; // Ajouté pour nettoyer après suppression
+  setSelectedDeposit?: (deposit: Deposit | null) => void;
+  depositToDelete?: Deposit | null; // Ajouté pour accéder au bon versement
 }
 
 export const useDepositActions = ({
@@ -27,28 +28,32 @@ export const useDepositActions = ({
   editForm,
   selectedDeposit,
   setIsDeleting,
-  setSelectedDeposit // optionnel, pour reset seulement après succès
+  setSelectedDeposit,
+  depositToDelete // Maintenant accessible
 }: UseDepositActionsProps) => {
   
   const handleDelete = (deposit: Deposit) => {
     console.log("Demande de suppression pour le versement:", deposit);
     console.log("Deposit ID:", deposit.id, "type:", typeof deposit.id);
 
-    // Correction: toujours forcer le type Number sur l'ID au cas où ce soit une string
     const depositCopy = { ...deposit, id: Number(deposit.id) };
     console.log("Setting depositToDelete with copy (after type conversion):", depositCopy);
 
     setDepositToDelete(depositCopy);
-
     setIsDeleteDialogOpen(true);
     setShowDeleteDialog(true);
   };
 
   const confirmDelete = async (): Promise<boolean> => {
     console.log("confirmDelete called in useDepositActions");
-    console.log("Current selectedDeposit:", selectedDeposit);
+    
+    // Utiliser depositToDelete en priorité, puis selectedDeposit en fallback
+    const targetDeposit = depositToDelete || selectedDeposit;
+    console.log("Target deposit for deletion:", targetDeposit);
+    console.log("depositToDelete:", depositToDelete);
+    console.log("selectedDeposit:", selectedDeposit);
 
-    if (!selectedDeposit) {
+    if (!targetDeposit) {
       console.error("No deposit selected for deletion");
       toast.error("Erreur", {
         description: "Aucun versement sélectionné"
@@ -57,8 +62,8 @@ export const useDepositActions = ({
     }
 
     setIsDeleting(true);
-    console.log("Confirmation de suppression pour:", selectedDeposit);
-    console.log("Deposit ID to delete:", selectedDeposit.id, "type:", typeof selectedDeposit.id);
+    console.log("Confirmation de suppression pour:", targetDeposit);
+    console.log("Deposit ID to delete:", targetDeposit.id, "type:", typeof targetDeposit.id);
 
     try {
       console.log("Calling confirmDeleteDeposit function...");
@@ -69,7 +74,7 @@ export const useDepositActions = ({
         console.log("Delete operation successful");
         setIsDeleteDialogOpen(false);
         setShowDeleteDialog(false);
-        // Nettoyer le state APRES la suppression effective :
+        // Nettoyer le state APRES la suppression effective
         if (setSelectedDeposit) setSelectedDeposit(null);
         setDepositToDelete(null);
         toast.success("Succès", {
