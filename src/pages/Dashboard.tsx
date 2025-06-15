@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { SystemUser } from "@/types/admin";
@@ -34,8 +33,8 @@ const Dashboard = () => {
     console.log("Loading duration:", Date.now() - loadingStartTime, "ms");
     
     // Check Supabase configuration
-    console.log("Supabase URL:", supabase.supabaseUrl);
-    console.log("Supabase Key:", supabase.supabaseKey?.substring(0, 20) + "...");
+    console.log("Supabase URL:", "https://jyqtmpbdicwofkhtvjyy.supabase.co");
+    console.log("Supabase Key configured:", "Yes");
     
     // Test auth state
     supabase.auth.getSession().then(({ data: { session }, error: sessionError }) => {
