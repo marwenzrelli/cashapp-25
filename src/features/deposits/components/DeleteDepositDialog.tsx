@@ -26,16 +26,18 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
     setIsDeleting(true);
     
     try {
-      console.log("[DIALOG] Calling deleteDepositDirectly");
+      console.log("[DIALOG] Calling deleteDepositDirectly with deposit:", selectedDeposit);
       const success = await deleteDepositDirectly(selectedDeposit);
       
       console.log("[DIALOG] Deletion result:", success);
       
       if (success === true) {
-        console.log("[DIALOG] Deletion successful, closing dialog and refreshing");
+        console.log("[DIALOG] Deletion successful, closing dialog");
+        
+        // Close dialog first
         onOpenChange(false);
         
-        // Call parent onConfirm if it exists
+        // Call parent onConfirm to refresh data
         if (onConfirm) {
           console.log("[DIALOG] Calling parent onConfirm");
           await onConfirm();
@@ -43,9 +45,11 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
         
         toast.success("Versement supprimé avec succès");
         
-        // Force page reload to ensure fresh data
-        console.log("[DIALOG] Forcing page reload");
-        window.location.reload();
+        // Small delay then reload to ensure fresh data
+        setTimeout(() => {
+          console.log("[DIALOG] Reloading page for fresh data");
+          window.location.reload();
+        }, 500);
       } else {
         console.error("[DIALOG] Deletion failed");
         toast.error("La suppression a échoué");

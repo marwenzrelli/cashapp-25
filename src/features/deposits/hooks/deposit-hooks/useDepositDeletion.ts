@@ -15,7 +15,13 @@ export const useDepositDeletion = () => {
 
     try {
       // Vérifier la session utilisateur
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        console.error("[DIRECT_DELETE] Session error:", sessionError);
+        toast.error("Erreur de session");
+        return false;
+      }
+
       if (!session?.user?.id) {
         console.error("[DIRECT_DELETE] No authenticated user");
         toast.error("Vous devez être connecté");
@@ -48,24 +54,36 @@ export const useDepositDeletion = () => {
       }
 
       const depositId = Number(deposit.id);
+      if (isNaN(depositId)) {
+        console.error("[DIRECT_DELETE] Invalid deposit ID:", deposit.id);
+        toast.error("ID de versement invalide");
+        return false;
+      }
+
       console.log(`[DIRECT_DELETE] Converting deposit ID: ${deposit.id} -> ${depositId}`);
 
-      // Récupérer les détails du dépôt
+      // Récupérer les détails du dépôt avant suppression
       const { data: depositData, error: fetchError } = await supabase
         .from('deposits')
         .select('*')
         .eq('id', depositId)
         .single();
         
-      if (fetchError || !depositData) {
+      if (fetchError) {
         console.error("[DIRECT_DELETE] Failed to fetch deposit:", fetchError);
+        toast.error("Dépôt introuvable");
+        return false;
+      }
+      
+      if (!depositData) {
+        console.error("[DIRECT_DELETE] No deposit data found");
         toast.error("Dépôt introuvable");
         return false;
       }
       
       console.log("[DIRECT_DELETE] Deposit found:", depositData);
       
-      // Insérer dans deleted_deposits
+      // Insérer dans deleted_deposits pour l'audit
       const { error: logError } = await supabase
         .from('deleted_deposits')
         .insert({
@@ -99,7 +117,6 @@ export const useDepositDeletion = () => {
       }
       
       console.log("[DIRECT_DELETE] Deposit deleted successfully");
-      toast.success("Versement supprimé avec succès");
       return true;
       
     } catch (error) {

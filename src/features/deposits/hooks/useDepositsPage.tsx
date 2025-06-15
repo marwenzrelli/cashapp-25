@@ -63,13 +63,16 @@ export const useDepositsPage = () => {
     selectedDeposit
   });
 
-  // Simple function that just closes the dialog - the actual deletion is handled by DeleteDepositDialog
+  // Simplified function that refreshes deposits after deletion
   const confirmDelete = async (): Promise<boolean> => {
-    console.log("[PAGE] confirmDelete - closing dialogs only");
-    setIsDeleteDialogOpen(false);
-    setShowDeleteDialog(false);
-    setDepositToDelete(null);
-    return true;
+    console.log("[PAGE] confirmDelete - refreshing deposits");
+    try {
+      await fetchDeposits();
+      return true;
+    } catch (error) {
+      console.error("[PAGE] Error refreshing deposits:", error);
+      return false;
+    }
   };
 
   return {
