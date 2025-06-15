@@ -25,19 +25,32 @@ export const useDashboardData = () => {
       setIsLoading(true);
       setError(null);
       
-      // Requêtes parallèles pour améliorer les performances
+      // Calcul simplifié et direct du solde général
+      // On utilise directement la somme des soldes des clients actifs
+      const { data: clientBalances, error: balanceError } = await supabase
+        .from('clients')
+        .select('solde')
+        .eq('status', 'active');
+
+      if (balanceError) throw balanceError;
+
+      // Calcul simple et direct du solde total
+      const total_balance = clientBalances?.reduce((sum, client) => {
+        const balance = Number(client.solde) || 0;
+        return sum + balance;
+      }, 0) || 0;
+
+      // Requêtes parallèles pour les autres statistiques
       const [
         depositsResult,
         withdrawalsResult,
         clientsResult,
-        transfersResult,
-        clientBalancesResult
+        transfersResult
       ] = await Promise.all([
         supabase.from('deposits').select('amount').eq('status', 'completed'),
         supabase.from('withdrawals').select('amount').eq('status', 'completed'),
         supabase.from('clients').select('*', { count: 'exact' }).eq('status', 'active'),
-        supabase.from('transfers').select('amount').eq('status', 'completed'),
-        supabase.from('clients').select('solde').eq('status', 'active')
+        supabase.from('transfers').select('amount').eq('status', 'completed')
       ]);
 
       // Vérification des erreurs
@@ -45,40 +58,39 @@ export const useDashboardData = () => {
       if (withdrawalsResult.error) throw withdrawalsResult.error;
       if (clientsResult.error) throw clientsResult.error;
       if (transfersResult.error) throw transfersResult.error;
-      if (clientBalancesResult.error) throw clientBalancesResult.error;
 
-      // Calculs simplifiés
+      // Calculs directs et simples
       const total_deposits = depositsResult.data?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
       const total_withdrawals = withdrawalsResult.data?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
       const sent_transfers = transfersResult.data?.reduce((sum, t) => sum + Number(t.amount), 0) || 0;
-      const total_balance = clientBalancesResult.data?.reduce((sum, client) => sum + Number(client.solde || 0), 0) || 0;
 
-      // Génération simplifiée des statistiques mensuelles (6 derniers mois seulement)
+      // Génération simplifiée des statistiques mensuelles
       const monthlyStats = [];
       const today = new Date();
       
-      for (let i = 0; i < 6; i++) {
+      for (let i = 5; i >= 0; i--) {
         const month = subMonths(today, i);
         const monthLabel = format(month, 'MMM');
         
-        monthlyStats.unshift({
+        monthlyStats.push({
           day: monthLabel,
-          total_deposits: Math.round(total_deposits / 6), // Distribution simplifiée
+          total_deposits: Math.round(total_deposits / 6),
           total_withdrawals: Math.round(total_withdrawals / 6),
           deposits_count: Math.round((depositsResult.data?.length || 0) / 6),
           withdrawals_count: Math.round((withdrawalsResult.data?.length || 0) / 6)
         });
       }
 
+      // Mise à jour avec les valeurs calculées de manière stable
       setStats({
         total_deposits,
         total_withdrawals,
         client_count: clientsResult.count || 0,
         transfer_count: transfersResult.data?.length || 0,
         monthly_stats: monthlyStats,
-        total_balance,
+        total_balance, // Utilise directement la somme des soldes clients
         sent_transfers,
-        received_transfers: sent_transfers // Simplifié
+        received_transfers: sent_transfers
       });
       
     } catch (error: any) {
@@ -92,23 +104,23 @@ export const useDashboardData = () => {
 
   const fetchRecentActivity = useCallback(async () => {
     try {
-      // Requêtes parallèles limitées aux 10 derniers éléments chacune
+      // Requêtes parallèles limitées pour l'activité récente
       const [depositsResult, withdrawalsResult, transfersResult] = await Promise.all([
         supabase
           .from('deposits')
           .select('id, amount, created_at, client_name, status, notes')
           .order('created_at', { ascending: false })
-          .limit(10),
+          .limit(8),
         supabase
           .from('withdrawals')
           .select('id, amount, created_at, client_name, status, notes')
           .order('created_at', { ascending: false })
-          .limit(10),
+          .limit(8),
         supabase
           .from('transfers')
           .select('id, amount, created_at, from_client, to_client, status, reason')
           .order('created_at', { ascending: false })
-          .limit(10)
+          .limit(8)
       ]);
 
       if (depositsResult.error) throw depositsResult.error;
@@ -148,7 +160,7 @@ export const useDashboardData = () => {
           description: t.reason || `Virement de ${t.from_client} vers ${t.to_client}`
         }))
       ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-       .slice(0, 20); // Limité à 20 activités maximum
+       .slice(0, 15);
 
       setRecentActivity(allActivity);
     } catch (error: any) {
@@ -167,11 +179,11 @@ export const useDashboardData = () => {
     fetchStats();
     fetchRecentActivity();
     
-    // Actualisation automatique toutes les 5 minutes (au lieu de 10)
+    // Actualisation automatique toutes les 10 minutes (réduit la fréquence)
     const interval = setInterval(() => {
       fetchStats();
       fetchRecentActivity();
-    }, 5 * 60 * 1000);
+    }, 10 * 60 * 1000);
     
     return () => clearInterval(interval);
   }, [fetchStats, fetchRecentActivity]);
