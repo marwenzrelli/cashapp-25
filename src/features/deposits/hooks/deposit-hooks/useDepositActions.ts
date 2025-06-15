@@ -42,22 +42,6 @@ export const useDepositActions = ({
     setShowDeleteDialog(true);
   };
 
-  const confirmDelete = async (): Promise<boolean> => {
-    console.log("[ACTIONS] confirmDelete called - simplified deletion flow");
-    
-    try {
-      setIsDeleteDialogOpen(false);
-      setShowDeleteDialog(false);
-      setDepositToDelete(null);
-      
-      return true;
-    } catch (error) {
-      console.error("[ACTIONS] Error in confirmDelete:", error);
-      showErrorToast("Erreur lors de l'actualisation", error);
-      return false;
-    }
-  };
-
   const handleConfirmEdit = async (): Promise<boolean> => {
     if (!selectedDeposit) {
       console.error("Aucun versement sélectionné pour la modification");
@@ -126,7 +110,6 @@ export const useDepositActions = ({
 
   return {
     handleDelete,
-    confirmDelete,
     handleConfirmEdit,
     handleCreateDeposit
   };
