@@ -12,6 +12,7 @@ export const useDepositsPage = () => {
     createDeposit, 
     deleteDeposit, 
     updateDeposit, 
+    confirmDeleteDeposit, 
     setShowDeleteDialog, 
     setDepositToDelete,
     fetchDeposits
@@ -50,30 +51,21 @@ export const useDepositsPage = () => {
 
   const {
     handleDelete,
+    confirmDelete,
     handleConfirmEdit,
     handleCreateDeposit
   } = useDepositActions({
     createDeposit,
     updateDeposit,
+    confirmDeleteDeposit,
     setDepositToDelete,
     setShowDeleteDialog,
     setIsDeleteDialogOpen,
     setIsEditDialogOpen,
     editForm,
-    selectedDeposit
+    selectedDeposit,
+    setIsDeleting
   });
-
-  // Simple function that refreshes deposits after deletion
-  const confirmDelete = async (): Promise<boolean> => {
-    console.log("[PAGE] confirmDelete - refreshing deposits");
-    try {
-      await fetchDeposits();
-      return true;
-    } catch (error) {
-      console.error("[PAGE] Error refreshing deposits:", error);
-      return false;
-    }
-  };
 
   return {
     searchTerm,

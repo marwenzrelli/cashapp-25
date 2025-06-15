@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { SystemUser } from "@/types/admin";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,47 +19,8 @@ const Dashboard = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { currency } = useCurrency();
   const [currentUser, setCurrentUser] = useState<SystemUser | null>(null);
+  const { stats, isLoading, recentActivity, handleRefresh } = useDashboardData();
   const [isRecalculating, setIsRecalculating] = useState(false);
-  const [hasInitialized, setHasInitialized] = useState(false);
-
-  // Simplified dashboard data loading
-  const { 
-    stats, 
-    isLoading, 
-    recentActivity, 
-    handleRefresh, 
-    error 
-  } = useDashboardData();
-
-  useEffect(() => {
-    console.log("Dashboard mounted, checking auth state...");
-    
-    const checkAuth = async () => {
-      try {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) {
-          console.error("Auth error:", sessionError);
-          toast.error("Erreur d'authentification");
-          return;
-        }
-
-        if (!session) {
-          console.warn("No session found");
-          toast.error("Veuillez vous connecter");
-          return;
-        }
-
-        console.log("Session found for user:", session.user.email);
-        setHasInitialized(true);
-      } catch (error) {
-        console.error("Error checking auth:", error);
-        toast.error("Erreur lors de la vérification de l'authentification");
-      }
-    };
-
-    checkAuth();
-  }, []);
 
   const handleUpdateProfile = async (updatedUser: Partial<SystemUser>) => {
     try {
@@ -104,69 +65,9 @@ const Dashboard = () => {
     }
   };
 
-  // Show initialization loading
-  if (!hasInitialized) {
-    return (
-      <div className="space-y-8 animate-in w-full px-0 sm:px-0">
-        <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Initialisation du tableau de bord...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show loading state
-  if (isLoading) {
-    return (
-      <div className="space-y-8 animate-in w-full px-0 sm:px-0">
-        <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Chargement des données...</p>
-          <div className="mt-4">
-            <button 
-              onClick={handleRefresh}
-              className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/90 text-sm"
-            >
-              Actualiser
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Show error state
-  if (error) {
-    return (
-      <div className="space-y-8 animate-in w-full px-0 sm:px-0">
-        <div className="text-center py-8">
-          <div className="text-red-500 mb-4">
-            <p className="font-medium">Erreur de chargement</p>
-            <p className="text-sm">{error}</p>
-          </div>
-          <div className="space-y-2">
-            <button 
-              onClick={handleRefresh}
-              className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/90 mr-2"
-            >
-              Réessayer
-            </button>
-            <button 
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-            >
-              Recharger la page
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-8 animate-in w-full px-0 sm:px-0">
-      <DashboardHeader isLoading={false} onRefresh={handleRefresh} />
+      <DashboardHeader isLoading={isLoading} onRefresh={handleRefresh} />
 
       <StatsCardGrid 
         stats={stats} 
@@ -176,12 +77,12 @@ const Dashboard = () => {
       />
 
       <div className="grid gap-6 md:grid-cols-2 w-full">
-        <TransactionTrends data={stats?.monthly_stats || []} currency={currency} />
+        <TransactionTrends data={stats.monthly_stats} currency={currency} />
         <AISuggestions stats={stats} />
       </div>
 
       <div className="space-y-2">
-        <RecentActivityCard activities={recentActivity || []} currency={currency} />
+        <RecentActivityCard activities={recentActivity} currency={currency} />
       </div>
 
       <EditProfileDialog
