@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useRef } from "react";
 import { Client } from "../../types";
 import { supabase } from "@/integrations/supabase/client";
@@ -157,19 +156,16 @@ export const useFetchClients = (
         }
       }, 8000);
       
-      // Fetch clients with a timeout
+      // Fetch clients with a timeout - using the correct column name
       const fetchPromise = supabase
         .from('clients')
         .select('*')
         .order('date_creation', { ascending: false });
         
       // Manual timeout for the fetch operation
-      const timeoutPromise = new Promise<{data: null, error: Error}>((resolve) => {
+      const timeoutPromise = new Promise<{data: null, error: Error}>((_, reject) => {
         setTimeout(() => {
-          resolve({
-            data: null,
-            error: new Error("Délai d'attente dépassé pour la requête")
-          });
+          reject(new Error("Délai d'attente dépassé pour la requête"));
         }, 5000); // 5 second timeout for fetch
       });
       

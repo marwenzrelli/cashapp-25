@@ -11,7 +11,7 @@ export const fetchClientDetails = async (clientId: number): Promise<Client> => {
       setTimeout(() => reject(new Error("Délai d'attente dépassé")), 8000); // 8 secondes timeout
     });
     
-    // La requête principale
+    // La requête principale - using the correct column name
     const fetchPromise = async () => {
       const response = await supabase
         .from('clients')
