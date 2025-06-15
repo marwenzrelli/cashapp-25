@@ -38,8 +38,11 @@ export const useDeleteDeposit = (
         // Update the local state by removing the deleted deposit
         setDeposits(prevDeposits => {
           const filtered = prevDeposits.filter(deposit => {
-            const currentId = typeof deposit.id === 'string' ? parseInt(deposit.id, 10) : deposit.id;
-            return currentId !== depositId;
+            // Handle both string and number IDs safely
+            const depositIdToCompare = typeof deposit.id === 'string' ? 
+              parseInt(String(deposit.id).replace(/\D/g, ''), 10) : 
+              Number(deposit.id);
+            return depositIdToCompare !== depositId;
           });
           console.log(`Filtered deposits: ${prevDeposits.length} -> ${filtered.length}`);
           return filtered;
@@ -72,19 +75,29 @@ export const useDeleteDeposit = (
     }
     
     try {
-      // Extract numeric ID with safer approach
+      // Extract numeric ID with a more robust approach
       let depositId: number;
       
-      // Convert the ID to string first, then parse
-      const idAsString = String(depositToDelete.id);
-      console.log("Original ID:", depositToDelete.id, "as string:", idAsString);
+      // Get the ID value and ensure it's properly typed
+      const idValue = depositToDelete.id;
+      console.log("Raw deposit ID:", idValue, "type:", typeof idValue);
       
-      // Remove any non-digit characters and parse
-      const numericPart = idAsString.replace(/\D/g, '');
-      depositId = parseInt(numericPart, 10);
+      // Handle different ID formats safely
+      if (typeof idValue === 'number') {
+        depositId = idValue;
+      } else if (typeof idValue === 'string') {
+        // Remove any non-digit characters and parse
+        const numericPart = idValue.replace(/\D/g, '');
+        depositId = parseInt(numericPart, 10);
+      } else {
+        // Fallback: convert to string then extract numbers
+        const stringValue = String(idValue);
+        const numericPart = stringValue.replace(/\D/g, '');
+        depositId = parseInt(numericPart, 10);
+      }
       
       if (isNaN(depositId) || depositId <= 0) {
-        console.error("Could not extract valid numeric ID from:", depositToDelete.id);
+        console.error("Could not extract valid numeric ID from:", idValue);
         toast.error("Format d'ID invalide");
         return false;
       }
