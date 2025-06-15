@@ -19,7 +19,6 @@ import AdminUtility from "./pages/AdminUtility";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
-import { AuthProvider } from "@/contexts/AuthContext";
 import "./App.css";
 
 // Create a client
@@ -41,30 +40,28 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="light">
-        <AuthProvider>
-          <Router>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/clients/:clientId/public" element={<PublicClientProfile />} />
-              <Route path="/public/client/:token" element={<PublicClientProfile />} />
-              <Route path="/admin-utility" element={<AdminUtility />} />
-              <Route path="/create-supervisor" element={<SupervisorCreation />} />
-              <Route path="/" element={<Layout />}>
-                <Route index element={<Dashboard />} />
-                <Route path="clients" element={<Clients />} />
-                <Route path="clients/:clientId" element={<ClientProfile />} />
-                <Route path="deposits" element={<Deposits />} />
-                <Route path="withdrawals" element={<Withdrawals />} />
-                <Route path="transfers" element={<Transfers />} />
-                <Route path="operations" element={<Operations />} />
-                <Route path="statistics" element={<Statistics />} />
-                <Route path="administration" element={<Administration />} />
-                <Route path="*" element={<NotFound />} />
-              </Route>
-            </Routes>
-            <Toaster position="top-right" richColors closeButton />
-          </Router>
-        </AuthProvider>
+        <Router>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/clients/:clientId/public" element={<PublicClientProfile />} />
+            <Route path="/public/client/:token" element={<PublicClientProfile />} />
+            <Route path="/admin-utility" element={<AdminUtility />} />
+            <Route path="/create-supervisor" element={<SupervisorCreation />} />
+            <Route path="/" element={<Layout />}>
+              <Route index element={<Dashboard />} />
+              <Route path="clients" element={<Clients />} />
+              <Route path="clients/:clientId" element={<ClientProfile />} />
+              <Route path="deposits" element={<Deposits />} />
+              <Route path="withdrawals" element={<Withdrawals />} />
+              <Route path="transfers" element={<Transfers />} />
+              <Route path="operations" element={<Operations />} />
+              <Route path="statistics" element={<Statistics />} />
+              <Route path="administration" element={<Administration />} />
+              <Route path="*" element={<NotFound />} />
+            </Route>
+          </Routes>
+          <Toaster position="top-right" richColors closeButton />
+        </Router>
       </ThemeProvider>
     </QueryClientProvider>
   );
