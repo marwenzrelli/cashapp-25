@@ -53,6 +53,7 @@ function App() {
                 <Route path="/create-supervisor" element={<SupervisorCreation />} />
                 <Route path="/" element={<Layout />}>
                   <Route index element={<Dashboard />} />
+                  <Route path="dashboard" element={<Dashboard />} />
                   <Route path="clients" element={<Clients />} />
                   <Route path="clients/:clientId" element={<ClientProfile />} />
                   <Route path="deposits" element={<Deposits />} />
