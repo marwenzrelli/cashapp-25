@@ -12,7 +12,6 @@ export const useDepositsPage = () => {
     createDeposit, 
     deleteDeposit, 
     updateDeposit, 
-    confirmDeleteDeposit, 
     setShowDeleteDialog, 
     setDepositToDelete,
     fetchDeposits
@@ -57,7 +56,6 @@ export const useDepositsPage = () => {
   } = useDepositActions({
     createDeposit,
     updateDeposit,
-    confirmDeleteDeposit,
     setDepositToDelete,
     setShowDeleteDialog,
     setIsDeleteDialogOpen,

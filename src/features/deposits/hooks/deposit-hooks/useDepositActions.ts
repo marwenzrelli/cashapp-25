@@ -12,7 +12,7 @@ interface UseDepositActionsProps {
   setIsEditDialogOpen: (isOpen: boolean) => void;
   editForm: EditFormData;
   selectedDeposit: Deposit | null;
-  refreshData?: () => Promise<void>;
+  setIsDeleting?: (isDeleting: boolean) => void;
 }
 
 export const useDepositActions = ({
@@ -24,7 +24,7 @@ export const useDepositActions = ({
   setIsEditDialogOpen,
   editForm,
   selectedDeposit,
-  refreshData
+  setIsDeleting
 }: UseDepositActionsProps) => {
   
   const handleDelete = (deposit: Deposit) => {
@@ -43,14 +43,9 @@ export const useDepositActions = ({
   };
 
   const confirmDelete = async (): Promise<boolean> => {
-    console.log("[ACTIONS] confirmDelete called - triggering data refresh");
+    console.log("[ACTIONS] confirmDelete called - simplified deletion flow");
     
     try {
-      if (refreshData) {
-        console.log("[ACTIONS] Calling refreshData");
-        await refreshData();
-      }
-      
       setIsDeleteDialogOpen(false);
       setShowDeleteDialog(false);
       setDepositToDelete(null);
