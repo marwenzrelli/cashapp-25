@@ -1,3 +1,4 @@
+
 import { useDeposits } from "@/features/deposits/hooks/useDeposits";
 import { useDepositSearch } from "./deposit-hooks/useDepositSearch";
 import { useDepositDialogs } from "./deposit-hooks/useDepositDialogs";
@@ -15,8 +16,8 @@ export const useDepositsPage = () => {
     setShowDeleteDialog, 
     setDepositToDelete,
     fetchDeposits,
-    depositToDelete // Ajouté pour passage à la vue
-  } = useDeposits(); // ajout de depositToDelete
+    depositToDelete
+  } = useDeposits();
 
   const {
     searchTerm,
@@ -64,8 +65,8 @@ export const useDepositsPage = () => {
     setIsEditDialogOpen,
     editForm,
     selectedDeposit,
-    setIsDeleting
-    // setSelectedDeposit non obligatoire ici
+    setIsDeleting,
+    setSelectedDeposit
   });
 
   return {
@@ -100,6 +101,6 @@ export const useDepositsPage = () => {
     handleConfirmEdit,
     handleCreateDeposit,
     fetchDeposits,
-    depositToDelete // Ajoutée à l'API retournée
+    depositToDelete
   };
 };

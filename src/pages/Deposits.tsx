@@ -42,7 +42,8 @@ const Deposits = () => {
     fetchDeposits,
     isLoading,
     isDeleting,
-    totalItems
+    totalItems,
+    depositToDelete
   } = useDepositsPage();
 
   const { clients, refreshClientBalance } = useClients();
@@ -145,6 +146,7 @@ const Deposits = () => {
         isEditDialogOpen={isEditDialogOpen}
         setIsEditDialogOpen={setIsEditDialogOpen}
         selectedDeposit={selectedDeposit}
+        depositToDelete={depositToDelete}
         itemsPerPage={itemsPerPage}
         setItemsPerPage={setItemsPerPage}
         currentPage={currentPage}

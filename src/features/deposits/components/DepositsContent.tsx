@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, memo } from "react";
 import { DepositsTable } from "./DepositsTable";
 import { DepositsHeader } from "./DepositsHeader";
@@ -25,7 +26,7 @@ interface DepositsContentProps {
   isEditDialogOpen: boolean;
   setIsEditDialogOpen: (open: boolean) => void;
   selectedDeposit: Deposit | null;
-  depositToDelete?: Deposit | null; // Ajouté pour la correcion
+  depositToDelete?: Deposit | null;
   itemsPerPage: string;
   setItemsPerPage: (value: string) => void;
   currentPage: number;
@@ -57,7 +58,7 @@ export const DepositsContent = memo(({
   isEditDialogOpen,
   setIsEditDialogOpen,
   selectedDeposit,
-  depositToDelete, // Ajout pour la suppression
+  depositToDelete,
   itemsPerPage,
   setItemsPerPage,
   currentPage,
@@ -91,13 +92,15 @@ export const DepositsContent = memo(({
       filteredDepositsLength: filteredDeposits?.length,
       paginatedDepositsLength: paginatedDeposits?.length,
       isLoading,
-      selectedDepositForDeletion: selectedDeposit?.id
+      depositToDelete: depositToDelete?.id,
+      selectedDeposit: selectedDeposit?.id
     });
   }, [
     deposits?.length, 
     filteredDeposits?.length, 
     paginatedDeposits?.length, 
     isLoading, 
+    depositToDelete?.id,
     selectedDeposit?.id
   ]);
 
@@ -160,8 +163,7 @@ export const DepositsContent = memo(({
         isOpen={isDeleteDialogOpen} 
         onOpenChange={setIsDeleteDialogOpen} 
         onConfirm={confirmDelete} 
-        selectedDeposit={depositToDelete && depositToDelete.id !== undefined ? depositToDelete : selectedDeposit && selectedDeposit.id !== undefined ? selectedDeposit : null} 
-        // On prend toujours depositToDelete s'il existe, sinon selectedDeposit, sinon null
+        selectedDeposit={depositToDelete || selectedDeposit} 
       />
 
       <EditDepositDialog
