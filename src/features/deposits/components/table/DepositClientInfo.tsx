@@ -19,7 +19,7 @@ export const DepositClientInfo = ({
 }: DepositClientInfoProps) => {
   const navigate = useNavigate();
   const { currency } = useCurrency();
-  
+
   // Handle click to navigate to client profile
   const handleClientClick = () => {
     if (clientId) {
@@ -29,13 +29,12 @@ export const DepositClientInfo = ({
     }
   };
 
-  // Format the client ID for display as 4 digits
-  const displayClientId = clientId 
-    ? (typeof clientId === 'number' 
-        ? formatId(clientId, 4) // Format to 4 digits
-        : formatId(parseInt(clientId), 4)) // Parse string to int and format
-    : "N/A";
-  
+  // Format the client ID for display as 4 digits (or show N/A)
+  let displayClientId = "N/A";
+  if (clientId !== undefined && clientId !== null && !isNaN(Number(clientId))) {
+    displayClientId = formatId(clientId, 4);
+  }
+
   return (
     <div className="flex items-center gap-3">
       <div className="relative">
@@ -55,7 +54,6 @@ export const DepositClientInfo = ({
           <p className="text-xs text-muted-foreground pl-1">
             ID: {displayClientId}
           </p>
-          
           {clientBalance !== null && (
             <span className={`text-xs px-2 py-0.5 rounded-md border ${
               clientBalance >= 0
