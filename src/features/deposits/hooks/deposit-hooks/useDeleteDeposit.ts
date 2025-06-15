@@ -14,7 +14,7 @@ export const useDeleteDeposit = (
   setShowDeleteDialog: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
   const deleteDeposit = async (depositId: number): Promise<boolean> => {
-    console.log(`Calling deleteDeposit function with ID: ${depositId} (type: ${typeof depositId})`);
+    console.log(`Starting deleteDeposit with ID: ${depositId} (type: ${typeof depositId})`);
     
     if (!depositId || isNaN(depositId) || depositId <= 0) {
       console.error("Invalid deposit ID:", depositId);
@@ -24,39 +24,36 @@ export const useDeleteDeposit = (
     
     try {
       setIsLoading(true);
-      console.log("Setting isLoading to true");
+      console.log("Setting isLoading to true for deletion");
 
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id;
-      console.log("Got user ID from session:", userId);
+      console.log("User ID for deletion:", userId);
 
       // Use the centralized deletion utility
       const success = await handleDepositDeletion(depositId, userId);
       
       if (success) {
-        // Update the local state
-        console.log("Updating local state after successful deletion");
+        console.log("Deletion successful, updating local state");
+        // Update the local state by removing the deleted deposit
         setDeposits(prevDeposits => {
-          console.log("Current deposits before filter:", prevDeposits.length);
-          const newDeposits = prevDeposits.filter(deposit => {
+          const filtered = prevDeposits.filter(deposit => {
             const currentId = typeof deposit.id === 'string' ? parseInt(deposit.id, 10) : deposit.id;
-            const result = currentId !== depositId;
-            console.log(`Comparing deposit ID ${currentId} (${typeof currentId}) with ${depositId} (${typeof depositId}): keep = ${result}`);
-            return result;
+            return currentId !== depositId;
           });
-          console.log("New deposits after filter:", newDeposits.length);
-          return newDeposits;
+          console.log(`Filtered deposits: ${prevDeposits.length} -> ${filtered.length}`);
+          return filtered;
         });
         
         toast.success("Versement supprimé avec succès");
         return true;
       } else {
         console.error("Deletion failed");
-        toast.error("La suppression a échoué");
+        toast.error("Échec de la suppression");
         return false;
       }
     } catch (error) {
-      console.error("Error during deleteDeposit function:", error);
+      console.error("Error during deleteDeposit:", error);
       showErrorToast("Erreur lors de la suppression du versement", error);
       return false;
     } finally {
@@ -70,36 +67,40 @@ export const useDeleteDeposit = (
     
     if (!depositToDelete) {
       console.error("No deposit selected for deletion");
-      toast.error("Aucun versement sélectionné pour la suppression");
+      toast.error("Aucun versement sélectionné");
       return false;
     }
     
     try {
-      // Ensure we're working with a number type ID
-      const depositId = typeof depositToDelete.id === 'string' 
-        ? parseInt(depositToDelete.id, 10) 
-        : depositToDelete.id;
+      // Extract numeric ID from deposit
+      let depositId: number;
       
-      if (isNaN(depositId)) {
+      if (typeof depositToDelete.id === 'string') {
+        // Handle string IDs that might be in format "123" or "dep-123"
+        const cleanId = depositToDelete.id.replace(/[^\d]/g, '');
+        depositId = parseInt(cleanId, 10);
+      } else {
+        depositId = depositToDelete.id;
+      }
+      
+      if (isNaN(depositId) || depositId <= 0) {
         console.error("Invalid deposit ID format:", depositToDelete.id);
         toast.error("Format d'ID invalide");
         return false;
       }
       
-      console.log("Attempting to delete deposit with ID:", depositId, "type:", typeof depositId);
+      console.log(`Attempting to delete deposit with ID: ${depositId}`);
       
       const result = await deleteDeposit(depositId);
-      console.log("Delete operation completed with result:", result);
+      console.log("Delete operation result:", result);
       
       if (result) {
         console.log("Successful deletion, clearing state");
-        // Clear the depositToDelete state after a successful deletion
         setDepositToDelete(null);
         setShowDeleteDialog(false);
         return true;
       } else {
-        console.error("Deletion returned false");
-        toast.error("La suppression n'a pas pu être effectuée");
+        console.error("Deletion failed");
         return false;
       }
     } catch (error) {

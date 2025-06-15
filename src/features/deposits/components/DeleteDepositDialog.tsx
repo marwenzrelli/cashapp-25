@@ -16,6 +16,7 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
   const handleConfirm = async () => {
     if (!onConfirm) {
       console.error("No onConfirm handler provided");
+      toast.error("Gestionnaire de confirmation manquant");
       return;
     }
     
@@ -25,35 +26,33 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
       return;
     }
     
-    console.log("Starting deposit deletion process for ID:", selectedDeposit.id, "of type:", typeof selectedDeposit.id);
+    console.log("Starting deletion process for deposit ID:", selectedDeposit.id);
     setIsDeleting(true);
     
     try {
-      // Force a fresh copy of the deposit object to avoid reference issues
-      const depositToDelete = {...selectedDeposit};
-      console.log("Using deposit for deletion:", depositToDelete);
-      
-      // Call onConfirm directly and wait for result
-      console.log("Calling onConfirm handler with deposit ID:", depositToDelete.id);
+      console.log("Calling onConfirm handler");
       const success = await onConfirm();
       
       console.log("Deletion result:", success);
       
-      // Only close dialog on successful deletion
       if (success === true) {
         console.log("Deletion successful, closing dialog");
         onOpenChange(false);
       } else {
-        console.error("Deletion failed, keeping dialog open");
+        console.error("Deletion failed");
         toast.error("La suppression a échoué");
       }
     } catch (error) {
-      console.error("Error occurred during deletion:", error);
+      console.error("Error during deletion:", error);
       toast.error("Erreur lors de la suppression");
     } finally {
       setIsDeleting(false);
     }
   };
+
+  if (!selectedDeposit) {
+    return null;
+  }
 
   return (
     <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
@@ -67,19 +66,17 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
           </AlertDialogTitle>
           <AlertDialogDescription className="space-y-2">
             <p>Êtes-vous sûr de vouloir supprimer ce versement ?</p>
-            {selectedDeposit && (
-              <div className="rounded-lg border bg-muted/50 p-4 space-y-2">
-                <div className="font-medium text-foreground">
-                  Client : {selectedDeposit.client_name}
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  Montant : {selectedDeposit.amount.toLocaleString()} TND
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  Date : {selectedDeposit.date}
-                </div>
+            <div className="rounded-lg border bg-muted/50 p-4 space-y-2">
+              <div className="font-medium text-foreground">
+                Client : {selectedDeposit.client_name}
               </div>
-            )}
+              <div className="text-sm text-muted-foreground">
+                Montant : {selectedDeposit.amount.toLocaleString()} TND
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Date : {selectedDeposit.date}
+              </div>
+            </div>
             <p className="text-destructive font-medium">Cette action est irréversible.</p>
           </AlertDialogDescription>
         </AlertDialogHeader>
