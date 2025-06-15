@@ -35,10 +35,15 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
         console.log("[DIALOG] Deletion successful, closing dialog");
         onOpenChange(false);
         
-        // Call the parent's onConfirm to update the UI
+        // Call the parent's onConfirm to trigger refresh
         if (onConfirm) {
+          console.log("[DIALOG] Calling parent onConfirm");
           await onConfirm();
         }
+        
+        // Force page reload to ensure fresh data
+        console.log("[DIALOG] Forcing page reload");
+        window.location.reload();
       } else {
         console.error("[DIALOG] Deletion failed");
         toast.error("La suppression a échoué");
