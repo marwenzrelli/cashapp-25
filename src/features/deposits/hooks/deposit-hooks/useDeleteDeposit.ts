@@ -36,29 +36,37 @@ export const useDeleteDeposit = (
         return false;
       }
 
-      // Check user role and permissions
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', userId)
-        .single();
+      // Superviseur emails - toujours autorisés
+      const supervisorEmails = [
+        'marwen.zrelli.pro@icloud.com',
+        'marwen.zrelli@gmail.com'
+      ];
 
-      if (profileError) {
-        console.error("Error fetching user profile:", profileError);
-        // Allow supervisors based on email if profile fetch fails
-        const supervisorEmails = [
-          'marwen.zrelli.pro@icloud.com',
-          'marwen.zrelli@gmail.com'
-        ];
-        
-        if (!session.user.email || !supervisorEmails.includes(session.user.email.toLowerCase())) {
-          toast.error("Permissions insuffisantes pour supprimer un versement");
+      // Vérifier si c'est un superviseur par email d'abord
+      const isSupervisorByEmail = session.user.email && 
+        supervisorEmails.includes(session.user.email.toLowerCase());
+
+      if (isSupervisorByEmail) {
+        console.log("Superviseur reconnu par email:", session.user.email);
+      } else {
+        // Vérifier le rôle dans la base de données seulement si pas superviseur par email
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', userId)
+          .single();
+
+        if (profileError) {
+          console.error("Error fetching user profile:", profileError);
+          toast.error("Erreur lors de la vérification des permissions");
           return false;
         }
-      } else if (profile && !['supervisor', 'manager'].includes(profile.role)) {
-        console.error("User role insufficient for deletion:", profile.role);
-        toast.error("Seuls les superviseurs et managers peuvent supprimer des versements");
-        return false;
+
+        if (profile && !['supervisor', 'manager'].includes(profile.role)) {
+          console.error("User role insufficient for deletion:", profile.role);
+          toast.error("Seuls les superviseurs et managers peuvent supprimer des versements");
+          return false;
+        }
       }
 
       // Use the centralized deletion utility
