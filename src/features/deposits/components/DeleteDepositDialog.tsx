@@ -13,6 +13,7 @@ import {
 import { Trash2 } from "lucide-react";
 import { DeleteDepositDialogProps } from "@/features/deposits/types";
 import { toast } from "sonner";
+import { formatId } from "@/utils/formatId";
 
 export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
   isOpen,
@@ -22,7 +23,6 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
 }) => {
   const [isDeleting, setIsDeleting] = React.useState(false);
 
-  // Ajout de logs pour inspection
   React.useEffect(() => {
     if (isOpen) {
       console.log("[DeleteDialog] Deposit sélectionné pour suppression:", selectedDeposit);
@@ -56,11 +56,9 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
 
   // Helper utilitaire pour fallback d’affichage
   const displayId = (dep?: any) => {
-    if (!dep) return "N/A";
-    if (typeof dep.id === "number" && !isNaN(dep.id)) return dep.id;
-    if (!!dep.id && !isNaN(Number(dep.id))) return dep.id;
-    return "N/A";
-  }
+    if (!dep || dep.id === undefined || dep.id === null) return "N/A";
+    return formatId(dep.id, 6);
+  };
 
   return (
     <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
@@ -80,7 +78,7 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
                   Client : {selectedDeposit.client_name}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  <span className="font-semibold pr-1">ID:</span> {displayId(selectedDeposit)}
+                  <span className="font-semibold pr-1">ID du versement :</span> {displayId(selectedDeposit)}
                 </div>
                 <div className="text-sm text-muted-foreground">
                   Montant : {typeof selectedDeposit.amount === "number"
