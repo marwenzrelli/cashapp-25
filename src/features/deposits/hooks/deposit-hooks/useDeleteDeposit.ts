@@ -30,6 +30,37 @@ export const useDeleteDeposit = (
       const userId = session?.user?.id;
       console.log("User ID for deletion:", userId);
 
+      if (!userId) {
+        console.error("No authenticated user found");
+        toast.error("Vous devez être connecté pour supprimer un versement");
+        return false;
+      }
+
+      // Check user role and permissions
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .single();
+
+      if (profileError) {
+        console.error("Error fetching user profile:", profileError);
+        // Allow supervisors based on email if profile fetch fails
+        const supervisorEmails = [
+          'marwen.zrelli.pro@icloud.com',
+          'marwen.zrelli@gmail.com'
+        ];
+        
+        if (!session.user.email || !supervisorEmails.includes(session.user.email.toLowerCase())) {
+          toast.error("Permissions insuffisantes pour supprimer un versement");
+          return false;
+        }
+      } else if (profile && !['supervisor', 'manager'].includes(profile.role)) {
+        console.error("User role insufficient for deletion:", profile.role);
+        toast.error("Seuls les superviseurs et managers peuvent supprimer des versements");
+        return false;
+      }
+
       // Use the centralized deletion utility
       const success = await handleDepositDeletion(depositId, userId);
       
@@ -78,19 +109,15 @@ export const useDeleteDeposit = (
       // Extract numeric ID with a more robust approach
       let depositId: number;
       
-      // Get the ID value and ensure it's properly typed
+      // Get the ID value safely
       const idValue = depositToDelete.id;
       console.log("Raw deposit ID:", idValue, "type:", typeof idValue);
       
-      // Handle different ID formats safely
+      // Handle different ID formats safely with proper type checking
       if (typeof idValue === 'number') {
         depositId = idValue;
-      } else if (typeof idValue === 'string') {
-        // Remove any non-digit characters and parse
-        const numericPart = idValue.replace(/\D/g, '');
-        depositId = parseInt(numericPart, 10);
       } else {
-        // Fallback: convert to string then extract numbers
+        // Convert to string safely and extract numeric part
         const stringValue = String(idValue);
         const numericPart = stringValue.replace(/\D/g, '');
         depositId = parseInt(numericPart, 10);
