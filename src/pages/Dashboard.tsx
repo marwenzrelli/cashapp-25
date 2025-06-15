@@ -21,14 +21,38 @@ const Dashboard = () => {
   const [currentUser, setCurrentUser] = useState<SystemUser | null>(null);
   const { stats, isLoading, recentActivity, handleRefresh, error } = useDashboardData();
   const [isRecalculating, setIsRecalculating] = useState(false);
+  const [loadingStartTime, setLoadingStartTime] = useState<number>(Date.now());
 
   useEffect(() => {
-    console.log("Dashboard mounted");
+    console.log("=== DASHBOARD DEBUG INFO ===");
+    console.log("Current URL:", window.location.href);
+    console.log("Dashboard mounted at:", new Date().toISOString());
     console.log("Dashboard stats:", stats);
     console.log("Dashboard isLoading:", isLoading);
     console.log("Dashboard error:", error);
-    console.log("Dashboard recentActivity:", recentActivity);
-  }, [stats, isLoading, error, recentActivity]);
+    console.log("Dashboard recentActivity count:", recentActivity?.length || 0);
+    console.log("Loading duration:", Date.now() - loadingStartTime, "ms");
+    
+    // Check Supabase configuration
+    console.log("Supabase URL:", supabase.supabaseUrl);
+    console.log("Supabase Key:", supabase.supabaseKey?.substring(0, 20) + "...");
+    
+    // Test auth state
+    supabase.auth.getSession().then(({ data: { session }, error: sessionError }) => {
+      console.log("Dashboard session check:", {
+        hasSession: !!session,
+        userId: session?.user?.id,
+        email: session?.user?.email,
+        error: sessionError
+      });
+    });
+  }, [stats, isLoading, error, recentActivity, loadingStartTime]);
+
+  useEffect(() => {
+    if (isLoading) {
+      setLoadingStartTime(Date.now());
+    }
+  }, [isLoading]);
 
   const handleUpdateProfile = async (updatedUser: Partial<SystemUser>) => {
     try {
@@ -73,14 +97,32 @@ const Dashboard = () => {
     }
   };
 
-  // Afficher l'état de chargement ou d'erreur
+  // Show loading state with timeout
   if (isLoading) {
-    console.log("Dashboard is loading...");
+    const loadingDuration = Date.now() - loadingStartTime;
+    console.log("Dashboard is loading... Duration:", loadingDuration, "ms");
+    
     return (
       <div className="space-y-8 animate-in w-full px-0 sm:px-0">
         <div className="text-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
           <p>Chargement du tableau de bord...</p>
+          <p className="text-sm text-muted-foreground mt-2">
+            {loadingDuration > 5000 ? "Vérification de la connexion..." : ""}
+          </p>
+          {loadingDuration > 10000 && (
+            <div className="mt-4 space-y-2">
+              <p className="text-sm text-yellow-600">
+                Le chargement prend plus de temps que prévu
+              </p>
+              <button 
+                onClick={handleRefresh}
+                className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/90 text-sm"
+              >
+                Réessayer
+              </button>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -92,12 +134,24 @@ const Dashboard = () => {
       <div className="space-y-8 animate-in w-full px-0 sm:px-0">
         <div className="text-center py-8">
           <p className="text-red-500 mb-4">Erreur lors du chargement: {error}</p>
-          <button 
-            onClick={handleRefresh}
-            className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/90"
-          >
-            Réessayer
-          </button>
+          <div className="space-y-2">
+            <button 
+              onClick={handleRefresh}
+              className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/90 mr-2"
+            >
+              Réessayer
+            </button>
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+            >
+              Recharger la page
+            </button>
+          </div>
+          <div className="mt-4 text-xs text-gray-500">
+            <p>URL: {window.location.href}</p>
+            <p>Timestamp: {new Date().toISOString()}</p>
+          </div>
         </div>
       </div>
     );
