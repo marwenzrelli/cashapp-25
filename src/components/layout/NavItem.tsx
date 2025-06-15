@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { LucideIcon } from "lucide-react";
 
@@ -10,11 +11,12 @@ interface NavItemProps {
 }
 
 export const NavItem = ({ path, label, icon: Icon, currentPath, onClick }: NavItemProps) => {
-  // Handle both "/" and "/dashboard" paths as active for dashboard
-  const isActive = (path === "/dashboard" && (currentPath === "/" || currentPath === "/dashboard")) ||
-                   currentPath === path;
+  // Special case for dashboard - map /dashboard to / for active state check
+  const isActive = path === "/dashboard" 
+    ? (currentPath === "/" || currentPath === "/dashboard")
+    : currentPath === path;
   
-  // Always use "/" for dashboard navigation to keep it simple
+  // Map dashboard path to root for the Link
   const linkPath = path === "/dashboard" ? "/" : path;
   
   return (

@@ -27,7 +27,6 @@ const Layout = () => {
   }, []);
 
   console.log("Layout - userRole:", userRole);
-  console.log("Current path in Layout:", location.pathname);
 
   return (
     <div className="min-h-screen bg-background">
@@ -39,7 +38,7 @@ const Layout = () => {
         handleLogout={handleLogout} 
       />
       <main className="w-full flex justify-center">
-        <div className="w-full max-w-7xl px-2 sm:px-4 lg:px-6 py-4">
+        <div className="w-full max-w-7xl px-2 sm:px-4 lg:px-6">
           <Outlet />
         </div>
       </main>

@@ -12,6 +12,7 @@ export const useDepositsPage = () => {
     createDeposit, 
     deleteDeposit, 
     updateDeposit, 
+    confirmDeleteDeposit, 
     setShowDeleteDialog, 
     setDepositToDelete,
     fetchDeposits
@@ -50,11 +51,13 @@ export const useDepositsPage = () => {
 
   const {
     handleDelete,
+    confirmDelete,
     handleConfirmEdit,
     handleCreateDeposit
   } = useDepositActions({
     createDeposit,
     updateDeposit,
+    confirmDeleteDeposit,
     setDepositToDelete,
     setShowDeleteDialog,
     setIsDeleteDialogOpen,
@@ -63,15 +66,6 @@ export const useDepositsPage = () => {
     selectedDeposit,
     setIsDeleting
   });
-
-  // Simple function that just closes the dialog - the actual deletion is handled by DeleteDepositDialog
-  const confirmDelete = async (): Promise<boolean> => {
-    console.log("[PAGE] confirmDelete - closing dialogs only");
-    setIsDeleteDialogOpen(false);
-    setShowDeleteDialog(false);
-    setDepositToDelete(null);
-    return true;
-  };
 
   return {
     searchTerm,
