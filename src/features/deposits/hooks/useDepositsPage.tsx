@@ -63,7 +63,7 @@ export const useDepositsPage = () => {
     selectedDeposit
   });
 
-  // Simplified function that refreshes deposits after deletion
+  // Simple function that refreshes deposits after deletion
   const confirmDelete = async (): Promise<boolean> => {
     console.log("[PAGE] confirmDelete - refreshing deposits");
     try {
