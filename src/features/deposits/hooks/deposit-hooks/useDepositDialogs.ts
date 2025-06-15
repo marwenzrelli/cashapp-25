@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Deposit, EditFormData } from "@/components/deposits/types";
+import { Deposit, EditFormData } from "@/features/deposits/types";
 import { formatISODateTime } from "../utils/dateUtils";
 import { toast } from "sonner";
 

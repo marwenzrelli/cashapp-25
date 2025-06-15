@@ -12,7 +12,6 @@ interface UseDepositActionsProps {
   setIsEditDialogOpen: (isOpen: boolean) => void;
   editForm: EditFormData;
   selectedDeposit: Deposit | null;
-  setIsDeleting?: (isDeleting: boolean) => void;
 }
 
 export const useDepositActions = ({
@@ -23,21 +22,17 @@ export const useDepositActions = ({
   setIsDeleteDialogOpen,
   setIsEditDialogOpen,
   editForm,
-  selectedDeposit,
-  setIsDeleting
+  selectedDeposit
 }: UseDepositActionsProps) => {
   
   const handleDelete = (deposit: Deposit) => {
     console.log("[ACTIONS] Demande de suppression pour le versement:", deposit);
     console.log("[ACTIONS] Deposit ID:", deposit.id, "type:", typeof deposit.id);
     
-    // Make a deep copy of the deposit object to avoid reference issues
     const depositCopy = JSON.parse(JSON.stringify(deposit));
     console.log("[ACTIONS] Setting depositToDelete with copy:", depositCopy);
     
     setDepositToDelete(depositCopy);
-    
-    // Open the dialog
     setIsDeleteDialogOpen(true);
     setShowDeleteDialog(true);
   };
@@ -51,7 +46,6 @@ export const useDepositActions = ({
     console.log("Confirmation des modifications pour:", selectedDeposit);
     console.log("Nouvelles valeurs:", editForm);
 
-    // Ensure we always have a date value
     const dateToUse = editForm.date || new Date().toISOString().split('T')[0];
     const timeToUse = editForm.time || '00:00:00';
 
@@ -66,7 +60,6 @@ export const useDepositActions = ({
     console.log("Final updates being sent:", updates);
 
     try {
-      // Ensure the ID is properly converted to a number
       const depositId = typeof selectedDeposit.id === 'string' 
         ? parseInt(selectedDeposit.id, 10) 
         : selectedDeposit.id;

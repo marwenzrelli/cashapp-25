@@ -60,8 +60,7 @@ export const useDepositsPage = () => {
     setIsDeleteDialogOpen,
     setIsEditDialogOpen,
     editForm,
-    selectedDeposit,
-    setIsDeleting
+    selectedDeposit
   });
 
   // Simple function that just closes the dialog - the actual deletion is handled by DeleteDepositDialog
