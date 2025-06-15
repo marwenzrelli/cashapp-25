@@ -1,4 +1,3 @@
-
 import { Deposit, EditFormData } from "@/features/deposits/types";
 import { toast } from "sonner";
 import { showErrorToast } from "@/features/clients/hooks/utils/errorUtils";
@@ -30,12 +29,12 @@ export const useDepositActions = ({
 }: UseDepositActionsProps) => {
   
   const handleDelete = (deposit: Deposit) => {
-    console.log("Demande de suppression pour le versement:", deposit);
-    console.log("Deposit ID:", deposit.id, "type:", typeof deposit.id);
+    console.log("[ACTIONS] Demande de suppression pour le versement:", deposit);
+    console.log("[ACTIONS] Deposit ID:", deposit.id, "type:", typeof deposit.id);
     
     // Make a deep copy of the deposit object to avoid reference issues
     const depositCopy = JSON.parse(JSON.stringify(deposit));
-    console.log("Setting depositToDelete with copy:", depositCopy);
+    console.log("[ACTIONS] Setting depositToDelete with copy:", depositCopy);
     
     setDepositToDelete(depositCopy);
     
@@ -45,29 +44,15 @@ export const useDepositActions = ({
   };
 
   const confirmDelete = async (): Promise<boolean> => {
-    console.log("confirmDelete called in useDepositActions");
-    console.log("Current selectedDeposit:", selectedDeposit);
+    console.log("[ACTIONS] confirmDelete called - this will be handled by the dialog directly");
     
-    if (!selectedDeposit) {
-      console.error("No deposit selected for deletion");
-      toast.error("Erreur", {
-        description: "Aucun versement sélectionné"
-      });
-      return false;
-    }
-    
-    setIsDeleting(true);
-    console.log("Confirmation de suppression pour:", selectedDeposit);
-    console.log("Deposit ID to delete:", selectedDeposit.id, "type:", typeof selectedDeposit.id);
-    
+    // This function is now mainly for backward compatibility
+    // The actual deletion is handled by DeleteDepositDialog
     try {
-      // Call the actual delete function and await its result
-      console.log("Calling confirmDeleteDeposit function...");
       const success = await confirmDeleteDeposit();
-      console.log("Delete operation result:", success);
       
       if (success === true) {
-        console.log("Delete operation successful");
+        console.log("[ACTIONS] Delete operation successful");
         setIsDeleteDialogOpen(false);
         setShowDeleteDialog(false);
         toast.success("Succès", {
@@ -75,14 +60,14 @@ export const useDepositActions = ({
         });
         return true;
       } else {
-        console.error("La suppression a échoué");
+        console.error("[ACTIONS] La suppression a échoué");
         toast.error("Échec de la suppression", {
           description: "Une erreur est survenue lors de la suppression du versement"
         });
         return false;
       }
     } catch (error) {
-      console.error("Erreur détaillée lors de la suppression:", {
+      console.error("[ACTIONS] Erreur détaillée lors de la suppression:", {
         message: error.message,
         stack: error.stack,
         error: error
@@ -90,8 +75,6 @@ export const useDepositActions = ({
       
       showErrorToast("Échec de la suppression", error);
       return false;
-    } finally {
-      setIsDeleting(false);
     }
   };
 
