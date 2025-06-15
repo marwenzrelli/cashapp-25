@@ -22,16 +22,26 @@ export const DepositClientInfo = ({
 
   // Handle click to navigate to client profile
   const handleClientClick = () => {
-    if (clientId) {
+    if (
+      clientId !== undefined &&
+      clientId !== null &&
+      !isNaN(Number(clientId)) &&
+      Number(clientId) > 0 // ID positif (d'après la structure table Supabase)
+    ) {
       navigate(`/clients/${clientId}`);
     } else {
-      console.log("No client ID available for navigation:", clientName);
+      console.log("Aucun ID client valide pour la navigation:", clientName, clientId);
     }
   };
 
-  // Format the client ID for display as 4 digits (or show N/A)
+  // Format robustly the client ID (always display 4 chiffres or N/A)
   let displayClientId = "N/A";
-  if (clientId !== undefined && clientId !== null && !isNaN(Number(clientId))) {
+  if (
+    clientId !== undefined &&
+    clientId !== null &&
+    !isNaN(Number(clientId)) &&
+    Number(clientId) > 0 // ID positif
+  ) {
     displayClientId = formatId(clientId, 4);
   }
 
@@ -46,13 +56,14 @@ export const DepositClientInfo = ({
       <div>
         <p 
           className="font-medium cursor-pointer hover:text-primary hover:underline transition-colors flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-purple-50/90 dark:bg-purple-900/30 hover:bg-purple-100 dark:hover:bg-purple-900/40 shadow-sm hover:shadow border border-purple-100/30 dark:border-purple-900/20"
+          title={displayClientId === "N/A" ? "Aucun client ID n’est relié à ce versement" : undefined}
           onClick={handleClientClick}
         >
           {clientName}
         </p>
         <div className="flex items-center gap-2 mt-1">
           <p className="text-xs text-muted-foreground pl-1">
-            ID: {displayClientId}
+            ID client : <span className={displayClientId === "N/A" ? "text-red-400" : "font-semibold text-primary"}>{displayClientId}</span>
           </p>
           {clientBalance !== null && (
             <span className={`text-xs px-2 py-0.5 rounded-md border ${
