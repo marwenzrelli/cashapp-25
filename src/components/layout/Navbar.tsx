@@ -5,6 +5,7 @@ import { LogoSection } from "./LogoSection";
 import { NavigationLinks } from "./NavigationLinks";
 import { MobileMenu } from "./MobileMenu";
 import { LogoutButton } from "./LogoutButton";
+import { NotificationButton } from "@/components/notifications/NotificationButton";
 
 interface NavbarProps {
   currentPath: string;
@@ -43,11 +44,11 @@ export const Navbar = ({ currentPath, userRole, isOpen, setIsOpen, handleLogout 
             </div>
           </div>
 
-          {/* Bouton déconnexion desktop */}
-          <LogoutButton
-            onLogout={handleLogout}
-            className="hidden md:flex"
-          />
+          {/* Actions desktop */}
+          <div className="hidden md:flex items-center space-x-2">
+            <NotificationButton />
+            <LogoutButton onLogout={handleLogout} />
+          </div>
         </div>
       </div>
     </nav>

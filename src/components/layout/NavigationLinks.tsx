@@ -7,6 +7,7 @@ import { UserRole } from "@/types/admin";
 interface NavigationLinksProps {
   className?: string;
   onClick?: () => void;
+  onNavigate?: () => void;
   currentPath: string;
   userRole: UserRole | null;
 }
@@ -18,8 +19,9 @@ interface NavItemType {
   roles?: UserRole[];
 }
 
-export const NavigationLinks = ({ className = "", onClick = () => {}, currentPath, userRole }: NavigationLinksProps) => {
+export const NavigationLinks = ({ className = "", onClick = () => {}, onNavigate = () => {}, currentPath, userRole }: NavigationLinksProps) => {
   console.log("NavigationLinks - userRole:", userRole);
+  console.log("NavigationLinks - userRole type:", typeof userRole);
   
   const navItems: NavItemType[] = [
     { path: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
@@ -27,17 +29,35 @@ export const NavigationLinks = ({ className = "", onClick = () => {}, currentPat
     { path: "/deposits", label: "Versements", icon: ArrowDownCircle },
     { path: "/withdrawals", label: "Retraits", icon: ArrowUpCircle },
     { path: "/transfers", label: "Virements", icon: ArrowLeftRight },
-    { path: "/statistics", label: "Statistiques", icon: LineChart, roles: ['supervisor', 'manager'] },
     { path: "/operations", label: "Recherche", icon: Search },
+    { path: "/statistics", label: "Statistiques", icon: LineChart, roles: ['supervisor', 'manager'] },
     { path: "/administration", label: "Administration", icon: Shield, roles: ['supervisor'] },
-    // The temporary link to admin-utility has been removed
   ];
 
   const filteredNavItems = navItems.filter(item => {
+    console.log(`Checking item ${item.label}:`, {
+      hasRoles: !!item.roles,
+      itemRoles: item.roles,
+      userRole: userRole,
+      shouldShow: !item.roles || (userRole && item.roles.includes(userRole))
+    });
+    
     if (!item.roles) return true;
-    if (!userRole) return false;
-    return item.roles.includes(userRole);
+    if (!userRole) {
+      console.log(`No userRole for ${item.label}, hiding`);
+      return false;
+    }
+    const shouldShow = item.roles.includes(userRole);
+    console.log(`${item.label} should show:`, shouldShow);
+    return shouldShow;
   });
+
+  console.log("Filtered nav items:", filteredNavItems.map(item => item.label));
+
+  const handleItemClick = () => {
+    onClick();
+    onNavigate();
+  };
 
   return (
     <div className={className}>
@@ -48,7 +68,7 @@ export const NavigationLinks = ({ className = "", onClick = () => {}, currentPat
           label={item.label}
           icon={item.icon}
           currentPath={currentPath}
-          onClick={onClick}
+          onClick={handleItemClick}
         />
       ))}
     </div>
