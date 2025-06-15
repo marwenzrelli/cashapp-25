@@ -1,9 +1,15 @@
-
 import React, { useState } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Trash2 } from "lucide-react";
 import { DeleteDepositDialogProps } from "@/features/deposits/types";
 import { toast } from "sonner";
+
+export interface DeleteDepositDialogProps {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  selectedDeposit: any | null; // Pour compatibilité, on laisse selectedDeposit ici
+  onConfirm: () => void;
+}
 
 export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
   isOpen,
@@ -11,44 +17,29 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
   selectedDeposit,
   onConfirm
 }) => {
-  const [isDeleting, setIsDeleting] = useState(false);
-  
+  const [isDeleting, setIsDeleting] = React.useState(false);
+
   const handleConfirm = async () => {
     if (!onConfirm) {
       console.error("No onConfirm handler provided");
       return;
     }
-    
+
     if (!selectedDeposit) {
       console.error("No deposit selected for deletion");
       toast.error("Aucun versement sélectionné");
       return;
     }
-    
-    console.log("Starting deposit deletion process for ID:", selectedDeposit.id, "of type:", typeof selectedDeposit.id);
+
     setIsDeleting(true);
-    
     try {
-      // Force a fresh copy of the deposit object to avoid reference issues
-      const depositToDelete = {...selectedDeposit};
-      console.log("Using deposit for deletion:", depositToDelete);
-      
-      // Call onConfirm directly and wait for result
-      console.log("Calling onConfirm handler with deposit ID:", depositToDelete.id);
       const success = await onConfirm();
-      
-      console.log("Deletion result:", success);
-      
-      // Only close dialog on successful deletion
       if (success === true) {
-        console.log("Deletion successful, closing dialog");
         onOpenChange(false);
       } else {
-        console.error("Deletion failed, keeping dialog open");
         toast.error("La suppression a échoué");
       }
     } catch (error) {
-      console.error("Error occurred during deletion:", error);
       toast.error("Erreur lors de la suppression");
     } finally {
       setIsDeleting(false);
@@ -73,10 +64,10 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
                   Client : {selectedDeposit.client_name}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  Montant : {selectedDeposit.amount.toLocaleString()} TND
+                  Montant : {selectedDeposit.amount?.toLocaleString?.() ?? selectedDeposit.amount} TND
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  Date : {selectedDeposit.date}
+                  Date : {selectedDeposit.date || selectedDeposit.operation_date}
                 </div>
               </div>
             )}

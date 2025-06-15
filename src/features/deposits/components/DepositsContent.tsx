@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, memo } from "react";
 import { DepositsTable } from "./DepositsTable";
 import { DepositsHeader } from "./DepositsHeader";
@@ -26,6 +25,7 @@ interface DepositsContentProps {
   isEditDialogOpen: boolean;
   setIsEditDialogOpen: (open: boolean) => void;
   selectedDeposit: Deposit | null;
+  depositToDelete?: Deposit | null; // Ajouté pour la correcion
   itemsPerPage: string;
   setItemsPerPage: (value: string) => void;
   currentPage: number;
@@ -57,6 +57,7 @@ export const DepositsContent = memo(({
   isEditDialogOpen,
   setIsEditDialogOpen,
   selectedDeposit,
+  depositToDelete, // Ajout pour la suppression
   itemsPerPage,
   setItemsPerPage,
   currentPage,
@@ -159,7 +160,8 @@ export const DepositsContent = memo(({
         isOpen={isDeleteDialogOpen} 
         onOpenChange={setIsDeleteDialogOpen} 
         onConfirm={confirmDelete} 
-        selectedDeposit={selectedDeposit} 
+        selectedDeposit={depositToDelete ?? selectedDeposit} 
+        // Passer depositToDelete prioritairement (compatibilité ancienne prop)
       />
 
       <EditDepositDialog
