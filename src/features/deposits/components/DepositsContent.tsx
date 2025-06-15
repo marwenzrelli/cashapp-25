@@ -160,8 +160,8 @@ export const DepositsContent = memo(({
         isOpen={isDeleteDialogOpen} 
         onOpenChange={setIsDeleteDialogOpen} 
         onConfirm={confirmDelete} 
-        selectedDeposit={depositToDelete ?? selectedDeposit} 
-        // Passer depositToDelete prioritairement (compatibilité ancienne prop)
+        selectedDeposit={depositToDelete && depositToDelete.id !== undefined ? depositToDelete : selectedDeposit && selectedDeposit.id !== undefined ? selectedDeposit : null} 
+        // On prend toujours depositToDelete s'il existe, sinon selectedDeposit, sinon null
       />
 
       <EditDepositDialog

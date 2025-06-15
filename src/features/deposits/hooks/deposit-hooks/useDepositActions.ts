@@ -1,4 +1,3 @@
-
 import { Deposit, EditFormData } from "@/features/deposits/types";
 import { toast } from "sonner";
 import { showErrorToast } from "@/features/clients/hooks/utils/errorUtils";
@@ -35,13 +34,12 @@ export const useDepositActions = ({
     console.log("Demande de suppression pour le versement:", deposit);
     console.log("Deposit ID:", deposit.id, "type:", typeof deposit.id);
 
-    // Make a deep copy of the deposit object to avoid reference issues
-    const depositCopy = JSON.parse(JSON.stringify(deposit));
-    console.log("Setting depositToDelete with copy:", depositCopy);
+    // Correction: toujours forcer le type Number sur l'ID au cas où ce soit une string
+    const depositCopy = { ...deposit, id: Number(deposit.id) };
+    console.log("Setting depositToDelete with copy (after type conversion):", depositCopy);
 
     setDepositToDelete(depositCopy);
 
-    // Open the dialog
     setIsDeleteDialogOpen(true);
     setShowDeleteDialog(true);
   };
@@ -170,4 +168,3 @@ export const useDepositActions = ({
     handleCreateDeposit
   };
 };
-
