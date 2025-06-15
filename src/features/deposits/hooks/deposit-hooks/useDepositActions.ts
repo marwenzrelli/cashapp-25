@@ -14,6 +14,7 @@ interface UseDepositActionsProps {
   editForm: EditFormData;
   selectedDeposit: Deposit | null;
   setIsDeleting: (isDeleting: boolean) => void;
+  setSelectedDeposit?: (deposit: Deposit | null) => void; // Ajouté pour nettoyer après suppression
 }
 
 export const useDepositActions = ({
@@ -26,19 +27,20 @@ export const useDepositActions = ({
   setIsEditDialogOpen,
   editForm,
   selectedDeposit,
-  setIsDeleting
+  setIsDeleting,
+  setSelectedDeposit // optionnel, pour reset seulement après succès
 }: UseDepositActionsProps) => {
   
   const handleDelete = (deposit: Deposit) => {
     console.log("Demande de suppression pour le versement:", deposit);
     console.log("Deposit ID:", deposit.id, "type:", typeof deposit.id);
-    
+
     // Make a deep copy of the deposit object to avoid reference issues
     const depositCopy = JSON.parse(JSON.stringify(deposit));
     console.log("Setting depositToDelete with copy:", depositCopy);
-    
+
     setDepositToDelete(depositCopy);
-    
+
     // Open the dialog
     setIsDeleteDialogOpen(true);
     setShowDeleteDialog(true);
@@ -47,7 +49,7 @@ export const useDepositActions = ({
   const confirmDelete = async (): Promise<boolean> => {
     console.log("confirmDelete called in useDepositActions");
     console.log("Current selectedDeposit:", selectedDeposit);
-    
+
     if (!selectedDeposit) {
       console.error("No deposit selected for deletion");
       toast.error("Erreur", {
@@ -55,21 +57,23 @@ export const useDepositActions = ({
       });
       return false;
     }
-    
+
     setIsDeleting(true);
     console.log("Confirmation de suppression pour:", selectedDeposit);
     console.log("Deposit ID to delete:", selectedDeposit.id, "type:", typeof selectedDeposit.id);
-    
+
     try {
-      // Call the actual delete function and await its result
       console.log("Calling confirmDeleteDeposit function...");
       const success = await confirmDeleteDeposit();
       console.log("Delete operation result:", success);
-      
+
       if (success === true) {
         console.log("Delete operation successful");
         setIsDeleteDialogOpen(false);
         setShowDeleteDialog(false);
+        // Nettoyer le state APRES la suppression effective :
+        if (setSelectedDeposit) setSelectedDeposit(null);
+        setDepositToDelete(null);
         toast.success("Succès", {
           description: "Le versement a été supprimé avec succès"
         });
@@ -87,7 +91,7 @@ export const useDepositActions = ({
         stack: error.stack,
         error: error
       });
-      
+
       showErrorToast("Échec de la suppression", error);
       return false;
     } finally {
@@ -104,7 +108,6 @@ export const useDepositActions = ({
     console.log("Confirmation des modifications pour:", selectedDeposit);
     console.log("Nouvelles valeurs:", editForm);
 
-    // Ensure we always have a date value
     const dateToUse = editForm.date || new Date().toISOString().split('T')[0];
     const timeToUse = editForm.time || '00:00:00';
 
@@ -119,7 +122,6 @@ export const useDepositActions = ({
     console.log("Final updates being sent:", updates);
 
     try {
-      // Ensure the ID is properly converted to a number
       const depositId = typeof selectedDeposit.id === 'string' 
         ? parseInt(selectedDeposit.id, 10) 
         : selectedDeposit.id;
@@ -168,3 +170,4 @@ export const useDepositActions = ({
     handleCreateDeposit
   };
 };
+
