@@ -1,15 +1,9 @@
-import React, { useState } from "react";
+
+import React from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Trash2 } from "lucide-react";
 import { DeleteDepositDialogProps } from "@/features/deposits/types";
 import { toast } from "sonner";
-
-export interface DeleteDepositDialogProps {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
-  selectedDeposit: any | null; // Pour compatibilité, on laisse selectedDeposit ici
-  onConfirm: () => void;
-}
 
 export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
   isOpen,
