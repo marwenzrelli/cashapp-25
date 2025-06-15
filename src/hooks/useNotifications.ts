@@ -31,12 +31,8 @@ export const useNotifications = () => {
     try {
       let permission: NotificationPermission;
       
-      // Sur mobile, nous devons d'abord vérifier si l'utilisateur peut interagir
       if (isMobile()) {
-        // Sur mobile, nous devons nous assurer que la demande est déclenchée par un geste utilisateur
         console.log('Demande de permission sur mobile...');
-        
-        // Certains navigateurs mobiles nécessitent une interaction utilisateur
         await new Promise(resolve => {
           setTimeout(resolve, 100);
         });
@@ -52,7 +48,6 @@ export const useNotifications = () => {
             : 'Vous recevrez maintenant des notifications pour toutes les transactions.',
         });
 
-        // Test immédiat sur mobile pour vérifier que ça fonctionne
         if (isMobile()) {
           setTimeout(() => {
             try {
@@ -108,43 +103,36 @@ export const useNotifications = () => {
           icon: icon || '/favicon.ico',
           badge: '/favicon.ico',
           tag: 'transaction-notification',
-          requireInteraction: isMobile(), // Sur mobile, garder la notification visible plus longtemps
+          requireInteraction: isMobile(),
           silent: false,
-          // Options spécifiques pour mobile
           ...(isMobile() && {
-            vibrate: [100, 50, 100], // Vibration sur mobile
+            vibrate: [100, 50, 100],
             renotify: true,
           })
         });
 
-        // Sur mobile, fermer automatiquement après plus de temps
         const autoCloseTime = isMobile() ? 8000 : 5000;
         setTimeout(() => {
           notification.close();
         }, autoCloseTime);
 
-        // Gérer le clic sur la notification
         notification.onclick = () => {
           window.focus();
           notification.close();
           
-          // Sur mobile, essayer de ramener l'app au premier plan
           if (isMobile() && 'navigator' in window && 'serviceWorker' in navigator) {
-            // Focus sur la fenêtre principale
             if (window.parent !== window) {
               window.parent.focus();
             }
           }
         };
 
-        // Log pour debug mobile
         if (isMobile()) {
           console.log('Notification mobile envoyée:', title);
         }
       } catch (error) {
         console.error('Erreur lors de l\'affichage de la notification:', error);
         
-        // Fallback pour mobile si la notification échoue
         if (isMobile()) {
           toast.info(title, {
             description: body,
@@ -155,7 +143,7 @@ export const useNotifications = () => {
     }
   }, []);
 
-  // Configurer les notifications en temps réel
+  // Configurer les notifications en temps réel pour TOUS les mouvements
   const setupRealtimeNotifications = useCallback(async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -169,19 +157,21 @@ export const useNotifications = () => {
         supabase.removeChannel(channelRef.current);
       }
 
-      console.log('Configuration des notifications en temps réel...', isMobile() ? '(Mobile)' : '(Desktop)');
+      console.log('Configuration des notifications pour TOUS les mouvements...', isMobile() ? '(Mobile)' : '(Desktop)');
 
-      // Créer un nouveau channel pour écouter toutes les transactions
+      // Créer un nouveau channel pour écouter TOUTES les transactions
       const channel = supabase
-        .channel('transaction-notifications')
+        .channel('all-transaction-notifications')
         .on('postgres_changes', {
           event: 'INSERT',
           schema: 'public',
           table: 'deposits'
         }, (payload) => {
           const deposit = payload.new;
-          const title = '💰 Nouveau versement';
-          const body = `${deposit.client_name} - ${deposit.amount} TND`;
+          const title = '💰 Nouveau versement reçu';
+          const body = `Client: ${deposit.client_name}\nMontant: ${deposit.amount} TND`;
+          
+          console.log('Notification versement:', deposit);
           
           toast.success(title, {
             description: body,
@@ -196,8 +186,10 @@ export const useNotifications = () => {
           table: 'withdrawals'
         }, (payload) => {
           const withdrawal = payload.new;
-          const title = '💸 Nouveau retrait';
-          const body = `${withdrawal.client_name} - ${withdrawal.amount} TND`;
+          const title = '💸 Nouveau retrait effectué';
+          const body = `Client: ${withdrawal.client_name}\nMontant: ${withdrawal.amount} TND`;
+          
+          console.log('Notification retrait:', withdrawal);
           
           toast.info(title, {
             description: body,
@@ -212,8 +204,10 @@ export const useNotifications = () => {
           table: 'transfers'
         }, (payload) => {
           const transfer = payload.new;
-          const title = '🔄 Nouveau virement';
-          const body = `${transfer.from_client} → ${transfer.to_client} - ${transfer.amount} TND`;
+          const title = '🔄 Nouveau virement réalisé';
+          const body = `De: ${transfer.from_client}\nVers: ${transfer.to_client}\nMontant: ${transfer.amount} TND`;
+          
+          console.log('Notification virement:', transfer);
           
           toast.info(title, {
             description: body,
@@ -223,17 +217,26 @@ export const useNotifications = () => {
           showBrowserNotification(title, body);
         })
         .subscribe((status) => {
-          console.log('Statut notifications en temps réel:', status, isMobile() ? '(Mobile)' : '(Desktop)');
+          console.log('Statut notifications temps réel:', status, isMobile() ? '(Mobile)' : '(Desktop)');
           if (status === 'SUBSCRIBED') {
-            console.log('Notifications en temps réel activées avec succès');
+            console.log('✅ Notifications activées pour TOUS les mouvements');
             
-            // Message de confirmation spécifique pour mobile
             if (isMobile()) {
-              toast.success('🔔 Mode mobile activé', {
-                description: 'Les notifications fonctionnent maintenant sur votre appareil mobile',
+              toast.success('📱 Mode mobile activé', {
+                description: 'Vous recevrez toutes les notifications de mouvements',
+                duration: 3000,
+              });
+            } else {
+              toast.success('🔔 Notifications activées', {
+                description: 'Vous recevrez toutes les notifications de mouvements',
                 duration: 3000,
               });
             }
+          } else if (status === 'CHANNEL_ERROR') {
+            console.error('❌ Erreur de connexion notifications');
+            toast.error('Erreur notifications', {
+              description: 'Impossible de configurer les notifications en temps réel',
+            });
           }
         });
 
