@@ -14,8 +14,7 @@ export const useDeleteDeposit = (
   setShowDeleteDialog: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
   const deleteDeposit = async (depositId: number): Promise<boolean> => {
-    console.log("=== DÉBUT deleteDeposit ===");
-    console.log(`ID reçu: ${depositId} (type: ${typeof depositId})`);
+    console.log("Suppression versement ID:", depositId);
     
     // Validation stricte de l'ID
     if (!depositId || isNaN(depositId) || depositId <= 0) {
@@ -26,11 +25,9 @@ export const useDeleteDeposit = (
     
     try {
       setIsLoading(true);
-      console.log("Chargement activé");
 
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id;
-      console.log("ID utilisateur:", userId);
 
       if (!userId) {
         console.error("Utilisateur non authentifié");
@@ -39,12 +36,10 @@ export const useDeleteDeposit = (
       }
 
       // Utiliser l'utilitaire centralisé de suppression
-      console.log("Appel handleDepositDeletion avec ID:", depositId);
       const success = await handleDepositDeletion(depositId, userId);
-      console.log("Résultat handleDepositDeletion:", success);
       
       if (success) {
-        console.log("Mise à jour de l'état local après suppression réussie");
+        console.log("Suppression serveur réussie");
         
         // Mettre à jour l'état local
         setDeposits(prevDeposits => {
@@ -53,12 +48,9 @@ export const useDeleteDeposit = (
               ? parseInt(deposit.id, 10) 
               : deposit.id;
             
-            const shouldKeep = currentId !== depositId;
-            console.log(`Versement ID ${currentId}: ${shouldKeep ? 'conservé' : 'supprimé'}`);
-            return shouldKeep;
+            return currentId !== depositId;
           });
           
-          console.log(`Versements avant filtrage: ${prevDeposits.length}, après: ${filteredDeposits.length}`);
           return filteredDeposits;
         });
         
@@ -74,15 +66,12 @@ export const useDeleteDeposit = (
       showErrorToast("Erreur lors de la suppression du versement", error);
       return false;
     } finally {
-      console.log("Désactivation du chargement");
       setIsLoading(false);
-      console.log("=== FIN deleteDeposit ===");
     }
   };
 
   const confirmDeleteDeposit = async (): Promise<boolean> => {
-    console.log("=== DÉBUT confirmDeleteDeposit ===");
-    console.log("depositToDelete:", depositToDelete);
+    console.log("Confirmation suppression versement");
     
     if (!depositToDelete) {
       console.error("Aucun versement à supprimer");
@@ -96,20 +85,16 @@ export const useDeleteDeposit = (
         ? parseInt(depositToDelete.id, 10) 
         : depositToDelete.id;
       
-      console.log("ID après conversion:", depositId, "type:", typeof depositId);
-      
       if (isNaN(depositId) || depositId <= 0) {
         console.error("Format d'ID invalide:", depositToDelete.id);
         toast.error("Format d'ID invalide");
         return false;
       }
       
-      console.log("Appel deleteDeposit avec ID:", depositId);
       const result = await deleteDeposit(depositId);
-      console.log("Résultat deleteDeposit:", result);
       
       if (result) {
-        console.log("Suppression confirmée - nettoyage des états");
+        console.log("Suppression confirmée");
         setDepositToDelete(null);
         setShowDeleteDialog(false);
         return true;
@@ -121,8 +106,6 @@ export const useDeleteDeposit = (
       console.error("Erreur dans confirmDeleteDeposit:", error);
       showErrorToast("Échec de la suppression du versement", error);
       return false;
-    } finally {
-      console.log("=== FIN confirmDeleteDeposit ===");
     }
   };
 

@@ -23,15 +23,8 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
 }) => {
   const [isDeleting, setIsDeleting] = React.useState(false);
 
-  React.useEffect(() => {
-    console.log("=== DeleteDialog State ===");
-    console.log("Dialog ouvert:", isOpen);
-    console.log("Versement sélectionné:", selectedDeposit);
-    console.log("Fonction onConfirm disponible:", !!onConfirm);
-  }, [isOpen, selectedDeposit, onConfirm]);
-
   const handleConfirm = async () => {
-    console.log("=== Début handleConfirm dans DeleteDialog ===");
+    console.log("Confirmation dialog - début");
     
     if (!onConfirm) {
       console.error("Aucune fonction onConfirm fournie");
@@ -44,19 +37,11 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
       toast.error("Aucun versement sélectionné");
       return;
     }
-
-    console.log("Versement à supprimer:", {
-      id: selectedDeposit.id,
-      client_name: selectedDeposit.client_name,
-      amount: selectedDeposit.amount
-    });
     
     setIsDeleting(true);
     
     try {
-      console.log("Appel de la fonction onConfirm");
       const success = await onConfirm();
-      console.log("Résultat de onConfirm:", success);
       
       if (success === true) {
         console.log("Suppression réussie - fermeture du dialog");
@@ -70,7 +55,6 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
       toast.error("Erreur lors de la suppression");
     } finally {
       setIsDeleting(false);
-      console.log("=== Fin handleConfirm dans DeleteDialog ===");
     }
   };
 

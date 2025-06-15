@@ -34,12 +34,7 @@ export const useDepositActions = ({
 }: UseDepositActionsProps) => {
   
   const handleDelete = (deposit: Deposit) => {
-    console.log("=== DÉBUT SUPPRESSION ===");
-    console.log("Versement à supprimer:", {
-      id: deposit.id,
-      client_name: deposit.client_name,
-      amount: deposit.amount
-    });
+    console.log("Initiation suppression versement ID:", deposit.id);
 
     // Normaliser l'ID pour être sûr qu'il soit un number
     const normalizedDeposit = {
@@ -55,23 +50,18 @@ export const useDepositActions = ({
       });
       return;
     }
-
-    console.log("Versement normalisé:", normalizedDeposit);
     
     // Définir le versement à supprimer
     setDepositToDelete(normalizedDeposit);
     setIsDeleteDialogOpen(true);
     setShowDeleteDialog(true);
-    
-    console.log("État mis à jour - dialog ouvert");
   };
 
   const confirmDelete = async (): Promise<boolean> => {
-    console.log("=== CONFIRMATION SUPPRESSION ===");
+    console.log("Confirmation suppression");
     
     // Priorité absolue à depositToDelete
     const targetDeposit = depositToDelete;
-    console.log("Versement ciblé pour suppression:", targetDeposit);
 
     if (!targetDeposit) {
       console.error("Aucun versement sélectionné pour suppression");
@@ -91,14 +81,12 @@ export const useDepositActions = ({
     }
 
     setIsDeleting(true);
-    console.log("Démarrage suppression pour ID:", targetDeposit.id);
 
     try {
       const success = await confirmDeleteDeposit();
-      console.log("Résultat suppression:", success);
 
       if (success === true) {
-        console.log("Suppression réussie - nettoyage des états");
+        console.log("Suppression réussie");
         
         // Fermer les dialogs
         setIsDeleteDialogOpen(false);
@@ -128,7 +116,6 @@ export const useDepositActions = ({
       return false;
     } finally {
       setIsDeleting(false);
-      console.log("=== FIN SUPPRESSION ===");
     }
   };
 
