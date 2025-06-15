@@ -14,11 +14,8 @@ export const useDeleteDeposit = (
   setShowDeleteDialog: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
   const deleteDeposit = async (depositId: number): Promise<boolean> => {
-    console.log("Suppression versement ID:", depositId);
-    
     // Validation stricte de l'ID
     if (!depositId || isNaN(depositId) || depositId <= 0) {
-      console.error("ID de versement invalide:", depositId);
       toast.error("ID de versement invalide");
       return false;
     }
@@ -30,37 +27,36 @@ export const useDeleteDeposit = (
       const userId = session?.user?.id;
 
       if (!userId) {
-        console.error("Utilisateur non authentifié");
         toast.error("Utilisateur non authentifié");
         return false;
       }
 
-      // Utiliser l'utilitaire centralisé de suppression
-      const success = await handleDepositDeletion(depositId, userId);
+      // Suppression directe depuis Supabase
+      const { error } = await supabase
+        .from('deposits')
+        .delete()
+        .eq('id', depositId);
       
-      if (success) {
-        console.log("Suppression serveur réussie");
-        
-        // Mettre à jour l'état local
-        setDeposits(prevDeposits => {
-          const filteredDeposits = prevDeposits.filter(deposit => {
-            const currentId = typeof deposit.id === 'string' 
-              ? parseInt(deposit.id, 10) 
-              : deposit.id;
-            
-            return currentId !== depositId;
-          });
-          
-          return filteredDeposits;
-        });
-        
-        toast.success("Versement supprimé avec succès");
-        return true;
-      } else {
-        console.error("Échec de la suppression côté serveur");
-        toast.error("La suppression a échoué");
+      if (error) {
+        console.error("Erreur lors de la suppression:", error);
+        toast.error("Erreur lors de la suppression du versement");
         return false;
       }
+      
+      // Mettre à jour l'état local
+      setDeposits(prevDeposits => {
+        return prevDeposits.filter(deposit => {
+          const currentId = typeof deposit.id === 'string' 
+            ? parseInt(deposit.id, 10) 
+            : deposit.id;
+          
+          return currentId !== depositId;
+        });
+      });
+      
+      toast.success("Versement supprimé avec succès");
+      return true;
+      
     } catch (error) {
       console.error("Erreur dans deleteDeposit:", error);
       showErrorToast("Erreur lors de la suppression du versement", error);
@@ -71,10 +67,7 @@ export const useDeleteDeposit = (
   };
 
   const confirmDeleteDeposit = async (): Promise<boolean> => {
-    console.log("Confirmation suppression versement");
-    
     if (!depositToDelete) {
-      console.error("Aucun versement à supprimer");
       toast.error("Aucun versement sélectionné pour la suppression");
       return false;
     }
@@ -86,7 +79,6 @@ export const useDeleteDeposit = (
         : depositToDelete.id;
       
       if (isNaN(depositId) || depositId <= 0) {
-        console.error("Format d'ID invalide:", depositToDelete.id);
         toast.error("Format d'ID invalide");
         return false;
       }
@@ -94,12 +86,10 @@ export const useDeleteDeposit = (
       const result = await deleteDeposit(depositId);
       
       if (result) {
-        console.log("Suppression confirmée");
         setDepositToDelete(null);
         setShowDeleteDialog(false);
         return true;
       } else {
-        console.error("Échec de deleteDeposit");
         return false;
       }
     } catch (error) {

@@ -1,4 +1,3 @@
-
 import { Deposit, EditFormData } from "@/features/deposits/types";
 import { toast } from "sonner";
 import { showErrorToast } from "@/features/clients/hooks/utils/errorUtils";
@@ -34,8 +33,6 @@ export const useDepositActions = ({
 }: UseDepositActionsProps) => {
   
   const handleDelete = (deposit: Deposit) => {
-    console.log("Initiation suppression versement ID:", deposit.id);
-
     // Normaliser l'ID pour être sûr qu'il soit un number
     const normalizedDeposit = {
       ...deposit,
@@ -44,10 +41,7 @@ export const useDepositActions = ({
 
     // Validation de l'ID
     if (isNaN(normalizedDeposit.id) || normalizedDeposit.id <= 0) {
-      console.error("ID de versement invalide:", deposit.id);
-      toast.error("Erreur", {
-        description: "ID de versement invalide"
-      });
+      toast.error("ID de versement invalide");
       return;
     }
     
@@ -58,25 +52,17 @@ export const useDepositActions = ({
   };
 
   const confirmDelete = async (): Promise<boolean> => {
-    console.log("Confirmation suppression");
-    
     // Priorité absolue à depositToDelete
     const targetDeposit = depositToDelete;
 
     if (!targetDeposit) {
-      console.error("Aucun versement sélectionné pour suppression");
-      toast.error("Erreur", {
-        description: "Aucun versement sélectionné pour suppression"
-      });
+      toast.error("Aucun versement sélectionné pour suppression");
       return false;
     }
 
     // Validation finale de l'ID
     if (!targetDeposit.id || isNaN(Number(targetDeposit.id)) || Number(targetDeposit.id) <= 0) {
-      console.error("ID invalide pour suppression:", targetDeposit.id);
-      toast.error("Erreur", {
-        description: "ID de versement invalide"
-      });
+      toast.error("ID de versement invalide");
       return false;
     }
 
@@ -85,9 +71,7 @@ export const useDepositActions = ({
     try {
       const success = await confirmDeleteDeposit();
 
-      if (success === true) {
-        console.log("Suppression réussie");
-        
+      if (success) {
         // Fermer les dialogs
         setIsDeleteDialogOpen(false);
         setShowDeleteDialog(false);
@@ -98,16 +82,9 @@ export const useDepositActions = ({
           setSelectedDeposit(null);
         }
         
-        toast.success("Succès", {
-          description: "Le versement a été supprimé avec succès"
-        });
-        
         return true;
       } else {
-        console.error("Échec de la suppression");
-        toast.error("Échec de la suppression", {
-          description: "Une erreur est survenue lors de la suppression"
-        });
+        toast.error("Échec de la suppression");
         return false;
       }
     } catch (error) {
@@ -125,9 +102,6 @@ export const useDepositActions = ({
       return false;
     }
 
-    console.log("Confirmation des modifications pour:", selectedDeposit);
-    console.log("Nouvelles valeurs:", editForm);
-
     const dateToUse = editForm.date || new Date().toISOString().split('T')[0];
     const timeToUse = editForm.time || '00:00:00';
 
@@ -138,8 +112,6 @@ export const useDepositActions = ({
       date: dateToUse,
       time: timeToUse
     };
-
-    console.log("Final updates being sent:", updates);
 
     try {
       const depositId = typeof selectedDeposit.id === 'string' 
@@ -155,9 +127,7 @@ export const useDepositActions = ({
       const result = await updateDeposit(depositId, updates);
       if (result === true) {
         setIsEditDialogOpen(false);
-        toast.success("Succès", {
-          description: "Le versement a été modifié avec succès."
-        });
+        toast.success("Le versement a été modifié avec succès.");
         return true;
       }
       return false;
