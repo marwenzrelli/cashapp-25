@@ -7,6 +7,7 @@ interface NotificationContextType {
   isEnabled: boolean;
   requestPermission: () => Promise<void>;
   notificationPermission: NotificationPermission;
+  isMobile: boolean;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -29,7 +30,8 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
   const { 
     requestNotificationPermission, 
     setupRealtimeNotifications, 
-    cleanup 
+    cleanup,
+    isMobile
   } = useNotifications();
 
   // Vérifier la permission au chargement
@@ -37,14 +39,20 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
     if ('Notification' in window) {
       setNotificationPermission(Notification.permission);
       setIsEnabled(Notification.permission === 'granted');
+      
+      // Log pour debug mobile
+      if (isMobile) {
+        console.log('NotificationProvider initialisé en mode mobile, permission:', Notification.permission);
+      }
     }
-  }, []);
+  }, [isMobile]);
 
   // Configurer les notifications quand l'utilisateur est connecté
   useEffect(() => {
     const checkAuthAndSetup = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session && isEnabled) {
+        console.log('Configuration des notifications temps réel:', isMobile ? 'Mobile' : 'Desktop');
         await setupRealtimeNotifications();
       }
     };
@@ -54,6 +62,7 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
     // Écouter les changements d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session && isEnabled) {
+        console.log('Utilisateur connecté - Configuration notifications:', isMobile ? 'Mobile' : 'Desktop');
         await setupRealtimeNotifications();
       } else if (event === 'SIGNED_OUT') {
         cleanup();
@@ -64,7 +73,7 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
       subscription.unsubscribe();
       cleanup();
     };
-  }, [isEnabled, setupRealtimeNotifications, cleanup]);
+  }, [isEnabled, setupRealtimeNotifications, cleanup, isMobile]);
 
   const requestPermission = async () => {
     const permission = await requestNotificationPermission();
@@ -75,6 +84,7 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
     if (enabled) {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
+        console.log('Permission accordée - Configuration:', isMobile ? 'Mobile' : 'Desktop');
         await setupRealtimeNotifications();
       }
     }
@@ -84,7 +94,8 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
     <NotificationContext.Provider value={{
       isEnabled,
       requestPermission,
-      notificationPermission
+      notificationPermission,
+      isMobile
     }}>
       {children}
     </NotificationContext.Provider>

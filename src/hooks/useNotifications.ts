@@ -14,6 +14,11 @@ export const useNotifications = () => {
     }
   }, []);
 
+  // Détecter si on est sur mobile
+  const isMobile = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  };
+
   // Demander la permission pour les notifications
   const requestNotificationPermission = useCallback(async () => {
     if (!('Notification' in window)) {
@@ -24,21 +29,61 @@ export const useNotifications = () => {
     }
 
     try {
-      const permission = await Notification.requestPermission();
+      let permission: NotificationPermission;
+      
+      // Sur mobile, nous devons d'abord vérifier si l'utilisateur peut interagir
+      if (isMobile()) {
+        // Sur mobile, nous devons nous assurer que la demande est déclenchée par un geste utilisateur
+        console.log('Demande de permission sur mobile...');
+        
+        // Certains navigateurs mobiles nécessitent une interaction utilisateur
+        await new Promise(resolve => {
+          setTimeout(resolve, 100);
+        });
+      }
+
+      permission = await Notification.requestPermission();
       notificationPermission.current = permission;
       
       if (permission === 'granted') {
-        toast.success('Notifications activées avec succès !', {
-          description: 'Vous recevrez maintenant des notifications pour toutes les transactions.',
+        toast.success('Notifications activées !', {
+          description: isMobile() 
+            ? 'Vous recevrez des notifications même quand l\'app est en arrière-plan.'
+            : 'Vous recevrez maintenant des notifications pour toutes les transactions.',
         });
+
+        // Test immédiat sur mobile pour vérifier que ça fonctionne
+        if (isMobile()) {
+          setTimeout(() => {
+            try {
+              new Notification('Test de notification', {
+                body: 'Les notifications fonctionnent sur votre appareil mobile !',
+                icon: '/favicon.ico',
+                tag: 'test-notification',
+                requireInteraction: false,
+              });
+            } catch (error) {
+              console.log('Test de notification échoué:', error);
+            }
+          }, 500);
+        }
       } else if (permission === 'denied') {
-        toast.error('Permission refusée', {
-          description: 'Pour activer les notifications :\n• Chrome/Edge : Cliquez sur le cadenas → Notifications → Autoriser\n• Firefox : Cliquez sur le bouclier → Paramètres → Autoriser\n• Safari : Préférences → Sites web → Notifications',
-          duration: 10000,
-        });
+        if (isMobile()) {
+          toast.error('Notifications bloquées', {
+            description: 'Pour les activer :\n• Ouvrez les paramètres de votre navigateur\n• Cherchez "Notifications" ou "Autorisations"\n• Activez les notifications pour ce site\n• Rechargez la page',
+            duration: 12000,
+          });
+        } else {
+          toast.error('Permission refusée', {
+            description: 'Pour activer les notifications :\n• Chrome/Edge : Cliquez sur le cadenas → Notifications → Autoriser\n• Firefox : Cliquez sur le bouclier → Paramètres → Autoriser\n• Safari : Préférences → Sites web → Notifications',
+            duration: 10000,
+          });
+        }
       } else {
         toast.warning('Permission en attente', {
-          description: 'Vous pouvez réessayer plus tard.',
+          description: isMobile() 
+            ? 'Veuillez autoriser les notifications dans la popup qui va apparaître.'
+            : 'Vous pouvez réessayer plus tard.',
         });
       }
       
@@ -46,7 +91,9 @@ export const useNotifications = () => {
     } catch (error) {
       console.error('Erreur lors de la demande de permission:', error);
       toast.error('Erreur', {
-        description: 'Impossible de demander la permission de notification.',
+        description: isMobile() 
+          ? 'Impossible de demander les notifications. Vérifiez les paramètres de votre navigateur.'
+          : 'Impossible de demander la permission de notification.',
       });
       return 'denied';
     }
@@ -61,21 +108,49 @@ export const useNotifications = () => {
           icon: icon || '/favicon.ico',
           badge: '/favicon.ico',
           tag: 'transaction-notification',
-          requireInteraction: false,
+          requireInteraction: isMobile(), // Sur mobile, garder la notification visible plus longtemps
+          silent: false,
+          // Options spécifiques pour mobile
+          ...(isMobile() && {
+            vibrate: [100, 50, 100], // Vibration sur mobile
+            renotify: true,
+          })
         });
 
-        // Auto-fermer après 5 secondes
+        // Sur mobile, fermer automatiquement après plus de temps
+        const autoCloseTime = isMobile() ? 8000 : 5000;
         setTimeout(() => {
           notification.close();
-        }, 5000);
+        }, autoCloseTime);
 
         // Gérer le clic sur la notification
         notification.onclick = () => {
           window.focus();
           notification.close();
+          
+          // Sur mobile, essayer de ramener l'app au premier plan
+          if (isMobile() && 'navigator' in window && 'serviceWorker' in navigator) {
+            // Focus sur la fenêtre principale
+            if (window.parent !== window) {
+              window.parent.focus();
+            }
+          }
         };
+
+        // Log pour debug mobile
+        if (isMobile()) {
+          console.log('Notification mobile envoyée:', title);
+        }
       } catch (error) {
         console.error('Erreur lors de l\'affichage de la notification:', error);
+        
+        // Fallback pour mobile si la notification échoue
+        if (isMobile()) {
+          toast.info(title, {
+            description: body,
+            duration: 6000,
+          });
+        }
       }
     }
   }, []);
@@ -94,7 +169,7 @@ export const useNotifications = () => {
         supabase.removeChannel(channelRef.current);
       }
 
-      console.log('Configuration des notifications en temps réel...');
+      console.log('Configuration des notifications en temps réel...', isMobile() ? '(Mobile)' : '(Desktop)');
 
       // Créer un nouveau channel pour écouter toutes les transactions
       const channel = supabase
@@ -110,7 +185,7 @@ export const useNotifications = () => {
           
           toast.success(title, {
             description: body,
-            duration: 4000,
+            duration: isMobile() ? 6000 : 4000,
           });
           
           showBrowserNotification(title, body);
@@ -126,7 +201,7 @@ export const useNotifications = () => {
           
           toast.info(title, {
             description: body,
-            duration: 4000,
+            duration: isMobile() ? 6000 : 4000,
           });
           
           showBrowserNotification(title, body);
@@ -142,15 +217,23 @@ export const useNotifications = () => {
           
           toast.info(title, {
             description: body,
-            duration: 4000,
+            duration: isMobile() ? 6000 : 4000,
           });
           
           showBrowserNotification(title, body);
         })
         .subscribe((status) => {
-          console.log('Statut notifications en temps réel:', status);
+          console.log('Statut notifications en temps réel:', status, isMobile() ? '(Mobile)' : '(Desktop)');
           if (status === 'SUBSCRIBED') {
             console.log('Notifications en temps réel activées avec succès');
+            
+            // Message de confirmation spécifique pour mobile
+            if (isMobile()) {
+              toast.success('🔔 Mode mobile activé', {
+                description: 'Les notifications fonctionnent maintenant sur votre appareil mobile',
+                duration: 3000,
+              });
+            }
           }
         });
 
@@ -158,7 +241,9 @@ export const useNotifications = () => {
     } catch (error) {
       console.error('Erreur lors de la configuration des notifications:', error);
       toast.error('Erreur de configuration', {
-        description: 'Impossible de configurer les notifications en temps réel.',
+        description: isMobile() 
+          ? 'Impossible de configurer les notifications mobiles.'
+          : 'Impossible de configurer les notifications en temps réel.',
       });
     }
   }, [showBrowserNotification]);
@@ -176,6 +261,7 @@ export const useNotifications = () => {
     requestNotificationPermission,
     setupRealtimeNotifications,
     cleanup,
-    notificationPermission: notificationPermission.current
+    notificationPermission: notificationPermission.current,
+    isMobile: isMobile()
   };
 };
