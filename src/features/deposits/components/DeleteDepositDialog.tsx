@@ -24,40 +24,62 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
   const [isDeleting, setIsDeleting] = React.useState(false);
 
   React.useEffect(() => {
-    if (isOpen) {
-      console.log("[DeleteDialog] Deposit sélectionné pour suppression:", selectedDeposit);
-    }
-  }, [isOpen, selectedDeposit]);
+    console.log("=== DeleteDialog State ===");
+    console.log("Dialog ouvert:", isOpen);
+    console.log("Versement sélectionné:", selectedDeposit);
+    console.log("Fonction onConfirm disponible:", !!onConfirm);
+  }, [isOpen, selectedDeposit, onConfirm]);
 
   const handleConfirm = async () => {
+    console.log("=== Début handleConfirm dans DeleteDialog ===");
+    
     if (!onConfirm) {
-      console.error("[DeleteDialog] No onConfirm handler provided");
+      console.error("Aucune fonction onConfirm fournie");
+      toast.error("Erreur de configuration du dialog");
       return;
     }
+    
     if (!selectedDeposit) {
-      console.error("[DeleteDialog] No deposit selected for deletion");
+      console.error("Aucun versement sélectionné");
       toast.error("Aucun versement sélectionné");
       return;
     }
+
+    console.log("Versement à supprimer:", {
+      id: selectedDeposit.id,
+      client_name: selectedDeposit.client_name,
+      amount: selectedDeposit.amount
+    });
+    
     setIsDeleting(true);
+    
     try {
+      console.log("Appel de la fonction onConfirm");
       const success = await onConfirm();
+      console.log("Résultat de onConfirm:", success);
+      
       if (success === true) {
+        console.log("Suppression réussie - fermeture du dialog");
         onOpenChange(false);
       } else {
+        console.error("La suppression a échoué");
         toast.error("La suppression a échoué");
       }
     } catch (error) {
+      console.error("Erreur lors de la confirmation:", error);
       toast.error("Erreur lors de la suppression");
     } finally {
       setIsDeleting(false);
+      console.log("=== Fin handleConfirm dans DeleteDialog ===");
     }
   };
 
-  // Helper utilitaire pour fallback d’affichage
-  const displayId = (dep?: any) => {
-    if (!dep || dep.id === undefined || dep.id === null) return "N/A";
-    return formatId(dep.id, 6);
+  // Fonction utilitaire pour l'affichage de l'ID
+  const displayId = (deposit?: any) => {
+    if (!deposit || deposit.id === undefined || deposit.id === null) {
+      return "N/A";
+    }
+    return formatId(deposit.id, 6);
   };
 
   return (
@@ -78,11 +100,12 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
                   Client : {selectedDeposit.client_name}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  <span className="font-semibold pr-1">ID du versement :</span> {displayId(selectedDeposit)}
+                  <span className="font-semibold pr-1">ID du versement :</span> 
+                  {displayId(selectedDeposit)}
                 </div>
                 <div className="text-sm text-muted-foreground">
                   Montant : {typeof selectedDeposit.amount === "number"
-                    ? selectedDeposit.amount.toLocaleString?.() + " TND"
+                    ? selectedDeposit.amount.toLocaleString() + " TND"
                     : selectedDeposit.amount ?? "N/A"}
                 </div>
                 <div className="text-sm text-muted-foreground">
@@ -94,10 +117,12 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
+          <AlertDialogCancel disabled={isDeleting}>
+            Annuler
+          </AlertDialogCancel>
           <AlertDialogAction 
             onClick={handleConfirm} 
-            disabled={isDeleting}
+            disabled={isDeleting || !selectedDeposit}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
           >
             {isDeleting ? "Suppression en cours..." : "Supprimer"}

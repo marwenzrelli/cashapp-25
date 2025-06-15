@@ -1,3 +1,4 @@
+
 import { Deposit, EditFormData } from "@/features/deposits/types";
 import { toast } from "sonner";
 import { showErrorToast } from "@/features/clients/hooks/utils/errorUtils";
@@ -14,7 +15,7 @@ interface UseDepositActionsProps {
   selectedDeposit: Deposit | null;
   setIsDeleting: (isDeleting: boolean) => void;
   setSelectedDeposit?: (deposit: Deposit | null) => void;
-  depositToDelete?: Deposit | null; // Ajouté pour accéder au bon versement
+  depositToDelete?: Deposit | null;
 }
 
 export const useDepositActions = ({
@@ -29,76 +30,105 @@ export const useDepositActions = ({
   selectedDeposit,
   setIsDeleting,
   setSelectedDeposit,
-  depositToDelete // Maintenant accessible
+  depositToDelete
 }: UseDepositActionsProps) => {
   
   const handleDelete = (deposit: Deposit) => {
-    console.log("Demande de suppression pour le versement:", deposit);
-    console.log("Deposit ID:", deposit.id, "type:", typeof deposit.id);
+    console.log("=== DÉBUT SUPPRESSION ===");
+    console.log("Versement à supprimer:", {
+      id: deposit.id,
+      client_name: deposit.client_name,
+      amount: deposit.amount
+    });
 
-    const depositCopy = { ...deposit, id: Number(deposit.id) };
-    console.log("Setting depositToDelete with copy (after type conversion):", depositCopy);
+    // Normaliser l'ID pour être sûr qu'il soit un number
+    const normalizedDeposit = {
+      ...deposit,
+      id: typeof deposit.id === 'string' ? parseInt(deposit.id, 10) : deposit.id
+    };
 
-    setDepositToDelete(depositCopy);
+    // Validation de l'ID
+    if (isNaN(normalizedDeposit.id) || normalizedDeposit.id <= 0) {
+      console.error("ID de versement invalide:", deposit.id);
+      toast.error("Erreur", {
+        description: "ID de versement invalide"
+      });
+      return;
+    }
+
+    console.log("Versement normalisé:", normalizedDeposit);
+    
+    // Définir le versement à supprimer
+    setDepositToDelete(normalizedDeposit);
     setIsDeleteDialogOpen(true);
     setShowDeleteDialog(true);
+    
+    console.log("État mis à jour - dialog ouvert");
   };
 
   const confirmDelete = async (): Promise<boolean> => {
-    console.log("confirmDelete called in useDepositActions");
+    console.log("=== CONFIRMATION SUPPRESSION ===");
     
-    // Utiliser depositToDelete en priorité, puis selectedDeposit en fallback
-    const targetDeposit = depositToDelete || selectedDeposit;
-    console.log("Target deposit for deletion:", targetDeposit);
-    console.log("depositToDelete:", depositToDelete);
-    console.log("selectedDeposit:", selectedDeposit);
+    // Priorité absolue à depositToDelete
+    const targetDeposit = depositToDelete;
+    console.log("Versement ciblé pour suppression:", targetDeposit);
 
     if (!targetDeposit) {
-      console.error("No deposit selected for deletion");
+      console.error("Aucun versement sélectionné pour suppression");
       toast.error("Erreur", {
-        description: "Aucun versement sélectionné"
+        description: "Aucun versement sélectionné pour suppression"
+      });
+      return false;
+    }
+
+    // Validation finale de l'ID
+    if (!targetDeposit.id || isNaN(Number(targetDeposit.id)) || Number(targetDeposit.id) <= 0) {
+      console.error("ID invalide pour suppression:", targetDeposit.id);
+      toast.error("Erreur", {
+        description: "ID de versement invalide"
       });
       return false;
     }
 
     setIsDeleting(true);
-    console.log("Confirmation de suppression pour:", targetDeposit);
-    console.log("Deposit ID to delete:", targetDeposit.id, "type:", typeof targetDeposit.id);
+    console.log("Démarrage suppression pour ID:", targetDeposit.id);
 
     try {
-      console.log("Calling confirmDeleteDeposit function...");
       const success = await confirmDeleteDeposit();
-      console.log("Delete operation result:", success);
+      console.log("Résultat suppression:", success);
 
       if (success === true) {
-        console.log("Delete operation successful");
+        console.log("Suppression réussie - nettoyage des états");
+        
+        // Fermer les dialogs
         setIsDeleteDialogOpen(false);
         setShowDeleteDialog(false);
-        // Nettoyer le state APRES la suppression effective
-        if (setSelectedDeposit) setSelectedDeposit(null);
+        
+        // Nettoyer les états
         setDepositToDelete(null);
+        if (setSelectedDeposit) {
+          setSelectedDeposit(null);
+        }
+        
         toast.success("Succès", {
           description: "Le versement a été supprimé avec succès"
         });
+        
         return true;
       } else {
-        console.error("La suppression a échoué");
+        console.error("Échec de la suppression");
         toast.error("Échec de la suppression", {
-          description: "Une erreur est survenue lors de la suppression du versement"
+          description: "Une erreur est survenue lors de la suppression"
         });
         return false;
       }
     } catch (error) {
-      console.error("Erreur détaillée lors de la suppression:", {
-        message: error.message,
-        stack: error.stack,
-        error: error
-      });
-
+      console.error("Erreur lors de la suppression:", error);
       showErrorToast("Échec de la suppression", error);
       return false;
     } finally {
       setIsDeleting(false);
+      console.log("=== FIN SUPPRESSION ===");
     }
   };
 

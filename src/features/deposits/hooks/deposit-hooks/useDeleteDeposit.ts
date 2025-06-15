@@ -14,98 +14,115 @@ export const useDeleteDeposit = (
   setShowDeleteDialog: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
   const deleteDeposit = async (depositId: number): Promise<boolean> => {
-    console.log(`Calling deleteDeposit function with ID: ${depositId} (type: ${typeof depositId})`);
+    console.log("=== DÉBUT deleteDeposit ===");
+    console.log(`ID reçu: ${depositId} (type: ${typeof depositId})`);
     
+    // Validation stricte de l'ID
     if (!depositId || isNaN(depositId) || depositId <= 0) {
-      console.error("Invalid deposit ID:", depositId);
+      console.error("ID de versement invalide:", depositId);
       toast.error("ID de versement invalide");
       return false;
     }
     
     try {
       setIsLoading(true);
-      console.log("Setting isLoading to true");
+      console.log("Chargement activé");
 
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id;
-      console.log("Got user ID from session:", userId);
+      console.log("ID utilisateur:", userId);
 
-      // Use the centralized deletion utility
+      if (!userId) {
+        console.error("Utilisateur non authentifié");
+        toast.error("Utilisateur non authentifié");
+        return false;
+      }
+
+      // Utiliser l'utilitaire centralisé de suppression
+      console.log("Appel handleDepositDeletion avec ID:", depositId);
       const success = await handleDepositDeletion(depositId, userId);
+      console.log("Résultat handleDepositDeletion:", success);
       
       if (success) {
-        // Update the local state
-        console.log("Updating local state after successful deletion");
+        console.log("Mise à jour de l'état local après suppression réussie");
+        
+        // Mettre à jour l'état local
         setDeposits(prevDeposits => {
-          console.log("Current deposits before filter:", prevDeposits.length);
-          const newDeposits = prevDeposits.filter(deposit => {
-            const currentId = typeof deposit.id === 'string' ? parseInt(deposit.id, 10) : deposit.id;
-            const result = currentId !== depositId;
-            console.log(`Comparing deposit ID ${currentId} (${typeof currentId}) with ${depositId} (${typeof depositId}): keep = ${result}`);
-            return result;
+          const filteredDeposits = prevDeposits.filter(deposit => {
+            const currentId = typeof deposit.id === 'string' 
+              ? parseInt(deposit.id, 10) 
+              : deposit.id;
+            
+            const shouldKeep = currentId !== depositId;
+            console.log(`Versement ID ${currentId}: ${shouldKeep ? 'conservé' : 'supprimé'}`);
+            return shouldKeep;
           });
-          console.log("New deposits after filter:", newDeposits.length);
-          return newDeposits;
+          
+          console.log(`Versements avant filtrage: ${prevDeposits.length}, après: ${filteredDeposits.length}`);
+          return filteredDeposits;
         });
         
         toast.success("Versement supprimé avec succès");
         return true;
       } else {
-        console.error("Deletion failed");
+        console.error("Échec de la suppression côté serveur");
         toast.error("La suppression a échoué");
         return false;
       }
     } catch (error) {
-      console.error("Error during deleteDeposit function:", error);
+      console.error("Erreur dans deleteDeposit:", error);
       showErrorToast("Erreur lors de la suppression du versement", error);
       return false;
     } finally {
-      console.log("Setting isLoading to false");
+      console.log("Désactivation du chargement");
       setIsLoading(false);
+      console.log("=== FIN deleteDeposit ===");
     }
   };
 
   const confirmDeleteDeposit = async (): Promise<boolean> => {
-    console.log("confirmDeleteDeposit called with depositToDelete:", depositToDelete);
+    console.log("=== DÉBUT confirmDeleteDeposit ===");
+    console.log("depositToDelete:", depositToDelete);
     
     if (!depositToDelete) {
-      console.error("No deposit selected for deletion");
+      console.error("Aucun versement à supprimer");
       toast.error("Aucun versement sélectionné pour la suppression");
       return false;
     }
     
     try {
-      // Ensure we're working with a number type ID
+      // Conversion et validation de l'ID
       const depositId = typeof depositToDelete.id === 'string' 
         ? parseInt(depositToDelete.id, 10) 
         : depositToDelete.id;
       
-      if (isNaN(depositId)) {
-        console.error("Invalid deposit ID format:", depositToDelete.id);
+      console.log("ID après conversion:", depositId, "type:", typeof depositId);
+      
+      if (isNaN(depositId) || depositId <= 0) {
+        console.error("Format d'ID invalide:", depositToDelete.id);
         toast.error("Format d'ID invalide");
         return false;
       }
       
-      console.log("Attempting to delete deposit with ID:", depositId, "type:", typeof depositId);
-      
+      console.log("Appel deleteDeposit avec ID:", depositId);
       const result = await deleteDeposit(depositId);
-      console.log("Delete operation completed with result:", result);
+      console.log("Résultat deleteDeposit:", result);
       
       if (result) {
-        console.log("Successful deletion, clearing state");
-        // Clear the depositToDelete state after a successful deletion
+        console.log("Suppression confirmée - nettoyage des états");
         setDepositToDelete(null);
         setShowDeleteDialog(false);
         return true;
       } else {
-        console.error("Deletion returned false");
-        toast.error("La suppression n'a pas pu être effectuée");
+        console.error("Échec de deleteDeposit");
         return false;
       }
     } catch (error) {
-      console.error("Error in confirmDeleteDeposit:", error);
+      console.error("Erreur dans confirmDeleteDeposit:", error);
       showErrorToast("Échec de la suppression du versement", error);
       return false;
+    } finally {
+      console.log("=== FIN confirmDeleteDeposit ===");
     }
   };
 
