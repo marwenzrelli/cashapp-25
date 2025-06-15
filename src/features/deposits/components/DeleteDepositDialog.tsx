@@ -1,6 +1,15 @@
 
 import React from "react";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog";
 import { Trash2 } from "lucide-react";
 import { DeleteDepositDialogProps } from "@/features/deposits/types";
 import { toast } from "sonner";
@@ -13,18 +22,23 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
 }) => {
   const [isDeleting, setIsDeleting] = React.useState(false);
 
+  // Ajout de logs pour inspection
+  React.useEffect(() => {
+    if (isOpen) {
+      console.log("[DeleteDialog] Deposit sélectionné pour suppression:", selectedDeposit);
+    }
+  }, [isOpen, selectedDeposit]);
+
   const handleConfirm = async () => {
     if (!onConfirm) {
-      console.error("No onConfirm handler provided");
+      console.error("[DeleteDialog] No onConfirm handler provided");
       return;
     }
-
     if (!selectedDeposit) {
-      console.error("No deposit selected for deletion");
+      console.error("[DeleteDialog] No deposit selected for deletion");
       toast.error("Aucun versement sélectionné");
       return;
     }
-
     setIsDeleting(true);
     try {
       const success = await onConfirm();
@@ -39,6 +53,14 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
       setIsDeleting(false);
     }
   };
+
+  // Helper utilitaire pour fallback d’affichage
+  const displayId = (dep?: any) => {
+    if (!dep) return "N/A";
+    if (typeof dep.id === "number" && !isNaN(dep.id)) return dep.id;
+    if (!!dep.id && !isNaN(Number(dep.id))) return dep.id;
+    return "N/A";
+  }
 
   return (
     <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
@@ -58,10 +80,15 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
                   Client : {selectedDeposit.client_name}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  Montant : {selectedDeposit.amount?.toLocaleString?.() ?? selectedDeposit.amount} TND
+                  <span className="font-semibold pr-1">ID:</span> {displayId(selectedDeposit)}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  Date : {selectedDeposit.date || selectedDeposit.operation_date}
+                  Montant : {typeof selectedDeposit.amount === "number"
+                    ? selectedDeposit.amount.toLocaleString?.() + " TND"
+                    : selectedDeposit.amount ?? "N/A"}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Date : {selectedDeposit.date || selectedDeposit.operation_date || "N/A"}
                 </div>
               </div>
             )}
