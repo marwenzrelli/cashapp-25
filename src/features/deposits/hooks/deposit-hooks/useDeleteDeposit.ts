@@ -74,15 +74,16 @@ export const useDeleteDeposit = (
     try {
       // Extract numeric ID from deposit with proper type handling
       let depositId: number;
+      const depositIdValue = depositToDelete.id;
       
-      if (typeof depositToDelete.id === 'string') {
+      if (typeof depositIdValue === 'string') {
         // Handle string IDs that might be in format "123" or "dep-123"
-        const cleanId = depositToDelete.id.replace(/[^\d]/g, '');
+        const cleanId = depositIdValue.replace(/[^\d]/g, '');
         depositId = parseInt(cleanId, 10);
-      } else if (typeof depositToDelete.id === 'number') {
-        depositId = depositToDelete.id;
+      } else if (typeof depositIdValue === 'number') {
+        depositId = depositIdValue;
       } else {
-        console.error("Invalid deposit ID type:", typeof depositToDelete.id, depositToDelete.id);
+        console.error("Invalid deposit ID type:", typeof depositIdValue, depositIdValue);
         toast.error("Type d'ID invalide");
         return false;
       }
