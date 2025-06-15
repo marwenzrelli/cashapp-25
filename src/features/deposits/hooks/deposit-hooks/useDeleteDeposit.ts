@@ -31,31 +31,25 @@ export const useDeleteDeposit = (
         return false;
       }
 
-      // Suppression directe depuis Supabase
-      const { error } = await supabase
-        .from('deposits')
-        .delete()
-        .eq('id', depositId);
+      // Utiliser la fonction utilitaire qui gère l'audit automatiquement
+      const success = await handleDepositDeletion(depositId, userId);
       
-      if (error) {
-        console.error("Erreur lors de la suppression:", error);
-        toast.error("Erreur lors de la suppression du versement");
+      if (success) {
+        // Mettre à jour l'état local
+        setDeposits(prevDeposits => {
+          return prevDeposits.filter(deposit => {
+            const currentId = typeof deposit.id === 'string' 
+              ? parseInt(deposit.id, 10) 
+              : deposit.id;
+            
+            return currentId !== depositId;
+          });
+        });
+        
+        return true;
+      } else {
         return false;
       }
-      
-      // Mettre à jour l'état local
-      setDeposits(prevDeposits => {
-        return prevDeposits.filter(deposit => {
-          const currentId = typeof deposit.id === 'string' 
-            ? parseInt(deposit.id, 10) 
-            : deposit.id;
-          
-          return currentId !== depositId;
-        });
-      });
-      
-      toast.success("Versement supprimé avec succès");
-      return true;
       
     } catch (error) {
       console.error("Erreur dans deleteDeposit:", error);
