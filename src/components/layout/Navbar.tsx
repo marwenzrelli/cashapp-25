@@ -1,8 +1,8 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from 'next-themes';
-import { MoonIcon, SunIcon } from '@radix-ui/react-icons';
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -14,12 +14,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { LogOut } from 'lucide-react';
 import { NotificationManager } from './NotificationManager';
-
-const LogoSection = () => (
-  <Link to="/" className="text-lg font-semibold">
-    Gestion Financière
-  </Link>
-);
+import { LogoSection } from './LogoSection';
 
 const NavigationLinks = () => (
   <div className="hidden md:flex space-x-4">
@@ -88,7 +83,7 @@ const LogoutButton = () => {
         <Button variant="ghost" className="relative h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
           <Avatar className="h-8 w-8">
             <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.user_metadata?.full_name} />
-            <AvatarFallback>{user?.user_metadata?.full_name?.substring(0, 2).toUpperCase()}</AvatarFallback>
+            <AvatarFallback>{user?.user_metadata?.full_name?.substring(0, 2).toUpperCase() || 'U'}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
@@ -103,8 +98,6 @@ const LogoutButton = () => {
 };
 
 export const Navbar = () => {
-  const { resolvedTheme, setTheme } = useTheme();
-
   return (
     <nav className="bg-white dark:bg-gray-900 shadow-sm border-b">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
