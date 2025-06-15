@@ -1,6 +1,4 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { Deposit } from "@/features/deposits/types";
 import { useDepositDeletion } from "./useDepositDeletion";
 
@@ -15,12 +13,11 @@ export const useDeleteDeposit = (
   const { deleteDepositDirectly } = useDepositDeletion();
 
   const deleteDeposit = async (depositId: number): Promise<boolean> => {
-    console.log(`[DELETE] Legacy function called with ID: ${depositId}`);
+    console.log(`[DELETE] Direct deletion called for ID: ${depositId}`);
     
     const deposit = deposits.find(d => Number(d.id) === depositId);
     if (!deposit) {
       console.error("[DELETE] Deposit not found in local state");
-      toast.error("Versement introuvable");
       return false;
     }
 
@@ -28,11 +25,10 @@ export const useDeleteDeposit = (
   };
 
   const confirmDeleteDeposit = async (): Promise<boolean> => {
-    console.log("[CONFIRM] Starting confirmation process");
+    console.log("[CONFIRM] Starting simplified confirmation process");
     
     if (!depositToDelete) {
       console.error("[CONFIRM] No deposit selected");
-      toast.error("Aucun versement sélectionné");
       return false;
     }
     
@@ -43,9 +39,9 @@ export const useDeleteDeposit = (
       const success = await deleteDepositDirectly(depositToDelete);
       
       if (success) {
-        console.log("[CONFIRM] Deletion successful, updating state");
+        console.log("[CONFIRM] Deletion successful, updating local state");
         
-        // Mise à jour de l'état local
+        // Update local state
         setDeposits(prevDeposits => {
           const depositId = Number(depositToDelete.id);
           const filtered = prevDeposits.filter(deposit => Number(deposit.id) !== depositId);
@@ -53,6 +49,7 @@ export const useDeleteDeposit = (
           return filtered;
         });
         
+        // Clean up
         setDepositToDelete(null);
         setShowDeleteDialog(false);
         return true;
@@ -62,7 +59,6 @@ export const useDeleteDeposit = (
       }
     } catch (error) {
       console.error("[CONFIRM] Error in confirmDeleteDeposit:", error);
-      toast.error("Échec de la suppression du versement");
       return false;
     } finally {
       setIsLoading(false);

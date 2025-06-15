@@ -1,3 +1,4 @@
+
 import { Deposit, EditFormData } from "@/features/deposits/types";
 import { toast } from "sonner";
 import { showErrorToast } from "@/features/clients/hooks/utils/errorUtils";
@@ -5,27 +6,25 @@ import { showErrorToast } from "@/features/clients/hooks/utils/errorUtils";
 interface UseDepositActionsProps {
   createDeposit: (deposit: Deposit) => Promise<boolean | void>;
   updateDeposit: (id: number, updates: any) => Promise<boolean | void>;
-  confirmDeleteDeposit: () => Promise<boolean>;
   setDepositToDelete: (deposit: Deposit | null) => void;
   setShowDeleteDialog: (show: boolean) => void;
   setIsDeleteDialogOpen: (isOpen: boolean) => void;
   setIsEditDialogOpen: (isOpen: boolean) => void;
   editForm: EditFormData;
   selectedDeposit: Deposit | null;
-  setIsDeleting: (isDeleting: boolean) => void;
+  refreshData?: () => Promise<void>;
 }
 
 export const useDepositActions = ({
   createDeposit,
   updateDeposit,
-  confirmDeleteDeposit,
   setDepositToDelete,
   setShowDeleteDialog,
   setIsDeleteDialogOpen,
   setIsEditDialogOpen,
   editForm,
   selectedDeposit,
-  setIsDeleting
+  refreshData
 }: UseDepositActionsProps) => {
   
   const handleDelete = (deposit: Deposit) => {
@@ -44,36 +43,22 @@ export const useDepositActions = ({
   };
 
   const confirmDelete = async (): Promise<boolean> => {
-    console.log("[ACTIONS] confirmDelete called - this will be handled by the dialog directly");
+    console.log("[ACTIONS] confirmDelete called - triggering data refresh");
     
-    // This function is now mainly for backward compatibility
-    // The actual deletion is handled by DeleteDepositDialog
     try {
-      const success = await confirmDeleteDeposit();
-      
-      if (success === true) {
-        console.log("[ACTIONS] Delete operation successful");
-        setIsDeleteDialogOpen(false);
-        setShowDeleteDialog(false);
-        toast.success("Succès", {
-          description: "Le versement a été supprimé avec succès"
-        });
-        return true;
-      } else {
-        console.error("[ACTIONS] La suppression a échoué");
-        toast.error("Échec de la suppression", {
-          description: "Une erreur est survenue lors de la suppression du versement"
-        });
-        return false;
+      if (refreshData) {
+        console.log("[ACTIONS] Calling refreshData");
+        await refreshData();
       }
-    } catch (error) {
-      console.error("[ACTIONS] Erreur détaillée lors de la suppression:", {
-        message: error.message,
-        stack: error.stack,
-        error: error
-      });
       
-      showErrorToast("Échec de la suppression", error);
+      setIsDeleteDialogOpen(false);
+      setShowDeleteDialog(false);
+      setDepositToDelete(null);
+      
+      return true;
+    } catch (error) {
+      console.error("[ACTIONS] Error in confirmDelete:", error);
+      showErrorToast("Erreur lors de l'actualisation", error);
       return false;
     }
   };
