@@ -7,6 +7,7 @@ import { UserRole } from "@/types/admin";
 interface NavigationLinksProps {
   className?: string;
   onClick?: () => void;
+  onNavigate?: () => void;
   currentPath: string;
   userRole: UserRole | null;
 }
@@ -18,7 +19,7 @@ interface NavItemType {
   roles?: UserRole[];
 }
 
-export const NavigationLinks = ({ className = "", onClick = () => {}, currentPath, userRole }: NavigationLinksProps) => {
+export const NavigationLinks = ({ className = "", onClick = () => {}, onNavigate = () => {}, currentPath, userRole }: NavigationLinksProps) => {
   console.log("NavigationLinks - userRole:", userRole);
   
   const navItems: NavItemType[] = [
@@ -39,6 +40,11 @@ export const NavigationLinks = ({ className = "", onClick = () => {}, currentPat
     return item.roles.includes(userRole);
   });
 
+  const handleItemClick = () => {
+    onClick();
+    onNavigate();
+  };
+
   return (
     <div className={className}>
       {filteredNavItems.map((item) => (
@@ -48,7 +54,7 @@ export const NavigationLinks = ({ className = "", onClick = () => {}, currentPat
           label={item.label}
           icon={item.icon}
           currentPath={currentPath}
-          onClick={onClick}
+          onClick={handleItemClick}
         />
       ))}
     </div>
