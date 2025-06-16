@@ -14,7 +14,6 @@ import { toast } from "sonner";
 import { useOperations } from "@/features/operations/hooks/useOperations";
 import { deleteOperation } from "@/features/operations/utils/deletionUtils";
 import { TotalsSection } from "./TotalsSection";
-
 interface OperationsDesktopTableProps {
   operations: Operation[];
   currency?: string;
@@ -22,7 +21,6 @@ interface OperationsDesktopTableProps {
   updateOperation?: (operation: Operation) => Promise<void>;
   onOperationDeleted?: () => Promise<void>;
 }
-
 export const OperationsDesktopTable = ({
   operations,
   currency = "TND",
@@ -37,7 +35,6 @@ export const OperationsDesktopTable = ({
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-
   const formatDate = (dateString: string): string => {
     try {
       const date = parseISO(dateString);
@@ -151,9 +148,7 @@ export const OperationsDesktopTable = ({
       setIsDeleting(false);
     }
   };
-
-  return (
-    <div>
+  return <div>
       <div className="rounded-md border overflow-hidden">
         <Table className="w-full">
           <TableHeader>
@@ -167,15 +162,11 @@ export const OperationsDesktopTable = ({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {operations.length === 0 ? (
-              <TableRow>
+            {operations.length === 0 ? <TableRow>
                 <TableCell colSpan={isPublicView ? 5 : 6} className="h-24 text-center">
                   Aucune opération trouvée
                 </TableCell>
-              </TableRow>
-            ) : (
-              operations.map((operation, index) => (
-                <TableRow key={`${operation.id}-${index}`} className="hover:bg-muted/50">
+              </TableRow> : operations.map((operation, index) => <TableRow key={`${operation.id}-${index}`} className="hover:bg-muted/50">
                   <TableCell className="font-medium">
                     {getFormattedId(operation.id)}
                   </TableCell>
@@ -191,41 +182,12 @@ export const OperationsDesktopTable = ({
                     {operation.description || "-"}
                   </TableCell>
                   <TableCell className="text-right font-medium">
-                    <span className={cn(
-                      operation.type === 'withdrawal' ? 'text-red-600' : 
-                      operation.type === 'deposit' ? 'text-green-600' : '', 
-                      'font-medium'
-                    )}>
+                    <span className={cn(operation.type === 'withdrawal' ? 'text-red-600' : operation.type === 'deposit' ? 'text-green-600' : '', 'font-medium')}>
                       {formatAmount(operation.amount, operation.type)}
                     </span>
                   </TableCell>
-                  {!isPublicView && (
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEditClick(operation)}>
-                            <Pencil className="mr-2 h-4 w-4" />
-                            Modifier
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleDeleteClick(operation)}
-                            className="text-destructive"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Supprimer
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  )}
-                </TableRow>
-              ))
-            )}
+                  {!isPublicView}
+                </TableRow>)}
           </TableBody>
         </Table>
       </div>
@@ -234,25 +196,10 @@ export const OperationsDesktopTable = ({
         <TotalsSection operations={operations} currency={currency} />
       </div>
 
-      {!isPublicView && (
-        <>
-          <OperationDetailsModal 
-            isOpen={isDetailsModalOpen} 
-            onClose={() => setIsDetailsModalOpen(false)} 
-            operation={selectedOperation} 
-            onEdit={handleOperationUpdate} 
-            onDelete={handleDeleteClick} 
-          />
+      {!isPublicView && <>
+          <OperationDetailsModal isOpen={isDetailsModalOpen} onClose={() => setIsDetailsModalOpen(false)} operation={selectedOperation} onEdit={handleOperationUpdate} onDelete={handleDeleteClick} />
           
-          <DeleteOperationDialog 
-            isOpen={isDeleteDialogOpen} 
-            onClose={() => setIsDeleteDialogOpen(false)} 
-            onDelete={performDeleteOperation} 
-            operation={selectedOperation} 
-            isLoading={isDeleting} 
-          />
-        </>
-      )}
-    </div>
-  );
+          <DeleteOperationDialog isOpen={isDeleteDialogOpen} onClose={() => setIsDeleteDialogOpen(false)} onDelete={performDeleteOperation} operation={selectedOperation} isLoading={isDeleting} />
+        </>}
+    </div>;
 };
