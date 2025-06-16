@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Operation } from "@/features/operations/types";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -160,6 +159,7 @@ export const PublicClientOperationsHistory = ({ operations, clientId }: PublicCl
                 <ClientOperationsHistoryTabs 
                   filteredOperations={filteredOperations}
                   currency={currency}
+                  isPublicView={true}
                 />
               </CardContent>
             </Card>

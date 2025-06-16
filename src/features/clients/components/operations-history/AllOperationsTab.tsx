@@ -1,38 +1,33 @@
 
-import React from "react";
 import { Operation } from "@/features/operations/types";
 import { OperationsDesktopTable } from "./all-operations/OperationsDesktopTable";
 import { OperationsMobileList } from "./all-operations/OperationsMobileList";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { TotalsSection } from "./all-operations/TotalsSection";
 
 interface AllOperationsTabProps {
   operations: Operation[];
-  currency?: string;
-  updateOperation?: (operation: Operation) => Promise<void>;
-  onOperationDeleted?: () => Promise<void>;
+  currency: string;
+  isPublicView?: boolean;
 }
 
 export const AllOperationsTab = ({ 
   operations, 
-  currency = "TND",
-  updateOperation,
-  onOperationDeleted
+  currency,
+  isPublicView = false 
 }: AllOperationsTabProps) => {
-  const isMobile = useIsMobile();
-
-  return isMobile ? (
-    <OperationsMobileList 
-      operations={operations}
-      currency={currency} 
-      updateOperation={updateOperation}
-      onOperationDeleted={onOperationDeleted}
-    />
-  ) : (
-    <OperationsDesktopTable 
-      operations={operations} 
-      currency={currency}
-      updateOperation={updateOperation}
-      onOperationDeleted={onOperationDeleted}
-    />
+  return (
+    <div className="space-y-4">
+      <TotalsSection operations={operations} />
+      <OperationsDesktopTable 
+        operations={operations} 
+        currency={currency}
+        isPublicView={isPublicView}
+      />
+      <OperationsMobileList 
+        operations={operations} 
+        currency={currency}
+        isPublicView={isPublicView}
+      />
+    </div>
   );
 };
