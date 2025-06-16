@@ -1,3 +1,4 @@
+
 import React from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -19,6 +20,7 @@ interface OperationsMobileCardProps {
   showId?: boolean;
   typeBackgroundClass?: string;
   icon?: ReactNode;
+  isPublicView?: boolean;
 }
 
 export const OperationsMobileCard = ({
@@ -29,7 +31,8 @@ export const OperationsMobileCard = ({
   colorClass,
   showId = false,
   typeBackgroundClass,
-  icon
+  icon,
+  isPublicView = false
 }: OperationsMobileCardProps) => {
   const { formatAmount: defaultFormatAmount } = useFormatAmount();
   
@@ -116,5 +119,12 @@ export const OperationsMobileCard = ({
           <p className="truncate px-2 py-1 my-0.5 rounded-md bg-orange-50 dark:bg-orange-900/20">De: {operation.fromClient}</p>
           <p className="truncate px-2 py-1 my-0.5 rounded-md bg-blue-50 dark:bg-blue-900/20">À: {operation.toClient}</p>
         </div>}
+      
+      {/* Les boutons d'action ne s'affichent que si ce n'est pas une vue publique */}
+      {!isPublicView && (
+        <div className="flex gap-2 mt-3 pt-3 border-t">
+          {/* Ici vous pouvez ajouter les boutons d'action si nécessaire */}
+        </div>
+      )}
     </div>;
 };

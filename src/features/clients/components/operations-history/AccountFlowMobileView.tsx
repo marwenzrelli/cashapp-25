@@ -8,9 +8,10 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface AccountFlowMobileViewProps {
   operations: (Operation & { balanceBefore: number; balanceAfter: number })[];
+  isPublicView?: boolean;
 }
 
-export const AccountFlowMobileView = ({ operations }: AccountFlowMobileViewProps) => {
+export const AccountFlowMobileView = ({ operations, isPublicView = false }: AccountFlowMobileViewProps) => {
   const { currency } = useCurrency();
 
   const formatDateTime = (dateString: string) => {

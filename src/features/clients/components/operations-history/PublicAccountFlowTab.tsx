@@ -78,8 +78,8 @@ export const PublicAccountFlowTab = ({
 
   return (
     <Card className="mt-4">
-      {/* Mobile view */}
-      <AccountFlowMobileView operations={processedOperations} />
+      {/* Mobile view avec isPublicView={true} */}
+      <AccountFlowMobileView operations={processedOperations} isPublicView={true} />
 
       {/* Desktop view */}
       <div className="hidden md:block">
