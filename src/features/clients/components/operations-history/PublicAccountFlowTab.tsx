@@ -94,6 +94,7 @@ export const PublicAccountFlowTab = ({
                 <TableHead className="w-[150px] text-right">Solde avant</TableHead>
                 <TableHead className="w-[120px] text-right">Montant</TableHead>
                 <TableHead className="w-[150px] text-right">Solde après</TableHead>
+                {/* Pas de colonne Actions dans la vue publique */}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -128,6 +129,7 @@ export const PublicAccountFlowTab = ({
                     <TableCell className="text-right font-semibold">
                       {formatAmount(op.balanceAfter)}
                     </TableCell>
+                    {/* Pas de cellule Actions dans la vue publique */}
                   </TableRow>
                 ))
               )}
