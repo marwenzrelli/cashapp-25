@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Operation } from "@/features/operations/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -15,35 +14,35 @@ import { toast } from "sonner";
 import { useOperations } from "@/features/operations/hooks/useOperations";
 import { deleteOperation } from "@/features/operations/utils/deletionUtils";
 import { TotalsSection } from "./TotalsSection";
-
 interface OperationsDesktopTableProps {
   operations: Operation[];
   currency?: string;
   updateOperation?: (operation: Operation) => Promise<void>;
   onOperationDeleted?: () => Promise<void>;
 }
-
 export const OperationsDesktopTable = ({
   operations,
   currency = "TND",
   updateOperation,
   onOperationDeleted
 }: OperationsDesktopTableProps) => {
-  const { refreshOperations } = useOperations();
+  const {
+    refreshOperations
+  } = useOperations();
   const [selectedOperation, setSelectedOperation] = useState<Operation | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-
   const formatDate = (dateString: string): string => {
     try {
       const date = parseISO(dateString);
-      return format(date, "dd MMM yyyy HH:mm", { locale: fr });
+      return format(date, "dd MMM yyyy HH:mm", {
+        locale: fr
+      });
     } catch (e) {
       return "Date invalide";
     }
   };
-
   const formatAmount = (amount: number, type: Operation['type']): string => {
     const formattedNumber = new Intl.NumberFormat('fr-TN', {
       style: 'currency',
@@ -51,10 +50,8 @@ export const OperationsDesktopTable = ({
       minimumFractionDigits: 3,
       maximumFractionDigits: 3
     }).format(amount);
-
     return type === 'withdrawal' ? `- ${formattedNumber}` : formattedNumber;
   };
-
   const getTypeColor = (type: string): string => {
     switch (type) {
       case 'deposit':
@@ -67,7 +64,6 @@ export const OperationsDesktopTable = ({
         return "bg-gray-100 hover:bg-gray-200 text-gray-800";
     }
   };
-
   const getTypeLabel = (type: string): string => {
     switch (type) {
       case 'deposit':
@@ -80,10 +76,8 @@ export const OperationsDesktopTable = ({
         return type;
     }
   };
-
   const getFormattedId = (id: string | number): string => {
     const idStr = String(id);
-    
     if (idStr.includes('-')) {
       const parts = idStr.split('-');
       return `${parts[0]} #${parts[1]}`;
@@ -92,27 +86,22 @@ export const OperationsDesktopTable = ({
       const prefix = idStr.replace(/\d+/g, '');
       return `${prefix} #${numericPart}`;
     }
-    
     return `#${idStr}`;
   };
-
   const handleEditClick = (operation: Operation) => {
     setSelectedOperation(JSON.parse(JSON.stringify(operation)));
     setIsDetailsModalOpen(true);
   };
-
   const handleDeleteClick = (operation: Operation) => {
     setSelectedOperation(JSON.parse(JSON.stringify(operation)));
     setIsDeleteDialogOpen(true);
   };
-
   const handleOperationUpdate = async (updatedOperation: Operation) => {
     if (updateOperation) {
       try {
         await updateOperation(updatedOperation);
         toast.success("Opération modifiée avec succès");
         setIsDetailsModalOpen(false);
-        
         if (onOperationDeleted) {
           await onOperationDeleted();
         }
@@ -125,33 +114,25 @@ export const OperationsDesktopTable = ({
       toast.error("Fonction de modification non disponible");
     }
   };
-
   const performDeleteOperation = async (): Promise<boolean> => {
     if (!selectedOperation) {
       toast.error("Aucune opération sélectionnée");
       return false;
     }
-    
     setIsDeleting(true);
-    
     try {
       const success = await deleteOperation(selectedOperation);
-      
       if (success) {
         setIsDeleteDialogOpen(false);
-        
         await new Promise(resolve => setTimeout(resolve, 2000));
-        
         if (onOperationDeleted) {
           await onOperationDeleted();
-          
           setTimeout(async () => {
             if (onOperationDeleted) {
               await onOperationDeleted();
             }
           }, 3000);
         }
-        
         return true;
       } else {
         toast.error("Erreur lors de la suppression");
@@ -165,9 +146,7 @@ export const OperationsDesktopTable = ({
       setIsDeleting(false);
     }
   };
-
-  return (
-    <div>
+  return <div>
       <div className="rounded-md border overflow-hidden">
         <Table className="w-full">
           <TableHeader>
@@ -181,15 +160,11 @@ export const OperationsDesktopTable = ({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {operations.length === 0 ? (
-              <TableRow>
+            {operations.length === 0 ? <TableRow>
                 <TableCell colSpan={6} className="h-24 text-center">
                   Aucune opération trouvée
                 </TableCell>
-              </TableRow>
-            ) : (
-              operations.map((operation, index) => (
-                <TableRow key={`${operation.id}-${index}`} className="hover:bg-muted/50">
+              </TableRow> : operations.map((operation, index) => <TableRow key={`${operation.id}-${index}`} className="hover:bg-muted/50">
                   <TableCell className="font-medium">
                     {getFormattedId(operation.id)}
                   </TableCell>
@@ -205,11 +180,7 @@ export const OperationsDesktopTable = ({
                     {operation.description || "-"}
                   </TableCell>
                   <TableCell className="text-right font-medium">
-                    <span className={cn(
-                      operation.type === 'withdrawal' ? 'text-red-600' : 
-                      operation.type === 'deposit' ? 'text-green-600' : '',
-                      'font-medium'
-                    )}>
+                    <span className={cn(operation.type === 'withdrawal' ? 'text-red-600' : operation.type === 'deposit' ? 'text-green-600' : '', 'font-medium')}>
                       {formatAmount(operation.amount, operation.type)}
                     </span>
                   </TableCell>
@@ -222,25 +193,15 @@ export const OperationsDesktopTable = ({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        {updateOperation && (
-                          <DropdownMenuItem onClick={() => handleEditClick(operation)}>
+                        {updateOperation && <DropdownMenuItem onClick={() => handleEditClick(operation)}>
                             <Pencil className="mr-2 h-4 w-4" />
                             Modifier
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem 
-                          onClick={() => handleDeleteClick(operation)} 
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Supprimer
-                        </DropdownMenuItem>
+                          </DropdownMenuItem>}
+                        
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
-                </TableRow>
-              ))
-            )}
+                </TableRow>)}
           </TableBody>
         </Table>
       </div>
@@ -249,21 +210,8 @@ export const OperationsDesktopTable = ({
         <TotalsSection operations={operations} currency={currency} />
       </div>
 
-      <OperationDetailsModal 
-        isOpen={isDetailsModalOpen}
-        onClose={() => setIsDetailsModalOpen(false)}
-        operation={selectedOperation}
-        onEdit={handleOperationUpdate}
-        onDelete={handleDeleteClick}
-      />
+      <OperationDetailsModal isOpen={isDetailsModalOpen} onClose={() => setIsDetailsModalOpen(false)} operation={selectedOperation} onEdit={handleOperationUpdate} onDelete={handleDeleteClick} />
       
-      <DeleteOperationDialog
-        isOpen={isDeleteDialogOpen}
-        onClose={() => setIsDeleteDialogOpen(false)}
-        onDelete={performDeleteOperation}
-        operation={selectedOperation}
-        isLoading={isDeleting}
-      />
-    </div>
-  );
+      <DeleteOperationDialog isOpen={isDeleteDialogOpen} onClose={() => setIsDeleteDialogOpen(false)} onDelete={performDeleteOperation} operation={selectedOperation} isLoading={isDeleting} />
+    </div>;
 };
