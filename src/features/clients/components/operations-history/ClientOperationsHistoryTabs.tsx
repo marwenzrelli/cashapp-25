@@ -10,12 +10,16 @@ interface ClientOperationsHistoryTabsProps {
   filteredOperations: Operation[];
   currency: string;
   isPublicView?: boolean;
+  updateOperation?: (operation: Operation) => Promise<void>;
+  onOperationDeleted?: () => Promise<void>;
 }
 
 export const ClientOperationsHistoryTabs = ({ 
   filteredOperations, 
   currency,
-  isPublicView = false 
+  isPublicView = false,
+  updateOperation,
+  onOperationDeleted
 }: ClientOperationsHistoryTabsProps) => {
   const deposits = filteredOperations.filter(op => op.type === 'deposit');
   const withdrawals = filteredOperations.filter(op => op.type === 'withdrawal');
@@ -35,6 +39,8 @@ export const ClientOperationsHistoryTabs = ({
           operations={filteredOperations} 
           currency={currency}
           isPublicView={isPublicView}
+          updateOperation={updateOperation}
+          onOperationDeleted={onOperationDeleted}
         />
       </TabsContent>
       

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Operation } from "@/features/operations/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -12,6 +11,7 @@ import { cn } from "@/lib/utils";
 interface TransferOperationsTabProps {
   operations: Operation[];
   currency?: string;
+  isPublicView?: boolean;
   selectedOperations?: Record<string, boolean>;
   toggleSelection?: (id: string) => void;
 }
@@ -19,6 +19,7 @@ interface TransferOperationsTabProps {
 export const TransferOperationsTab = ({ 
   operations, 
   currency = "TND",
+  isPublicView = false,
   selectedOperations = {},
   toggleSelection = () => {}
 }: TransferOperationsTabProps) => {
@@ -49,7 +50,7 @@ export const TransferOperationsTab = ({
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
-              <TableHead className="w-[50px] text-center"></TableHead>
+              {!isPublicView && <TableHead className="w-[50px] text-center"></TableHead>}
               <TableHead className="w-[10%] whitespace-nowrap font-medium">ID</TableHead>
               <TableHead className="w-[15%] whitespace-nowrap font-medium">Date</TableHead>
               <TableHead className="w-[15%] font-medium">De</TableHead>
@@ -60,18 +61,15 @@ export const TransferOperationsTab = ({
           </TableHeader>
           <TableBody>
             {transferOperations.map((operation) => {
-              // Use operation_date if available, otherwise fall back to date
               const displayDate = operation.operation_date || operation.date;
               const formattedDate = typeof displayDate === 'string' 
                 ? format(new Date(displayDate), "dd/MM/yyyy HH:mm") 
                 : format(displayDate, "dd/MM/yyyy HH:mm");
               
-              // Format operation ID
               const operationId = isNaN(parseInt(operation.id)) 
                 ? operation.id 
                 : formatId(parseInt(operation.id));
                 
-              // Check if operation is selected
               const isSelected = selectedOperations[operation.id] || false;
                 
               return (
@@ -81,15 +79,17 @@ export const TransferOperationsTab = ({
                     isSelected ? "bg-blue-50 dark:bg-blue-900/20" : "",
                     "transition-colors cursor-pointer hover:bg-muted/50"
                   )}
-                  onClick={() => toggleSelection(operation.id)}
+                  onClick={() => !isPublicView && toggleSelection(operation.id)}
                 >
-                  <TableCell className="w-[50px] p-2 text-center">
-                    <Checkbox 
-                      checked={isSelected}
-                      onCheckedChange={() => toggleSelection(operation.id)}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  </TableCell>
+                  {!isPublicView && (
+                    <TableCell className="w-[50px] p-2 text-center">
+                      <Checkbox 
+                        checked={isSelected}
+                        onCheckedChange={() => toggleSelection(operation.id)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </TableCell>
+                  )}
                   <TableCell className="font-mono text-xs text-muted-foreground">
                     #{operationId}
                   </TableCell>
@@ -106,7 +106,7 @@ export const TransferOperationsTab = ({
             
             {/* Totals section for desktop */}
             <TableRow className="border-t-2 border-primary/20 bg-muted/30">
-              <TableCell colSpan={6} className="font-medium text-right">Total des virements:</TableCell>
+              <TableCell colSpan={isPublicView ? 6 : 7} className="font-medium text-right">Total des virements:</TableCell>
               <TableCell className="text-right font-medium text-blue-600 dark:text-blue-400">
                 {formatNumber(totalTransfers)} {currency}
               </TableCell>
@@ -124,15 +124,29 @@ export const TransferOperationsTab = ({
               "transition-colors",
               selectedOperations[operation.id] ? "border-l-4 border-blue-500 pl-2" : ""
             )}
-            onClick={() => toggleSelection(operation.id)}
+            onClick={() => !isPublicView && toggleSelection(operation.id)}
           >
-            <div className="flex items-center mb-2">
-              <Checkbox 
-                checked={selectedOperations[operation.id] || false}
-                onCheckedChange={() => toggleSelection(operation.id)}
-                onClick={(e) => e.stopPropagation()}
-                className="mr-2"
-              />
+            {!isPublicView ? (
+              <div className="flex items-center mb-2">
+                <Checkbox 
+                  checked={selectedOperations[operation.id] || false}
+                  onCheckedChange={() => toggleSelection(operation.id)}
+                  onClick={(e) => e.stopPropagation()}
+                  className="mr-2"
+                />
+                <div className="w-full">
+                  <OperationsMobileCard 
+                    key={operation.id} 
+                    operation={operation}
+                    formatAmount={(amount) => formatNumber(amount)}
+                    currency={currency}
+                    colorClass="text-blue-600 dark:text-blue-400"
+                    showType={false}
+                    isPublicView={isPublicView}
+                  />
+                </div>
+              </div>
+            ) : (
               <div className="w-full">
                 <OperationsMobileCard 
                   key={operation.id} 
@@ -141,9 +155,10 @@ export const TransferOperationsTab = ({
                   currency={currency}
                   colorClass="text-blue-600 dark:text-blue-400"
                   showType={false}
+                  isPublicView={isPublicView}
                 />
               </div>
-            </div>
+            )}
           </div>
         ))}
         

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Operation } from "@/features/operations/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -13,12 +12,15 @@ import { useFormatAmount } from "@/hooks/use-format-amount";
 interface DepositOperationsTabProps {
   operations: Operation[];
   currency?: string;
+  isPublicView?: boolean;
   selectedOperations?: Record<string, boolean>;
   toggleSelection?: (id: string) => void;
 }
+
 export const DepositOperationsTab = ({
   operations,
   currency = "TND",
+  isPublicView = false,
   selectedOperations = {},
   toggleSelection = () => {}
 }: DepositOperationsTabProps) => {
@@ -33,48 +35,50 @@ export const DepositOperationsTab = ({
   // Calculate total for deposits
   const totalDeposits = depositOperations.reduce((total, op) => total + op.amount, 0);
 
-  return <>
+  return (
+    <>
       {/* Desktop version */}
       <div className="hidden md:block overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
-              
-              <TableHead className="w-[10%] whitespace-nowrap font-medium">           ID</TableHead>
-              <TableHead className="w-[15%] whitespace-nowrap font-medium">               Date</TableHead>
-              
-              <TableHead className="w-[30%] font-medium">                               Description</TableHead>
-              <TableHead className="w-[15%] text-right whitespace-nowrap font-medium">Montant        </TableHead>
+              <TableHead className="w-[10%] whitespace-nowrap font-medium">ID</TableHead>
+              <TableHead className="w-[15%] whitespace-nowrap font-medium">Date</TableHead>
+              <TableHead className="w-[30%] font-medium">Description</TableHead>
+              <TableHead className="w-[15%] text-right whitespace-nowrap font-medium">Montant</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {depositOperations.map(operation => {
-            // Use operation_date if available, otherwise fall back to date
-            const displayDate = operation.operation_date || operation.date;
-            const formattedDate = typeof displayDate === 'string' ? format(new Date(displayDate), "dd/MM/yyyy HH:mm") : format(displayDate, "dd/MM/yyyy HH:mm");
-
-            // Format operation ID
-            const operationId = isNaN(parseInt(operation.id)) ? operation.id : formatId(parseInt(operation.id));
-
-            // Check if operation is selected
-            const isSelected = selectedOperations[operation.id] || false;
-            return <TableRow key={operation.id} className={cn(isSelected ? "bg-green-50 dark:bg-green-900/20" : "", "transition-colors cursor-pointer hover:bg-muted/50")} onClick={() => toggleSelection(operation.id)}>
-                  
+              const displayDate = operation.operation_date || operation.date;
+              const formattedDate = typeof displayDate === 'string' ? format(new Date(displayDate), "dd/MM/yyyy HH:mm") : format(displayDate, "dd/MM/yyyy HH:mm");
+              const operationId = isNaN(parseInt(operation.id)) ? operation.id : formatId(parseInt(operation.id));
+              const isSelected = selectedOperations[operation.id] || false;
+              
+              return (
+                <TableRow 
+                  key={operation.id} 
+                  className={cn(
+                    isSelected ? "bg-green-50 dark:bg-green-900/20" : "", 
+                    "transition-colors cursor-pointer hover:bg-muted/50"
+                  )} 
+                  onClick={() => !isPublicView && toggleSelection(operation.id)}
+                >
                   <TableCell className="font-mono text-xs text-muted-foreground">
                     #{operationId}
                   </TableCell>
                   <TableCell className="whitespace-nowrap">{formattedDate}</TableCell>
-                  
                   <TableCell className="max-w-[300px] truncate">{operation.description}</TableCell>
                   <TableCell className="text-right font-medium text-green-600 dark:text-green-400 whitespace-nowrap">
                     +{formatNumber(operation.amount)} {currency}
                   </TableCell>
-                </TableRow>;
-          })}
+                </TableRow>
+              );
+            })}
             
             {/* Totals section for desktop */}
             <TableRow className="border-t-2 border-primary/20 bg-muted/30">
-              <TableCell colSpan={5} className="font-medium text-right">Total des versements:</TableCell>
+              <TableCell colSpan={4} className="font-medium text-right">Total des versements:</TableCell>
               <TableCell className="text-right font-medium text-green-600 dark:text-green-400">
                 +{formatNumber(totalDeposits)} {currency}
               </TableCell>
@@ -88,8 +92,11 @@ export const DepositOperationsTab = ({
         {depositOperations.map(operation => (
           <div 
             key={operation.id} 
-            className={cn("transition-colors", selectedOperations[operation.id] ? "border-l-4 border-green-500 pl-2" : "")} 
-            onClick={() => toggleSelection(operation.id)}
+            className={cn(
+              "transition-colors", 
+              selectedOperations[operation.id] ? "border-l-4 border-green-500 pl-2" : ""
+            )} 
+            onClick={() => !isPublicView && toggleSelection(operation.id)}
           >
             <div className="w-full">
               <OperationsMobileCard 
@@ -98,7 +105,8 @@ export const DepositOperationsTab = ({
                 formatAmount={amount => `+ ${formatAmount(amount)}`} 
                 currency={currency} 
                 colorClass="text-green-600 dark:text-green-400" 
-                showType={false} 
+                showType={false}
+                isPublicView={isPublicView}
               />
             </div>
           </div>
@@ -113,5 +121,6 @@ export const DepositOperationsTab = ({
           </div>
         </div>
       </div>
-    </>;
+    </>
+  );
 };
