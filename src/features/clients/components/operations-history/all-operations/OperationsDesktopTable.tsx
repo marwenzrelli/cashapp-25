@@ -184,23 +184,7 @@ export const OperationsDesktopTable = ({
                       {formatAmount(operation.amount, operation.type)}
                     </span>
                   </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Ouvrir le menu</span>
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {updateOperation && <DropdownMenuItem onClick={() => handleEditClick(operation)}>
-                            <Pencil className="mr-2 h-4 w-4" />
-                            Modifier
-                          </DropdownMenuItem>}
-                        
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+                  
                 </TableRow>)}
           </TableBody>
         </Table>
