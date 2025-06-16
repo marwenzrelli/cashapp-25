@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Operation } from "@/features/operations/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -172,6 +171,7 @@ export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = (
         <div className="px-0 pb-0">
           <ClientOperationsHistoryTabs 
             filteredOperations={filteredOperations} 
+            currency="TND"
             updateOperation={updateOperation}
             onOperationDeleted={refreshOperations}
           />
