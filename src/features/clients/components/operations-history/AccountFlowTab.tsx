@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Operation } from "@/features/operations/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -107,7 +106,6 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
       {/* Mobile view */}
       <AccountFlowMobileView 
         operations={displayOperations}
-        updateOperation={updateOperation}
       />
 
       {/* Desktop view */}
