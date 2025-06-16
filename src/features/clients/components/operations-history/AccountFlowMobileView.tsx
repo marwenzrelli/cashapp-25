@@ -92,7 +92,12 @@ export const AccountFlowMobileView = ({ operations, isPublicView = false }: Acco
                 </div>
               </div>
               
-              {/* Pas de boutons d'action dans la vue publique mobile */}
+              {/* Les boutons d'action ne s'affichent que si ce n'est pas une vue publique */}
+              {!isPublicView && (
+                <div className="flex gap-2 mt-3 pt-3 border-t">
+                  {/* Boutons d'action pour la vue privée - actuellement vides mais peuvent être ajoutés */}
+                </div>
+              )}
             </CardContent>
           </Card>
         ))
