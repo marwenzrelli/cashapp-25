@@ -33,6 +33,8 @@ export const AllOperationsTab = ({
         operations={operations} 
         currency={currency}
         isPublicView={isPublicView}
+        updateOperation={updateOperation}
+        onOperationDeleted={onOperationDeleted}
       />
     </div>
   );

@@ -7,12 +7,16 @@ interface OperationsMobileListProps {
   operations: Operation[];
   currency: string;
   isPublicView?: boolean;
+  updateOperation?: (operation: Operation) => Promise<void>;
+  onOperationDeleted?: () => Promise<void>;
 }
 
 export const OperationsMobileList = ({ 
   operations, 
   currency,
-  isPublicView = false 
+  isPublicView = false,
+  updateOperation,
+  onOperationDeleted
 }: OperationsMobileListProps) => {
   if (operations.length === 0) {
     return (
@@ -30,6 +34,8 @@ export const OperationsMobileList = ({
           operation={operation} 
           currency={currency}
           isPublicView={isPublicView}
+          updateOperation={updateOperation}
+          onOperationDeleted={onOperationDeleted}
         />
       ))}
     </div>
