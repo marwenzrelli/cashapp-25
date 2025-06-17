@@ -3,13 +3,14 @@ import { Operation } from "@/features/operations/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { MoreVertical, Pencil, Trash2, ArrowRightLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { OperationDetailsModal } from "@/features/operations/components/OperationDetailsModal";
 import { DeleteOperationDialog } from "@/features/operations/components/DeleteOperationDialog";
+import { TransferOperationDialog } from "@/features/operations/components/TransferOperationDialog";
 import { toast } from "sonner";
 import { useOperations } from "@/features/operations/hooks/useOperations";
 import { deleteOperation } from "@/features/operations/utils/deletionUtils";
@@ -36,6 +37,7 @@ export const OperationsDesktopTable = ({
   const [selectedOperation, setSelectedOperation] = useState<Operation | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isTransferDialogOpen, setIsTransferDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const formatDate = (dateString: string): string => {
@@ -108,6 +110,11 @@ export const OperationsDesktopTable = ({
     setIsDeleteDialogOpen(true);
   };
 
+  const handleTransferClick = (operation: Operation) => {
+    setSelectedOperation(JSON.parse(JSON.stringify(operation)));
+    setIsTransferDialogOpen(true);
+  };
+
   const handleOperationUpdate = async (updatedOperation: Operation) => {
     if (updateOperation) {
       try {
@@ -157,6 +164,12 @@ export const OperationsDesktopTable = ({
       return false;
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleTransferComplete = async () => {
+    if (onOperationDeleted) {
+      await onOperationDeleted();
     }
   };
 
@@ -221,6 +234,12 @@ export const OperationsDesktopTable = ({
                             <Pencil className="mr-2 h-4 w-4" />
                             Modifier
                           </DropdownMenuItem>
+                          {(operation.type === 'deposit' || operation.type === 'withdrawal') && (
+                            <DropdownMenuItem onClick={() => handleTransferClick(operation)}>
+                              <ArrowRightLeft className="mr-2 h-4 w-4" />
+                              Transférer
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem onClick={() => handleDeleteClick(operation)} className="text-red-600">
                             <Trash2 className="mr-2 h-4 w-4" />
                             Supprimer
@@ -256,6 +275,13 @@ export const OperationsDesktopTable = ({
             onDelete={performDeleteOperation}
             operation={selectedOperation}
             isLoading={isDeleting}
+          />
+
+          <TransferOperationDialog
+            isOpen={isTransferDialogOpen}
+            onClose={() => setIsTransferDialogOpen(false)}
+            operation={selectedOperation}
+            onTransferComplete={handleTransferComplete}
           />
         </>
       )}

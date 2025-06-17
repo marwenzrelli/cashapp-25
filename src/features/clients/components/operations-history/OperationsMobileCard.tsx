@@ -4,7 +4,7 @@ import { fr } from "date-fns/locale";
 import { Operation } from "@/features/operations/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CalendarClock, Clock, Hash, User, Pencil, Trash2 } from "lucide-react";
+import { CalendarClock, Clock, Hash, User, Pencil, Trash2, ArrowRightLeft } from "lucide-react";
 import { formatId } from "@/utils/formatId";
 import { cn } from "@/lib/utils";
 import { ReactNode } from "react";
@@ -12,6 +12,7 @@ import { formatNumber } from "./all-operations/OperationTypeHelpers";
 import { useFormatAmount } from "@/hooks/use-format-amount";
 import { OperationDetailsModal } from "@/features/operations/components/OperationDetailsModal";
 import { DeleteOperationDialog } from "@/features/operations/components/DeleteOperationDialog";
+import { TransferOperationDialog } from "@/features/operations/components/TransferOperationDialog";
 import { toast } from "sonner";
 import { deleteOperation } from "@/features/operations/utils/deletionUtils";
 
@@ -46,6 +47,7 @@ export const OperationsMobileCard = ({
   const [selectedOperation, setSelectedOperation] = useState<Operation | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isTransferDialogOpen, setIsTransferDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   
   const formatAmountValue = (amount: number) => {
@@ -95,6 +97,11 @@ export const OperationsMobileCard = ({
     setIsDeleteDialogOpen(true);
   };
 
+  const handleTransferClick = () => {
+    setSelectedOperation(JSON.parse(JSON.stringify(operation)));
+    setIsTransferDialogOpen(true);
+  };
+
   const handleOperationUpdate = async (updatedOperation: Operation) => {
     if (updateOperation) {
       try {
@@ -135,6 +142,12 @@ export const OperationsMobileCard = ({
       return false;
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleTransferComplete = async () => {
+    if (onOperationDeleted) {
+      await onOperationDeleted();
     }
   };
 
@@ -187,7 +200,7 @@ export const OperationsMobileCard = ({
             <p className="truncate px-2 py-1 my-0.5 rounded-md bg-blue-50 dark:bg-blue-900/20">À: {operation.toClient}</p>
           </div>}
         
-        {/* Les boutons d'action ne s'affichent que si ce n'est pas une vue publique */}
+        {/* Action buttons only show if not public view */}
         {!isPublicView && (
           <div className="flex gap-2 mt-3 pt-3 border-t">
             <Button
@@ -199,6 +212,17 @@ export const OperationsMobileCard = ({
               <Pencil className="h-4 w-4 mr-2" />
               Modifier
             </Button>
+            {(operation.type === 'deposit' || operation.type === 'withdrawal') && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleTransferClick}
+                className="flex-1 text-blue-600 hover:text-blue-700"
+              >
+                <ArrowRightLeft className="h-4 w-4 mr-2" />
+                Transférer
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -228,6 +252,13 @@ export const OperationsMobileCard = ({
             onDelete={performDeleteOperation}
             operation={selectedOperation}
             isLoading={isDeleting}
+          />
+
+          <TransferOperationDialog
+            isOpen={isTransferDialogOpen}
+            onClose={() => setIsTransferDialogOpen(false)}
+            operation={selectedOperation}
+            onTransferComplete={handleTransferComplete}
           />
         </>
       )}
