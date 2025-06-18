@@ -1,3 +1,4 @@
+
 import { useRef, useCallback, useMemo, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useOperations } from "@/features/operations/hooks/useOperations";
@@ -12,39 +13,44 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 export const useClientProfile = () => {
-  const { clientId } = useParams();
+  const { id: clientIdParam } = useParams();
   const navigate = useNavigate();
   const { operations, refreshOperations } = useOperations();
   const qrCodeRef = useRef<HTMLDivElement>(null);
   
   // Améliorer la validation de l'ID client
   const parsedClientId = useMemo(() => {
-    if (!clientId || clientId === ':clientId') {
-      console.error("ID client invalide ou manquant:", clientId);
+    console.log("Raw clientIdParam from useParams:", clientIdParam);
+    
+    if (!clientIdParam || clientIdParam === ':id' || clientIdParam === 'undefined') {
+      console.error("ID client invalide ou manquant:", clientIdParam);
       return null;
     }
-    const parsed = parseInt(clientId, 10);
+    
+    const parsed = parseInt(clientIdParam, 10);
     if (isNaN(parsed) || parsed <= 0) {
-      console.error("ID client non numérique ou invalide:", clientId, "parsed:", parsed);
+      console.error("ID client non numérique ou invalide:", clientIdParam, "parsed:", parsed);
       return null;
     }
+    
+    console.log("Valid client ID parsed:", parsed);
     return parsed;
-  }, [clientId]);
+  }, [clientIdParam]);
   
   const isPepsiMen = useMemo(() => parsedClientId === 4, [parsedClientId]);
   
-  console.log("useClientProfile - Raw ID from params:", clientId, "Parsed client ID:", parsedClientId);
+  console.log("useClientProfile - Raw ID from params:", clientIdParam, "Parsed client ID:", parsedClientId);
   
   // Redirection si l'ID est invalide
   useEffect(() => {
-    if (clientId && parsedClientId === null) {
+    if (clientIdParam && parsedClientId === null) {
       console.error("Redirection vers /clients à cause d'un ID invalide");
       navigate("/clients", { replace: true });
       toast.error("ID client invalide", {
         description: "L'identifiant du client n'est pas valide"
       });
     }
-  }, [clientId, parsedClientId, navigate]);
+  }, [clientIdParam, parsedClientId, navigate]);
   
   const { client, isLoading, error, fetchClient } = useClientData(parsedClientId);
   
