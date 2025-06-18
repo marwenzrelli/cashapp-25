@@ -39,7 +39,7 @@ export const OperationsContent = ({
       <DeleteOperationDialog
         isOpen={showDeleteDialog}
         onClose={onDeleteDialogClose}
-        onConfirm={onConfirmDelete}
+        onDelete={onConfirmDelete}
         operation={operationToDelete}
       />
     </div>
