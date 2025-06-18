@@ -65,27 +65,21 @@ export const NavigationLinks = ({ onItemClick }: NavigationLinksProps) => {
       count: null
     },
     {
-      to: "/billing",
-      icon: CreditCard,
-      label: "Facturation",
-      count: null
-    },
-    {
       to: "/direct-operations",
       icon: ArrowRightLeft,
       label: "Opérations Directes",
       count: null
     },
     {
-      to: "/settings",
-      icon: Settings,
-      label: "Paramètres",
+      to: "/statistics",
+      icon: CreditCard,
+      label: "Statistiques",
       count: null
     },
     {
-      to: "/help",
-      icon: HelpCircle,
-      label: "Aide",
+      to: "/administration",
+      icon: Settings,
+      label: "Administration",
       count: null
     }
   ];
