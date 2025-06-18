@@ -16,12 +16,14 @@ export const fetchClientOperations = async (
     
     // Récupérer les dépôts du client - FILTRER PAR CLIENT NAME
     const fetchDepositsPromise = async () => {
+      console.log(`Recherche de dépôts pour: "${clientName}"`);
       const response = await supabase
         .from('deposits')
         .select('*')
         .eq('client_name', clientName)
         .order('created_at', { ascending: false });
       
+      console.log(`Dépôts trouvés pour ${clientName}:`, response.data?.length || 0);
       return response;
     };
     
@@ -38,12 +40,14 @@ export const fetchClientOperations = async (
 
     // Récupérer les retraits du client - FILTRER PAR CLIENT NAME
     const fetchWithdrawalsPromise = async () => {
+      console.log(`Recherche de retraits pour: "${clientName}"`);
       const response = await supabase
         .from('withdrawals')
         .select('*')
         .eq('client_name', clientName)
         .order('created_at', { ascending: false });
       
+      console.log(`Retraits trouvés pour ${clientName}:`, response.data?.length || 0);
       return response;
     };
     
@@ -60,6 +64,7 @@ export const fetchClientOperations = async (
 
     // Récupérer les transferts du client - FILTRER PAR CLIENT NAME (à la fois comme expéditeur et destinataire)
     const fetchTransfersPromise = async () => {
+      console.log(`Recherche de transferts pour: "${clientName}"`);
       const [fromTransfers, toTransfers] = await Promise.all([
         supabase
           .from('transfers')
@@ -73,6 +78,8 @@ export const fetchClientOperations = async (
           .order('created_at', { ascending: false })
       ]);
       
+      console.log(`Transferts FROM trouvés pour ${clientName}:`, fromTransfers.data?.length || 0);
+      console.log(`Transferts TO trouvés pour ${clientName}:`, toTransfers.data?.length || 0);
       return { fromTransfers, toTransfers };
     };
 
@@ -88,6 +95,7 @@ export const fetchClientOperations = async (
 
     // Récupérer les opérations directes du client - FILTRER PAR CLIENT NAME
     const fetchDirectOperationsPromise = async () => {
+      console.log(`Recherche d'opérations directes pour: "${clientName}"`);
       const [fromOperations, toOperations] = await Promise.all([
         supabase
           .from('direct_operations')
@@ -101,6 +109,10 @@ export const fetchClientOperations = async (
           .order('created_at', { ascending: false })
       ]);
       
+      console.log(`Opérations directes FROM trouvées pour ${clientName}:`, fromOperations.data?.length || 0);
+      console.log(`Opérations directes TO trouvées pour ${clientName}:`, toOperations.data?.length || 0);
+      console.log(`Sample FROM operation:`, fromOperations.data?.[0]);
+      console.log(`Sample TO operation:`, toOperations.data?.[0]);
       return { fromOperations, toOperations };
     };
 
@@ -208,6 +220,11 @@ export const fetchClientOperations = async (
       withdrawals: uniqueOperations.filter(op => op.type === 'withdrawal').length,
       transfers: uniqueOperations.filter(op => op.type === 'transfer').length,
       direct_transfers: uniqueOperations.filter(op => op.type === 'direct_transfer').length
+    });
+    
+    // Log détaillé des opérations trouvées
+    uniqueOperations.forEach(op => {
+      console.log(`Operation: ${op.type} - ${op.amount} - ${op.description}`);
     });
     
     return uniqueOperations;
