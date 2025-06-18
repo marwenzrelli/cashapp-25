@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   Home,
@@ -17,7 +18,7 @@ import { useLocation } from 'react-router-dom';
 import { cn } from "@/lib/utils";
 
 interface NavigationLinksProps {
-  onItemClick: () => void;
+  onItemClick?: () => void;
 }
 
 export const NavigationLinks = ({ onItemClick }: NavigationLinksProps) => {

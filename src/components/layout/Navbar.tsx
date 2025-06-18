@@ -24,11 +24,7 @@ export const Navbar = ({ currentPath, userRole, isOpen, setIsOpen, handleLogout 
 
             {/* Menu desktop */}
             <div className="hidden md:flex items-center ml-8 space-x-4">
-              <NavigationLinks 
-                className="flex items-center space-x-4" 
-                currentPath={currentPath}
-                userRole={userRole}
-              />
+              <NavigationLinks />
             </div>
 
             {/* Menu mobile */}

@@ -28,12 +28,7 @@ export const MobileMenu = ({ isOpen, setIsOpen, userRole, currentPath, handleLog
             <span>FinanceFlow Pro</span>
           </SheetTitle>
         </SheetHeader>
-        <NavigationLinks
-          className="flex flex-col space-y-3"
-          onClick={() => setIsOpen(false)}
-          currentPath={currentPath}
-          userRole={userRole}
-        />
+        <NavigationLinks onItemClick={() => setIsOpen(false)} />
         <div className="absolute bottom-8 left-4 right-4">
           <Button
             variant="ghost"
