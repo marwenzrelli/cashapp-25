@@ -66,7 +66,7 @@ const Clients = () => {
     };
   }, []);
 
-  // Handle only initial loading state
+  // Handle only initial loading state with improved logic
   useEffect(() => {
     // Clear previous timers if they exist
     if (timeoutTimerRef.current) {
@@ -88,23 +88,23 @@ const Clients = () => {
         timeoutTimerRef.current = null;
       }, 10000);
       
-      // Only show loading indicator if loading persists for more than 800ms
+      // Augmenter le délai avant d'afficher l'indicateur de chargement (1.5s au lieu de 800ms)
       if (!loadingIndicatorShown) {
         loadingTimerRef.current = setTimeout(() => {
           if (loading) {
             setLoadingIndicatorShown(true);
           }
           loadingTimerRef.current = null;
-        }, 800);
+        }, 1500); // Augmenté de 800ms à 1500ms
       }
     } else if (!loading && initialLoading) {
-      // When initial loading finishes
+      // When initial loading finishes - garder l'indicateur visible un peu plus longtemps
       const resetTimer = setTimeout(() => {
         setInitialLoading(false);
         setLoadingTimeout(false);
         setLoadingIndicatorShown(false);
         initialLoadCompleteRef.current = true;
-      }, 300);
+      }, 500); // Augmenté de 300ms à 500ms pour éviter le scintillement
       
       return () => clearTimeout(resetTimer);
     }
@@ -120,8 +120,9 @@ const Clients = () => {
     };
   }, [loading, initialLoading]);
 
-  // Display fixed floating loading indicator instead of fullscreen one
+  // Display fixed floating loading indicator with improved conditions
   const renderFloatingLoadingIndicator = () => {
+    // Ne pas afficher si le chargement est terminé rapidement
     if (loading && loadingIndicatorShown && !initialLoadCompleteRef.current) {
       return (
         <div className="fixed bottom-6 right-6 bg-white dark:bg-gray-800 shadow-lg rounded-lg p-3 flex items-center gap-3 z-50 border animate-in fade-in slide-in-from-right-10 duration-300">
@@ -129,7 +130,7 @@ const Clients = () => {
             size="sm" 
             fadeIn={false} 
             showImmediately 
-            debounceMs={800}
+            debounceMs={0} // Pas de debounce supplémentaire ici
           />
           <span>{loadingTimeout ? "Chargement prolongé..." : "Chargement..."}</span>
           {loadingTimeout && (
