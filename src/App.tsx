@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
@@ -16,6 +15,7 @@ import Login from "./pages/Login";
 import PublicClientProfile from "./pages/PublicClientProfile";
 import SupervisorCreation from "./pages/SupervisorCreation";
 import AdminUtility from "./pages/AdminUtility";
+import DirectOperations from "./pages/DirectOperations";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
@@ -47,6 +47,7 @@ function App() {
             <Route path="/public/client/:token" element={<PublicClientProfile />} />
             <Route path="/admin-utility" element={<AdminUtility />} />
             <Route path="/create-supervisor" element={<SupervisorCreation />} />
+            <Route path="/direct-operations" element={<DirectOperations />} />
             <Route path="/" element={<Layout />}>
               <Route index element={<Dashboard />} />
               <Route path="clients" element={<Clients />} />

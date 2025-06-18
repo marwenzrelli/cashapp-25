@@ -1,5 +1,5 @@
-
 import { Operation } from '../../types';
+import { DirectOperation } from "@/features/direct-operations/types";
 
 /**
  * Transforms raw data from different tables into a unified Operation format
@@ -125,4 +125,39 @@ export const sortOperationsByDate = (operations: Operation[]): Operation[] => {
     const dateB = new Date(b.operation_date || b.date);
     return dateB.getTime() - dateA.getTime();
   });
+};
+
+/**
+ * Transformer for direct operations between clients
+ */
+export const transformDirectOperation = (directOp: DirectOperation): Operation => {
+  return {
+    id: `direct-${directOp.id}`,
+    type: 'direct_transfer' as any,
+    amount: directOp.amount,
+    date: directOp.operation_date,
+    operation_date: directOp.operation_date,
+    description: `Opération directe: ${directOp.from_client_name} → ${directOp.to_client_name}`,
+    fromClient: directOp.from_client_name,
+    toClient: directOp.to_client_name,
+    status: directOp.status,
+    formattedDate: directOp.operation_date
+  };
+};
+
+/**
+ * Fetch and transform direct operations
+ */
+export const fetchDirectOperations = async (): Promise<Operation[]> => {
+  const { data: directOps, error } = await supabase
+    .from('direct_operations')
+    .select('*')
+    .order('operation_date', { ascending: false });
+
+  if (error) {
+    console.error('Erreur lors de la récupération des opérations directes:', error);
+    return [];
+  }
+
+  return (directOps || []).map(transformDirectOperation);
 };

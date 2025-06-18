@@ -1,9 +1,8 @@
-
 import { format, parseISO } from "date-fns";
 
 export interface Operation {
   id: string;
-  type: "deposit" | "withdrawal" | "transfer";
+  type: "deposit" | "withdrawal" | "transfer" | "direct_transfer";
   amount: number;
   date: string;
   createdAt?: string;
@@ -13,7 +12,7 @@ export interface Operation {
   toClient?: string;
   formattedDate?: string;
   client_id?: number;
-  status?: string; // Added the status field to the Operation interface
+  status?: string;
 }
 
 // Add ClientStats interface that was missing

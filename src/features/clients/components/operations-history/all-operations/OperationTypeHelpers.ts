@@ -1,4 +1,3 @@
-
 import { Operation } from "@/features/operations/types";
 import { ArrowUpRight, ArrowDownRight, ArrowLeftRight } from "lucide-react";
 import React from "react";
@@ -12,6 +11,8 @@ export const getOperationTypeColor = (type: string): string => {
       return "text-red-600 dark:text-red-400";
     case "transfer":
       return "text-blue-600 dark:text-blue-400";
+    case "direct_transfer":
+      return "text-purple-600 dark:text-purple-400";
     default:
       return "";
   }
@@ -26,6 +27,8 @@ export const getOperationTypeDisplay = (type: string): string => {
       return "Retrait";
     case "transfer":
       return "Transfert";
+    case "direct_transfer":
+      return "Opération Directe";
     default:
       return "Inconnu";
   }

@@ -81,6 +81,51 @@ export type Database = {
         }
         Relationships: []
       }
+      deleted_direct_operations: {
+        Row: {
+          amount: number
+          deleted_at: string | null
+          deleted_by: string | null
+          from_client_id: number | null
+          from_client_name: string
+          id: number
+          notes: string | null
+          operation_date: string | null
+          original_id: number
+          status: string | null
+          to_client_id: number | null
+          to_client_name: string
+        }
+        Insert: {
+          amount: number
+          deleted_at?: string | null
+          deleted_by?: string | null
+          from_client_id?: number | null
+          from_client_name: string
+          id?: number
+          notes?: string | null
+          operation_date?: string | null
+          original_id: number
+          status?: string | null
+          to_client_id?: number | null
+          to_client_name: string
+        }
+        Update: {
+          amount?: number
+          deleted_at?: string | null
+          deleted_by?: string | null
+          from_client_id?: number | null
+          from_client_name?: string
+          id?: number
+          notes?: string | null
+          operation_date?: string | null
+          original_id?: number
+          status?: string | null
+          to_client_id?: number | null
+          to_client_name?: string
+        }
+        Relationships: []
+      }
       deleted_transfers: {
         Row: {
           amount: number
@@ -197,6 +242,66 @@ export type Database = {
           {
             foreignKeyName: "deposits_client_id_fkey"
             columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      direct_operations: {
+        Row: {
+          amount: number
+          created_at: string | null
+          created_by: string | null
+          from_client_id: number | null
+          from_client_name: string
+          id: number
+          notes: string | null
+          operation_date: string | null
+          operation_type: string | null
+          status: string | null
+          to_client_id: number | null
+          to_client_name: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          created_by?: string | null
+          from_client_id?: number | null
+          from_client_name: string
+          id?: number
+          notes?: string | null
+          operation_date?: string | null
+          operation_type?: string | null
+          status?: string | null
+          to_client_id?: number | null
+          to_client_name: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          created_by?: string | null
+          from_client_id?: number | null
+          from_client_name?: string
+          id?: number
+          notes?: string | null
+          operation_date?: string | null
+          operation_type?: string | null
+          status?: string | null
+          to_client_id?: number | null
+          to_client_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "direct_operations_from_client_id_fkey"
+            columns: ["from_client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "direct_operations_to_client_id_fkey"
+            columns: ["to_client_id"]
             isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]

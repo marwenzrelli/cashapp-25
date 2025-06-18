@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Operation } from "@/features/operations/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -70,6 +69,8 @@ export const OperationsDesktopTable = ({
         return "bg-red-100 hover:bg-red-200 text-red-800";
       case 'transfer':
         return "bg-blue-100 hover:bg-blue-200 text-blue-800";
+      case 'direct_transfer':
+        return "bg-purple-100 hover:bg-purple-200 text-purple-800";
       default:
         return "bg-gray-100 hover:bg-gray-200 text-gray-800";
     }
@@ -83,6 +84,8 @@ export const OperationsDesktopTable = ({
         return "Retrait";
       case 'transfer':
         return "Transfert";
+      case 'direct_transfer':
+        return "Opération Directe";
       default:
         return type;
     }
@@ -216,7 +219,8 @@ export const OperationsDesktopTable = ({
                     <span className={cn(
                       operation.type === 'withdrawal' ? 'text-red-600' : 
                       operation.type === 'deposit' ? 'text-green-600' : 
-                      operation.type === 'transfer' ? 'text-blue-600' : '', 
+                      operation.type === 'transfer' ? 'text-blue-600' : 
+                      operation.type === 'direct_transfer' ? 'text-purple-600' : '', 
                       'font-medium'
                     )}>
                       {formatAmount(operation.amount, operation.type)}
