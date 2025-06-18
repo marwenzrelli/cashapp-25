@@ -2,24 +2,25 @@
 import React from "react";
 import { DashboardHeader } from "@/features/dashboard/components/DashboardHeader";
 import { StatsCardGrid } from "@/features/dashboard/components/StatsCardGrid";
-import { RecentActivity } from "@/features/dashboard/components/RecentActivity";
+import { RecentActivityCard } from "@/features/dashboard/components/RecentActivity";
 import { TransactionTrends } from "@/features/dashboard/components/TransactionTrends";
 import { AISuggestions } from "@/features/dashboard/components/AISuggestions";
 import { useDashboardData } from "@/features/dashboard/hooks/useDashboardData";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { LoadingIndicator } from "@/components/ui/loading-indicator";
 
 const Index = () => {
   const { 
     stats, 
     recentActivity, 
-    trendData, 
-    suggestions, 
-    loading, 
+    isLoading, 
     error,
-    refreshData 
+    handleRefresh 
   } = useDashboardData();
+  
+  const { currency } = useCurrency();
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <LoadingIndicator 
@@ -37,7 +38,7 @@ const Index = () => {
           <h1 className="text-2xl font-bold text-red-600 mb-4">Erreur de chargement</h1>
           <p className="text-muted-foreground mb-4">{error}</p>
           <button 
-            onClick={refreshData}
+            onClick={handleRefresh}
             className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90"
           >
             Réessayer
@@ -49,16 +50,16 @@ const Index = () => {
 
   return (
     <div className="space-y-8">
-      <DashboardHeader />
+      <DashboardHeader isLoading={isLoading} onRefresh={handleRefresh} />
       
-      <StatsCardGrid stats={stats} />
+      <StatsCardGrid stats={stats} currency={currency} />
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <RecentActivity activities={recentActivity} />
-        <AISuggestions suggestions={suggestions} />
+        <RecentActivityCard activities={recentActivity} currency={currency} />
+        <AISuggestions stats={stats} />
       </div>
       
-      <TransactionTrends data={trendData} />
+      <TransactionTrends data={stats.monthly_stats} currency={currency} />
     </div>
   );
 };

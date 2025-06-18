@@ -1,30 +1,46 @@
 
 import { Operation } from "../types";
 import { OperationsList } from "./OperationsList";
+import { DeleteOperationDialog } from "./DeleteOperationDialog";
 
 interface OperationsContentProps {
-  filteredOperations: Operation[];
+  operations: Operation[];
   isLoading: boolean;
-  isFiltering: boolean;
+  error: string | null;
+  onRefresh: () => Promise<void>;
   onDelete: (operation: Operation) => void;
-  onEdit: (operation: Operation) => void;
+  showDeleteDialog: boolean;
+  onDeleteDialogClose: () => void;
+  onConfirmDelete: () => Promise<void>;
+  operationToDelete: Operation | undefined;
 }
 
 export const OperationsContent = ({
-  filteredOperations,
+  operations,
   isLoading,
-  isFiltering,
+  error,
+  onRefresh,
   onDelete,
-  onEdit
+  showDeleteDialog,
+  onDeleteDialogClose,
+  onConfirmDelete,
+  operationToDelete
 }: OperationsContentProps) => {
   return (
     <div className="space-y-6 print:mt-0">
       <OperationsList 
-        operations={filteredOperations} 
+        operations={operations} 
         isLoading={isLoading} 
-        showEmptyMessage={isFiltering}
+        showEmptyMessage={!isLoading && operations.length === 0}
         onDelete={onDelete}
-        onEdit={onEdit}
+        onEdit={() => {}} // Placeholder for edit functionality
+      />
+      
+      <DeleteOperationDialog
+        isOpen={showDeleteDialog}
+        onClose={onDeleteDialogClose}
+        onConfirm={onConfirmDelete}
+        operation={operationToDelete}
       />
     </div>
   );
