@@ -21,15 +21,18 @@ export const PublicAccountFlowTab = ({
 }: PublicAccountFlowTabProps) => {
   const { currency } = useCurrency();
 
-  // Calculate effective balance using the same logic as PersonalInfo
+  // Calculate effective balance using the same logic as PersonalInfo - EXACTEMENT LA MÊME LOGIQUE
   const calculateEffectiveBalance = () => {
+    console.log("PublicAccountFlowTab - Calculating balance for:", client?.prenom, client?.nom);
+    console.log("PublicAccountFlowTab - Operations count:", operations?.length || 0);
+    
     if (!operations || operations.length === 0 || !client) {
-      return 0;
+      console.log("PublicAccountFlowTab - No operations or client, returning 0");
+      return 0; // Changement: retourner 0 au lieu du solde DB
     }
 
     const clientFullName = `${client.prenom} ${client.nom}`.trim();
-    console.log("PublicAccountFlowTab - Calculating balance for:", clientFullName);
-    console.log("PublicAccountFlowTab - Operations count:", operations.length);
+    console.log("PublicAccountFlowTab - Looking for operations for:", clientFullName);
     
     // Calculate totals by operation type exactly like PersonalInfoFields
     const totalDeposits = operations

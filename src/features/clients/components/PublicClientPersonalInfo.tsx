@@ -25,8 +25,8 @@ export const PublicClientPersonalInfo = ({
     console.log("PublicClientPersonalInfo - Client solde from DB:", client.solde);
     
     if (!operations || operations.length === 0) {
-      console.log("PublicClientPersonalInfo - No operations, returning client.solde:", client.solde);
-      return client.solde || 0;
+      console.log("PublicClientPersonalInfo - No operations, returning 0");
+      return 0; // Changement: retourner 0 au lieu du solde DB quand pas d'opérations
     }
 
     const clientFullName = `${client.prenom} ${client.nom}`.trim();
