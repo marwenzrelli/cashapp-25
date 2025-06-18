@@ -1,15 +1,22 @@
 
 import { Client } from "@/features/clients/types";
 
+export interface TokenData {
+  client_id: number;
+  access_token: string;
+  expires_at?: string;
+}
+
 export interface ClientOperation {
   id: string;
-  type: "deposit" | "withdrawal" | "transfer";
+  type: "deposit" | "withdrawal" | "transfer" | "direct_transfer";
   date: string;
   amount: number;
   description: string;
   status?: string;
   fromClient?: string;
   toClient?: string;
+  operation_date?: string;
 }
 
 export interface PublicClientData {
@@ -20,20 +27,4 @@ export interface PublicClientData {
   loadingTime: number;
   fetchClientData: () => Promise<void>;
   retryFetch: () => void;
-}
-
-export interface TokenData {
-  client_id: number;
-  expires_at: string | null;
-  created_at: string;
-}
-
-// Simple interface to avoid complex type issues
-export interface WithdrawalData {
-  id: number | string;
-  client_name: string;
-  amount: number;
-  created_at: string;
-  notes?: string;
-  status?: string;
 }

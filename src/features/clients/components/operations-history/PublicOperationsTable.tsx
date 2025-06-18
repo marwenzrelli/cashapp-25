@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -24,6 +25,10 @@ export const PublicOperationsTable: React.FC<PublicOperationsTableProps> = ({ op
     .filter(op => op.type === 'transfer')
     .reduce((sum, op) => sum + op.amount, 0);
     
+  const totalDirectTransfers = operations
+    .filter(op => op.type === 'direct_transfer')
+    .reduce((sum, op) => sum + op.amount, 0);
+    
   // Calculate net movement (deposits - withdrawals)
   const netMovement = totalDeposits - totalWithdrawals;
 
@@ -35,6 +40,8 @@ export const PublicOperationsTable: React.FC<PublicOperationsTableProps> = ({ op
         return 'bg-red-50/50 hover:bg-red-100/50';
       case 'transfer':
         return 'bg-blue-50/50 hover:bg-blue-100/50';
+      case 'direct_transfer':
+        return 'bg-purple-50/50 hover:bg-purple-100/50';
       default:
         return '';
     }
@@ -48,8 +55,25 @@ export const PublicOperationsTable: React.FC<PublicOperationsTableProps> = ({ op
         return 'bg-red-50 text-red-700 border-red-200';
       case 'transfer':
         return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'direct_transfer':
+        return 'bg-purple-50 text-purple-700 border-purple-200';
       default:
         return 'bg-gray-50 text-gray-700 border-gray-200';
+    }
+  };
+
+  const getOperationLabel = (type: string) => {
+    switch (type) {
+      case 'deposit':
+        return 'Versement';
+      case 'withdrawal':
+        return 'Retrait';
+      case 'transfer':
+        return 'Virement';
+      case 'direct_transfer':
+        return 'Opération Directe';
+      default:
+        return type;
     }
   };
 
@@ -90,9 +114,7 @@ export const PublicOperationsTable: React.FC<PublicOperationsTableProps> = ({ op
                         variant="outline" 
                         className={`${getOperationBadgeStyle(operation.type)} text-xs capitalize`}
                       >
-                        {operation.type === 'deposit' ? 'Versement' : 
-                         operation.type === 'withdrawal' ? 'Retrait' : 
-                         'Virement'}
+                        {getOperationLabel(operation.type)}
                       </Badge>
                     </TableCell>
                   )}
@@ -124,6 +146,12 @@ export const PublicOperationsTable: React.FC<PublicOperationsTableProps> = ({ op
             <div className="font-medium">Total Virements:</div>
             <div className="text-right text-blue-500">{totalTransfers.toLocaleString()} {currency}</div>
           </div>
+          {totalDirectTransfers > 0 && (
+            <div className="grid grid-cols-2 text-xs">
+              <div className="font-medium">Total Opérations Directes:</div>
+              <div className="text-right text-purple-500">{totalDirectTransfers.toLocaleString()} {currency}</div>
+            </div>
+          )}
           <div className="grid grid-cols-2 text-xs font-bold border-t pt-1 mt-1">
             <div>Mouvement Net:</div>
             <div className={`text-right ${netMovement >= 0 ? 'text-green-600' : 'text-red-600'}`}>

@@ -11,7 +11,7 @@ export const fetchClientOperations = async (
     
     // Utiliser une promesse avec timeout au lieu de AbortController
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error("Délai d'attente dépassé")), 10000); // 10 secondes timeout pour les opérations
+      setTimeout(() => reject(new Error("Délai d'attente dépassé")), 15000); // Augmenté à 15 secondes
     });
     
     // Récupérer les dépôts du client
@@ -58,8 +58,65 @@ export const fetchClientOperations = async (
       throw new Error(`Erreur lors de la récupération des retraits: ${withdrawalsResult.error.message}`);
     }
 
+    // Récupérer les transferts du client (à la fois comme expéditeur et destinataire)
+    const fetchTransfersPromise = async () => {
+      const [fromTransfers, toTransfers] = await Promise.all([
+        supabase
+          .from('transfers')
+          .select('*')
+          .eq('from_client', clientName)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('transfers')
+          .select('*')
+          .eq('to_client', clientName)
+          .order('created_at', { ascending: false })
+      ]);
+      
+      return { fromTransfers, toTransfers };
+    };
+
+    const transfersResult = await Promise.race([
+      fetchTransfersPromise(),
+      timeoutPromise
+    ]);
+
+    if (transfersResult.fromTransfers.error || transfersResult.toTransfers.error) {
+      console.error("Error fetching transfers:", transfersResult.fromTransfers.error || transfersResult.toTransfers.error);
+      throw new Error("Erreur lors de la récupération des transferts");
+    }
+
+    // Récupérer les opérations directes du client
+    const fetchDirectOperationsPromise = async () => {
+      const [fromOperations, toOperations] = await Promise.all([
+        supabase
+          .from('direct_operations')
+          .select('*')
+          .eq('from_client_name', clientName)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('direct_operations')
+          .select('*')
+          .eq('to_client_name', clientName)
+          .order('created_at', { ascending: false })
+      ]);
+      
+      return { fromOperations, toOperations };
+    };
+
+    const directOperationsResult = await Promise.race([
+      fetchDirectOperationsPromise(),
+      timeoutPromise
+    ]);
+
+    if (directOperationsResult.fromOperations.error || directOperationsResult.toOperations.error) {
+      console.error("Error fetching direct operations:", directOperationsResult.fromOperations.error || directOperationsResult.toOperations.error);
+      // Ne pas faire échouer la requête entière pour les opérations directes
+    }
+
     // Combiner et formater les opérations
     const operations: ClientOperation[] = [
+      // Dépôts
       ...(depositsResult.data || []).map((deposit): ClientOperation => ({
         id: `deposit-${deposit.id}`,
         type: "deposit",
@@ -67,8 +124,10 @@ export const fetchClientOperations = async (
         amount: deposit.amount,
         description: deposit.notes || `Versement`,
         status: deposit.status,
-        fromClient: deposit.client_name
+        fromClient: deposit.client_name,
+        operation_date: deposit.operation_date || deposit.created_at
       })),
+      // Retraits
       ...(withdrawalsResult.data || []).map((withdrawal): ClientOperation => ({
         id: `withdrawal-${withdrawal.id}`,
         type: "withdrawal",
@@ -76,7 +135,56 @@ export const fetchClientOperations = async (
         amount: withdrawal.amount,
         description: withdrawal.notes || `Retrait`,
         status: withdrawal.status,
-        fromClient: withdrawal.client_name
+        fromClient: withdrawal.client_name,
+        operation_date: withdrawal.operation_date || withdrawal.created_at
+      })),
+      // Transferts depuis ce client
+      ...(transfersResult.fromTransfers.data || []).map((transfer): ClientOperation => ({
+        id: `transfer-${transfer.id}`,
+        type: "transfer",
+        date: transfer.operation_date || transfer.created_at,
+        amount: transfer.amount,
+        description: transfer.reason || `Transfert vers ${transfer.to_client}`,
+        status: transfer.status,
+        fromClient: transfer.from_client,
+        toClient: transfer.to_client,
+        operation_date: transfer.operation_date || transfer.created_at
+      })),
+      // Transferts vers ce client
+      ...(transfersResult.toTransfers.data || []).map((transfer): ClientOperation => ({
+        id: `transfer-in-${transfer.id}`,
+        type: "transfer",
+        date: transfer.operation_date || transfer.created_at,
+        amount: transfer.amount,
+        description: transfer.reason || `Transfert de ${transfer.from_client}`,
+        status: transfer.status,
+        fromClient: transfer.from_client,
+        toClient: transfer.to_client,
+        operation_date: transfer.operation_date || transfer.created_at
+      })),
+      // Opérations directes depuis ce client
+      ...(directOperationsResult.fromOperations?.data || []).map((operation): ClientOperation => ({
+        id: `direct-${operation.id}`,
+        type: "direct_transfer",
+        date: operation.operation_date || operation.created_at,
+        amount: operation.amount,
+        description: operation.notes || `Opération directe vers ${operation.to_client_name}`,
+        status: operation.status,
+        fromClient: operation.from_client_name,
+        toClient: operation.to_client_name,
+        operation_date: operation.operation_date || operation.created_at
+      })),
+      // Opérations directes vers ce client
+      ...(directOperationsResult.toOperations?.data || []).map((operation): ClientOperation => ({
+        id: `direct-in-${operation.id}`,
+        type: "direct_transfer",
+        date: operation.operation_date || operation.created_at,
+        amount: operation.amount,
+        description: operation.notes || `Opération directe de ${operation.from_client_name}`,
+        status: operation.status,
+        fromClient: operation.from_client_name,
+        toClient: operation.to_client_name,
+        operation_date: operation.operation_date || operation.created_at
       }))
     ];
 
@@ -87,6 +195,13 @@ export const fetchClientOperations = async (
     uniqueOperations.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     console.log(`Récupéré ${uniqueOperations.length} opérations uniques sur ${operations.length} totales pour le client ${clientName}`);
+    console.log("Types d'opérations:", {
+      deposits: uniqueOperations.filter(op => op.type === 'deposit').length,
+      withdrawals: uniqueOperations.filter(op => op.type === 'withdrawal').length,
+      transfers: uniqueOperations.filter(op => op.type === 'transfer').length,
+      direct_transfers: uniqueOperations.filter(op => op.type === 'direct_transfer').length
+    });
+    
     return uniqueOperations;
   } catch (error: any) {
     console.error("Error in fetchClientOperations:", error);
