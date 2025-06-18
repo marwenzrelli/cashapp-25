@@ -19,16 +19,18 @@ export const Navbar = ({ currentPath, userRole, isOpen, setIsOpen, handleLogout 
     <nav className="border-b bg-card w-full">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
-          <div className="flex items-center">
+          <div className="flex items-center space-x-8">
             <LogoSection />
 
-            {/* Menu desktop - Toujours visible */}
-            <div className="hidden md:flex items-center ml-8 space-x-4">
+            {/* Menu desktop - Navigation principale */}
+            <div className="hidden md:flex">
               <NavigationLinks />
             </div>
+          </div>
 
+          <div className="flex items-center space-x-4">
             {/* Menu mobile - Bouton hamburger */}
-            <div className="md:hidden ml-4">
+            <div className="md:hidden">
               <MobileMenu 
                 isOpen={isOpen} 
                 setIsOpen={setIsOpen} 
@@ -37,13 +39,11 @@ export const Navbar = ({ currentPath, userRole, isOpen, setIsOpen, handleLogout 
                 handleLogout={handleLogout} 
               />
             </div>
-          </div>
 
-          {/* Bouton déconnexion desktop - Toujours visible */}
-          <div className="hidden md:flex">
-            <LogoutButton
-              onLogout={handleLogout}
-            />
+            {/* Bouton déconnexion desktop */}
+            <div className="hidden md:flex">
+              <LogoutButton onLogout={handleLogout} />
+            </div>
           </div>
         </div>
       </div>

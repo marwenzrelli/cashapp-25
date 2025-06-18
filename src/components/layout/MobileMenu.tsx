@@ -28,7 +28,11 @@ export const MobileMenu = ({ isOpen, setIsOpen, userRole, currentPath, handleLog
             <span>Caisse</span>
           </SheetTitle>
         </SheetHeader>
-        <NavigationLinks onItemClick={() => setIsOpen(false)} />
+        
+        <div className="flex flex-col space-y-2">
+          <NavigationLinks onItemClick={() => setIsOpen(false)} />
+        </div>
+        
         <div className="absolute bottom-8 left-4 right-4">
           <Button
             variant="ghost"
