@@ -14,7 +14,7 @@ export const fetchClientOperations = async (
       setTimeout(() => reject(new Error("Délai d'attente dépassé")), 15000); // Augmenté à 15 secondes
     });
     
-    // Récupérer les dépôts du client
+    // Récupérer les dépôts du client - FILTRER PAR CLIENT NAME
     const fetchDepositsPromise = async () => {
       const response = await supabase
         .from('deposits')
@@ -36,7 +36,7 @@ export const fetchClientOperations = async (
       throw new Error(`Erreur lors de la récupération des dépôts: ${depositsResult.error.message}`);
     }
 
-    // Récupérer les retraits du client
+    // Récupérer les retraits du client - FILTRER PAR CLIENT NAME
     const fetchWithdrawalsPromise = async () => {
       const response = await supabase
         .from('withdrawals')
@@ -58,7 +58,7 @@ export const fetchClientOperations = async (
       throw new Error(`Erreur lors de la récupération des retraits: ${withdrawalsResult.error.message}`);
     }
 
-    // Récupérer les transferts du client (à la fois comme expéditeur et destinataire)
+    // Récupérer les transferts du client - FILTRER PAR CLIENT NAME (à la fois comme expéditeur et destinataire)
     const fetchTransfersPromise = async () => {
       const [fromTransfers, toTransfers] = await Promise.all([
         supabase
@@ -86,7 +86,7 @@ export const fetchClientOperations = async (
       throw new Error("Erreur lors de la récupération des transferts");
     }
 
-    // Récupérer les opérations directes du client
+    // Récupérer les opérations directes du client - FILTRER PAR CLIENT NAME
     const fetchDirectOperationsPromise = async () => {
       const [fromOperations, toOperations] = await Promise.all([
         supabase
@@ -113,6 +113,14 @@ export const fetchClientOperations = async (
       console.error("Error fetching direct operations:", directOperationsResult.fromOperations.error || directOperationsResult.toOperations.error);
       // Ne pas faire échouer la requête entière pour les opérations directes
     }
+
+    // Log pour déboguer les résultats
+    console.log("PublicClientOperations - Deposits found:", depositsResult.data?.length || 0);
+    console.log("PublicClientOperations - Withdrawals found:", withdrawalsResult.data?.length || 0);
+    console.log("PublicClientOperations - From transfers found:", transfersResult.fromTransfers.data?.length || 0);
+    console.log("PublicClientOperations - To transfers found:", transfersResult.toTransfers.data?.length || 0);
+    console.log("PublicClientOperations - From direct ops found:", directOperationsResult.fromOperations?.data?.length || 0);
+    console.log("PublicClientOperations - To direct ops found:", directOperationsResult.toOperations?.data?.length || 0);
 
     // Combiner et formater les opérations
     const operations: ClientOperation[] = [
@@ -194,8 +202,8 @@ export const fetchClientOperations = async (
     // Trier par date (plus récentes en premier)
     uniqueOperations.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-    console.log(`Récupéré ${uniqueOperations.length} opérations uniques sur ${operations.length} totales pour le client ${clientName}`);
-    console.log("Types d'opérations:", {
+    console.log(`PublicClientOperations - Récupéré ${uniqueOperations.length} opérations uniques pour le client ${clientName}`);
+    console.log("PublicClientOperations - Types d'opérations:", {
       deposits: uniqueOperations.filter(op => op.type === 'deposit').length,
       withdrawals: uniqueOperations.filter(op => op.type === 'withdrawal').length,
       transfers: uniqueOperations.filter(op => op.type === 'transfer').length,
