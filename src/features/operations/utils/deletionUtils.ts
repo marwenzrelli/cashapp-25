@@ -293,22 +293,18 @@ export const handleTransferDeletion = async (transferId: number, userId: string 
       .from('transfers')
       .select('*')
       .eq('id', transferId)
-      .single();
+      .maybeSingle();
       
     if (fetchError) {
       console.error("Erreur lors de la vérification du transfert:", fetchError);
-      if (fetchError.code === 'PGRST116') {
-        toast.error("Transfert introuvable - il a peut-être déjà été supprimé");
-        return true;
-      }
       toast.error("Erreur lors de la vérification du transfert");
       return false;
     }
     
     if (!transferData) {
-      console.log("Transfert déjà supprimé ou introuvable");
-      toast.success("Transfert déjà supprimé");
-      return true;
+      console.log("Transfert non trouvé, mais cela pourrait être normal s'il a été supprimé ailleurs");
+      toast.success("Transfert déjà supprimé ou introuvable");
+      return true; // Return true because the goal (deletion) is achieved
     }
     
     console.log(`Transfert trouvé: ${transferData.from_client} → ${transferData.to_client}, montant: ${transferData.amount}`);
@@ -326,7 +322,7 @@ export const handleTransferDeletion = async (transferId: number, userId: string 
       .gte('deleted_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()) // Dans les dernières 24h
       .order('deleted_at', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
     
     if (deletedDeposit) {
       originalOperation = deletedDeposit;
@@ -341,7 +337,7 @@ export const handleTransferDeletion = async (transferId: number, userId: string 
         .gte('deleted_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()) // Dans les dernières 24h
         .order('deleted_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
       
       if (deletedWithdrawal) {
         originalOperation = deletedWithdrawal;
