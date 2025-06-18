@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Client } from "../../types";
 import { format } from "date-fns";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useOperations } from "@/features/operations/hooks/useOperations";
+import { useMemo } from "react";
 
 interface ClientExpandedViewProps {
   client: Client;
@@ -11,9 +13,53 @@ interface ClientExpandedViewProps {
 
 export const ClientExpandedView = ({ client, onView }: ClientExpandedViewProps) => {
   const { currency } = useCurrency();
+  const { operations } = useOperations();
   
-  // Create sign prefix based on balance
-  const signPrefix = client.solde >= 0 ? "+ " : "";
+  const clientId = typeof client.id === 'string' ? parseInt(client.id, 10) : client.id;
+  const clientName = `${client.prenom} ${client.nom}`;
+  
+  // Calculate net balance from operations
+  const netBalance = useMemo(() => {
+    if (!operations || operations.length === 0) {
+      return client.solde; // Fallback to database balance
+    }
+
+    const clientFullName = clientName.trim();
+    
+    // Calculate totals by operation type
+    const totalDeposits = operations
+      .filter(op => op.type === "deposit" && (op.client_id === clientId || op.fromClient === clientFullName))
+      .reduce((total, op) => total + op.amount, 0);
+      
+    const totalWithdrawals = operations
+      .filter(op => op.type === "withdrawal" && (op.client_id === clientId || op.fromClient === clientFullName))
+      .reduce((total, op) => total + op.amount, 0);
+      
+    // Separate transfers received and sent
+    const transfersReceived = operations
+      .filter(op => op.type === "transfer" && (op.to_client_id === clientId || op.toClient === clientFullName))
+      .reduce((total, op) => total + op.amount, 0);
+      
+    const transfersSent = operations
+      .filter(op => op.type === "transfer" && (op.from_client_id === clientId || op.fromClient === clientFullName))
+      .reduce((total, op) => total + op.amount, 0);
+
+    // Calculate direct operations received and sent
+    const directOperationsReceived = operations
+      .filter(op => op.type === "direct_transfer" && (op.to_client_id === clientId || op.toClient === clientFullName))
+      .reduce((total, op) => total + op.amount, 0);
+      
+    const directOperationsSent = operations
+      .filter(op => op.type === "direct_transfer" && (op.from_client_id === clientId || op.fromClient === clientFullName))
+      .reduce((total, op) => total + op.amount, 0);
+      
+    // Calculate net balance: deposits + transfers received + direct operations received - withdrawals - transfers sent - direct operations sent
+    return totalDeposits + transfersReceived + directOperationsReceived - totalWithdrawals - transfersSent - directOperationsSent;
+  }, [operations, clientId, clientName, client.solde]);
+  
+  // Format the balance with explicit sign and proper rounding
+  const roundedBalance = Math.round(netBalance * 100) / 100; // Round to 2 decimal places
+  const signPrefix = roundedBalance >= 0 ? "+ " : "";
   
   return (
     <div className="mt-4 md:pl-14 text-sm grid gap-2">
@@ -23,14 +69,17 @@ export const ClientExpandedView = ({ client, onView }: ClientExpandedViewProps) 
           <p className="truncate font-medium">{client.email || "Non renseigné"}</p>
         </div>
         <div className="bg-white dark:bg-gray-800/60 rounded-lg p-3">
-          <p className="text-muted-foreground text-xs mb-1">Solde réel</p>
+          <p className="text-muted-foreground text-xs mb-1">Solde net</p>
           <div>
             <span className={`px-2 py-1 inline-block border rounded-md ${
-              client.solde >= 0 
+              roundedBalance >= 0 
                 ? 'text-green-600 border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-900/30 dark:text-green-400' 
                 : 'text-red-600 border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-900/30 dark:text-red-400'
             }`}>
-              {signPrefix}{client.solde.toLocaleString()} {currency}
+              {signPrefix}{Math.abs(roundedBalance).toLocaleString('fr-FR', { 
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 2 
+              })} {currency}
             </span>
           </div>
         </div>
