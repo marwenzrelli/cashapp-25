@@ -104,6 +104,11 @@ export const OperationsDesktopTable = ({
     return `#${idStr}`;
   };
 
+  const handleIdClick = (operation: Operation) => {
+    setSelectedOperation(JSON.parse(JSON.stringify(operation)));
+    setIsDetailsModalOpen(true);
+  };
+
   const handleEditClick = (operation: Operation) => {
     setSelectedOperation(JSON.parse(JSON.stringify(operation)));
     setIsDetailsModalOpen(true);
@@ -202,7 +207,12 @@ export const OperationsDesktopTable = ({
               operations.map((operation, index) => (
                 <TableRow key={`${operation.id}-${index}`} className="hover:bg-muted/50">
                   <TableCell className="font-medium">
-                    {getFormattedId(operation.id)}
+                    <button
+                      onClick={() => handleIdClick(operation)}
+                      className="text-primary hover:text-primary/80 underline cursor-pointer transition-colors"
+                    >
+                      {getFormattedId(operation.id)}
+                    </button>
                   </TableCell>
                   <TableCell>
                     {formatDate(operation.operation_date || operation.date)}
@@ -265,16 +275,17 @@ export const OperationsDesktopTable = ({
         <TotalsSection operations={operations} currency={currency} />
       </div>
 
+      {/* Operation Details Modal - Always rendered */}
+      <OperationDetailsModal 
+        isOpen={isDetailsModalOpen}
+        onClose={() => setIsDetailsModalOpen(false)}
+        operation={selectedOperation}
+        onEdit={handleOperationUpdate}
+        onDelete={handleDeleteClick}
+      />
+
       {!isPublicView && (
         <>
-          <OperationDetailsModal 
-            isOpen={isDetailsModalOpen}
-            onClose={() => setIsDetailsModalOpen(false)}
-            operation={selectedOperation}
-            onEdit={handleOperationUpdate}
-            onDelete={handleDeleteClick}
-          />
-          
           <DeleteOperationDialog 
             isOpen={isDeleteDialogOpen}
             onClose={() => setIsDeleteDialogOpen(false)}
