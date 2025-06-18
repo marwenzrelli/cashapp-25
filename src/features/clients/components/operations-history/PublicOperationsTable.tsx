@@ -29,8 +29,10 @@ export const PublicOperationsTable: React.FC<PublicOperationsTableProps> = ({ op
     .filter(op => op.type === 'direct_transfer')
     .reduce((sum, op) => sum + op.amount, 0);
     
-  // Calculate net movement (deposits - withdrawals)
-  const netMovement = totalDeposits - totalWithdrawals;
+  // Calculate net movement using the SAME unified formula as "Solde Net"
+  // Note: For this table, we consider all transfers and direct operations as positive movements
+  // since we're showing operations for a specific client context
+  const netMovement = totalDeposits - totalWithdrawals + totalTransfers + totalDirectTransfers;
 
   const getRowBackgroundColor = (type: string) => {
     switch (type) {
@@ -131,7 +133,7 @@ export const PublicOperationsTable: React.FC<PublicOperationsTableProps> = ({ op
         </Table>
       </div>
 
-      {/* Totals section */}
+      {/* Totals section - Updated to use unified calculation */}
       {operations.length > 0 && (
         <div className="mt-4 space-y-1 border-t pt-3 px-2">
           <div className="grid grid-cols-2 text-xs">
