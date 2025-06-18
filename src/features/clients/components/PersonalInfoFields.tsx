@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { Client } from "../types";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { Operation } from "@/features/operations/types";
 
 interface PersonalInfoFieldsProps {
   client: Client;
@@ -11,6 +12,7 @@ interface PersonalInfoFieldsProps {
   showBalanceOnMobile?: boolean;
   showBalance?: boolean;
   realTimeBalance?: number | null;
+  clientOperations?: Operation[];
 }
 
 export const PersonalInfoFields = ({
@@ -18,7 +20,8 @@ export const PersonalInfoFields = ({
   formatAmount,
   showBalanceOnMobile = false,
   showBalance = true,
-  realTimeBalance = null
+  realTimeBalance = null,
+  clientOperations = []
 }: PersonalInfoFieldsProps) => {
   // Use the currency context for formatting
   const { formatCurrency } = useCurrency();
@@ -26,13 +29,54 @@ export const PersonalInfoFields = ({
   // Use provided formatAmount function or fall back to currency context formatter
   const formatDisplayAmount = formatAmount || formatCurrency;
   
-  // Use real-time balance if available, otherwise fall back to client.solde
-  const effectiveBalance = typeof realTimeBalance === 'number' ? realTimeBalance : client.solde;
+  // Calculate effective balance from operations if available
+  const calculateNetBalance = () => {
+    if (!clientOperations || clientOperations.length === 0) {
+      // If no operations available, use real-time balance or client.solde
+      return typeof realTimeBalance === 'number' ? realTimeBalance : client.solde;
+    }
+
+    const clientFullName = `${client.prenom} ${client.nom}`.trim();
+    
+    // Calculate totals by operation type
+    const totalDeposits = clientOperations
+      .filter(op => op.type === "deposit")
+      .reduce((total, op) => total + op.amount, 0);
+      
+    const totalWithdrawals = clientOperations
+      .filter(op => op.type === "withdrawal")
+      .reduce((total, op) => total + op.amount, 0);
+      
+    // Separate transfers received and sent
+    const transfersReceived = clientOperations
+      .filter(op => op.type === "transfer" && op.toClient === clientFullName)
+      .reduce((total, op) => total + op.amount, 0);
+      
+    const transfersSent = clientOperations
+      .filter(op => op.type === "transfer" && op.fromClient === clientFullName)
+      .reduce((total, op) => total + op.amount, 0);
+
+    // Calculate direct operations received and sent
+    const directOperationsReceived = clientOperations
+      .filter(op => op.type === "direct_transfer" && op.toClient === clientFullName)
+      .reduce((total, op) => total + op.amount, 0);
+      
+    const directOperationsSent = clientOperations
+      .filter(op => op.type === "direct_transfer" && op.fromClient === clientFullName)
+      .reduce((total, op) => total + op.amount, 0);
+      
+    // Calculate net movement with correct formula: 
+    // Solde = dépôts + transferts reçus + opérations directes reçues - retraits - transferts émis - opérations directes émises
+    return totalDeposits + transfersReceived + directOperationsReceived - totalWithdrawals - transfersSent - directOperationsSent;
+  };
+
+  const effectiveBalance = calculateNetBalance();
   
   console.log("PersonalInfoFields displaying balance:", {
     realTimeBalance,
     clientSolde: client.solde,
-    effectiveBalance
+    effectiveBalance,
+    hasOperations: clientOperations.length > 0
   });
   
   return (
