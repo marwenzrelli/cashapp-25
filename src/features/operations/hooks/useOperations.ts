@@ -9,6 +9,8 @@ export const useOperations = () => {
   const [operations, setOperations] = useState<Operation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [operationToDelete, setOperationToDelete] = useState<Operation | undefined>(undefined);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const fetchOperations = useCallback(async (showToast = false) => {
     try {
@@ -77,6 +79,77 @@ export const useOperations = () => {
     await fetchOperations(showToast);
   }, [fetchOperations]);
 
+  const deleteOperation = useCallback((operation: Operation) => {
+    setOperationToDelete(operation);
+    setShowDeleteDialog(true);
+  }, []);
+
+  const confirmDeleteOperation = useCallback(async () => {
+    if (!operationToDelete) return;
+    
+    try {
+      setIsLoading(true);
+      
+      // Extract operation ID and type
+      const operationIdParts = operationToDelete.id.toString().split('-');
+      const operationIdString = operationIdParts.length > 1 ? operationIdParts[1] : operationIdParts[0];
+      const operationId = parseInt(operationIdString, 10);
+      
+      if (isNaN(operationId)) {
+        throw new Error(`ID d'opération invalide: ${operationToDelete.id}`);
+      }
+      
+      let deleteResult;
+      
+      // Delete from appropriate table based on operation type
+      switch (operationToDelete.type) {
+        case "deposit":
+          deleteResult = await supabase
+            .from('deposits')
+            .delete()
+            .eq('id', operationId);
+          break;
+        case "withdrawal":
+          deleteResult = await supabase
+            .from('withdrawals')
+            .delete()
+            .eq('id', operationId);
+          break;
+        case "transfer":
+          deleteResult = await supabase
+            .from('transfers')
+            .delete()
+            .eq('id', operationId);
+          break;
+        case "direct_transfer":
+          deleteResult = await supabase
+            .from('direct_operations')
+            .delete()
+            .eq('id', operationId);
+          break;
+        default:
+          throw new Error(`Type d'opération inconnu: ${operationToDelete.type}`);
+      }
+      
+      if (deleteResult.error) {
+        throw new Error(deleteResult.error.message);
+      }
+      
+      toast.success("Opération supprimée avec succès");
+      setShowDeleteDialog(false);
+      setOperationToDelete(undefined);
+      
+      // Refresh operations
+      await fetchOperations();
+      
+    } catch (error: any) {
+      console.error("Error deleting operation:", error);
+      toast.error(`Erreur lors de la suppression: ${error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [operationToDelete, fetchOperations]);
+
   // Initial fetch
   useEffect(() => {
     fetchOperations();
@@ -87,6 +160,11 @@ export const useOperations = () => {
     isLoading,
     error,
     refreshOperations,
-    fetchOperations
+    fetchOperations,
+    deleteOperation,
+    showDeleteDialog,
+    setShowDeleteDialog,
+    confirmDeleteOperation,
+    operationToDelete
   };
 };

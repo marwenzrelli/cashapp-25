@@ -1,3 +1,4 @@
+
 import { format, parseISO } from "date-fns";
 
 export interface Operation {
@@ -12,6 +13,8 @@ export interface Operation {
   toClient?: string;
   formattedDate?: string;
   client_id?: number;
+  from_client_id?: number;
+  to_client_id?: number;
   status?: string;
 }
 
