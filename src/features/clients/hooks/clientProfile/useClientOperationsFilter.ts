@@ -42,7 +42,8 @@ export const useClientOperationsFilter = (
       const byType = {
         deposits: operations.filter(op => op.type === 'deposit').length,
         withdrawals: operations.filter(op => op.type === 'withdrawal').length,
-        transfers: operations.filter(op => op.type === 'transfer').length
+        transfers: operations.filter(op => op.type === 'transfer').length,
+        directOperations: operations.filter(op => op.type === 'direct_transfer').length
       };
       
       console.log('Operations by type:', byType);
@@ -66,6 +67,7 @@ export const useClientOperationsFilter = (
       return operations.filter(op => {
         // Direct client ID match (most reliable)
         if (op.client_id === 4) return true;
+        if (op.from_client_id === 4 || op.to_client_id === 4) return true;
         
         // For operations without client_id, do strict name matching
         const fromClient = (op.fromClient || '').toLowerCase();
@@ -88,13 +90,20 @@ export const useClientOperationsFilter = (
         return true;
       }
       
+      // For direct operations, check both from_client_id and to_client_id
+      if (op.type === 'direct_transfer') {
+        if (op.from_client_id === clientId || op.to_client_id === clientId) {
+          return true;
+        }
+      }
+      
       // Strict name-based matching as fallback
       const fromClient = (op.fromClient || '').toLowerCase();
       const exactFromMatch = fromClient === clientFullName;
       
-      // For transfers, also check toClient field
+      // For transfers and direct operations, also check toClient field
       const toClient = (op.toClient || '').toLowerCase(); 
-      const exactToMatch = op.type === 'transfer' && toClient === clientFullName;
+      const exactToMatch = (op.type === 'transfer' || op.type === 'direct_transfer') && toClient === clientFullName;
       
       return exactFromMatch || exactToMatch;
     });
@@ -107,7 +116,7 @@ export const useClientOperationsFilter = (
     console.log(`Filtering ${clientOperations.length} operations by type=${selectedType}, searchTerm=${searchTerm}, showAllDates=${showAllDates}`);
     
     return clientOperations.filter(op => {
-      // Filter by type
+      // Filter by type - include direct_transfer in "all"
       if (selectedType !== 'all' && op.type !== selectedType) {
         return false;
       }

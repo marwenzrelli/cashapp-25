@@ -1,3 +1,4 @@
+
 import { format, parseISO } from "date-fns";
 import { Operation } from "@/features/operations/types";
 import { DirectOperation } from "@/features/direct-operations/types";
@@ -9,9 +10,10 @@ import { supabase } from "@/integrations/supabase/client";
 export const transformToOperations = (
   deposits: any[] = [], 
   withdrawals: any[] = [], 
-  transfers: any[] = []
+  transfers: any[] = [],
+  directOperations: any[] = []
 ): Operation[] => {
-  console.log(`Starting transformation with: ${deposits?.length || 0} deposits, ${withdrawals?.length || 0} withdrawals, ${transfers?.length || 0} transfers`);
+  console.log(`Starting transformation with: ${deposits?.length || 0} deposits, ${withdrawals?.length || 0} withdrawals, ${transfers?.length || 0} transfers, ${directOperations?.length || 0} direct operations`);
   
   // Log a sample deposit to verify structure
   if (deposits && deposits.length > 0) {
@@ -93,9 +95,35 @@ export const transformToOperations = (
     }
   }).filter(Boolean) : [];
 
-  console.log(`Transformed counts: ${transformedDeposits.length} deposits, ${transformedWithdrawals.length} withdrawals, ${transformedTransfers.length} transfers`);
+  // Transform direct operations
+  const transformedDirectOperations: Operation[] = directOperations && Array.isArray(directOperations) ? directOperations.map(directOp => {
+    try {
+      if (!directOp) return null;
+      
+      return {
+        id: `direct-${directOp.id || 'unknown'}`,
+        type: 'direct_transfer' as any,
+        amount: typeof directOp.amount === 'number' ? directOp.amount :
+                typeof directOp.amount === 'string' ? parseFloat(directOp.amount) : 0,
+        date: directOp.operation_date || directOp.created_at || new Date().toISOString(),
+        operation_date: directOp.operation_date || directOp.created_at || new Date().toISOString(),
+        description: directOp.notes || `Opération directe: ${directOp.from_client_name} → ${directOp.to_client_name}`,
+        fromClient: directOp.from_client_name || 'Client inconnu',
+        toClient: directOp.to_client_name || 'Client inconnu',
+        from_client_id: directOp.from_client_id,
+        to_client_id: directOp.to_client_id,
+        client_id: directOp.from_client_id, // For compatibility
+        status: directOp.status || 'completed'
+      };
+    } catch (error) {
+      console.error("Error transforming direct operation:", error, directOp);
+      return null;
+    }
+  }).filter(Boolean) : [];
+
+  console.log(`Transformed counts: ${transformedDeposits.length} deposits, ${transformedWithdrawals.length} withdrawals, ${transformedTransfers.length} transfers, ${transformedDirectOperations.length} direct operations`);
   
-  return [...transformedDeposits, ...transformedWithdrawals, ...transformedTransfers];
+  return [...transformedDeposits, ...transformedWithdrawals, ...transformedTransfers, ...transformedDirectOperations];
 };
 
 /**
