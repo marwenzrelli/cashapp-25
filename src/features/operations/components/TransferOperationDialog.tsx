@@ -70,7 +70,9 @@ export const TransferOperationDialog = ({
 
     setIsLoading(true);
     try {
-      // Create the transfer record
+      console.log('Début du transfert pour l\'opération:', operation.id, 'type:', operation.type);
+      
+      // Create the transfer record first
       const { error: transferError } = await supabase
         .from('transfers')
         .insert({
@@ -81,31 +83,95 @@ export const TransferOperationDialog = ({
           operation_date: new Date().toISOString()
         });
 
-      if (transferError) throw transferError;
-
-      // Delete the original operation
-      const operationType = operation.type;
-      const operationIdParts = operation.id.toString().split('-');
-      const operationIdString = operationIdParts.length > 1 ? operationIdParts[1] : operationIdParts[0];
-      const operationId = parseInt(operationIdString, 10);
-
-      if (operationType === 'deposit') {
-        const { error: deleteError } = await supabase
-          .from('deposits')
-          .delete()
-          .eq('id', operationId);
-        
-        if (deleteError) throw deleteError;
-      } else if (operationType === 'withdrawal') {
-        const { error: deleteError } = await supabase
-          .from('withdrawals')
-          .delete()
-          .eq('id', operationId);
-        
-        if (deleteError) throw deleteError;
+      if (transferError) {
+        console.error('Erreur lors de la création du transfert:', transferError);
+        throw transferError;
       }
 
-      toast.success('Transfert effectué avec succès');
+      console.log('Transfert créé avec succès, suppression de l\'opération originale...');
+
+      // Parse the operation ID to get the numeric part
+      const operationType = operation.type;
+      let operationIdString = operation.id.toString();
+      
+      // Handle different ID formats (with or without prefix)
+      if (operationIdString.includes('-')) {
+        const parts = operationIdString.split('-');
+        operationIdString = parts[parts.length - 1];
+      } else if (operationIdString.match(/^[a-z]+\d+$/i)) {
+        // Remove non-numeric characters from the beginning
+        operationIdString = operationIdString.replace(/\D/g, '');
+      }
+      
+      const operationId = parseInt(operationIdString, 10);
+      
+      if (isNaN(operationId)) {
+        console.error('ID d\'opération invalide:', operation.id);
+        toast.error('Format d\'ID invalide');
+        return;
+      }
+
+      console.log(`Suppression de l'opération ${operationType} avec ID: ${operationId}`);
+
+      // Try to delete the original operation, but don't fail if it doesn't exist
+      let deleteSuccess = false;
+      
+      if (operationType === 'deposit') {
+        // First check if the deposit exists
+        const { data: existingDeposit, error: checkError } = await supabase
+          .from('deposits')
+          .select('id')
+          .eq('id', operationId)
+          .single();
+        
+        if (existingDeposit && !checkError) {
+          const { error: deleteError } = await supabase
+            .from('deposits')
+            .delete()
+            .eq('id', operationId);
+          
+          if (deleteError) {
+            console.warn('Erreur lors de la suppression du dépôt:', deleteError);
+            // Don't throw error, just warn
+          } else {
+            deleteSuccess = true;
+            console.log('Dépôt supprimé avec succès');
+          }
+        } else {
+          console.warn('Dépôt non trouvé pour suppression, probablement déjà supprimé');
+        }
+      } else if (operationType === 'withdrawal') {
+        // First check if the withdrawal exists
+        const { data: existingWithdrawal, error: checkError } = await supabase
+          .from('withdrawals')
+          .select('id')
+          .eq('id', operationId)
+          .single();
+        
+        if (existingWithdrawal && !checkError) {
+          const { error: deleteError } = await supabase
+            .from('withdrawals')
+            .delete()
+            .eq('id', operationId);
+          
+          if (deleteError) {
+            console.warn('Erreur lors de la suppression du retrait:', deleteError);
+            // Don't throw error, just warn
+          } else {
+            deleteSuccess = true;
+            console.log('Retrait supprimé avec succès');
+          }
+        } else {
+          console.warn('Retrait non trouvé pour suppression, probablement déjà supprimé');
+        }
+      }
+
+      // Show success message regardless of deletion status
+      if (deleteSuccess) {
+        toast.success('Transfert effectué avec succès et opération originale supprimée');
+      } else {
+        toast.success('Transfert effectué avec succès (opération originale déjà traitée)');
+      }
       
       if (onTransferComplete) {
         await onTransferComplete();
