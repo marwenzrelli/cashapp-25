@@ -18,9 +18,20 @@ export const PublicClientPersonalInfo = ({
 }: PublicClientPersonalInfoProps) => {
   const { formatCurrency } = useCurrency();
 
-  // Use the client's current balance directly - same as in profile page
+  // Use the exact same balance as the profile page - client.solde
   const netBalance = client.solde;
-  const formattedBalance = formatCurrency(netBalance);
+  
+  // Use the same formatting as the profile page (3 decimal places for TND)
+  const formatAmount = (amount: number): string => {
+    return new Intl.NumberFormat('fr-TN', {
+      style: 'currency',
+      currency: 'TND',
+      minimumFractionDigits: 3,
+      maximumFractionDigits: 3
+    }).format(amount);
+  };
+
+  const formattedBalance = formatAmount(netBalance);
   
   return <Card className="backdrop-blur-xl bg-white/50 dark:bg-gray-950/50 w-full rounded-lg border">
       <CardHeader className="pb-4 space-y-0">
