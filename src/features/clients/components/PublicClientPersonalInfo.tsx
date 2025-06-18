@@ -9,7 +9,7 @@ import { format } from "date-fns";
 
 interface PublicClientPersonalInfoProps {
   client: Client;
-  operations?: any[]; // Add operations prop to calculate net balance
+  operations?: any[];
 }
 
 export const PublicClientPersonalInfo = ({
@@ -21,13 +21,13 @@ export const PublicClientPersonalInfo = ({
   // Calculate the effective balance exactly like in PersonalInfoFields
   const calculateEffectiveBalance = () => {
     console.log("PublicClientPersonalInfo - Calculating balance for:", client.prenom, client.nom);
+    console.log("PublicClientPersonalInfo - Operations received:", operations);
     console.log("PublicClientPersonalInfo - Operations count:", operations.length);
     console.log("PublicClientPersonalInfo - Client solde from DB:", client.solde);
-    console.log("PublicClientPersonalInfo - All operations:", operations);
     
     if (!operations || operations.length === 0) {
-      console.log("PublicClientPersonalInfo - No operations, returning 0");
-      return 0; // Changement: retourner 0 au lieu du solde DB quand pas d'opérations
+      console.log("PublicClientPersonalInfo - No operations, using DB balance:", client.solde);
+      return Number(client.solde) || 0;
     }
 
     const clientFullName = `${client.prenom} ${client.nom}`.trim();
@@ -47,6 +47,12 @@ export const PublicClientPersonalInfo = ({
     
     console.log("PublicClientPersonalInfo - Filtered client operations:", clientOperations.length);
     console.log("PublicClientPersonalInfo - Client operations details:", clientOperations);
+    
+    // Si aucune opération pour ce client spécifiquement, utiliser le solde DB
+    if (clientOperations.length === 0) {
+      console.log("PublicClientPersonalInfo - No operations for this client, using DB balance:", client.solde);
+      return Number(client.solde) || 0;
+    }
     
     // Calculate totals by operation type exactly like PersonalInfoFields
     const totalDeposits = clientOperations
