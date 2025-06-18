@@ -53,8 +53,13 @@ export const ClientListItem = ({
             <div className="flex flex-col space-y-1 min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <h3 className="font-medium truncate">{clientName}</h3>
-                <ClientIdBadge id={clientId} />
-                <ClientStatusBadge status={client.status} />
+                <ClientIdBadge clientId={clientId} />
+                <ClientStatusBadge status={client.status}>
+                  {client.status === 'active' ? 'Actif' : 
+                   client.status === 'inactive' ? 'Inactif' : 
+                   client.status === 'pending' ? 'En attente' : 
+                   client.status}
+                </ClientStatusBadge>
               </div>
               <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-sm text-muted-foreground">
                 <span className="truncate">{client.telephone}</span>
@@ -100,7 +105,7 @@ export const ClientListItem = ({
       {/* Expanded Content */}
       {isExpanded && (
         <div className="mt-4 pl-12">
-          <ClientExpandedView client={client} />
+          <ClientExpandedView client={client} onView={onView} />
         </div>
       )}
     </div>
