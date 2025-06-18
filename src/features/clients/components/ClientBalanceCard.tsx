@@ -1,10 +1,8 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileSpreadsheet, FileText } from "lucide-react";
 import { Client } from "../types";
 import { Button } from "@/components/ui/button";
 import { ClientQRCode } from "./ClientQRCode";
-
 interface ClientBalanceCardProps {
   client: Client;
   clientId: number;
@@ -13,7 +11,6 @@ interface ClientBalanceCardProps {
   formatAmount: (amount: number) => string;
   showQRCode?: boolean;
 }
-
 export function ClientBalanceCard({
   client,
   clientId,
@@ -22,10 +19,9 @@ export function ClientBalanceCard({
   formatAmount,
   showQRCode = true
 }: ClientBalanceCardProps) {
-  return (
-    <Card className="shadow-sm h-full">
+  return <Card className="shadow-sm h-full">
       <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-        <CardTitle className="text-lg font-medium">Solde du client</CardTitle>
+        
         <div className="flex space-x-2">
           <Button variant="outline" size="sm" onClick={exportToExcel} className="flex items-center gap-1">
             <FileSpreadsheet className="h-4 w-4" />
@@ -45,13 +41,10 @@ export function ClientBalanceCard({
             </p>
           </div>
           
-          {showQRCode && clientId && (
-            <div className="mt-4 md:mt-0">
+          {showQRCode && clientId && <div className="mt-4 md:mt-0">
               <ClientQRCode clientId={clientId} clientName={`${client.prenom} ${client.nom}`} size={100} />
-            </div>
-          )}
+            </div>}
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 }
