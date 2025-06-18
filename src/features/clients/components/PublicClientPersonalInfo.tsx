@@ -49,14 +49,14 @@ export const PublicClientPersonalInfo = ({
       
     // Separate transfers received and sent
     const transfersReceived = operations
-      .filter(op => op.type === "transfer" && op.to_client === clientFullName)
+      .filter(op => op.type === "transfer" && op.toClient === clientFullName)
       .reduce((total, op) => {
         console.log("PublicClientPersonalInfo - Adding received transfer:", op.amount);
         return total + Number(op.amount);
       }, 0);
       
     const transfersSent = operations
-      .filter(op => op.type === "transfer" && op.from_client === clientFullName)
+      .filter(op => op.type === "transfer" && op.fromClient === clientFullName)
       .reduce((total, op) => {
         console.log("PublicClientPersonalInfo - Adding sent transfer:", op.amount);
         return total + Number(op.amount);
@@ -64,14 +64,14 @@ export const PublicClientPersonalInfo = ({
 
     // Calculate direct operations received and sent
     const directOperationsReceived = operations
-      .filter(op => op.type === "direct_transfer" && op.to_client === clientFullName)
+      .filter(op => op.type === "direct_transfer" && op.toClient === clientFullName)
       .reduce((total, op) => {
         console.log("PublicClientPersonalInfo - Adding received direct transfer:", op.amount);
         return total + Number(op.amount);
       }, 0);
       
     const directOperationsSent = operations
-      .filter(op => op.type === "direct_transfer" && op.from_client === clientFullName)
+      .filter(op => op.type === "direct_transfer" && op.fromClient === clientFullName)
       .reduce((total, op) => {
         console.log("PublicClientPersonalInfo - Adding sent direct transfer:", op.amount);
         return total + Number(op.amount);
