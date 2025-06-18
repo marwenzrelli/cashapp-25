@@ -1,3 +1,4 @@
+
 import { Operation } from "@/features/operations/types";
 import { useMemo } from "react";
 import { Card } from "@/components/ui/card";
@@ -111,11 +112,8 @@ export const PublicAccountFlowTab = ({
     return effectiveBalance;
   };
 
-  // Sort operations by date and calculate running balance - CORRECTED LOGIC
+  // Sort operations by date and calculate running balance - FIXED LOGIC
   const processedOperations = useMemo(() => {
-    // Calculate the effective balance (final balance)
-    const finalBalance = calculateEffectiveBalance();
-    
     if (!client) return [];
     
     const clientFullName = `${client.prenom} ${client.nom}`.trim();
@@ -134,55 +132,56 @@ export const PublicAccountFlowTab = ({
     
     console.log("PublicAccountFlowTab - Processing operations for:", clientFullName, "Count:", clientOperations.length);
     
-    // Sort operations from newest to oldest first (for display order)
-    const sortedOps = [...clientOperations].sort((a, b) => {
+    // Sort operations from oldest to newest for balance calculation
+    const sortedOpsForCalculation = [...clientOperations].sort((a, b) => {
       const dateA = new Date(a.operation_date || a.date);
       const dateB = new Date(b.operation_date || b.date);
-      return dateB.getTime() - dateA.getTime(); // Newest first
+      return dateA.getTime() - dateB.getTime(); // Oldest first for calculation
     });
 
-    // Start with the final balance and work backwards
-    let currentBalance = finalBalance;
-    const opsWithBalance = sortedOps.map((op, index) => {
-      // The balance after this operation is the current balance
-      const balanceAfter = currentBalance;
+    // Calculate running balance for each operation
+    let runningBalance = 0;
+    const opsWithBalance = sortedOpsForCalculation.map((op) => {
+      const balanceBefore = runningBalance;
 
-      // Calculate what the balance was before this operation
-      let balanceBefore = currentBalance;
+      // Calculate the impact of this operation on the balance
+      let operationImpact = 0;
       
       if (op.type === "deposit") {
-        balanceBefore = currentBalance - op.amount;
+        operationImpact = Number(op.amount);
       } else if (op.type === "withdrawal") {
-        balanceBefore = currentBalance + op.amount;
+        operationImpact = -Number(op.amount);
       } else if (op.type === "transfer") {
         if (op.toClient === clientFullName) {
-          // Transfer received - balance was lower before
-          balanceBefore = currentBalance - op.amount;
+          // Transfer received - positive impact
+          operationImpact = Number(op.amount);
         } else if (op.fromClient === clientFullName) {
-          // Transfer sent - balance was higher before
-          balanceBefore = currentBalance + op.amount;
+          // Transfer sent - negative impact
+          operationImpact = -Number(op.amount);
         }
       } else if (op.type === "direct_transfer") {
         if (op.toClient === clientFullName) {
-          // Direct operation received - balance was lower before
-          balanceBefore = currentBalance - op.amount;
+          // Direct operation received - positive impact
+          operationImpact = Number(op.amount);
         } else if (op.fromClient === clientFullName) {
-          // Direct operation sent - balance was higher before
-          balanceBefore = currentBalance + op.amount;
+          // Direct operation sent - negative impact
+          operationImpact = -Number(op.amount);
         }
       }
       
-      // Update current balance for next iteration (going backwards in time)
-      currentBalance = balanceBefore;
+      // Update running balance
+      runningBalance += operationImpact;
       
       return {
         ...op,
         balanceBefore,
-        balanceAfter
+        balanceAfter: runningBalance,
+        operationImpact
       };
     });
 
-    return opsWithBalance;
+    // Return sorted from newest to oldest for display
+    return opsWithBalance.reverse();
   }, [operations, client]);
 
   const formatDateTime = (dateString: string) => {
@@ -221,8 +220,8 @@ export const PublicAccountFlowTab = ({
     if (type === "withdrawal") return "- ";
     if (type === "transfer" && operation.fromClient === clientFullName) return "- ";
     if (type === "direct_transfer" && operation.fromClient === clientFullName) return "- ";
-    // For all incoming operations (deposits, received transfers, received direct operations), show no prefix (positive)
-    return "";
+    // For all incoming operations (deposits, received transfers, received direct operations), show positive prefix
+    return "+ ";
   };
 
   const clientFullName = client ? `${client.prenom} ${client.nom}`.trim() : '';
