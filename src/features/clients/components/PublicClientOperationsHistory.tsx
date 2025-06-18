@@ -1,174 +1,32 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Operation } from "@/features/operations/types";
-import { useCurrency } from "@/contexts/CurrencyContext";
-import { DateRange } from "react-day-picker";
-import { subDays, startOfDay, endOfDay, isWithinInterval } from "date-fns";
-import { DatePickerWithRange } from "@/components/ui/date-range-picker";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PublicAccountFlowTab } from "./operations-history/PublicAccountFlowTab";
-import { FileText, List, Search } from "lucide-react";
-import { ClientOperationsHistoryTabs } from "./operations-history/ClientOperationsHistoryTabs";
-import { Switch } from "@/components/ui/switch";
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { PublicOperationsTabs } from "./operations-history/PublicOperationsTabs";
+import { Client } from "../types";
 
 interface PublicClientOperationsHistoryProps {
-  operations: Operation[];
-  clientId?: number;
+  operations: any[];
+  client: Client; // Add client prop
 }
 
-export const PublicClientOperationsHistory = ({ operations, clientId }: PublicClientOperationsHistoryProps) => {
-  const { currency } = useCurrency();
-  const isPepsiMen = clientId === 4;
-  const [showAllOperations, setShowAllOperations] = useState<boolean>(true);
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: subDays(new Date(), 30),
-    to: new Date()
-  });
-  const [pendingDateRange, setPendingDateRange] = useState<DateRange | undefined>(dateRange);
-  const [filteredOperations, setFilteredOperations] = useState<Operation[]>(operations);
+export const PublicClientOperationsHistory = ({ 
+  operations, 
+  client 
+}: PublicClientOperationsHistoryProps) => {
+  console.log("PublicClientOperationsHistory - Total operations:", operations?.length || 0);
+  console.log("PublicClientOperationsHistory - Client ID:", client?.id);
+  console.log("PublicClientOperationsHistory - Is pepsi men:", client?.nom?.toLowerCase().includes('pepsi'));
   
-  useEffect(() => {
-    if (isPepsiMen && !showAllOperations) {
-      setShowAllOperations(true);
-    }
-  }, [isPepsiMen, showAllOperations]);
-  
-  useEffect(() => {
-    console.log(`PublicClientOperationsHistory - Total operations: ${operations.length}`);
-    console.log(`PublicClientOperationsHistory - Client ID: ${clientId}`);
-    console.log(`PublicClientOperationsHistory - Is pepsi men: ${isPepsiMen}`);
-    console.log(`PublicClientOperationsHistory - Show all operations: ${showAllOperations}`);
-    
-    if (isPepsiMen) {
-      const allWithdrawals = operations.filter(op => op.type === 'withdrawal');
-      console.log(`PublicClientOperationsHistory - Total withdrawals for pepsi men: ${allWithdrawals.length}`);
-      console.log(`Withdrawal IDs: ${allWithdrawals.map(w => w.id).join(', ')}`);
-    }
+  // Pour "pepsi men", on ne montre que ses propres opérations
+  const shouldShowAllOperations = !client?.nom?.toLowerCase().includes('pepsi') || client?.id !== 2;
+  console.log("PublicClientOperationsHistory - Show all operations:", shouldShowAllOperations);
 
-    // Filter operations based on date range when not showing all
-    if (showAllOperations) {
-      setFilteredOperations(operations);
-    } else {
-      filterOperationsByDate();
-    }
-  }, [operations, isPepsiMen, clientId, showAllOperations, dateRange]);
-  
-  const filterOperationsByDate = () => {
-    if (!dateRange?.from || !dateRange?.to) {
-      setFilteredOperations(operations);
-      return;
-    }
-    
-    // Ensure we're working with fresh Date objects to avoid reference issues
-    const from = startOfDay(new Date(dateRange.from));
-    const to = endOfDay(new Date(dateRange.to));
-    
-    console.log(`Filtering operations from ${from.toISOString()} to ${to.toISOString()}`);
-    
-    const filtered = operations.filter(op => {
-      try {
-        const opDate = new Date(op.operation_date || op.date);
-        
-        // Check if date is valid
-        if (isNaN(opDate.getTime())) {
-          console.log(`Invalid date for operation ${op.id}: ${op.operation_date || op.date}`);
-          return false;
-        }
-        
-        const isInRange = isWithinInterval(opDate, { start: from, end: to });
-        
-        // Debug log for filtering
-        if (!isInRange) {
-          console.log(`Excluding operation ${op.id} with date ${opDate.toISOString()} - outside range`);
-        }
-        
-        return isInRange;
-      } catch (error) {
-        console.error(`Error filtering operation ${op.id}:`, error);
-        return false;
-      }
-    });
-    
-    console.log(`Filtered from ${operations.length} to ${filtered.length} operations`);
-    setFilteredOperations(filtered);
-  };
-
-  const handleDateRangeChange = (range: DateRange | undefined) => {
-    setPendingDateRange(range);
-  };
-
-  const applyDateFilter = () => {
-    setDateRange(pendingDateRange);
-  };
-  
   return (
-    <Card className="shadow-sm max-w-full w-full overflow-hidden">
-      <CardHeader className="px-4 sm:px-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-          <CardTitle className="text-xl">Historique des opérations</CardTitle>
-          <div className="flex items-center space-x-2">
-            <Switch 
-              id="show-all-operations"
-              checked={showAllOperations}
-              onCheckedChange={setShowAllOperations}
-              disabled={isPepsiMen}
-            />
-            <span className="text-sm text-muted-foreground">Afficher toutes les opérations</span>
-          </div>
-        </div>
+    <Card className="backdrop-blur-xl bg-white/50 dark:bg-gray-950/50">
+      <CardHeader>
+        <CardTitle className="text-lg">Historique des opérations</CardTitle>
       </CardHeader>
-      <CardContent className="p-0">
-        {!showAllOperations && (
-          <div className="px-4 sm:px-6 mb-4 w-full">
-            <div className="flex flex-col sm:flex-row gap-2">
-              <div className="flex-grow">
-                <DatePickerWithRange
-                  date={pendingDateRange}
-                  onDateChange={handleDateRangeChange}
-                  className="w-full"
-                />
-              </div>
-              <Button 
-                onClick={applyDateFilter} 
-                className="w-full sm:w-auto"
-                disabled={!pendingDateRange?.from || !pendingDateRange?.to}
-              >
-                <Search className="h-4 w-4 mr-2" />
-                Appliquer
-              </Button>
-            </div>
-          </div>
-        )}
-        
-        <Tabs defaultValue="list" className="w-full">
-          <TabsList className="w-full grid grid-cols-2">
-            <TabsTrigger value="list" className="flex items-center gap-2">
-              <List className="h-4 w-4" />
-              Liste
-            </TabsTrigger>
-            <TabsTrigger value="flow" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Flux
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="list" className="p-0">
-            <Card className="shadow-sm border border-border/50 rounded-md">
-              <CardContent className="p-0 sm:p-0">
-                <ClientOperationsHistoryTabs 
-                  filteredOperations={filteredOperations}
-                  currency={currency}
-                  isPublicView={true}
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="flow" className="p-0">
-            <PublicAccountFlowTab operations={filteredOperations} />
-          </TabsContent>
-        </Tabs>
+      <CardContent>
+        <PublicOperationsTabs operations={operations} client={client} />
       </CardContent>
     </Card>
   );
