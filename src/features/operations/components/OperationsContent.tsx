@@ -11,7 +11,7 @@ interface OperationsContentProps {
   onDelete: (operation: Operation) => void;
   showDeleteDialog: boolean;
   onDeleteDialogClose: () => void;
-  onConfirmDelete: () => Promise<void>;
+  onConfirmDelete: () => Promise<boolean>;
   operationToDelete: Operation | undefined;
 }
 
