@@ -111,7 +111,7 @@ export const PublicAccountFlowTab = ({
     return effectiveBalance;
   };
 
-  // Sort operations by date and calculate running balance - CORRECTED LOGIC FOR DIRECT OPERATIONS
+  // Sort operations by date and calculate running balance
   const processedOperations = useMemo(() => {
     if (!client) return [];
     
@@ -148,24 +148,28 @@ export const PublicAccountFlowTab = ({
     // Calculate total impact of all operations to find initial balance
     let totalImpact = 0;
     sortedOps.forEach(op => {
+      let operationImpact = 0;
+      
       if (op.type === "deposit") {
-        totalImpact += Number(op.amount);
+        operationImpact = Number(op.amount);
       } else if (op.type === "withdrawal") {
-        totalImpact -= Number(op.amount);
+        operationImpact = -Number(op.amount);
       } else if (op.type === "transfer") {
         if (op.toClient === clientFullName) {
-          totalImpact += Number(op.amount);
+          operationImpact = Number(op.amount); // Reçu
         } else if (op.fromClient === clientFullName) {
-          totalImpact -= Number(op.amount);
+          operationImpact = -Number(op.amount); // Envoyé
         }
       } else if (op.type === "direct_transfer") {
-        // CORRECTION PRINCIPALE: Les opérations directes doivent avoir le même effet que les virements
         if (op.toClient === clientFullName) {
-          totalImpact += Number(op.amount);
+          operationImpact = Number(op.amount); // Opération directe reçue
         } else if (op.fromClient === clientFullName) {
-          totalImpact -= Number(op.amount);
+          operationImpact = -Number(op.amount); // Opération directe envoyée
         }
       }
+      
+      totalImpact += operationImpact;
+      console.log(`Total impact calculation - Operation ${op.id}: type=${op.type}, impact=${operationImpact}, totalImpact=${totalImpact}`);
     });
 
     // Initial balance = final balance - total impact
@@ -191,16 +195,15 @@ export const PublicAccountFlowTab = ({
         operationImpact = -Number(op.amount);
       } else if (op.type === "transfer") {
         if (op.toClient === clientFullName) {
-          operationImpact = Number(op.amount);
+          operationImpact = Number(op.amount); // Virement reçu
         } else if (op.fromClient === clientFullName) {
-          operationImpact = -Number(op.amount);
+          operationImpact = -Number(op.amount); // Virement envoyé
         }
       } else if (op.type === "direct_transfer") {
-        // CORRECTION CRITIQUE: Les opérations directes doivent affecter le solde exactement comme les virements
         if (op.toClient === clientFullName) {
-          operationImpact = Number(op.amount); // Opération reçue = +montant
+          operationImpact = Number(op.amount); // Opération directe reçue = +montant
         } else if (op.fromClient === clientFullName) {
-          operationImpact = -Number(op.amount); // Opération envoyée = -montant
+          operationImpact = -Number(op.amount); // Opération directe envoyée = -montant
         }
       }
       
