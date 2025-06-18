@@ -41,9 +41,14 @@ export const ClientInfoCards = ({
 
         {/* Solde et actions */}
         <div className="space-y-6">
-          <ClientBalanceCard client={client} formatAmount={formatAmount} />
-          <ClientActionButtons 
+          <ClientBalanceCard 
+            client={client} 
             clientId={clientId}
+            exportToExcel={exportToExcel}
+            exportToPDF={exportToPDF}
+            formatAmount={formatAmount} 
+          />
+          <ClientActionButtons 
             exportToExcel={exportToExcel}
             exportToPDF={exportToPDF}
           />
