@@ -1,4 +1,3 @@
-
 import { Operation } from "@/features/operations/types";
 import { useMemo } from "react";
 import { Card } from "@/components/ui/card";
@@ -112,9 +111,9 @@ export const PublicAccountFlowTab = ({
     return effectiveBalance;
   };
 
-  // Sort operations by date and calculate running balance
+  // Sort operations by date and calculate running balance - CORRECTED LOGIC
   const processedOperations = useMemo(() => {
-    // Calculate the effective balance
+    // Calculate the effective balance (final balance)
     const finalBalance = calculateEffectiveBalance();
     
     if (!client) return [];
@@ -135,50 +134,55 @@ export const PublicAccountFlowTab = ({
     
     console.log("PublicAccountFlowTab - Processing operations for:", clientFullName, "Count:", clientOperations.length);
     
-    // Sort operations from oldest to newest first
+    // Sort operations from newest to oldest first (for display order)
     const sortedOps = [...clientOperations].sort((a, b) => {
       const dateA = new Date(a.operation_date || a.date);
       const dateB = new Date(b.operation_date || b.date);
-      return dateA.getTime() - dateB.getTime();
+      return dateB.getTime() - dateA.getTime(); // Newest first
     });
 
-    // Start with 0 and build up to the final balance
-    let runningBalance = 0;
+    // Start with the final balance and work backwards
+    let currentBalance = finalBalance;
     const opsWithBalance = sortedOps.map((op, index) => {
-      const balanceBefore = runningBalance;
+      // The balance after this operation is the current balance
+      const balanceAfter = currentBalance;
 
-      // Update running balance based on operation type and client relationship
+      // Calculate what the balance was before this operation
+      let balanceBefore = currentBalance;
+      
       if (op.type === "deposit") {
-        runningBalance += op.amount;
+        balanceBefore = currentBalance - op.amount;
       } else if (op.type === "withdrawal") {
-        runningBalance -= op.amount;
+        balanceBefore = currentBalance + op.amount;
       } else if (op.type === "transfer") {
         if (op.toClient === clientFullName) {
-          // Transfer received
-          runningBalance += op.amount;
+          // Transfer received - balance was lower before
+          balanceBefore = currentBalance - op.amount;
         } else if (op.fromClient === clientFullName) {
-          // Transfer sent
-          runningBalance -= op.amount;
+          // Transfer sent - balance was higher before
+          balanceBefore = currentBalance + op.amount;
         }
       } else if (op.type === "direct_transfer") {
         if (op.toClient === clientFullName) {
-          // Direct operation received
-          runningBalance += op.amount;
+          // Direct operation received - balance was lower before
+          balanceBefore = currentBalance - op.amount;
         } else if (op.fromClient === clientFullName) {
-          // Direct operation sent
-          runningBalance -= op.amount;
+          // Direct operation sent - balance was higher before
+          balanceBefore = currentBalance + op.amount;
         }
       }
+      
+      // Update current balance for next iteration (going backwards in time)
+      currentBalance = balanceBefore;
       
       return {
         ...op,
         balanceBefore,
-        balanceAfter: runningBalance
+        balanceAfter
       };
     });
 
-    // Return sorted from newest to oldest for display
-    return opsWithBalance.reverse();
+    return opsWithBalance;
   }, [operations, client]);
 
   const formatDateTime = (dateString: string) => {
