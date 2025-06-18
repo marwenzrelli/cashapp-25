@@ -78,6 +78,7 @@ export const useClientOperationsFilter = (
       return operations.filter(op => {
         // Match by client_id
         if (op.client_id === 4) return true;
+        if (op.from_client_id === 4 || op.to_client_id === 4) return true;
         
         // Match by name containing both "pepsi" and "men" in any fromClient/toClient fields
         const fromClient = (op.fromClient || '').toLowerCase();
@@ -91,18 +92,32 @@ export const useClientOperationsFilter = (
       });
     }
     
-    // Regular client filtering with improved name matching
+    // Regular client filtering with improved name matching and direct operations support
     return operations.filter(op => {
       // Direct client_id match if available
       if (op.client_id !== undefined && op.client_id === clientId) {
         return true;
       }
       
+      // For direct operations, check both from_client_id and to_client_id
+      if (op.type === 'direct_transfer') {
+        if (op.from_client_id === clientId || op.to_client_id === clientId) {
+          return true;
+        }
+      }
+      
+      // For transfers, also check from_client_id and to_client_id if available
+      if (op.type === 'transfer') {
+        if (op.from_client_id === clientId || op.to_client_id === clientId) {
+          return true;
+        }
+      }
+      
       // Name-based matches for operations without client_id or as fallback
       const isFromClient = matchesClientName(op.fromClient, clientFullName, client.prenom, client.nom);
       
-      // For transfers, also check toClient field
-      const isToClient = op.type === 'transfer' && 
+      // For transfers and direct operations, also check toClient field
+      const isToClient = (op.type === 'transfer' || op.type === 'direct_transfer') && 
                         matchesClientName(op.toClient, clientFullName, client.prenom, client.nom);
       
       return isFromClient || isToClient;
@@ -116,7 +131,7 @@ export const useClientOperationsFilter = (
     console.log(`Filtering ${clientOperations.length} operations by type=${selectedType}, searchTerm=${searchTerm}, showAllDates=${showAllDates}`);
     
     return clientOperations.filter(op => {
-      // Filter by type
+      // Filter by type - include direct_transfer in "all"
       if (selectedType !== 'all' && op.type !== selectedType) {
         return false;
       }

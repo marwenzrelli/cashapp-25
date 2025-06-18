@@ -50,7 +50,7 @@ export const useClientOperationsFilter = (
     }
   }, [operations, isPepsiMen]);
   
-  // Get operations for this client only - with special handling for pepsi men
+  // Get operations for this client only - with special handling for pepsi men and direct operations
   const clientOperations = useMemo(() => {
     if (!client) {
       return [];
@@ -92,6 +92,13 @@ export const useClientOperationsFilter = (
       
       // For direct operations, check both from_client_id and to_client_id
       if (op.type === 'direct_transfer') {
+        if (op.from_client_id === clientId || op.to_client_id === clientId) {
+          return true;
+        }
+      }
+      
+      // For transfers, also check from_client_id and to_client_id if available
+      if (op.type === 'transfer') {
         if (op.from_client_id === clientId || op.to_client_id === clientId) {
           return true;
         }
