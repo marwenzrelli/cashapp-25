@@ -53,8 +53,8 @@ export const PublicClientPersonalInfo = ({
       .filter(op => op.type === "direct_transfer" && op.fromClient === clientFullName)
       .reduce((total, op) => total + op.amount, 0);
       
-    // Calculate net movement with correct formula
-    return totalDeposits + transfersReceived + directOperationsReceived - totalWithdrawals - transfersSent - directOperationsSent;
+    // Calculate net balance starting from initial balance + movements (like in PersonalInfoFields)
+    return client.solde + totalDeposits + transfersReceived + directOperationsReceived - totalWithdrawals - transfersSent - directOperationsSent;
   };
 
   const netBalance = calculateNetBalance();
@@ -95,7 +95,7 @@ export const PublicClientPersonalInfo = ({
             <div className="flex items-center gap-3 bg-background/50 p-3 rounded-lg">
               <Wallet className="h-4 w-4 text-primary/70" />
               <div className="w-full">
-                <p className="text-xs text-muted-foreground">Solde actuel</p>
+                <p className="text-xs text-muted-foreground">Solde net</p>
                 <span className={cn("text-lg font-semibold inline-block mt-0.5", netBalance >= 0 ? "text-green-600" : "text-red-600")}>
                   {formattedBalance}
                 </span>
