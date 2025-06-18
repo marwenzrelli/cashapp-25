@@ -21,8 +21,8 @@ export const PublicClientPersonalInfo = ({
   // Use the exact same balance as the profile page - client.solde
   const netBalance = client.solde;
   
-  // Use the exact same formatting as the profile page - simple format without decimals
-  const formattedBalance = `${Math.round(netBalance).toLocaleString('fr-FR')} TND`;
+  // Use the exact same formatting as the profile page - simple format without separators
+  const formattedBalance = `${Math.round(netBalance)} TND`;
   
   return <Card className="backdrop-blur-xl bg-white/50 dark:bg-gray-950/50 w-full rounded-lg border">
       <CardHeader className="pb-4 space-y-0">
