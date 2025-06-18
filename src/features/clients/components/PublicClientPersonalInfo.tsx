@@ -18,11 +18,38 @@ export const PublicClientPersonalInfo = ({
 }: PublicClientPersonalInfoProps) => {
   const { formatCurrency } = useCurrency();
 
-  // Use the exact same balance as the profile page - client.solde
-  const netBalance = client.solde;
+  // Calculate the effective balance exactly like in the main profile page
+  // This should match the calculation used in PersonalInfoFields
+  const calculateEffectiveBalance = () => {
+    if (operations && operations.length > 0) {
+      let balance = 0;
+      
+      operations.forEach(op => {
+        if (op.type === "deposit") {
+          balance += Number(op.amount);
+        } else if (op.type === "withdrawal") {
+          balance -= Number(op.amount);
+        } else if (op.type === "transfer") {
+          // Check if this client is sender or receiver
+          const clientFullName = `${client.prenom} ${client.nom}`.toLowerCase();
+          if (op.to_client && op.to_client.toLowerCase() === clientFullName) {
+            balance += Number(op.amount); // Receiving transfer
+          } else if (op.from_client && op.from_client.toLowerCase() === clientFullName) {
+            balance -= Number(op.amount); // Sending transfer
+          }
+        }
+      });
+      
+      return balance;
+    }
+    
+    return client.solde;
+  };
+
+  const effectiveBalance = calculateEffectiveBalance();
   
-  // Use the exact same formatting as the profile page - simple format without separators
-  const formattedBalance = `${Math.round(netBalance)} TND`;
+  // Use simple formatting without any separators, exactly like the main profile
+  const formattedBalance = `${Math.round(effectiveBalance)} TND`;
   
   return <Card className="backdrop-blur-xl bg-white/50 dark:bg-gray-950/50 w-full rounded-lg border">
       <CardHeader className="pb-4 space-y-0">
@@ -60,7 +87,7 @@ export const PublicClientPersonalInfo = ({
               <Wallet className="h-4 w-4 text-primary/70" />
               <div className="w-full">
                 <p className="text-xs text-muted-foreground">Solde net</p>
-                <span className={cn("text-lg font-semibold inline-block mt-0.5", netBalance >= 0 ? "text-green-600" : "text-red-600")}>
+                <span className={cn("text-lg font-semibold inline-block mt-0.5", effectiveBalance >= 0 ? "text-green-600" : "text-red-600")}>
                   {formattedBalance}
                 </span>
                 <p className="text-xs text-muted-foreground mt-1">
