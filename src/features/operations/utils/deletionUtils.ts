@@ -276,7 +276,7 @@ export const handleWithdrawalDeletion = async (withdrawalId: number, userId: str
 };
 
 /**
- * Utilitaire pour supprimer un transfert et garder une trace dans deleted_transfers
+ * Utilitaire pour supprimer un transfert - version simplifiée sans logging
  */
 export const handleTransferDeletion = async (transferId: number, userId: string | undefined): Promise<boolean> => {
   try {
@@ -288,27 +288,32 @@ export const handleTransferDeletion = async (transferId: number, userId: string 
       return false;
     }
     
-    // Récupérer les détails du transfert avant suppression
+    // Vérifier que le transfert existe avant de le supprimer
     const { data: transferData, error: fetchError } = await supabase
       .from('transfers')
-      .select('*')
+      .select('id, from_client, to_client, amount')
       .eq('id', transferId)
       .single();
       
     if (fetchError) {
-      console.error("Erreur lors de la récupération des détails du transfert:", fetchError);
-      toast.error("Erreur lors de la récupération des détails du transfert");
-      throw fetchError;
-    }
-    
-    if (!transferData) {
-      console.error("Aucune donnée de transfert trouvée pour l'ID:", transferId);
-      toast.error("Transfert introuvable");
+      console.error("Erreur lors de la vérification du transfert:", fetchError);
+      if (fetchError.code === 'PGRST116') {
+        toast.error("Transfert introuvable - il a peut-être déjà été supprimé");
+        return true; // Considérer comme un succès si déjà supprimé
+      }
+      toast.error("Erreur lors de la vérification du transfert");
       return false;
     }
     
-    // Directement supprimer le transfert sans essayer de l'insérer dans deleted_transfers
-    // car cette table a des contraintes RLS qui empêchent l'insertion
+    if (!transferData) {
+      console.log("Transfert déjà supprimé ou introuvable");
+      toast.success("Transfert déjà supprimé");
+      return true;
+    }
+    
+    console.log(`Transfert trouvé: ${transferData.from_client} → ${transferData.to_client}, montant: ${transferData.amount}`);
+    
+    // Supprimer directement le transfert
     const { error: deleteError } = await supabase
       .from('transfers')
       .delete()
@@ -319,7 +324,7 @@ export const handleTransferDeletion = async (transferId: number, userId: string 
       toast.error("Erreur lors de la suppression du transfert", {
         description: deleteError.message
       });
-      throw deleteError;
+      return false;
     }
     
     console.log("Transfert supprimé avec succès:", transferId);
