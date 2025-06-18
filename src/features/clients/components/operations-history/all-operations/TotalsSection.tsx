@@ -51,10 +51,11 @@ export const TotalsSection = ({ operations, currency, clientName, isMobile = fal
     .filter(op => op.type === "direct_transfer")
     .reduce((total, op) => total + op.amount, 0) : 0;
     
-  // Calculate net movement with new formula: deposits + transfers received + direct operations received - withdrawals - transfers sent - direct operations sent
+  // Calculate net movement with correct formula: 
+  // Solde = dépôts + transferts reçus + opérations directes reçues - retraits - transferts émis - opérations directes émises
   const netMovement = clientName 
     ? totalDeposits + transfersReceived + directOperationsReceived - totalWithdrawals - transfersSent - directOperationsSent
-    : totalDeposits - totalWithdrawals;
+    : totalDeposits + totalTransfers + totalDirectOperations - totalWithdrawals;
 
   if (isMobile) {
     return (
