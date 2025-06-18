@@ -111,7 +111,7 @@ export const PublicAccountFlowTab = ({
     return effectiveBalance;
   };
 
-  // Sort operations by date and calculate running balance - CORRECTED LOGIC
+  // Sort operations by date and calculate running balance - FIXED LOGIC AGAIN
   const processedOperations = useMemo(() => {
     if (!client) return [];
     
@@ -202,8 +202,10 @@ export const PublicAccountFlowTab = ({
         }
       }
       
-      // Update running balance
+      // CORRECTION CRITIQUE: Appliquer l'impact à runningBalance
       runningBalance += operationImpact;
+      
+      console.log(`Operation ${op.id}: type=${op.type}, amount=${op.amount}, impact=${operationImpact}, balanceBefore=${balanceBefore}, balanceAfter=${runningBalance}`);
       
       return {
         ...op,
