@@ -52,13 +52,10 @@ export const PublicClientPersonalInfo = ({
     console.log("PublicClientPersonalInfo - Filtered client operations:", clientOperations.length);
     console.log("PublicClientPersonalInfo - Client operations details:", clientOperations);
     
-    // Si aucune opération pour ce client spécifiquement mais qu'il y a des opérations globales,
-    // calculer la différence pour voir s'il y a eu des changements non reflétés dans le solde DB
+    // Si aucune opération pour ce client spécifiquement, retourner juste le solde DB
     if (clientOperations.length === 0) {
-      console.log("PublicClientPersonalInfo - No operations for this client, but checking for potential balance updates");
-      // Pour le moment, retourner le solde DB + 1 comme dans la page de profil privé
-      // Ceci suggère qu'il y a une différence de calcul quelque part
-      return effectiveBalance + 1;
+      console.log("PublicClientPersonalInfo - No operations for this client, using DB balance:", effectiveBalance);
+      return effectiveBalance;
     }
     
     // Calculate totals by operation type exactly like PersonalInfoFields
