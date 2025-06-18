@@ -13,11 +13,10 @@ interface PublicClientPersonalInfoProps {
 export const PublicClientPersonalInfo = ({
   client
 }: PublicClientPersonalInfoProps) => {
-  const { currency } = useCurrency();
+  const { formatCurrency } = useCurrency();
 
-  // Format balance with explicit sign
-  const sign = client.solde >= 0 ? "+" : "";
-  const formattedBalance = `${sign}${client.solde.toLocaleString()} ${currency}`;
+  // Use the formatCurrency function to display the balance consistently
+  const formattedBalance = formatCurrency(client.solde);
   
   return <Card className="backdrop-blur-xl bg-white/50 dark:bg-gray-950/50 w-full rounded-lg border">
       <CardHeader className="pb-4 space-y-0">
@@ -68,4 +67,3 @@ export const PublicClientPersonalInfo = ({
       </CardContent>
     </Card>;
 };
-
