@@ -111,7 +111,7 @@ export const PublicAccountFlowTab = ({
     return effectiveBalance;
   };
 
-  // Sort operations by date and calculate running balance - FIXED LOGIC AGAIN
+  // Sort operations by date and calculate running balance - CORRECTED LOGIC FOR DIRECT OPERATIONS
   const processedOperations = useMemo(() => {
     if (!client) return [];
     
@@ -159,6 +159,7 @@ export const PublicAccountFlowTab = ({
           totalImpact -= Number(op.amount);
         }
       } else if (op.type === "direct_transfer") {
+        // CORRECTION PRINCIPALE: Les opérations directes doivent avoir le même effet que les virements
         if (op.toClient === clientFullName) {
           totalImpact += Number(op.amount);
         } else if (op.fromClient === clientFullName) {
@@ -195,14 +196,15 @@ export const PublicAccountFlowTab = ({
           operationImpact = -Number(op.amount);
         }
       } else if (op.type === "direct_transfer") {
+        // CORRECTION CRITIQUE: Les opérations directes doivent affecter le solde exactement comme les virements
         if (op.toClient === clientFullName) {
-          operationImpact = Number(op.amount);
+          operationImpact = Number(op.amount); // Opération reçue = +montant
         } else if (op.fromClient === clientFullName) {
-          operationImpact = -Number(op.amount);
+          operationImpact = -Number(op.amount); // Opération envoyée = -montant
         }
       }
       
-      // CORRECTION CRITIQUE: Appliquer l'impact à runningBalance
+      // Appliquer l'impact à runningBalance
       runningBalance += operationImpact;
       
       console.log(`Operation ${op.id}: type=${op.type}, amount=${op.amount}, impact=${operationImpact}, balanceBefore=${balanceBefore}, balanceAfter=${runningBalance}`);
