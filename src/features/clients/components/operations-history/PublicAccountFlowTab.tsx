@@ -25,6 +25,7 @@ export const PublicAccountFlowTab = ({
   const calculateEffectiveBalance = () => {
     console.log("PublicAccountFlowTab - Calculating balance for:", client?.prenom, client?.nom);
     console.log("PublicAccountFlowTab - Operations count:", operations?.length || 0);
+    console.log("PublicAccountFlowTab - All operations:", operations);
     
     if (!operations || operations.length === 0 || !client) {
       console.log("PublicAccountFlowTab - No operations or client, returning 0");
@@ -34,15 +35,30 @@ export const PublicAccountFlowTab = ({
     const clientFullName = `${client.prenom} ${client.nom}`.trim();
     console.log("PublicAccountFlowTab - Looking for operations for:", clientFullName);
     
+    // Filtrer les opérations qui concernent ce client - MÊME LOGIQUE QUE PersonalInfo
+    const clientOperations = operations.filter(op => {
+      const isDeposit = op.type === "deposit" && op.fromClient === clientFullName;
+      const isWithdrawal = op.type === "withdrawal" && op.fromClient === clientFullName;
+      const isTransferReceived = op.type === "transfer" && op.toClient === clientFullName;
+      const isTransferSent = op.type === "transfer" && op.fromClient === clientFullName;
+      const isDirectReceived = op.type === "direct_transfer" && op.toClient === clientFullName;
+      const isDirectSent = op.type === "direct_transfer" && op.fromClient === clientFullName;
+      
+      return isDeposit || isWithdrawal || isTransferReceived || isTransferSent || isDirectReceived || isDirectSent;
+    });
+    
+    console.log("PublicAccountFlowTab - Filtered client operations:", clientOperations.length);
+    console.log("PublicAccountFlowTab - Client operations details:", clientOperations);
+    
     // Calculate totals by operation type exactly like PersonalInfoFields
-    const totalDeposits = operations
+    const totalDeposits = clientOperations
       .filter(op => op.type === "deposit")
       .reduce((total, op) => {
         console.log("PublicAccountFlowTab - Adding deposit:", op.amount);
         return total + Number(op.amount);
       }, 0);
       
-    const totalWithdrawals = operations
+    const totalWithdrawals = clientOperations
       .filter(op => op.type === "withdrawal")
       .reduce((total, op) => {
         console.log("PublicAccountFlowTab - Adding withdrawal:", op.amount);
@@ -50,32 +66,32 @@ export const PublicAccountFlowTab = ({
       }, 0);
       
     // Separate transfers received and sent
-    const transfersReceived = operations
+    const transfersReceived = clientOperations
       .filter(op => op.type === "transfer" && op.toClient === clientFullName)
       .reduce((total, op) => {
-        console.log("PublicAccountFlowTab - Adding received transfer:", op.amount);
+        console.log("PublicAccountFlowTab - Adding received transfer:", op.amount, "from", op.fromClient);
         return total + Number(op.amount);
       }, 0);
       
-    const transfersSent = operations
+    const transfersSent = clientOperations
       .filter(op => op.type === "transfer" && op.fromClient === clientFullName)
       .reduce((total, op) => {
-        console.log("PublicAccountFlowTab - Adding sent transfer:", op.amount);
+        console.log("PublicAccountFlowTab - Adding sent transfer:", op.amount, "to", op.toClient);
         return total + Number(op.amount);
       }, 0);
 
     // Calculate direct operations received and sent
-    const directOperationsReceived = operations
+    const directOperationsReceived = clientOperations
       .filter(op => op.type === "direct_transfer" && op.toClient === clientFullName)
       .reduce((total, op) => {
-        console.log("PublicAccountFlowTab - Adding received direct transfer:", op.amount);
+        console.log("PublicAccountFlowTab - Adding received direct transfer:", op.amount, "from", op.fromClient);
         return total + Number(op.amount);
       }, 0);
       
-    const directOperationsSent = operations
+    const directOperationsSent = clientOperations
       .filter(op => op.type === "direct_transfer" && op.fromClient === clientFullName)
       .reduce((total, op) => {
-        console.log("PublicAccountFlowTab - Adding sent direct transfer:", op.amount);
+        console.log("PublicAccountFlowTab - Adding sent direct transfer:", op.amount, "to", op.toClient);
         return total + Number(op.amount);
       }, 0);
       
@@ -101,8 +117,26 @@ export const PublicAccountFlowTab = ({
     // Calculate the effective balance
     const finalBalance = calculateEffectiveBalance();
     
+    if (!client) return [];
+    
+    const clientFullName = `${client.prenom} ${client.nom}`.trim();
+    
+    // Filtrer les opérations qui concernent ce client
+    const clientOperations = operations.filter(op => {
+      const isDeposit = op.type === "deposit" && op.fromClient === clientFullName;
+      const isWithdrawal = op.type === "withdrawal" && op.fromClient === clientFullName;
+      const isTransferReceived = op.type === "transfer" && op.toClient === clientFullName;
+      const isTransferSent = op.type === "transfer" && op.fromClient === clientFullName;
+      const isDirectReceived = op.type === "direct_transfer" && op.toClient === clientFullName;
+      const isDirectSent = op.type === "direct_transfer" && op.fromClient === clientFullName;
+      
+      return isDeposit || isWithdrawal || isTransferReceived || isTransferSent || isDirectReceived || isDirectSent;
+    });
+    
+    console.log("PublicAccountFlowTab - Processing operations for:", clientFullName, "Count:", clientOperations.length);
+    
     // Sort operations from oldest to newest first
-    const sortedOps = [...operations].sort((a, b) => {
+    const sortedOps = [...clientOperations].sort((a, b) => {
       const dateA = new Date(a.operation_date || a.date);
       const dateB = new Date(b.operation_date || b.date);
       return dateA.getTime() - dateB.getTime();
@@ -114,8 +148,6 @@ export const PublicAccountFlowTab = ({
       const balanceBefore = runningBalance;
 
       // Update running balance based on operation type and client relationship
-      const clientFullName = client ? `${client.prenom} ${client.nom}`.trim() : '';
-      
       if (op.type === "deposit") {
         runningBalance += op.amount;
       } else if (op.type === "withdrawal") {

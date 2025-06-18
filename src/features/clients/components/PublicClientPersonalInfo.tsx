@@ -23,6 +23,7 @@ export const PublicClientPersonalInfo = ({
     console.log("PublicClientPersonalInfo - Calculating balance for:", client.prenom, client.nom);
     console.log("PublicClientPersonalInfo - Operations count:", operations.length);
     console.log("PublicClientPersonalInfo - Client solde from DB:", client.solde);
+    console.log("PublicClientPersonalInfo - All operations:", operations);
     
     if (!operations || operations.length === 0) {
       console.log("PublicClientPersonalInfo - No operations, returning 0");
@@ -32,15 +33,30 @@ export const PublicClientPersonalInfo = ({
     const clientFullName = `${client.prenom} ${client.nom}`.trim();
     console.log("PublicClientPersonalInfo - Looking for operations for:", clientFullName);
     
+    // Filtrer les opérations qui concernent ce client
+    const clientOperations = operations.filter(op => {
+      const isDeposit = op.type === "deposit" && op.fromClient === clientFullName;
+      const isWithdrawal = op.type === "withdrawal" && op.fromClient === clientFullName;
+      const isTransferReceived = op.type === "transfer" && op.toClient === clientFullName;
+      const isTransferSent = op.type === "transfer" && op.fromClient === clientFullName;
+      const isDirectReceived = op.type === "direct_transfer" && op.toClient === clientFullName;
+      const isDirectSent = op.type === "direct_transfer" && op.fromClient === clientFullName;
+      
+      return isDeposit || isWithdrawal || isTransferReceived || isTransferSent || isDirectReceived || isDirectSent;
+    });
+    
+    console.log("PublicClientPersonalInfo - Filtered client operations:", clientOperations.length);
+    console.log("PublicClientPersonalInfo - Client operations details:", clientOperations);
+    
     // Calculate totals by operation type exactly like PersonalInfoFields
-    const totalDeposits = operations
+    const totalDeposits = clientOperations
       .filter(op => op.type === "deposit")
       .reduce((total, op) => {
         console.log("PublicClientPersonalInfo - Adding deposit:", op.amount);
         return total + Number(op.amount);
       }, 0);
       
-    const totalWithdrawals = operations
+    const totalWithdrawals = clientOperations
       .filter(op => op.type === "withdrawal")
       .reduce((total, op) => {
         console.log("PublicClientPersonalInfo - Adding withdrawal:", op.amount);
@@ -48,32 +64,32 @@ export const PublicClientPersonalInfo = ({
       }, 0);
       
     // Separate transfers received and sent
-    const transfersReceived = operations
+    const transfersReceived = clientOperations
       .filter(op => op.type === "transfer" && op.toClient === clientFullName)
       .reduce((total, op) => {
-        console.log("PublicClientPersonalInfo - Adding received transfer:", op.amount);
+        console.log("PublicClientPersonalInfo - Adding received transfer:", op.amount, "from", op.fromClient);
         return total + Number(op.amount);
       }, 0);
       
-    const transfersSent = operations
+    const transfersSent = clientOperations
       .filter(op => op.type === "transfer" && op.fromClient === clientFullName)
       .reduce((total, op) => {
-        console.log("PublicClientPersonalInfo - Adding sent transfer:", op.amount);
+        console.log("PublicClientPersonalInfo - Adding sent transfer:", op.amount, "to", op.toClient);
         return total + Number(op.amount);
       }, 0);
 
     // Calculate direct operations received and sent
-    const directOperationsReceived = operations
+    const directOperationsReceived = clientOperations
       .filter(op => op.type === "direct_transfer" && op.toClient === clientFullName)
       .reduce((total, op) => {
-        console.log("PublicClientPersonalInfo - Adding received direct transfer:", op.amount);
+        console.log("PublicClientPersonalInfo - Adding received direct transfer:", op.amount, "from", op.fromClient);
         return total + Number(op.amount);
       }, 0);
       
-    const directOperationsSent = operations
+    const directOperationsSent = clientOperations
       .filter(op => op.type === "direct_transfer" && op.fromClient === clientFullName)
       .reduce((total, op) => {
-        console.log("PublicClientPersonalInfo - Adding sent direct transfer:", op.amount);
+        console.log("PublicClientPersonalInfo - Adding sent direct transfer:", op.amount, "to", op.toClient);
         return total + Number(op.amount);
       }, 0);
       
