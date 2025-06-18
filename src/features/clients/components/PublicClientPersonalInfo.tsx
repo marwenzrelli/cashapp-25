@@ -18,20 +18,15 @@ export const PublicClientPersonalInfo = ({
 }: PublicClientPersonalInfoProps) => {
   const { formatCurrency } = useCurrency();
 
-  // Calculate the effective balance exactly like in PersonalInfoFields
+  // Calculate the effective balance using the SAME logic as all other pages
   const calculateEffectiveBalance = () => {
     console.log("PublicClientPersonalInfo - Calculating balance for:", client.prenom, client.nom);
     console.log("PublicClientPersonalInfo - Operations received:", operations);
     console.log("PublicClientPersonalInfo - Operations count:", operations.length);
-    console.log("PublicClientPersonalInfo - Client solde from DB:", client.solde);
-    
-    // Start with DB balance as base
-    let effectiveBalance = Number(client.solde) || 0;
-    console.log("PublicClientPersonalInfo - Starting with DB balance:", effectiveBalance);
     
     if (!operations || operations.length === 0) {
-      console.log("PublicClientPersonalInfo - No operations, using DB balance:", effectiveBalance);
-      return effectiveBalance;
+      console.log("PublicClientPersonalInfo - No operations, returning 0");
+      return 0;
     }
 
     const clientFullName = `${client.prenom} ${client.nom}`.trim();
@@ -52,13 +47,7 @@ export const PublicClientPersonalInfo = ({
     console.log("PublicClientPersonalInfo - Filtered client operations:", clientOperations.length);
     console.log("PublicClientPersonalInfo - Client operations details:", clientOperations);
     
-    // Si aucune opération pour ce client spécifiquement, retourner juste le solde DB
-    if (clientOperations.length === 0) {
-      console.log("PublicClientPersonalInfo - No operations for this client, using DB balance:", effectiveBalance);
-      return effectiveBalance;
-    }
-    
-    // Calculate totals by operation type exactly like PersonalInfoFields
+    // Calculate totals by operation type - MÊME LOGIQUE QUE PARTOUT AILLEURS
     const totalDeposits = clientOperations
       .filter(op => op.type === "deposit")
       .reduce((total, op) => {
@@ -103,19 +92,18 @@ export const PublicClientPersonalInfo = ({
         return total + Number(op.amount);
       }, 0);
       
-    // Calculate net movement with correct formula: 
-    // Balance = DB balance + deposits + transfers received + direct operations received - withdrawals - transfers sent - direct operations sent
-    effectiveBalance = effectiveBalance + totalDeposits + transfersReceived + directOperationsReceived - totalWithdrawals - transfersSent - directOperationsSent;
+    // LOGIQUE UNIFIÉE: total versements - total retraits + total virements reçus - total virements émis + total opérations directes reçues - total opérations directes émises
+    const effectiveBalance = totalDeposits - totalWithdrawals + transfersReceived - transfersSent + directOperationsReceived - directOperationsSent;
     
     console.log("PublicClientPersonalInfo - Final calculated balance:", effectiveBalance);
     console.log("PublicClientPersonalInfo - Breakdown:", {
-      dbBalance: Number(client.solde) || 0,
       totalDeposits,
       totalWithdrawals,
       transfersReceived,
       transfersSent,
       directOperationsReceived,
-      directOperationsSent
+      directOperationsSent,
+      formula: `${totalDeposits} - ${totalWithdrawals} + ${transfersReceived} - ${transfersSent} + ${directOperationsReceived} - ${directOperationsSent} = ${effectiveBalance}`
     });
     
     return effectiveBalance;
