@@ -52,7 +52,12 @@ export const ClientListItem = ({
           <div className="flex items-center space-x-3 flex-1 min-w-0">
             <div className="flex flex-col space-y-1 min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <h3 className="font-medium truncate">{clientName}</h3>
+                <h3 
+                  className="font-medium truncate cursor-pointer hover:text-primary transition-colors"
+                  onClick={() => onView(clientId)}
+                >
+                  {clientName}
+                </h3>
                 <ClientIdBadge clientId={clientId} />
                 <ClientStatusBadge status={client.status}>
                   {client.status === 'active' ? 'Actif' : 
