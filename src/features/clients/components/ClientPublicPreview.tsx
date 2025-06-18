@@ -41,7 +41,7 @@ export const ClientPublicPreview: React.FC<ClientPublicPreviewProps> = ({
                       <PublicClientPersonalInfo client={client} />
                       <PublicClientOperationsHistory 
                         operations={operations} 
-                        clientId={typeof client.id === 'string' ? parseInt(client.id) : client.id}
+                        client={client}
                       />
                     </div>
                   </div>
@@ -57,7 +57,7 @@ export const ClientPublicPreview: React.FC<ClientPublicPreviewProps> = ({
                 <PublicClientPersonalInfo client={client} />
                 <PublicClientOperationsHistory 
                   operations={operations} 
-                  clientId={typeof client.id === 'string' ? parseInt(client.id) : client.id}
+                  client={client}
                 />
               </div>
             )}

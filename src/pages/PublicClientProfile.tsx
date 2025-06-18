@@ -1,3 +1,4 @@
+
 import { useParams, useNavigate } from "react-router-dom";
 import { PublicClientLoading } from "@/features/clients/components/PublicClientLoading";
 import { PublicClientError } from "@/features/clients/components/PublicClientError";
@@ -135,7 +136,7 @@ const PublicClientProfile = () => {
     <div className={`min-h-screen bg-gradient-to-b from-primary/10 to-background p-4 transition-all duration-300 ${pageReady ? 'opacity-100 scale-100' : 'opacity-0 scale-[0.98]'}`}>
       <div className="container mx-auto max-w-6xl space-y-6">
         <PublicClientPersonalInfo client={client} operations={operations} />
-        <PublicClientOperationsHistory operations={operations} />
+        <PublicClientOperationsHistory operations={operations} client={client} />
       </div>
     </div>
   );
