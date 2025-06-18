@@ -18,7 +18,7 @@ export const PublicClientPersonalInfo = ({
 }: PublicClientPersonalInfoProps) => {
   const { formatCurrency } = useCurrency();
 
-  // Calculate net balance from operations exactly like in PersonalInfoFields
+  // Calculate net balance using EXACT same logic as PersonalInfoFields
   const calculateNetBalance = () => {
     if (!operations || operations.length === 0) {
       return client.solde;
@@ -26,35 +26,46 @@ export const PublicClientPersonalInfo = ({
 
     const clientFullName = `${client.prenom} ${client.nom}`.trim();
     
-    // Calculate totals by operation type - exactly the same logic as PersonalInfoFields
-    const totalDeposits = operations
-      .filter(op => op.type === "deposit")
-      .reduce((total, op) => total + op.amount, 0);
-      
-    const totalWithdrawals = operations
-      .filter(op => op.type === "withdrawal")
-      .reduce((total, op) => total + op.amount, 0);
-      
-    // Separate transfers received and sent
-    const transfersReceived = operations
-      .filter(op => op.type === "transfer" && op.toClient === clientFullName)
-      .reduce((total, op) => total + op.amount, 0);
-      
-    const transfersSent = operations
-      .filter(op => op.type === "transfer" && op.fromClient === clientFullName)
-      .reduce((total, op) => total + op.amount, 0);
-
-    // Calculate direct operations received and sent
-    const directOperationsReceived = operations
-      .filter(op => op.type === "direct_transfer" && op.toClient === clientFullName)
-      .reduce((total, op) => total + op.amount, 0);
-      
-    const directOperationsSent = operations
-      .filter(op => op.type === "direct_transfer" && op.fromClient === clientFullName)
-      .reduce((total, op) => total + op.amount, 0);
-      
-    // Calculate net balance: initial balance + inflows - outflows
-    return client.solde + totalDeposits + transfersReceived + directOperationsReceived - totalWithdrawals - transfersSent - directOperationsSent;
+    // Use the EXACT same calculation logic as PersonalInfoFields
+    let netBalance = client.solde;
+    
+    operations.forEach(operation => {
+      switch (operation.type) {
+        case 'deposit':
+          // All deposits add to the balance
+          netBalance += operation.amount;
+          break;
+          
+        case 'withdrawal':
+          // All withdrawals subtract from the balance
+          netBalance -= operation.amount;
+          break;
+          
+        case 'transfer':
+          // Check if this client is sender or receiver
+          if (operation.fromClient === clientFullName) {
+            // Client is sending - subtract amount
+            netBalance -= operation.amount;
+          } else if (operation.toClient === clientFullName) {
+            // Client is receiving - add amount
+            netBalance += operation.amount;
+          }
+          break;
+          
+        case 'direct_transfer':
+          // Check if this client is sender or receiver
+          if (operation.fromClient === clientFullName) {
+            // Client is sending - subtract amount
+            netBalance -= operation.amount;
+          } else if (operation.toClient === clientFullName) {
+            // Client is receiving - add amount
+            netBalance += operation.amount;
+          }
+          break;
+      }
+    });
+    
+    return netBalance;
   };
 
   const netBalance = calculateNetBalance();
