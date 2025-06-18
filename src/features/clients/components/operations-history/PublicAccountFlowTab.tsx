@@ -213,9 +213,11 @@ export const PublicAccountFlowTab = ({
   };
 
   const getAmountPrefix = (type: string, clientFullName: string, operation: any) => {
+    // Only show negative prefix for outgoing operations (sent by the client)
     if (type === "withdrawal") return "- ";
     if (type === "transfer" && operation.fromClient === clientFullName) return "- ";
     if (type === "direct_transfer" && operation.fromClient === clientFullName) return "- ";
+    // For all incoming operations (deposits, received transfers, received direct operations), show no prefix (positive)
     return "";
   };
 
