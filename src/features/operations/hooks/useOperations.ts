@@ -84,8 +84,8 @@ export const useOperations = () => {
     setShowDeleteDialog(true);
   }, []);
 
-  const confirmDeleteOperation = useCallback(async () => {
-    if (!operationToDelete) return;
+  const confirmDeleteOperation = useCallback(async (): Promise<boolean> => {
+    if (!operationToDelete) return false;
     
     try {
       setIsLoading(true);
@@ -142,9 +142,12 @@ export const useOperations = () => {
       // Refresh operations
       await fetchOperations();
       
+      return true;
+      
     } catch (error: any) {
       console.error("Error deleting operation:", error);
       toast.error(`Erreur lors de la suppression: ${error.message}`);
+      return false;
     } finally {
       setIsLoading(false);
     }
