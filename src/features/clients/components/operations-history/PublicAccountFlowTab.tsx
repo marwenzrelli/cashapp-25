@@ -1,3 +1,4 @@
+
 import { Operation } from "@/features/operations/types";
 import { useMemo } from "react";
 import { Card } from "@/components/ui/card";
@@ -117,8 +118,10 @@ export const PublicAccountFlowTab = ({
     
     const clientFullName = `${client.prenom} ${client.nom}`.trim();
     
-    // Filtrer les opérations qui concernent ce client
+    // Filtrer les opérations qui concernent ce client - INCLURE TOUTES LES OPÉRATIONS DIRECTES
     const clientOperations = operations.filter(op => {
+      console.log("PublicAccountFlowTab - Checking operation:", op.id, op.type, "fromClient:", op.fromClient, "toClient:", op.toClient);
+      
       const isDeposit = op.type === "deposit" && op.fromClient === clientFullName;
       const isWithdrawal = op.type === "withdrawal" && op.fromClient === clientFullName;
       const isTransferReceived = op.type === "transfer" && op.toClient === clientFullName;
@@ -126,10 +129,19 @@ export const PublicAccountFlowTab = ({
       const isDirectReceived = op.type === "direct_transfer" && op.toClient === clientFullName;
       const isDirectSent = op.type === "direct_transfer" && op.fromClient === clientFullName;
       
-      return isDeposit || isWithdrawal || isTransferReceived || isTransferSent || isDirectReceived || isDirectSent;
+      const isRelevant = isDeposit || isWithdrawal || isTransferReceived || isTransferSent || isDirectReceived || isDirectSent;
+      
+      if (isRelevant) {
+        console.log("PublicAccountFlowTab - Operation included:", op.id, op.type, {
+          isDeposit, isWithdrawal, isTransferReceived, isTransferSent, isDirectReceived, isDirectSent
+        });
+      }
+      
+      return isRelevant;
     });
     
     console.log("PublicAccountFlowTab - Processing operations for:", clientFullName, "Count:", clientOperations.length);
+    console.log("PublicAccountFlowTab - All relevant operations:", clientOperations);
     
     if (clientOperations.length === 0) {
       return [];
@@ -169,13 +181,13 @@ export const PublicAccountFlowTab = ({
       }
       
       totalImpact += operationImpact;
-      console.log(`Total impact calculation - Operation ${op.id}: type=${op.type}, impact=${operationImpact}, totalImpact=${totalImpact}`);
+      console.log(`PublicAccountFlowTab - Total impact calculation - Operation ${op.id}: type=${op.type}, impact=${operationImpact}, totalImpact=${totalImpact}`);
     });
 
     // Initial balance = final balance - total impact
     const initialBalance = finalBalance - totalImpact;
     
-    console.log("Balance calculation:", {
+    console.log("PublicAccountFlowTab - Balance calculation:", {
       finalBalance,
       totalImpact,
       initialBalance
@@ -210,7 +222,7 @@ export const PublicAccountFlowTab = ({
       // Appliquer l'impact à runningBalance
       runningBalance += operationImpact;
       
-      console.log(`Operation ${op.id}: type=${op.type}, amount=${op.amount}, impact=${operationImpact}, balanceBefore=${balanceBefore}, balanceAfter=${runningBalance}`);
+      console.log(`PublicAccountFlowTab - Operation ${op.id}: type=${op.type}, amount=${op.amount}, impact=${operationImpact}, balanceBefore=${balanceBefore}, balanceAfter=${runningBalance}`);
       
       return {
         ...op,
