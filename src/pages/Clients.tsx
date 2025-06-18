@@ -9,13 +9,11 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 
 const Clients = () => {
-  // Display state management with improved debouncing
+  // Simplified display state management
   const [initialLoading, setInitialLoading] = useState(true);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
-  const [loadingIndicatorShown, setLoadingIndicatorShown] = useState(false);
-  const [pageReady, setPageReady] = useState(false); // État pour la transition de la page
+  const [pageReady, setPageReady] = useState(false);
   const timeoutTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const loadingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const pageTransitionTimerRef = useRef<NodeJS.Timeout | null>(null);
   const initialLoadCompleteRef = useRef(false);
 
@@ -52,12 +50,11 @@ const Clients = () => {
     handleCreateClient,
   } = useClientsPage();
 
-  // Animation de transition de la page
+  // Page transition animation - faster
   useEffect(() => {
-    // Permettre un court délai pour la transition de la page
     pageTransitionTimerRef.current = setTimeout(() => {
       setPageReady(true);
-    }, 150);
+    }, 100); // Réduit de 150ms à 100ms
 
     return () => {
       if (pageTransitionTimerRef.current) {
@@ -66,115 +63,90 @@ const Clients = () => {
     };
   }, []);
 
-  // Handle only initial loading state with improved logic
+  // Simplified loading state management
   useEffect(() => {
-    // Clear previous timers if they exist
+    // Clear previous timeout
     if (timeoutTimerRef.current) {
       clearTimeout(timeoutTimerRef.current);
       timeoutTimerRef.current = null;
     }
     
-    if (loadingTimerRef.current) {
-      clearTimeout(loadingTimerRef.current);
-      loadingTimerRef.current = null;
-    }
-    
     if (loading && !initialLoadCompleteRef.current) {
-      // Show timeout message after 10 seconds if still loading
+      // Show timeout message after 8 seconds (reduced from 10)
       timeoutTimerRef.current = setTimeout(() => {
         if (loading) {
           setLoadingTimeout(true);
         }
         timeoutTimerRef.current = null;
-      }, 10000);
-      
-      // Augmenter le délai avant d'afficher l'indicateur de chargement (1.5s au lieu de 800ms)
-      if (!loadingIndicatorShown) {
-        loadingTimerRef.current = setTimeout(() => {
-          if (loading) {
-            setLoadingIndicatorShown(true);
-          }
-          loadingTimerRef.current = null;
-        }, 1500); // Augmenté de 800ms à 1500ms
-      }
+      }, 8000);
     } else if (!loading && initialLoading) {
-      // When initial loading finishes - garder l'indicateur visible un peu plus longtemps
+      // Quick reset when loading finishes
       const resetTimer = setTimeout(() => {
         setInitialLoading(false);
         setLoadingTimeout(false);
-        setLoadingIndicatorShown(false);
         initialLoadCompleteRef.current = true;
-      }, 500); // Augmenté de 300ms à 500ms pour éviter le scintillement
+      }, 100); // Réduit de 500ms à 100ms
       
       return () => clearTimeout(resetTimer);
     }
     
-    // Clean up on unmount
     return () => {
       if (timeoutTimerRef.current) {
         clearTimeout(timeoutTimerRef.current);
       }
-      if (loadingTimerRef.current) {
-        clearTimeout(loadingTimerRef.current);
-      }
     };
   }, [loading, initialLoading]);
 
-  // Display fixed floating loading indicator with improved conditions
+  // Simplified floating loading indicator - only for timeout situations
   const renderFloatingLoadingIndicator = () => {
-    // Ne pas afficher si le chargement est terminé rapidement
-    if (loading && loadingIndicatorShown && !initialLoadCompleteRef.current) {
+    if (loading && loadingTimeout && !initialLoadCompleteRef.current) {
       return (
         <div className="fixed bottom-6 right-6 bg-white dark:bg-gray-800 shadow-lg rounded-lg p-3 flex items-center gap-3 z-50 border animate-in fade-in slide-in-from-right-10 duration-300">
           <LoadingIndicator 
             size="sm" 
             fadeIn={false} 
             showImmediately 
-            debounceMs={0} // Pas de debounce supplémentaire ici
+            debounceMs={0}
           />
-          <span>{loadingTimeout ? "Chargement prolongé..." : "Chargement..."}</span>
-          {loadingTimeout && (
-            <Button size="sm" variant="ghost" className="ml-2" onClick={handleRetry}>
-              <RefreshCw className="h-4 w-4" />
-            </Button>
-          )}
+          <span>Chargement prolongé...</span>
+          <Button size="sm" variant="ghost" className="ml-2" onClick={handleRetry}>
+            <RefreshCw className="h-4 w-4" />
+          </Button>
         </div>
       );
     }
     return null;
   };
 
-  // Display initial loading state only when we have no data yet
-  if ((initialLoading || loading) && loadingIndicatorShown && !clients.length && !initialLoadCompleteRef.current) {
+  // Simplified initial loading - only show for longer loads
+  if ((initialLoading || loading) && !clients.length && !initialLoadCompleteRef.current && loadingTimeout) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[80vh]">
         <LoadingIndicator 
           size="lg" 
-          text={loadingTimeout ? "Le chargement prend plus de temps que prévu..." : "Chargement des clients..."} 
+          text="Le chargement prend plus de temps que prévu..." 
           fadeIn={true}
-          debounceMs={600}
+          debounceMs={200} // Réduit de 600ms à 200ms
         />
-        {loadingTimeout && (
-          <div className="mt-6 animate-in fade-in-50 slide-in-from-bottom-4 duration-300">
-            <Button variant="outline" onClick={handleRetry} className="gap-2">
-              <RefreshCw className="h-4 w-4" />
-              Réessayer
-            </Button>
-          </div>
-        )}
+        <div className="mt-6 animate-in fade-in-50 slide-in-from-bottom-4 duration-300">
+          <Button variant="outline" onClick={handleRetry} className="gap-2">
+            <RefreshCw className="h-4 w-4" />
+            Réessayer
+          </Button>
+        </div>
       </div>
     );
   }
 
   return (
     <TooltipProvider>
-      <div className={`w-full max-w-[100vw] pb-8 px-0 transition-opacity duration-500 ${pageReady ? 'opacity-100' : 'opacity-0'}`}>
+      <div className={`w-full max-w-[100vw] pb-8 px-0 transition-opacity duration-300 ${pageReady ? 'opacity-100' : 'opacity-0'}`}>
         {renderFloatingLoadingIndicator()}
         
         <ClientsPageContent
           clients={clients}
           filteredClients={filteredClients}
-          loading={loading && !initialLoadCompleteRef.current}
+          loading={loading && !initialLoadCompleteRef.current && loadingTimeout}
           error={error}
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
