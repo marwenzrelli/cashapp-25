@@ -18,7 +18,7 @@ export const PublicClientPersonalInfo = ({
 }: PublicClientPersonalInfoProps) => {
   const { formatCurrency } = useCurrency();
 
-  // Calculate net balance from operations like in PersonalInfoFields
+  // Calculate net balance from operations exactly like in PersonalInfoFields
   const calculateNetBalance = () => {
     if (!operations || operations.length === 0) {
       return client.solde;
@@ -26,7 +26,7 @@ export const PublicClientPersonalInfo = ({
 
     const clientFullName = `${client.prenom} ${client.nom}`.trim();
     
-    // Calculate totals by operation type
+    // Calculate totals by operation type - exactly the same logic as PersonalInfoFields
     const totalDeposits = operations
       .filter(op => op.type === "deposit")
       .reduce((total, op) => total + op.amount, 0);
@@ -53,7 +53,7 @@ export const PublicClientPersonalInfo = ({
       .filter(op => op.type === "direct_transfer" && op.fromClient === clientFullName)
       .reduce((total, op) => total + op.amount, 0);
       
-    // Calculate net balance starting from initial balance + movements (like in PersonalInfoFields)
+    // Calculate net balance: initial balance + inflows - outflows
     return client.solde + totalDeposits + transfersReceived + directOperationsReceived - totalWithdrawals - transfersSent - directOperationsSent;
   };
 
