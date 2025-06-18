@@ -50,7 +50,6 @@ function App() {
               <Route path="/public/client/:token" element={<PublicClientProfile />} />
               <Route path="/admin-utility" element={<AdminUtility />} />
               <Route path="/create-supervisor" element={<SupervisorCreation />} />
-              <Route path="/direct-operations" element={<DirectOperations />} />
               <Route path="/" element={<Layout />}>
                 <Route index element={<Dashboard />} />
                 <Route path="clients" element={<Clients />} />
@@ -59,6 +58,8 @@ function App() {
                 <Route path="withdrawals" element={<Withdrawals />} />
                 <Route path="transfers" element={<Transfers />} />
                 <Route path="operations" element={<Operations />} />
+                <Route path="operations-history" element={<Operations />} />
+                <Route path="direct-operations" element={<DirectOperations />} />
                 <Route path="statistics" element={<Statistics />} />
                 <Route path="administration" element={<Administration />} />
                 <Route path="*" element={<NotFound />} />

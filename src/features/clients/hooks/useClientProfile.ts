@@ -1,4 +1,3 @@
-
 import { useRef, useCallback, useMemo, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useOperations } from "@/features/operations/hooks/useOperations";
@@ -17,11 +16,35 @@ export const useClientProfile = () => {
   const navigate = useNavigate();
   const { operations, refreshOperations } = useOperations();
   const qrCodeRef = useRef<HTMLDivElement>(null);
-  const parsedClientId = clientId ? parseInt(clientId, 10) : null;
+  
+  // Améliorer la validation de l'ID client
+  const parsedClientId = useMemo(() => {
+    if (!clientId || clientId === ':clientId') {
+      console.error("ID client invalide ou manquant:", clientId);
+      return null;
+    }
+    const parsed = parseInt(clientId, 10);
+    if (isNaN(parsed) || parsed <= 0) {
+      console.error("ID client non numérique ou invalide:", clientId, "parsed:", parsed);
+      return null;
+    }
+    return parsed;
+  }, [clientId]);
   
   const isPepsiMen = useMemo(() => parsedClientId === 4, [parsedClientId]);
   
   console.log("useClientProfile - Raw ID from params:", clientId, "Parsed client ID:", parsedClientId);
+  
+  // Redirection si l'ID est invalide
+  useEffect(() => {
+    if (clientId && parsedClientId === null) {
+      console.error("Redirection vers /clients à cause d'un ID invalide");
+      navigate("/clients", { replace: true });
+      toast.error("ID client invalide", {
+        description: "L'identifiant du client n'est pas valide"
+      });
+    }
+  }, [clientId, parsedClientId, navigate]);
   
   const { client, isLoading, error, fetchClient } = useClientData(parsedClientId);
   
@@ -150,7 +173,7 @@ export const useClientProfile = () => {
     } catch (error) {
       console.error("Erreur lors du rafraîchissement des opérations:", error);
       toast.error("Erreur lors de l'actualisation des données");
-      throw error; // Re-throw the error to maintain Promise rejection
+      throw error;
     }
   }, [refreshOperations, client, parsedClientId, refreshClientBalance]);
 
