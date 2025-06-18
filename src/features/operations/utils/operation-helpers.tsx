@@ -1,37 +1,49 @@
 
-import { ReactNode } from "react";
-import { ArrowUpCircle, ArrowDownCircle, RefreshCcw } from "lucide-react";
-import { Operation } from "../types";
+import React from "react";
+import { Badge } from "@/components/ui/badge";
+import { ArrowDown, ArrowUp, ArrowRightLeft, Shuffle } from "lucide-react";
 
-export const getTypeStyle = (type: Operation["type"]) => {
+export const getTypeStyle = (type: string): string => {
   switch (type) {
-    case "deposit":
-      return "bg-green-50 text-green-600 dark:bg-green-950/50";
-    case "withdrawal":
-      return "bg-red-50 text-red-600 dark:bg-red-950/50";
-    case "transfer":
-      return "bg-purple-50 text-purple-600 dark:bg-purple-950/50";
+    case 'deposit':
+      return "bg-green-100 hover:bg-green-200 text-green-800";
+    case 'withdrawal':
+      return "bg-red-100 hover:bg-red-200 text-red-800";
+    case 'transfer':
+      return "bg-blue-100 hover:bg-blue-200 text-blue-800";
+    case 'direct_transfer':
+      return "bg-purple-100 hover:bg-purple-200 text-purple-800";
+    default:
+      return "bg-gray-100 hover:bg-gray-200 text-gray-800";
   }
 };
 
-export const getTypeIcon = (type: Operation["type"]): ReactNode => {
+export const getTypeIcon = (type: string): React.ReactNode => {
   switch (type) {
-    case "deposit":
-      return <ArrowUpCircle className="h-4 w-4" />;
-    case "withdrawal":
-      return <ArrowDownCircle className="h-4 w-4" />;
-    case "transfer":
-      return <RefreshCcw className="h-4 w-4" />;
+    case 'deposit':
+      return <ArrowDown className="h-3 w-3" />;
+    case 'withdrawal':
+      return <ArrowUp className="h-3 w-3" />;
+    case 'transfer':
+      return <ArrowRightLeft className="h-3 w-3" />;
+    case 'direct_transfer':
+      return <Shuffle className="h-3 w-3" />;
+    default:
+      return null;
   }
 };
 
-export const getTypeLabel = (type: Operation["type"]) => {
+export const getTypeLabel = (type: string): string => {
   switch (type) {
-    case "deposit":
+    case 'deposit':
       return "Versement";
-    case "withdrawal":
+    case 'withdrawal':
       return "Retrait";
-    case "transfer":
+    case 'transfer':
       return "Virement";
+    case 'direct_transfer':
+      return "Opération Directe";
+    default:
+      return type;
   }
 };
