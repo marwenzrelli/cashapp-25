@@ -44,8 +44,8 @@ export const fetchAccessData = async (token: string): Promise<TokenData> => {
 
     return {
       client_id: result.data.client_id,
-      expires_at: result.data.expires_at,
-      created_at: result.data.created_at
+      access_token: token, // Include the token that was used to fetch the data
+      expires_at: result.data.expires_at
     } as TokenData;
   } catch (error: any) {
     console.error("Error fetching access data:", error);
