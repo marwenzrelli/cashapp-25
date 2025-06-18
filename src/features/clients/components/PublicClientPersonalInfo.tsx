@@ -9,14 +9,56 @@ import { format } from "date-fns";
 
 interface PublicClientPersonalInfoProps {
   client: Client;
+  operations?: any[]; // Add operations prop to calculate net balance
 }
+
 export const PublicClientPersonalInfo = ({
-  client
+  client,
+  operations = []
 }: PublicClientPersonalInfoProps) => {
   const { formatCurrency } = useCurrency();
 
-  // Use the formatCurrency function to display the balance consistently
-  const formattedBalance = formatCurrency(client.solde);
+  // Calculate net balance from operations like in PersonalInfoFields
+  const calculateNetBalance = () => {
+    if (!operations || operations.length === 0) {
+      return client.solde;
+    }
+
+    const clientFullName = `${client.prenom} ${client.nom}`.trim();
+    
+    // Calculate totals by operation type
+    const totalDeposits = operations
+      .filter(op => op.type === "deposit")
+      .reduce((total, op) => total + op.amount, 0);
+      
+    const totalWithdrawals = operations
+      .filter(op => op.type === "withdrawal")
+      .reduce((total, op) => total + op.amount, 0);
+      
+    // Separate transfers received and sent
+    const transfersReceived = operations
+      .filter(op => op.type === "transfer" && op.toClient === clientFullName)
+      .reduce((total, op) => total + op.amount, 0);
+      
+    const transfersSent = operations
+      .filter(op => op.type === "transfer" && op.fromClient === clientFullName)
+      .reduce((total, op) => total + op.amount, 0);
+
+    // Calculate direct operations received and sent
+    const directOperationsReceived = operations
+      .filter(op => op.type === "direct_transfer" && op.toClient === clientFullName)
+      .reduce((total, op) => total + op.amount, 0);
+      
+    const directOperationsSent = operations
+      .filter(op => op.type === "direct_transfer" && op.fromClient === clientFullName)
+      .reduce((total, op) => total + op.amount, 0);
+      
+    // Calculate net movement with correct formula
+    return totalDeposits + transfersReceived + directOperationsReceived - totalWithdrawals - transfersSent - directOperationsSent;
+  };
+
+  const netBalance = calculateNetBalance();
+  const formattedBalance = formatCurrency(netBalance);
   
   return <Card className="backdrop-blur-xl bg-white/50 dark:bg-gray-950/50 w-full rounded-lg border">
       <CardHeader className="pb-4 space-y-0">
@@ -26,7 +68,7 @@ export const PublicClientPersonalInfo = ({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-2">  {/* Changed from space-y-4 to space-y-2 */}
+        <div className="space-y-2">
           {/* Client name and avatar */}
           <div className="flex items-center gap-3 bg-primary/5 p-3 rounded-lg">
             <div className="bg-primary/10 p-2 rounded-full">
@@ -54,7 +96,7 @@ export const PublicClientPersonalInfo = ({
               <Wallet className="h-4 w-4 text-primary/70" />
               <div className="w-full">
                 <p className="text-xs text-muted-foreground">Solde actuel</p>
-                <span className={cn("text-lg font-semibold inline-block mt-0.5", client.solde >= 0 ? "text-green-600" : "text-red-600")}>
+                <span className={cn("text-lg font-semibold inline-block mt-0.5", netBalance >= 0 ? "text-green-600" : "text-red-600")}>
                   {formattedBalance}
                 </span>
                 <p className="text-xs text-muted-foreground mt-1">
