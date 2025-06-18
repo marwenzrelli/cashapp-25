@@ -95,6 +95,10 @@ export const PersonalInfoFields = ({
               <BadgeCheck className="h-3.5 w-3.5 text-primary/70" />
               Client vérifié
             </p>
+            {/* Current balance date display */}
+            <p className="text-sm text-muted-foreground mt-2">
+              Solde actuel au {new Date().toLocaleDateString()}
+            </p>
           </div>
         </div>
         
