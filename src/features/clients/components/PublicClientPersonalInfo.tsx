@@ -21,29 +21,50 @@ export const PublicClientPersonalInfo = ({
   // Calculate the effective balance exactly like in the main profile page
   // This should match the calculation used in PersonalInfoFields
   const calculateEffectiveBalance = () => {
+    console.log("PublicClientPersonalInfo - Calculating balance for:", client.prenom, client.nom);
+    console.log("PublicClientPersonalInfo - Operations count:", operations.length);
+    console.log("PublicClientPersonalInfo - Client solde from DB:", client.solde);
+    
     if (operations && operations.length > 0) {
       let balance = 0;
+      const clientFullName = `${client.prenom} ${client.nom}`.toLowerCase().trim();
+      
+      console.log("PublicClientPersonalInfo - Looking for operations for:", clientFullName);
       
       operations.forEach(op => {
         if (op.type === "deposit") {
           balance += Number(op.amount);
+          console.log("PublicClientPersonalInfo - Added deposit:", op.amount, "New balance:", balance);
         } else if (op.type === "withdrawal") {
           balance -= Number(op.amount);
+          console.log("PublicClientPersonalInfo - Subtracted withdrawal:", op.amount, "New balance:", balance);
         } else if (op.type === "transfer") {
           // Check if this client is sender or receiver
-          const clientFullName = `${client.prenom} ${client.nom}`.toLowerCase();
-          if (op.to_client && op.to_client.toLowerCase() === clientFullName) {
+          if (op.to_client && op.to_client.toLowerCase().trim() === clientFullName) {
             balance += Number(op.amount); // Receiving transfer
-          } else if (op.from_client && op.from_client.toLowerCase() === clientFullName) {
+            console.log("PublicClientPersonalInfo - Received transfer:", op.amount, "New balance:", balance);
+          } else if (op.from_client && op.from_client.toLowerCase().trim() === clientFullName) {
             balance -= Number(op.amount); // Sending transfer
+            console.log("PublicClientPersonalInfo - Sent transfer:", op.amount, "New balance:", balance);
+          }
+        } else if (op.type === "direct_transfer") {
+          // Handle direct transfers
+          if (op.to_client && op.to_client.toLowerCase().trim() === clientFullName) {
+            balance += Number(op.amount); // Receiving direct transfer
+            console.log("PublicClientPersonalInfo - Received direct transfer:", op.amount, "New balance:", balance);
+          } else if (op.from_client && op.from_client.toLowerCase().trim() === clientFullName) {
+            balance -= Number(op.amount); // Sending direct transfer
+            console.log("PublicClientPersonalInfo - Sent direct transfer:", op.amount, "New balance:", balance);
           }
         }
       });
       
+      console.log("PublicClientPersonalInfo - Final calculated balance:", balance);
       return balance;
     }
     
-    return client.solde;
+    console.log("PublicClientPersonalInfo - No operations, returning client.solde:", client.solde);
+    return client.solde || 0;
   };
 
   const effectiveBalance = calculateEffectiveBalance();
