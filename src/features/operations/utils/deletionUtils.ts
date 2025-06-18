@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Operation } from "../types";
@@ -288,7 +289,8 @@ export const handleTransferDeletion = async (transferId: number, userId: string 
       return false;
     }
     
-    // Récupérer les détails complets du transfert
+    // Étape 1: Vérifier si le transfert existe dans la base
+    console.log(`Vérification de l'existence du transfert ID: ${transferId}`);
     const { data: transferData, error: fetchError } = await supabase
       .from('transfers')
       .select('*')
@@ -301,51 +303,39 @@ export const handleTransferDeletion = async (transferId: number, userId: string 
       return false;
     }
     
+    // Si le transfert n'existe pas, chercher dans les transferts supprimés
     if (!transferData) {
-      console.log("Transfert non trouvé, mais cela pourrait être normal s'il a été supprimé ailleurs");
-      toast.success("Transfert déjà supprimé ou introuvable");
-      return true; // Return true because the goal (deletion) is achieved
+      console.log(`Transfert ID ${transferId} non trouvé dans la table transfers, vérification dans deleted_transfers...`);
+      
+      const { data: deletedTransferData } = await supabase
+        .from('deleted_transfers')
+        .select('*')
+        .eq('original_id', transferId)
+        .maybeSingle();
+      
+      if (deletedTransferData) {
+        console.log(`Transfert trouvé dans deleted_transfers, tentative de restauration de l'opération originale...`);
+        // Essayer de restaurer l'opération originale même si le transfert est déjà supprimé
+        const restored = await attemptOriginalOperationRestoration(deletedTransferData.from_client, deletedTransferData.amount, userId);
+        if (restored) {
+          toast.success("Opération originale restaurée avec succès");
+        } else {
+          toast.success("Transfert déjà supprimé");
+        }
+        return true;
+      } else {
+        console.log("Transfert non trouvé nulle part, considéré comme déjà supprimé");
+        toast.success("Transfert déjà supprimé ou introuvable");
+        return true;
+      }
     }
     
     console.log(`Transfert trouvé: ${transferData.from_client} → ${transferData.to_client}, montant: ${transferData.amount}`);
     
-    // Vérifier si ce transfert provient d'une opération originale en cherchant dans les tables de suppression
-    let originalOperation = null;
-    let operationType = null;
+    // Étape 2: Chercher l'opération originale avant suppression
+    const originalOperation = await findOriginalOperation(transferData.from_client, transferData.amount);
     
-    // Chercher dans deleted_deposits
-    const { data: deletedDeposit } = await supabase
-      .from('deleted_deposits')
-      .select('*')
-      .eq('client_name', transferData.from_client)
-      .eq('amount', transferData.amount)
-      .gte('deleted_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()) // Dans les dernières 24h
-      .order('deleted_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    
-    if (deletedDeposit) {
-      originalOperation = deletedDeposit;
-      operationType = 'deposit';
-    } else {
-      // Chercher dans deleted_withdrawals
-      const { data: deletedWithdrawal } = await supabase
-        .from('deleted_withdrawals')
-        .select('*')
-        .eq('client_name', transferData.from_client)
-        .eq('amount', transferData.amount)
-        .gte('deleted_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()) // Dans les dernières 24h
-        .order('deleted_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      
-      if (deletedWithdrawal) {
-        originalOperation = deletedWithdrawal;
-        operationType = 'withdrawal';
-      }
-    }
-    
-    // Supprimer le transfert
+    // Étape 3: Supprimer le transfert de la table principale
     const { error: deleteError } = await supabase
       .from('transfers')
       .delete()
@@ -359,70 +349,23 @@ export const handleTransferDeletion = async (transferId: number, userId: string 
       return false;
     }
     
-    // Si on a trouvé une opération originale, la restaurer
-    if (originalOperation && operationType) {
-      try {
-        if (operationType === 'deposit') {
-          // Restaurer le dépôt
-          const { error: restoreError } = await supabase
-            .from('deposits')
-            .insert({
-              client_name: originalOperation.client_name,
-              amount: originalOperation.amount,
-              operation_date: originalOperation.operation_date,
-              notes: originalOperation.notes,
-              status: originalOperation.status,
-              created_by: userId
-            });
-          
-          if (restoreError) {
-            console.error("Erreur lors de la restauration du dépôt:", restoreError);
-          } else {
-            // Supprimer l'entrée de deleted_deposits
-            await supabase
-              .from('deleted_deposits')
-              .delete()
-              .eq('id', originalOperation.id);
-            
-            console.log("Dépôt restauré avec succès");
-            toast.success("Transfert supprimé et dépôt original restauré");
-          }
-        } else if (operationType === 'withdrawal') {
-          // Restaurer le retrait
-          const { error: restoreError } = await supabase
-            .from('withdrawals')
-            .insert({
-              client_name: originalOperation.client_name,
-              amount: originalOperation.amount,
-              operation_date: originalOperation.operation_date,
-              notes: originalOperation.notes,
-              status: originalOperation.status,
-              created_by: userId
-            });
-          
-          if (restoreError) {
-            console.error("Erreur lors de la restauration du retrait:", restoreError);
-          } else {
-            // Supprimer l'entrée de deleted_withdrawals
-            await supabase
-              .from('deleted_withdrawals')
-              .delete()
-              .eq('id', originalOperation.id);
-            
-            console.log("Retrait restauré avec succès");
-            toast.success("Transfert supprimé et retrait original restauré");
-          }
-        }
-      } catch (restoreError) {
-        console.error("Erreur lors de la restauration:", restoreError);
-        toast.success("Transfert supprimé (restauration de l'opération originale impossible)");
+    console.log(`Transfert supprimé avec succès de la table transfers`);
+    
+    // Étape 4: Enregistrer dans deleted_transfers
+    await recordDeletedTransfer(transferData, userId);
+    
+    // Étape 5: Restaurer l'opération originale si trouvée
+    if (originalOperation) {
+      const restored = await restoreOriginalOperation(originalOperation, userId);
+      if (restored) {
+        toast.success("Transfert supprimé et opération originale restaurée");
+      } else {
+        toast.success("Transfert supprimé (restauration partielle)");
       }
     } else {
-      console.log("Aucune opération originale trouvée pour restauration");
       toast.success("Transfert supprimé avec succès");
     }
     
-    console.log("Transfert supprimé avec succès:", transferId);
     return true;
   } catch (error: any) {
     console.error("Erreur lors de la suppression du transfert:", error);
@@ -431,4 +374,151 @@ export const handleTransferDeletion = async (transferId: number, userId: string 
     });
     return false;
   }
+};
+
+/**
+ * Cherche l'opération originale (dépôt ou retrait) qui a été transférée
+ */
+const findOriginalOperation = async (clientName: string, amount: number) => {
+  console.log(`Recherche de l'opération originale pour ${clientName}, montant: ${amount}`);
+  
+  // Chercher dans deleted_deposits (dernières 48h pour plus de flexibilité)
+  const { data: deletedDeposit } = await supabase
+    .from('deleted_deposits')
+    .select('*')
+    .eq('client_name', clientName)
+    .eq('amount', amount)
+    .gte('deleted_at', new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString())
+    .order('deleted_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  
+  if (deletedDeposit) {
+    console.log("Opération originale trouvée: dépôt supprimé");
+    return { ...deletedDeposit, type: 'deposit' };
+  }
+  
+  // Chercher dans deleted_withdrawals
+  const { data: deletedWithdrawal } = await supabase
+    .from('deleted_withdrawals')
+    .select('*')
+    .eq('client_name', clientName)
+    .eq('amount', amount)
+    .gte('deleted_at', new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString())
+    .order('deleted_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  
+  if (deletedWithdrawal) {
+    console.log("Opération originale trouvée: retrait supprimé");
+    return { ...deletedWithdrawal, type: 'withdrawal' };
+  }
+  
+  console.log("Aucune opération originale trouvée");
+  return null;
+};
+
+/**
+ * Enregistre le transfert supprimé dans deleted_transfers
+ */
+const recordDeletedTransfer = async (transferData: any, userId: string | undefined) => {
+  try {
+    const { error: logError } = await supabase
+      .from('deleted_transfers')
+      .insert({
+        original_id: transferData.id,
+        from_client: transferData.from_client,
+        to_client: transferData.to_client,
+        amount: Number(transferData.amount),
+        operation_date: transferData.operation_date,
+        reason: transferData.reason,
+        status: transferData.status,
+        deleted_by: userId
+      });
+      
+    if (logError) {
+      console.error("Erreur lors de l'enregistrement dans deleted_transfers:", logError);
+    } else {
+      console.log("Transfert enregistré dans deleted_transfers");
+    }
+  } catch (error) {
+    console.error("Erreur lors de l'enregistrement du transfert supprimé:", error);
+  }
+};
+
+/**
+ * Restaure l'opération originale (dépôt ou retrait)
+ */
+const restoreOriginalOperation = async (originalOperation: any, userId: string | undefined): Promise<boolean> => {
+  try {
+    if (originalOperation.type === 'deposit') {
+      // Restaurer le dépôt
+      const { error: restoreError } = await supabase
+        .from('deposits')
+        .insert({
+          client_name: originalOperation.client_name,
+          amount: originalOperation.amount,
+          operation_date: originalOperation.operation_date,
+          notes: originalOperation.notes,
+          status: originalOperation.status,
+          created_by: userId
+        });
+      
+      if (restoreError) {
+        console.error("Erreur lors de la restauration du dépôt:", restoreError);
+        return false;
+      } else {
+        // Supprimer l'entrée de deleted_deposits
+        await supabase
+          .from('deleted_deposits')
+          .delete()
+          .eq('id', originalOperation.id);
+        
+        console.log("Dépôt restauré avec succès");
+        return true;
+      }
+    } else if (originalOperation.type === 'withdrawal') {
+      // Restaurer le retrait
+      const { error: restoreError } = await supabase
+        .from('withdrawals')
+        .insert({
+          client_name: originalOperation.client_name,
+          amount: originalOperation.amount,
+          operation_date: originalOperation.operation_date,
+          notes: originalOperation.notes,
+          status: originalOperation.status,
+          created_by: userId
+        });
+      
+      if (restoreError) {
+        console.error("Erreur lors de la restauration du retrait:", restoreError);
+        return false;
+      } else {
+        // Supprimer l'entrée de deleted_withdrawals
+        await supabase
+          .from('deleted_withdrawals')
+          .delete()
+          .eq('id', originalOperation.id);
+        
+        console.log("Retrait restauré avec succès");
+        return true;
+      }
+    }
+    
+    return false;
+  } catch (error) {
+    console.error("Erreur lors de la restauration:", error);
+    return false;
+  }
+};
+
+/**
+ * Tente de restaurer une opération originale même si le transfert est déjà supprimé
+ */
+const attemptOriginalOperationRestoration = async (clientName: string, amount: number, userId: string | undefined): Promise<boolean> => {
+  const originalOperation = await findOriginalOperation(clientName, amount);
+  if (originalOperation) {
+    return await restoreOriginalOperation(originalOperation, userId);
+  }
+  return false;
 };
