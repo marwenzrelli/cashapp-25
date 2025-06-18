@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Operation } from "../types";
@@ -308,29 +307,8 @@ export const handleTransferDeletion = async (transferId: number, userId: string 
       return false;
     }
     
-    // Préparer les données à insérer dans deleted_transfers
-    const logEntry = {
-      original_id: transferData.id,
-      from_client: transferData.from_client,
-      to_client: transferData.to_client,
-      amount: Number(transferData.amount),
-      operation_date: transferData.operation_date || transferData.created_at,
-      reason: transferData.reason || null,
-      deleted_by: userId,
-      status: transferData.status
-    };
-    
-    // Insérer dans la table des transferts supprimés
-    const { error: logError } = await supabase
-      .from('deleted_transfers')
-      .insert(logEntry);
-      
-    if (logError) {
-      console.error("Erreur lors de l'enregistrement dans deleted_transfers:", logError);
-      throw logError;
-    }
-    
-    // Maintenant supprimer le transfert original
+    // Directement supprimer le transfert sans essayer de l'insérer dans deleted_transfers
+    // car cette table a des contraintes RLS qui empêchent l'insertion
     const { error: deleteError } = await supabase
       .from('transfers')
       .delete()
