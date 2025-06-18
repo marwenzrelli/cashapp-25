@@ -11,6 +11,7 @@ interface ClientOperationsHistoryTabsProps {
   filteredOperations: Operation[];
   currency: string;
   isPublicView?: boolean;
+  clientName?: string;
   updateOperation?: (operation: Operation) => Promise<void>;
   onOperationDeleted?: () => Promise<void>;
 }
@@ -19,6 +20,7 @@ export const ClientOperationsHistoryTabs = ({
   filteredOperations, 
   currency,
   isPublicView = false,
+  clientName,
   updateOperation,
   onOperationDeleted
 }: ClientOperationsHistoryTabsProps) => {
@@ -42,6 +44,7 @@ export const ClientOperationsHistoryTabs = ({
           operations={filteredOperations} 
           currency={currency}
           isPublicView={isPublicView}
+          clientName={clientName}
           updateOperation={updateOperation}
           onOperationDeleted={onOperationDeleted}
         />

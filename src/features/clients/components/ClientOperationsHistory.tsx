@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Operation } from "@/features/operations/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +26,7 @@ interface ClientOperationsHistoryProps {
   setShowAllDates?: (showAll: boolean) => void;
   clientId?: number;
   isPepsiMen?: boolean;
+  clientName?: string;
   updateOperation?: (operation: Operation) => Promise<void>;
 }
 
@@ -44,6 +46,7 @@ export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = (
   setShowAllDates = () => {},
   clientId,
   isPepsiMen = false,
+  clientName,
   updateOperation
 }) => {
   // State for pending date range before confirmation
@@ -172,6 +175,7 @@ export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = (
           <ClientOperationsHistoryTabs 
             filteredOperations={filteredOperations} 
             currency="TND"
+            clientName={clientName}
             updateOperation={updateOperation}
             onOperationDeleted={refreshOperations}
           />

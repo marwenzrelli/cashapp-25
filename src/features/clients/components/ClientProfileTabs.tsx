@@ -72,6 +72,9 @@ export function ClientProfileTabs({
       console.error("Error refreshing operations in tabs:", error);
     }
   };
+
+  // Get client full name for totals calculation
+  const clientFullName = `${client.prenom} ${client.nom}`.trim();
   
   return (
     <div className="space-y-6">
@@ -104,6 +107,7 @@ export function ClientProfileTabs({
                 setShowAllDates={setShowAllDates} 
                 clientId={clientId} 
                 isPepsiMen={isPepsiMen} 
+                clientName={clientFullName}
                 updateOperation={updateOperation}
               />
             </TabsContent>

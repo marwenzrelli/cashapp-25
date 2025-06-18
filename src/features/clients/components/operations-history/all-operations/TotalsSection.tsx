@@ -36,10 +36,24 @@ export const TotalsSection = ({ operations, currency, clientName, isMobile = fal
   const totalTransfers = !clientName ? operations
     .filter(op => op.type === "transfer")
     .reduce((total, op) => total + op.amount, 0) : 0;
+
+  // Calculate direct operations received and sent if clientName is provided
+  const directOperationsReceived = clientName ? operations
+    .filter(op => op.type === "direct_transfer" && op.toClient === clientName)
+    .reduce((total, op) => total + op.amount, 0) : 0;
     
-  // Calculate net movement with new formula: deposits + transfers received - withdrawals - transfers sent
+  const directOperationsSent = clientName ? operations
+    .filter(op => op.type === "direct_transfer" && op.fromClient === clientName)
+    .reduce((total, op) => total + op.amount, 0) : 0;
+    
+  // Total direct operations (for backwards compatibility when clientName is not provided)
+  const totalDirectOperations = !clientName ? operations
+    .filter(op => op.type === "direct_transfer")
+    .reduce((total, op) => total + op.amount, 0) : 0;
+    
+  // Calculate net movement with new formula: deposits + transfers received + direct operations received - withdrawals - transfers sent - direct operations sent
   const netMovement = clientName 
-    ? totalDeposits + transfersReceived - totalWithdrawals - transfersSent
+    ? totalDeposits + transfersReceived + directOperationsReceived - totalWithdrawals - transfersSent - directOperationsSent
     : totalDeposits - totalWithdrawals;
 
   if (isMobile) {
@@ -73,14 +87,34 @@ export const TotalsSection = ({ operations, currency, clientName, isMobile = fal
                   {formatAmount(transfersSent)} {currency}
                 </span>
               </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Opérations directes reçues:</span>
+                <span className="font-medium text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 px-2 py-0.5 rounded">
+                  {formatAmount(directOperationsReceived)} {currency}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Opérations directes émises:</span>
+                <span className="font-medium text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-900/20 px-2 py-0.5 rounded">
+                  {formatAmount(directOperationsSent)} {currency}
+                </span>
+              </div>
             </>
           ) : (
-            <div className="flex justify-between items-center">
-              <span className="text-sm">Virements:</span>
-              <span className="font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded">
-                {formatAmount(totalTransfers)} {currency}
-              </span>
-            </div>
+            <>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Virements:</span>
+                <span className="font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded">
+                  {formatAmount(totalTransfers)} {currency}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Opérations directes:</span>
+                <span className="font-medium text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 px-2 py-0.5 rounded">
+                  {formatAmount(totalDirectOperations)} {currency}
+                </span>
+              </div>
+            </>
           )}
           <div className="flex justify-between items-center pt-2 border-t mt-2">
             <span className="font-medium">Solde Net:</span>
@@ -118,12 +152,26 @@ export const TotalsSection = ({ operations, currency, clientName, isMobile = fal
             <span className="text-sm text-muted-foreground">Virements émis:</span>
             <span className="font-medium text-orange-600 dark:text-orange-400">{formatAmount(transfersSent)} {currency}</span>
           </div>
+          <div className="flex justify-between">
+            <span className="text-sm text-muted-foreground">Opérations directes reçues:</span>
+            <span className="font-medium text-purple-600 dark:text-purple-400">{formatAmount(directOperationsReceived)} {currency}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-sm text-muted-foreground">Opérations directes émises:</span>
+            <span className="font-medium text-pink-600 dark:text-pink-400">{formatAmount(directOperationsSent)} {currency}</span>
+          </div>
         </>
       ) : (
-        <div className="flex justify-between">
-          <span className="text-sm text-muted-foreground">Virements:</span>
-          <span className="font-medium text-blue-600 dark:text-blue-400">{formatAmount(totalTransfers)} {currency}</span>
-        </div>
+        <>
+          <div className="flex justify-between">
+            <span className="text-sm text-muted-foreground">Virements:</span>
+            <span className="font-medium text-blue-600 dark:text-blue-400">{formatAmount(totalTransfers)} {currency}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-sm text-muted-foreground">Opérations directes:</span>
+            <span className="font-medium text-purple-600 dark:text-purple-400">{formatAmount(totalDirectOperations)} {currency}</span>
+          </div>
+        </>
       )}
       <div className="flex justify-between pt-1 border-t">
         <span className="font-medium">Solde Net:</span>
