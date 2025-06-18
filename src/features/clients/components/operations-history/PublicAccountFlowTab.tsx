@@ -1,4 +1,3 @@
-
 import { Operation } from "@/features/operations/types";
 import { useMemo } from "react";
 import { Card } from "@/components/ui/card";
@@ -112,7 +111,7 @@ export const PublicAccountFlowTab = ({
     return effectiveBalance;
   };
 
-  // Sort operations by date and calculate running balance - FIXED LOGIC
+  // Sort operations by date and calculate running balance - CORRECTED LOGIC
   const processedOperations = useMemo(() => {
     if (!client) return [];
     
@@ -132,16 +131,54 @@ export const PublicAccountFlowTab = ({
     
     console.log("PublicAccountFlowTab - Processing operations for:", clientFullName, "Count:", clientOperations.length);
     
-    // Sort operations from oldest to newest for balance calculation
-    const sortedOpsForCalculation = [...clientOperations].sort((a, b) => {
+    if (clientOperations.length === 0) {
+      return [];
+    }
+
+    // Calculate the final balance
+    const finalBalance = calculateEffectiveBalance();
+    
+    // Sort operations from oldest to newest
+    const sortedOps = [...clientOperations].sort((a, b) => {
       const dateA = new Date(a.operation_date || a.date);
       const dateB = new Date(b.operation_date || b.date);
-      return dateA.getTime() - dateB.getTime(); // Oldest first for calculation
+      return dateA.getTime() - dateB.getTime();
     });
 
-    // Calculate running balance for each operation
-    let runningBalance = 0;
-    const opsWithBalance = sortedOpsForCalculation.map((op) => {
+    // Calculate total impact of all operations to find initial balance
+    let totalImpact = 0;
+    sortedOps.forEach(op => {
+      if (op.type === "deposit") {
+        totalImpact += Number(op.amount);
+      } else if (op.type === "withdrawal") {
+        totalImpact -= Number(op.amount);
+      } else if (op.type === "transfer") {
+        if (op.toClient === clientFullName) {
+          totalImpact += Number(op.amount);
+        } else if (op.fromClient === clientFullName) {
+          totalImpact -= Number(op.amount);
+        }
+      } else if (op.type === "direct_transfer") {
+        if (op.toClient === clientFullName) {
+          totalImpact += Number(op.amount);
+        } else if (op.fromClient === clientFullName) {
+          totalImpact -= Number(op.amount);
+        }
+      }
+    });
+
+    // Initial balance = final balance - total impact
+    const initialBalance = finalBalance - totalImpact;
+    
+    console.log("Balance calculation:", {
+      finalBalance,
+      totalImpact,
+      initialBalance
+    });
+
+    // Calculate running balance for each operation starting from initial balance
+    let runningBalance = initialBalance;
+    const opsWithBalance = sortedOps.map((op) => {
       const balanceBefore = runningBalance;
 
       // Calculate the impact of this operation on the balance
@@ -153,18 +190,14 @@ export const PublicAccountFlowTab = ({
         operationImpact = -Number(op.amount);
       } else if (op.type === "transfer") {
         if (op.toClient === clientFullName) {
-          // Transfer received - positive impact
           operationImpact = Number(op.amount);
         } else if (op.fromClient === clientFullName) {
-          // Transfer sent - negative impact
           operationImpact = -Number(op.amount);
         }
       } else if (op.type === "direct_transfer") {
         if (op.toClient === clientFullName) {
-          // Direct operation received - positive impact
           operationImpact = Number(op.amount);
         } else if (op.fromClient === clientFullName) {
-          // Direct operation sent - negative impact
           operationImpact = -Number(op.amount);
         }
       }
