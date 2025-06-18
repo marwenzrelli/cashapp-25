@@ -17,6 +17,10 @@ export const ClientPublicPreview: React.FC<ClientPublicPreviewProps> = ({
   operations,
   isMobilePreview = false
 }) => {
+  console.log("ClientPublicPreview - Client:", client.prenom, client.nom);
+  console.log("ClientPublicPreview - Operations received:", operations?.length || 0);
+  console.log("ClientPublicPreview - Operations details:", operations);
+
   return (
     <div className="space-y-6">
       <Card className="shadow-sm">
@@ -38,7 +42,7 @@ export const ClientPublicPreview: React.FC<ClientPublicPreviewProps> = ({
                   {/* Content with scrollable area */}
                   <div className="h-[600px] overflow-y-auto p-2 bg-gray-50">
                     <div className="space-y-4">
-                      <PublicClientPersonalInfo client={client} />
+                      <PublicClientPersonalInfo client={client} operations={operations} />
                       <PublicClientOperationsHistory 
                         operations={operations} 
                         client={client}
@@ -54,7 +58,7 @@ export const ClientPublicPreview: React.FC<ClientPublicPreviewProps> = ({
             ) : (
               // Standard desktop view
               <div className="container mx-auto max-w-6xl space-y-6">
-                <PublicClientPersonalInfo client={client} />
+                <PublicClientPersonalInfo client={client} operations={operations} />
                 <PublicClientOperationsHistory 
                   operations={operations} 
                   client={client}
