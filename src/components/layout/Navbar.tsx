@@ -22,12 +22,12 @@ export const Navbar = ({ currentPath, userRole, isOpen, setIsOpen, handleLogout 
           <div className="flex items-center">
             <LogoSection />
 
-            {/* Menu desktop */}
+            {/* Menu desktop - Toujours visible */}
             <div className="hidden md:flex items-center ml-8 space-x-4">
               <NavigationLinks />
             </div>
 
-            {/* Menu mobile */}
+            {/* Menu mobile - Bouton hamburger */}
             <div className="md:hidden ml-4">
               <MobileMenu 
                 isOpen={isOpen} 
@@ -39,11 +39,12 @@ export const Navbar = ({ currentPath, userRole, isOpen, setIsOpen, handleLogout 
             </div>
           </div>
 
-          {/* Bouton déconnexion desktop */}
-          <LogoutButton
-            onLogout={handleLogout}
-            className="hidden md:flex"
-          />
+          {/* Bouton déconnexion desktop - Toujours visible */}
+          <div className="hidden md:flex">
+            <LogoutButton
+              onLogout={handleLogout}
+            />
+          </div>
         </div>
       </div>
     </nav>
