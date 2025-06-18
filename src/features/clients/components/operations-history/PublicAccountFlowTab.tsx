@@ -21,7 +21,7 @@ export const PublicAccountFlowTab = ({
 }: PublicAccountFlowTabProps) => {
   const { currency } = useCurrency();
 
-  // Calculate effective balance using the same logic as PersonalInfo - EXACTEMENT LA MÊME LOGIQUE
+  // Calculate effective balance using the EXACT SAME logic as PublicClientPersonalInfo
   const calculateEffectiveBalance = () => {
     console.log("PublicAccountFlowTab - Calculating balance for:", client?.prenom, client?.nom);
     console.log("PublicAccountFlowTab - Operations count:", operations?.length || 0);
@@ -29,13 +29,13 @@ export const PublicAccountFlowTab = ({
     
     if (!operations || operations.length === 0 || !client) {
       console.log("PublicAccountFlowTab - No operations or client, returning 0");
-      return 0; // Changement: retourner 0 au lieu du solde DB
+      return 0;
     }
 
     const clientFullName = `${client.prenom} ${client.nom}`.trim();
     console.log("PublicAccountFlowTab - Looking for operations for:", clientFullName);
     
-    // Filtrer les opérations qui concernent ce client - MÊME LOGIQUE QUE PersonalInfo
+    // Filtrer les opérations qui concernent ce client - EXACTEMENT LA MÊME LOGIQUE QUE PublicClientPersonalInfo
     const clientOperations = operations.filter(op => {
       const isDeposit = op.type === "deposit" && op.fromClient === clientFullName;
       const isWithdrawal = op.type === "withdrawal" && op.fromClient === clientFullName;
@@ -50,7 +50,7 @@ export const PublicAccountFlowTab = ({
     console.log("PublicAccountFlowTab - Filtered client operations:", clientOperations.length);
     console.log("PublicAccountFlowTab - Client operations details:", clientOperations);
     
-    // Calculate totals by operation type exactly like PersonalInfoFields
+    // Calculate totals by operation type - EXACTEMENT LA MÊME LOGIQUE QUE PublicClientPersonalInfo
     const totalDeposits = clientOperations
       .filter(op => op.type === "deposit")
       .reduce((total, op) => {
@@ -95,9 +95,8 @@ export const PublicAccountFlowTab = ({
         return total + Number(op.amount);
       }, 0);
       
-    // Calculate net movement with correct formula: 
-    // Balance = deposits + transfers received + direct operations received - withdrawals - transfers sent - direct operations sent
-    const effectiveBalance = totalDeposits + transfersReceived + directOperationsReceived - totalWithdrawals - transfersSent - directOperationsSent;
+    // LOGIQUE UNIFIÉE: total versements - total retraits + total virements reçus - total virements émis + total opérations directes reçues - total opérations directes émises
+    const effectiveBalance = totalDeposits - totalWithdrawals + transfersReceived - transfersSent + directOperationsReceived - directOperationsSent;
     
     console.log("PublicAccountFlowTab - Final calculated balance:", effectiveBalance);
     console.log("PublicAccountFlowTab - Breakdown:", {
@@ -106,7 +105,8 @@ export const PublicAccountFlowTab = ({
       transfersReceived,
       transfersSent,
       directOperationsReceived,
-      directOperationsSent
+      directOperationsSent,
+      formula: `${totalDeposits} - ${totalWithdrawals} + ${transfersReceived} - ${transfersSent} + ${directOperationsReceived} - ${directOperationsSent} = ${effectiveBalance}`
     });
     
     return effectiveBalance;
