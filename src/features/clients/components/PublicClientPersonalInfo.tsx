@@ -18,48 +18,8 @@ export const PublicClientPersonalInfo = ({
 }: PublicClientPersonalInfoProps) => {
   const { formatCurrency } = useCurrency();
 
-  // Calculate net balance using EXACT same logic as PersonalInfoFields
-  const calculateNetBalance = () => {
-    if (!operations || operations.length === 0) {
-      // If no operations available, use real-time balance or client.solde
-      return client.solde;
-    }
-
-    const clientFullName = `${client.prenom} ${client.nom}`.trim();
-    
-    // Calculate totals by operation type - EXACT same logic as PersonalInfoFields
-    const totalDeposits = operations
-      .filter(op => op.type === "deposit")
-      .reduce((total, op) => total + op.amount, 0);
-      
-    const totalWithdrawals = operations
-      .filter(op => op.type === "withdrawal")
-      .reduce((total, op) => total + op.amount, 0);
-      
-    // Separate transfers received and sent
-    const transfersReceived = operations
-      .filter(op => op.type === "transfer" && op.toClient === clientFullName)
-      .reduce((total, op) => total + op.amount, 0);
-      
-    const transfersSent = operations
-      .filter(op => op.type === "transfer" && op.fromClient === clientFullName)
-      .reduce((total, op) => total + op.amount, 0);
-
-    // Calculate direct operations received and sent
-    const directOperationsReceived = operations
-      .filter(op => op.type === "direct_transfer" && op.toClient === clientFullName)
-      .reduce((total, op) => total + op.amount, 0);
-      
-    const directOperationsSent = operations
-      .filter(op => op.type === "direct_transfer" && op.fromClient === clientFullName)
-      .reduce((total, op) => total + op.amount, 0);
-      
-    // Calculate net movement with correct formula: 
-    // Solde = dépôts + transferts reçus + opérations directes reçues - retraits - transferts émis - opérations directes émises
-    return totalDeposits + transfersReceived + directOperationsReceived - totalWithdrawals - transfersSent - directOperationsSent;
-  };
-
-  const netBalance = calculateNetBalance();
+  // Use the client's current balance directly - same as in profile page
+  const netBalance = client.solde;
   const formattedBalance = formatCurrency(netBalance);
   
   return <Card className="backdrop-blur-xl bg-white/50 dark:bg-gray-950/50 w-full rounded-lg border">
