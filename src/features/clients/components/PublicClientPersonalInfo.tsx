@@ -18,59 +18,86 @@ export const PublicClientPersonalInfo = ({
 }: PublicClientPersonalInfoProps) => {
   const { formatCurrency } = useCurrency();
 
-  // Calculate the effective balance exactly like in the main profile page
-  // This should match the calculation used in PersonalInfoFields
+  // Calculate the effective balance exactly like in PersonalInfoFields
   const calculateEffectiveBalance = () => {
     console.log("PublicClientPersonalInfo - Calculating balance for:", client.prenom, client.nom);
     console.log("PublicClientPersonalInfo - Operations count:", operations.length);
     console.log("PublicClientPersonalInfo - Client solde from DB:", client.solde);
     
-    if (operations && operations.length > 0) {
-      let balance = 0;
-      const clientFullName = `${client.prenom} ${client.nom}`.toLowerCase().trim();
-      
-      console.log("PublicClientPersonalInfo - Looking for operations for:", clientFullName);
-      
-      operations.forEach(op => {
-        if (op.type === "deposit") {
-          balance += Number(op.amount);
-          console.log("PublicClientPersonalInfo - Added deposit:", op.amount, "New balance:", balance);
-        } else if (op.type === "withdrawal") {
-          balance -= Number(op.amount);
-          console.log("PublicClientPersonalInfo - Subtracted withdrawal:", op.amount, "New balance:", balance);
-        } else if (op.type === "transfer") {
-          // Check if this client is sender or receiver
-          if (op.to_client && op.to_client.toLowerCase().trim() === clientFullName) {
-            balance += Number(op.amount); // Receiving transfer
-            console.log("PublicClientPersonalInfo - Received transfer:", op.amount, "New balance:", balance);
-          } else if (op.from_client && op.from_client.toLowerCase().trim() === clientFullName) {
-            balance -= Number(op.amount); // Sending transfer
-            console.log("PublicClientPersonalInfo - Sent transfer:", op.amount, "New balance:", balance);
-          }
-        } else if (op.type === "direct_transfer") {
-          // Handle direct transfers
-          if (op.to_client && op.to_client.toLowerCase().trim() === clientFullName) {
-            balance += Number(op.amount); // Receiving direct transfer
-            console.log("PublicClientPersonalInfo - Received direct transfer:", op.amount, "New balance:", balance);
-          } else if (op.from_client && op.from_client.toLowerCase().trim() === clientFullName) {
-            balance -= Number(op.amount); // Sending direct transfer
-            console.log("PublicClientPersonalInfo - Sent direct transfer:", op.amount, "New balance:", balance);
-          }
-        }
-      });
-      
-      console.log("PublicClientPersonalInfo - Final calculated balance:", balance);
-      return balance;
+    if (!operations || operations.length === 0) {
+      console.log("PublicClientPersonalInfo - No operations, returning client.solde:", client.solde);
+      return client.solde || 0;
     }
+
+    const clientFullName = `${client.prenom} ${client.nom}`.trim();
+    console.log("PublicClientPersonalInfo - Looking for operations for:", clientFullName);
     
-    console.log("PublicClientPersonalInfo - No operations, returning client.solde:", client.solde);
-    return client.solde || 0;
+    // Calculate totals by operation type exactly like PersonalInfoFields
+    const totalDeposits = operations
+      .filter(op => op.type === "deposit")
+      .reduce((total, op) => {
+        console.log("PublicClientPersonalInfo - Adding deposit:", op.amount);
+        return total + Number(op.amount);
+      }, 0);
+      
+    const totalWithdrawals = operations
+      .filter(op => op.type === "withdrawal")
+      .reduce((total, op) => {
+        console.log("PublicClientPersonalInfo - Adding withdrawal:", op.amount);
+        return total + Number(op.amount);
+      }, 0);
+      
+    // Separate transfers received and sent
+    const transfersReceived = operations
+      .filter(op => op.type === "transfer" && op.to_client === clientFullName)
+      .reduce((total, op) => {
+        console.log("PublicClientPersonalInfo - Adding received transfer:", op.amount);
+        return total + Number(op.amount);
+      }, 0);
+      
+    const transfersSent = operations
+      .filter(op => op.type === "transfer" && op.from_client === clientFullName)
+      .reduce((total, op) => {
+        console.log("PublicClientPersonalInfo - Adding sent transfer:", op.amount);
+        return total + Number(op.amount);
+      }, 0);
+
+    // Calculate direct operations received and sent
+    const directOperationsReceived = operations
+      .filter(op => op.type === "direct_transfer" && op.to_client === clientFullName)
+      .reduce((total, op) => {
+        console.log("PublicClientPersonalInfo - Adding received direct transfer:", op.amount);
+        return total + Number(op.amount);
+      }, 0);
+      
+    const directOperationsSent = operations
+      .filter(op => op.type === "direct_transfer" && op.from_client === clientFullName)
+      .reduce((total, op) => {
+        console.log("PublicClientPersonalInfo - Adding sent direct transfer:", op.amount);
+        return total + Number(op.amount);
+      }, 0);
+      
+    // Calculate net movement with correct formula: 
+    // Balance = deposits + transfers received + direct operations received - withdrawals - transfers sent - direct operations sent
+    const effectiveBalance = totalDeposits + transfersReceived + directOperationsReceived - totalWithdrawals - transfersSent - directOperationsSent;
+    
+    console.log("PublicClientPersonalInfo - Final calculated balance:", effectiveBalance);
+    console.log("PublicClientPersonalInfo - Breakdown:", {
+      totalDeposits,
+      totalWithdrawals,
+      transfersReceived,
+      transfersSent,
+      directOperationsReceived,
+      directOperationsSent
+    });
+    
+    return effectiveBalance;
   };
 
   const effectiveBalance = calculateEffectiveBalance();
   
-  // Use simple formatting without any separators, exactly like the main profile
-  const formattedBalance = `${Math.round(effectiveBalance)} TND`;
+  // Use formatCurrency for consistent formatting
+  const formattedBalance = formatCurrency(effectiveBalance);
   
   return <Card className="backdrop-blur-xl bg-white/50 dark:bg-gray-950/50 w-full rounded-lg border">
       <CardHeader className="pb-4 space-y-0">
