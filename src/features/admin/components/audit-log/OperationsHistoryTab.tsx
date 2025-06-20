@@ -1,188 +1,124 @@
 
+import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useQuery } from "@tanstack/react-query";
-import { LogEntryRenderer, OperationLogEntry } from "./LogEntryRenderer";
+import { useOperations } from "@/features/operations/hooks/useOperations";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { formatDateTime } from "@/features/deposits/hooks/utils/dateUtils";
-
-export const fetchRecentOperations = async () => {
-  try {
-    // Récupérer les opérateurs
-    const { data: usersData } = await supabase
-      .from('profiles')
-      .select('id, full_name');
-    
-    const usersMap = (usersData || []).reduce((acc, user) => {
-      acc[user.id] = user.full_name;
-      return acc;
-    }, {} as Record<string, string>);
-
-    // Fetch deposits
-    const { data: deposits, error: depositsError } = await supabase
-      .from('deposits')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(20);
-
-    if (depositsError) throw depositsError;
-
-    // Fetch withdrawals
-    const { data: withdrawals, error: withdrawalsError } = await supabase
-      .from('withdrawals')
-      .select('*')
-      .order('operation_date', { ascending: false })
-      .limit(20);
-
-    if (withdrawalsError) throw withdrawalsError;
-
-    // Fetch transfers
-    const { data: transfers, error: transfersError } = await supabase
-      .from('transfers')
-      .select('*')
-      .order('operation_date', { ascending: false })
-      .limit(20);
-
-    if (transfersError) throw transfersError;
-
-    // Combine and format all operations with the exact dates as stored in the database
-    const formattedDeposits = deposits.map(d => ({
-      id: `deposit-${d.id}`,
-      type: 'deposit',
-      amount: d.amount,
-      date: formatDateTime(d.created_at),
-      raw_date: d.created_at, // Keep the raw date for exact formatting
-      client_name: d.client_name,
-      created_by: d.created_by,
-      created_by_name: d.created_by ? usersMap[d.created_by] || 'Utilisateur inconnu' : 'Système',
-      description: d.notes || `Versement pour ${d.client_name}`
-    }));
-
-    const formattedWithdrawals = withdrawals.map(w => ({
-      id: `withdrawal-${w.id}`,
-      type: 'withdrawal',
-      amount: w.amount,
-      date: w.operation_date,
-      raw_date: w.operation_date, // Keep the raw date for exact formatting
-      client_name: w.client_name,
-      created_by: w.created_by,
-      created_by_name: w.created_by ? usersMap[w.created_by] || 'Utilisateur inconnu' : 'Système',
-      description: w.notes || `Retrait par ${w.client_name}`
-    }));
-
-    const formattedTransfers = transfers.map(t => ({
-      id: `transfer-${t.id}`,
-      type: 'transfer',
-      amount: t.amount,
-      date: t.operation_date,
-      raw_date: t.operation_date, // Keep the raw date for exact formatting
-      from_client: t.from_client,
-      to_client: t.to_client,
-      created_by: t.created_by,
-      created_by_name: t.created_by ? usersMap[t.created_by] || 'Utilisateur inconnu' : 'Système',
-      description: t.reason || `Virement de ${t.from_client} vers ${t.to_client}`
-    }));
-
-    // Combine all operations and sort by date (newest first)
-    const allOperations = [...formattedDeposits, ...formattedWithdrawals, ...formattedTransfers]
-      .sort((a, b) => {
-        const dateA = a.raw_date ? new Date(a.raw_date).getTime() : new Date(a.date).getTime();
-        const dateB = b.raw_date ? new Date(b.raw_date).getTime() : new Date(b.date).getTime();
-        return dateB - dateA;
-      })
-      .slice(0, 50); // Limit to 50 most recent
-
-    return allOperations;
-  } catch (error) {
-    console.error("Erreur lors du chargement des opérations récentes:", error);
-    toast.error("Erreur lors du chargement des opérations récentes");
-    throw error;
-  }
-};
+import { LoadingState } from "./LoadingState";
+import { ErrorState } from "./ErrorState";
+import { LogEntryRenderer, OperationLogEntry } from "./LogEntryRenderer";
+import { formatDateTime } from "@/features/operations/types";
 
 export const OperationsHistoryTab = () => {
-  const { data: operationsLog = [], isLoading } = useQuery({
-    queryKey: ['recent-operations'],
-    queryFn: fetchRecentOperations,
-    staleTime: 30000,
-    refetchOnWindowFocus: true
-  });
+  const { operations, isLoading: operationsLoading, error: operationsError } = useOperations();
+  const [directOperations, setDirectOperations] = useState([]);
+  const [isLoadingDirect, setIsLoadingDirect] = useState(true);
+  const [directError, setDirectError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("all");
 
-  const renderOperationsByType = (type: string) => {
-    const filteredOperations = operationsLog.filter(op => op.type === type);
+  const fetchDirectOperations = async () => {
+    setIsLoadingDirect(true);
+    setDirectError(null);
     
-    if (isLoading) {
-      return (
-        <div className="flex items-center justify-center py-10">
-          <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
-        </div>
-      );
+    try {
+      const { data, error } = await supabase
+        .from("direct_operations")
+        .select(`
+          *,
+          created_by_profile:profiles!direct_operations_created_by_fkey(full_name, email)
+        `)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      const formattedDirectOperations = data.map(op => ({
+        id: op.id.toString(),
+        type: "direct_transfer",
+        amount: op.amount,
+        date: formatDateTime(op.created_at),
+        raw_date: op.created_at,
+        from_client: op.from_client_name,
+        to_client: op.to_client_name,
+        created_by: op.created_by || "",
+        created_by_name: op.created_by_profile?.full_name || op.created_by_profile?.email || "Système",
+        description: op.notes || `Opération directe de ${op.from_client_name} vers ${op.to_client_name}`
+      }));
+
+      setDirectOperations(formattedDirectOperations);
+    } catch (error: any) {
+      console.error("Erreur lors de la récupération des opérations directes:", error);
+      setDirectError(error.message || "Une erreur est survenue lors du chargement des opérations directes");
+    } finally {
+      setIsLoadingDirect(false);
     }
-    
-    if (filteredOperations.length === 0) {
-      return (
-        <div className="text-center py-10 text-muted-foreground">
-          Aucune opération de ce type
-        </div>
-      );
-    }
-    
-    return (
-      <div className="divide-y divide-border">
-        {filteredOperations.map((operation, index) => (
-          <LogEntryRenderer key={operation.id} entry={operation} index={index} type="operation" />
-        ))}
-      </div>
-    );
   };
 
+  useEffect(() => {
+    fetchDirectOperations();
+  }, []);
+
+  const handleRetry = () => {
+    fetchDirectOperations();
+  };
+
+  // Combiner toutes les opérations
+  const allOperations = [
+    ...operations.map(op => ({
+      ...op,
+      raw_date: op.createdAt || op.date
+    })),
+    ...directOperations
+  ];
+
+  // Filtrer selon l'onglet actif
+  const filteredOperations = allOperations.filter(entry => {
+    const typedEntry = entry as OperationLogEntry;
+    if (activeTab === "all") return true;
+    return typedEntry.type === activeTab;
+  });
+
+  // Trier par date
+  const sortedOperations = filteredOperations.sort((a, b) => {
+    const dateA = new Date(a.raw_date || a.date).getTime();
+    const dateB = new Date(b.raw_date || b.date).getTime();
+    return dateB - dateA;
+  });
+
+  if (operationsLoading || isLoadingDirect) {
+    return <LoadingState />;
+  }
+
+  if (operationsError || directError) {
+    return <ErrorState message={operationsError || directError} onRetry={handleRetry} />;
+  }
+
   return (
-    <Tabs defaultValue="all">
-      <TabsList className="grid grid-cols-4 mb-4">
-        <TabsTrigger value="all">Toutes les opérations</TabsTrigger>
-        <TabsTrigger value="deposit">Versements</TabsTrigger>
-        <TabsTrigger value="withdrawal">Retraits</TabsTrigger>
-        <TabsTrigger value="transfer">Virements</TabsTrigger>
-      </TabsList>
-      
-      <TabsContent value="all">
-        <ScrollArea className="h-[50vh]">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-10">
-              <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
-            </div>
-          ) : operationsLog.length === 0 ? (
-            <div className="text-center py-10 text-muted-foreground">
-              Aucune opération enregistrée
+    <div className="space-y-4">
+      <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid grid-cols-5 mb-4">
+          <TabsTrigger value="all">Toutes</TabsTrigger>
+          <TabsTrigger value="deposit">Versements</TabsTrigger>
+          <TabsTrigger value="withdrawal">Retraits</TabsTrigger>
+          <TabsTrigger value="transfer">Virements</TabsTrigger>
+          <TabsTrigger value="direct_transfer">Opérations directes</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value={activeTab} className="space-y-4">
+          {sortedOperations.length === 0 ? (
+            <div className="text-center p-6 text-muted-foreground">
+              Aucune opération trouvée.
             </div>
           ) : (
-            <div className="divide-y divide-border">
-              {operationsLog.map((operation, index) => (
-                <LogEntryRenderer key={operation.id} entry={operation} index={index} type="operation" />
-              ))}
-            </div>
+            sortedOperations.map((entry, index) => (
+              <LogEntryRenderer 
+                key={`${entry.type}-${entry.id}`} 
+                entry={entry as OperationLogEntry} 
+                index={index} 
+                type="operation" 
+              />
+            ))
           )}
-        </ScrollArea>
-      </TabsContent>
-      
-      <TabsContent value="deposit">
-        <ScrollArea className="h-[50vh]">
-          {renderOperationsByType('deposit')}
-        </ScrollArea>
-      </TabsContent>
-      
-      <TabsContent value="withdrawal">
-        <ScrollArea className="h-[50vh]">
-          {renderOperationsByType('withdrawal')}
-        </ScrollArea>
-      </TabsContent>
-      
-      <TabsContent value="transfer">
-        <ScrollArea className="h-[50vh]">
-          {renderOperationsByType('transfer')}
-        </ScrollArea>
-      </TabsContent>
-    </Tabs>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
