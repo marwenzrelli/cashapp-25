@@ -55,69 +55,43 @@ export const RecentActivityItem = ({ activity, currency, index }: RecentActivity
 
       console.log("Searching for client:", searchName);
 
-      // Méthode similaire à celle utilisée dans les autres pages
-      // 1. Recherche par nom complet exact
-      let { data: clients, error } = await supabase
+      // Approche simple et efficace - recherche par fragments
+      const searchTerms = searchName.toLowerCase().split(' ').filter(term => term.length > 0);
+      
+      // Récupérer tous les clients et filtrer côté client pour plus de flexibilité
+      const { data: allClients, error } = await supabase
         .from('clients')
         .select('id, nom, prenom')
-        .or(`nom.eq.${searchName},prenom.eq.${searchName}`)
-        .limit(5);
+        .limit(100); // Limite raisonnable
 
       if (error) {
-        console.error("Error in exact search:", error);
+        console.error("Error fetching clients:", error);
+        toast.error("Erreur lors de la recherche du client");
+        return;
       }
 
-      // 2. Si pas trouvé, recherche par nom + prénom combiné
-      if (!clients || clients.length === 0) {
-        const { data: combinedClients, error: combinedError } = await supabase
-          .from('clients')
-          .select('id, nom, prenom')
-          .textSearch('nom || \' \' || prenom', searchName, { type: 'plain' })
-          .limit(5);
+      console.log("All clients fetched:", allClients?.length);
 
-        if (!combinedError && combinedClients) {
-          clients = combinedClients;
-        }
-      }
-
-      // 3. Si toujours pas trouvé, recherche partielle avec ilike
-      if (!clients || clients.length === 0) {
-        const searchParts = searchName.split(' ');
+      // Filtrage côté client pour plus de contrôle
+      const matchingClients = allClients?.filter(client => {
+        const fullName = `${client.prenom} ${client.nom}`.toLowerCase();
+        const reverseName = `${client.nom} ${client.prenom}`.toLowerCase();
         
-        if (searchParts.length === 1) {
-          // Un seul mot - rechercher dans nom et prénom
-          const { data: partialClients, error: partialError } = await supabase
-            .from('clients')
-            .select('id, nom, prenom')
-            .or(`nom.ilike.%${searchName}%,prenom.ilike.%${searchName}%`)
-            .limit(5);
+        // Vérifier si tous les termes de recherche sont présents
+        const matchesAll = searchTerms.every(term => 
+          fullName.includes(term) || reverseName.includes(term)
+        );
+        
+        return matchesAll;
+      }) || [];
 
-          if (!partialError && partialClients) {
-            clients = partialClients;
-          }
-        } else {
-          // Plusieurs mots - essayer différentes combinaisons
-          const [firstPart, ...restParts] = searchParts;
-          const secondPart = restParts.join(' ');
-          
-          const { data: multiPartClients, error: multiPartError } = await supabase
-            .from('clients')
-            .select('id, nom, prenom')
-            .or(`and(nom.ilike.%${firstPart}%,prenom.ilike.%${secondPart}%),and(prenom.ilike.%${firstPart}%,nom.ilike.%${secondPart}%)`)
-            .limit(5);
+      console.log("Matching clients:", matchingClients);
 
-          if (!multiPartError && multiPartClients) {
-            clients = multiPartClients;
-          }
-        }
-      }
-
-      console.log("Found clients:", clients);
-
-      if (clients && clients.length > 0) {
+      if (matchingClients && matchingClients.length > 0) {
         // Prendre le premier client trouvé
-        navigate(`/clients/${clients[0].id}`);
-        toast.success(`Redirection vers le profil de ${clients[0].prenom} ${clients[0].nom}`);
+        const foundClient = matchingClients[0];
+        navigate(`/clients/${foundClient.id}`);
+        toast.success(`Redirection vers le profil de ${foundClient.prenom} ${foundClient.nom}`);
       } else {
         toast.error(`Client "${searchName}" non trouvé`);
       }
