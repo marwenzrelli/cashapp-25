@@ -11,7 +11,7 @@ import { getTypeStyle, getTypeIcon, getTypeLabel } from "@/features/operations/u
 
 interface PublicAccountFlowTabProps {
   operations: Operation[];
-  client?: any; // Add client prop to access client name
+  client?: any;
 }
 
 export const PublicAccountFlowTab = ({
@@ -26,21 +26,9 @@ export const PublicAccountFlowTab = ({
     
     const clientFullName = `${client.prenom} ${client.nom}`.trim();
     
-    console.log("=== DEBUG BALANCE CALCULATION START ===");
+    console.log("=== CALCUL CHRONOLOGIQUE DU BAS VERS LE HAUT ===");
     console.log("Client:", clientFullName);
-    console.log("Total operations received:", operations.length);
-    
-    // DEBUG: Log all operations to see what we're working with
-    operations.forEach((op, i) => {
-      console.log(`Operation ${i + 1}:`, {
-        id: op.id,
-        type: op.type,
-        amount: op.amount,
-        fromClient: op.fromClient,
-        toClient: op.toClient,
-        date: op.operation_date || op.date
-      });
-    });
+    console.log("Total operations reçues:", operations.length);
     
     // Filtrer les opérations qui concernent ce client
     const clientOperations = operations.filter(op => {
@@ -51,87 +39,69 @@ export const PublicAccountFlowTab = ({
       const isDirectReceived = op.type === "direct_transfer" && op.toClient === clientFullName;
       const isDirectSent = op.type === "direct_transfer" && op.fromClient === clientFullName;
       
-      const isRelevant = isDeposit || isWithdrawal || isTransferReceived || isTransferSent || isDirectReceived || isDirectSent;
-      
-      if (isRelevant) {
-        console.log(`✓ Operation ${op.id} included:`, {
-          type: op.type,
-          amount: op.amount,
-          isDeposit, isWithdrawal, isTransferReceived, isTransferSent, isDirectReceived, isDirectSent
-        });
-      }
-      
-      return isRelevant;
+      return isDeposit || isWithdrawal || isTransferReceived || isTransferSent || isDirectReceived || isDirectSent;
     });
     
-    console.log(`Filtered ${clientOperations.length} relevant operations for ${clientFullName}`);
+    console.log(`${clientOperations.length} opérations filtrées pour ${clientFullName}`);
     
     if (clientOperations.length === 0) {
-      console.log("No operations found for this client");
+      console.log("Aucune opération trouvée pour ce client");
       return [];
     }
 
-    // Sort operations from oldest to newest (chronological order)
-    const sortedOps = [...clientOperations].sort((a, b) => {
+    // Trier par date CHRONOLOGIQUE (du plus ancien au plus récent)
+    const sortedOpsChronological = [...clientOperations].sort((a, b) => {
       const dateA = new Date(a.operation_date || a.date);
       const dateB = new Date(b.operation_date || b.date);
       return dateA.getTime() - dateB.getTime();
     });
 
-    console.log("Operations sorted chronologically:");
-    sortedOps.forEach((op, i) => {
-      console.log(`${i + 1}. ${op.type} - ${op.amount} TND - ${op.operation_date || op.date}`);
+    console.log("Opérations triées chronologiquement (plus ancien en premier):");
+    sortedOpsChronological.forEach((op, i) => {
+      console.log(`${i + 1}. ${format(new Date(op.operation_date || op.date), "dd/MM/yyyy HH:mm")} - ${op.type} - ${op.amount} TND`);
     });
 
-    // CALCUL CHRONOLOGIQUE: Commencer à 0 et calculer séquentiellement
+    // CALCUL CHRONOLOGIQUE: Commencer à 0 et calculer du bas vers le haut
     let runningBalance = 0;
-    console.log("Starting balance calculation from 0");
+    console.log("Démarrage du calcul chronologique avec solde = 0");
     
-    const opsWithBalance = sortedOps.map((op, index) => {
+    const opsWithBalance = sortedOpsChronological.map((op, index) => {
       const balanceBefore = runningBalance;
       let balanceChange = 0;
       
-      console.log(`\n--- Processing operation ${index + 1}/${sortedOps.length} ---`);
-      console.log("Operation details:", {
-        id: op.id,
-        type: op.type,
-        amount: op.amount,
-        fromClient: op.fromClient,
-        toClient: op.toClient
-      });
-      console.log("Balance before this operation:", balanceBefore);
+      console.log(`\n--- Opération ${index + 1}/${sortedOpsChronological.length} ---`);
+      console.log(`Date: ${format(new Date(op.operation_date || op.date), "dd/MM/yyyy HH:mm")}`);
+      console.log(`Type: ${op.type}, Montant: ${op.amount}`);
+      console.log(`Solde AVANT cette opération: ${balanceBefore}`);
       
+      // Calculer l'impact sur le solde
       if (op.type === "deposit") {
         balanceChange = Number(op.amount);
-        console.log("Deposit: +" + balanceChange);
+        console.log(`✅ Versement: +${balanceChange}`);
       } else if (op.type === "withdrawal") {
         balanceChange = -Number(op.amount);
-        console.log("Withdrawal: " + balanceChange);
+        console.log(`❌ Retrait: ${balanceChange}`);
       } else if (op.type === "transfer") {
         if (op.toClient === clientFullName) {
           balanceChange = Number(op.amount);
-          console.log("Transfer received: +" + balanceChange);
+          console.log(`📥 Virement reçu: +${balanceChange}`);
         } else if (op.fromClient === clientFullName) {
           balanceChange = -Number(op.amount);
-          console.log("Transfer sent: " + balanceChange);
-        } else {
-          console.log("⚠️ Transfer doesn't match client name!");
+          console.log(`📤 Virement envoyé: ${balanceChange}`);
         }
       } else if (op.type === "direct_transfer") {
         if (op.toClient === clientFullName) {
           balanceChange = Number(op.amount);
-          console.log("Direct transfer received: +" + balanceChange);
+          console.log(`📥 Opération directe reçue: +${balanceChange}`);
         } else if (op.fromClient === clientFullName) {
           balanceChange = -Number(op.amount);
-          console.log("Direct transfer sent: " + balanceChange);
-        } else {
-          console.log("⚠️ Direct transfer doesn't match client name!");
+          console.log(`📤 Opération directe envoyée: ${balanceChange}`);
         }
       }
       
       runningBalance = balanceBefore + balanceChange;
-      console.log("Balance change:", balanceChange);
-      console.log("Balance after:", runningBalance);
+      console.log(`Changement: ${balanceChange}`);
+      console.log(`Solde APRÈS cette opération: ${runningBalance}`);
       
       return {
         ...op,
@@ -141,16 +111,21 @@ export const PublicAccountFlowTab = ({
       };
     });
 
-    console.log("\n=== FINAL BALANCE CALCULATION RESULTS ===");
+    console.log("\n=== RÉSULTATS FINAUX (ordre chronologique) ===");
     opsWithBalance.forEach((op, i) => {
-      console.log(`${i + 1}. ${op.type} - Before: ${op.balanceBefore} - Change: ${op.balanceChange} - After: ${op.balanceAfter}`);
+      const date = format(new Date(op.operation_date || op.date), "dd/MM/yyyy HH:mm");
+      console.log(`${i + 1}. ${date} - ${op.type} - Avant: ${op.balanceBefore} → Après: ${op.balanceAfter}`);
     });
 
-    // Return in reverse order for display (newest first)
-    const reversed = opsWithBalance.reverse();
-    console.log("=== DEBUG BALANCE CALCULATION END ===\n");
+    // Inverser pour l'affichage (plus récent en premier) mais les calculs sont corrects
+    const reversedForDisplay = [...opsWithBalance].reverse();
+    console.log("\n=== ORDRE D'AFFICHAGE (plus récent en premier) ===");
+    reversedForDisplay.forEach((op, i) => {
+      const date = format(new Date(op.operation_date || op.date), "dd/MM/yyyy HH:mm");
+      console.log(`${i + 1}. ${date} - Avant: ${op.balanceBefore} → Après: ${op.balanceAfter}`);
+    });
     
-    return reversed;
+    return reversedForDisplay;
   }, [operations, client]);
 
   const formatDateTime = (dateString: string) => {
