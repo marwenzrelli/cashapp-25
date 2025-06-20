@@ -22,13 +22,32 @@ export const OperationsHistoryTab = () => {
     try {
       const { data, error } = await supabase
         .from("direct_operations")
-        .select(`
-          *,
-          created_by_profile:profiles!direct_operations_created_by_fkey(full_name, email)
-        `)
+        .select("*")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
+
+      // Get unique user IDs from direct operations
+      const uniqueUserIds = new Set(data.map(op => op.created_by).filter(Boolean));
+      
+      // Fetch user profiles separately
+      const userMap = new Map();
+      for (const userId of uniqueUserIds) {
+        if (!userId) continue;
+        
+        const { data: userData, error: userError } = await supabase
+          .from("profiles")
+          .select("id, full_name, email")
+          .eq("id", userId)
+          .single();
+          
+        if (!userError && userData) {
+          userMap.set(userId, {
+            name: userData.full_name || userData.email || "Utilisateur inconnu",
+            email: userData.email
+          });
+        }
+      }
 
       const formattedDirectOperations = data.map(op => ({
         id: op.id.toString(),
@@ -39,7 +58,9 @@ export const OperationsHistoryTab = () => {
         from_client: op.from_client_name,
         to_client: op.to_client_name,
         created_by: op.created_by || "",
-        created_by_name: op.created_by_profile?.full_name || op.created_by_profile?.email || "Système",
+        created_by_name: op.created_by && userMap.get(op.created_by) 
+          ? userMap.get(op.created_by).name 
+          : "Système",
         description: op.notes || `Opération directe de ${op.from_client_name} vers ${op.to_client_name}`
       }));
 
