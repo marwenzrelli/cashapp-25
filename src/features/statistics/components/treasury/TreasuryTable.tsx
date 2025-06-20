@@ -14,16 +14,21 @@ import { supabase } from "@/integrations/supabase/client";
 interface TreasuryTableProps {
   operations: Operation[];
   onDataRefresh?: (newOperations: Operation[]) => void;
+  systemBalance: number;
 }
 
 interface TreasuryOperation extends Operation {
   balanceBefore: number;
   balanceAfter: number;
+  treasuryImpact: number;
+  displayType: 'deposit' | 'withdrawal' | 'transfer_out' | 'transfer_in';
+  isTransferPair?: boolean;
 }
 
 export const TreasuryTable = ({
   operations,
-  onDataRefresh
+  onDataRefresh,
+  systemBalance
 }: TreasuryTableProps) => {
   const { sortedOperations, sortConfig, handleSort } = useTreasurySorting(operations);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -112,40 +117,93 @@ export const TreasuryTable = ({
     }
   };
 
-  const operationsWithBalance = useMemo(() => {
-    // Log initial input to verify we're receiving all operation types
-    const depositCount = operations.filter(op => op.type === 'deposit').length;
-    const withdrawalCount = operations.filter(op => op.type === 'withdrawal').length;
-    const transferCount = operations.filter(op => op.type === 'transfer').length;
-    console.log(`TreasuryTable received ${operations.length} operations:`, {
-      deposits: depositCount,
-      withdrawals: withdrawalCount,
-      transfers: transferCount
+  const expandedOperations = useMemo(() => {
+    // Créer une liste étendue où chaque virement devient deux lignes
+    const expanded: Operation[] = [];
+    
+    sortedOperations.forEach(operation => {
+      if (operation.type === 'transfer') {
+        // Ligne de sortie (débit)
+        expanded.push({
+          ...operation,
+          id: `${operation.id}-out`,
+          type: 'transfer' as const,
+          displayType: 'transfer_out' as any,
+          description: `${operation.description} (Sortie: ${operation.fromClient})`,
+          fromClient: operation.fromClient,
+          toClient: operation.toClient
+        });
+        
+        // Ligne d'entrée (crédit)
+        expanded.push({
+          ...operation,
+          id: `${operation.id}-in`,
+          type: 'transfer' as const,
+          displayType: 'transfer_in' as any,
+          description: `${operation.description} (Entrée: ${operation.toClient})`,
+          fromClient: operation.fromClient,
+          toClient: operation.toClient
+        });
+      } else {
+        expanded.push({
+          ...operation,
+          displayType: operation.type as any
+        });
+      }
     });
 
-    let runningBalance = 0;
-    return sortedOperations.map((op): TreasuryOperation => {
-      const balanceBefore = runningBalance;
-      
-      // Pour le calcul de trésorerie, les virements sont neutres (ne changent pas le solde global)
-      // car ils représentent un mouvement interne entre comptes
-      let balanceChange = 0;
-      if (op.type === "deposit") {
-        balanceChange = op.amount; // Entrée d'argent dans le système
-      } else if (op.type === "withdrawal") {
-        balanceChange = -op.amount; // Sortie d'argent du système
+    return expanded;
+  }, [sortedOperations]);
+
+  const operationsWithBalance = useMemo(() => {
+    console.log(`TreasuryTable calculant les soldes pour ${expandedOperations.length} opérations étendues`);
+    console.log(`Solde système de référence: ${systemBalance}`);
+
+    // Calculer d'abord l'impact total de trésorerie pour déterminer le solde de départ
+    let totalTreasuryImpact = 0;
+    expandedOperations.forEach(op => {
+      if (op.displayType === 'deposit') {
+        totalTreasuryImpact += op.amount;
+      } else if (op.displayType === 'withdrawal') {
+        totalTreasuryImpact -= op.amount;
       }
-      // Les transfers (op.type === "transfer") ont balanceChange = 0 (neutre)
+      // Les virements (transfer_out et transfer_in) n'impactent pas le total de trésorerie
+    });
+
+    // Le solde de départ doit être calculé pour que le solde final corresponde au solde système
+    const startingBalance = systemBalance - totalTreasuryImpact;
+    
+    console.log(`Impact total de trésorerie: ${totalTreasuryImpact}`);
+    console.log(`Solde de départ calculé: ${startingBalance}`);
+
+    let runningBalance = startingBalance;
+    
+    return expandedOperations.map((op): TreasuryOperation => {
+      const balanceBefore = runningBalance;
+      let treasuryImpact = 0;
       
-      runningBalance += balanceChange;
+      if (op.displayType === 'deposit') {
+        treasuryImpact = op.amount; // Entrée d'argent
+      } else if (op.displayType === 'withdrawal') {
+        treasuryImpact = -op.amount; // Sortie d'argent
+      } else if (op.displayType === 'transfer_out') {
+        treasuryImpact = 0; // Mouvement interne - neutre pour la trésorerie
+      } else if (op.displayType === 'transfer_in') {
+        treasuryImpact = 0; // Mouvement interne - neutre pour la trésorerie
+      }
+      
+      runningBalance += treasuryImpact;
       
       return {
         ...op,
         balanceBefore,
-        balanceAfter: runningBalance
+        balanceAfter: runningBalance,
+        treasuryImpact,
+        displayType: op.displayType,
+        isTransferPair: op.type === 'transfer'
       };
     });
-  }, [sortedOperations]);
+  }, [expandedOperations, systemBalance]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', {
@@ -154,14 +212,16 @@ export const TreasuryTable = ({
     }).format(amount);
   };
 
-  const getOperationNatureBadge = (type: Operation['type']) => {
-    switch (type) {
+  const getOperationNatureBadge = (displayType: string) => {
+    switch (displayType) {
       case 'deposit':
         return <Badge variant="outline" className="bg-green-50 text-green-700">Versement</Badge>;
       case 'withdrawal':
         return <Badge variant="outline" className="bg-red-50 text-red-700">Retrait</Badge>;
-      case 'transfer':
-        return <Badge variant="outline" className="bg-blue-50 text-blue-700">Virement</Badge>;
+      case 'transfer_out':
+        return <Badge variant="outline" className="bg-orange-50 text-orange-700">Virement (Sortie)</Badge>;
+      case 'transfer_in':
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700">Virement (Entrée)</Badge>;
       default:
         return <Badge variant="outline">Inconnu</Badge>;
     }
@@ -189,14 +249,14 @@ export const TreasuryTable = ({
     return "font-semibold font-mono";
   };
 
-  const getAmountClass = (type: Operation['type']) => {
-    switch (type) {
+  const getAmountClass = (displayType: string) => {
+    switch (displayType) {
       case "withdrawal":
+      case "transfer_out":
         return "text-red-600 font-semibold font-mono";
       case "deposit":
+      case "transfer_in":
         return "text-green-600 font-semibold font-mono";
-      case "transfer":
-        return "text-blue-600 font-semibold font-mono";
       default:
         return "font-semibold font-mono";
     }
@@ -226,13 +286,22 @@ export const TreasuryTable = ({
 
   // Fonction pour formater le montant selon le type d'opération pour l'affichage
   const formatOperationAmount = (operation: TreasuryOperation) => {
-    if (operation.type === "withdrawal") {
+    if (operation.displayType === "withdrawal" || operation.displayType === "transfer_out") {
       return formatCurrency(-operation.amount);
-    } else if (operation.type === "transfer") {
-      // Pour les virements, on affiche le montant neutre (pas de signe) car c'est un mouvement interne
-      return formatCurrency(0); // Montant neutre pour la trésorerie
+    } else if (operation.displayType === "deposit" || operation.displayType === "transfer_in") {
+      return formatCurrency(operation.amount);
     } else {
       return formatCurrency(operation.amount);
+    }
+  };
+
+  const getClientDisplay = (operation: TreasuryOperation) => {
+    if (operation.displayType === "transfer_out") {
+      return operation.fromClient;
+    } else if (operation.displayType === "transfer_in") {
+      return operation.toClient;
+    } else {
+      return operation.fromClient;
     }
   };
 
@@ -242,7 +311,7 @@ export const TreasuryTable = ({
         <div>
           <h3 className="text-lg font-semibold">Livre de trésorerie</h3>
           <p className="text-sm text-muted-foreground">
-            {operationsWithBalance.length} opération{operationsWithBalance.length > 1 ? 's' : ''} affichée{operationsWithBalance.length > 1 ? 's' : ''}
+            {operationsWithBalance.length} opération{operationsWithBalance.length > 1 ? 's' : ''} affichée{operationsWithBalance.length > 1 ? 's' : ''} (virements dédoublés)
           </p>
         </div>
         <Button
@@ -272,17 +341,20 @@ export const TreasuryTable = ({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {operationsWithBalance.length > 0 ? operationsWithBalance.map(operation => (
-              <TableRow key={operation.id}>
+            {operationsWithBalance.length > 0 ? operationsWithBalance.map((operation, index) => (
+              <TableRow 
+                key={operation.id}
+                className={operation.isTransferPair ? "bg-blue-50/30 dark:bg-blue-950/10" : ""}
+              >
                 <TableCell>
                   {format(new Date(operation.operation_date || operation.date), "dd/MM/yyyy HH:mm", {
                     locale: fr
                   })}
                 </TableCell>
                 <TableCell>{operation.id}</TableCell>
-                <TableCell>{getOperationNatureBadge(operation.type)}</TableCell>
+                <TableCell>{getOperationNatureBadge(operation.displayType)}</TableCell>
                 <TableCell>
-                  {operation.type === "transfer" ? `${operation.fromClient} → ${operation.toClient}` : operation.fromClient}
+                  {getClientDisplay(operation)}
                 </TableCell>
                 <TableCell>
                   {operation.description || ""}
@@ -293,7 +365,7 @@ export const TreasuryTable = ({
                 <TableCell className={`text-right ${getBalanceClass(operation.balanceBefore)}`}>
                   {formatCurrency(operation.balanceBefore)}
                 </TableCell>
-                <TableCell className={`text-right ${getAmountClass(operation.type)}`}>
+                <TableCell className={`text-right ${getAmountClass(operation.displayType)}`}>
                   {formatOperationAmount(operation)}
                 </TableCell>
                 <TableCell className={`text-right ${getBalanceClass(operation.balanceAfter)}`}>
