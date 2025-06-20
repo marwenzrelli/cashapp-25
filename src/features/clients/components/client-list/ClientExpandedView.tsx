@@ -57,9 +57,8 @@ export const ClientExpandedView = ({ client, onView }: ClientExpandedViewProps) 
     return totalDeposits + transfersReceived + directOperationsReceived - totalWithdrawals - transfersSent - directOperationsSent;
   }, [operations, clientId, clientName, client.solde]);
   
-  // Format the balance with explicit sign and proper rounding
+  // Format the balance without explicit sign and proper rounding
   const roundedBalance = Math.round(netBalance * 100) / 100; // Round to 2 decimal places
-  const signPrefix = roundedBalance >= 0 ? "+ " : "";
   
   return (
     <div className="mt-4 md:pl-14 text-sm grid gap-2">
@@ -76,7 +75,7 @@ export const ClientExpandedView = ({ client, onView }: ClientExpandedViewProps) 
                 ? 'text-green-600 border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-900/30 dark:text-green-400' 
                 : 'text-red-600 border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-900/30 dark:text-red-400'
             }`}>
-              {signPrefix}{Math.abs(roundedBalance).toLocaleString('fr-FR', { 
+              {Math.abs(roundedBalance).toLocaleString('fr-FR', { 
                 minimumFractionDigits: 0,
                 maximumFractionDigits: 2 
               })} {currency}

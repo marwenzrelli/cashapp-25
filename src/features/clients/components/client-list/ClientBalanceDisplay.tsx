@@ -53,12 +53,11 @@ export const ClientBalanceDisplay = ({ solde, clientId, clientName }: ClientBala
     return totalDeposits + transfersReceived + directOperationsReceived - totalWithdrawals - transfersSent - directOperationsSent;
   }, [operations, clientId, clientName, solde]);
   
-  // Format the balance with explicit sign and proper rounding
+  // Format the balance without explicit sign and proper rounding
   const roundedBalance = Math.round(netBalance * 100) / 100; // Round to 2 decimal places
-  const sign = roundedBalance >= 0 ? "+ " : ""; // Negative sign is automatically included
   
   // Use the formatAmount function for consistent currency formatting
-  const formattedBalance = `${sign}${Math.abs(roundedBalance).toLocaleString('fr-FR', { 
+  const formattedBalance = `${Math.abs(roundedBalance).toLocaleString('fr-FR', { 
     minimumFractionDigits: 0,
     maximumFractionDigits: 2 
   })} ${currency}`;
