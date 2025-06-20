@@ -31,9 +31,14 @@ export const PersonalInfoFields = ({
   
   // Calculate effective balance from operations if available
   const calculateNetBalance = () => {
+    // If real-time balance is available, use it
+    if (typeof realTimeBalance === 'number') {
+      return realTimeBalance;
+    }
+
+    // If no operations available, use client.solde
     if (!clientOperations || clientOperations.length === 0) {
-      // If no operations available, use real-time balance or client.solde
-      return typeof realTimeBalance === 'number' ? realTimeBalance : client.solde;
+      return client.solde;
     }
 
     const clientFullName = `${client.prenom} ${client.nom}`.trim();
@@ -76,7 +81,8 @@ export const PersonalInfoFields = ({
     realTimeBalance,
     clientSolde: client.solde,
     effectiveBalance,
-    hasOperations: clientOperations.length > 0
+    hasOperations: clientOperations.length > 0,
+    clientName: `${client.prenom} ${client.nom}`
   });
   
   return (

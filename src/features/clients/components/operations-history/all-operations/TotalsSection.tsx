@@ -2,12 +2,14 @@
 import { Operation } from "@/features/operations/types";
 import { cn } from "@/lib/utils";
 import { useFormatAmount } from "@/hooks/use-format-amount";
+
 interface TotalsSectionProps {
   operations: Operation[];
   currency: string;
   clientName?: string;
   isMobile?: boolean;
 }
+
 export const TotalsSection = ({
   operations,
   currency,
@@ -88,13 +90,13 @@ export const TotalsSection = ({
               <div className="flex justify-between items-center">
                 <span className="text-sm">Virements:</span>
                 <span className="font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded">
-                  {formatAmount(totalTransfers)} {currency}
+                  +{formatAmount(totalTransfers)} {currency}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm">Opérations directes:</span>
                 <span className="font-medium text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 px-2 py-0.5 rounded">
-                  {formatAmount(totalDirectOperations)} {currency}
+                  +{formatAmount(totalDirectOperations)} {currency}
                 </span>
               </div>
             </>}
@@ -136,11 +138,11 @@ export const TotalsSection = ({
         </> : <>
           <div className="flex justify-between">
             <span className="text-sm text-muted-foreground">Virements:</span>
-            <span className="font-medium text-blue-600 dark:text-blue-400">{formatAmount(totalTransfers)} {currency}</span>
+            <span className="font-medium text-blue-600 dark:text-blue-400">+{formatAmount(totalTransfers)} {currency}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-sm text-muted-foreground">Opérations directes:</span>
-            <span className="font-medium text-purple-600 dark:text-purple-400">{formatAmount(totalDirectOperations)} {currency}</span>
+            <span className="font-medium text-purple-600 dark:text-purple-400">+{formatAmount(totalDirectOperations)} {currency}</span>
           </div>
         </>}
       <div className="flex justify-between pt-1 border-t">
