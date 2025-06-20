@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { NewDepositButton } from "@/features/deposits/components/NewDepositButton";
 import { StandaloneDepositForm } from "@/features/deposits/components/DepositForm";
 import { useClients } from "@/features/clients/hooks/useClients";
+import { ScrollToTop } from "@/components/ui/scroll-to-top";
 
 const Deposits = () => {
   // Track whether the auth listener was set up
@@ -163,6 +164,8 @@ const Deposits = () => {
         isLoading={isLoading}
         totalItems={totalItems}
       />
+      
+      <ScrollToTop />
     </div>
   );
 };
