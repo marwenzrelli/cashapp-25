@@ -9,9 +9,10 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 interface AccountFlowMobileViewProps {
   operations: (Operation & { balanceBefore: number; balanceAfter: number })[];
   isPublicView?: boolean;
+  clientId?: number;
 }
 
-export const AccountFlowMobileView = ({ operations, isPublicView = false }: AccountFlowMobileViewProps) => {
+export const AccountFlowMobileView = ({ operations, isPublicView = false, clientId }: AccountFlowMobileViewProps) => {
   const { currency } = useCurrency();
 
   const formatDateTime = (dateString: string) => {
@@ -29,11 +30,26 @@ export const AccountFlowMobileView = ({ operations, isPublicView = false }: Acco
     });
   };
 
-  const getAmountClass = (type: string) => {
-    if (type === "deposit") return "text-green-600 dark:text-green-400";
-    if (type === "withdrawal") return "text-red-600 dark:text-red-400";
-    if (type === "transfer") return "text-blue-600 dark:text-blue-400";
+  const getAmountClass = (op: any) => {
+    if (op.type === "deposit") return "text-green-600 dark:text-green-400";
+    if (op.type === "withdrawal") return "text-red-600 dark:text-red-400";
+    if (op.type === "direct_transfer" || op.type === "transfer") {
+      const isReceiving = op.to_client_id === clientId;
+      return isReceiving ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400";
+    }
     return "";
+  };
+
+  const getAmountDisplay = (op: any) => {
+    // For direct transfers and transfers, show + or - based on whether client receives or sends
+    if (op.type === "direct_transfer" || op.type === "transfer") {
+      const isReceiving = op.to_client_id === clientId;
+      return `${isReceiving ? "" : "- "}${formatAmount(op.amount)} TND`;
+    } else if (op.type === "withdrawal") {
+      return `- ${formatAmount(op.amount)} TND`;
+    } else {
+      return `${formatAmount(op.amount)} TND`;
+    }
   };
 
   const getBalanceClass = (balance: number) => {
@@ -83,8 +99,8 @@ export const AccountFlowMobileView = ({ operations, isPublicView = false }: Acco
                 
                 <div className="flex justify-between">
                   <span className="text-sm">Montant:</span>
-                  <span className={`text-sm font-medium ${getAmountClass(op.type)}`}>
-                    {op.type === "withdrawal" ? "- " : ""}{formatAmount(op.amount)} TND
+                  <span className={`text-sm font-medium ${getAmountClass(op)}`}>
+                    {getAmountDisplay(op)}
                   </span>
                 </div>
                 
@@ -96,7 +112,6 @@ export const AccountFlowMobileView = ({ operations, isPublicView = false }: Acco
                 </div>
               </div>
               
-              {/* Les boutons d'action ne s'affichent que si ce n'est pas une vue publique */}
               {!isPublicView && (
                 <div className="flex gap-2 mt-3 pt-3 border-t">
                   {/* Boutons d'action pour la vue privée - actuellement vides mais peuvent être ajoutés */}

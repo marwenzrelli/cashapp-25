@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Operation } from "@/features/operations/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -40,15 +39,14 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
     } else if (op.type === "withdrawal") {
       balanceChange = -amount;
     } else if (op.type === "transfer") {
-      // For transfers, we need to check if this client is receiving or sending
-      // If the operation has client_id or matches clientId, determine direction
-      if (op.to_client_id === clientId || (op.toClient && op.toClient.includes(op.fromClient || ''))) {
+      // For transfers, check if this client is receiving or sending
+      if (op.to_client_id === clientId) {
         balanceChange = amount; // Receiving transfer
       } else {
         balanceChange = -amount; // Sending transfer
       }
     } else if (op.type === "direct_transfer") {
-      // Same logic for direct transfers
+      // For direct transfers, check if this client is receiving or sending
       if (op.to_client_id === clientId) {
         balanceChange = amount; // Receiving direct transfer
       } else {
@@ -57,6 +55,19 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
     }
     
     const balanceAfter = previousBalance + balanceChange;
+
+    console.log(`AccountFlowTab - Operation ${op.id}:`, {
+      type: op.type,
+      amount: op.amount,
+      clientId,
+      to_client_id: op.to_client_id,
+      from_client_id: op.from_client_id,
+      balanceChange,
+      previousBalance,
+      balanceAfter,
+      isReceiving: op.to_client_id === clientId,
+      isSending: op.from_client_id === clientId || (op.type === "withdrawal" || op.type === "deposit")
+    });
 
     acc.push({
       ...op,
@@ -90,6 +101,7 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
     if (type === "deposit") return "text-green-600 dark:text-green-400";
     if (type === "withdrawal") return "text-red-600 dark:text-red-400";
     if (type === "transfer") return "text-blue-600 dark:text-blue-400";
+    if (type === "direct_transfer") return "text-blue-600 dark:text-blue-400";
     return "";
   };
 
@@ -111,6 +123,28 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
       await updateOperation(updatedOperation);
       setIsEditDialogOpen(false);
     }
+  };
+
+  const getAmountDisplay = (op: any) => {
+    // For direct transfers and transfers, show + or - based on whether client receives or sends
+    if (op.type === "direct_transfer" || op.type === "transfer") {
+      const isReceiving = op.to_client_id === clientId;
+      return `${isReceiving ? "" : "- "}${formatAmount(op.amount)} TND`;
+    } else if (op.type === "withdrawal") {
+      return `- ${formatAmount(op.amount)} TND`;
+    } else {
+      return `${formatAmount(op.amount)} TND`;
+    }
+  };
+
+  const getAmountClassForOperation = (op: any) => {
+    if (op.type === "deposit") return "text-green-600 dark:text-green-400";
+    if (op.type === "withdrawal") return "text-red-600 dark:text-red-400";
+    if (op.type === "direct_transfer" || op.type === "transfer") {
+      const isReceiving = op.to_client_id === clientId;
+      return isReceiving ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400";
+    }
+    return "";
   };
 
   return (
@@ -166,8 +200,8 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
                       <TableCell className={`text-right ${getBalanceClass(op.balanceBefore)}`}>
                         {formatAmount(op.balanceBefore)} TND
                       </TableCell>
-                      <TableCell className={`text-right ${getAmountClass(op.type, op.amount)}`}>
-                        {op.type === "withdrawal" ? "- " : ""}{formatAmount(op.amount)} TND
+                      <TableCell className={`text-right ${getAmountClassForOperation(op)}`}>
+                        {getAmountDisplay(op)}
                       </TableCell>
                       <TableCell className={`text-right font-semibold ${getBalanceClass(op.balanceAfter)}`}>
                         {formatAmount(op.balanceAfter)} TND
