@@ -31,7 +31,6 @@ export const TreasuryTab = ({ operations, isLoading }: TreasuryTabProps) => {
         if (error) throw error;
 
         const totalClientBalance = clients?.reduce((sum, client) => sum + (client.solde || 0), 0) || 0;
-        console.log('Solde système calculé:', totalClientBalance);
         setSystemBalance(totalClientBalance);
       } catch (error) {
         console.error('Erreur lors du calcul du solde système:', error);
@@ -58,7 +57,6 @@ export const TreasuryTab = ({ operations, isLoading }: TreasuryTabProps) => {
       <TreasuryTable 
         operations={localOperations} 
         onDataRefresh={handleDataRefresh}
-        systemBalance={systemBalance}
       />
       <TreasuryTotals 
         operations={localOperations}
