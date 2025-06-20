@@ -26,8 +26,9 @@ export const PublicAccountFlowTab = ({
     
     const clientFullName = `${client.prenom} ${client.nom}`.trim();
     
-    console.log("=== CALCUL CHRONOLOGIQUE DU BAS VERS LE HAUT ===");
+    console.log("=== CALCUL CHRONOLOGIQUE AVEC SOLDE HISTORIQUE ===");
     console.log("Client:", clientFullName);
+    console.log("Solde actuel du client:", client.solde);
     console.log("Total operations reçues:", operations.length);
     
     // Filtrer les opérations qui concernent ce client
@@ -61,9 +62,46 @@ export const PublicAccountFlowTab = ({
       console.log(`${i + 1}. ${format(new Date(op.operation_date || op.date), "dd/MM/yyyy HH:mm")} - ${op.type} - ${op.amount} TND`);
     });
 
-    // CALCUL CHRONOLOGIQUE: Commencer à 0 et calculer du bas vers le haut
-    let runningBalance = 0;
-    console.log("Démarrage du calcul chronologique avec solde = 0");
+    // CALCULER LE SOLDE HISTORIQUE À LA DATE DE LA PREMIÈRE OPÉRATION
+    // On part du solde actuel et on "annule" toutes les opérations pour revenir au passé
+    let historicalBalance = client.solde;
+    console.log("\n=== CALCUL DU SOLDE HISTORIQUE ===");
+    console.log("Solde actuel:", historicalBalance);
+    
+    // Pour chaque opération dans l'ordre chronologique inverse (récent vers ancien),
+    // on annule son effet pour retrouver le solde historique
+    for (let i = sortedOpsChronological.length - 1; i >= 0; i--) {
+      const op = sortedOpsChronological[i];
+      let balanceChange = 0;
+      
+      if (op.type === "deposit") {
+        balanceChange = -Number(op.amount); // Annuler le dépôt
+      } else if (op.type === "withdrawal") {
+        balanceChange = Number(op.amount); // Annuler le retrait
+      } else if (op.type === "transfer") {
+        if (op.toClient === clientFullName) {
+          balanceChange = -Number(op.amount); // Annuler le virement reçu
+        } else if (op.fromClient === clientFullName) {
+          balanceChange = Number(op.amount); // Annuler le virement envoyé
+        }
+      } else if (op.type === "direct_transfer") {
+        if (op.toClient === clientFullName) {
+          balanceChange = -Number(op.amount); // Annuler l'opération directe reçue
+        } else if (op.fromClient === clientFullName) {
+          balanceChange = Number(op.amount); // Annuler l'opération directe envoyée
+        }
+      }
+      
+      historicalBalance += balanceChange;
+      console.log(`Annulation ${op.type} ${op.amount}: ${historicalBalance}`);
+    }
+    
+    console.log("Solde historique calculé à la première opération:", historicalBalance);
+
+    // MAINTENANT CALCULER CHRONOLOGIQUEMENT À PARTIR DU SOLDE HISTORIQUE
+    let runningBalance = historicalBalance;
+    console.log("\n=== CALCUL CHRONOLOGIQUE À PARTIR DU SOLDE HISTORIQUE ===");
+    console.log("Démarrage avec solde historique:", runningBalance);
     
     const opsWithBalance = sortedOpsChronological.map((op, index) => {
       const balanceBefore = runningBalance;
@@ -110,6 +148,18 @@ export const PublicAccountFlowTab = ({
         balanceChange
       };
     });
+
+    console.log("\n=== VÉRIFICATION FINALE ===");
+    console.log("Solde final calculé:", runningBalance);
+    console.log("Solde actuel du client:", client.solde);
+    console.log("Différence:", runningBalance - client.solde);
+    
+    if (Math.abs(runningBalance - client.solde) > 0.01) {
+      console.warn("⚠️ ATTENTION: Le solde calculé ne correspond pas au solde actuel!");
+      console.warn("Cela peut indiquer que toutes les opérations ne sont pas incluses dans cette vue.");
+    } else {
+      console.log("✅ Parfait! Le solde calculé correspond au solde actuel.");
+    }
 
     console.log("\n=== RÉSULTATS FINAUX (ordre chronologique) ===");
     opsWithBalance.forEach((op, i) => {
