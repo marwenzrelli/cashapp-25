@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Operation } from "@/features/operations/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -64,20 +63,22 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
     };
   });
 
-  // Calculate the initial balance (balance before first operation)
+  // Calculate the initial balance (balance before any operation)
+  // Current balance minus all the changes = initial balance
   const totalChange = operationsWithBalance.reduce((sum, op) => sum + op.balanceChange, 0);
   const initialBalance = currentBalance - totalChange;
 
   // Calculate running balances chronologically from oldest to newest
+  let runningBalance = initialBalance;
   const operationsWithFinalBalance = operationsWithBalance.map((op, index) => {
-    // Calculate balance before this operation
-    const previousOperations = operationsWithBalance.slice(0, index);
-    const balanceBefore = initialBalance + previousOperations.reduce((sum, prevOp) => sum + prevOp.balanceChange, 0);
+    // Balance before this operation
+    const balanceBefore = runningBalance;
     
-    // Calculate balance after this operation
-    const balanceAfter = balanceBefore + op.balanceChange;
+    // Apply the operation to get balance after
+    runningBalance += op.balanceChange;
+    const balanceAfter = runningBalance;
 
-    console.log(`AccountFlowTab - Operation ${op.id} (chronological):`, {
+    console.log(`AccountFlowTab - Operation ${op.id} (chronological order ${index + 1}/${operationsWithBalance.length}):`, {
       type: op.type,
       amount: op.amount,
       clientId,
@@ -86,10 +87,10 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
       balanceChange: op.balanceChange,
       balanceBefore,
       balanceAfter,
+      currentRunningBalance: runningBalance,
       isReceiving: op.to_client_id === clientId,
       isSending: op.from_client_id === clientId,
-      index: index + 1,
-      total: operationsWithBalance.length
+      date: op.operation_date || op.date
     });
 
     return {
@@ -97,6 +98,15 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
       balanceBefore,
       balanceAfter
     };
+  });
+
+  // Verify the final balance matches current client balance
+  console.log(`AccountFlowTab - Final verification:`, {
+    initialBalance,
+    finalCalculatedBalance: runningBalance,
+    currentClientBalance: currentBalance,
+    totalOperations: operationsWithBalance.length,
+    isBalanceMatching: Math.abs(runningBalance - currentBalance) < 0.01
   });
 
   // Reverse to show newest first in display
