@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Withdrawal } from "../types";
-import { UserCircle, ArrowDownCircle, Pencil, Trash2, CalendarIcon, Hash } from "lucide-react";
+import { UserCircle, ArrowDownCircle, Pencil, Trash2, CalendarIcon, Hash, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { Client } from "@/features/clients/types";
 import { formatDate } from "../hooks/utils/formatUtils";
@@ -22,6 +22,10 @@ interface WithdrawalTableProps {
   }) | null;
   dateRange?: DateRange;
 }
+
+type SortField = 'id' | 'client' | 'amount' | 'date';
+type SortDirection = 'asc' | 'desc' | null;
+
 export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
   withdrawals,
   onEdit,
@@ -36,6 +40,9 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
 
   // État pour suivre quel retrait est développé
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [sortField, setSortField] = useState<SortField | null>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>(null);
+
   const handleClientClick = (client: (Client & {
     dateCreation: string;
   }) | null) => {
@@ -48,6 +55,69 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
   const toggleExpanded = (id: string) => {
     setExpandedId(expandedId === id ? null : id);
   };
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      // Cycle through: asc -> desc -> null
+      if (sortDirection === 'asc') {
+        setSortDirection('desc');
+      } else if (sortDirection === 'desc') {
+        setSortDirection(null);
+        setSortField(null);
+      } else {
+        setSortDirection('asc');
+      }
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="h-4 w-4 text-muted-foreground" />;
+    }
+    if (sortDirection === 'asc') {
+      return <ArrowUp className="h-4 w-4 text-primary" />;
+    }
+    if (sortDirection === 'desc') {
+      return <ArrowDown className="h-4 w-4 text-primary" />;
+    }
+    return <ArrowUpDown className="h-4 w-4 text-muted-foreground" />;
+  };
+
+  // Sort withdrawals
+  const sortedWithdrawals = [...withdrawals].sort((a, b) => {
+    if (!sortField || !sortDirection) return 0;
+
+    let aValue: any;
+    let bValue: any;
+
+    switch (sortField) {
+      case 'id':
+        aValue = Number(a.id);
+        bValue = Number(b.id);
+        break;
+      case 'client':
+        aValue = a.client_name.toLowerCase();
+        bValue = b.client_name.toLowerCase();
+        break;
+      case 'amount':
+        aValue = a.amount;
+        bValue = b.amount;
+        break;
+      case 'date':
+        aValue = new Date(a.operation_date || a.date);
+        bValue = new Date(b.operation_date || b.date);
+        break;
+      default:
+        return 0;
+    }
+
+    if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+    if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
 
   // Calculate the total amount for the displayed withdrawals
   const totalAmount = withdrawals.reduce((total, withdrawal) => total + withdrawal.amount, 0);
@@ -69,16 +139,48 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr className="text-left">
-                <th className="p-3">   ID</th>
-                <th className="p-3">               Client</th>
-                <th className="p-3 text-center">Montant</th>
-                <th className="p-3">Date d'opération</th>
-                <th className="p-3">                                       Notes</th>
-                <th className="p-3 text-center">Actions</th>
+                <th className="p-3 font-medium">
+                  <button 
+                    onClick={() => handleSort('id')}
+                    className="flex items-center gap-2 hover:text-primary transition-colors"
+                  >
+                    ID
+                    {getSortIcon('id')}
+                  </button>
+                </th>
+                <th className="p-3 font-medium">
+                  <button 
+                    onClick={() => handleSort('client')}
+                    className="flex items-center gap-2 hover:text-primary transition-colors"
+                  >
+                    Client
+                    {getSortIcon('client')}
+                  </button>
+                </th>
+                <th className="p-3 font-medium text-center">
+                  <button 
+                    onClick={() => handleSort('amount')}
+                    className="flex items-center gap-2 hover:text-primary transition-colors mx-auto"
+                  >
+                    Montant
+                    {getSortIcon('amount')}
+                  </button>
+                </th>
+                <th className="p-3 font-medium">
+                  <button 
+                    onClick={() => handleSort('date')}
+                    className="flex items-center gap-2 hover:text-primary transition-colors"
+                  >
+                    Date d'opération
+                    {getSortIcon('date')}
+                  </button>
+                </th>
+                <th className="p-3 font-medium">Notes</th>
+                <th className="p-3 font-medium text-center">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {withdrawals.map(withdrawal => {
+              {sortedWithdrawals.map(withdrawal => {
               const client = findClientById(withdrawal.client_name);
               const formattedOperationDate = withdrawal.operation_date ? formatDate(withdrawal.operation_date) : "Date inconnue";
               const operationId = formatId(withdrawal.id, 4);
@@ -161,7 +263,7 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
 
         {/* Mobile Card View - Mise à jour avec Collapsible */}
         <div className="md:hidden space-y-3 w-full px-0">
-          {withdrawals.map(withdrawal => {
+          {sortedWithdrawals.map(withdrawal => {
           const client = findClientById(withdrawal.client_name);
           const formattedOperationDate = withdrawal.operation_date ? formatDate(withdrawal.operation_date) : "Date inconnue";
           const operationId = formatId(withdrawal.id, 4);
