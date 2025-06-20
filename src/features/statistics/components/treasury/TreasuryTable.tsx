@@ -33,22 +33,19 @@ export const TreasuryTable = ({
     try {
       console.log("Synchronisation avec la base de données...");
 
-      // Récupérer toutes les données depuis la base
+      // Récupérer toutes les données depuis la base (y compris les incomplètes)
       const [depositsResult, withdrawalsResult, transfersResult] = await Promise.all([
         supabase
           .from('deposits')
           .select('*')
-          .eq('status', 'completed')
           .order('operation_date', { ascending: false }),
         supabase
           .from('withdrawals')
           .select('*')
-          .eq('status', 'completed')
           .order('operation_date', { ascending: false }),
         supabase
           .from('transfers')
           .select('*')
-          .eq('status', 'completed')
           .order('operation_date', { ascending: false })
       ]);
 
@@ -159,6 +156,19 @@ export const TreasuryTable = ({
     }
   };
 
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return <Badge variant="outline" className="bg-green-50 text-green-700">Complété</Badge>;
+      case 'pending':
+        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700">En attente</Badge>;
+      case 'cancelled':
+        return <Badge variant="outline" className="bg-red-50 text-red-700">Annulé</Badge>;
+      default:
+        return <Badge variant="outline" className="bg-gray-50 text-gray-700">{status}</Badge>;
+    }
+  };
+
   const getBalanceClass = (amount: number) => {
     if (amount > 0) {
       return "text-green-600 font-semibold font-mono";
@@ -232,6 +242,7 @@ export const TreasuryTable = ({
               <SortableHeader field="nature">Nature</SortableHeader>
               <SortableHeader field="client">Client</SortableHeader>
               <TableHead>Désignation</TableHead>
+              <TableHead>Statut</TableHead>
               <TableHead className="text-right">Solde avant</TableHead>
               <TableHead className="text-right">Montant</TableHead>
               <TableHead className="text-right">Solde après</TableHead>
@@ -253,6 +264,9 @@ export const TreasuryTable = ({
                 <TableCell>
                   {operation.description || ""}
                 </TableCell>
+                <TableCell>
+                  {getStatusBadge(operation.status || 'completed')}
+                </TableCell>
                 <TableCell className={`text-right ${getBalanceClass(operation.balanceBefore)}`}>
                   {formatCurrency(operation.balanceBefore)}
                 </TableCell>
@@ -265,7 +279,7 @@ export const TreasuryTable = ({
               </TableRow>
             )) : (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-4 text-muted-foreground">
+                <TableCell colSpan={9} className="text-center py-4 text-muted-foreground">
                   Aucune opération à afficher
                 </TableCell>
               </TableRow>
