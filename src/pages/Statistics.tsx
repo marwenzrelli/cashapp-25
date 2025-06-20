@@ -4,6 +4,7 @@ import { StatisticsHeader } from "@/features/statistics/components/StatisticsHea
 import { ErrorDisplay } from "@/features/statistics/components/ErrorDisplay";
 import { StatisticsLoadingState } from "@/features/statistics/components/StatisticsLoadingState";
 import { StatisticsContent } from "@/features/statistics/components/StatisticsContent";
+import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { transformToOperations, deduplicateOperations, sortOperationsByDate } from "@/features/operations/hooks/utils/operationTransformers";
@@ -87,6 +88,8 @@ const Statistics = () => {
           refreshData={refreshData} 
           isSyncing={isSyncing} 
         />
+        
+        <ScrollToTop />
       </div>
     );
   }
@@ -120,6 +123,8 @@ const Statistics = () => {
         hasValidData={hasValidData}
         attempted={attempted}
       />
+      
+      <ScrollToTop />
     </div>
   );
 };
