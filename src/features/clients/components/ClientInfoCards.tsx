@@ -2,7 +2,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { ClientPersonalInfo } from "./ClientPersonalInfo";
 import { ClientBalanceCard } from "./ClientBalanceCard";
-import { ClientActionButtons } from "./ClientActionButtons";
 import { Client } from "../types";
 import { Operation } from "@/features/operations/types";
 
@@ -39,7 +38,7 @@ export const ClientInfoCards = ({
           </Card>
         </div>
 
-        {/* Solde et actions */}
+        {/* Solde et QR code seulement */}
         <div className="space-y-6">
           <ClientBalanceCard 
             client={client} 
@@ -48,10 +47,7 @@ export const ClientInfoCards = ({
             exportToPDF={exportToPDF}
             formatAmount={formatAmount} 
           />
-          <ClientActionButtons 
-            exportToExcel={exportToExcel}
-            exportToPDF={exportToPDF}
-          />
+          {/* Removed ClientActionButtons - no more export buttons */}
         </div>
       </div>
     </div>

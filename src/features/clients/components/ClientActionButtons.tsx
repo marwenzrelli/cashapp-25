@@ -39,20 +39,7 @@ export const ClientActionButtons = ({
           Rafraîchir le solde
         </Button>
       )}
-      {(exportToExcel || exportToPDF) && !onDepositClick && !onWithdrawalClick && (
-        <div className={`flex ${orientation === "vertical" ? "flex-col" : "flex-row"} gap-2 w-full`}>
-          {exportToExcel && (
-            <Button onClick={exportToExcel} size="sm" variant="outline" className="flex items-center justify-center gap-2 w-full">
-              Excel
-            </Button>
-          )}
-          {exportToPDF && (
-            <Button onClick={exportToPDF} size="sm" variant="outline" className="flex items-center justify-center gap-2 w-full">
-              PDF
-            </Button>
-          )}
-        </div>
-      )}
+      {/* Removed export buttons section completely */}
     </div>
   );
 };
