@@ -1,21 +1,19 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, Sparkles, TrendingUp, TrendingDown, Users, DollarSign, Clock } from "lucide-react";
 import { DashboardStats } from "../types";
-
 interface AISuggestionsProps {
   stats: DashboardStats;
 }
-
-export const AISuggestions = ({ stats }: AISuggestionsProps) => {
+export const AISuggestions = ({
+  stats
+}: AISuggestionsProps) => {
   const generateSuggestions = () => {
     const suggestions = [];
 
     // Analyse des flux financiers
     const depositsAmount = stats.total_deposits_amount || 0;
     const withdrawalsAmount = stats.total_withdrawals_amount || 0;
-    const balanceRatio = depositsAmount > 0 ? (withdrawalsAmount / depositsAmount) * 100 : 0;
-
+    const balanceRatio = depositsAmount > 0 ? withdrawalsAmount / depositsAmount * 100 : 0;
     if (balanceRatio > 80) {
       suggestions.push({
         id: 1,
@@ -90,50 +88,8 @@ export const AISuggestions = ({ stats }: AISuggestionsProps) => {
         color: "border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20"
       });
     }
-
     return suggestions.slice(0, 3); // Limiter à 3 suggestions
   };
-
   const suggestions = generateSuggestions();
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-primary" />
-          Suggestions IA
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {suggestions.length > 0 ? (
-            suggestions.map((suggestion) => (
-              <div
-                key={suggestion.id}
-                className={`flex items-start gap-4 p-4 rounded-lg border transition-all hover:scale-[1.02] ${suggestion.color}`}
-              >
-                {suggestion.icon}
-                <div className="flex-1">
-                  <h4 className="font-medium mb-1">{suggestion.title}</h4>
-                  <p className="text-sm text-muted-foreground">
-                    {suggestion.message}
-                  </p>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="flex items-start gap-4 p-4 rounded-lg border bg-muted/50">
-              <Sparkles className="h-6 w-6 text-blue-500 mt-1" />
-              <div>
-                <h4 className="font-medium mb-1">Système en cours d'analyse</h4>
-                <p className="text-sm text-muted-foreground">
-                  Les suggestions apparaîtront lorsque plus de données seront disponibles.
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
+  return;
 };
