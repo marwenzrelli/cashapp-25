@@ -10,6 +10,7 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { EditOperationDialog } from "@/features/operations/components/EditOperationDialog";
 import { AccountFlowMobileView } from "./AccountFlowMobileView";
 import { useClients } from "@/features/clients/hooks/useClients";
+import { useAccountFlowCalculations } from "./hooks/useAccountFlowCalculations";
 
 interface AccountFlowTabProps {
   operations: Operation[];
@@ -23,104 +24,16 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
   const [selectedOperation, setSelectedOperation] = useState<Operation | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  // Get current client balance from database
+  // Get current client
   const currentClient = clients?.find(c => c.id === clientId);
-  const currentBalance = currentClient?.solde || 0;
 
-  console.log(`AccountFlowTab - Client ${clientId} current balance from DB: ${currentBalance}`);
+  console.log(`AccountFlowTab - Using unified calculation logic for client ${clientId}`);
 
-  // Sort operations chronologically from oldest to newest
-  const sortedOperations = [...operations].sort((a, b) => {
-    const dateA = new Date(a.operation_date || a.date);
-    const dateB = new Date(b.operation_date || b.date);
-    return dateA.getTime() - dateB.getTime();
+  // Use the same unified calculation logic as PublicAccountFlowTab
+  const processedOperations = useAccountFlowCalculations({ 
+    operations, 
+    client: currentClient 
   });
-
-  console.log(`AccountFlowTab - Processing ${sortedOperations.length} operations chronologically`);
-
-  // Calculate the balance changes for each operation
-  const operationsWithBalanceChanges = sortedOperations.map((op, index) => {
-    let balanceChange = 0;
-    
-    if (op.type === "deposit") {
-      balanceChange = op.amount; // Deposit adds to balance
-    } else if (op.type === "withdrawal") {
-      balanceChange = -op.amount; // Withdrawal subtracts from balance
-    } else if (op.type === "transfer") {
-      // For transfers, we need to check if this client is sender or receiver
-      // Since we don't have clear from_client_id/to_client_id for transfers,
-      // we'll assume it's a withdrawal for this client
-      balanceChange = -op.amount;
-    } else if (op.type === "direct_transfer") {
-      // For direct transfers, check if client is receiving or sending
-      if (op.to_client_id === clientId) {
-        balanceChange = op.amount; // Receiving transfer
-      } else if (op.from_client_id === clientId) {
-        balanceChange = -op.amount; // Sending transfer
-      }
-    }
-
-    console.log(`AccountFlowTab - Operation ${op.id} (${index + 1}/${sortedOperations.length}):`, {
-      type: op.type,
-      amount: op.amount,
-      clientId,
-      to_client_id: op.to_client_id,
-      from_client_id: op.from_client_id,
-      balanceChange,
-      date: op.operation_date || op.date
-    });
-
-    return {
-      ...op,
-      balanceChange
-    };
-  });
-
-  // Calculate total change to find initial balance
-  const totalChange = operationsWithBalanceChanges.reduce((sum, op) => sum + op.balanceChange, 0);
-  const initialBalance = currentBalance - totalChange;
-
-  console.log(`AccountFlowTab - Balance calculation:`, {
-    currentBalance,
-    totalChange,
-    initialBalance
-  });
-
-  // Now calculate running balances chronologically
-  const operationsWithBalances = operationsWithBalanceChanges.map((op, index) => {
-    // Calculate balance before this operation
-    const previousOperations = operationsWithBalanceChanges.slice(0, index);
-    const balanceBefore = initialBalance + previousOperations.reduce((sum, prevOp) => sum + prevOp.balanceChange, 0);
-    
-    // Calculate balance after this operation
-    const balanceAfter = balanceBefore + op.balanceChange;
-
-    console.log(`AccountFlowTab - Operation ${op.id} balances:`, {
-      balanceBefore,
-      balanceChange: op.balanceChange,
-      balanceAfter
-    });
-
-    return {
-      ...op,
-      balanceBefore,
-      balanceAfter
-    };
-  });
-
-  // Verify the final balance matches current balance
-  const lastOperation = operationsWithBalances[operationsWithBalances.length - 1];
-  const finalCalculatedBalance = lastOperation ? lastOperation.balanceAfter : initialBalance;
-  
-  console.log(`AccountFlowTab - Final verification:`, {
-    initialBalance,
-    finalCalculatedBalance,
-    currentClientBalance: currentBalance,
-    isBalanceMatching: Math.abs(finalCalculatedBalance - currentBalance) < 0.01
-  });
-
-  // Reverse for display (newest first)
-  const displayOperations = [...operationsWithBalances].reverse();
 
   const formatDateTime = (dateString: string) => {
     try {
@@ -158,15 +71,9 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
   };
 
   const getAmountDisplay = (op: any) => {
-    // For direct transfers and transfers, show + or - based on whether client receives or sends
-    if (op.type === "direct_transfer" || op.type === "transfer") {
-      const isReceiving = op.to_client_id === clientId;
-      return `${isReceiving ? "+" : "-"} ${formatAmount(op.amount)} TND`;
-    } else if (op.type === "withdrawal") {
-      return `- ${formatAmount(op.amount)} TND`;
-    } else {
-      return `+ ${formatAmount(op.amount)} TND`;
-    }
+    // Show the actual balance change with proper sign
+    const sign = op.balanceChange >= 0 ? "+" : "-";
+    return `${sign} ${formatAmount(Math.abs(op.balanceChange))} TND`;
   };
 
   const getAmountClassForOperation = (op: any) => {
@@ -179,7 +86,7 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
     <>
       {/* Mobile view */}
       <AccountFlowMobileView 
-        operations={displayOperations}
+        operations={processedOperations}
         clientId={clientId}
       />
 
@@ -200,14 +107,14 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {displayOperations.length === 0 ? (
+                {processedOperations.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="h-24 text-center">
                       Aucune opération trouvée
                     </TableCell>
                   </TableRow>
                 ) : (
-                  displayOperations.map((op) => (
+                  processedOperations.map((op) => (
                     <TableRow 
                       key={op.id} 
                       className="cursor-pointer hover:bg-muted/50"
