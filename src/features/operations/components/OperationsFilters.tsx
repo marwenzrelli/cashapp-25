@@ -1,7 +1,6 @@
 
 import { useState } from "react";
-import { Search, Calendar, ListFilter, Filter } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Calendar, ListFilter, Filter } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
@@ -11,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
+import { ClientAutocomplete } from "./ClientAutocomplete";
 
 interface OperationsFiltersProps {
   type: string | null;
@@ -99,18 +99,14 @@ export const OperationsFilters = ({
 
       {/* Filter controls */}
       <div className="grid gap-4 md:grid-cols-3">
-        {/* Search by client */}
+        {/* Search by client with autocomplete */}
         <div className="space-y-2">
           <label className="text-sm font-medium text-muted-foreground">Rechercher un client</label>
-          <div className="relative">
-            <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Nom du client, description..."
-              value={client}
-              onChange={(e) => setClient(e.target.value)}
-              className="pl-9"
-            />
-          </div>
+          <ClientAutocomplete
+            value={client}
+            onChange={setClient}
+            placeholder="Tapez le nom d'un client..."
+          />
         </div>
         
         {/* Operation type filter */}
