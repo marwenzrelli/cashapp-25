@@ -128,7 +128,7 @@ export const TreasuryTable = ({
           ...operation,
           id: `${operation.id}-out`,
           type: 'transfer' as const,
-          displayType: 'transfer_out' as any,
+          displayType: 'transfer_out' as const,
           description: `${operation.description} (Sortie: ${operation.fromClient})`,
           fromClient: operation.fromClient,
           toClient: operation.toClient
@@ -139,7 +139,7 @@ export const TreasuryTable = ({
           ...operation,
           id: `${operation.id}-in`,
           type: 'transfer' as const,
-          displayType: 'transfer_in' as any,
+          displayType: 'transfer_in' as const,
           description: `${operation.description} (Entrée: ${operation.toClient})`,
           fromClient: operation.fromClient,
           toClient: operation.toClient
@@ -162,9 +162,10 @@ export const TreasuryTable = ({
     // Calculer d'abord l'impact total de trésorerie pour déterminer le solde de départ
     let totalTreasuryImpact = 0;
     expandedOperations.forEach(op => {
-      if (op.displayType === 'deposit') {
+      const displayType = op.displayType || op.type;
+      if (displayType === 'deposit') {
         totalTreasuryImpact += op.amount;
-      } else if (op.displayType === 'withdrawal') {
+      } else if (displayType === 'withdrawal') {
         totalTreasuryImpact -= op.amount;
       }
       // Les virements (transfer_out et transfer_in) n'impactent pas le total de trésorerie
@@ -180,15 +181,16 @@ export const TreasuryTable = ({
     
     return expandedOperations.map((op): TreasuryOperation => {
       const balanceBefore = runningBalance;
+      const displayType = op.displayType || op.type;
       let treasuryImpact = 0;
       
-      if (op.displayType === 'deposit') {
+      if (displayType === 'deposit') {
         treasuryImpact = op.amount; // Entrée d'argent
-      } else if (op.displayType === 'withdrawal') {
+      } else if (displayType === 'withdrawal') {
         treasuryImpact = -op.amount; // Sortie d'argent
-      } else if (op.displayType === 'transfer_out') {
+      } else if (displayType === 'transfer_out') {
         treasuryImpact = 0; // Mouvement interne - neutre pour la trésorerie
-      } else if (op.displayType === 'transfer_in') {
+      } else if (displayType === 'transfer_in') {
         treasuryImpact = 0; // Mouvement interne - neutre pour la trésorerie
       }
       
@@ -199,7 +201,7 @@ export const TreasuryTable = ({
         balanceBefore,
         balanceAfter: runningBalance,
         treasuryImpact,
-        displayType: op.displayType,
+        displayType: displayType as 'deposit' | 'withdrawal' | 'transfer_out' | 'transfer_in',
         isTransferPair: op.type === 'transfer'
       };
     });

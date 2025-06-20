@@ -16,6 +16,7 @@ export interface Operation {
   from_client_id?: number;
   to_client_id?: number;
   status?: string;
+  displayType?: 'deposit' | 'withdrawal' | 'transfer_out' | 'transfer_in';
 }
 
 // Add ClientStats interface that was missing
