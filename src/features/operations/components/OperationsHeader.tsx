@@ -1,10 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { 
-  Download, 
-  Printer,
-  RefreshCcw
-} from "lucide-react";
+import { RefreshCcw } from "lucide-react";
 
 interface OperationsHeaderProps {
   onExportPDF: () => void;
@@ -41,7 +37,6 @@ export const OperationsHeader = ({
           className="h-9"
           onClick={onExportPDF}
         >
-          <Download className="h-4 w-4 mr-2" />
           Exporter PDF
         </Button>
         <Button
@@ -50,7 +45,6 @@ export const OperationsHeader = ({
           className="h-9"
           onClick={onPrint}
         >
-          <Printer className="h-4 w-4 mr-2" />
           Imprimer
         </Button>
       </div>

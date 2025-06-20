@@ -1,6 +1,5 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileSpreadsheet, FileText } from "lucide-react";
 import { Client } from "../types";
 import { Button } from "@/components/ui/button";
 import { ClientQRCode } from "./ClientQRCode";
@@ -27,11 +26,9 @@ export function ClientBalanceCard({
       <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
         <div className="flex space-x-2">
           <Button variant="outline" size="sm" onClick={exportToExcel} className="flex items-center gap-1">
-            <FileSpreadsheet className="h-4 w-4" />
             <span className="hidden sm:inline">Excel</span>
           </Button>
           <Button variant="outline" size="sm" onClick={exportToPDF} className="flex items-center gap-1">
-            <FileText className="h-4 w-4" />
             <span className="hidden sm:inline">PDF</span>
           </Button>
         </div>

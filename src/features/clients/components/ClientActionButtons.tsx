@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { ArrowDownToLine, ArrowUpToLine, RefreshCcw, FileSpreadsheet, FileText } from "lucide-react";
+import { ArrowDownToLine, ArrowUpToLine, RefreshCcw } from "lucide-react";
 
 interface ClientActionButtonsProps {
   onDepositClick?: () => void;
@@ -43,13 +43,11 @@ export const ClientActionButtons = ({
         <div className={`flex ${orientation === "vertical" ? "flex-col" : "flex-row"} gap-2 w-full`}>
           {exportToExcel && (
             <Button onClick={exportToExcel} size="sm" variant="outline" className="flex items-center justify-center gap-2 w-full">
-              <FileSpreadsheet className="h-4 w-4" />
               Excel
             </Button>
           )}
           {exportToPDF && (
             <Button onClick={exportToPDF} size="sm" variant="outline" className="flex items-center justify-center gap-2 w-full">
-              <FileText className="h-4 w-4" />
               PDF
             </Button>
           )}
