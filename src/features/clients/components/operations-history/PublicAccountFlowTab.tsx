@@ -1,3 +1,4 @@
+
 import { Operation } from "@/features/operations/types";
 import { useMemo } from "react";
 import { Card } from "@/components/ui/card";
@@ -26,7 +27,7 @@ export const PublicAccountFlowTab = ({
     
     const clientFullName = `${client.prenom} ${client.nom}`.trim();
     
-    console.log("=== CALCUL CHRONOLOGIQUE DEPUIS ZÉRO ===");
+    console.log("=== CALCUL DU FLUX DE COMPTE ===");
     console.log("Client:", clientFullName);
     console.log("Total operations reçues:", operations.length);
     
@@ -56,26 +57,24 @@ export const PublicAccountFlowTab = ({
       return dateA.getTime() - dateB.getTime();
     });
 
-    console.log("Opérations triées chronologiquement (plus ancien en premier):");
-    sortedOpsChronological.forEach((op, i) => {
-      console.log(`${i + 1}. ${format(new Date(op.operation_date || op.date), "dd/MM/yyyy HH:mm")} - ${op.type} - ${op.amount} TND`);
-    });
-
+    console.log("=== CALCUL CHRONOLOGIQUE DEPUIS 0 TND ===");
+    console.log("Solde de départ: 0 TND");
+    
     // CALCUL CHRONOLOGIQUE: Commencer à 0 TND
-    let runningBalance = 0;
-    console.log("\n=== CALCUL CHRONOLOGIQUE DEPUIS 0 TND ===");
-    console.log("Solde de départ:", runningBalance, "TND");
+    let currentBalance = 0;
     
     const opsWithBalance = sortedOpsChronological.map((op, index) => {
-      const balanceBefore = runningBalance;
+      // Le solde AVANT cette opération est le solde actuel
+      const balanceBefore = currentBalance;
+      
+      // Calculer l'impact de cette opération sur le solde
       let balanceChange = 0;
       
       console.log(`\n--- Opération ${index + 1}/${sortedOpsChronological.length} ---`);
       console.log(`Date: ${format(new Date(op.operation_date || op.date), "dd/MM/yyyy HH:mm")}`);
       console.log(`Type: ${op.type}, Montant: ${op.amount} TND`);
-      console.log(`Solde AVANT cette opération: ${balanceBefore} TND`);
+      console.log(`Solde AVANT: ${balanceBefore} TND`);
       
-      // Calculer l'impact sur le solde
       if (op.type === "deposit") {
         balanceChange = Number(op.amount);
         console.log(`✅ Dépôt: +${balanceChange} TND`);
@@ -100,23 +99,26 @@ export const PublicAccountFlowTab = ({
         }
       }
       
-      runningBalance = balanceBefore + balanceChange;
+      // Calculer le nouveau solde APRÈS cette opération
+      currentBalance = balanceBefore + balanceChange;
+      const balanceAfter = currentBalance;
+      
       console.log(`Changement: ${balanceChange >= 0 ? '+' : ''}${balanceChange} TND`);
-      console.log(`Solde APRÈS cette opération: ${runningBalance} TND`);
+      console.log(`Solde APRÈS: ${balanceAfter} TND`);
       
       return {
         ...op,
         balanceBefore,
-        balanceAfter: runningBalance,
+        balanceAfter,
         balanceChange
       };
     });
 
     console.log("\n=== RÉSUMÉ FINAL ===");
-    console.log("Solde calculé final:", runningBalance, "TND");
+    console.log("Solde calculé final:", currentBalance, "TND");
     console.log("Solde actuel du client:", client.solde, "TND");
     
-    const difference = Math.abs(runningBalance - client.solde);
+    const difference = Math.abs(currentBalance - client.solde);
     console.log("Différence:", difference, "TND");
     
     if (difference > 0.01) {
@@ -125,12 +127,6 @@ export const PublicAccountFlowTab = ({
     } else {
       console.log("✅ Parfait! Le calcul depuis zéro correspond au solde actuel.");
     }
-
-    console.log("\n=== HISTORIQUE CHRONOLOGIQUE (calcul depuis 0) ===");
-    opsWithBalance.forEach((op, i) => {
-      const date = format(new Date(op.operation_date || op.date), "dd/MM/yyyy HH:mm");
-      console.log(`${i + 1}. ${date} - ${op.type} - Avant: ${op.balanceBefore} TND → Après: ${op.balanceAfter} TND`);
-    });
 
     // Inverser pour l'affichage (plus récent en premier) mais les calculs sont corrects
     const reversedForDisplay = [...opsWithBalance].reverse();
