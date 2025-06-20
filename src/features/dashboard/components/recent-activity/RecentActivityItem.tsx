@@ -1,4 +1,3 @@
-
 import { ArrowUpCircle, ArrowDownCircle, ArrowLeftRight, Hash } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RecentActivity } from "../../types";
@@ -11,6 +10,7 @@ import { DeleteOperationDialog } from "@/features/operations/components/DeleteOp
 import { Operation } from "@/features/operations/types";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 interface RecentActivityItemProps {
   activity: RecentActivity;
@@ -21,6 +21,7 @@ interface RecentActivityItemProps {
 export const RecentActivityItem = ({ activity, currency, index }: RecentActivityItemProps) => {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const navigate = useNavigate();
   
   const safeFormatId = (id: string) => {
     try {
@@ -43,6 +44,33 @@ export const RecentActivityItem = ({ activity, currency, index }: RecentActivity
     description: activity.description || "",
     operation_date: activity.date
   });
+
+  const handleClientClick = async (clientName: string) => {
+    try {
+      // Rechercher le client par nom pour obtenir son ID
+      const { data: clients, error } = await supabase
+        .from('clients')
+        .select('id')
+        .ilike('nom', clientName)
+        .or(`prenom.ilike.${clientName}`)
+        .limit(1);
+
+      if (error) {
+        console.error("Error finding client:", error);
+        toast.error("Erreur lors de la recherche du client");
+        return;
+      }
+
+      if (clients && clients.length > 0) {
+        navigate(`/clients/${clients[0].id}`);
+      } else {
+        toast.error("Client non trouvé");
+      }
+    } catch (error) {
+      console.error("Error navigating to client:", error);
+      toast.error("Erreur lors de la navigation");
+    }
+  };
 
   const handleEditOperation = async (updatedOperation: Operation) => {
     try {
@@ -153,7 +181,12 @@ export const RecentActivityItem = ({ activity, currency, index }: RecentActivity
                 #{safeFormatId(activity.id)}
               </span>
             </div>
-            <p className="text-sm text-muted-foreground">{activity.client_name}</p>
+            <button 
+              onClick={() => handleClientClick(activity.client_name)}
+              className="text-sm text-muted-foreground hover:text-primary hover:underline transition-colors cursor-pointer text-left"
+            >
+              {activity.client_name}
+            </button>
             {activity.description && (
               <p className="text-sm text-muted-foreground/70 mt-1 max-w-[300px] truncate">
                 {activity.description}
