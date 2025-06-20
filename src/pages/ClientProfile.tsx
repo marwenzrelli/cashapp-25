@@ -86,13 +86,7 @@ export default function ClientProfile() {
           </div>
         )}
         
-        {/* Hidden buttons to trigger dialogs */}
-        <div className="hidden">
-          <button id="depositDialog" onClick={() => document.querySelector<HTMLElement>('[data-deposit-dialog-trigger]')?.click()}>Open Deposit</button>
-          <button id="withdrawalDialog" onClick={() => document.querySelector<HTMLElement>('[data-withdrawal-dialog-trigger]')?.click()}>Open Withdrawal</button>
-          <button id="exportExcel" onClick={exportToExcel}>Export to Excel</button>
-          <button id="exportPDF" onClick={exportToPDF}>Export to PDF</button>
-        </div>
+        {/* Removed hidden export buttons section */}
       </div>
     </div>
   );
