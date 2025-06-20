@@ -95,13 +95,18 @@ const Operations = () => {
         </CardContent>
       </Card>
 
-      {/* Load Operations Button - Only show when filters are active and operations not yet loaded */}
-      {isFiltering && !showOperations && (
+      {/* Load Operations Button - Always show when operations not yet loaded */}
+      {!showOperations && (
         <Card>
           <CardContent className="p-8 text-center">
             <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 dark:from-gray-800/50 dark:to-gray-700/30 rounded-xl p-8 border border-gray-200/50 dark:border-gray-700/30">
               <Play className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
-              <p className="text-muted-foreground text-base mb-4">Cliquez sur "Charger les opérations" pour afficher les résultats filtrés</p>
+              <p className="text-muted-foreground text-base mb-4">
+                {isFiltering ? 
+                  "Cliquez sur \"Charger les opérations\" pour afficher les résultats filtrés" :
+                  "Cliquez sur \"Charger les opérations\" pour afficher toutes les opérations"
+                }
+              </p>
               <Button onClick={handleLoadOperations} size="lg">
                 <Play className="h-4 w-4 mr-2" strokeWidth={2} />
                 Charger les opérations
