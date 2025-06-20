@@ -56,6 +56,7 @@ export const TreasuryTab = ({ operations, isLoading }: TreasuryTabProps) => {
     <div className="space-y-6">
       <TreasuryTable 
         operations={localOperations} 
+        systemBalance={systemBalance}
         onDataRefresh={handleDataRefresh}
       />
       <TreasuryTotals 
