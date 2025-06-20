@@ -21,13 +21,13 @@ export const PublicAccountFlowTab = ({
 }: PublicAccountFlowTabProps) => {
   const { currency } = useCurrency();
 
-  // Sort operations by date and calculate running balance starting from 0
+  // Calculer le flux de compte en suivant l'ordre chronologique exact des opérations
   const processedOperations = useMemo(() => {
     if (!client) return [];
     
     const clientFullName = `${client.prenom} ${client.nom}`.trim();
     
-    console.log("=== CALCUL DU FLUX DE COMPTE ===");
+    console.log("=== CALCUL DU FLUX DE COMPTE CHRONOLOGIQUE ===");
     console.log("Client:", clientFullName);
     console.log("Total operations reçues:", operations.length);
     
@@ -50,86 +50,98 @@ export const PublicAccountFlowTab = ({
       return [];
     }
 
-    // Trier par date CHRONOLOGIQUE (du plus ancien au plus récent)
+    // Trier par ordre chronologique STRICT (du plus ancien au plus récent)
     const sortedOpsChronological = [...clientOperations].sort((a, b) => {
-      const dateA = new Date(a.operation_date || a.date);
-      const dateB = new Date(b.operation_date || b.date);
-      return dateA.getTime() - dateB.getTime();
+      const dateA = new Date(a.operation_date || a.date).getTime();
+      const dateB = new Date(b.operation_date || b.date).getTime();
+      
+      // Si les dates sont identiques, trier par ID pour avoir un ordre déterministe
+      if (dateA === dateB) {
+        return a.id.localeCompare(b.id);
+      }
+      
+      return dateA - dateB;
     });
 
-    console.log("=== CALCUL CHRONOLOGIQUE DEPUIS 0 TND ===");
-    console.log("Solde de départ: 0 TND");
-    
-    // CALCUL CHRONOLOGIQUE: Commencer à 0 TND
-    let currentBalance = 0;
+    console.log("=== ORDRE CHRONOLOGIQUE DES OPÉRATIONS ===");
+    sortedOpsChronological.forEach((op, i) => {
+      const date = format(new Date(op.operation_date || op.date), "dd/MM/yyyy HH:mm");
+      console.log(`${i + 1}. ${date} - ${op.type} - ${op.amount} TND - ID: ${op.id}`);
+    });
+
+    // CALCUL CHRONOLOGIQUE: Démarrer à 0 TND et calculer chaque étape
+    let runningBalance = 0;
+    console.log("\n=== CALCUL SÉQUENTIEL DU SOLDE ===");
+    console.log("Solde initial: 0.00 TND");
     
     const opsWithBalance = sortedOpsChronological.map((op, index) => {
-      // Le solde AVANT cette opération est le solde actuel
-      const balanceBefore = currentBalance;
+      // Le solde AVANT cette opération
+      const balanceBefore = runningBalance;
       
-      // Calculer l'impact de cette opération sur le solde
+      // Calculer l'impact de cette opération
       let balanceChange = 0;
       
       console.log(`\n--- Opération ${index + 1}/${sortedOpsChronological.length} ---`);
       console.log(`Date: ${format(new Date(op.operation_date || op.date), "dd/MM/yyyy HH:mm")}`);
-      console.log(`Type: ${op.type}, Montant: ${op.amount} TND`);
-      console.log(`Solde AVANT: ${balanceBefore} TND`);
+      console.log(`Type: ${op.type}, Montant: ${op.amount} TND, ID: ${op.id}`);
+      console.log(`Solde avant opération: ${balanceBefore.toFixed(3)} TND`);
       
+      // Déterminer l'impact selon le type d'opération
       if (op.type === "deposit") {
         balanceChange = Number(op.amount);
-        console.log(`✅ Dépôt: +${balanceChange} TND`);
+        console.log(`📥 Dépôt: +${balanceChange} TND`);
       } else if (op.type === "withdrawal") {
         balanceChange = -Number(op.amount);
-        console.log(`❌ Retrait: ${balanceChange} TND`);
+        console.log(`📤 Retrait: ${balanceChange} TND`);
       } else if (op.type === "transfer") {
         if (op.toClient === clientFullName) {
           balanceChange = Number(op.amount);
-          console.log(`📥 Virement reçu: +${balanceChange} TND`);
+          console.log(`📥 Virement reçu de "${op.fromClient}": +${balanceChange} TND`);
         } else if (op.fromClient === clientFullName) {
           balanceChange = -Number(op.amount);
-          console.log(`📤 Virement envoyé: ${balanceChange} TND`);
+          console.log(`📤 Virement envoyé vers "${op.toClient}": ${balanceChange} TND`);
         }
       } else if (op.type === "direct_transfer") {
         if (op.toClient === clientFullName) {
           balanceChange = Number(op.amount);
-          console.log(`📥 Opération directe reçue: +${balanceChange} TND`);
+          console.log(`📥 Opération directe reçue de "${op.fromClient}": +${balanceChange} TND`);
         } else if (op.fromClient === clientFullName) {
           balanceChange = -Number(op.amount);
-          console.log(`📤 Opération directe envoyée: ${balanceChange} TND`);
+          console.log(`📤 Opération directe envoyée vers "${op.toClient}": ${balanceChange} TND`);
         }
       }
       
-      // Calculer le nouveau solde APRÈS cette opération
-      currentBalance = balanceBefore + balanceChange;
-      const balanceAfter = currentBalance;
+      // Calculer le nouveau solde
+      runningBalance = balanceBefore + balanceChange;
       
-      console.log(`Changement: ${balanceChange >= 0 ? '+' : ''}${balanceChange} TND`);
-      console.log(`Solde APRÈS: ${balanceAfter} TND`);
+      console.log(`Impact: ${balanceChange >= 0 ? '+' : ''}${balanceChange} TND`);
+      console.log(`Nouveau solde: ${runningBalance.toFixed(3)} TND`);
       
       return {
         ...op,
-        balanceBefore,
-        balanceAfter,
-        balanceChange
+        balanceBefore: Number(balanceBefore.toFixed(3)),
+        balanceAfter: Number(runningBalance.toFixed(3)),
+        balanceChange: Number(balanceChange.toFixed(3))
       };
     });
 
-    console.log("\n=== RÉSUMÉ FINAL ===");
-    console.log("Solde calculé final:", currentBalance, "TND");
-    console.log("Solde actuel du client:", client.solde, "TND");
+    console.log("\n=== VÉRIFICATION FINALE ===");
+    console.log(`Solde calculé chronologiquement: ${runningBalance.toFixed(3)} TND`);
+    console.log(`Solde actuel du client en base: ${Number(client.solde).toFixed(3)} TND`);
     
-    const difference = Math.abs(currentBalance - client.solde);
-    console.log("Différence:", difference, "TND");
+    const difference = Math.abs(runningBalance - Number(client.solde));
+    console.log(`Écart: ${difference.toFixed(3)} TND`);
     
     if (difference > 0.01) {
-      console.warn("⚠️ ATTENTION: Le solde calculé depuis zéro ne correspond pas au solde actuel!");
-      console.warn("Cela peut indiquer que toutes les opérations ne sont pas incluses dans cette vue.");
+      console.warn("⚠️  ATTENTION: Le solde calculé ne correspond pas au solde en base!");
+      console.warn("Cela peut indiquer des opérations manquantes ou des incohérences.");
     } else {
-      console.log("✅ Parfait! Le calcul depuis zéro correspond au solde actuel.");
+      console.log("✅ Le calcul chronologique est cohérent avec le solde en base.");
     }
 
-    // Inverser pour l'affichage (plus récent en premier) mais les calculs sont corrects
+    // Retourner dans l'ordre inverse pour l'affichage (plus récent en premier)
     const reversedForDisplay = [...opsWithBalance].reverse();
+    
     console.log("\n=== ORDRE D'AFFICHAGE (plus récent en premier) ===");
     reversedForDisplay.forEach((op, i) => {
       const date = format(new Date(op.operation_date || op.date), "dd/MM/yyyy HH:mm");
