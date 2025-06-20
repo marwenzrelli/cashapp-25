@@ -21,104 +21,13 @@ export const PublicAccountFlowTab = ({
 }: PublicAccountFlowTabProps) => {
   const { currency } = useCurrency();
 
-  // Calculate effective balance using the EXACT SAME logic as PublicClientPersonalInfo
-  const calculateEffectiveBalance = () => {
-    console.log("PublicAccountFlowTab - Calculating balance for:", client?.prenom, client?.nom);
-    console.log("PublicAccountFlowTab - Operations count:", operations?.length || 0);
-    console.log("PublicAccountFlowTab - All operations:", operations);
-    
-    if (!operations || operations.length === 0 || !client) {
-      console.log("PublicAccountFlowTab - No operations or client, returning 0");
-      return 0;
-    }
-
-    const clientFullName = `${client.prenom} ${client.nom}`.trim();
-    console.log("PublicAccountFlowTab - Looking for operations for:", clientFullName);
-    
-    // Filtrer les opérations qui concernent ce client - EXACTEMENT LA MÊME LOGIQUE QUE PublicClientPersonalInfo
-    const clientOperations = operations.filter(op => {
-      const isDeposit = op.type === "deposit" && op.fromClient === clientFullName;
-      const isWithdrawal = op.type === "withdrawal" && op.fromClient === clientFullName;
-      const isTransferReceived = op.type === "transfer" && op.toClient === clientFullName;
-      const isTransferSent = op.type === "transfer" && op.fromClient === clientFullName;
-      const isDirectReceived = op.type === "direct_transfer" && op.toClient === clientFullName;
-      const isDirectSent = op.type === "direct_transfer" && op.fromClient === clientFullName;
-      
-      return isDeposit || isWithdrawal || isTransferReceived || isTransferSent || isDirectReceived || isDirectSent;
-    });
-    
-    console.log("PublicAccountFlowTab - Filtered client operations:", clientOperations.length);
-    console.log("PublicAccountFlowTab - Client operations details:", clientOperations);
-    
-    // Calculate totals by operation type - EXACTEMENT LA MÊME LOGIQUE QUE PublicClientPersonalInfo
-    const totalDeposits = clientOperations
-      .filter(op => op.type === "deposit")
-      .reduce((total, op) => {
-        console.log("PublicAccountFlowTab - Adding deposit:", op.amount);
-        return total + Number(op.amount);
-      }, 0);
-      
-    const totalWithdrawals = clientOperations
-      .filter(op => op.type === "withdrawal")
-      .reduce((total, op) => {
-        console.log("PublicAccountFlowTab - Adding withdrawal:", op.amount);
-        return total + Number(op.amount);
-      }, 0);
-      
-    // Separate transfers received and sent
-    const transfersReceived = clientOperations
-      .filter(op => op.type === "transfer" && op.toClient === clientFullName)
-      .reduce((total, op) => {
-        console.log("PublicAccountFlowTab - Adding received transfer:", op.amount, "from", op.fromClient);
-        return total + Number(op.amount);
-      }, 0);
-      
-    const transfersSent = clientOperations
-      .filter(op => op.type === "transfer" && op.fromClient === clientFullName)
-      .reduce((total, op) => {
-        console.log("PublicAccountFlowTab - Adding sent transfer:", op.amount, "to", op.toClient);
-        return total + Number(op.amount);
-      }, 0);
-
-    // Calculate direct operations received and sent
-    const directOperationsReceived = clientOperations
-      .filter(op => op.type === "direct_transfer" && op.toClient === clientFullName)
-      .reduce((total, op) => {
-        console.log("PublicAccountFlowTab - Adding received direct transfer:", op.amount, "from", op.fromClient);
-        return total + Number(op.amount);
-      }, 0);
-      
-    const directOperationsSent = clientOperations
-      .filter(op => op.type === "direct_transfer" && op.fromClient === clientFullName)
-      .reduce((total, op) => {
-        console.log("PublicAccountFlowTab - Adding sent direct transfer:", op.amount, "to", op.toClient);
-        return total + Number(op.amount);
-      }, 0);
-      
-    // LOGIQUE UNIFIÉE: total versements - total retraits + total virements reçus - total virements émis + total opérations directes reçues - total opérations directes émises
-    const effectiveBalance = totalDeposits - totalWithdrawals + transfersReceived - transfersSent + directOperationsReceived - directOperationsSent;
-    
-    console.log("PublicAccountFlowTab - Final calculated balance:", effectiveBalance);
-    console.log("PublicAccountFlowTab - Breakdown:", {
-      totalDeposits,
-      totalWithdrawals,
-      transfersReceived,
-      transfersSent,
-      directOperationsReceived,
-      directOperationsSent,
-      formula: `${totalDeposits} - ${totalWithdrawals} + ${transfersReceived} - ${transfersSent} + ${directOperationsReceived} - ${directOperationsSent} = ${effectiveBalance}`
-    });
-    
-    return effectiveBalance;
-  };
-
   // Sort operations by date and calculate running balance
   const processedOperations = useMemo(() => {
     if (!client) return [];
     
     const clientFullName = `${client.prenom} ${client.nom}`.trim();
     
-    // Filtrer les opérations qui concernent ce client - INCLURE TOUTES LES OPÉRATIONS DIRECTES
+    // Filtrer les opérations qui concernent ce client
     const clientOperations = operations.filter(op => {
       console.log("PublicAccountFlowTab - Checking operation:", op.id, op.type, "fromClient:", op.fromClient, "toClient:", op.toClient);
       
@@ -147,55 +56,23 @@ export const PublicAccountFlowTab = ({
       return [];
     }
 
-    // Calculate the final balance
-    const finalBalance = calculateEffectiveBalance();
-    
-    // Sort operations from oldest to newest
+    // Sort operations from oldest to newest (chronological order)
     const sortedOps = [...clientOperations].sort((a, b) => {
       const dateA = new Date(a.operation_date || a.date);
       const dateB = new Date(b.operation_date || b.date);
       return dateA.getTime() - dateB.getTime();
     });
 
-    // Calculate total impact of all operations to find initial balance
-    let totalImpact = 0;
-    sortedOps.forEach(op => {
-      let operationImpact = 0;
-      
-      if (op.type === "deposit") {
-        operationImpact = Number(op.amount);
-      } else if (op.type === "withdrawal") {
-        operationImpact = -Number(op.amount);
-      } else if (op.type === "transfer") {
-        if (op.toClient === clientFullName) {
-          operationImpact = Number(op.amount); // Reçu
-        } else if (op.fromClient === clientFullName) {
-          operationImpact = -Number(op.amount); // Envoyé
-        }
-      } else if (op.type === "direct_transfer") {
-        if (op.toClient === clientFullName) {
-          operationImpact = Number(op.amount); // Opération directe reçue
-        } else if (op.fromClient === clientFullName) {
-          operationImpact = -Number(op.amount); // Opération directe envoyée
-        }
-      }
-      
-      totalImpact += operationImpact;
-      console.log(`PublicAccountFlowTab - Total impact calculation - Operation ${op.id}: type=${op.type}, impact=${operationImpact}, totalImpact=${totalImpact}`);
-    });
+    console.log("PublicAccountFlowTab - Sorted operations chronologically:", sortedOps.map(op => ({
+      id: op.id,
+      type: op.type,
+      amount: op.amount,
+      date: op.operation_date || op.date
+    })));
 
-    // Initial balance = final balance - total impact
-    const initialBalance = finalBalance - totalImpact;
-    
-    console.log("PublicAccountFlowTab - Balance calculation:", {
-      finalBalance,
-      totalImpact,
-      initialBalance
-    });
-
-    // Calculate running balance for each operation starting from initial balance
-    let runningBalance = initialBalance;
-    const opsWithBalance = sortedOps.map((op) => {
+    // Calculate running balance starting from 0
+    let runningBalance = 0;
+    const opsWithBalance = sortedOps.map((op, index) => {
       const balanceBefore = runningBalance;
 
       // Calculate the impact of this operation on the balance
@@ -222,7 +99,14 @@ export const PublicAccountFlowTab = ({
       // Appliquer l'impact à runningBalance
       runningBalance += balanceChange;
       
-      console.log(`PublicAccountFlowTab - Operation ${op.id}: type=${op.type}, amount=${op.amount}, balanceChange=${balanceChange}, balanceBefore=${balanceBefore}, balanceAfter=${runningBalance}`);
+      console.log(`PublicAccountFlowTab - Operation ${index + 1}/${sortedOps.length} - ID ${op.id}:`, {
+        type: op.type,
+        amount: op.amount,
+        balanceChange,
+        balanceBefore,
+        balanceAfter: runningBalance,
+        date: op.operation_date || op.date
+      });
       
       return {
         ...op,
@@ -232,7 +116,7 @@ export const PublicAccountFlowTab = ({
       };
     });
 
-    // Return sorted from newest to oldest for display
+    // Return sorted from newest to oldest for display (reverse chronological for UI)
     return opsWithBalance.reverse();
   }, [operations, client]);
 
@@ -276,6 +160,12 @@ export const PublicAccountFlowTab = ({
     return "+ ";
   };
 
+  const getBalanceClass = (balance: number) => {
+    return balance >= 0 
+      ? "text-green-600 dark:text-green-400" 
+      : "text-red-600 dark:text-red-400";
+  };
+
   const clientFullName = client ? `${client.prenom} ${client.nom}`.trim() : '';
 
   return (
@@ -296,7 +186,6 @@ export const PublicAccountFlowTab = ({
                 <TableHead className="w-[150px] text-right">Solde avant</TableHead>
                 <TableHead className="w-[120px] text-right">Montant</TableHead>
                 <TableHead className="w-[150px] text-right">Solde après</TableHead>
-                {/* Pas de colonne Actions dans la vue publique */}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -322,16 +211,15 @@ export const PublicAccountFlowTab = ({
                     <TableCell className="max-w-[200px] truncate">
                       {op.description || "-"}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className={`text-right ${getBalanceClass(op.balanceBefore)}`}>
                       {formatAmount(op.balanceBefore)}
                     </TableCell>
                     <TableCell className={`text-right ${getAmountClass(op.type, clientFullName, op)}`}>
                       {getAmountPrefix(op.type, clientFullName, op)}{formatAmount(op.amount)}
                     </TableCell>
-                    <TableCell className="text-right font-semibold">
+                    <TableCell className={`text-right font-semibold ${getBalanceClass(op.balanceAfter)}`}>
                       {formatAmount(op.balanceAfter)}
                     </TableCell>
-                    {/* Pas de cellule Actions dans la vue publique */}
                   </TableRow>
                 ))
               )}
