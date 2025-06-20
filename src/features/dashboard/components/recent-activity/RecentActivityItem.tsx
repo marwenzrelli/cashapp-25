@@ -55,25 +55,69 @@ export const RecentActivityItem = ({ activity, currency, index }: RecentActivity
 
       console.log("Searching for client:", searchName);
 
-      // Recherche simple par nom ou prénom
-      const { data: clients, error } = await supabase
+      // Méthode similaire à celle utilisée dans les autres pages
+      // 1. Recherche par nom complet exact
+      let { data: clients, error } = await supabase
         .from('clients')
         .select('id, nom, prenom')
-        .or(`nom.ilike.%${searchName}%,prenom.ilike.%${searchName}%`)
-        .limit(10);
+        .or(`nom.eq.${searchName},prenom.eq.${searchName}`)
+        .limit(5);
 
       if (error) {
-        console.error("Error finding client:", error);
-        toast.error("Erreur lors de la recherche du client");
-        return;
+        console.error("Error in exact search:", error);
+      }
+
+      // 2. Si pas trouvé, recherche par nom + prénom combiné
+      if (!clients || clients.length === 0) {
+        const { data: combinedClients, error: combinedError } = await supabase
+          .from('clients')
+          .select('id, nom, prenom')
+          .textSearch('nom || \' \' || prenom', searchName, { type: 'plain' })
+          .limit(5);
+
+        if (!combinedError && combinedClients) {
+          clients = combinedClients;
+        }
+      }
+
+      // 3. Si toujours pas trouvé, recherche partielle avec ilike
+      if (!clients || clients.length === 0) {
+        const searchParts = searchName.split(' ');
+        
+        if (searchParts.length === 1) {
+          // Un seul mot - rechercher dans nom et prénom
+          const { data: partialClients, error: partialError } = await supabase
+            .from('clients')
+            .select('id, nom, prenom')
+            .or(`nom.ilike.%${searchName}%,prenom.ilike.%${searchName}%`)
+            .limit(5);
+
+          if (!partialError && partialClients) {
+            clients = partialClients;
+          }
+        } else {
+          // Plusieurs mots - essayer différentes combinaisons
+          const [firstPart, ...restParts] = searchParts;
+          const secondPart = restParts.join(' ');
+          
+          const { data: multiPartClients, error: multiPartError } = await supabase
+            .from('clients')
+            .select('id, nom, prenom')
+            .or(`and(nom.ilike.%${firstPart}%,prenom.ilike.%${secondPart}%),and(prenom.ilike.%${firstPart}%,nom.ilike.%${secondPart}%)`)
+            .limit(5);
+
+          if (!multiPartError && multiPartClients) {
+            clients = multiPartClients;
+          }
+        }
       }
 
       console.log("Found clients:", clients);
 
       if (clients && clients.length > 0) {
-        // Si plusieurs clients trouvés, prendre le premier
-        // ou on pourrait afficher une liste pour choisir
+        // Prendre le premier client trouvé
         navigate(`/clients/${clients[0].id}`);
+        toast.success(`Redirection vers le profil de ${clients[0].prenom} ${clients[0].nom}`);
       } else {
         toast.error(`Client "${searchName}" non trouvé`);
       }
