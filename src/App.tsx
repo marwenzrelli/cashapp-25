@@ -20,6 +20,7 @@ import DirectOperations from "./pages/DirectOperations";
 import Statistics from "./pages/Statistics";
 import Administration from "./pages/Administration";
 import Login from "./pages/Login";
+import Search from "./pages/Search";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,7 @@ function App() {
                   <Route path="dashboard" element={<Index />} />
                   <Route path="clients" element={<Clients />} />
                   <Route path="clients/:id" element={<ClientProfile />} />
+                  <Route path="search" element={<Search />} />
                   <Route path="deposits" element={<Deposits />} />
                   <Route path="withdrawals" element={<Withdrawals />} />
                   <Route path="transfers" element={<Transfers />} />
