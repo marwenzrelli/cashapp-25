@@ -5,6 +5,9 @@ import { Operation } from "@/features/operations/types";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ChevronUp, ChevronDown } from "lucide-react";
+import { useTreasurySorting, SortField } from "../../hooks/useTreasurySorting";
 
 interface TreasuryTableProps {
   operations: Operation[];
@@ -18,7 +21,9 @@ interface TreasuryOperation extends Operation {
 export const TreasuryTable = ({
   operations
 }: TreasuryTableProps) => {
-  const sortedOperations = useMemo(() => {
+  const { sortedOperations, sortConfig, handleSort } = useTreasurySorting(operations);
+
+  const operationsWithBalance = useMemo(() => {
     // Log initial input to verify we're receiving all operation types
     const depositCount = operations.filter(op => op.type === 'deposit').length;
     const withdrawalCount = operations.filter(op => op.type === 'withdrawal').length;
@@ -30,11 +35,7 @@ export const TreasuryTable = ({
     });
 
     let runningBalance = 0;
-    return [...operations].sort((a, b) => {
-      const dateA = new Date(a.operation_date || a.date);
-      const dateB = new Date(b.operation_date || b.date);
-      return dateA.getTime() - dateB.getTime();
-    }).map((op): TreasuryOperation => {
+    return sortedOperations.map((op): TreasuryOperation => {
       const amount = op.type === "withdrawal" ? -op.amount : op.amount;
       const balanceBefore = runningBalance;
       runningBalance += amount;
@@ -44,7 +45,7 @@ export const TreasuryTable = ({
         balanceAfter: runningBalance
       };
     });
-  }, [operations]);
+  }, [sortedOperations]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', {
@@ -88,15 +89,37 @@ export const TreasuryTable = ({
     }
   };
 
+  const getSortIcon = (field: SortField) => {
+    if (sortConfig.field !== field) {
+      return <ChevronUp className="h-4 w-4 text-muted-foreground" />;
+    }
+    return sortConfig.direction === "asc" 
+      ? <ChevronUp className="h-4 w-4" />
+      : <ChevronDown className="h-4 w-4" />;
+  };
+
+  const SortableHeader = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
+    <TableHead>
+      <Button
+        variant="ghost"
+        onClick={() => handleSort(field)}
+        className="h-auto p-0 font-medium hover:bg-transparent flex items-center gap-2"
+      >
+        {children}
+        {getSortIcon(field)}
+      </Button>
+    </TableHead>
+  );
+
   return (
     <div className="relative w-full overflow-auto">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Date</TableHead>
-            <TableHead>ID Opération</TableHead>
-            <TableHead>Nature</TableHead>
-            <TableHead>Client</TableHead>
+            <SortableHeader field="date">Date</SortableHeader>
+            <SortableHeader field="id">ID Opération</SortableHeader>
+            <SortableHeader field="nature">Nature</SortableHeader>
+            <SortableHeader field="client">Client</SortableHeader>
             <TableHead>Désignation</TableHead>
             <TableHead className="text-right">Solde avant</TableHead>
             <TableHead className="text-right">Montant</TableHead>
@@ -104,7 +127,7 @@ export const TreasuryTable = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {sortedOperations.length > 0 ? sortedOperations.map(operation => (
+          {operationsWithBalance.length > 0 ? operationsWithBalance.map(operation => (
             <TableRow key={operation.id}>
               <TableCell>
                 {format(new Date(operation.operation_date || operation.date), "dd/MM/yyyy HH:mm", {
