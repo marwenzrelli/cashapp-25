@@ -28,7 +28,7 @@ export const OperationTypeCards = ({ stats, currency }: OperationTypeCardsProps)
         <CardContent>
           <div className="text-2xl font-bold text-green-600">{stats.total_deposits || 0}</div>
           <p className="text-xs text-muted-foreground mt-1">
-            Montant total: {formatAmount(stats.total_deposits || 0)}
+            Montant total: {formatAmount(stats.total_deposits_amount || 0)}
           </p>
         </CardContent>
       </Card>
@@ -43,7 +43,7 @@ export const OperationTypeCards = ({ stats, currency }: OperationTypeCardsProps)
         <CardContent>
           <div className="text-2xl font-bold text-red-600">{stats.total_withdrawals || 0}</div>
           <p className="text-xs text-muted-foreground mt-1">
-            Montant total: {formatAmount(stats.total_withdrawals || 0)}
+            Montant total: {formatAmount(stats.total_withdrawals_amount || 0)}
           </p>
         </CardContent>
       </Card>
