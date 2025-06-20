@@ -23,19 +23,23 @@ export const AccountFlowMobileView = ({ operations, isPublicView = false }: Acco
   };
 
   const formatAmount = (amount: number): string => {
-    return new Intl.NumberFormat('fr-TN', {
-      style: 'currency',
-      currency: 'TND',
-      minimumFractionDigits: 3,
-      maximumFractionDigits: 3
-    }).format(amount);
+    return Math.abs(amount).toLocaleString('fr-FR', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    });
   };
 
   const getAmountClass = (type: string) => {
-    if (type === "deposit") return "text-green-600";
-    if (type === "withdrawal") return "text-red-600";
-    if (type === "transfer") return "text-blue-600";
+    if (type === "deposit") return "text-green-600 dark:text-green-400";
+    if (type === "withdrawal") return "text-red-600 dark:text-red-400";
+    if (type === "transfer") return "text-blue-600 dark:text-blue-400";
     return "";
+  };
+
+  const getBalanceClass = (balance: number) => {
+    return balance >= 0 
+      ? "text-green-600 dark:text-green-400" 
+      : "text-red-600 dark:text-red-400";
   };
 
   return (
@@ -72,22 +76,22 @@ export const AccountFlowMobileView = ({ operations, isPublicView = false }: Acco
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-sm">Solde avant:</span>
-                  <span className="text-sm font-medium">
-                    {formatAmount(op.balanceBefore)}
+                  <span className={`text-sm font-medium ${getBalanceClass(op.balanceBefore)}`}>
+                    {formatAmount(op.balanceBefore)} TND
                   </span>
                 </div>
                 
                 <div className="flex justify-between">
                   <span className="text-sm">Montant:</span>
                   <span className={`text-sm font-medium ${getAmountClass(op.type)}`}>
-                    {op.type === "withdrawal" ? "- " : ""}{formatAmount(op.amount)}
+                    {op.type === "withdrawal" ? "- " : ""}{formatAmount(op.amount)} TND
                   </span>
                 </div>
                 
                 <div className="flex justify-between border-t pt-2">
                   <span className="text-sm font-medium">Solde après:</span>
-                  <span className="text-sm font-semibold">
-                    {formatAmount(op.balanceAfter)}
+                  <span className={`text-sm font-semibold ${getBalanceClass(op.balanceAfter)}`}>
+                    {formatAmount(op.balanceAfter)} TND
                   </span>
                 </div>
               </div>

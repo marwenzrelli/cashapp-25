@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Operation } from "@/features/operations/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -20,32 +21,39 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
   const [selectedOperation, setSelectedOperation] = useState<Operation | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  // Sort operations by date from newest to oldest
+  // Sort operations by date from oldest to newest for calculation
   const sortedOperations = [...operations].sort((a, b) => {
     const dateA = new Date(a.operation_date || a.date);
     const dateB = new Date(b.operation_date || b.date);
-    return dateB.getTime() - dateA.getTime();
+    return dateA.getTime() - dateB.getTime();
   });
 
-  // Calculate running balance for each operation
-  const operationsWithBalance = sortedOperations.reverse().reduce((acc: any[], op, index, array) => {
-    // Start with the oldest operations (we reversed the array)
+  // Calculate running balance for each operation starting from 0
+  const operationsWithBalance = sortedOperations.reduce((acc: any[], op, index) => {
     const amount = op.amount;
-    const previousOp = index > 0 ? acc[index - 1] : null;
-    let previousBalance = previousOp ? previousOp.balanceAfter : 0;
+    const previousBalance = index > 0 ? acc[index - 1].balanceAfter : 0;
     
-    // For withdrawals, we subtract from the balance
-    // For deposits, we add to the balance
-    // For transfers, it depends on if the client is sending or receiving
+    // Calculate balance change based on operation type
     let balanceChange = 0;
     if (op.type === "deposit") {
       balanceChange = amount;
     } else if (op.type === "withdrawal") {
       balanceChange = -amount;
     } else if (op.type === "transfer") {
-      // If this client is the sender, it's negative; if receiver, it's positive
-      // This is a simplified approach, might need adjustment based on your data structure
-      balanceChange = -amount; // Assuming current view is for the sender
+      // For transfers, we need to check if this client is receiving or sending
+      // If the operation has client_id or matches clientId, determine direction
+      if (op.to_client_id === clientId || (op.toClient && op.toClient.includes(op.fromClient || ''))) {
+        balanceChange = amount; // Receiving transfer
+      } else {
+        balanceChange = -amount; // Sending transfer
+      }
+    } else if (op.type === "direct_transfer") {
+      // Same logic for direct transfers
+      if (op.to_client_id === clientId) {
+        balanceChange = amount; // Receiving direct transfer
+      } else {
+        balanceChange = -amount; // Sending direct transfer
+      }
     }
     
     const balanceAfter = previousBalance + balanceChange;
@@ -60,7 +68,7 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
     return acc;
   }, []);
 
-  // Reverse back to show newest first
+  // Reverse to show newest first in display
   const displayOperations = [...operationsWithBalance].reverse();
 
   const formatDateTime = (dateString: string) => {
@@ -72,19 +80,23 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
   };
 
   const formatAmount = (amount: number): string => {
-    return new Intl.NumberFormat('fr-TN', {
-      style: 'currency',
-      currency: 'TND',
-      minimumFractionDigits: 3,
-      maximumFractionDigits: 3
-    }).format(amount);
+    return Math.abs(amount).toLocaleString('fr-FR', { 
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2 
+    });
   };
 
   const getAmountClass = (type: string, amount: number) => {
-    if (type === "deposit") return "text-green-600";
-    if (type === "withdrawal") return "text-red-600";
-    if (type === "transfer") return "text-purple-600";
+    if (type === "deposit") return "text-green-600 dark:text-green-400";
+    if (type === "withdrawal") return "text-red-600 dark:text-red-400";
+    if (type === "transfer") return "text-blue-600 dark:text-blue-400";
     return "";
+  };
+
+  const getBalanceClass = (balance: number) => {
+    return balance >= 0 
+      ? "text-green-600 dark:text-green-400" 
+      : "text-red-600 dark:text-red-400";
   };
 
   const handleRowClick = (operation: Operation) => {
@@ -151,14 +163,14 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
                       <TableCell className="max-w-[200px] truncate">
                         {op.description || "-"}
                       </TableCell>
-                      <TableCell className="text-right">
-                        {formatAmount(op.balanceBefore)}
+                      <TableCell className={`text-right ${getBalanceClass(op.balanceBefore)}`}>
+                        {formatAmount(op.balanceBefore)} TND
                       </TableCell>
                       <TableCell className={`text-right ${getAmountClass(op.type, op.amount)}`}>
-                        {op.type === "withdrawal" ? "- " : ""}{formatAmount(op.amount)}
+                        {op.type === "withdrawal" ? "- " : ""}{formatAmount(op.amount)} TND
                       </TableCell>
-                      <TableCell className="text-right font-semibold">
-                        {formatAmount(op.balanceAfter)}
+                      <TableCell className={`text-right font-semibold ${getBalanceClass(op.balanceAfter)}`}>
+                        {formatAmount(op.balanceAfter)} TND
                       </TableCell>
                     </TableRow>
                   ))
