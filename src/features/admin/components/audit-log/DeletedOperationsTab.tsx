@@ -32,11 +32,12 @@ export const DeletedOperationsTab = () => {
   return (
     <div className="space-y-4">
       <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-4 mb-4">
+        <TabsList className="grid grid-cols-5 mb-4">
           <TabsTrigger value="all">Toutes</TabsTrigger>
           <TabsTrigger value="deposit">Versements</TabsTrigger>
           <TabsTrigger value="withdrawal">Retraits</TabsTrigger>
           <TabsTrigger value="transfer">Virements</TabsTrigger>
+          <TabsTrigger value="direct_transfer">Opérations directes</TabsTrigger>
         </TabsList>
 
         <TabsContent value={activeTab} className="space-y-4">

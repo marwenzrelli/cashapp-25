@@ -38,11 +38,20 @@ export const useDeletedOperations = () => {
 
       if (transfersError) throw transfersError;
 
+      // Récupérer les opérations directes supprimées
+      const { data: deletedDirectOperations, error: directOperationsError } = await supabase
+        .from("deleted_direct_operations")
+        .select("*")
+        .order("deleted_at", { ascending: false });
+
+      if (directOperationsError) throw directOperationsError;
+
       // Récupérer les informations d'utilisateur pour les associer aux opérations
       const uniqueUserIds = new Set([
         ...deletedDeposits.map(d => d.deleted_by),
         ...deletedWithdrawals.map(w => w.deleted_by),
-        ...deletedTransfers.map(t => t.deleted_by)
+        ...deletedTransfers.map(t => t.deleted_by),
+        ...deletedDirectOperations.map(do => do.deleted_by)
       ].filter(Boolean));
 
       const userMap = new Map();
@@ -71,7 +80,7 @@ export const useDeletedOperations = () => {
           : "Système";
           
         return {
-          id: deposit.id.toString(), // Convert to string
+          id: deposit.id.toString(),
           type: "deposit",
           amount: deposit.amount,
           date: formatDateTime(deposit.deleted_at),
@@ -88,7 +97,7 @@ export const useDeletedOperations = () => {
           : "Système";
           
         return {
-          id: withdrawal.id.toString(), // Convert to string
+          id: withdrawal.id.toString(),
           type: "withdrawal",
           amount: withdrawal.amount,
           date: formatDateTime(withdrawal.deleted_at),
@@ -105,7 +114,7 @@ export const useDeletedOperations = () => {
           : "Système";
           
         return {
-          id: transfer.id.toString(), // Convert to string
+          id: transfer.id.toString(),
           type: "transfer",
           amount: transfer.amount,
           date: formatDateTime(transfer.deleted_at),
@@ -117,11 +126,30 @@ export const useDeletedOperations = () => {
         };
       });
 
+      const formattedDirectOperations = deletedDirectOperations.map(directOp => {
+        const userName = directOp.deleted_by && userMap.get(directOp.deleted_by)
+          ? userMap.get(directOp.deleted_by).name
+          : "Système";
+          
+        return {
+          id: directOp.id.toString(),
+          type: "direct_transfer",
+          amount: directOp.amount,
+          date: formatDateTime(directOp.deleted_at),
+          from_client: directOp.from_client_name,
+          to_client: directOp.to_client_name,
+          created_by: directOp.deleted_by || "",
+          created_by_name: userName,
+          description: directOp.notes || `Opération directe supprimée de ${directOp.from_client_name} vers ${directOp.to_client_name}`
+        };
+      });
+
       // Combiner toutes les données et trier par date
       const allDeletedOperations = [
         ...formattedDeposits,
         ...formattedWithdrawals,
-        ...formattedTransfers
+        ...formattedTransfers,
+        ...formattedDirectOperations
       ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
       setData(allDeletedOperations);

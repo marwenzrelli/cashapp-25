@@ -62,7 +62,7 @@ export const parseOperationId = (operationId: string | number): number => {
 };
 
 /**
- * Fonction générique pour la suppression d'opérations (retrait, dépôt, transfert)
+ * Fonction générique pour la suppression d'opérations (retrait, dépôt, transfert, opération directe)
  */
 export const deleteOperation = async (operation: Operation): Promise<boolean> => {
   if (!operation) {
@@ -101,6 +101,8 @@ export const deleteOperation = async (operation: Operation): Promise<boolean> =>
         return await handleDepositDeletion(operationId, userId);
       case 'transfer':
         return await handleTransferDeletion(operationId, userId);
+      case 'direct_transfer':
+        return await handleDirectOperationDeletion(operationId, userId);
       default:
         console.error("Type d'opération non supporté:", operationType);
         toast.error(`Type d'opération non supporté: ${operationType}`);
@@ -376,6 +378,88 @@ export const handleTransferDeletion = async (transferId: number, userId: string 
     console.error("Erreur lors de la suppression du transfert:", error);
     toast.error("Erreur lors de la suppression", {
       description: error.message || "Une erreur s'est produite lors de la suppression du transfert."
+    });
+    return false;
+  }
+};
+
+/**
+ * Utilitaire pour supprimer une opération directe et garder une trace dans deleted_direct_operations
+ */
+export const handleDirectOperationDeletion = async (operationId: number, userId: string | undefined): Promise<boolean> => {
+  try {
+    console.log(`Suppression de l'opération directe avec ID: ${operationId}`);
+    
+    if (!operationId || isNaN(operationId) || operationId <= 0) {
+      console.error("ID d'opération directe invalide:", operationId);
+      toast.error("ID d'opération directe invalide");
+      return false;
+    }
+    
+    // Récupérer les détails de l'opération directe avant suppression
+    const { data: directOpData, error: fetchError } = await supabase
+      .from('direct_operations')
+      .select('*')
+      .eq('id', operationId)
+      .single();
+      
+    if (fetchError) {
+      console.error("Erreur lors de la récupération des détails de l'opération directe:", fetchError);
+      toast.error("Erreur lors de la récupération des détails de l'opération directe");
+      throw fetchError;
+    }
+    
+    if (!directOpData) {
+      console.error("Aucune donnée d'opération directe trouvée pour l'ID:", operationId);
+      toast.error("Opération directe introuvable");
+      return false;
+    }
+    
+    // Préparer les données à insérer dans deleted_direct_operations
+    const logEntry = {
+      original_id: directOpData.id,
+      from_client_id: directOpData.from_client_id,
+      to_client_id: directOpData.to_client_id,
+      from_client_name: directOpData.from_client_name,
+      to_client_name: directOpData.to_client_name,
+      amount: Number(directOpData.amount),
+      operation_date: directOpData.operation_date,
+      notes: directOpData.notes || null,
+      status: directOpData.status,
+      deleted_by: userId
+    };
+    
+    // Insérer dans la table des opérations directes supprimées
+    const { error: logError } = await supabase
+      .from('deleted_direct_operations')
+      .insert(logEntry);
+      
+    if (logError) {
+      console.error("Erreur lors de l'enregistrement dans deleted_direct_operations:", logError);
+      throw logError;
+    }
+    
+    // Maintenant supprimer l'opération directe originale
+    const { error: deleteError } = await supabase
+      .from('direct_operations')
+      .delete()
+      .eq('id', operationId);
+      
+    if (deleteError) {
+      console.error("Erreur lors de la suppression de l'opération directe:", deleteError);
+      toast.error("Erreur lors de la suppression de l'opération directe", {
+        description: deleteError.message
+      });
+      throw deleteError;
+    }
+    
+    console.log("Opération directe supprimée avec succès:", operationId);
+    toast.success("Opération directe supprimée avec succès");
+    return true;
+  } catch (error: any) {
+    console.error("Erreur lors de la suppression de l'opération directe:", error);
+    toast.error("Erreur lors de la suppression", {
+      description: error.message || "Une erreur s'est produite lors de la suppression de l'opération directe."
     });
     return false;
   }
