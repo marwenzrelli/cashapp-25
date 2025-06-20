@@ -1,4 +1,3 @@
-
 import { Operation } from "@/features/operations/types";
 import { useMemo } from "react";
 import { Card } from "@/components/ui/card";
@@ -27,10 +26,24 @@ export const PublicAccountFlowTab = ({
     
     const clientFullName = `${client.prenom} ${client.nom}`.trim();
     
+    console.log("=== DEBUG BALANCE CALCULATION START ===");
+    console.log("Client:", clientFullName);
+    console.log("Total operations received:", operations.length);
+    
+    // DEBUG: Log all operations to see what we're working with
+    operations.forEach((op, i) => {
+      console.log(`Operation ${i + 1}:`, {
+        id: op.id,
+        type: op.type,
+        amount: op.amount,
+        fromClient: op.fromClient,
+        toClient: op.toClient,
+        date: op.operation_date || op.date
+      });
+    });
+    
     // Filtrer les opérations qui concernent ce client
     const clientOperations = operations.filter(op => {
-      console.log("PublicAccountFlowTab - Checking operation:", op.id, op.type, "fromClient:", op.fromClient, "toClient:", op.toClient);
-      
       const isDeposit = op.type === "deposit" && op.fromClient === clientFullName;
       const isWithdrawal = op.type === "withdrawal" && op.fromClient === clientFullName;
       const isTransferReceived = op.type === "transfer" && op.toClient === clientFullName;
@@ -41,7 +54,9 @@ export const PublicAccountFlowTab = ({
       const isRelevant = isDeposit || isWithdrawal || isTransferReceived || isTransferSent || isDirectReceived || isDirectSent;
       
       if (isRelevant) {
-        console.log("PublicAccountFlowTab - Operation included:", op.id, op.type, {
+        console.log(`✓ Operation ${op.id} included:`, {
+          type: op.type,
+          amount: op.amount,
           isDeposit, isWithdrawal, isTransferReceived, isTransferSent, isDirectReceived, isDirectSent
         });
       }
@@ -49,10 +64,10 @@ export const PublicAccountFlowTab = ({
       return isRelevant;
     });
     
-    console.log("PublicAccountFlowTab - Processing operations for:", clientFullName, "Count:", clientOperations.length);
-    console.log("PublicAccountFlowTab - All relevant operations:", clientOperations);
+    console.log(`Filtered ${clientOperations.length} relevant operations for ${clientFullName}`);
     
     if (clientOperations.length === 0) {
+      console.log("No operations found for this client");
       return [];
     }
 
@@ -63,67 +78,79 @@ export const PublicAccountFlowTab = ({
       return dateA.getTime() - dateB.getTime();
     });
 
-    console.log("PublicAccountFlowTab - Sorted operations chronologically:", sortedOps.map(op => ({
-      id: op.id,
-      type: op.type,
-      amount: op.amount,
-      date: op.operation_date || op.date
-    })));
+    console.log("Operations sorted chronologically:");
+    sortedOps.forEach((op, i) => {
+      console.log(`${i + 1}. ${op.type} - ${op.amount} TND - ${op.operation_date || op.date}`);
+    });
 
     // CALCUL CHRONOLOGIQUE: Commencer à 0 et calculer séquentiellement
-    let currentBalance = 0;
+    let runningBalance = 0;
+    console.log("Starting balance calculation from 0");
+    
     const opsWithBalance = sortedOps.map((op, index) => {
-      // Le solde AVANT cette opération
-      const balanceBefore = currentBalance;
-
-      // Calculer l'impact de cette opération sur le solde
+      const balanceBefore = runningBalance;
       let balanceChange = 0;
       
-      if (op.type === "deposit") {
-        balanceChange = Number(op.amount); // Versement = +montant
-      } else if (op.type === "withdrawal") {
-        balanceChange = -Number(op.amount); // Retrait = -montant
-      } else if (op.type === "transfer") {
-        // Pour les virements, utiliser les noms des clients
-        if (op.toClient === clientFullName) {
-          balanceChange = Number(op.amount); // Virement reçu = +montant
-        } else if (op.fromClient === clientFullName) {
-          balanceChange = -Number(op.amount); // Virement envoyé = -montant
-        }
-      } else if (op.type === "direct_transfer") {
-        // Pour les opérations directes, utiliser les noms des clients
-        if (op.toClient === clientFullName) {
-          balanceChange = Number(op.amount); // Opération directe reçue = +montant
-        } else if (op.fromClient === clientFullName) {
-          balanceChange = -Number(op.amount); // Opération directe envoyée = -montant
-        }
-      }
-      
-      // Calculer le nouveau solde APRÈS cette opération
-      currentBalance = balanceBefore + balanceChange;
-      const balanceAfter = currentBalance;
-      
-      console.log(`PublicAccountFlowTab - Operation ${index + 1}/${sortedOps.length} - ID ${op.id}:`, {
+      console.log(`\n--- Processing operation ${index + 1}/${sortedOps.length} ---`);
+      console.log("Operation details:", {
+        id: op.id,
         type: op.type,
         amount: op.amount,
-        balanceChange,
-        balanceBefore,
-        balanceAfter,
-        date: op.operation_date || op.date,
         fromClient: op.fromClient,
         toClient: op.toClient
       });
+      console.log("Balance before this operation:", balanceBefore);
+      
+      if (op.type === "deposit") {
+        balanceChange = Number(op.amount);
+        console.log("Deposit: +" + balanceChange);
+      } else if (op.type === "withdrawal") {
+        balanceChange = -Number(op.amount);
+        console.log("Withdrawal: " + balanceChange);
+      } else if (op.type === "transfer") {
+        if (op.toClient === clientFullName) {
+          balanceChange = Number(op.amount);
+          console.log("Transfer received: +" + balanceChange);
+        } else if (op.fromClient === clientFullName) {
+          balanceChange = -Number(op.amount);
+          console.log("Transfer sent: " + balanceChange);
+        } else {
+          console.log("⚠️ Transfer doesn't match client name!");
+        }
+      } else if (op.type === "direct_transfer") {
+        if (op.toClient === clientFullName) {
+          balanceChange = Number(op.amount);
+          console.log("Direct transfer received: +" + balanceChange);
+        } else if (op.fromClient === clientFullName) {
+          balanceChange = -Number(op.amount);
+          console.log("Direct transfer sent: " + balanceChange);
+        } else {
+          console.log("⚠️ Direct transfer doesn't match client name!");
+        }
+      }
+      
+      runningBalance = balanceBefore + balanceChange;
+      console.log("Balance change:", balanceChange);
+      console.log("Balance after:", runningBalance);
       
       return {
         ...op,
         balanceBefore,
-        balanceAfter,
+        balanceAfter: runningBalance,
         balanceChange
       };
     });
 
-    // Return sorted from newest to oldest for display (reverse chronological for UI)
-    return opsWithBalance.reverse();
+    console.log("\n=== FINAL BALANCE CALCULATION RESULTS ===");
+    opsWithBalance.forEach((op, i) => {
+      console.log(`${i + 1}. ${op.type} - Before: ${op.balanceBefore} - Change: ${op.balanceChange} - After: ${op.balanceAfter}`);
+    });
+
+    // Return in reverse order for display (newest first)
+    const reversed = opsWithBalance.reverse();
+    console.log("=== DEBUG BALANCE CALCULATION END ===\n");
+    
+    return reversed;
   }, [operations, client]);
 
   const formatDateTime = (dateString: string) => {
