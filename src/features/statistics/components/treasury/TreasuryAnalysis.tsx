@@ -23,46 +23,7 @@ export const TreasuryAnalysis = () => {
     try {
       console.log("Démarrage de l'analyse de trésorerie...");
 
-      // Requête 1: Totaux des opérations
-      const { data: operationsData, error: operationsError } = await supabase.rpc('run_sql', {
-        query: `
-          SELECT 
-            'Versements' as type,
-            COUNT(*) as nombre,
-            SUM(amount) as total
-          FROM deposits 
-          WHERE status = 'completed'
-          
-          UNION ALL
-          
-          SELECT 
-            'Retraits' as type,
-            COUNT(*) as nombre,
-            SUM(amount) as total
-          FROM withdrawals 
-          WHERE status = 'completed'
-          
-          UNION ALL
-          
-          SELECT 
-            'Virements' as type,
-            COUNT(*) as nombre,
-            SUM(amount) as total
-          FROM transfers 
-          WHERE status = 'completed'
-          
-          UNION ALL
-          
-          SELECT 
-            'Opérations directes' as type,
-            COUNT(*) as nombre,
-            SUM(amount) as total
-          FROM direct_operations 
-          WHERE status = 'completed';
-        `
-      });
-
-      // Requête directe alternative sans RPC
+      // Requêtes directes pour récupérer les données
       const [depositsResult, withdrawalsResult, transfersResult, clientsResult] = await Promise.all([
         supabase.from('deposits').select('amount').eq('status', 'completed'),
         supabase.from('withdrawals').select('amount').eq('status', 'completed'),
