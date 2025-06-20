@@ -62,6 +62,15 @@ export const ClientBalanceDisplay = ({ solde, clientId, clientName }: ClientBala
     maximumFractionDigits: 2 
   })} ${currency}`;
   
+  console.log("ClientBalanceDisplay balance calculation:", {
+    clientName,
+    clientId,
+    solde,
+    netBalance,
+    roundedBalance,
+    isPositive: roundedBalance >= 0
+  });
+  
   return (
     <div className="flex flex-col gap-1 pr-0 md:pr-6 md:border-r md:border-transparent">
       <div className="flex items-center">

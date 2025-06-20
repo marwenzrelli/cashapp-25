@@ -60,6 +60,15 @@ export const ClientExpandedView = ({ client, onView }: ClientExpandedViewProps) 
   // Format the balance without explicit sign and proper rounding
   const roundedBalance = Math.round(netBalance * 100) / 100; // Round to 2 decimal places
   
+  console.log("ClientExpandedView balance calculation:", {
+    clientName,
+    clientId,
+    clientSolde: client.solde,
+    netBalance,
+    roundedBalance,
+    isPositive: roundedBalance >= 0
+  });
+  
   return (
     <div className="mt-4 md:pl-14 text-sm grid gap-2">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

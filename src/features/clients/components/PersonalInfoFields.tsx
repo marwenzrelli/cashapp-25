@@ -82,7 +82,8 @@ export const PersonalInfoFields = ({
     clientSolde: client.solde,
     effectiveBalance,
     hasOperations: clientOperations.length > 0,
-    clientName: `${client.prenom} ${client.nom}`
+    clientName: `${client.prenom} ${client.nom}`,
+    isPositive: effectiveBalance >= 0
   });
   
   return (
@@ -154,12 +155,15 @@ export const PersonalInfoFields = ({
               <div className="w-full">
                 <p className="text-xs text-muted-foreground">Solde</p>
                 <span className={cn(
-                  "font-medium px-3 py-1.5 mt-1 inline-block border rounded-md w-full", 
+                  "font-medium px-3 py-1.5 mt-1 inline-block border rounded-md", 
                   effectiveBalance >= 0 
                     ? "text-green-600 dark:text-green-400 border-green-200 dark:border-green-900/30 bg-green-50 dark:bg-green-900/20" 
                     : "text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/30 bg-red-50 dark:bg-red-900/20"
                 )}>
-                  {formatDisplayAmount(Math.abs(effectiveBalance))}
+                  {Math.abs(effectiveBalance).toLocaleString('fr-FR', { 
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 2 
+                  })} TND
                 </span>
               </div>
             </div>
