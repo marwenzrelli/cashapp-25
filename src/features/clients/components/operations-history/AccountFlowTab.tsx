@@ -27,58 +27,57 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
   const currentClient = clients?.find(c => c.id === clientId);
   const currentBalance = currentClient?.solde || 0;
 
-  // Sort operations by date from oldest to newest for calculation
+  // Sort operations by date from oldest to newest for chronological calculation
   const sortedOperations = [...operations].sort((a, b) => {
     const dateA = new Date(a.operation_date || a.date);
     const dateB = new Date(b.operation_date || b.date);
     return dateA.getTime() - dateB.getTime();
   });
 
-  // Calculate running balance for each operation starting from the final balance and working backwards
-  const operationsWithBalance = sortedOperations.reduce((acc: any[], op, index) => {
-    const amount = op.amount;
-    
-    // Calculate balance change based on operation type
+  // Calculate balance changes for each operation
+  const operationsWithBalance = sortedOperations.map((op, index) => {
     let balanceChange = 0;
+    
     if (op.type === "deposit") {
-      balanceChange = amount;
+      balanceChange = op.amount;
     } else if (op.type === "withdrawal") {
-      balanceChange = -amount;
+      balanceChange = -op.amount;
     } else if (op.type === "transfer") {
       // For transfers, check if this client is receiving or sending
       if (op.to_client_id === clientId) {
-        balanceChange = amount; // Receiving transfer
-      } else {
-        balanceChange = -amount; // Sending transfer
+        balanceChange = op.amount; // Receiving transfer
+      } else if (op.from_client_id === clientId) {
+        balanceChange = -op.amount; // Sending transfer
       }
     } else if (op.type === "direct_transfer") {
       // For direct transfers, check if this client is receiving or sending
       if (op.to_client_id === clientId) {
-        balanceChange = amount; // Receiving direct transfer
-      } else {
-        balanceChange = -amount; // Sending direct transfer
+        balanceChange = op.amount; // Receiving direct transfer
+      } else if (op.from_client_id === clientId) {
+        balanceChange = -op.amount; // Sending direct transfer
       }
     }
-    
-    acc.push({
-      ...op,
-      balanceChange: balanceChange
-    });
-    
-    return acc;
-  }, []);
 
-  // Now calculate the actual balances working backwards from current balance
+    return {
+      ...op,
+      balanceChange
+    };
+  });
+
+  // Calculate the initial balance (balance before first operation)
   const totalChange = operationsWithBalance.reduce((sum, op) => sum + op.balanceChange, 0);
   const initialBalance = currentBalance - totalChange;
 
-  // Calculate running balances
+  // Calculate running balances chronologically from oldest to newest
   const operationsWithFinalBalance = operationsWithBalance.map((op, index) => {
+    // Calculate balance before this operation
     const previousOperations = operationsWithBalance.slice(0, index);
     const balanceBefore = initialBalance + previousOperations.reduce((sum, prevOp) => sum + prevOp.balanceChange, 0);
+    
+    // Calculate balance after this operation
     const balanceAfter = balanceBefore + op.balanceChange;
 
-    console.log(`AccountFlowTab - Operation ${op.id}:`, {
+    console.log(`AccountFlowTab - Operation ${op.id} (chronological):`, {
       type: op.type,
       amount: op.amount,
       clientId,
@@ -88,7 +87,9 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
       balanceBefore,
       balanceAfter,
       isReceiving: op.to_client_id === clientId,
-      isSending: op.from_client_id === clientId
+      isSending: op.from_client_id === clientId,
+      index: index + 1,
+      total: operationsWithBalance.length
     });
 
     return {
