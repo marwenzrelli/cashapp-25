@@ -1,7 +1,7 @@
 
 import React from "react";
 import { TreasuryTable } from "./TreasuryTable";
-import { TreasuryTotals } from "./TreasuryTotals";
+import { TreasurySummary } from "./TreasurySummary";
 import { Operation } from "@/features/operations/types";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -32,6 +32,8 @@ export const TreasuryTab = ({ operations, isLoading }: TreasuryTabProps) => {
 
         const totalClientBalance = clients?.reduce((sum, client) => sum + (client.solde || 0), 0) || 0;
         setSystemBalance(totalClientBalance);
+        
+        console.log(`Solde système calculé: ${totalClientBalance} TND`);
       } catch (error) {
         console.error('Erreur lors du calcul du solde système:', error);
       }
@@ -41,8 +43,19 @@ export const TreasuryTab = ({ operations, isLoading }: TreasuryTabProps) => {
   }, [localOperations]);
 
   const handleDataRefresh = (newOperations: Operation[]) => {
+    console.log(`TreasuryTab: Mise à jour avec ${newOperations.length} opérations`);
     setLocalOperations(newOperations);
   };
+
+  // Calculer le solde final de trésorerie basé sur les opérations
+  const finalTreasuryBalance = React.useMemo(() => {
+    const deposits = localOperations.filter(op => op.type === 'deposit').reduce((sum, op) => sum + op.amount, 0);
+    const withdrawals = localOperations.filter(op => op.type === 'withdrawal').reduce((sum, op) => sum + op.amount, 0);
+    const treasuryBalance = deposits - withdrawals;
+    
+    console.log(`Calcul final - Versements: ${deposits}, Retraits: ${withdrawals}, Balance: ${treasuryBalance}`);
+    return treasuryBalance;
+  }, [localOperations]);
 
   if (isLoading) {
     return (
@@ -58,9 +71,9 @@ export const TreasuryTab = ({ operations, isLoading }: TreasuryTabProps) => {
         operations={localOperations} 
         onDataRefresh={handleDataRefresh}
       />
-      <TreasuryTotals 
+      <TreasurySummary 
         operations={localOperations}
-        finalBalance={systemBalance}
+        finalTreasuryBalance={systemBalance}
       />
     </div>
   );

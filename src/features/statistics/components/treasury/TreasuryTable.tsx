@@ -28,25 +28,25 @@ export const TreasuryTable = ({
   const { sortedOperations, sortConfig, handleSort } = useTreasurySorting(operations);
   const [isSyncing, setIsSyncing] = useState(false);
 
-  const syncWithDatabase = async () => {
+  const syncAllOperations = async () => {
     setIsSyncing(true);
     try {
-      console.log("Synchronisation avec la base de données...");
+      console.log("Synchronisation de TOUTES les opérations...");
 
-      // Récupérer toutes les données depuis la base (y compris les incomplètes)
+      // Récupérer TOUTES les données depuis la base (sans limite de date)
       const [depositsResult, withdrawalsResult, transfersResult] = await Promise.all([
         supabase
           .from('deposits')
           .select('*')
-          .order('operation_date', { ascending: false }),
+          .order('operation_date', { ascending: true }),
         supabase
           .from('withdrawals')
           .select('*')
-          .order('operation_date', { ascending: false }),
+          .order('operation_date', { ascending: true }),
         supabase
           .from('transfers')
           .select('*')
-          .order('operation_date', { ascending: false })
+          .order('operation_date', { ascending: true })
       ]);
 
       if (depositsResult.error) throw depositsResult.error;
@@ -62,7 +62,7 @@ export const TreasuryTable = ({
         operation_date: deposit.operation_date || deposit.created_at,
         description: deposit.notes || 'Versement',
         fromClient: deposit.client_name,
-        status: deposit.status
+        status: deposit.status || 'completed'
       }));
 
       const transformedWithdrawals: Operation[] = withdrawalsResult.data.map(withdrawal => ({
@@ -73,7 +73,7 @@ export const TreasuryTable = ({
         operation_date: withdrawal.operation_date || withdrawal.created_at,
         description: withdrawal.notes || 'Retrait',
         fromClient: withdrawal.client_name,
-        status: withdrawal.status
+        status: withdrawal.status || 'completed'
       }));
 
       const transformedTransfers: Operation[] = transfersResult.data.map(transfer => ({
@@ -85,25 +85,28 @@ export const TreasuryTable = ({
         description: transfer.reason || 'Virement',
         fromClient: transfer.from_client,
         toClient: transfer.to_client,
-        status: transfer.status
+        status: transfer.status || 'completed'
       }));
 
-      // Combiner et trier toutes les opérations
+      // Combiner et trier toutes les opérations par date chronologique
       const allOperations = [...transformedDeposits, ...transformedWithdrawals, ...transformedTransfers];
       const sortedByDate = allOperations.sort((a, b) => {
         const dateA = new Date(a.operation_date || a.date);
         const dateB = new Date(b.operation_date || b.date);
-        return dateA.getTime() - dateB.getTime(); // Tri chronologique pour calculer le solde
+        return dateA.getTime() - dateB.getTime();
       });
 
       console.log(`Synchronisation terminée: ${sortedByDate.length} opérations récupérées`);
+      console.log(`- Versements: ${transformedDeposits.length}`);
+      console.log(`- Retraits: ${transformedWithdrawals.length}`);
+      console.log(`- Virements: ${transformedTransfers.length}`);
       
       // Notifier le parent des nouvelles données
       if (onDataRefresh) {
         onDataRefresh(sortedByDate);
       }
 
-      toast.success(`Données synchronisées: ${sortedByDate.length} opérations`);
+      toast.success(`Toutes les opérations synchronisées: ${sortedByDate.length} opérations`);
     } catch (error) {
       console.error('Erreur lors de la synchronisation:', error);
       toast.error('Erreur lors de la synchronisation des données');
@@ -113,31 +116,24 @@ export const TreasuryTable = ({
   };
 
   const operationsWithBalance = useMemo(() => {
-    // Log initial input to verify we're receiving all operation types
-    const depositCount = operations.filter(op => op.type === 'deposit').length;
-    const withdrawalCount = operations.filter(op => op.type === 'withdrawal').length;
-    const transferCount = operations.filter(op => op.type === 'transfer').length;
-    console.log(`TreasuryTable received ${operations.length} operations:`, {
-      deposits: depositCount,
-      withdrawals: withdrawalCount,
-      transfers: transferCount
-    });
-
+    console.log(`TreasuryTable: Calcul des soldes pour ${operations.length} opérations`);
+    
     let runningBalance = 0;
-    return sortedOperations.map((op): TreasuryOperation => {
+    return sortedOperations.map((op, index): TreasuryOperation => {
       const balanceBefore = runningBalance;
       
-      // Pour le calcul de trésorerie, les virements sont neutres (ne changent pas le solde global)
-      // car ils représentent un mouvement interne entre comptes
+      // Calcul correct: seuls les dépôts et retraits affectent la trésorerie
       let balanceChange = 0;
       if (op.type === "deposit") {
-        balanceChange = op.amount; // Entrée d'argent dans le système
+        balanceChange = op.amount; // Entrée d'argent
       } else if (op.type === "withdrawal") {
-        balanceChange = -op.amount; // Sortie d'argent du système
+        balanceChange = -op.amount; // Sortie d'argent
       }
-      // Les transfers (op.type === "transfer") ont balanceChange = 0 (neutre)
+      // Les virements sont neutres pour la trésorerie (op.type === "transfer")
       
       runningBalance += balanceChange;
+      
+      console.log(`Opération ${index + 1}: ${op.type} ${op.amount} -> Solde: ${balanceBefore} -> ${runningBalance}`);
       
       return {
         ...op,
@@ -224,13 +220,12 @@ export const TreasuryTable = ({
     </TableHead>
   );
 
-  // Fonction pour formater le montant selon le type d'opération pour l'affichage
+  // Fonction pour formater le montant selon le type d'opération
   const formatOperationAmount = (operation: TreasuryOperation) => {
     if (operation.type === "withdrawal") {
       return formatCurrency(-operation.amount);
     } else if (operation.type === "transfer") {
-      // Pour les virements, on affiche le montant neutre (pas de signe) car c'est un mouvement interne
-      return formatCurrency(0); // Montant neutre pour la trésorerie
+      return formatCurrency(0); // Neutre pour la trésorerie
     } else {
       return formatCurrency(operation.amount);
     }
@@ -246,13 +241,13 @@ export const TreasuryTable = ({
           </p>
         </div>
         <Button
-          onClick={syncWithDatabase}
+          onClick={syncAllOperations}
           disabled={isSyncing}
           variant="outline"
           className="flex items-center gap-2"
         >
           <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
-          {isSyncing ? 'Synchronisation...' : 'Synchroniser'}
+          {isSyncing ? 'Synchronisation...' : 'Synchroniser toutes les opérations'}
         </Button>
       </div>
 
