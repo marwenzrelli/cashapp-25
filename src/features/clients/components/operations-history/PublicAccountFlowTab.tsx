@@ -70,13 +70,13 @@ export const PublicAccountFlowTab = ({
       date: op.operation_date || op.date
     })));
 
-    // NOUVEAU: Calcul chronologique simple en partant de 0
+    // CALCUL CHRONOLOGIQUE: Commencer à 0 et calculer séquentiellement
     let currentBalance = 0;
     const opsWithBalance = sortedOps.map((op, index) => {
       // Le solde AVANT cette opération
       const balanceBefore = currentBalance;
 
-      // Calculer l'impact de cette opération
+      // Calculer l'impact de cette opération sur le solde
       let balanceChange = 0;
       
       if (op.type === "deposit") {
@@ -84,12 +84,14 @@ export const PublicAccountFlowTab = ({
       } else if (op.type === "withdrawal") {
         balanceChange = -Number(op.amount); // Retrait = -montant
       } else if (op.type === "transfer") {
+        // Pour les virements, utiliser les noms des clients
         if (op.toClient === clientFullName) {
           balanceChange = Number(op.amount); // Virement reçu = +montant
         } else if (op.fromClient === clientFullName) {
           balanceChange = -Number(op.amount); // Virement envoyé = -montant
         }
       } else if (op.type === "direct_transfer") {
+        // Pour les opérations directes, utiliser les noms des clients
         if (op.toClient === clientFullName) {
           balanceChange = Number(op.amount); // Opération directe reçue = +montant
         } else if (op.fromClient === clientFullName) {
@@ -97,7 +99,7 @@ export const PublicAccountFlowTab = ({
         }
       }
       
-      // Calculer le solde APRÈS cette opération
+      // Calculer le nouveau solde APRÈS cette opération
       currentBalance = balanceBefore + balanceChange;
       const balanceAfter = currentBalance;
       
@@ -107,7 +109,9 @@ export const PublicAccountFlowTab = ({
         balanceChange,
         balanceBefore,
         balanceAfter,
-        date: op.operation_date || op.date
+        date: op.operation_date || op.date,
+        fromClient: op.fromClient,
+        toClient: op.toClient
       });
       
       return {
