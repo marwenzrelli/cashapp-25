@@ -70,18 +70,19 @@ export const PublicAccountFlowTab = ({
       date: op.operation_date || op.date
     })));
 
-    // Calculate running balance starting from 0 - SIMPLE LOGIC
-    let runningBalance = 0;
+    // NOUVEAU: Calcul chronologique simple en partant de 0
+    let currentBalance = 0;
     const opsWithBalance = sortedOps.map((op, index) => {
-      const balanceBefore = runningBalance;
+      // Le solde AVANT cette opération
+      const balanceBefore = currentBalance;
 
-      // Calculate the impact of this operation on the balance
+      // Calculer l'impact de cette opération
       let balanceChange = 0;
       
       if (op.type === "deposit") {
-        balanceChange = Number(op.amount);
+        balanceChange = Number(op.amount); // Versement = +montant
       } else if (op.type === "withdrawal") {
-        balanceChange = -Number(op.amount);
+        balanceChange = -Number(op.amount); // Retrait = -montant
       } else if (op.type === "transfer") {
         if (op.toClient === clientFullName) {
           balanceChange = Number(op.amount); // Virement reçu = +montant
@@ -96,22 +97,23 @@ export const PublicAccountFlowTab = ({
         }
       }
       
-      // Appliquer l'impact à runningBalance
-      runningBalance += balanceChange;
+      // Calculer le solde APRÈS cette opération
+      currentBalance = balanceBefore + balanceChange;
+      const balanceAfter = currentBalance;
       
       console.log(`PublicAccountFlowTab - Operation ${index + 1}/${sortedOps.length} - ID ${op.id}:`, {
         type: op.type,
         amount: op.amount,
         balanceChange,
         balanceBefore,
-        balanceAfter: runningBalance,
+        balanceAfter,
         date: op.operation_date || op.date
       });
       
       return {
         ...op,
         balanceBefore,
-        balanceAfter: runningBalance,
+        balanceAfter,
         balanceChange
       };
     });
