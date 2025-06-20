@@ -83,8 +83,10 @@ const Dashboard = () => {
         <OperationTypeCards stats={stats} currency={currency} />
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 w-full">
-        <TransactionTrends data={stats.monthly_stats} currency={currency} />
+      <div className="grid gap-6 md:grid-cols-3 w-full">
+        <div className="md:col-span-2">
+          <TransactionTrends data={stats.monthly_stats} currency={currency} />
+        </div>
         <AISuggestions stats={stats} />
       </div>
 
