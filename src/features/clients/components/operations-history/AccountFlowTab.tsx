@@ -27,43 +27,10 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
     return dateA.getTime() - dateB.getTime();
   });
 
-  // Calculate the current balance from all operations for this client
-  const calculateCurrentBalance = () => {
-    let balance = 0;
-    
-    sortedOperations.forEach(op => {
-      if (op.type === "deposit") {
-        balance += op.amount;
-      } else if (op.type === "withdrawal") {
-        balance -= op.amount;
-      } else if (op.type === "transfer") {
-        // For transfers, check if this client is receiving or sending
-        if (op.to_client_id === clientId) {
-          balance += op.amount; // Receiving transfer
-        } else if (op.from_client_id === clientId) {
-          balance -= op.amount; // Sending transfer
-        }
-      } else if (op.type === "direct_transfer") {
-        // For direct transfers, check if this client is receiving or sending
-        if (op.to_client_id === clientId) {
-          balance += op.amount; // Receiving direct transfer
-        } else if (op.from_client_id === clientId) {
-          balance -= op.amount; // Sending direct transfer
-        }
-      }
-    });
-    
-    return balance;
-  };
-
-  const currentBalance = calculateCurrentBalance();
-
-  // Calculate running balance for each operation starting from the final balance and working backwards
-  const operationsWithBalance = sortedOperations.reduceRight((acc: any[], op, index) => {
+  // Calculate running balance for each operation starting from 0
+  const operationsWithBalance = sortedOperations.reduce((acc: any[], op, index) => {
     const amount = op.amount;
-    
-    // Get the balance after this operation (from the next operation or current balance)
-    const balanceAfter = acc.length > 0 ? acc[0].balanceBefore : currentBalance;
+    const previousBalance = index > 0 ? acc[index - 1].balanceAfter : 0;
     
     // Calculate balance change based on operation type
     let balanceChange = 0;
@@ -75,19 +42,19 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
       // For transfers, check if this client is receiving or sending
       if (op.to_client_id === clientId) {
         balanceChange = amount; // Receiving transfer
-      } else if (op.from_client_id === clientId) {
+      } else {
         balanceChange = -amount; // Sending transfer
       }
     } else if (op.type === "direct_transfer") {
       // For direct transfers, check if this client is receiving or sending
       if (op.to_client_id === clientId) {
         balanceChange = amount; // Receiving direct transfer
-      } else if (op.from_client_id === clientId) {
+      } else {
         balanceChange = -amount; // Sending direct transfer
       }
     }
     
-    const balanceBefore = balanceAfter - balanceChange;
+    const balanceAfter = previousBalance + balanceChange;
 
     console.log(`AccountFlowTab - Operation ${op.id}:`, {
       type: op.type,
@@ -96,24 +63,23 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
       to_client_id: op.to_client_id,
       from_client_id: op.from_client_id,
       balanceChange,
-      balanceBefore,
+      previousBalance,
       balanceAfter,
       isReceiving: op.to_client_id === clientId,
       isSending: op.from_client_id === clientId || (op.type === "withdrawal" || op.type === "deposit")
     });
 
-    const operationWithBalance = {
+    acc.push({
       ...op,
-      balanceBefore: balanceBefore,
+      balanceBefore: previousBalance,
       balanceAfter: balanceAfter,
       balanceChange: balanceChange
-    };
+    });
     
-    acc.unshift(operationWithBalance);
     return acc;
   }, []);
 
-  // Display operations with newest first
+  // Reverse to show newest first in display
   const displayOperations = [...operationsWithBalance].reverse();
 
   const formatDateTime = (dateString: string) => {
@@ -186,7 +152,6 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
       {/* Mobile view */}
       <AccountFlowMobileView 
         operations={displayOperations}
-        clientId={clientId}
       />
 
       {/* Desktop view */}
