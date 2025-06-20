@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -9,6 +8,8 @@ export const useDashboardData = () => {
   const [stats, setStats] = useState<DashboardStats>({
     total_deposits: 0,
     total_withdrawals: 0,
+    total_deposits_amount: 0,
+    total_withdrawals_amount: 0,
     client_count: 0,
     transfer_count: 0,
     total_balance: 0,
@@ -59,7 +60,7 @@ export const useDashboardData = () => {
       if (clientsResult.error) throw clientsResult.error;
       if (transfersResult.error) throw transfersResult.error;
 
-      // Calculs directs et simples - ici on compte le nombre d'opérations, pas les montants
+      // Calculs des montants et nombres
       const deposits_count = depositsResult.data?.length || 0;
       const withdrawals_count = withdrawalsResult.data?.length || 0;
       const total_deposits_amount = depositsResult.data?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
@@ -83,10 +84,12 @@ export const useDashboardData = () => {
         });
       }
 
-      // Mise à jour avec les valeurs calculées de manière stable
+      // Mise à jour avec les valeurs calculées
       setStats({
         total_deposits: deposits_count, // Nombre de dépôts
         total_withdrawals: withdrawals_count, // Nombre de retraits
+        total_deposits_amount, // Montant total des dépôts
+        total_withdrawals_amount, // Montant total des retraits
         client_count: clientsResult.count || 0,
         transfer_count: transfersResult.data?.length || 0,
         monthly_stats: monthlyStats,

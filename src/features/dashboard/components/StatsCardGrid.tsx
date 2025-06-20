@@ -53,16 +53,16 @@ export const StatsCardGrid = ({
 
       <StatsCard
         title="Total Versements"
-        value={`${stats.total_deposits.toLocaleString()} ${currency}`}
-        subtitle={`${stats.monthly_stats[0]?.deposit_count || 0} versements ce mois`}
+        value={`${stats.total_deposits_amount?.toLocaleString() || 0} ${currency}`}
+        subtitle={`${stats.total_deposits} versements effectués`}
         icon={<ArrowUpCircle className="h-4 w-4 text-success" />}
         gradientFrom="green"
       />
 
       <StatsCard
         title="Total Retraits"
-        value={`${stats.total_withdrawals.toLocaleString()} ${currency}`}
-        subtitle={`${stats.monthly_stats[0]?.withdrawal_count || 0} retraits ce mois`}
+        value={`${stats.total_withdrawals_amount?.toLocaleString() || 0} ${currency}`}
+        subtitle={`${stats.total_withdrawals} retraits effectués`}
         icon={<ArrowDownCircle className="h-4 w-4 text-danger" />}
         gradientFrom="red"
       />
