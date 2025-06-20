@@ -8,6 +8,7 @@ import { AdminDashboard } from "@/features/admin/components/administration/Admin
 import { PermissionErrorState } from "@/features/admin/components/administration/PermissionErrorState";
 import { GeneralErrorState } from "@/features/admin/components/administration/GeneralErrorState";
 import { NoUserProfileState } from "@/features/admin/components/administration/NoUserProfileState";
+import { ScrollToTop } from "@/components/ui/scroll-to-top";
 
 const Administration = () => {
   useAuthenticationCheck();
@@ -44,54 +45,71 @@ const Administration = () => {
 
   if (hasPermissionError) {
     return (
-      <PermissionErrorState
-        errorMessage={usersError?.message}
-        isRetrying={isRetrying}
-        showPromotionForm={showPromotionForm}
-        email={email}
-        setEmail={setEmail}
-        isMakingSupervisor={isMakingSupervisor}
-        onRetry={retryInitialization}
-        onShowPromotionForm={() => setShowPromotionForm(true)}
-        onHidePromotionForm={() => setShowPromotionForm(false)}
-        onPromote={makeSelfSupervisor}
-      />
+      <>
+        <PermissionErrorState
+          errorMessage={usersError?.message}
+          isRetrying={isRetrying}
+          showPromotionForm={showPromotionForm}
+          email={email}
+          setEmail={setEmail}
+          isMakingSupervisor={isMakingSupervisor}
+          onRetry={retryInitialization}
+          onShowPromotionForm={() => setShowPromotionForm(true)}
+          onHidePromotionForm={() => setShowPromotionForm(false)}
+          onPromote={makeSelfSupervisor}
+        />
+        <ScrollToTop />
+      </>
     );
   }
 
   if (usersError) {
     return (
-      <GeneralErrorState 
-        errorMessage={usersError.message || ""}
-        isRetrying={isRetrying}
-        onRetry={retryInitialization}
-      />
+      <>
+        <GeneralErrorState 
+          errorMessage={usersError.message || ""}
+          isRetrying={isRetrying}
+          onRetry={retryInitialization}
+        />
+        <ScrollToTop />
+      </>
     );
   }
 
   if (!currentUser) {
     return (
-      <NoUserProfileState
-        isRetrying={isRetrying}
-        onRetry={retryInitialization}
-      />
+      <>
+        <NoUserProfileState
+          isRetrying={isRetrying}
+          onRetry={retryInitialization}
+        />
+        <ScrollToTop />
+      </>
     );
   }
 
   if (currentUser.role !== 'supervisor') {
-    return <AccessDenied message="Cette section est réservée aux superviseurs." />;
+    return (
+      <>
+        <AccessDenied message="Cette section est réservée aux superviseurs." />
+        <ScrollToTop />
+      </>
+    );
   }
 
   return (
-    <AdminDashboard
-      users={users}
-      currentUser={currentUser}
-      toggleUserStatus={toggleUserStatus}
-      updateUser={updateUser}
-      updatePermissions={updatePermissions}
-      deleteUser={deleteUser}
-      addUser={addUser}
-    />
+    <>
+      <AdminDashboard
+        users={users}
+        currentUser={currentUser}
+        toggleUserStatus={toggleUserStatus}
+        updateUser={updateUser}
+        updatePermissions={updatePermissions}
+        deleteUser={deleteUser}
+        addUser={addUser}
+      />
+      <ScrollToTop />
+    </>
   );
 };
 

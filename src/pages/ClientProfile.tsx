@@ -3,6 +3,7 @@ import { useClientProfile } from "@/features/clients/hooks/useClientProfile";
 import { ClientProfileHeader } from "@/features/clients/components/ClientProfileHeader";
 import { ClientInfoCards } from "@/features/clients/components/ClientInfoCards";
 import { ClientProfileTabs } from "@/features/clients/components/ClientProfileTabs";
+import { ScrollToTop } from "@/components/ui/scroll-to-top";
 
 export default function ClientProfile() {
   const {
@@ -86,7 +87,7 @@ export default function ClientProfile() {
           </div>
         )}
         
-        {/* Removed hidden export buttons section */}
+        <ScrollToTop />
       </div>
     </div>
   );

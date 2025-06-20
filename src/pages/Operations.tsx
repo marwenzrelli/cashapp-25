@@ -4,6 +4,7 @@ import { OperationsContent } from "@/features/operations/components/OperationsCo
 import { useOperations } from "@/features/operations/hooks/useOperations";
 import { LoadingIndicator } from "@/components/ui/loading-indicator";
 import { OperationsError } from "@/features/operations/components/OperationsError";
+import { ScrollToTop } from "@/components/ui/scroll-to-top";
 
 const Operations = () => {
   const {
@@ -53,6 +54,7 @@ const Operations = () => {
         onConfirmDelete={confirmDeleteOperation}
         operationToDelete={operationToDelete}
       />
+      <ScrollToTop />
     </div>
   );
 };

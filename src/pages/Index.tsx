@@ -9,6 +9,7 @@ import { AISuggestions } from "@/features/dashboard/components/AISuggestions";
 import { useDashboardData } from "@/features/dashboard/hooks/useDashboardData";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { LoadingIndicator } from "@/components/ui/loading-indicator";
+import { ScrollToTop } from "@/components/ui/scroll-to-top";
 
 const Index = () => {
   const { 
@@ -66,6 +67,8 @@ const Index = () => {
       </div>
       
       <TransactionTrends data={stats.monthly_stats} currency={currency} />
+      
+      <ScrollToTop />
     </div>
   );
 };

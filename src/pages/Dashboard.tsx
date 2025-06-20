@@ -14,6 +14,7 @@ import { AISuggestions } from "@/features/dashboard/components/AISuggestions";
 import { RecentActivityCard } from "@/features/dashboard/components/RecentActivity";
 import { useDashboardData } from "@/features/dashboard/hooks/useDashboardData";
 import { recalculateAllClientBalances } from "@/features/statistics/utils/balanceCalculator";
+import { ScrollToTop } from "@/components/ui/scroll-to-top";
 
 const Dashboard = () => {
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
@@ -117,6 +118,8 @@ const Dashboard = () => {
           language: "fr"
         }}
       />
+
+      <ScrollToTop />
     </div>
   );
 };

@@ -2,6 +2,7 @@
 import React from "react";
 import { DirectOperationsList } from "@/features/direct-operations/components/DirectOperationsList";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollToTop } from "@/components/ui/scroll-to-top";
 
 const DirectOperations = () => {
   return (
@@ -21,6 +22,8 @@ const DirectOperations = () => {
           <DirectOperationsList />
         </CardContent>
       </Card>
+
+      <ScrollToTop />
     </div>
   );
 };
