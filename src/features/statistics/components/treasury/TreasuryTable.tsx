@@ -125,9 +125,20 @@ export const TreasuryTable = ({
 
     let runningBalance = 0;
     return sortedOperations.map((op): TreasuryOperation => {
-      const amount = op.type === "withdrawal" ? -op.amount : op.amount;
       const balanceBefore = runningBalance;
-      runningBalance += amount;
+      
+      // Pour le calcul de trésorerie, les virements sont neutres (ne changent pas le solde global)
+      // car ils représentent un mouvement interne entre comptes
+      let balanceChange = 0;
+      if (op.type === "deposit") {
+        balanceChange = op.amount; // Entrée d'argent dans le système
+      } else if (op.type === "withdrawal") {
+        balanceChange = -op.amount; // Sortie d'argent du système
+      }
+      // Les transfers (op.type === "transfer") ont balanceChange = 0 (neutre)
+      
+      runningBalance += balanceChange;
+      
       return {
         ...op,
         balanceBefore,
@@ -213,6 +224,18 @@ export const TreasuryTable = ({
     </TableHead>
   );
 
+  // Fonction pour formater le montant selon le type d'opération pour l'affichage
+  const formatOperationAmount = (operation: TreasuryOperation) => {
+    if (operation.type === "withdrawal") {
+      return formatCurrency(-operation.amount);
+    } else if (operation.type === "transfer") {
+      // Pour les virements, on affiche le montant neutre (pas de signe) car c'est un mouvement interne
+      return formatCurrency(0); // Montant neutre pour la trésorerie
+    } else {
+      return formatCurrency(operation.amount);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -244,7 +267,7 @@ export const TreasuryTable = ({
               <TableHead>Désignation</TableHead>
               <TableHead>Statut</TableHead>
               <TableHead className="text-right">Solde avant</TableHead>
-              <TableHead className="text-right">Montant</TableHead>
+              <TableHead className="text-right">Impact Trésorerie</TableHead>
               <TableHead className="text-right">Solde après</TableHead>
             </TableRow>
           </TableHeader>
@@ -271,7 +294,7 @@ export const TreasuryTable = ({
                   {formatCurrency(operation.balanceBefore)}
                 </TableCell>
                 <TableCell className={`text-right ${getAmountClass(operation.type)}`}>
-                  {formatCurrency(operation.type === "withdrawal" ? -operation.amount : operation.amount)}
+                  {formatOperationAmount(operation)}
                 </TableCell>
                 <TableCell className={`text-right ${getBalanceClass(operation.balanceAfter)}`}>
                   {formatCurrency(operation.balanceAfter)}
