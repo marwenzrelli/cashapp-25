@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Operation } from "@/features/operations/types";
@@ -12,7 +13,6 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface TreasuryTableProps {
   operations: Operation[];
-  systemBalance: number; // Ajouter le solde système
   onDataRefresh?: (newOperations: Operation[]) => void;
 }
 
@@ -23,7 +23,6 @@ interface TreasuryOperation extends Operation {
 
 export const TreasuryTable = ({
   operations,
-  systemBalance,
   onDataRefresh
 }: TreasuryTableProps) => {
   const { sortedOperations, sortConfig, handleSort } = useTreasurySorting(operations);
@@ -124,20 +123,7 @@ export const TreasuryTable = ({
       transfers: transferCount
     });
 
-    if (sortedOperations.length === 0) {
-      return [];
-    }
-
-    // Calculer le solde de départ pour que le solde final corresponde au solde système
-    let totalChange = 0;
-    sortedOperations.forEach(op => {
-      const amount = op.type === "withdrawal" ? -op.amount : op.amount;
-      totalChange += amount;
-    });
-
-    const startingBalance = systemBalance - totalChange;
-    
-    let runningBalance = startingBalance;
+    let runningBalance = 0;
     return sortedOperations.map((op): TreasuryOperation => {
       const amount = op.type === "withdrawal" ? -op.amount : op.amount;
       const balanceBefore = runningBalance;
@@ -148,7 +134,7 @@ export const TreasuryTable = ({
         balanceAfter: runningBalance
       };
     });
-  }, [sortedOperations, systemBalance]);
+  }, [sortedOperations]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', {
