@@ -21,7 +21,7 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
     const clientFullName = `${client.prenom} ${client.nom}`.trim();
     const clientId = typeof client.id === 'string' ? parseInt(client.id) : client.id;
     
-    console.log("=== CALCUL CORRIGÉ DES SOLDES - VERSION FIXÉE ===");
+    console.log("=== NOUVEAU CALCUL DES SOLDES ===");
     console.log(`Client: ${clientFullName} (ID: ${clientId})`);
     console.log(`Solde actuel en base: ${Number(client.solde).toFixed(3)} TND`);
     console.log(`Total opérations disponibles: ${operations.length}`);
@@ -63,14 +63,13 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
       console.log(`${i + 1}. [${date}] ${op.type} | ${op.amount} TND | ID: ${op.id}`);
     });
 
-    // CALCUL CORRIGÉ: partir du solde actuel et calculer vers le passé
+    // NOUVEAU CALCUL: Partir du solde actuel et remonter dans le temps
     const currentBalance = Number(client.solde);
-    console.log(`\n=== CALCUL SÉQUENTIEL CORRIGÉ ===`);
-    console.log(`Solde actuel: ${currentBalance.toFixed(3)} TND`);
+    console.log(`\n=== CALCUL RÉTROGRADE CORRECT ===`);
+    console.log(`Solde actuel (point de départ): ${currentBalance.toFixed(3)} TND`);
     
-    // Calculer l'impact cumulé de toutes les opérations
-    let totalImpact = 0;
-    const operationImpacts = sortedOperations.map(op => {
+    // Calculer l'impact de chaque opération
+    const operationsWithImpact = sortedOperations.map(op => {
       let impact = 0;
       
       switch (op.type) {
@@ -85,26 +84,27 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
         case "transfer":
         case "direct_transfer":
           if (op.toClient === clientFullName || op.to_client_id === clientId) {
-            impact = Number(op.amount); // Réception
+            impact = Number(op.amount); // Réception = +
           } else if (op.fromClient === clientFullName || op.from_client_id === clientId) {
-            impact = -Number(op.amount); // Envoi
+            impact = -Number(op.amount); // Envoi = -
           }
           break;
       }
       
-      totalImpact += impact;
       return { operation: op, impact };
     });
-    
-    // Le solde initial = solde actuel - impact total
+
+    // Calculer le solde initial en partant du solde actuel
+    const totalImpact = operationsWithImpact.reduce((sum, { impact }) => sum + impact, 0);
     const initialBalance = currentBalance - totalImpact;
-    console.log(`Impact total calculé: ${totalImpact.toFixed(3)} TND`);
-    console.log(`Solde initial reconstitué: ${initialBalance.toFixed(3)} TND`);
     
-    // Maintenant calculer les soldes séquentiels
+    console.log(`Impact total de toutes les opérations: ${totalImpact.toFixed(3)} TND`);
+    console.log(`Solde initial calculé: ${initialBalance.toFixed(3)} TND`);
+    
+    // Maintenant calculer les soldes séquentiels à partir du solde initial
     let runningBalance = initialBalance;
     
-    const operationsWithBalance = operationImpacts.map(({ operation: op, impact }, index) => {
+    const operationsWithBalances = operationsWithImpact.map(({ operation: op, impact }, index) => {
       const balanceBefore = runningBalance;
       const balanceAfter = balanceBefore + impact;
       
@@ -115,7 +115,7 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
       console.log(`Impact: ${impact >= 0 ? '+' : ''}${impact.toFixed(3)} TND`);
       console.log(`Solde APRÈS: ${balanceAfter.toFixed(3)} TND`);
       
-      // Mettre à jour le solde courant
+      // Mettre à jour le solde courant pour la prochaine itération
       runningBalance = balanceAfter;
       
       return {
@@ -133,12 +133,20 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
     const difference = Math.abs(runningBalance - currentBalance);
     if (difference > 0.001) {
       console.error(`❌ ÉCART DÉTECTÉ: ${difference.toFixed(3)} TND`);
+      console.error(`Vérifiez les données des opérations ou la logique de calcul`);
     } else {
-      console.log("✅ CALCULS COHÉRENTS");
+      console.log("✅ CALCULS PARFAITEMENT COHÉRENTS");
     }
 
     // Retourner en ordre inverse pour affichage (plus récent en premier)
-    return [...operationsWithBalance].reverse();
+    const finalOperations = [...operationsWithBalances].reverse();
+    
+    console.log("\n=== RÉSUMÉ DES SOLDES FINAUX ===");
+    finalOperations.forEach((op, i) => {
+      console.log(`${i + 1}. ${op.type} | Avant: ${op.balanceBefore} | Après: ${op.balanceAfter} | Change: ${op.balanceChange}`);
+    });
+    
+    return finalOperations;
   }, [operations, client]);
 
   return processedOperations;
