@@ -70,7 +70,7 @@ export const PublicAccountFlowTab = ({
       date: op.operation_date || op.date
     })));
 
-    // Calculate running balance starting from 0
+    // Calculate running balance starting from 0 - SIMPLE LOGIC
     let runningBalance = 0;
     const opsWithBalance = sortedOps.map((op, index) => {
       const balanceBefore = runningBalance;
@@ -84,9 +84,9 @@ export const PublicAccountFlowTab = ({
         balanceChange = -Number(op.amount);
       } else if (op.type === "transfer") {
         if (op.toClient === clientFullName) {
-          balanceChange = Number(op.amount); // Virement reçu
+          balanceChange = Number(op.amount); // Virement reçu = +montant
         } else if (op.fromClient === clientFullName) {
-          balanceChange = -Number(op.amount); // Virement envoyé
+          balanceChange = -Number(op.amount); // Virement envoyé = -montant
         }
       } else if (op.type === "direct_transfer") {
         if (op.toClient === clientFullName) {
