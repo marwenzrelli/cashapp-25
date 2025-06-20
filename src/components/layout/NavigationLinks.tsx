@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   Home,
@@ -35,6 +34,13 @@ export const NavigationLinks = ({ onItemClick }: NavigationLinksProps) => {
       icon: Users,
       label: "Clients",
       color: "#0EA5E9",
+      count: null
+    },
+    {
+      to: "/search",
+      icon: Search,
+      label: "Recherche",
+      color: "#6B7280",
       count: null
     },
     {
