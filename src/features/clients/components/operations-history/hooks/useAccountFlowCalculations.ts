@@ -21,7 +21,7 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
     const clientFullName = `${client.prenom} ${client.nom}`.trim();
     const clientId = typeof client.id === 'string' ? parseInt(client.id) : client.id;
     
-    console.log("=== NOUVEAU CALCUL FLUX SIMPLIFIÉ ===");
+    console.log("=== CALCUL FLUX UNIFORME POUR TOUS CLIENTS ===");
     console.log(`Client: ${clientFullName} (ID: ${clientId})`);
     
     // Filtrer les opérations pour ce client
@@ -54,8 +54,8 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
       return dateA - dateB;
     });
 
-    // LOGIQUE ULTRA SIMPLE: Toujours commencer à 0
-    console.log("\n=== CALCUL SÉQUENTIEL DEPUIS 0 ===");
+    // LOGIQUE UNIFORME: Tous les clients commencent à 0
+    console.log("\n=== CALCUL UNIFORME DEPUIS 0 POUR TOUS CLIENTS ===");
     let currentBalance = 0;
     
     const processedOps = sortedOperations.map((op, index) => {
@@ -76,7 +76,7 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
           
         case "transfer":
         case "direct_transfer":
-          // Logique simple : si c'est vers ce client = positif, si c'est depuis ce client = négatif
+          // Logique uniforme pour tous les clients
           if (op.toClient === clientFullName || op.to_client_id === clientId) {
             // Virement REÇU = POSITIF (ENTRÉE)
             balanceChange = Number(op.amount);
@@ -110,8 +110,9 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
       };
     });
 
-    console.log(`\n=== RÉSULTAT FINAL SIMPLIFIÉ ===`);
-    console.log(`Solde final calculé: ${currentBalance.toFixed(3)} TND`);
+    console.log(`\n=== RÉSULTAT FINAL UNIFORME ===`);
+    console.log(`Client: ${clientFullName}`);
+    console.log(`Solde calculé final: ${currentBalance.toFixed(3)} TND`);
     console.log(`Solde en base: ${Number(client.solde).toFixed(3)} TND`);
     console.log(`Différence: ${(currentBalance - Number(client.solde)).toFixed(3)} TND`);
     
