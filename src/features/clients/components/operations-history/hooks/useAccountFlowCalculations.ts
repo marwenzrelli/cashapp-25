@@ -21,7 +21,7 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
     const clientFullName = `${client.prenom} ${client.nom}`.trim();
     const clientId = typeof client.id === 'string' ? parseInt(client.id) : client.id;
     
-    console.log("=== CALCUL RÉINITIALISÉ DES SOLDES ===");
+    console.log("=== NOUVEAU CALCUL FLUX DE COMPTE ===");
     console.log(`Client: ${clientFullName} (ID: ${clientId})`);
     console.log(`Solde actuel en base: ${Number(client.solde).toFixed(3)} TND`);
     console.log(`Total opérations disponibles: ${operations.length}`);
@@ -63,10 +63,9 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
       console.log(`${i + 1}. [${date}] ${op.type} | ${op.amount} TND | ID: ${op.id}`);
     });
 
-    // NOUVELLE APPROCHE: Calculer les impacts et partir du solde final vers le passé
-    const currentBalance = Number(client.solde);
-    console.log(`\n=== CALCUL SIMPLIFIÉ ET CORRECT ===`);
-    console.log(`Solde final (actuel): ${currentBalance.toFixed(3)} TND`);
+    // NOUVELLE LOGIQUE: Commencer à 0 et calculer séquentiellement
+    console.log(`\n=== CALCUL SÉQUENTIEL DEPUIS 0 ===`);
+    console.log(`Solde de départ: 0.000 TND`);
     
     // Calculer l'impact de chaque opération avec une logique claire
     const operationsWithImpact = sortedOperations.map(op => {
@@ -86,21 +85,32 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
           
         case "transfer":
         case "direct_transfer":
-          // Vérifier si c'est une réception ou un envoi
+          // Logique améliorée pour les transferts
           const isReceiver = (op.toClient === clientFullName) || (op.to_client_id === clientId);
           const isSender = (op.fromClient === clientFullName) || (op.from_client_id === clientId);
           
+          console.log(`Analyse transfert ${op.id}:`);
+          console.log(`  - toClient: "${op.toClient}" vs "${clientFullName}" => ${op.toClient === clientFullName}`);
+          console.log(`  - to_client_id: ${op.to_client_id} vs ${clientId} => ${op.to_client_id === clientId}`);
+          console.log(`  - fromClient: "${op.fromClient}" vs "${clientFullName}" => ${op.fromClient === clientFullName}`);
+          console.log(`  - from_client_id: ${op.from_client_id} vs ${clientId} => ${op.from_client_id === clientId}`);
+          console.log(`  - isReceiver: ${isReceiver}, isSender: ${isSender}`);
+          
           if (isReceiver && !isSender) {
+            // C'est une réception = entrée positive
             impact = Number(op.amount);
-            description = "Réception (+)";
+            description = "Virement reçu (+)";
+            console.log(`  => RÉCEPTION: +${impact} TND`);
           } else if (isSender && !isReceiver) {
+            // C'est un envoi = sortie négative
             impact = -Number(op.amount);
-            description = "Envoi (-)";
+            description = "Virement envoyé (-)";
+            console.log(`  => ENVOI: ${impact} TND`);
           } else {
             // Cas ambigu - ne pas compter
             impact = 0;
-            description = "Opération ambiguë (0)";
-            console.warn(`Opération ambiguë détectée: ${op.id}`, { op, isReceiver, isSender });
+            description = "Transfert ambigu (0)";
+            console.log(`  => AMBIGU: 0 TND`);
           }
           break;
           
@@ -109,19 +119,12 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
           description = "Type inconnu (0)";
       }
       
-      console.log(`Impact calculé pour ${op.id}: ${impact.toFixed(3)} TND (${description})`);
+      console.log(`Impact final pour ${op.id}: ${impact.toFixed(3)} TND (${description})`);
       return { operation: op, impact, description };
     });
 
-    // Calculer le solde initial en soustrayant tous les impacts du solde final
-    const totalImpact = operationsWithImpact.reduce((sum, { impact }) => sum + impact, 0);
-    const initialBalance = currentBalance - totalImpact;
-    
-    console.log(`Impact total cumulé: ${totalImpact.toFixed(3)} TND`);
-    console.log(`Solde initial calculé: ${initialBalance.toFixed(3)} TND`);
-    
-    // Calculer les soldes séquentiels en partant du solde initial
-    let runningBalance = initialBalance;
+    // Calculer les soldes séquentiels en partant de 0
+    let runningBalance = 0; // Toujours commencer à 0
     
     const operationsWithBalances = operationsWithImpact.map(({ operation: op, impact, description }, index) => {
       const balanceBefore = runningBalance;
@@ -148,15 +151,12 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
 
     console.log("\n=== VÉRIFICATION FINALE ===");
     console.log(`Solde final calculé: ${runningBalance.toFixed(3)} TND`);
-    console.log(`Solde en base: ${currentBalance.toFixed(3)} TND`);
+    console.log(`Solde en base: ${Number(client.solde).toFixed(3)} TND`);
     
-    const difference = Math.abs(runningBalance - currentBalance);
+    const difference = Math.abs(runningBalance - Number(client.solde));
     if (difference > 0.001) {
-      console.error(`❌ ÉCART DÉTECTÉ: ${difference.toFixed(3)} TND`);
-      console.error(`Causes possibles:`);
-      console.error(`1. Opérations manquantes ou en double`);
-      console.error(`2. Erreur dans la logique de calcul des impacts`);
-      console.error(`3. Données incohérentes en base`);
+      console.log(`⚠️ ÉCART DÉTECTÉ: ${difference.toFixed(3)} TND`);
+      console.log(`Note: Ceci peut être normal si des opérations sont manquantes ou si le solde en base a été ajusté manuellement`);
     } else {
       console.log("✅ CALCULS PARFAITEMENT COHÉRENTS");
     }
