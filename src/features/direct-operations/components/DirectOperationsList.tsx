@@ -7,6 +7,8 @@ import { DirectOperation } from "../types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { DirectOperationDialog } from "./DirectOperationDialog";
+import { DirectOperationsFilters } from "./DirectOperationsFilters";
+import { useDirectOperationsFilter } from "../hooks/useDirectOperationsFilter";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +17,16 @@ export const DirectOperationsList = () => {
   const [operations, setOperations] = useState<DirectOperation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const {
+    filterClient,
+    setFilterClient,
+    dateRange,
+    setDateRange,
+    clearAllFilters,
+    isFiltering,
+    filteredOperations
+  } = useDirectOperationsFilter(operations);
 
   useEffect(() => {
     fetchDirectOperations();
@@ -92,6 +104,25 @@ export const DirectOperationsList = () => {
         </Button>
       </div>
 
+      {/* Filters Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Filtres de recherche</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <DirectOperationsFilters
+            client={filterClient}
+            setClient={setFilterClient}
+            date={dateRange}
+            setDate={setDateRange}
+            isFiltering={isFiltering}
+            onClearFilters={clearAllFilters}
+            totalOperations={operations.length}
+            filteredCount={filteredOperations.length}
+          />
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -104,14 +135,16 @@ export const DirectOperationsList = () => {
             <div className="text-center py-8">
               <p className="text-muted-foreground">Chargement des opérations...</p>
             </div>
-          ) : operations.length === 0 ? (
+          ) : filteredOperations.length === 0 ? (
             <div className="text-center py-8">
               <ArrowRightLeft className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-              <p className="text-muted-foreground">Aucune opération directe enregistrée</p>
+              <p className="text-muted-foreground">
+                {isFiltering ? 'Aucune opération ne correspond aux critères de recherche' : 'Aucune opération directe enregistrée'}
+              </p>
             </div>
           ) : (
             <div className="space-y-4">
-              {operations.map((operation) => (
+              {filteredOperations.map((operation) => (
                 <div
                   key={operation.id}
                   className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50"
