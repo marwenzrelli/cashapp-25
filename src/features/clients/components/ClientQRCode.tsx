@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Copy, ExternalLink, RefreshCw, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
@@ -196,11 +195,11 @@ export const ClientQRCode = ({
         <div className="bg-white p-3 rounded-2xl shadow-inner relative w-full max-w-[200px] mx-auto">
           {isLoading ? (
             <div className="absolute inset-0 flex items-center justify-center bg-white/90 backdrop-blur-sm rounded-2xl z-10">
-              <RefreshCw className="h-6 w-6 animate-spin text-violet-500" />
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-violet-500 border-t-transparent" />
             </div>
           ) : !accessToken ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/90 backdrop-blur-sm rounded-2xl z-10">
-              <Shield className="h-8 w-8 text-violet-300 mb-2" />
+              <div className="h-8 w-8 text-violet-300 mb-2 rounded border-2 border-violet-300" />
               <p className="text-sm text-violet-500 text-center font-medium">
                 Chargement du QR code...
               </p>
@@ -220,18 +219,15 @@ export const ClientQRCode = ({
       
       {/* Action Buttons Outside QR Code Frame */}
       <div className="flex gap-2 w-full">
-        <Button variant="outline" size="sm" className="flex-1 border-violet-200 hover:bg-violet-100 hover:text-violet-700 transition-all gap-2" onClick={handleCopyLink} disabled={!accessToken || isLoading}>
-          <Copy className="h-3.5 w-3.5" />
+        <Button variant="outline" size="sm" className="flex-1 border-violet-200 hover:bg-violet-100 hover:text-violet-700 transition-all" onClick={handleCopyLink} disabled={!accessToken || isLoading}>
           <span className="text-xs">Copier</span>
         </Button>
         
-        <Button variant="outline" size="sm" className="flex-1 border-violet-200 hover:bg-violet-100 hover:text-violet-700 transition-all gap-2" onClick={handleOpenLink} disabled={!accessToken || isLoading}>
-          <ExternalLink className="h-3.5 w-3.5" />
+        <Button variant="outline" size="sm" className="flex-1 border-violet-200 hover:bg-violet-100 hover:text-violet-700 transition-all" onClick={handleOpenLink} disabled={!accessToken || isLoading}>
           <span className="text-xs">Ouvrir</span>
         </Button>
         
-        <Button variant="outline" size="sm" className={cn("flex-1 border-violet-200 hover:bg-violet-100 hover:text-violet-700 transition-all gap-2", isLoading && "animate-pulse")} onClick={handleRegenerateQR} disabled={isLoading}>
-          <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+        <Button variant="outline" size="sm" className={cn("flex-1 border-violet-200 hover:bg-violet-100 hover:text-violet-700 transition-all", isLoading && "animate-pulse")} onClick={handleRegenerateQR} disabled={isLoading}>
           <span className="text-xs">Refresh</span>
         </Button>
       </div>
