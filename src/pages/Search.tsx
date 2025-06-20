@@ -3,13 +3,18 @@ import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search as SearchIcon, Users, CreditCard, ArrowRightLeft } from "lucide-react";
+import { Search as SearchIcon, Users, CreditCard, ArrowRightLeft, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useClients } from "@/features/clients/hooks/useClients";
 import { Badge } from "@/components/ui/badge";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { DateRange } from "react-day-picker";
+import { Switch } from "@/components/ui/switch";
 
 const Search = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [showDateFilter, setShowDateFilter] = useState(false);
   const { clients } = useClients();
 
   // Filtrer les clients selon le terme de recherche
@@ -36,14 +41,41 @@ const Search = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="relative">
-            <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Rechercher par nom, email ou téléphone..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9"
-            />
+          <div className="space-y-4">
+            <div className="relative">
+              <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Rechercher par nom, email ou téléphone..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+
+            {/* Date filter section */}
+            <div className="flex items-center space-x-2">
+              <Switch 
+                id="date-filter"
+                checked={showDateFilter}
+                onCheckedChange={setShowDateFilter}
+              />
+              <label htmlFor="date-filter" className="text-sm font-medium">
+                Filtrer par période
+              </label>
+            </div>
+
+            {showDateFilter && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Sélectionner une période
+                </label>
+                <DatePickerWithRange
+                  date={dateRange}
+                  onDateChange={setDateRange}
+                />
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -54,6 +86,11 @@ const Search = () => {
             <CardTitle>Résultats de recherche</CardTitle>
             <CardDescription>
               {filteredClients.length} client(s) trouvé(s)
+              {showDateFilter && dateRange?.from && dateRange?.to && (
+                <span className="ml-2 text-muted-foreground">
+                  (période sélectionnée)
+                </span>
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent>
