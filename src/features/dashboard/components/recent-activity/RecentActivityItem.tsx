@@ -55,11 +55,11 @@ export const RecentActivityItem = ({ activity, currency, index }: RecentActivity
 
       console.log("Searching for client:", searchName);
 
-      // Recherche par nom et prénom combinés ou séparément
+      // Recherche simple par nom ou prénom
       const { data: clients, error } = await supabase
         .from('clients')
         .select('id, nom, prenom')
-        .or(`nom.ilike.%${searchName}%,prenom.ilike.%${searchName}%,nom || ' ' || prenom.ilike.%${searchName}%,prenom || ' ' || nom.ilike.%${searchName}%`)
+        .or(`nom.ilike.%${searchName}%,prenom.ilike.%${searchName}%`)
         .limit(10);
 
       if (error) {
