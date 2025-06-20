@@ -59,9 +59,11 @@ export const useDashboardData = () => {
       if (clientsResult.error) throw clientsResult.error;
       if (transfersResult.error) throw transfersResult.error;
 
-      // Calculs directs et simples
-      const total_deposits = depositsResult.data?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
-      const total_withdrawals = withdrawalsResult.data?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
+      // Calculs directs et simples - ici on compte le nombre d'opérations, pas les montants
+      const deposits_count = depositsResult.data?.length || 0;
+      const withdrawals_count = withdrawalsResult.data?.length || 0;
+      const total_deposits_amount = depositsResult.data?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
+      const total_withdrawals_amount = withdrawalsResult.data?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
       const sent_transfers = transfersResult.data?.reduce((sum, t) => sum + Number(t.amount), 0) || 0;
 
       // Génération simplifiée des statistiques mensuelles
@@ -74,17 +76,17 @@ export const useDashboardData = () => {
         
         monthlyStats.push({
           day: monthLabel,
-          total_deposits: Math.round(total_deposits / 6),
-          total_withdrawals: Math.round(total_withdrawals / 6),
-          deposits_count: Math.round((depositsResult.data?.length || 0) / 6),
-          withdrawals_count: Math.round((withdrawalsResult.data?.length || 0) / 6)
+          total_deposits: Math.round(total_deposits_amount / 6),
+          total_withdrawals: Math.round(total_withdrawals_amount / 6),
+          deposits_count: Math.round(deposits_count / 6),
+          withdrawals_count: Math.round(withdrawals_count / 6)
         });
       }
 
       // Mise à jour avec les valeurs calculées de manière stable
       setStats({
-        total_deposits,
-        total_withdrawals,
+        total_deposits: deposits_count, // Nombre de dépôts
+        total_withdrawals: withdrawals_count, // Nombre de retraits
         client_count: clientsResult.count || 0,
         transfer_count: transfersResult.data?.length || 0,
         monthly_stats: monthlyStats,

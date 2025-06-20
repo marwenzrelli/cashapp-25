@@ -2,6 +2,7 @@
 import React from "react";
 import { DashboardHeader } from "@/features/dashboard/components/DashboardHeader";
 import { StatsCardGrid } from "@/features/dashboard/components/StatsCardGrid";
+import { OperationTypeCards } from "@/features/dashboard/components/OperationTypeCards";
 import { RecentActivityCard } from "@/features/dashboard/components/RecentActivity";
 import { TransactionTrends } from "@/features/dashboard/components/TransactionTrends";
 import { AISuggestions } from "@/features/dashboard/components/AISuggestions";
@@ -53,6 +54,11 @@ const Index = () => {
       <DashboardHeader isLoading={isLoading} onRefresh={handleRefresh} />
       
       <StatsCardGrid stats={stats} currency={currency} />
+      
+      <div className="space-y-6">
+        <h3 className="text-lg font-semibold">Types d'opérations</h3>
+        <OperationTypeCards stats={stats} currency={currency} />
+      </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <RecentActivityCard activities={recentActivity} currency={currency} />

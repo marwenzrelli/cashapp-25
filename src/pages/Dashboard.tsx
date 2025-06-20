@@ -8,6 +8,7 @@ import { EditProfileDialog } from "@/features/profile/EditProfileDialog";
 import { SettingsDialog } from "@/features/profile/SettingsDialog";
 import { DashboardHeader } from "@/features/dashboard/components/DashboardHeader";
 import { StatsCardGrid } from "@/features/dashboard/components/StatsCardGrid";
+import { OperationTypeCards } from "@/features/dashboard/components/OperationTypeCards";
 import { TransactionTrends } from "@/features/dashboard/components/TransactionTrends";
 import { AISuggestions } from "@/features/dashboard/components/AISuggestions";
 import { RecentActivityCard } from "@/features/dashboard/components/RecentActivity";
@@ -75,6 +76,11 @@ const Dashboard = () => {
         onRecalculate={handleRecalculateBalances}
         isRecalculating={isRecalculating}
       />
+
+      <div className="space-y-6">
+        <h3 className="text-lg font-semibold">Types d'opérations</h3>
+        <OperationTypeCards stats={stats} currency={currency} />
+      </div>
 
       <div className="grid gap-6 md:grid-cols-2 w-full">
         <TransactionTrends data={stats.monthly_stats} currency={currency} />
