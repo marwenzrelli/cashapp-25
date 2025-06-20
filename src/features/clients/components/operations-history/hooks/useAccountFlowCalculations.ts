@@ -21,7 +21,7 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
     const clientFullName = `${client.prenom} ${client.nom}`.trim();
     const clientId = typeof client.id === 'string' ? parseInt(client.id) : client.id;
     
-    console.log("=== CALCUL FLUX SIMPLIFIÉ ===");
+    console.log("=== NOUVEAU CALCUL FLUX SIMPLIFIÉ ===");
     console.log(`Client: ${clientFullName} (ID: ${clientId})`);
     
     // Filtrer les opérations pour ce client
@@ -54,8 +54,8 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
       return dateA - dateB;
     });
 
-    // LOGIQUE SIMPLE: Commencer à 0 et traiter chaque opération
-    console.log("\n=== TRAITEMENT SÉQUENTIEL DEPUIS 0 ===");
+    // LOGIQUE ULTRA SIMPLE: Toujours commencer à 0
+    console.log("\n=== CALCUL SÉQUENTIEL DEPUIS 0 ===");
     let currentBalance = 0;
     
     const processedOps = sortedOperations.map((op, index) => {
@@ -66,38 +66,35 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
       switch (op.type) {
         case "deposit":
           balanceChange = Number(op.amount);
-          console.log(`Dépôt: +${balanceChange} TND`);
+          console.log(`[${index + 1}] Dépôt: +${balanceChange} TND`);
           break;
           
         case "withdrawal":
           balanceChange = -Number(op.amount);
-          console.log(`Retrait: ${balanceChange} TND`);
+          console.log(`[${index + 1}] Retrait: ${balanceChange} TND`);
           break;
           
         case "transfer":
         case "direct_transfer":
-          // Pour les transferts, vérifier si c'est une réception ou un envoi
-          const isReceiver = (op.toClient === clientFullName) || (op.to_client_id === clientId);
-          const isSender = (op.fromClient === clientFullName) || (op.from_client_id === clientId);
-          
-          if (isReceiver && !isSender) {
-            // Virement reçu = POSITIF
+          // Logique simple : si c'est vers ce client = positif, si c'est depuis ce client = négatif
+          if (op.toClient === clientFullName || op.to_client_id === clientId) {
+            // Virement REÇU = POSITIF (ENTRÉE)
             balanceChange = Number(op.amount);
-            console.log(`Virement REÇU: +${balanceChange} TND (de ${op.fromClient || 'inconnu'})`);
-          } else if (isSender && !isReceiver) {
-            // Virement envoyé = NÉGATIF
+            console.log(`[${index + 1}] Virement REÇU: +${balanceChange} TND (de ${op.fromClient || 'inconnu'})`);
+          } else if (op.fromClient === clientFullName || op.from_client_id === clientId) {
+            // Virement ENVOYÉ = NÉGATIF (SORTIE)
             balanceChange = -Number(op.amount);
-            console.log(`Virement ENVOYÉ: ${balanceChange} TND (vers ${op.toClient || 'inconnu'})`);
+            console.log(`[${index + 1}] Virement ENVOYÉ: ${balanceChange} TND (vers ${op.toClient || 'inconnu'})`);
           } else {
-            // Cas ambigu
+            // Cas ambigu - ne devrait pas arriver avec le bon filtrage
             balanceChange = 0;
-            console.log(`Virement AMBIGU: 0 TND`);
+            console.log(`[${index + 1}] Virement AMBIGU: 0 TND`);
           }
           break;
           
         default:
           balanceChange = 0;
-          console.log(`Type inconnu: 0 TND`);
+          console.log(`[${index + 1}] Type inconnu: 0 TND`);
       }
       
       const balanceAfter = balanceBefore + balanceChange;
@@ -113,9 +110,10 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
       };
     });
 
-    console.log(`\n=== RÉSULTAT FINAL ===`);
+    console.log(`\n=== RÉSULTAT FINAL SIMPLIFIÉ ===`);
     console.log(`Solde final calculé: ${currentBalance.toFixed(3)} TND`);
     console.log(`Solde en base: ${Number(client.solde).toFixed(3)} TND`);
+    console.log(`Différence: ${(currentBalance - Number(client.solde)).toFixed(3)} TND`);
     
     // Retourner en ordre inverse pour affichage (plus récent en premier)
     return [...processedOps].reverse();
