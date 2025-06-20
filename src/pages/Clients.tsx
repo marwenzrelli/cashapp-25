@@ -7,6 +7,7 @@ import { useEffect, useState, useRef } from "react";
 import { LoadingIndicator } from "@/components/ui/loading-indicator";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
+import { ScrollToTop } from "@/components/ui/scroll-to-top";
 
 const Clients = () => {
   // Simplified display state management
@@ -172,6 +173,8 @@ const Clients = () => {
           onNewClientChange={setNewClient}
           onEditFormChange={setEditForm}
         />
+
+        <ScrollToTop />
       </div>
     </TooltipProvider>
   );
