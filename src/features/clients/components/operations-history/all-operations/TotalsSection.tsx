@@ -1,3 +1,4 @@
+
 import { Operation } from "@/features/operations/types";
 import { cn } from "@/lib/utils";
 import { useFormatAmount } from "@/hooks/use-format-amount";
@@ -38,7 +39,10 @@ export const TotalsSection = ({
 
   // Calculate net movement with correct formula: 
   // Solde = dépôts + transferts reçus + opérations directes reçues - retraits - transferts émis - opérations directes émises
-  const netMovement = clientName ? totalDeposits + transfersReceived + directOperationsReceived - totalWithdrawals - transfersSent - directOperationsSent : totalDeposits + totalTransfers + totalDirectOperations - totalWithdrawals;
+  const netMovement = clientName ? 
+    totalDeposits + transfersReceived + directOperationsReceived - totalWithdrawals - transfersSent - directOperationsSent : 
+    totalDeposits + totalTransfers + totalDirectOperations - totalWithdrawals;
+  
   if (isMobile) {
     return <div className="mt-6 p-4 border rounded-lg bg-muted/30">
         <h3 className="font-semibold mb-2 text-center">Récapitulatif</h3>
@@ -46,38 +50,38 @@ export const TotalsSection = ({
           <div className="flex justify-between items-center">
             <span className="text-sm">Versements:</span>
             <span className="font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded">
-              {formatAmount(totalDeposits)} {currency}
+              +{formatAmount(totalDeposits)} {currency}
             </span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm">Retraits:</span>
             <span className="font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded">
-              {formatAmount(totalWithdrawals)} {currency}
+              -{formatAmount(totalWithdrawals)} {currency}
             </span>
           </div>
           {clientName ? <>
               <div className="flex justify-between items-center">
                 <span className="text-sm">Virements reçus:</span>
                 <span className="font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded">
-                  {formatAmount(transfersReceived)} {currency}
+                  +{formatAmount(transfersReceived)} {currency}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm">Virements émis:</span>
                 <span className="font-medium text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 px-2 py-0.5 rounded">
-                  {formatAmount(transfersSent)} {currency}
+                  -{formatAmount(transfersSent)} {currency}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm">Opérations directes reçues:</span>
                 <span className="font-medium text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 px-2 py-0.5 rounded">
-                  {formatAmount(directOperationsReceived)} {currency}
+                  +{formatAmount(directOperationsReceived)} {currency}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm">Opérations directes émises:</span>
                 <span className="font-medium text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-900/20 px-2 py-0.5 rounded">
-                  {formatAmount(directOperationsSent)} {currency}
+                  -{formatAmount(directOperationsSent)} {currency}
                 </span>
               </div>
             </> : <>
@@ -97,7 +101,7 @@ export const TotalsSection = ({
           <div className="flex justify-between items-center pt-2 border-t mt-2">
             <span className="font-medium">Solde Net:</span>
             <span className={cn("font-bold px-2 py-0.5 rounded", netMovement >= 0 ? "text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20" : "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20")}>
-              {formatAmount(netMovement)} {currency}
+              {netMovement >= 0 ? '+' : ''}{formatAmount(netMovement)} {currency}
             </span>
           </div>
         </div>
@@ -106,28 +110,28 @@ export const TotalsSection = ({
   return <div className="space-y-1 px-[34px]">
       <div className="flex justify-between">
         <span className="text-sm text-muted-foreground">Versements:</span>
-        <span className="font-medium text-green-600 dark:text-green-400">{formatAmount(totalDeposits)} {currency}</span>
+        <span className="font-medium text-green-600 dark:text-green-400">+{formatAmount(totalDeposits)} {currency}</span>
       </div>
       <div className="flex justify-between">
         <span className="text-sm text-muted-foreground">Retraits:</span>
-        <span className="font-medium text-red-600 dark:text-red-400">{formatAmount(totalWithdrawals)} {currency}</span>
+        <span className="font-medium text-red-600 dark:text-red-400">-{formatAmount(totalWithdrawals)} {currency}</span>
       </div>
       {clientName ? <>
           <div className="flex justify-between">
             <span className="text-sm text-muted-foreground">Virements reçus:</span>
-            <span className="font-medium text-blue-600 dark:text-blue-400">{formatAmount(transfersReceived)} {currency}</span>
+            <span className="font-medium text-blue-600 dark:text-blue-400">+{formatAmount(transfersReceived)} {currency}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-sm text-muted-foreground">Virements émis:</span>
-            <span className="font-medium text-orange-600 dark:text-orange-400">{formatAmount(transfersSent)} {currency}</span>
+            <span className="font-medium text-orange-600 dark:text-orange-400">-{formatAmount(transfersSent)} {currency}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-sm text-muted-foreground">Opérations directes reçues:</span>
-            <span className="font-medium text-purple-600 dark:text-purple-400">{formatAmount(directOperationsReceived)} {currency}</span>
+            <span className="font-medium text-purple-600 dark:text-purple-400">+{formatAmount(directOperationsReceived)} {currency}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-sm text-muted-foreground">Opérations directes émises:</span>
-            <span className="font-medium text-pink-600 dark:text-pink-400">{formatAmount(directOperationsSent)} {currency}</span>
+            <span className="font-medium text-pink-600 dark:text-pink-400">-{formatAmount(directOperationsSent)} {currency}</span>
           </div>
         </> : <>
           <div className="flex justify-between">
@@ -142,7 +146,7 @@ export const TotalsSection = ({
       <div className="flex justify-between pt-1 border-t">
         <span className="font-medium">Solde Net:</span>
         <span className={cn("font-bold", netMovement >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400")}>
-          {formatAmount(netMovement)} {currency}
+          {netMovement >= 0 ? '+' : ''}{formatAmount(netMovement)} {currency}
         </span>
       </div>
     </div>;
