@@ -10,6 +10,13 @@ export const useOperationsFilter = (operations: Operation[]) => {
   const [filterClient, setFilterClient] = useState("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   
+  // Fonction pour nettoyer tous les filtres
+  const clearAllFilters = () => {
+    setFilterType(null);
+    setFilterClient("");
+    setDateRange(undefined);
+  };
+  
   // Filtrage optimisé - sans limitation artificielle du nombre de résultats
   const filteredOperations = useMemo(() => {
     console.log(`Filtering ${operations.length} operations with criteria:`, { 
@@ -75,6 +82,7 @@ export const useOperationsFilter = (operations: Operation[]) => {
     setFilterClient,
     dateRange,
     setDateRange,
+    clearAllFilters,
     isFiltering: !!filterType || !!filterClient || !!(dateRange?.from && dateRange?.to),
     filteredOperations
   };
