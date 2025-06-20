@@ -74,8 +74,8 @@ export const DesktopDepositsTable = ({
 
     switch (sortField) {
       case 'id':
-        aValue = typeof a.id === 'number' ? a.id : parseInt(a.id.toString());
-        bValue = typeof b.id === 'number' ? b.id : parseInt(b.id.toString());
+        aValue = Number(a.id);
+        bValue = Number(b.id);
         break;
       case 'client':
         aValue = a.client_name.toLowerCase();
