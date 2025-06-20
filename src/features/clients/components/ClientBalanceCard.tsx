@@ -1,7 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Client } from "../types";
-import { Button } from "@/components/ui/button";
 import { ClientQRCode } from "./ClientQRCode";
 
 interface ClientBalanceCardProps {
@@ -23,15 +22,8 @@ export function ClientBalanceCard({
 }: ClientBalanceCardProps) {
   return (
     <Card className="shadow-sm h-full">
-      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-        <div className="flex space-x-2">
-          <Button variant="outline" size="sm" onClick={exportToExcel} className="flex items-center gap-1">
-            <span className="hidden sm:inline">Excel</span>
-          </Button>
-          <Button variant="outline" size="sm" onClick={exportToPDF} className="flex items-center gap-1">
-            <span className="hidden sm:inline">PDF</span>
-          </Button>
-        </div>
+      <CardHeader className="pb-2">
+        {/* Removed export buttons section */}
       </CardHeader>
       <CardContent>
         <div className="flex flex-col md:flex-row justify-center items-center">
