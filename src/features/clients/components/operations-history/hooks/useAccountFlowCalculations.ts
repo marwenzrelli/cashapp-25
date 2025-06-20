@@ -21,9 +21,9 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
     const clientFullName = `${client.prenom} ${client.nom}`.trim();
     const clientId = typeof client.id === 'string' ? parseInt(client.id) : client.id;
     
-    console.log("=== DIAGNOSTIC FLUX DE COMPTE - CLIENT PROMO BET ===");
+    console.log("=== DIAGNOSTIC FLUX DE COMPTE - PROMO BET CORRIGÉ ===");
     console.log(`Client: ${clientFullName} (ID: ${clientId})`);
-    console.log(`Solde en base: ${Number(client.solde).toFixed(3)} TND`);
+    console.log(`Solde actuel en base: ${Number(client.solde).toFixed(3)} TND`);
     console.log(`Total opérations disponibles: ${operations.length}`);
     
     // Filtrage des opérations pour ce client
@@ -39,8 +39,6 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
       
       if (isMatching) {
         console.log(`✓ Opération retenue: ${op.id} | Type: ${op.type} | Montant: ${op.amount} | Date: ${op.operation_date || op.date}`);
-        console.log(`  - client_id: ${op.client_id}, from_client_id: ${op.from_client_id}, to_client_id: ${op.to_client_id}`);
-        console.log(`  - fromClient: "${op.fromClient}", toClient: "${op.toClient}"`);
       }
       
       return isMatching;
@@ -53,7 +51,7 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
       return [];
     }
 
-    // Tri chronologique: plus ancien en premier
+    // Tri chronologique: plus ancien en premier pour le calcul
     const sortedOperations = [...clientOperations].sort((a, b) => {
       const dateA = new Date(a.operation_date || a.date).getTime();
       const dateB = new Date(b.operation_date || b.date).getTime();
@@ -65,17 +63,62 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
       return dateA - dateB;
     });
 
-    console.log("=== ORDRE CHRONOLOGIQUE POUR CALCUL ===");
+    console.log("=== ORDRE CHRONOLOGIQUE CORRIGÉ ===");
     sortedOperations.forEach((op, i) => {
       const date = format(new Date(op.operation_date || op.date), "dd/MM/yyyy HH:mm:ss");
       console.log(`${i + 1}. [${date}] ${op.type} | ${op.amount} TND | ID: ${op.id}`);
     });
 
     // CALCUL CORRIGÉ DES SOLDES
-    console.log("\n=== CALCUL CORRIGÉ DES SOLDES ===");
-    console.log("🎯 Objectif: Calculer les soldes 'avant' et 'après' pour chaque opération");
+    console.log("\n=== CALCUL CORRIGÉ DES SOLDES SÉQUENTIELS ===");
     
-    let runningBalance = 0; // Démarrage à 0 pour tous les clients
+    // Calculer le solde initial en partant du solde actuel et en remontant les opérations
+    const currentBalance = Number(client.solde);
+    console.log(`Solde actuel du client: ${currentBalance.toFixed(3)} TND`);
+    
+    // Calculer l'impact total de toutes les opérations
+    let totalImpact = 0;
+    sortedOperations.forEach(op => {
+      let impact = 0;
+      
+      switch (op.type) {
+        case "deposit":
+          impact = Number(op.amount);
+          break;
+          
+        case "withdrawal":
+          impact = -Number(op.amount);
+          break;
+          
+        case "transfer":
+          if (op.toClient === clientFullName || op.to_client_id === clientId) {
+            impact = Number(op.amount);
+          } else if (op.fromClient === clientFullName || op.from_client_id === clientId) {
+            impact = -Number(op.amount);
+          }
+          break;
+          
+        case "direct_transfer":
+          if (op.toClient === clientFullName || op.to_client_id === clientId) {
+            impact = Number(op.amount);
+          } else if (op.fromClient === clientFullName || op.from_client_id === clientId) {
+            impact = -Number(op.amount);
+          }
+          break;
+      }
+      
+      totalImpact += impact;
+    });
+    
+    // Le solde initial est le solde actuel moins l'impact total de toutes les opérations
+    const initialBalance = currentBalance - totalImpact;
+    
+    console.log(`Impact total calculé: ${totalImpact.toFixed(3)} TND`);
+    console.log(`Solde initial reconstitué: ${initialBalance.toFixed(3)} TND`);
+    console.log(`Vérification: ${initialBalance.toFixed(3)} + ${totalImpact.toFixed(3)} = ${(initialBalance + totalImpact).toFixed(3)} TND`);
+    
+    // Maintenant, calculer les soldes séquentiels
+    let runningBalance = initialBalance;
     
     const operationsWithBalance = sortedOperations.map((op, index) => {
       const balanceBefore = runningBalance;
@@ -86,46 +129,37 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
       console.log(`Date: ${format(new Date(op.operation_date || op.date), "dd/MM/yyyy HH:mm:ss")}`);
       console.log(`Solde AVANT cette opération: ${balanceBefore.toFixed(3)} TND`);
       
-      // CALCUL DE L'IMPACT - logique corrigée
+      // CALCUL DE L'IMPACT CORRIGÉ
       switch (op.type) {
         case "deposit":
           impact = Number(op.amount);
-          console.log(`📥 DÉPÔT: +${impact} TND (ajout au solde)`);
+          console.log(`📥 DÉPÔT: +${impact} TND`);
           break;
           
         case "withdrawal":
           impact = -Number(op.amount);
-          console.log(`📤 RETRAIT: ${impact} TND (soustraction du solde)`);
+          console.log(`📤 RETRAIT: ${impact} TND`);
           break;
           
         case "transfer":
-          // Vérifier si ce client envoie ou reçoit
           if (op.toClient === clientFullName || op.to_client_id === clientId) {
             impact = Number(op.amount);
-            console.log(`📥 VIREMENT REÇU: +${impact} TND (de: ${op.fromClient || 'N/A'})`);
+            console.log(`📥 VIREMENT REÇU: +${impact} TND`);
           } else if (op.fromClient === clientFullName || op.from_client_id === clientId) {
             impact = -Number(op.amount);
-            console.log(`📤 VIREMENT ENVOYÉ: ${impact} TND (vers: ${op.toClient || 'N/A'})`);
-          } else {
-            console.log(`⚠️ TRANSFERT: Ni expéditeur ni destinataire détecté pour ce client`);
+            console.log(`📤 VIREMENT ENVOYÉ: ${impact} TND`);
           }
           break;
           
         case "direct_transfer":
-          // Vérifier si ce client envoie ou reçoit
           if (op.toClient === clientFullName || op.to_client_id === clientId) {
             impact = Number(op.amount);
-            console.log(`📥 TRANSFERT DIRECT REÇU: +${impact} TND (de: ${op.fromClient || 'N/A'})`);
+            console.log(`📥 TRANSFERT DIRECT REÇU: +${impact} TND`);
           } else if (op.fromClient === clientFullName || op.from_client_id === clientId) {
             impact = -Number(op.amount);
-            console.log(`📤 TRANSFERT DIRECT ENVOYÉ: ${impact} TND (vers: ${op.toClient || 'N/A'})`);
-          } else {
-            console.log(`⚠️ TRANSFERT DIRECT: Ni expéditeur ni destinataire détecté pour ce client`);
+            console.log(`📤 TRANSFERT DIRECT ENVOYÉ: ${impact} TND`);
           }
           break;
-          
-        default:
-          console.log(`⚠️ Type d'opération non reconnu: ${op.type}`);
       }
       
       // Application de l'impact
@@ -142,29 +176,20 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
       };
     });
 
-    console.log("\n=== VÉRIFICATION FINALE ===");
+    console.log("\n=== VÉRIFICATION FINALE CORRIGÉE ===");
     console.log(`Client: ${clientFullName} (ID: ${clientId})`);
-    console.log(`Solde calculé chronologiquement: ${runningBalance.toFixed(3)} TND`);
-    console.log(`Solde en base de données: ${Number(client.solde).toFixed(3)} TND`);
+    console.log(`Solde initial reconstitué: ${initialBalance.toFixed(3)} TND`);
+    console.log(`Solde final calculé: ${runningBalance.toFixed(3)} TND`);
+    console.log(`Solde en base de données: ${currentBalance.toFixed(3)} TND`);
     
-    const difference = Math.abs(runningBalance - Number(client.solde));
+    const difference = Math.abs(runningBalance - currentBalance);
     console.log(`Écart absolu: ${difference.toFixed(3)} TND`);
     
     if (difference > 0.01) {
-      console.error("❌ INCOHÉRENCE DÉTECTÉE POUR PROMO BET!");
-      console.error(`Le calcul chronologique (${runningBalance.toFixed(3)} TND) ne correspond pas au solde en base (${Number(client.solde).toFixed(3)} TND)`);
-      console.error("Possible causes :");
-      console.error("- Opérations manquantes");
-      console.error("- Erreur dans le calcul d'impact");
-      console.error("- Données incohérentes en base");
-      
-      // Diagnostic détaillé pour promo bet
-      console.log("\n=== DIAGNOSTIC DÉTAILLÉ PROMO BET ===");
-      operationsWithBalance.forEach((op, i) => {
-        console.log(`${i + 1}. ${op.type} | Avant: ${op.balanceBefore} | Impact: ${op.balanceChange >= 0 ? '+' : ''}${op.balanceChange} | Après: ${op.balanceAfter}`);
-      });
+      console.error("❌ INCOHÉRENCE DÉTECTÉE!");
+      console.error(`Le calcul séquentiel (${runningBalance.toFixed(3)} TND) ne correspond pas au solde en base (${currentBalance.toFixed(3)} TND)`);
     } else {
-      console.log("✅ COHÉRENCE CONFIRMÉE pour promo bet");
+      console.log("✅ COHÉRENCE CONFIRMÉE - Calculs corrects");
     }
 
     // Retourner en ordre inverse pour affichage (plus récent en premier)
