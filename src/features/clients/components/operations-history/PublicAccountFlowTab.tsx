@@ -20,13 +20,13 @@ export const PublicAccountFlowTab = ({
 }: PublicAccountFlowTabProps) => {
   const { currency } = useCurrency();
 
-  // Sort operations by date and calculate running balance
+  // Sort operations by date and calculate running balance starting from 0
   const processedOperations = useMemo(() => {
     if (!client) return [];
     
     const clientFullName = `${client.prenom} ${client.nom}`.trim();
     
-    console.log("=== CALCUL CHRONOLOGIQUE À PARTIR DE 0 ===");
+    console.log("=== CALCUL CHRONOLOGIQUE DEPUIS ZÉRO ===");
     console.log("Client:", clientFullName);
     console.log("Total operations reçues:", operations.length);
     
@@ -61,10 +61,10 @@ export const PublicAccountFlowTab = ({
       console.log(`${i + 1}. ${format(new Date(op.operation_date || op.date), "dd/MM/yyyy HH:mm")} - ${op.type} - ${op.amount} TND`);
     });
 
-    // CALCUL CHRONOLOGIQUE: Commencer à 0 et calculer chronologiquement
+    // CALCUL CHRONOLOGIQUE: Commencer à 0 TND
     let runningBalance = 0;
-    console.log("\n=== CALCUL CHRONOLOGIQUE À PARTIR DE 0 ===");
-    console.log("Solde initial:", runningBalance);
+    console.log("\n=== CALCUL CHRONOLOGIQUE DEPUIS 0 TND ===");
+    console.log("Solde de départ:", runningBalance, "TND");
     
     const opsWithBalance = sortedOpsChronological.map((op, index) => {
       const balanceBefore = runningBalance;
@@ -72,37 +72,37 @@ export const PublicAccountFlowTab = ({
       
       console.log(`\n--- Opération ${index + 1}/${sortedOpsChronological.length} ---`);
       console.log(`Date: ${format(new Date(op.operation_date || op.date), "dd/MM/yyyy HH:mm")}`);
-      console.log(`Type: ${op.type}, Montant: ${op.amount}`);
-      console.log(`Solde AVANT cette opération: ${balanceBefore}`);
+      console.log(`Type: ${op.type}, Montant: ${op.amount} TND`);
+      console.log(`Solde AVANT cette opération: ${balanceBefore} TND`);
       
       // Calculer l'impact sur le solde
       if (op.type === "deposit") {
         balanceChange = Number(op.amount);
-        console.log(`✅ Versement: +${balanceChange}`);
+        console.log(`✅ Dépôt: +${balanceChange} TND`);
       } else if (op.type === "withdrawal") {
         balanceChange = -Number(op.amount);
-        console.log(`❌ Retrait: ${balanceChange}`);
+        console.log(`❌ Retrait: ${balanceChange} TND`);
       } else if (op.type === "transfer") {
         if (op.toClient === clientFullName) {
           balanceChange = Number(op.amount);
-          console.log(`📥 Virement reçu: +${balanceChange}`);
+          console.log(`📥 Virement reçu: +${balanceChange} TND`);
         } else if (op.fromClient === clientFullName) {
           balanceChange = -Number(op.amount);
-          console.log(`📤 Virement envoyé: ${balanceChange}`);
+          console.log(`📤 Virement envoyé: ${balanceChange} TND`);
         }
       } else if (op.type === "direct_transfer") {
         if (op.toClient === clientFullName) {
           balanceChange = Number(op.amount);
-          console.log(`📥 Opération directe reçue: +${balanceChange}`);
+          console.log(`📥 Opération directe reçue: +${balanceChange} TND`);
         } else if (op.fromClient === clientFullName) {
           balanceChange = -Number(op.amount);
-          console.log(`📤 Opération directe envoyée: ${balanceChange}`);
+          console.log(`📤 Opération directe envoyée: ${balanceChange} TND`);
         }
       }
       
       runningBalance = balanceBefore + balanceChange;
-      console.log(`Changement: ${balanceChange}`);
-      console.log(`Solde APRÈS cette opération: ${runningBalance}`);
+      console.log(`Changement: ${balanceChange >= 0 ? '+' : ''}${balanceChange} TND`);
+      console.log(`Solde APRÈS cette opération: ${runningBalance} TND`);
       
       return {
         ...op,
@@ -112,22 +112,24 @@ export const PublicAccountFlowTab = ({
       };
     });
 
-    console.log("\n=== VÉRIFICATION AVEC LE SOLDE ACTUEL ===");
-    console.log("Solde final calculé chronologiquement:", runningBalance);
-    console.log("Solde actuel du client:", client.solde);
-    console.log("Différence:", Math.abs(runningBalance - client.solde));
+    console.log("\n=== RÉSUMÉ FINAL ===");
+    console.log("Solde calculé final:", runningBalance, "TND");
+    console.log("Solde actuel du client:", client.solde, "TND");
     
-    if (Math.abs(runningBalance - client.solde) > 0.01) {
-      console.warn("⚠️ ATTENTION: Le solde calculé ne correspond pas au solde actuel!");
+    const difference = Math.abs(runningBalance - client.solde);
+    console.log("Différence:", difference, "TND");
+    
+    if (difference > 0.01) {
+      console.warn("⚠️ ATTENTION: Le solde calculé depuis zéro ne correspond pas au solde actuel!");
       console.warn("Cela peut indiquer que toutes les opérations ne sont pas incluses dans cette vue.");
     } else {
-      console.log("✅ Parfait! Le solde calculé correspond au solde actuel.");
+      console.log("✅ Parfait! Le calcul depuis zéro correspond au solde actuel.");
     }
 
-    console.log("\n=== RÉSULTATS FINAUX (ordre chronologique) ===");
+    console.log("\n=== HISTORIQUE CHRONOLOGIQUE (calcul depuis 0) ===");
     opsWithBalance.forEach((op, i) => {
       const date = format(new Date(op.operation_date || op.date), "dd/MM/yyyy HH:mm");
-      console.log(`${i + 1}. ${date} - ${op.type} - Avant: ${op.balanceBefore} → Après: ${op.balanceAfter}`);
+      console.log(`${i + 1}. ${date} - ${op.type} - Avant: ${op.balanceBefore} TND → Après: ${op.balanceAfter} TND`);
     });
 
     // Inverser pour l'affichage (plus récent en premier) mais les calculs sont corrects
@@ -135,7 +137,7 @@ export const PublicAccountFlowTab = ({
     console.log("\n=== ORDRE D'AFFICHAGE (plus récent en premier) ===");
     reversedForDisplay.forEach((op, i) => {
       const date = format(new Date(op.operation_date || op.date), "dd/MM/yyyy HH:mm");
-      console.log(`${i + 1}. ${date} - Avant: ${op.balanceBefore} → Après: ${op.balanceAfter}`);
+      console.log(`${i + 1}. ${date} - Avant: ${op.balanceBefore} TND → Après: ${op.balanceAfter} TND`);
     });
     
     return reversedForDisplay;
