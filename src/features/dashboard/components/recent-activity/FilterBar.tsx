@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
-import { OperationFilters } from "@/features/operations/components/OperationFilters";
+import { OperationsFilters } from "@/features/operations/components/OperationsFilters";
 import { DateRange } from "react-day-picker";
 
 interface FilterBarProps {
@@ -25,13 +25,17 @@ export const FilterBar = ({
 }: FilterBarProps) => {
   return (
     <div className="space-y-3">
-      <OperationFilters
+      <OperationsFilters
         type={tempOperationType}
         setType={setTempOperationType}
         client={tempSearchTerm}
         setClient={setTempSearchTerm}
         date={tempDateRange}
         setDate={setTempDateRange}
+        isFiltering={false}
+        onClearFilters={() => {}}
+        totalOperations={0}
+        filteredCount={0}
       />
       
       {/* OK button to apply filters */}
