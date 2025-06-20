@@ -7,7 +7,7 @@ import { getTypeStyle, getTypeIcon, getTypeLabel } from "@/features/operations/u
 import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface AccountFlowMobileViewProps {
-  operations: (Operation & { balanceBefore: number; balanceAfter: number })[];
+  operations: (Operation & { balanceBefore: number; balanceAfter: number; balanceChange: number })[];
   isPublicView?: boolean;
   clientId?: number;
 }
@@ -30,26 +30,16 @@ export const AccountFlowMobileView = ({ operations, isPublicView = false, client
     });
   };
 
-  const getAmountClass = (op: any) => {
-    if (op.type === "deposit") return "text-green-600 dark:text-green-400";
-    if (op.type === "withdrawal") return "text-red-600 dark:text-red-400";
-    if (op.type === "direct_transfer" || op.type === "transfer") {
-      const isReceiving = op.to_client_id === clientId;
-      return isReceiving ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400";
-    }
-    return "";
+  const getAmountClass = (balanceChange: number) => {
+    if (balanceChange > 0) return "text-green-600 dark:text-green-400";
+    if (balanceChange < 0) return "text-red-600 dark:text-red-400";
+    return "text-gray-600 dark:text-gray-400";
   };
 
   const getAmountDisplay = (op: any) => {
-    // For direct transfers and transfers, show + or - based on whether client receives or sends
-    if (op.type === "direct_transfer" || op.type === "transfer") {
-      const isReceiving = op.to_client_id === clientId;
-      return `${isReceiving ? "+" : "-"} ${formatAmount(op.amount)} TND`;
-    } else if (op.type === "withdrawal") {
-      return `- ${formatAmount(op.amount)} TND`;
-    } else {
-      return `+ ${formatAmount(op.amount)} TND`;
-    }
+    // Show the actual balance change with proper sign
+    const sign = op.balanceChange >= 0 ? "+" : "-";
+    return `${sign} ${formatAmount(Math.abs(op.balanceChange))} TND`;
   };
 
   const getBalanceClass = (balance: number) => {
@@ -99,7 +89,7 @@ export const AccountFlowMobileView = ({ operations, isPublicView = false, client
                 
                 <div className="flex justify-between">
                   <span className="text-sm">Montant:</span>
-                  <span className={`text-sm font-medium ${getAmountClass(op)}`}>
+                  <span className={`text-sm font-medium ${getAmountClass(op.balanceChange)}`}>
                     {getAmountDisplay(op)}
                   </span>
                 </div>
