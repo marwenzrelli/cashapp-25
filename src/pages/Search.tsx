@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,6 +15,7 @@ import { LoadingIndicator } from "@/components/ui/loading-indicator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ClientAutocomplete } from "@/features/operations/components/ClientAutocomplete";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
+import { Button } from "@/components/ui/button";
 
 const Search = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -21,6 +23,7 @@ const Search = () => {
   const [showDateFilter, setShowDateFilter] = useState(false);
   const [operationType, setOperationType] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"clients" | "operations">("operations");
+  const [showResults, setShowResults] = useState(false);
   
   const { clients } = useClients();
   const { operations, isLoading: operationsLoading } = useOperations();
@@ -42,6 +45,11 @@ const Search = () => {
 
   const handleTypeChange = (value: string) => {
     setOperationType(value === "all" ? null : value);
+    setShowResults(false); // Reset results when filter changes
+  };
+
+  const handleSearchOperation = () => {
+    setShowResults(true);
   };
 
   // Placeholder functions for edit and delete operations
@@ -53,6 +61,24 @@ const Search = () => {
   const handleDeleteOperation = (operation: any) => {
     console.log("Delete operation:", operation);
     // TODO: Implement delete functionality
+  };
+
+  // Reset results when switching tabs or changing search term
+  const handleTabChange = (tab: "clients" | "operations") => {
+    setActiveTab(tab);
+    setShowResults(false);
+  };
+
+  const handleSearchTermChange = (value: string) => {
+    setSearchTerm(value);
+    if (activeTab === "operations") {
+      setShowResults(false);
+    }
+  };
+
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    setDateRange(range);
+    setShowResults(false);
   };
 
   return (
@@ -68,7 +94,7 @@ const Search = () => {
         {/* Tabs pour basculer entre clients et opérations */}
         <div className="flex space-x-1 bg-muted p-1 rounded-lg">
           <button
-            onClick={() => setActiveTab("operations")}
+            onClick={() => handleTabChange("operations")}
             className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === "operations"
                 ? "bg-background text-foreground shadow-sm"
@@ -79,7 +105,7 @@ const Search = () => {
             Opérations
           </button>
           <button
-            onClick={() => setActiveTab("clients")}
+            onClick={() => handleTabChange("clients")}
             className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === "clients"
                 ? "bg-background text-foreground shadow-sm"
@@ -112,7 +138,7 @@ const Search = () => {
                 {activeTab === "operations" ? (
                   <ClientAutocomplete
                     value={searchTerm}
-                    onChange={setSearchTerm}
+                    onChange={handleSearchTermChange}
                     placeholder="Rechercher par nom de client..."
                     className="pl-9"
                   />
@@ -120,7 +146,7 @@ const Search = () => {
                   <Input
                     placeholder="Rechercher par nom, email ou téléphone..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => handleSearchTermChange(e.target.value)}
                     className="pl-9"
                   />
                 )}
@@ -166,10 +192,20 @@ const Search = () => {
                       </label>
                       <DatePickerWithRange
                         date={dateRange}
-                        onDateChange={setDateRange}
+                        onDateChange={handleDateRangeChange}
                       />
                     </div>
                   )}
+
+                  {/* Bouton de recherche pour les opérations */}
+                  <Button 
+                    onClick={handleSearchOperation}
+                    className="w-full"
+                    variant="default"
+                  >
+                    <SearchIcon className="h-4 w-4 mr-2" />
+                    Rechercher les opérations
+                  </Button>
                 </>
               )}
             </div>
@@ -177,7 +213,7 @@ const Search = () => {
         </Card>
 
         {/* Résultats */}
-        {activeTab === "operations" ? (
+        {activeTab === "operations" && showResults ? (
           <Card>
             <CardHeader>
               <CardTitle>Résultats des opérations</CardTitle>
@@ -210,50 +246,48 @@ const Search = () => {
               )}
             </CardContent>
           </Card>
-        ) : (
-          searchTerm && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Résultats des clients</CardTitle>
-                <CardDescription>
-                  {filteredClients.length} client(s) trouvé(s)
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {filteredClients.length === 0 ? (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">Aucun client trouvé pour "{searchTerm}"</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {filteredClients.map((client) => (
-                      <div key={client.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Users className="h-4 w-4 text-muted-foreground" />
-                              <h3 className="font-semibold">{client.prenom} {client.nom}</h3>
-                              <Badge variant={client.status === 'active' ? 'default' : 'secondary'}>
-                                {client.status === 'active' ? 'Actif' : 'Inactif'}
-                              </Badge>
-                            </div>
-                            <div className="text-sm text-muted-foreground space-y-1">
-                              {client.email && <p>📧 {client.email}</p>}
-                              {client.telephone && <p>📞 {client.telephone}</p>}
-                              <div className="flex items-center gap-1">
-                                <CreditCard className="h-3 w-3" />
-                                <span>Solde: {Number(client.solde).toLocaleString('fr-FR')} TND</span>
-                              </div>
+        ) : activeTab === "clients" && searchTerm && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Résultats des clients</CardTitle>
+              <CardDescription>
+                {filteredClients.length} client(s) trouvé(s)
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {filteredClients.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">Aucun client trouvé pour "{searchTerm}"</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {filteredClients.map((client) => (
+                    <div key={client.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Users className="h-4 w-4 text-muted-foreground" />
+                            <h3 className="font-semibold">{client.prenom} {client.nom}</h3>
+                            <Badge variant={client.status === 'active' ? 'default' : 'secondary'}>
+                              {client.status === 'active' ? 'Actif' : 'Inactif'}
+                            </Badge>
+                          </div>
+                          <div className="text-sm text-muted-foreground space-y-1">
+                            {client.email && <p>📧 {client.email}</p>}
+                            {client.telephone && <p>📞 {client.telephone}</p>}
+                            <div className="flex items-center gap-1">
+                              <CreditCard className="h-3 w-3" />
+                              <span>Solde: {Number(client.solde).toLocaleString('fr-FR')} TND</span>
                             </div>
                           </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         )}
       </div>
       <ScrollToTop />
