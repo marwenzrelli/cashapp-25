@@ -51,7 +51,7 @@ export const useDeletedOperations = () => {
         ...deletedDeposits.map(d => d.deleted_by),
         ...deletedWithdrawals.map(w => w.deleted_by),
         ...deletedTransfers.map(t => t.deleted_by),
-        ...deletedDirectOperations.map(do => do.deleted_by)
+        ...deletedDirectOperations.map(directOp => directOp.deleted_by)
       ].filter(Boolean));
 
       const userMap = new Map();
