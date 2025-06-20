@@ -199,36 +199,36 @@ export const PublicAccountFlowTab = ({
       const balanceBefore = runningBalance;
 
       // Calculate the impact of this operation on the balance
-      let operationImpact = 0;
+      let balanceChange = 0;
       
       if (op.type === "deposit") {
-        operationImpact = Number(op.amount);
+        balanceChange = Number(op.amount);
       } else if (op.type === "withdrawal") {
-        operationImpact = -Number(op.amount);
+        balanceChange = -Number(op.amount);
       } else if (op.type === "transfer") {
         if (op.toClient === clientFullName) {
-          operationImpact = Number(op.amount); // Virement reçu
+          balanceChange = Number(op.amount); // Virement reçu
         } else if (op.fromClient === clientFullName) {
-          operationImpact = -Number(op.amount); // Virement envoyé
+          balanceChange = -Number(op.amount); // Virement envoyé
         }
       } else if (op.type === "direct_transfer") {
         if (op.toClient === clientFullName) {
-          operationImpact = Number(op.amount); // Opération directe reçue = +montant
+          balanceChange = Number(op.amount); // Opération directe reçue = +montant
         } else if (op.fromClient === clientFullName) {
-          operationImpact = -Number(op.amount); // Opération directe envoyée = -montant
+          balanceChange = -Number(op.amount); // Opération directe envoyée = -montant
         }
       }
       
       // Appliquer l'impact à runningBalance
-      runningBalance += operationImpact;
+      runningBalance += balanceChange;
       
-      console.log(`PublicAccountFlowTab - Operation ${op.id}: type=${op.type}, amount=${op.amount}, impact=${operationImpact}, balanceBefore=${balanceBefore}, balanceAfter=${runningBalance}`);
+      console.log(`PublicAccountFlowTab - Operation ${op.id}: type=${op.type}, amount=${op.amount}, balanceChange=${balanceChange}, balanceBefore=${balanceBefore}, balanceAfter=${runningBalance}`);
       
       return {
         ...op,
         balanceBefore,
         balanceAfter: runningBalance,
-        operationImpact
+        balanceChange
       };
     });
 
