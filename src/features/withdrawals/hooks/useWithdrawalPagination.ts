@@ -66,11 +66,13 @@ export const useWithdrawalPagination = (withdrawals: Withdrawal[]) => {
     return searchMatch && dateMatch;
   });
 
-  // Pagination des retraits
-  const paginatedWithdrawals = filteredWithdrawals.slice(
-    (currentPage - 1) * parseInt(itemsPerPage),
-    currentPage * parseInt(itemsPerPage)
-  );
+  // Pagination des retraits - handle "tous" option
+  const paginatedWithdrawals = itemsPerPage === "tous" 
+    ? filteredWithdrawals 
+    : filteredWithdrawals.slice(
+        (currentPage - 1) * parseInt(itemsPerPage),
+        currentPage * parseInt(itemsPerPage)
+      );
 
   return {
     searchTerm,
