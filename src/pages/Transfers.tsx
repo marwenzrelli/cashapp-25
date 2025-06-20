@@ -36,9 +36,13 @@ const Transfers = () => {
   // Ensure transfers is always treated as an array
   const transfersArray: Transfer[] = Array.isArray(transfers) ? transfers : [];
   
-  // Calculate pagination
-  const startIndex = (currentPage - 1) * parseInt(itemsPerPage);
-  const visibleTransfers = transfersArray.slice(startIndex, startIndex + parseInt(itemsPerPage));
+  // Calculate pagination - handle "tous" option correctly
+  const visibleTransfers = itemsPerPage === "tous" 
+    ? transfersArray 
+    : transfersArray.slice(
+        (currentPage - 1) * parseInt(itemsPerPage),
+        currentPage * parseInt(itemsPerPage)
+      );
 
   const handleTransferSuccess = () => {
     fetchTransfers();
