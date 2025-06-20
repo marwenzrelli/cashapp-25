@@ -2,6 +2,7 @@
 import React from "react";
 import { TreasuryTable } from "./TreasuryTable";
 import { TreasurySummary } from "./TreasurySummary";
+import { TreasuryAnalysis } from "./TreasuryAnalysis";
 import { Operation } from "@/features/operations/types";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -67,10 +68,13 @@ export const TreasuryTab = ({ operations, isLoading }: TreasuryTabProps) => {
 
   return (
     <div className="space-y-6">
+      <TreasuryAnalysis />
+      
       <TreasuryTable 
         operations={localOperations} 
         onDataRefresh={handleDataRefresh}
       />
+      
       <TreasurySummary 
         operations={localOperations}
         finalTreasuryBalance={systemBalance}
