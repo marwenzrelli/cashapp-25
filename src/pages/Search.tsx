@@ -44,6 +44,17 @@ const Search = () => {
     setOperationType(value === "all" ? null : value);
   };
 
+  // Placeholder functions for edit and delete operations
+  const handleEditOperation = (operation: any) => {
+    console.log("Edit operation:", operation);
+    // TODO: Implement edit functionality
+  };
+
+  const handleDeleteOperation = (operation: any) => {
+    console.log("Delete operation:", operation);
+    // TODO: Implement delete functionality
+  };
+
   return (
     <div className="space-y-6 px-2 sm:px-4 md:px-6 max-w-full">
       <div>
@@ -190,7 +201,10 @@ const Search = () => {
             ) : (
               <OperationsList 
                 operations={filteredOperations}
-                showPagination={false}
+                isLoading={false}
+                showEmptyMessage={true}
+                onEdit={handleEditOperation}
+                onDelete={handleDeleteOperation}
               />
             )}
           </CardContent>
