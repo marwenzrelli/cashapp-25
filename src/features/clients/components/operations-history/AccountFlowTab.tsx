@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Operation } from "@/features/operations/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -8,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { EditOperationDialog } from "@/features/operations/components/EditOperationDialog";
 import { AccountFlowMobileView } from "./AccountFlowMobileView";
+import { useClients } from "@/features/clients/hooks/useClients";
 
 interface AccountFlowTabProps {
   operations: Operation[];
@@ -17,8 +19,13 @@ interface AccountFlowTabProps {
 
 export const AccountFlowTab = ({ operations, updateOperation, clientId }: AccountFlowTabProps) => {
   const { currency } = useCurrency();
+  const { clients } = useClients();
   const [selectedOperation, setSelectedOperation] = useState<Operation | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+  // Get current client balance
+  const currentClient = clients?.find(c => c.id === clientId);
+  const currentBalance = currentClient?.solde || 0;
 
   // Sort operations by date from oldest to newest for calculation
   const sortedOperations = [...operations].sort((a, b) => {
@@ -27,10 +34,9 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
     return dateA.getTime() - dateB.getTime();
   });
 
-  // Calculate running balance for each operation starting from 0
+  // Calculate running balance for each operation starting from the final balance and working backwards
   const operationsWithBalance = sortedOperations.reduce((acc: any[], op, index) => {
     const amount = op.amount;
-    const previousBalance = index > 0 ? acc[index - 1].balanceAfter : 0;
     
     // Calculate balance change based on operation type
     let balanceChange = 0;
@@ -54,7 +60,23 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
       }
     }
     
-    const balanceAfter = previousBalance + balanceChange;
+    acc.push({
+      ...op,
+      balanceChange: balanceChange
+    });
+    
+    return acc;
+  }, []);
+
+  // Now calculate the actual balances working backwards from current balance
+  const totalChange = operationsWithBalance.reduce((sum, op) => sum + op.balanceChange, 0);
+  const initialBalance = currentBalance - totalChange;
+
+  // Calculate running balances
+  const operationsWithFinalBalance = operationsWithBalance.map((op, index) => {
+    const previousOperations = operationsWithBalance.slice(0, index);
+    const balanceBefore = initialBalance + previousOperations.reduce((sum, prevOp) => sum + prevOp.balanceChange, 0);
+    const balanceAfter = balanceBefore + op.balanceChange;
 
     console.log(`AccountFlowTab - Operation ${op.id}:`, {
       type: op.type,
@@ -62,25 +84,22 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
       clientId,
       to_client_id: op.to_client_id,
       from_client_id: op.from_client_id,
-      balanceChange,
-      previousBalance,
+      balanceChange: op.balanceChange,
+      balanceBefore,
       balanceAfter,
       isReceiving: op.to_client_id === clientId,
-      isSending: op.from_client_id === clientId || (op.type === "withdrawal" || op.type === "deposit")
+      isSending: op.from_client_id === clientId
     });
 
-    acc.push({
+    return {
       ...op,
-      balanceBefore: previousBalance,
-      balanceAfter: balanceAfter,
-      balanceChange: balanceChange
-    });
-    
-    return acc;
-  }, []);
+      balanceBefore,
+      balanceAfter
+    };
+  });
 
   // Reverse to show newest first in display
-  const displayOperations = [...operationsWithBalance].reverse();
+  const displayOperations = [...operationsWithFinalBalance].reverse();
 
   const formatDateTime = (dateString: string) => {
     try {
@@ -95,14 +114,6 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
       minimumFractionDigits: 0,
       maximumFractionDigits: 2 
     });
-  };
-
-  const getAmountClass = (type: string, amount: number) => {
-    if (type === "deposit") return "text-green-600 dark:text-green-400";
-    if (type === "withdrawal") return "text-red-600 dark:text-red-400";
-    if (type === "transfer") return "text-blue-600 dark:text-blue-400";
-    if (type === "direct_transfer") return "text-blue-600 dark:text-blue-400";
-    return "";
   };
 
   const getBalanceClass = (balance: number) => {
@@ -129,11 +140,11 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
     // For direct transfers and transfers, show + or - based on whether client receives or sends
     if (op.type === "direct_transfer" || op.type === "transfer") {
       const isReceiving = op.to_client_id === clientId;
-      return `${isReceiving ? "" : "- "}${formatAmount(op.amount)} TND`;
+      return `${isReceiving ? "+" : "-"} ${formatAmount(op.amount)} TND`;
     } else if (op.type === "withdrawal") {
       return `- ${formatAmount(op.amount)} TND`;
     } else {
-      return `${formatAmount(op.amount)} TND`;
+      return `+ ${formatAmount(op.amount)} TND`;
     }
   };
 
@@ -152,6 +163,7 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
       {/* Mobile view */}
       <AccountFlowMobileView 
         operations={displayOperations}
+        clientId={clientId}
       />
 
       {/* Desktop view */}

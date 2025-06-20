@@ -44,11 +44,11 @@ export const AccountFlowMobileView = ({ operations, isPublicView = false, client
     // For direct transfers and transfers, show + or - based on whether client receives or sends
     if (op.type === "direct_transfer" || op.type === "transfer") {
       const isReceiving = op.to_client_id === clientId;
-      return `${isReceiving ? "" : "- "}${formatAmount(op.amount)} TND`;
+      return `${isReceiving ? "+" : "-"} ${formatAmount(op.amount)} TND`;
     } else if (op.type === "withdrawal") {
       return `- ${formatAmount(op.amount)} TND`;
     } else {
-      return `${formatAmount(op.amount)} TND`;
+      return `+ ${formatAmount(op.amount)} TND`;
     }
   };
 
