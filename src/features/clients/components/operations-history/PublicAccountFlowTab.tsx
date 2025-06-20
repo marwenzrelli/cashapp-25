@@ -26,19 +26,16 @@ export const PublicAccountFlowTab = ({
     const clientFullName = `${client.prenom} ${client.nom}`.trim();
     const clientId = typeof client.id === 'string' ? parseInt(client.id) : client.id;
     
-    console.log("=== DIAGNOSTIC FLUX DE COMPTE UNIFIÉ ===");
+    console.log("=== DIAGNOSTIC FLUX DE COMPTE - CLIENT PROMO BET ===");
     console.log(`Client: ${clientFullName} (ID: ${clientId})`);
     console.log(`Solde en base: ${Number(client.solde).toFixed(3)} TND`);
     console.log(`Total opérations disponibles: ${operations.length}`);
     
-    // Appliquer EXACTEMENT la même logique de filtrage pour tous les clients
+    // Filtrage des opérations pour ce client
     const clientOperations = operations.filter(op => {
-      // Priorité 1: ID client (plus fiable)
       const matchesClientId = op.client_id === clientId;
       const matchesFromClientId = op.from_client_id === clientId;
       const matchesToClientId = op.to_client_id === clientId;
-      
-      // Priorité 2: Nom exact (fallback)
       const matchesFromClientName = op.fromClient === clientFullName;
       const matchesToClientName = op.toClient === clientFullName;
       
@@ -47,81 +44,88 @@ export const PublicAccountFlowTab = ({
       
       if (isMatching) {
         console.log(`✓ Opération retenue: ${op.id} | Type: ${op.type} | Montant: ${op.amount} | Date: ${op.operation_date || op.date}`);
+        console.log(`  - client_id: ${op.client_id}, from_client_id: ${op.from_client_id}, to_client_id: ${op.to_client_id}`);
+        console.log(`  - fromClient: "${op.fromClient}", toClient: "${op.toClient}"`);
       }
       
       return isMatching;
     });
     
-    console.log(`Opérations filtrées pour ${clientFullName}: ${clientOperations.length}`);
+    console.log(`=== OPÉRATIONS FILTRÉES POUR ${clientFullName}: ${clientOperations.length} ===`);
     
     if (clientOperations.length === 0) {
-      console.log("⚠️ Aucune opération trouvée - retour d'un tableau vide");
+      console.log("⚠️ Aucune opération trouvée");
       return [];
     }
 
-    // TRI CHRONOLOGIQUE UNIFIÉ: le même algorithme pour tous
+    // Tri chronologique: plus ancien en premier
     const sortedOperations = [...clientOperations].sort((a, b) => {
       const dateA = new Date(a.operation_date || a.date).getTime();
       const dateB = new Date(b.operation_date || b.date).getTime();
       
-      // Si même timestamp, trier par ID pour garantir la cohérence
       if (dateA === dateB) {
         return a.id.localeCompare(b.id);
       }
       
-      return dateA - dateB; // Plus ancien en premier
+      return dateA - dateB;
     });
 
-    console.log("=== ORDRE CHRONOLOGIQUE STRICT ===");
+    console.log("=== ORDRE CHRONOLOGIQUE POUR CALCUL ===");
     sortedOperations.forEach((op, i) => {
       const date = format(new Date(op.operation_date || op.date), "dd/MM/yyyy HH:mm:ss");
       console.log(`${i + 1}. [${date}] ${op.type} | ${op.amount} TND | ID: ${op.id}`);
     });
 
-    // CALCUL UNIFIÉ: Démarrage à 0 TND pour TOUS les clients
-    console.log("\n=== CALCUL CHRONOLOGIQUE UNIFIÉ ===");
-    console.log("🔄 Démarrage systématique à 0.00 TND");
+    // CALCUL CORRIGÉ DES SOLDES
+    console.log("\n=== CALCUL CORRIGÉ DES SOLDES ===");
+    console.log("🎯 Objectif: Calculer les soldes 'avant' et 'après' pour chaque opération");
     
-    let runningBalance = 0; // Même point de départ pour tous
+    let runningBalance = 0; // Démarrage à 0 pour tous les clients
     
     const operationsWithBalance = sortedOperations.map((op, index) => {
       const balanceBefore = runningBalance;
       let impact = 0;
       
-      console.log(`\n--- Étape ${index + 1}/${sortedOperations.length} ---`);
-      console.log(`Opération: ${op.id} | Type: ${op.type} | Montant: ${op.amount}`);
+      console.log(`\n--- Opération ${index + 1}/${sortedOperations.length} ---`);
+      console.log(`ID: ${op.id} | Type: ${op.type} | Montant: ${op.amount} TND`);
       console.log(`Date: ${format(new Date(op.operation_date || op.date), "dd/MM/yyyy HH:mm:ss")}`);
-      console.log(`Solde avant traitement: ${balanceBefore.toFixed(3)} TND`);
+      console.log(`Solde AVANT cette opération: ${balanceBefore.toFixed(3)} TND`);
       
-      // LOGIQUE UNIFIÉE D'IMPACT - même calcul pour tous les clients
+      // CALCUL DE L'IMPACT - logique corrigée
       switch (op.type) {
         case "deposit":
           impact = Number(op.amount);
-          console.log(`📥 DÉPÔT: +${impact} TND`);
+          console.log(`📥 DÉPÔT: +${impact} TND (ajout au solde)`);
           break;
           
         case "withdrawal":
           impact = -Number(op.amount);
-          console.log(`📤 RETRAIT: ${impact} TND`);
+          console.log(`📤 RETRAIT: ${impact} TND (soustraction du solde)`);
           break;
           
         case "transfer":
+          // Vérifier si ce client envoie ou reçoit
           if (op.toClient === clientFullName || op.to_client_id === clientId) {
             impact = Number(op.amount);
-            console.log(`📥 VIREMENT REÇU: +${impact} TND (de: ${op.fromClient})`);
+            console.log(`📥 VIREMENT REÇU: +${impact} TND (de: ${op.fromClient || 'N/A'})`);
           } else if (op.fromClient === clientFullName || op.from_client_id === clientId) {
             impact = -Number(op.amount);
-            console.log(`📤 VIREMENT ENVOYÉ: ${impact} TND (vers: ${op.toClient})`);
+            console.log(`📤 VIREMENT ENVOYÉ: ${impact} TND (vers: ${op.toClient || 'N/A'})`);
+          } else {
+            console.log(`⚠️ TRANSFERT: Ni expéditeur ni destinataire détecté pour ce client`);
           }
           break;
           
         case "direct_transfer":
+          // Vérifier si ce client envoie ou reçoit
           if (op.toClient === clientFullName || op.to_client_id === clientId) {
             impact = Number(op.amount);
-            console.log(`📥 TRANSFERT DIRECT REÇU: +${impact} TND (de: ${op.fromClient})`);
+            console.log(`📥 TRANSFERT DIRECT REÇU: +${impact} TND (de: ${op.fromClient || 'N/A'})`);
           } else if (op.fromClient === clientFullName || op.from_client_id === clientId) {
             impact = -Number(op.amount);
-            console.log(`📤 TRANSFERT DIRECT ENVOYÉ: ${impact} TND (vers: ${op.toClient})`);
+            console.log(`📤 TRANSFERT DIRECT ENVOYÉ: ${impact} TND (vers: ${op.toClient || 'N/A'})`);
+          } else {
+            console.log(`⚠️ TRANSFERT DIRECT: Ni expéditeur ni destinataire détecté pour ce client`);
           }
           break;
           
@@ -129,11 +133,11 @@ export const PublicAccountFlowTab = ({
           console.log(`⚠️ Type d'opération non reconnu: ${op.type}`);
       }
       
-      // Mise à jour du solde courant
+      // Application de l'impact
       runningBalance = balanceBefore + impact;
       
-      console.log(`Impact calculé: ${impact >= 0 ? '+' : ''}${impact} TND`);
-      console.log(`Nouveau solde: ${runningBalance.toFixed(3)} TND`);
+      console.log(`Impact appliqué: ${impact >= 0 ? '+' : ''}${impact} TND`);
+      console.log(`Solde APRÈS cette opération: ${runningBalance.toFixed(3)} TND`);
       
       return {
         ...op,
@@ -143,9 +147,8 @@ export const PublicAccountFlowTab = ({
       };
     });
 
-    // VÉRIFICATION UNIFIÉE
-    console.log("\n=== VÉRIFICATION FINALE UNIFIÉE ===");
-    console.log(`Client: ${clientFullName}`);
+    console.log("\n=== VÉRIFICATION FINALE ===");
+    console.log(`Client: ${clientFullName} (ID: ${clientId})`);
     console.log(`Solde calculé chronologiquement: ${runningBalance.toFixed(3)} TND`);
     console.log(`Solde en base de données: ${Number(client.solde).toFixed(3)} TND`);
     
@@ -153,26 +156,24 @@ export const PublicAccountFlowTab = ({
     console.log(`Écart absolu: ${difference.toFixed(3)} TND`);
     
     if (difference > 0.01) {
-      console.error("❌ INCOHÉRENCE DÉTECTÉE!");
+      console.error("❌ INCOHÉRENCE DÉTECTÉE POUR PROMO BET!");
       console.error(`Le calcul chronologique (${runningBalance.toFixed(3)} TND) ne correspond pas au solde en base (${Number(client.solde).toFixed(3)} TND)`);
-      console.error("Causes possibles:");
-      console.error("- Opérations manquantes dans la requête");
-      console.error("- Opérations non filtrées correctement");
-      console.error("- Données corrompues en base");
+      console.error("Possible causes :");
+      console.error("- Opérations manquantes");
+      console.error("- Erreur dans le calcul d'impact");
+      console.error("- Données incohérentes en base");
+      
+      // Diagnostic détaillé pour promo bet
+      console.log("\n=== DIAGNOSTIC DÉTAILLÉ PROMO BET ===");
+      operationsWithBalance.forEach((op, i) => {
+        console.log(`${i + 1}. ${op.type} | Avant: ${op.balanceBefore} | Impact: ${op.balanceChange >= 0 ? '+' : ''}${op.balanceChange} | Après: ${op.balanceAfter}`);
+      });
     } else {
-      console.log("✅ COHÉRENCE CONFIRMÉE - Calcul correct");
+      console.log("✅ COHÉRENCE CONFIRMÉE pour promo bet");
     }
 
     // Retourner en ordre inverse pour affichage (plus récent en premier)
-    const displayOrder = [...operationsWithBalance].reverse();
-    
-    console.log("\n=== ORDRE D'AFFICHAGE FINAL ===");
-    displayOrder.slice(0, 5).forEach((op, i) => {
-      const date = format(new Date(op.operation_date || op.date), "dd/MM/yyyy HH:mm");
-      console.log(`${i + 1}. ${date} | Solde: ${op.balanceBefore} → ${op.balanceAfter} TND`);
-    });
-    
-    return displayOrder;
+    return [...operationsWithBalance].reverse();
   }, [operations, client]);
 
   const formatDateTime = (dateString: string) => {
