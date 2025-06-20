@@ -47,13 +47,20 @@ export const RecentActivityItem = ({ activity, currency, index }: RecentActivity
 
   const handleClientClick = async (clientName: string) => {
     try {
-      // Rechercher le client par nom pour obtenir son ID
+      // Pour les virements, extraire le premier nom avant "→"
+      let searchName = clientName;
+      if (clientName.includes('→')) {
+        searchName = clientName.split('→')[0].trim();
+      }
+
+      console.log("Searching for client:", searchName);
+
+      // Recherche par nom et prénom combinés ou séparément
       const { data: clients, error } = await supabase
         .from('clients')
-        .select('id')
-        .ilike('nom', clientName)
-        .or(`prenom.ilike.${clientName}`)
-        .limit(1);
+        .select('id, nom, prenom')
+        .or(`nom.ilike.%${searchName}%,prenom.ilike.%${searchName}%,nom || ' ' || prenom.ilike.%${searchName}%,prenom || ' ' || nom.ilike.%${searchName}%`)
+        .limit(10);
 
       if (error) {
         console.error("Error finding client:", error);
@@ -61,10 +68,14 @@ export const RecentActivityItem = ({ activity, currency, index }: RecentActivity
         return;
       }
 
+      console.log("Found clients:", clients);
+
       if (clients && clients.length > 0) {
+        // Si plusieurs clients trouvés, prendre le premier
+        // ou on pourrait afficher une liste pour choisir
         navigate(`/clients/${clients[0].id}`);
       } else {
-        toast.error("Client non trouvé");
+        toast.error(`Client "${searchName}" non trouvé`);
       }
     } catch (error) {
       console.error("Error navigating to client:", error);
