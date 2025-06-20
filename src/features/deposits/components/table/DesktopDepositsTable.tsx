@@ -150,12 +150,10 @@ export const DesktopDepositsTable = ({
       <tbody>
         {sortedDeposits.map(deposit => {
         const operationId = typeof deposit.id === 'number' ? formatId(deposit.id) : deposit.id;
-        return <tr key={deposit.id.toString()} className="group border-b transition-colors hover:bg-muted/50">
+        return <tr key={deposit.id} className="group border-b transition-colors hover:bg-muted/50">
               <td className="p-3 font-mono text-xs">{operationId}</td>
               <td className="p-3">
-                <DepositClientInfo clientName={deposit.client_name} depositId={deposit.id} // No need for toString here, updated interface accepts number
-            clientId={deposit.client_id} // No need for toString here, updated interface accepts number
-            />
+                <DepositClientInfo clientName={deposit.client_name} depositId={deposit.id} clientId={deposit.client_id} />
               </td>
               <td className="p-3 text-center">
                 <DepositAmount amount={deposit.amount} />
