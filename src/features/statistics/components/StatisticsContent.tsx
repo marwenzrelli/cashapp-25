@@ -50,6 +50,18 @@ export const StatisticsContent = ({
 }: StatisticsContentProps) => {
   const [activeTab, setActiveTab] = useState("overview");
 
+  // Calculer les montants totaux réels
+  const totalDepositsAmount = Array.isArray(filteredDeposits) 
+    ? filteredDeposits.reduce((sum, dep) => sum + (dep?.amount || 0), 0)
+    : 0;
+    
+  const totalWithdrawalsAmount = Array.isArray(filteredWithdrawals)
+    ? filteredWithdrawals.reduce((sum, withdrawal) => sum + (withdrawal?.amount || 0), 0)
+    : 0;
+
+  const depositsCount = Array.isArray(filteredDeposits) ? filteredDeposits.length : 0;
+  const withdrawalsCount = Array.isArray(filteredWithdrawals) ? filteredWithdrawals.length : 0;
+
   return (
     <Tabs 
       defaultValue="overview" 
@@ -91,10 +103,14 @@ export const StatisticsContent = ({
           totalWithdrawals={stats.total_withdrawals || 0}
           sentTransfers={stats.sent_transfers || 0}
           transferCount={stats.transfer_count || 0}
-          netFlow={(stats.total_deposits || 0) - (stats.total_withdrawals || 0)}
+          netFlow={totalDepositsAmount - totalWithdrawalsAmount}
           clientCount={stats.client_count || 0}
           percentageChange={percentageChange}
           averageTransactionsPerDay={averageTransactionsPerDay}
+          totalDepositsAmount={totalDepositsAmount}
+          totalWithdrawalsAmount={totalWithdrawalsAmount}
+          depositsCount={depositsCount}
+          withdrawalsCount={withdrawalsCount}
         />
 
         <ChartSection
@@ -105,8 +121,8 @@ export const StatisticsContent = ({
         <InsightsSection
           percentageChange={percentageChange}
           averageTransactionsPerDay={averageTransactionsPerDay}
-          totalDeposits={stats.total_deposits || 0}
-          depositsLength={Array.isArray(filteredDeposits) ? filteredDeposits.length : 0}
+          totalDeposits={totalDepositsAmount}
+          depositsLength={depositsCount}
         />
       </TabsContent>
 

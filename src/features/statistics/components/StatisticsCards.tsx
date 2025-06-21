@@ -20,6 +20,11 @@ interface StatisticsCardsProps {
   clientCount: number;
   percentageChange: number;
   averageTransactionsPerDay: number;
+  // Ajouter les montants réels
+  totalDepositsAmount?: number;
+  totalWithdrawalsAmount?: number;
+  depositsCount?: number;
+  withdrawalsCount?: number;
 }
 
 export const StatisticsCards = ({
@@ -30,7 +35,11 @@ export const StatisticsCards = ({
   netFlow,
   clientCount,
   percentageChange,
-  averageTransactionsPerDay
+  averageTransactionsPerDay,
+  totalDepositsAmount,
+  totalWithdrawalsAmount,
+  depositsCount,
+  withdrawalsCount
 }: StatisticsCardsProps) => {
   const { currency } = useCurrency();
 
@@ -46,6 +55,12 @@ export const StatisticsCards = ({
     return "text-gray-600 dark:text-gray-400";
   };
 
+  // Utiliser les montants réels si disponibles, sinon les totaux existants
+  const depositsAmount = totalDepositsAmount || totalDeposits;
+  const withdrawalsAmount = totalWithdrawalsAmount || totalWithdrawals;
+  const depositsOpsCount = depositsCount || totalDeposits;
+  const withdrawalsOpsCount = withdrawalsCount || totalWithdrawals;
+
   return (
     <div className="grid gap-6 md:grid-cols-4">
       <Card className="bg-gradient-to-br from-green-50 to-transparent dark:from-green-950/20">
@@ -56,13 +71,14 @@ export const StatisticsCards = ({
         <CardContent>
           <div className={cn(
             "text-2xl font-bold",
-            getAmountColor(totalDeposits)
+            getAmountColor(depositsAmount)
           )}>
-            {totalDeposits.toLocaleString()} {currency}
+            {depositsAmount.toLocaleString()} {currency}
           </div>
           <p className="text-xs text-muted-foreground">
+            {depositsOpsCount} versements • 
             <span className={getPercentageColor(percentageChange)}>
-              {percentageChange > 0 ? '+' : ''}{percentageChange.toFixed(1)}%
+              {percentageChange > 0 ? '+' : ''}{Math.abs(percentageChange).toFixed(1)}%
             </span>
             {' '}vs mois dernier
           </p>
@@ -77,13 +93,14 @@ export const StatisticsCards = ({
         <CardContent>
           <div className={cn(
             "text-2xl font-bold",
-            getAmountColor(-totalWithdrawals)
+            getAmountColor(-withdrawalsAmount)
           )}>
-            {totalWithdrawals.toLocaleString()} {currency}
+            {withdrawalsAmount.toLocaleString()} {currency}
           </div>
           <p className="text-xs text-muted-foreground">
+            {withdrawalsOpsCount} retraits • 
             <span className={getPercentageColor(-percentageChange)}>
-              {percentageChange > 0 ? '+' : ''}{percentageChange.toFixed(1)}%
+              {percentageChange > 0 ? '+' : ''}{Math.abs(percentageChange).toFixed(1)}%
             </span>
             {' '}vs mois dernier
           </p>
