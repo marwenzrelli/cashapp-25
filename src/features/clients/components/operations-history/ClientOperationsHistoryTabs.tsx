@@ -1,4 +1,3 @@
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AllOperationsTab } from "./AllOperationsTab";
 import { DepositOperationsTab } from "./DepositOperationsTab";
@@ -6,6 +5,7 @@ import { WithdrawalOperationsTab } from "./WithdrawalOperationsTab";
 import { TransferOperationsTab } from "./TransferOperationsTab";
 import { DirectOperationsTab } from "./DirectOperationsTab";
 import { Operation } from "@/features/operations/types";
+import { cn } from "@/lib/utils";
 
 interface ClientOperationsHistoryTabsProps {
   filteredOperations: Operation[];
@@ -32,11 +32,51 @@ export const ClientOperationsHistoryTabs = ({
   return (
     <Tabs defaultValue="all" className="w-full">
       <TabsList className="grid w-full grid-cols-5">
-        <TabsTrigger value="all">Toutes</TabsTrigger>
-        <TabsTrigger value="deposits">Dépôts</TabsTrigger>
-        <TabsTrigger value="withdrawals">Retraits</TabsTrigger>
-        <TabsTrigger value="transfers">Transferts</TabsTrigger>
-        <TabsTrigger value="direct">Directes</TabsTrigger>
+        <TabsTrigger 
+          value="all"
+          className={cn(
+            "data-[state=active]:bg-gray-100 data-[state=active]:text-gray-800",
+            "hover:bg-gray-50"
+          )}
+        >
+          Toutes
+        </TabsTrigger>
+        <TabsTrigger 
+          value="deposits"
+          className={cn(
+            "data-[state=active]:bg-green-100 data-[state=active]:text-green-800",
+            "hover:bg-green-50"
+          )}
+        >
+          Dépôts
+        </TabsTrigger>
+        <TabsTrigger 
+          value="withdrawals"
+          className={cn(
+            "data-[state=active]:bg-red-100 data-[state=active]:text-red-800",
+            "hover:bg-red-50"
+          )}
+        >
+          Retraits
+        </TabsTrigger>
+        <TabsTrigger 
+          value="transfers"
+          className={cn(
+            "data-[state=active]:bg-blue-100 data-[state=active]:text-blue-800",
+            "hover:bg-blue-50"
+          )}
+        >
+          Transferts
+        </TabsTrigger>
+        <TabsTrigger 
+          value="direct"
+          className={cn(
+            "data-[state=active]:bg-purple-100 data-[state=active]:text-purple-800",
+            "hover:bg-purple-50"
+          )}
+        >
+          Directes
+        </TabsTrigger>
       </TabsList>
       
       <TabsContent value="all" className="space-y-4">
