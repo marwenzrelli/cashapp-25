@@ -2,7 +2,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { ClientPersonalInfo } from "./ClientPersonalInfo";
 import { ClientBalanceCard } from "./ClientBalanceCard";
-import { ClientActionButtons } from "./ClientActionButtons";
 import { Client } from "../types";
 import { Operation } from "@/features/operations/types";
 
@@ -13,6 +12,8 @@ interface ClientInfoCardsProps {
   exportToExcel: () => void;
   exportToPDF: () => void;
   formatAmount: (amount: number) => string;
+  onDepositClick?: () => void;
+  onWithdrawalClick?: () => void;
 }
 
 export const ClientInfoCards = ({
@@ -21,7 +22,9 @@ export const ClientInfoCards = ({
   clientOperations,
   exportToExcel,
   exportToPDF,
-  formatAmount
+  formatAmount,
+  onDepositClick,
+  onWithdrawalClick
 }: ClientInfoCardsProps) => {
   return (
     <div className="space-y-6">
@@ -46,14 +49,9 @@ export const ClientInfoCards = ({
             clientId={clientId}
             exportToExcel={exportToExcel}
             exportToPDF={exportToPDF}
-            formatAmount={formatAmount} 
-          />
-          
-          {/* Restore action buttons */}
-          <ClientActionButtons 
-            exportToExcel={exportToExcel}
-            exportToPDF={exportToPDF}
-            orientation="vertical"
+            formatAmount={formatAmount}
+            onDepositClick={onDepositClick}
+            onWithdrawalClick={onWithdrawalClick}
           />
         </div>
       </div>
