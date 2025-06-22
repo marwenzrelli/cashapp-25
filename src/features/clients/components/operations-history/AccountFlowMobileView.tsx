@@ -58,16 +58,21 @@ export const AccountFlowMobileView = ({ operations, isPublicView = false, client
           </CardContent>
         </Card>
       ) : (
-        operations.map((op) => (
+        operations.map((op, index) => (
           <Card key={op.id} className="shadow-sm border-l-4 border-l-primary/20">
             <CardContent className="p-4 space-y-4">
-              {/* Header with operation type and date */}
+              {/* Header with operation number, type and date */}
               <div className="flex justify-between items-start">
                 <div className="space-y-2">
-                  <Badge className={`${getTypeStyle(op.type)} flex w-fit items-center gap-1.5 px-2 py-1`}>
-                    {getTypeIcon(op.type)}
-                    <span className="text-xs font-medium">{getTypeLabel(op.type)}</span>
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-muted-foreground bg-muted px-2 py-1 rounded">
+                      #{index + 1}
+                    </span>
+                    <Badge className={`${getTypeStyle(op.type)} flex w-fit items-center gap-1.5 px-2 py-1`}>
+                      {getTypeIcon(op.type)}
+                      <span className="text-xs font-medium">{getTypeLabel(op.type)}</span>
+                    </Badge>
+                  </div>
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Hash className="h-3 w-3" />
                     <span className="font-mono">ID: {op.id.toString().split('-')[1] || op.id}</span>

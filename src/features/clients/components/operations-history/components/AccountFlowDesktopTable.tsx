@@ -73,6 +73,7 @@ export const AccountFlowDesktopTable = ({
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[60px] text-center">#</TableHead>
                 <TableHead className="w-[120px]">Date</TableHead>
                 <TableHead className="w-[100px]">ID</TableHead>
                 <TableHead className="w-[120px]">Type</TableHead>
@@ -85,7 +86,7 @@ export const AccountFlowDesktopTable = ({
             <TableBody>
               {processedOperations.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center">
+                  <TableCell colSpan={8} className="h-24 text-center">
                     {!clientFullName ? (
                       <div className="text-orange-600">
                         Client non trouvé. Vérifiez que le client existe.
@@ -98,6 +99,9 @@ export const AccountFlowDesktopTable = ({
               ) : (
                 processedOperations.map((op, index) => (
                   <TableRow key={`${op.id}-${index}`} className="hover:bg-muted/50">
+                    <TableCell className="text-center font-medium text-muted-foreground">
+                      {index + 1}
+                    </TableCell>
                     <TableCell className="font-medium">
                       {formatDateTime(op.operation_date || op.date)}
                     </TableCell>

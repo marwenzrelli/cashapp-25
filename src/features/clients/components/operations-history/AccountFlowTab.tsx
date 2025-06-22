@@ -110,6 +110,7 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[60px] text-center">#</TableHead>
                   <TableHead className="w-[120px]">Date</TableHead>
                   <TableHead className="w-[100px]">ID</TableHead>
                   <TableHead className="w-[120px]">Type</TableHead>
@@ -122,7 +123,7 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
               <TableBody>
                 {processedOperations.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center">
+                    <TableCell colSpan={8} className="h-24 text-center">
                       {!currentClient ? (
                         <div className="text-orange-600">
                           Client non trouvé (ID: {clientId}). Vérifiez que le client existe.
@@ -133,12 +134,15 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
                     </TableCell>
                   </TableRow>
                 ) : (
-                  processedOperations.map((op) => (
+                  processedOperations.map((op, index) => (
                     <TableRow 
                       key={op.id} 
                       className="cursor-pointer hover:bg-muted/50"
                       onClick={() => handleRowClick(op)}
                     >
+                      <TableCell className="text-center font-medium text-muted-foreground">
+                        {index + 1}
+                      </TableCell>
                       <TableCell className="font-medium">
                         {formatDateTime(op.operation_date || op.date)}
                       </TableCell>
