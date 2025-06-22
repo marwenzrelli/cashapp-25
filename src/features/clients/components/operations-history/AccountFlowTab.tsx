@@ -6,7 +6,6 @@ import { format, parseISO } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { getTypeStyle, getTypeIcon, getTypeLabel } from "@/features/operations/utils/operation-helpers";
 import { Badge } from "@/components/ui/badge";
-import { useCurrency } from "@/contexts/CurrencyContext";
 import { EditOperationDialog } from "@/features/operations/components/EditOperationDialog";
 import { AccountFlowMobileView } from "./AccountFlowMobileView";
 import { useClients } from "@/features/clients/hooks/useClients";
@@ -19,7 +18,6 @@ interface AccountFlowTabProps {
 }
 
 export const AccountFlowTab = ({ operations, updateOperation, clientId }: AccountFlowTabProps) => {
-  const { currency } = useCurrency();
   const { clients } = useClients();
   const [selectedOperation, setSelectedOperation] = useState<Operation | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -27,13 +25,16 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
   // Get current client
   const currentClient = clients?.find(c => c.id === clientId);
 
-  console.log(`AccountFlowTab - Using unified calculation logic for client ${clientId}`);
+  console.log(`AccountFlowTab - Processing ${operations.length} operations for client ${clientId}`);
+  console.log(`Current client found:`, currentClient ? `${currentClient.prenom} ${currentClient.nom}` : 'Not found');
 
-  // Use the same unified calculation logic as PublicAccountFlowTab
+  // Use the unified calculation logic
   const processedOperations = useAccountFlowCalculations({ 
     operations, 
     client: currentClient 
   });
+
+  console.log(`AccountFlowTab - Processed operations: ${processedOperations.length}`);
 
   const formatDateTime = (dateString: string) => {
     try {
@@ -82,6 +83,14 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
     return "text-gray-600 dark:text-gray-400";
   };
 
+  if (!currentClient) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-muted-foreground">Client non trouvé</p>
+      </div>
+    );
+  }
+
   return (
     <>
       {/* Mobile view */}
@@ -110,7 +119,7 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
                 {processedOperations.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="h-24 text-center">
-                      Aucune opération trouvée
+                      Aucune opération trouvée pour ce client
                     </TableCell>
                   </TableRow>
                 ) : (
