@@ -68,13 +68,22 @@ export default function ClientProfile() {
     return false;
   };
 
-  // Wrapper function to match the expected return type
-  const refreshClientOperationsWrapper = async (): Promise<boolean> => {
+  // Wrapper function to match the expected return type for ClientProfileTabs
+  const refreshClientOperationsForTabs = async (): Promise<void> => {
     try {
       await refreshClientOperations();
-      return true;
     } catch (error) {
       console.error("Error refreshing client operations:", error);
+    }
+  };
+
+  // Wrapper function to match the expected return type for dialogs
+  const refreshClientBalanceForDialogs = async (): Promise<boolean> => {
+    try {
+      await refreshClientBalance();
+      return true;
+    } catch (error) {
+      console.error("Error refreshing client balance:", error);
       return false;
     }
   };
@@ -121,7 +130,7 @@ export default function ClientProfile() {
               setIsCustomRange={setIsCustomRange} 
               showAllDates={showAllDates} 
               setShowAllDates={setShowAllDates} 
-              refreshClientOperations={refreshClientOperationsWrapper} 
+              refreshClientOperations={refreshClientOperationsForTabs} 
               isPepsiMen={isPepsiMen}
               updateOperation={updateOperation}
             />
@@ -136,7 +145,7 @@ export default function ClientProfile() {
               open={isDepositDialogOpen}
               onOpenChange={setIsDepositDialogOpen}
               onConfirm={handleDepositSuccess}
-              refreshClientBalance={refreshClientBalance}
+              refreshClientBalance={refreshClientBalanceForDialogs}
             />
 
             <WithdrawalDialog
@@ -144,7 +153,7 @@ export default function ClientProfile() {
               open={isWithdrawalDialogOpen}
               onOpenChange={setIsWithdrawalDialogOpen}
               onConfirm={handleWithdrawalSuccess}
-              refreshClientBalance={refreshClientBalance}
+              refreshClientBalance={refreshClientBalanceForDialogs}
             />
           </>
         )}
