@@ -15,13 +15,14 @@ interface UseAccountFlowCalculationsProps {
 
 export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlowCalculationsProps) => {
   const processedOperations = useMemo(() => {
+    // Early returns to prevent unnecessary calculations
     if (!operations || operations.length === 0) {
       console.log("AccountFlowCalculations - No operations available");
       return [];
     }
     
-    if (!client) {
-      console.log("AccountFlowCalculations - No client available");
+    if (!client || !client.id) {
+      console.log("AccountFlowCalculations - No valid client available");
       return [];
     }
     
@@ -49,12 +50,6 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
     });
     
     console.log(`Opérations filtrées pour ce client: ${clientOperations.length}`);
-    console.log(`Types d'opérations trouvées:`, {
-      deposits: clientOperations.filter(op => op.type === 'deposit').length,
-      withdrawals: clientOperations.filter(op => op.type === 'withdrawal').length,
-      transfers: clientOperations.filter(op => op.type === 'transfer').length,
-      direct_transfers: clientOperations.filter(op => op.type === 'direct_transfer').length
-    });
     
     if (clientOperations.length === 0) {
       console.log("Aucune opération trouvée pour ce client");
@@ -66,11 +61,6 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
       const dateA = new Date(a.operation_date || a.date).getTime();
       const dateB = new Date(b.operation_date || b.date).getTime();
       return dateA - dateB;
-    });
-    
-    console.log("=== OPÉRATIONS TRIÉES PAR DATE ===");
-    sortedOperations.forEach((op, index) => {
-      console.log(`${index + 1}. ${op.operation_date || op.date} - ${op.type} - ${op.amount} TND - ${op.fromClient || ''} ${op.toClient ? `→ ${op.toClient}` : ''}`);
     });
     
     // Calculer le flux progressif en partant de zéro
@@ -116,12 +106,6 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
       };
       
       processedOps.push(processedOp);
-      
-      console.log(`${index + 1}. ${operation.operation_date || operation.date}`);
-      console.log(`   Type: ${operation.type}, Montant: ${operation.amount} TND`);
-      console.log(`   Direction: ${operation.fromClient || ''} ${operation.toClient ? `→ ${operation.toClient}` : ''}`);
-      console.log(`   Variation: ${balanceChange >= 0 ? '+' : ''}${balanceChange.toFixed(3)} TND`);
-      console.log(`   Solde: ${balanceBefore.toFixed(3)} → ${balanceAfter.toFixed(3)} TND`);
     });
     
     // Vérification finale
@@ -147,15 +131,11 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
       return dateB - dateA;
     });
     
-    console.log("=== RÉSULTAT FINAL (ordre d'affichage - plus récent en premier) ===");
-    finalProcessedOps.slice(0, 3).forEach((op, index) => {
-      console.log(`${index + 1}. ${op.operation_date || op.date}`);
-      console.log(`   Solde avant: ${op.balanceBefore.toFixed(3)} → Solde après: ${op.balanceAfter.toFixed(3)} TND`);
-      console.log(`   Variation: ${op.balanceChange >= 0 ? '+' : ''}${op.balanceChange.toFixed(3)} TND`);
-    });
+    console.log("=== CALCUL TERMINÉ ===");
+    console.log(`Retour de ${finalProcessedOps.length} opérations traitées`);
     
     return finalProcessedOps;
-  }, [operations, client]);
+  }, [operations, client?.id, client?.prenom, client?.nom, client?.solde]); // Ajout des dépendances spécifiques
 
   return processedOperations;
 };

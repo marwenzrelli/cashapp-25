@@ -10,6 +10,7 @@ import { EditOperationDialog } from "@/features/operations/components/EditOperat
 import { AccountFlowMobileView } from "./AccountFlowMobileView";
 import { useClients } from "@/features/clients/hooks/useClients";
 import { useAccountFlowCalculations } from "./hooks/useAccountFlowCalculations";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface AccountFlowTabProps {
   operations: Operation[];
@@ -18,27 +19,22 @@ interface AccountFlowTabProps {
 }
 
 export const AccountFlowTab = ({ operations, updateOperation, clientId }: AccountFlowTabProps) => {
-  const { clients } = useClients();
+  const { clients, isLoading: clientsLoading } = useClients();
   const [selectedOperation, setSelectedOperation] = useState<Operation | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   console.log(`AccountFlowTab - Processing ${operations.length} operations for client ${clientId}`);
-  console.log(`Available clients:`, clients?.map(c => ({ id: c.id, name: `${c.prenom} ${c.nom}` })));
 
   // Get current client
   const currentClient = clients?.find(c => c.id === clientId);
-
-  console.log(`Current client found:`, currentClient ? `${currentClient.prenom} ${currentClient.nom}` : 'Not found');
 
   // If client is not found in the clients list, create a minimal client object for calculations
   const clientForCalculations = currentClient || {
     id: clientId,
     prenom: "Client",
     nom: `#${clientId}`,
-    solde: 0 // We'll calculate the real balance from operations
+    solde: 0
   };
-
-  console.log(`Using client for calculations:`, clientForCalculations);
 
   // Use the unified calculation logic
   const processedOperations = useAccountFlowCalculations({ 
@@ -46,7 +42,10 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
     client: clientForCalculations 
   });
 
-  console.log(`AccountFlowTab - Processed operations: ${processedOperations.length}`);
+  // Show loading if clients are still loading or if we have operations but no processed operations yet
+  const isLoading = clientsLoading || (operations.length > 0 && processedOperations.length === 0 && currentClient);
+
+  console.log(`AccountFlowTab - Processed operations: ${processedOperations.length}, Loading: ${isLoading}`);
 
   const formatDateTime = (dateString: string) => {
     try {
@@ -84,7 +83,6 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
   };
 
   const getAmountDisplay = (op: any) => {
-    // Show the actual balance change with proper sign
     const sign = op.balanceChange >= 0 ? "+" : "-";
     return `${sign} ${formatAmount(Math.abs(op.balanceChange))} TND`;
   };
@@ -94,6 +92,71 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
     if (op.balanceChange < 0) return "text-red-600 dark:text-red-400";
     return "text-gray-600 dark:text-gray-400";
   };
+
+  // Loading skeleton component
+  const LoadingSkeleton = () => (
+    <>
+      {/* Mobile skeleton */}
+      <div className="md:hidden space-y-3 p-4">
+        {[...Array(3)].map((_, i) => (
+          <Card key={i}>
+            <CardContent className="p-4 space-y-3">
+              <div className="flex justify-between">
+                <Skeleton className="h-6 w-20" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+              <Skeleton className="h-4 w-full" />
+              <div className="grid grid-cols-2 gap-3">
+                <Skeleton className="h-8 w-full" />
+                <Skeleton className="h-8 w-full" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      
+      {/* Desktop skeleton */}
+      <Card className="hidden md:block">
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[60px] text-center">#</TableHead>
+                  <TableHead className="w-[120px]">Date</TableHead>
+                  <TableHead className="w-[100px]">ID</TableHead>
+                  <TableHead className="w-[120px]">Type</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead className="w-[150px] text-right">Solde avant</TableHead>
+                  <TableHead className="w-[120px] text-right">Montant</TableHead>
+                  <TableHead className="w-[150px] text-right">Solde après</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {[...Array(5)].map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell><Skeleton className="h-4 w-8" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                    <TableCell><Skeleton className="h-6 w-16" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+    </>
+  );
+
+  // Show loading state
+  if (isLoading) {
+    return <LoadingSkeleton />;
+  }
 
   return (
     <>
@@ -135,7 +198,6 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
                   </TableRow>
                 ) : (
                   processedOperations.map((op, index) => {
-                    // Calculer le numéro chronologique (inverse de l'index d'affichage)
                     const chronologicalNumber = processedOperations.length - index;
                     
                     return (
