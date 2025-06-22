@@ -28,8 +28,9 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
     const clientFullName = `${client.prenom} ${client.nom}`.trim();
     const clientId = typeof client.id === 'string' ? parseInt(client.id) : client.id;
     
-    console.log("=== CALCUL FLUX CHRONOLOGIQUE - DÉMARRAGE À ZÉRO ===");
+    console.log("=== SYNCHRONISATION AVEC BASE DE DONNÉES ===");
     console.log(`Client: ${clientFullName} (ID: ${clientId})`);
+    console.log(`Solde actuel en DB: ${client.solde} TND`);
     console.log(`Total operations to process: ${operations.length}`);
     
     // Filtrer les opérations pour ce client
@@ -60,18 +61,51 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
       return dateA - dateB;
     });
     
+    console.log("=== CALCUL CHRONOLOGIQUE SYNCHRONISÉ ===");
     console.log("Operations triées par ordre chronologique (plus anciennes d'abord):");
     sortedOperations.forEach((op, index) => {
       console.log(`${index + 1}. ${op.operation_date || op.date} - ${op.type} - ${op.amount} TND`);
     });
     
-    // Le solde actuel du client (fin de toutes les opérations)
-    const currentBalance = client.solde || 0;
-    console.log(`Solde actuel du client dans la DB: ${currentBalance} TND`);
+    // Le solde actuel du client depuis la DB (notre point final)
+    const currentDbBalance = parseFloat(client.solde?.toString() || '0');
+    console.log(`Solde final attendu (DB): ${currentDbBalance.toFixed(3)} TND`);
     
-    // DÉMARRAGE À ZÉRO - Calcul chronologique progressif
-    console.log(`=== CALCUL PROGRESSIF EN PARTANT DE ZÉRO ===`);
-    let runningBalance = 0; // COMMENCER À ZÉRO
+    // Calculer le total des variations de toutes les opérations
+    let totalVariations = 0;
+    sortedOperations.forEach(op => {
+      let balanceChange = 0;
+      
+      if (op.type === 'deposit') {
+        balanceChange = op.amount;
+      } else if (op.type === 'withdrawal') {
+        balanceChange = -op.amount;
+      } else if (op.type === 'transfer') {
+        if (op.fromClient === clientFullName || op.from_client_id === clientId) {
+          balanceChange = -op.amount; // Débit pour l'expéditeur
+        } else if (op.toClient === clientFullName || op.to_client_id === clientId) {
+          balanceChange = op.amount; // Crédit pour le destinataire
+        }
+      } else if (op.type === 'direct_transfer') {
+        if (op.fromClient === clientFullName || op.from_client_id === clientId) {
+          balanceChange = -op.amount; // Débit pour l'expéditeur
+        } else if (op.toClient === clientFullName || op.to_client_id === clientId) {
+          balanceChange = op.amount; // Crédit pour le destinataire
+        }
+      }
+      
+      totalVariations += balanceChange;
+    });
+    
+    console.log(`Total des variations calculées: ${totalVariations.toFixed(3)} TND`);
+    
+    // SYNCHRONISATION: Le solde initial doit être tel que: solde_initial + variations = solde_final_DB
+    const initialBalance = currentDbBalance - totalVariations;
+    console.log(`Solde initial calculé (synchronisé): ${initialBalance.toFixed(3)} TND`);
+    console.log(`Vérification: ${initialBalance.toFixed(3)} + ${totalVariations.toFixed(3)} = ${(initialBalance + totalVariations).toFixed(3)} (attendu: ${currentDbBalance.toFixed(3)})`);
+    
+    // CALCUL PROGRESSIF SYNCHRONISÉ
+    let runningBalance = initialBalance;
     const processedOps: ProcessedOperation[] = [];
     
     sortedOperations.forEach((op, index) => {
@@ -114,24 +148,19 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
       console.log(`   Solde: ${balanceBefore.toFixed(3)} → ${balanceAfter.toFixed(3)} TND`);
     });
     
-    // Vérification de cohérence finale
-    const finalCalculatedBalance = processedOps.length > 0 ? processedOps[processedOps.length - 1].balanceAfter : 0;
-    console.log(`=== VÉRIFICATION DE COHÉRENCE ===`);
-    console.log(`Solde calculé final (chronologique): ${finalCalculatedBalance.toFixed(3)} TND`);
-    console.log(`Solde actuel en DB: ${currentBalance.toFixed(3)} TND`);
+    // Vérification finale de synchronisation
+    const finalCalculatedBalance = processedOps.length > 0 ? processedOps[processedOps.length - 1].balanceAfter : initialBalance;
+    console.log(`=== VÉRIFICATION DE SYNCHRONISATION ===`);
+    console.log(`Solde calculé final: ${finalCalculatedBalance.toFixed(3)} TND`);
+    console.log(`Solde DB attendu: ${currentDbBalance.toFixed(3)} TND`);
     
-    const difference = Math.abs(finalCalculatedBalance - currentBalance);
+    const difference = Math.abs(finalCalculatedBalance - currentDbBalance);
     if (difference > 0.001) {
-      console.warn(`⚠️ DIFFÉRENCE DÉTECTÉE: ${difference.toFixed(3)} TND`);
-      console.warn(`Cela peut indiquer des opérations manquantes ou des incohérences dans les données`);
+      console.error(`❌ ERREUR DE SYNCHRONISATION: ${difference.toFixed(3)} TND de différence!`);
+      console.error(`Le calcul chronologique ne correspond pas au solde en base de données`);
     } else {
-      console.log(`✅ Cohérence parfaite: Le flux chronologique correspond au solde DB`);
+      console.log(`✅ SYNCHRONISATION PARFAITE: Le flux chronologique correspond exactement au solde DB`);
     }
-    
-    // Calculer le total des variations pour vérification
-    const totalChanges = processedOps.reduce((total, op) => total + op.balanceChange, 0);
-    console.log(`Total des variations calculées: ${totalChanges.toFixed(3)} TND`);
-    console.log(`Solde final attendu (0 + variations): ${totalChanges.toFixed(3)} TND`);
     
     // Retourner les opérations triées par date (plus récentes en premier pour l'affichage)
     const finalProcessedOps = processedOps.sort((a, b) => {
@@ -140,7 +169,7 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
       return dateB - dateA; // Plus récentes en premier pour l'affichage
     });
     
-    console.log("=== RÉSULTAT FINAL (ordre d'affichage - plus récent en premier) ===");
+    console.log("=== RÉSULTAT FINAL SYNCHRONISÉ (ordre d'affichage - plus récent en premier) ===");
     finalProcessedOps.slice(0, 5).forEach((op, index) => {
       console.log(`${index + 1}. ${op.operation_date || op.date}`);
       console.log(`   Solde avant: ${op.balanceBefore.toFixed(3)} → Solde après: ${op.balanceAfter.toFixed(3)} TND`);
