@@ -28,7 +28,7 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
     const clientFullName = `${client.prenom} ${client.nom}`.trim();
     const clientId = typeof client.id === 'string' ? parseInt(client.id) : client.id;
     
-    console.log("=== CALCUL FLUX UNIFORME POUR TOUS CLIENTS ===");
+    console.log("=== CALCUL FLUX CHRONOLOGIQUE CORRIGÉ ===");
     console.log(`Client: ${clientFullName} (ID: ${clientId})`);
     console.log(`Total operations to process: ${operations.length}`);
     
@@ -44,7 +44,7 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
                      matchesFromClientName || matchesToClientName;
       
       if (matches) {
-        console.log(`Operation matches client: ID ${op.id}, type: ${op.type}, amount: ${op.amount}`);
+        console.log(`Operation matches client: ID ${op.id}, type: ${op.type}, amount: ${op.amount}, date: ${op.operation_date || op.date}`);
       }
       
       return matches;
@@ -57,14 +57,23 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
       return [];
     }
     
-    // Trier les opérations par date (plus anciennes en premier pour calcul chronologique)
+    // Trier les opérations par date chronologique (plus anciennes en premier)
     const sortedOperations = [...clientOperations].sort((a, b) => {
       const dateA = new Date(a.operation_date || a.date).getTime();
       const dateB = new Date(b.operation_date || b.date).getTime();
       return dateA - dateB;
     });
     
-    // Calculer le solde actuel du client à partir de toutes ses opérations
+    console.log("Operations triées par ordre chronologique:");
+    sortedOperations.forEach((op, index) => {
+      console.log(`${index + 1}. ${op.operation_date || op.date} - ${op.type} - ${op.amount} TND`);
+    });
+    
+    // Le solde actuel du client (fin de toutes les opérations)
+    const currentBalance = client.solde || 0;
+    console.log(`Solde actuel du client: ${currentBalance} TND`);
+    
+    // Calculer le solde initial en partant du solde actuel et en remontant chronologiquement
     let totalChange = 0;
     sortedOperations.forEach(op => {
       let balanceChange = 0;
@@ -90,16 +99,14 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
       totalChange += balanceChange;
     });
     
-    // Le solde actuel est le solde du client dans la base
-    const currentBalance = client.solde || 0;
     // Le solde initial est le solde actuel moins tous les changements
     const initialBalance = currentBalance - totalChange;
     
-    console.log(`Initial balance calculated: ${initialBalance}`);
-    console.log(`Current balance: ${currentBalance}`);
-    console.log(`Total change from operations: ${totalChange}`);
+    console.log(`Solde initial calculé: ${initialBalance} TND`);
+    console.log(`Changement total des opérations: ${totalChange} TND`);
+    console.log(`Vérification: ${initialBalance} + ${totalChange} = ${initialBalance + totalChange} (doit égaler ${currentBalance})`);
     
-    // Traiter chaque opération chronologiquement pour calculer les soldes progressifs
+    // Calculer les soldes progressifs dans l'ordre chronologique
     let runningBalance = initialBalance;
     const processedOps: ProcessedOperation[] = [];
     
@@ -137,15 +144,20 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
       
       processedOps.push(processedOp);
       
-      console.log(`Operation ${index + 1}: ${op.type} - ${op.amount} - Balance: ${balanceBefore} -> ${balanceAfter}`);
+      console.log(`${index + 1}. ${op.operation_date || op.date} - ${op.type} - Change: ${balanceChange >= 0 ? '+' : ''}${balanceChange} - Solde: ${balanceBefore} → ${balanceAfter} TND`);
     });
     
     // Retourner les opérations triées par date (plus récentes en premier pour l'affichage)
-    // IMPORTANT: Les soldes sont maintenant calculés correctement dans l'ordre chronologique
+    // Les soldes sont maintenant calculés correctement dans l'ordre chronologique
     const finalProcessedOps = processedOps.sort((a, b) => {
       const dateA = new Date(a.operation_date || a.date).getTime();
       const dateB = new Date(b.operation_date || b.date).getTime();
       return dateB - dateA; // Plus récentes en premier pour l'affichage
+    });
+    
+    console.log("=== RÉSULTAT FINAL (ordre d'affichage - plus récent en premier) ===");
+    finalProcessedOps.forEach((op, index) => {
+      console.log(`${index + 1}. ${op.operation_date || op.date} - Solde avant: ${op.balanceBefore} → Solde après: ${op.balanceAfter} TND`);
     });
     
     console.log(`Final processed operations: ${finalProcessedOps.length}`);
