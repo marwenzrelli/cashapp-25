@@ -5,7 +5,6 @@ import { WithdrawalOperationsTab } from "./WithdrawalOperationsTab";
 import { TransferOperationsTab } from "./TransferOperationsTab";
 import { DirectOperationsTab } from "./DirectOperationsTab";
 import { Operation } from "@/features/operations/types";
-import { cn } from "@/lib/utils";
 
 interface ClientOperationsHistoryTabsProps {
   filteredOperations: Operation[];
@@ -34,46 +33,31 @@ export const ClientOperationsHistoryTabs = ({
       <TabsList className="grid w-full grid-cols-5">
         <TabsTrigger 
           value="all"
-          className={cn(
-            "data-[state=active]:bg-gray-100 data-[state=active]:text-gray-800",
-            "hover:bg-gray-50"
-          )}
+          className="bg-gray-100 text-gray-800 data-[state=active]:bg-gray-200"
         >
           Toutes
         </TabsTrigger>
         <TabsTrigger 
           value="deposits"
-          className={cn(
-            "data-[state=active]:bg-green-100 data-[state=active]:text-green-800",
-            "hover:bg-green-50"
-          )}
+          className="bg-green-100 text-green-800 data-[state=active]:bg-green-200"
         >
           Dépôts
         </TabsTrigger>
         <TabsTrigger 
           value="withdrawals"
-          className={cn(
-            "data-[state=active]:bg-red-100 data-[state=active]:text-red-800",
-            "hover:bg-red-50"
-          )}
+          className="bg-red-100 text-red-800 data-[state=active]:bg-red-200"
         >
           Retraits
         </TabsTrigger>
         <TabsTrigger 
           value="transfers"
-          className={cn(
-            "data-[state=active]:bg-blue-100 data-[state=active]:text-blue-800",
-            "hover:bg-blue-50"
-          )}
+          className="bg-blue-100 text-blue-800 data-[state=active]:bg-blue-200"
         >
           Transferts
         </TabsTrigger>
         <TabsTrigger 
           value="direct"
-          className={cn(
-            "data-[state=active]:bg-purple-100 data-[state=active]:text-purple-800",
-            "hover:bg-purple-50"
-          )}
+          className="bg-purple-100 text-purple-800 data-[state=active]:bg-purple-200"
         >
           Directes
         </TabsTrigger>
