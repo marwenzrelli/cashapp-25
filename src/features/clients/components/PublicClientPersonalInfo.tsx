@@ -1,4 +1,5 @@
 
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Client } from "../types";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -115,7 +116,7 @@ export const PublicClientPersonalInfo = ({
   const formattedBalance = formatCurrency(effectiveBalance);
   
   return <Card className="backdrop-blur-xl bg-white/50 dark:bg-gray-950/50 w-full rounded-lg border">
-      <CardHeader className="pb-4 space-y-0">
+      <CardHeader className="space-y-0">
         <CardTitle className="text-lg sm:text-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <span className="text-base sm:text-lg">Informations personnelles</span>
           <ClientIdBadge clientId={client.id} />
@@ -163,3 +164,4 @@ export const PublicClientPersonalInfo = ({
       </CardContent>
     </Card>;
 };
+
