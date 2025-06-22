@@ -68,6 +68,17 @@ export default function ClientProfile() {
     return false;
   };
 
+  // Wrapper function to match the expected return type
+  const refreshClientOperationsWrapper = async (): Promise<boolean> => {
+    try {
+      await refreshClientOperations();
+      return true;
+    } catch (error) {
+      console.error("Error refreshing client operations:", error);
+      return false;
+    }
+  };
+
   return (
     <div className="flex justify-center w-full">
       <div className="p-4 md:p-6 space-y-6 max-w-7xl w-full">
@@ -110,7 +121,7 @@ export default function ClientProfile() {
               setIsCustomRange={setIsCustomRange} 
               showAllDates={showAllDates} 
               setShowAllDates={setShowAllDates} 
-              refreshClientOperations={refreshClientOperations} 
+              refreshClientOperations={refreshClientOperationsWrapper} 
               isPepsiMen={isPepsiMen}
               updateOperation={updateOperation}
             />
