@@ -30,16 +30,16 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
     
     console.log("=== FLUX DE COMPTE SIMPLE ===");
     console.log(`Client: ${clientFullName} (ID: ${clientId})`);
-    console.log(`Solde actuel en DB: ${client.solde} TND`);
     console.log(`Total opérations reçues: ${operations.length}`);
     
     // Filtrer UNIQUEMENT les dépôts et retraits pour ce client
     const clientOperations = operations.filter(op => {
       const matchesClientId = op.client_id === clientId;
-      const matchesClientName = op.client_name === clientFullName;
+      const matchesFromClient = op.fromClient === clientFullName;
+      const matchesToClient = op.toClient === clientFullName;
       const isDepositOrWithdrawal = op.type === 'deposit' || op.type === 'withdrawal';
       
-      return (matchesClientId || matchesClientName) && isDepositOrWithdrawal;
+      return (matchesClientId || matchesFromClient || matchesToClient) && isDepositOrWithdrawal;
     });
     
     console.log(`Opérations dépôts/retraits filtrées: ${clientOperations.length}`);
