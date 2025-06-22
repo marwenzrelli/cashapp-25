@@ -134,39 +134,44 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
                     </TableCell>
                   </TableRow>
                 ) : (
-                  processedOperations.map((op, index) => (
-                    <TableRow 
-                      key={op.id} 
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => handleRowClick(op)}
-                    >
-                      <TableCell className="text-center font-medium text-muted-foreground">
-                        {index + 1}
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {formatDateTime(op.operation_date || op.date)}
-                      </TableCell>
-                      <TableCell>{op.id.toString().split('-')[1] || op.id}</TableCell>
-                      <TableCell>
-                        <Badge className={`${getTypeStyle(op.type)} flex w-fit items-center gap-1`}>
-                          {getTypeIcon(op.type)}
-                          {getTypeLabel(op.type)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="max-w-[200px] truncate">
-                        {op.description || "-"}
-                      </TableCell>
-                      <TableCell className={`text-right ${getBalanceClass(op.balanceBefore)}`}>
-                        {formatAmount(op.balanceBefore)} TND
-                      </TableCell>
-                      <TableCell className={`text-right ${getAmountClassForOperation(op)}`}>
-                        {getAmountDisplay(op)}
-                      </TableCell>
-                      <TableCell className={`text-right font-semibold ${getBalanceClass(op.balanceAfter)}`}>
-                        {formatAmount(op.balanceAfter)} TND
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  processedOperations.map((op, index) => {
+                    // Calculer le numéro chronologique (inverse de l'index d'affichage)
+                    const chronologicalNumber = processedOperations.length - index;
+                    
+                    return (
+                      <TableRow 
+                        key={op.id} 
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => handleRowClick(op)}
+                      >
+                        <TableCell className="text-center font-medium text-muted-foreground">
+                          {chronologicalNumber}
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {formatDateTime(op.operation_date || op.date)}
+                        </TableCell>
+                        <TableCell>{op.id.toString().split('-')[1] || op.id}</TableCell>
+                        <TableCell>
+                          <Badge className={`${getTypeStyle(op.type)} flex w-fit items-center gap-1`}>
+                            {getTypeIcon(op.type)}
+                            {getTypeLabel(op.type)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="max-w-[200px] truncate">
+                          {op.description || "-"}
+                        </TableCell>
+                        <TableCell className={`text-right ${getBalanceClass(op.balanceBefore)}`}>
+                          {formatAmount(op.balanceBefore)} TND
+                        </TableCell>
+                        <TableCell className={`text-right ${getAmountClassForOperation(op)}`}>
+                          {getAmountDisplay(op)}
+                        </TableCell>
+                        <TableCell className={`text-right font-semibold ${getBalanceClass(op.balanceAfter)}`}>
+                          {formatAmount(op.balanceAfter)} TND
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>
