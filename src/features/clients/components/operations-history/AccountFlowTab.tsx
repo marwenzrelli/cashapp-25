@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Operation } from "@/features/operations/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -19,7 +18,7 @@ interface AccountFlowTabProps {
 }
 
 export const AccountFlowTab = ({ operations, updateOperation, clientId }: AccountFlowTabProps) => {
-  const { clients, isLoading: clientsLoading } = useClients();
+  const { clients, loading: clientsLoading } = useClients();
   const [selectedOperation, setSelectedOperation] = useState<Operation | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
