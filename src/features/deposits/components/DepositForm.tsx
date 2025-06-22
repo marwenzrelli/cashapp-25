@@ -48,6 +48,17 @@ export const StandaloneDepositForm: React.FC<StandaloneDepositFormProps> = ({
 
   // Find the selected client to display their balance
   const selectedClientData = clients.find(client => client.id.toString() === selectedClient);
+  
+  // Check if we have only one client (specific client context)
+  const isSpecificClient = clients.length === 1;
+  const singleClient = isSpecificClient ? clients[0] : null;
+
+  // Auto-select the single client if we're in specific client context
+  React.useEffect(() => {
+    if (isSpecificClient && singleClient && !selectedClient) {
+      setSelectedClient(singleClient.id.toString());
+    }
+  }, [isSpecificClient, singleClient, selectedClient, setSelectedClient]);
 
   return (
     <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-100 shadow-md">
@@ -56,7 +67,10 @@ export const StandaloneDepositForm: React.FC<StandaloneDepositFormProps> = ({
           <div>
             <CardTitle className="text-base text-green-700">Nouveau versement</CardTitle>
             <CardDescription>
-              Effectuez un versement pour un client
+              {isSpecificClient && singleClient 
+                ? `Effectuez un versement pour ${singleClient.prenom} ${singleClient.nom}`
+                : "Effectuez un versement pour un client"
+              }
             </CardDescription>
           </div>
           {onCancel && (
@@ -74,48 +88,73 @@ export const StandaloneDepositForm: React.FC<StandaloneDepositFormProps> = ({
       
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="client">Client</Label>
-            <Select 
-              value={selectedClient} 
-              onValueChange={setSelectedClient}
-            >
-              <SelectTrigger id="client" className={isMobile ? "h-16 text-base" : ""}>
-                <SelectValue placeholder="Sélectionner un client" />
-              </SelectTrigger>
-              <SelectContent>
-                {clients.map(client => (
-                  <SelectItem key={client.id.toString()} value={client.id.toString()}>
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-2">
-                        <UserCircle className="h-4 w-4 text-primary/50" />
-                        <span>{client.prenom} {client.nom}</span>
+          {/* Only show client selection if we have multiple clients */}
+          {!isSpecificClient && (
+            <div className="space-y-2">
+              <Label htmlFor="client">Client</Label>
+              <Select 
+                value={selectedClient} 
+                onValueChange={setSelectedClient}
+              >
+                <SelectTrigger id="client" className={isMobile ? "h-16 text-base" : ""}>
+                  <SelectValue placeholder="Sélectionner un client" />
+                </SelectTrigger>
+                <SelectContent>
+                  {clients.map(client => (
+                    <SelectItem key={client.id.toString()} value={client.id.toString()}>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <UserCircle className="h-4 w-4 text-primary/50" />
+                          <span>{client.prenom} {client.nom}</span>
+                        </div>
+                        <span className={`text-xs ${
+                          client.solde >= 0 
+                            ? "text-green-600 dark:text-green-400" 
+                            : "text-red-600 dark:text-red-400"
+                        }`}>
+                          Solde: {client.solde.toLocaleString()} {currency}
+                        </span>
                       </div>
-                      <span className={`text-xs ${
-                        client.solde >= 0 
-                          ? "text-green-600 dark:text-green-400" 
-                          : "text-red-600 dark:text-red-400"
-                      }`}>
-                        Solde: {client.solde.toLocaleString()} {currency}
-                      </span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            {selectedClientData && (
-              <div className="mt-2 px-3 py-2 rounded-md bg-blue-50 dark:bg-blue-900/20">
-                <span className={`text-sm font-medium ${
-                  selectedClientData.solde >= 0 
-                    ? "text-green-600 dark:text-green-400" 
-                    : "text-red-600 dark:text-red-400"
-                }`}>
-                  Solde actuel: {selectedClientData.solde.toLocaleString()} {currency}
-                </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* Show client info for specific client context */}
+          {isSpecificClient && singleClient && (
+            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+              <div className="flex items-center gap-3">
+                <UserCircle className="h-8 w-8 text-blue-600" />
+                <div>
+                  <h3 className="font-medium text-blue-900 dark:text-blue-100">
+                    {singleClient.prenom} {singleClient.nom}
+                  </h3>
+                  <p className={`text-sm font-medium ${
+                    singleClient.solde >= 0 
+                      ? "text-green-600 dark:text-green-400" 
+                      : "text-red-600 dark:text-red-400"
+                  }`}>
+                    Solde actuel: {singleClient.solde.toLocaleString()} {currency}
+                  </p>
+                </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
+          
+          {/* Show balance info for multi-client context */}
+          {!isSpecificClient && selectedClientData && (
+            <div className="mt-2 px-3 py-2 rounded-md bg-blue-50 dark:bg-blue-900/20">
+              <span className={`text-sm font-medium ${
+                selectedClientData.solde >= 0 
+                  ? "text-green-600 dark:text-green-400" 
+                  : "text-red-600 dark:text-red-400"
+              }`}>
+                Solde actuel: {selectedClientData.solde.toLocaleString()} {currency}
+              </span>
+            </div>
+          )}
           
           <div className="space-y-2">
             <Label htmlFor="amount">Montant (TND)</Label>
