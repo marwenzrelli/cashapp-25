@@ -23,7 +23,7 @@ export const PublicOperationsTabs = ({ operations, client }: PublicOperationsTab
         </TabsTrigger>
         <TabsTrigger value="flow" className="flex items-center gap-2 py-3 px-4 text-sm">
           <TrendingUp className="h-4 w-4" />
-          Aperçu <span className="hidden sm:inline">public</span>
+          Flux de <span className="hidden sm:inline">compte</span>
         </TabsTrigger>
       </TabsList>
       
