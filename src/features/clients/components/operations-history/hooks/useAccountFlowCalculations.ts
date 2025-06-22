@@ -64,11 +64,7 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
       return dateA - dateB;
     });
     
-    // Calculer les soldes progressifs
-    let currentBalance = client.solde || 0;
-    const processedOps: ProcessedOperation[] = [];
-    
-    // Calculer le solde initial (avant toutes les opérations)
+    // Calculer le solde actuel du client à partir de toutes ses opérations
     let totalChange = 0;
     sortedOperations.forEach(op => {
       let balanceChange = 0;
@@ -94,15 +90,19 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
       totalChange += balanceChange;
     });
     
+    // Le solde actuel est le solde du client dans la base
+    const currentBalance = client.solde || 0;
     // Le solde initial est le solde actuel moins tous les changements
-    let initialBalance = currentBalance - totalChange;
-    let runningBalance = initialBalance;
+    const initialBalance = currentBalance - totalChange;
     
     console.log(`Initial balance calculated: ${initialBalance}`);
     console.log(`Current balance: ${currentBalance}`);
     console.log(`Total change from operations: ${totalChange}`);
     
-    // Traiter chaque opération chronologiquement
+    // Traiter chaque opération chronologiquement pour calculer les soldes progressifs
+    let runningBalance = initialBalance;
+    const processedOps: ProcessedOperation[] = [];
+    
     sortedOperations.forEach((op, index) => {
       let balanceChange = 0;
       
@@ -141,10 +141,11 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
     });
     
     // Retourner les opérations triées par date (plus récentes en premier pour l'affichage)
+    // IMPORTANT: Les soldes sont maintenant calculés correctement dans l'ordre chronologique
     const finalProcessedOps = processedOps.sort((a, b) => {
       const dateA = new Date(a.operation_date || a.date).getTime();
       const dateB = new Date(b.operation_date || b.date).getTime();
-      return dateB - dateA;
+      return dateB - dateA; // Plus récentes en premier pour l'affichage
     });
     
     console.log(`Final processed operations: ${finalProcessedOps.length}`);
