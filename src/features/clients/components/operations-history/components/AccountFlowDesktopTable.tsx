@@ -67,17 +67,17 @@ export const AccountFlowDesktopTable = ({
   };
 
   return (
-    <div className="hidden md:block">
-      <CardContent className="p-0">
-        <div className="overflow-x-auto">
-          <Table>
+    <div className="hidden md:block w-full">
+      <CardContent className="p-0 w-full">
+        <div className="w-full">
+          <Table className="w-full">
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[60px] text-center">#</TableHead>
                 <TableHead className="w-[120px]">Date</TableHead>
                 <TableHead className="w-[100px]">ID</TableHead>
                 <TableHead className="w-[120px]">Type</TableHead>
-                <TableHead>Description</TableHead>
+                <TableHead className="min-w-[200px]">Description</TableHead>
                 <TableHead className="w-[150px] text-right">Solde avant</TableHead>
                 <TableHead className="w-[120px] text-right">Montant</TableHead>
                 <TableHead className="w-[150px] text-right">Solde après</TableHead>
@@ -116,7 +116,7 @@ export const AccountFlowDesktopTable = ({
                           {getTypeLabel(op.type)}
                         </Badge>
                       </TableCell>
-                      <TableCell className="max-w-[200px] truncate">
+                      <TableCell className="truncate">
                         {op.description || "-"}
                       </TableCell>
                       <TableCell className={`text-right ${getBalanceClass(op.balanceBefore)}`}>

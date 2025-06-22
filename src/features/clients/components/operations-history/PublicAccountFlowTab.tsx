@@ -30,7 +30,7 @@ export const PublicAccountFlowTab = ({
 
   if (isLoading) {
     return (
-      <Card className="mt-4">
+      <Card className="mt-4 w-full">
         <div className="p-4 space-y-3">
           <div className="flex items-center space-x-2">
             <Skeleton className="h-4 w-4" />
@@ -47,16 +47,18 @@ export const PublicAccountFlowTab = ({
   }
 
   return (
-    <Card className="mt-4">
-      <AccountFlowMobileView 
-        operations={processedOperations} 
-        isPublicView={true} 
-      />
-      <AccountFlowDesktopTable 
-        processedOperations={processedOperations} 
-        clientFullName={clientFullName}
-        isPublicView={true}
-      />
-    </Card>
+    <div className="mt-4 w-full">
+      <Card className="w-full">
+        <AccountFlowMobileView 
+          operations={processedOperations} 
+          isPublicView={true} 
+        />
+        <AccountFlowDesktopTable 
+          processedOperations={processedOperations} 
+          clientFullName={clientFullName}
+          isPublicView={true}
+        />
+      </Card>
+    </div>
   );
 };
