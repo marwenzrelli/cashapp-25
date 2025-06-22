@@ -15,8 +15,13 @@ interface UseAccountFlowCalculationsProps {
 
 export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlowCalculationsProps) => {
   const processedOperations = useMemo(() => {
-    if (!client || !operations || operations.length === 0) {
-      console.log("AccountFlowCalculations - No client or operations available");
+    if (!operations || operations.length === 0) {
+      console.log("AccountFlowCalculations - No operations available");
+      return [];
+    }
+    
+    if (!client) {
+      console.log("AccountFlowCalculations - No client available");
       return [];
     }
     
@@ -35,14 +40,20 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
       const matchesFromClientName = op.fromClient === clientFullName;
       const matchesToClientName = op.toClient === clientFullName;
       
-      return matchesClientId || matchesFromClientId || matchesToClientId || 
-             matchesFromClientName || matchesToClientName;
+      const matches = matchesClientId || matchesFromClientId || matchesToClientId || 
+                     matchesFromClientName || matchesToClientName;
+      
+      if (matches) {
+        console.log(`Operation matches client: ID ${op.id}, type: ${op.type}, amount: ${op.amount}`);
+      }
+      
+      return matches;
     });
     
     console.log(`Filtered client operations: ${clientOperations.length}`);
     
     if (clientOperations.length === 0) {
-      console.log("No operations found for this client");
+      console.log("No operations found for this client after filtering");
       return [];
     }
     

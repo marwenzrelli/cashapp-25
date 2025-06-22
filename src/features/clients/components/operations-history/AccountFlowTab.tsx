@@ -22,16 +22,28 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
   const [selectedOperation, setSelectedOperation] = useState<Operation | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
+  console.log(`AccountFlowTab - Processing ${operations.length} operations for client ${clientId}`);
+  console.log(`Available clients:`, clients?.map(c => ({ id: c.id, name: `${c.prenom} ${c.nom}` })));
+
   // Get current client
   const currentClient = clients?.find(c => c.id === clientId);
 
-  console.log(`AccountFlowTab - Processing ${operations.length} operations for client ${clientId}`);
   console.log(`Current client found:`, currentClient ? `${currentClient.prenom} ${currentClient.nom}` : 'Not found');
+
+  // If client is not found in the clients list, create a minimal client object for calculations
+  const clientForCalculations = currentClient || {
+    id: clientId,
+    prenom: "Client",
+    nom: `#${clientId}`,
+    solde: 0 // We'll calculate the real balance from operations
+  };
+
+  console.log(`Using client for calculations:`, clientForCalculations);
 
   // Use the unified calculation logic
   const processedOperations = useAccountFlowCalculations({ 
     operations, 
-    client: currentClient 
+    client: clientForCalculations 
   });
 
   console.log(`AccountFlowTab - Processed operations: ${processedOperations.length}`);
@@ -83,14 +95,6 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
     return "text-gray-600 dark:text-gray-400";
   };
 
-  if (!currentClient) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-muted-foreground">Client non trouvé</p>
-      </div>
-    );
-  }
-
   return (
     <>
       {/* Mobile view */}
@@ -119,7 +123,13 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
                 {processedOperations.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="h-24 text-center">
-                      Aucune opération trouvée pour ce client
+                      {!currentClient ? (
+                        <div className="text-orange-600">
+                          Client non trouvé (ID: {clientId}). Vérifiez que le client existe.
+                        </div>
+                      ) : (
+                        "Aucune opération trouvée pour ce client"
+                      )}
                     </TableCell>
                   </TableRow>
                 ) : (
