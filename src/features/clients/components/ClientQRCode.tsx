@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import { Card } from '@/components/ui/card';
@@ -7,13 +6,11 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-
 interface ClientQRCodeProps {
   clientId: number;
   clientName: string;
   size?: number;
 }
-
 export const ClientQRCode = ({
   clientId,
   clientName,
@@ -28,7 +25,6 @@ export const ClientQRCode = ({
   const [userRole, setUserRole] = useState<string | null>(null);
   const [hasAccess, setHasAccess] = useState(false);
   const [roleCheckError, setRoleCheckError] = useState(false);
-
   useEffect(() => {
     supabase.auth.getSession().then(({
       data: {
@@ -52,7 +48,6 @@ export const ClientQRCode = ({
     });
     return () => subscription.unsubscribe();
   }, [navigate]);
-
   useEffect(() => {
     const checkUserRole = async () => {
       if (!session) return;
@@ -79,13 +74,11 @@ export const ClientQRCode = ({
     };
     checkUserRole();
   }, [session]);
-
   const generateQRAccess = async () => {
     if (!session || !hasAccess) return;
     try {
       setIsLoading(true);
       console.log("Starting QR code generation for client ID:", clientId);
-
       const {
         data: existingTokens,
         error: fetchError
@@ -98,7 +91,6 @@ export const ClientQRCode = ({
         return;
       }
       console.log("Existing tokens found:", existingTokens?.length || 0);
-
       if (existingTokens && existingTokens.length > 0) {
         tokenToUse = existingTokens[0].access_token;
         console.log("Using existing token:", tokenToUse);
@@ -150,13 +142,11 @@ export const ClientQRCode = ({
       setIsLoading(false);
     }
   };
-
   useEffect(() => {
     if (session && hasAccess) {
       generateQRAccess();
     }
   }, [clientId, session, hasAccess]);
-
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(qrUrl);
@@ -167,7 +157,6 @@ export const ClientQRCode = ({
       toast.error("Impossible de copier le lien.");
     }
   };
-
   const handleOpenLink = () => {
     if (qrUrl) {
       window.open(qrUrl, '_blank');
@@ -175,36 +164,27 @@ export const ClientQRCode = ({
       toast.error("Le lien n'est pas encore disponible.");
     }
   };
-
   const handleRegenerateQR = () => {
     generateQRAccess();
   };
-
   if (!session) {
     return null;
   }
-
   if (!hasAccess && !roleCheckError) {
     return null;
   }
-
-  return (
-    <div className="flex flex-col space-y-4">
+  return <div className="flex flex-col space-y-4">
       {/* QR Code Frame */}
-      <Card className="p-4 bg-gradient-to-br from-violet-100 to-purple-50 shadow-lg border-purple-200 hover:shadow-xl transition-all w-full">
+      <Card className="p-4 bg-gradient-to-br from-violet-100 to-purple-50 shadow-lg border-purple-200 hover:shadow-xl transition-all w-full mx-px px-[62px]">
         <div className="bg-white p-3 rounded-2xl shadow-inner relative w-full max-w-[200px] mx-auto">
-          {isLoading ? (
-            <div className="absolute inset-0 flex items-center justify-center bg-white/90 backdrop-blur-sm rounded-2xl z-10">
+          {isLoading ? <div className="absolute inset-0 flex items-center justify-center bg-white/90 backdrop-blur-sm rounded-2xl z-10">
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-violet-500 border-t-transparent" />
-            </div>
-          ) : !accessToken ? (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/90 backdrop-blur-sm rounded-2xl z-10">
+            </div> : !accessToken ? <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/90 backdrop-blur-sm rounded-2xl z-10">
               <div className="h-8 w-8 text-violet-300 mb-2 rounded border-2 border-violet-300" />
               <p className="text-sm text-violet-500 text-center font-medium">
                 Chargement du QR code...
               </p>
-            </div>
-          ) : null}
+            </div> : null}
           <div className="p-2 rounded-xl bg-gradient-to-br from-violet-100 to-purple-50 flex justify-center">
             <canvas ref={canvasRef} className="rounded-lg" />
           </div>
@@ -231,6 +211,5 @@ export const ClientQRCode = ({
           <span className="text-xs">Refresh</span>
         </Button>
       </div>
-    </div>
-  );
+    </div>;
 };
