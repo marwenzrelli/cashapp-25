@@ -72,6 +72,9 @@ export const ClientPersonalInfo = ({
             <div>
               <label className="text-sm font-medium text-gray-500">Solde actuel</label>
               <p className="text-2xl font-bold text-primary">{formatAmount(client.solde)}</p>
+              <p className="text-xs text-gray-400 mt-1">
+                Mis à jour le {new Date().toLocaleDateString('fr-FR')} à {new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+              </p>
             </div>
             <div>
               <label className="text-sm font-medium text-gray-500">Date de création</label>
