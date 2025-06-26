@@ -71,7 +71,7 @@ export const ClientPersonalInfo = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-gray-500">Solde actuel</label>
-              <p className="text-2xl font-bold text-primary">{formatAmount(client.solde)} TND</p>
+              <p className="text-2xl font-bold text-primary">{formatAmount(client.solde)}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-gray-500">Date de création</label>
@@ -87,11 +87,11 @@ export const ClientPersonalInfo = ({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-green-50 p-4 rounded-lg">
                 <label className="text-sm font-medium text-green-600">Total versements</label>
-                <p className="text-xl font-bold text-green-700">{formatAmount(totalDeposits)} TND</p>
+                <p className="text-xl font-bold text-green-700">{formatAmount(totalDeposits)}</p>
               </div>
               <div className="bg-red-50 p-4 rounded-lg">
                 <label className="text-sm font-medium text-red-600">Total retraits</label>
-                <p className="text-xl font-bold text-red-700">{formatAmount(totalWithdrawals)} TND</p>
+                <p className="text-xl font-bold text-red-700">{formatAmount(totalWithdrawals)}</p>
               </div>
               <div className="bg-blue-50 p-4 rounded-lg">
                 <label className="text-sm font-medium text-blue-600">Nombre d'opérations</label>
