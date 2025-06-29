@@ -29,16 +29,19 @@ export function DatePickerWithRange({
 }: DatePickerWithRangeProps) {
   const [fromTime, setFromTime] = React.useState("00:00");
   const [toTime, setToTime] = React.useState("23:59");
+  const [hasUserModifiedTimes, setHasUserModifiedTimes] = React.useState(false);
 
-  // Initialize times from existing dates
+  // Initialize times from existing dates only if user hasn't modified them
   React.useEffect(() => {
-    if (date?.from) {
-      setFromTime(format(date.from, "HH:mm"));
+    if (!hasUserModifiedTimes) {
+      if (date?.from) {
+        setFromTime(format(date.from, "HH:mm"));
+      }
+      if (date?.to) {
+        setToTime(format(date.to, "HH:mm"));
+      }
     }
-    if (date?.to) {
-      setToTime(format(date.to, "HH:mm"));
-    }
-  }, [date]);
+  }, [date, hasUserModifiedTimes]);
 
   const handleDateSelect = (selectedDate: DateRange | undefined) => {
     if (!selectedDate) {
@@ -79,6 +82,8 @@ export function DatePickerWithRange({
   };
 
   const handleTimeChange = (timeType: 'from' | 'to', newTime: string) => {
+    setHasUserModifiedTimes(true);
+    
     if (timeType === 'from') {
       setFromTime(newTime);
     } else {
