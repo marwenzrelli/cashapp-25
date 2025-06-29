@@ -46,27 +46,31 @@ export function DatePickerWithRange({
       return;
     }
 
+    updateDateRangeWithTimes(selectedDate, fromTime, toTime);
+  };
+
+  const updateDateRangeWithTimes = (dateRange: DateRange, startTime: string, endTime: string) => {
     const updatedRange: DateRange = {
       from: undefined,
       to: undefined
     };
 
-    if (selectedDate.from) {
-      const [fromHours, fromMinutes] = fromTime.split(':').map(Number);
-      const fromDate = new Date(selectedDate.from);
+    if (dateRange.from) {
+      const [fromHours, fromMinutes] = startTime.split(':').map(Number);
+      const fromDate = new Date(dateRange.from);
       fromDate.setHours(fromHours, fromMinutes, 0, 0);
       updatedRange.from = fromDate;
     }
 
-    if (selectedDate.to) {
-      const [toHours, toMinutes] = toTime.split(':').map(Number);
-      const toDate = new Date(selectedDate.to);
+    if (dateRange.to) {
+      const [toHours, toMinutes] = endTime.split(':').map(Number);
+      const toDate = new Date(dateRange.to);
       toDate.setHours(toHours, toMinutes, 59, 999);
       updatedRange.to = toDate;
-    } else if (selectedDate.from && !selectedDate.to) {
+    } else if (dateRange.from && !dateRange.to) {
       // If only from date is selected, set to same date with end time
-      const [toHours, toMinutes] = toTime.split(':').map(Number);
-      const toDate = new Date(selectedDate.from);
+      const [toHours, toMinutes] = endTime.split(':').map(Number);
+      const toDate = new Date(dateRange.from);
       toDate.setHours(toHours, toMinutes, 59, 999);
       updatedRange.to = toDate;
     }
@@ -81,25 +85,12 @@ export function DatePickerWithRange({
       setToTime(newTime);
     }
 
-    // Update the date range with new time
-    if (date) {
-      const updatedRange: DateRange = { ...date };
-
-      if (timeType === 'from' && date.from) {
-        const [hours, minutes] = newTime.split(':').map(Number);
-        const newFromDate = new Date(date.from);
-        newFromDate.setHours(hours, minutes, 0, 0);
-        updatedRange.from = newFromDate;
-      }
-
-      if (timeType === 'to' && date.to) {
-        const [hours, minutes] = newTime.split(':').map(Number);
-        const newToDate = new Date(date.to);
-        newToDate.setHours(hours, minutes, 59, 999);
-        updatedRange.to = newToDate;
-      }
-
-      onDateChange(updatedRange);
+    // Apply the time change immediately if we have a date range
+    if (date?.from) {
+      const currentStartTime = timeType === 'from' ? newTime : fromTime;
+      const currentEndTime = timeType === 'to' ? newTime : toTime;
+      
+      updateDateRangeWithTimes(date, currentStartTime, currentEndTime);
     }
   };
 
