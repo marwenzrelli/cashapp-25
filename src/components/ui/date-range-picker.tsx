@@ -46,7 +46,10 @@ export function DatePickerWithRange({
       return;
     }
 
-    const updatedRange: DateRange = {};
+    const updatedRange: DateRange = {
+      from: undefined,
+      to: undefined
+    };
 
     if (selectedDate.from) {
       const [fromHours, fromMinutes] = fromTime.split(':').map(Number);
