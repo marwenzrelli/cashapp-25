@@ -25,6 +25,22 @@ interface AccountFlowDesktopTableProps {
   isPublicView?: boolean;
 }
 
+// Helper function to get the text color based on operation type
+const getOperationNumberColor = (type: string): string => {
+  switch (type) {
+    case 'deposit':
+      return "text-green-600 dark:text-green-400";
+    case 'withdrawal':
+      return "text-red-600 dark:text-red-400";
+    case 'transfer':
+      return "text-blue-600 dark:text-blue-400";
+    case 'direct_transfer':
+      return "text-purple-600 dark:text-purple-400";
+    default:
+      return "text-muted-foreground";
+  }
+};
+
 export const AccountFlowDesktopTable = ({ 
   processedOperations, 
   clientFullName,
@@ -103,7 +119,7 @@ export const AccountFlowDesktopTable = ({
                   
                   return (
                     <TableRow key={`${op.id}-${index}`} className="hover:bg-muted/50">
-                      <TableCell className="text-center font-medium text-muted-foreground">
+                      <TableCell className={`text-center font-medium ${getOperationNumberColor(op.type)}`}>
                         {chronologicalNumber}
                       </TableCell>
                       <TableCell className="font-medium">
