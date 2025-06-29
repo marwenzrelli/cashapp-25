@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Client } from '@/features/clients/types';
 import { Operation } from '@/features/operations/types';
-import { addDays, subDays, startOfDay, endOfDay, isWithinInterval } from 'date-fns';
+import { addDays, subDays, isWithinInterval } from 'date-fns';
 import { DateRange } from 'react-day-picker';
 
 export const useClientOperationsFilter = (
@@ -140,7 +140,7 @@ export const useClientOperationsFilter = (
         }
       }
       
-      // Filter by date range only if not showing all dates
+      // Filter by date range only if not showing all dates, with exact time consideration
       if (!showAllDates && dateRange.from && dateRange.to) {
         try {
           const opDate = new Date(op.operation_date || op.date);
@@ -151,15 +151,22 @@ export const useClientOperationsFilter = (
             return false;
           }
           
-          // Use proper date boundaries for accurate comparison
-          const startDate = startOfDay(dateRange.from);
-          const endDate = endOfDay(dateRange.to);
+          // Use the EXACT date-time values from the date range picker
+          const startDate = new Date(dateRange.from);
+          const endDate = new Date(dateRange.to);
+          
+          console.log(`Checking operation ${op.id}:`);
+          console.log(`  Operation date: ${opDate.toISOString()}`);
+          console.log(`  Range start: ${startDate.toISOString()}`);
+          console.log(`  Range end: ${endDate.toISOString()}`);
           
           const isInRange = isWithinInterval(opDate, { start: startDate, end: endDate });
           
           // Debug log for date filtering
           if (!isInRange) {
-            console.log(`Operation ${op.id} excluded - date ${opDate.toISOString()} outside range ${startDate.toISOString()} to ${endDate.toISOString()}`);
+            console.log(`Operation ${op.id} EXCLUDED - date ${opDate.toISOString()} outside range ${startDate.toISOString()} to ${endDate.toISOString()}`);
+          } else {
+            console.log(`Operation ${op.id} INCLUDED - date ${opDate.toISOString()} within range`);
           }
           
           return isInRange;
