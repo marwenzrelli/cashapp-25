@@ -41,11 +41,11 @@ export function DatePickerWithRange({
             {date?.from ? (
               date.to ? (
                 <>
-                  {format(date.from, "dd/MM/yyyy", { locale: fr })} -{" "}
-                  {format(date.to, "dd/MM/yyyy", { locale: fr })}
+                  {format(date.from, "dd/MM/yyyy HH:mm", { locale: fr })} -{" "}
+                  {format(date.to, "dd/MM/yyyy HH:mm", { locale: fr })}
                 </>
               ) : (
-                format(date.from, "dd/MM/yyyy", { locale: fr })
+                format(date.from, "dd/MM/yyyy HH:mm", { locale: fr })
               )
             ) : (
               <span>Sélectionner une plage de dates</span>
