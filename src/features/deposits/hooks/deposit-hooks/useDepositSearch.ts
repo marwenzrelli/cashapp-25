@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Deposit } from "../../types";
 import { containsPartialText } from "@/features/operations/utils/display-helpers";
 import { DateRange } from "react-day-picker";
-import { isWithinInterval, startOfDay, endOfDay } from "date-fns";
+import { isWithinInterval } from "date-fns";
 
 export const useDepositSearch = (deposits: Deposit[]) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -38,7 +38,7 @@ export const useDepositSearch = (deposits: Deposit[]) => {
         return false;
       });
       
-      // Date range filter
+      // Date range filter with time consideration
       let dateMatch = true;
       if (dateRange?.from && dateRange?.to) {
         try {
@@ -50,9 +50,9 @@ export const useDepositSearch = (deposits: Deposit[]) => {
             return false;
           }
           
-          // Use proper date boundaries for comparison
-          const startDate = startOfDay(dateRange.from);
-          const endDate = endOfDay(dateRange.to);
+          // Use the exact date-time from the range picker (no startOfDay/endOfDay)
+          const startDate = new Date(dateRange.from);
+          const endDate = new Date(dateRange.to);
           
           dateMatch = isWithinInterval(depositDate, {
             start: startDate,

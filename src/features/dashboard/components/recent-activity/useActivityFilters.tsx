@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { DateRange } from "react-day-picker";
-import { isWithinInterval, parseISO, startOfDay, endOfDay } from "date-fns";
+import { isWithinInterval, parseISO } from "date-fns";
 import { RecentActivity } from "../../types";
 
 export const useActivityFilters = (activities: RecentActivity[]) => {
@@ -46,7 +46,7 @@ export const useActivityFilters = (activities: RecentActivity[]) => {
       // Filter by operation type
       const typeMatch = !operationType || activity.type === operationType;
 
-      // Filter by date range
+      // Filter by date range with time consideration
       let dateMatch = true;
       if (dateRange?.from && dateRange?.to) {
         try {
@@ -58,9 +58,9 @@ export const useActivityFilters = (activities: RecentActivity[]) => {
             return false;
           }
           
-          // Use proper date boundaries
-          const startDate = startOfDay(dateRange.from);
-          const endDate = endOfDay(dateRange.to);
+          // Use the exact date-time from the range picker (no startOfDay/endOfDay)
+          const startDate = new Date(dateRange.from);
+          const endDate = new Date(dateRange.to);
           
           dateMatch = isWithinInterval(activityDate, { 
             start: startDate, 

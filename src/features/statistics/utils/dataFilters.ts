@@ -1,5 +1,5 @@
 
-import { isWithinInterval, startOfDay, endOfDay } from "date-fns";
+import { isWithinInterval } from "date-fns";
 import { DateRange } from "react-day-picker";
 
 interface FilteredData {
@@ -49,12 +49,12 @@ export const filterData = (
       
       const itemDate = new Date(dateStr);
       
-      // Date range filtering
+      // Date range filtering with time consideration
       let dateMatch = true;
       if (dateRange?.from && dateRange?.to) {
-        // Use proper date boundaries for comparison
-        const startDate = startOfDay(dateRange.from);
-        const endDate = endOfDay(dateRange.to);
+        // Use the exact date-time from the range picker (no startOfDay/endOfDay)
+        const startDate = new Date(dateRange.from);
+        const endDate = new Date(dateRange.to);
         
         try {
           dateMatch = isWithinInterval(itemDate, { start: startDate, end: endDate });

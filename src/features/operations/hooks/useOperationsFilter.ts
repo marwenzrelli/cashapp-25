@@ -2,7 +2,7 @@
 import { useState, useMemo } from "react";
 import { Operation } from "../types";
 import { DateRange } from "react-day-picker";
-import { isWithinInterval, startOfDay, endOfDay } from "date-fns";
+import { isWithinInterval } from "date-fns";
 import { operationMatchesSearch } from "../utils/display-helpers";
 
 interface FilterOptions {
@@ -45,7 +45,7 @@ export const useOperationsFilter = (operations: Operation[], externalFilters?: F
         // Client filtering
         if (activeFilterClient && !operationMatchesSearch(op, activeFilterClient)) return false;
         
-        // Date range filtering
+        // Date range filtering with time consideration
         if (activeDateRange?.from && activeDateRange?.to) {
           try {
             const opDate = new Date(op.operation_date);
@@ -56,9 +56,9 @@ export const useOperationsFilter = (operations: Operation[], externalFilters?: F
               return false;
             }
             
-            // Normalize date boundaries for more accurate comparison
-            const startDate = startOfDay(activeDateRange.from);
-            const endDate = endOfDay(activeDateRange.to);
+            // Use the exact date-time from the range picker (no startOfDay/endOfDay)
+            const startDate = new Date(activeDateRange.from);
+            const endDate = new Date(activeDateRange.to);
             
             const isInRange = isWithinInterval(opDate, { start: startDate, end: endDate });
             

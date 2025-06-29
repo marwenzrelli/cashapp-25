@@ -2,7 +2,7 @@
 import { useState, useMemo } from "react";
 import { DirectOperation } from "../types";
 import { DateRange } from "react-day-picker";
-import { isWithinInterval, startOfDay, endOfDay } from "date-fns";
+import { isWithinInterval } from "date-fns";
 
 export const useDirectOperationsFilter = (operations: DirectOperation[]) => {
   const [filterClient, setFilterClient] = useState("");
@@ -35,7 +35,7 @@ export const useDirectOperationsFilter = (operations: DirectOperation[]) => {
           if (!fromClientMatch && !toClientMatch) return false;
         }
         
-        // Date range filtering
+        // Date range filtering with time consideration
         if (dateRange?.from && dateRange?.to) {
           try {
             const opDate = new Date(op.operation_date);
@@ -46,9 +46,9 @@ export const useDirectOperationsFilter = (operations: DirectOperation[]) => {
               return false;
             }
             
-            // Normalize date boundaries for more accurate comparison
-            const startDate = startOfDay(dateRange.from);
-            const endDate = endOfDay(dateRange.to);
+            // Use the exact date-time from the range picker (no startOfDay/endOfDay)
+            const startDate = new Date(dateRange.from);
+            const endDate = new Date(dateRange.to);
             
             const isInRange = isWithinInterval(opDate, { start: startDate, end: endDate });
             

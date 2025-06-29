@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Client } from '@/features/clients/types';
 import { Operation } from '@/features/operations/types';
-import { addDays, subDays, startOfDay, endOfDay, isWithinInterval } from 'date-fns';
+import { addDays, subDays, isWithinInterval } from 'date-fns';
 import { DateRange } from 'react-day-picker';
 
 export const useClientOperationsFilter = (
@@ -148,7 +148,7 @@ export const useClientOperationsFilter = (
         }
       }
       
-      // Filter by date range only if not showing all dates
+      // Filter by date range only if not showing all dates, with time consideration
       if (!showAllDates && dateRange.from && dateRange.to) {
         try {
           const opDate = new Date(op.operation_date || op.date);
@@ -159,8 +159,9 @@ export const useClientOperationsFilter = (
             return false;
           }
           
-          const startDate = startOfDay(new Date(dateRange.from));
-          const endDate = endOfDay(new Date(dateRange.to));
+          // Use the exact date-time from the range picker (no startOfDay/endOfDay)
+          const startDate = new Date(dateRange.from);
+          const endDate = new Date(dateRange.to);
           
           // Use isWithinInterval for more reliable date comparison
           const isInRange = isWithinInterval(opDate, { 
