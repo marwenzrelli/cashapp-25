@@ -55,7 +55,9 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId, refreshO
   // Show loading if clients are still loading or if we have operations but no processed operations yet
   const isLoading = clientsLoading || (operations.length > 0 && processedOperations.length === 0 && currentClient);
 
-  console.log(`AccountFlowTab - Processed operations: ${processedOperations.length}, Loading: ${isLoading}`);
+  console.log(`AccountFlowTab - Operations received: ${operations.length}`);
+  console.log(`AccountFlowTab - Processed operations: ${processedOperations.length}`);
+  console.log(`AccountFlowTab - Loading: ${isLoading}`);
 
   const formatDateTime = (dateString: string) => {
     try {
