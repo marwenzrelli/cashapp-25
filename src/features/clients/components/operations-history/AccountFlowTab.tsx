@@ -2,25 +2,36 @@ import { useState } from "react";
 import { Operation } from "@/features/operations/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format, parseISO } from "date-fns";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { getTypeStyle, getTypeIcon, getTypeLabel } from "@/features/operations/utils/operation-helpers";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { EditOperationDialog } from "@/features/operations/components/EditOperationDialog";
 import { AccountFlowMobileView } from "./AccountFlowMobileView";
 import { useClients } from "@/features/clients/hooks/useClients";
 import { useAccountFlowCalculations } from "./hooks/useAccountFlowCalculations";
+import { useOperationsRefresh } from "@/features/operations/hooks/useOperationsRefresh";
 import { Skeleton } from "@/components/ui/skeleton";
+import { RefreshCcw } from "lucide-react";
 
 interface AccountFlowTabProps {
   operations: Operation[];
   clientId: number;
   updateOperation?: (operation: Operation) => Promise<void>;
+  refreshOperations?: () => Promise<void>;
 }
 
-export const AccountFlowTab = ({ operations, updateOperation, clientId }: AccountFlowTabProps) => {
+export const AccountFlowTab = ({ operations, updateOperation, clientId, refreshOperations }: AccountFlowTabProps) => {
   const { clients, loading: clientsLoading } = useClients();
   const [selectedOperation, setSelectedOperation] = useState<Operation | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Use operations refresh hook if available
+  const { refreshOperationsWithFeedback } = useOperationsRefresh(
+    refreshOperations || (async () => {}),
+    setIsRefreshing
+  );
 
   console.log(`AccountFlowTab - Processing ${operations.length} operations for client ${clientId}`);
 
@@ -167,6 +178,23 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId }: Accoun
 
       {/* Desktop view */}
       <Card className="hidden md:block">
+        {refreshOperations && (
+          <CardHeader className="pb-3">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Flux de compte</h3>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={refreshOperationsWithFeedback}
+                disabled={isRefreshing}
+                className="gap-2"
+              >
+                <RefreshCcw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                Actualiser
+              </Button>
+            </div>
+          </CardHeader>
+        )}
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>

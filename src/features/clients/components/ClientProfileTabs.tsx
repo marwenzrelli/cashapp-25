@@ -90,7 +90,12 @@ export function ClientProfileTabs({
             </TabsContent>
             
             <TabsContent value="flux" className="space-y-6 mt-0">
-              <AccountFlowTab operations={clientOperations} clientId={clientId} updateOperation={updateOperation} />
+              <AccountFlowTab 
+                operations={clientOperations} 
+                clientId={clientId} 
+                updateOperation={updateOperation}
+                refreshOperations={handleRefreshOperations}
+              />
             </TabsContent>
             
             <TabsContent value="public-preview" className="space-y-6 mt-0">
