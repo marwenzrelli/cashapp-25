@@ -11,6 +11,7 @@ import { AccountFlowMobileView } from "./AccountFlowMobileView";
 import { useClients } from "@/features/clients/hooks/useClients";
 import { useAccountFlowCalculations } from "./hooks/useAccountFlowCalculations";
 import { useOperationsRefresh } from "@/features/operations/hooks/useOperationsRefresh";
+import { useClientSpecificOperations } from "@/features/clients/hooks/useClientSpecificOperations";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RefreshCcw } from "lucide-react";
 
@@ -19,19 +20,14 @@ interface AccountFlowTabProps {
   clientId: number;
   updateOperation?: (operation: Operation) => Promise<void>;
   refreshOperations?: () => Promise<void>;
+  clientName?: string;
 }
 
-export const AccountFlowTab = ({ operations, updateOperation, clientId, refreshOperations }: AccountFlowTabProps) => {
+export const AccountFlowTab = ({ operations, updateOperation, clientId, refreshOperations, clientName }: AccountFlowTabProps) => {
   const { clients, loading: clientsLoading } = useClients();
   const [selectedOperation, setSelectedOperation] = useState<Operation | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-
-  // Use operations refresh hook if available
-  const { refreshOperationsWithFeedback } = useOperationsRefresh(
-    refreshOperations || (async () => {}),
-    setIsRefreshing
-  );
 
   console.log(`AccountFlowTab - Processing ${operations.length} operations for client ${clientId}`);
 
@@ -46,9 +42,33 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId, refreshO
     solde: 0
   };
 
+  // Use client-specific operations hook if clientName is provided
+  const {
+    operations: clientSpecificOperations,
+    refreshOperations: refreshClientSpecificOps
+  } = useClientSpecificOperations(
+    clientId, 
+    clientName || `${clientForCalculations.prenom} ${clientForCalculations.nom}`.trim()
+  );
+
+  // Use operations refresh hook if available
+  const refreshFunction = clientName 
+    ? refreshClientSpecificOps 
+    : (refreshOperations || (async () => {}));
+    
+  const { refreshOperationsWithFeedback } = useOperationsRefresh(
+    refreshFunction,
+    setIsRefreshing
+  );
+
+  // Use client-specific operations if available, otherwise fall back to provided operations
+  const operationsToProcess = clientName ? clientSpecificOperations : operations;
+
+  console.log(`AccountFlowTab - Using ${clientName ? 'client-specific' : 'provided'} operations: ${operationsToProcess.length}`);
+
   // Use the unified calculation logic
   const processedOperations = useAccountFlowCalculations({ 
-    operations, 
+    operations: operationsToProcess, 
     client: clientForCalculations 
   });
 

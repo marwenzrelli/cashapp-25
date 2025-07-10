@@ -95,6 +95,7 @@ export function ClientProfileTabs({
                 clientId={clientId} 
                 updateOperation={updateOperation}
                 refreshOperations={handleRefreshOperations}
+                clientName={clientFullName}
               />
             </TabsContent>
             
