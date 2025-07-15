@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Operation } from "@/features/operations/types";
@@ -105,8 +106,7 @@ export const useClientSpecificOperations = (clientId: number, clientName: string
           description: deposit.notes || "Versement",
           status: deposit.status || "completed",
           client_id: deposit.client_id || clientId,
-          createdAt: deposit.created_at,
-          created_by: deposit.created_by
+          createdAt: deposit.created_at
         })),
         
         // Withdrawals
@@ -119,8 +119,7 @@ export const useClientSpecificOperations = (clientId: number, clientName: string
           description: withdrawal.notes || "Retrait",
           status: withdrawal.status || "completed",
           client_id: withdrawal.client_id || clientId,
-          createdAt: withdrawal.created_at,
-          created_by: withdrawal.created_by
+          createdAt: withdrawal.created_at
         })),
         
         // Outgoing transfers
@@ -134,8 +133,7 @@ export const useClientSpecificOperations = (clientId: number, clientName: string
           status: transfer.status || "completed",
           fromClient: transfer.from_client,
           toClient: transfer.to_client,
-          createdAt: transfer.created_at,
-          createdBy: transfer.created_by
+          createdAt: transfer.created_at
         })),
         
         // Incoming transfers
@@ -149,8 +147,7 @@ export const useClientSpecificOperations = (clientId: number, clientName: string
           status: transfer.status || "completed",
           fromClient: transfer.from_client,
           toClient: transfer.to_client,
-          createdAt: transfer.created_at,
-          createdBy: transfer.created_by
+          createdAt: transfer.created_at
         })),
         
         // Outgoing direct operations
@@ -164,8 +161,7 @@ export const useClientSpecificOperations = (clientId: number, clientName: string
           status: operation.status || "completed",
           fromClient: operation.from_client_name,
           toClient: operation.to_client_name,
-          createdAt: operation.created_at,
-          createdBy: operation.created_by
+          createdAt: operation.created_at
         })),
         
         // Incoming direct operations
@@ -179,8 +175,7 @@ export const useClientSpecificOperations = (clientId: number, clientName: string
           status: operation.status || "completed",
           fromClient: operation.from_client_name,
           toClient: operation.to_client_name,
-          createdAt: operation.created_at,
-          createdBy: operation.created_by
+          createdAt: operation.created_at
         }))
       ];
 
