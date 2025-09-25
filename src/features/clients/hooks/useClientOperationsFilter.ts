@@ -26,12 +26,6 @@ export const useClientOperationsFilter = (
   const clientId = client ? (typeof client.id === 'string' ? parseInt(client.id, 10) : client.id) : null;
   const isPepsiMen = clientId === 4;
   
-  // Ensure we always show all dates for pepsi men
-  useEffect(() => {
-    if (isPepsiMen && !showAllDates) {
-      setShowAllDates(true);
-    }
-  }, [isPepsiMen, showAllDates]);
   
   // Enhanced name matching function
   const matchesClientName = (operationName: string | undefined, clientFullName: string, firstName: string, lastName: string): boolean => {
