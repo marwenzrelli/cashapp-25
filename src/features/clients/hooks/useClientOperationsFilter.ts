@@ -153,10 +153,14 @@ export const useClientOperationsFilter = (
             return false;
           }
           
-          // The date picker already sets the correct time boundaries (00:00:00.000 to 23:59:59.999)
-          // so we can use the dates directly from the range picker
+          // The date picker already sets the correct time boundaries
           const startDate = dateRange.from;
           const endDate = dateRange.to;
+          
+          console.log(`Checking operation ${op.id}:`);
+          console.log(`  Operation date: ${opDate.toISOString()}`);
+          console.log(`  Range start: ${startDate.toISOString()}`);
+          console.log(`  Range end: ${endDate.toISOString()}`);
           
           // Use isWithinInterval for inclusive date comparison
           const isInRange = isWithinInterval(opDate, { 
@@ -164,8 +168,10 @@ export const useClientOperationsFilter = (
             end: endDate 
           });
           
-          if (!isInRange) {
-            console.log(`Operation ${op.id} with date ${opDate.toISOString()} excluded - outside range ${startDate.toISOString()} to ${endDate.toISOString()}`);
+          if (isInRange) {
+            console.log(`Operation ${op.id} INCLUDED - date ${opDate.toISOString()} within range`);
+          } else {
+            console.log(`Operation ${op.id} EXCLUDED - date ${opDate.toISOString()} outside range`);
           }
           
           return isInRange;
