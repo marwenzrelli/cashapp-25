@@ -61,6 +61,7 @@ export function DatePickerWithRange({
     if (dateRange.from) {
       const [fromHours, fromMinutes] = startTime.split(':').map(Number);
       const fromDate = new Date(dateRange.from);
+      // Set the exact time for start of range, ensuring milliseconds are 0
       fromDate.setHours(fromHours, fromMinutes, 0, 0);
       updatedRange.from = fromDate;
     }

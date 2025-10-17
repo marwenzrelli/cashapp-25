@@ -45,7 +45,7 @@ export const useOperationsFilter = (operations: Operation[], externalFilters?: F
         // Client filtering
         if (activeFilterClient && !operationMatchesSearch(op, activeFilterClient)) return false;
         
-        // Date range filtering with time consideration
+        // Date range filtering - the date picker sets correct time boundaries
         if (activeDateRange?.from && activeDateRange?.to) {
           try {
             const opDate = new Date(op.operation_date);
@@ -56,9 +56,9 @@ export const useOperationsFilter = (operations: Operation[], externalFilters?: F
               return false;
             }
             
-            // Use the exact date-time from the range picker (no startOfDay/endOfDay)
-            const startDate = new Date(activeDateRange.from);
-            const endDate = new Date(activeDateRange.to);
+            // The date picker already sets the correct time boundaries (00:00:00.000 to 23:59:59.999)
+            const startDate = activeDateRange.from;
+            const endDate = activeDateRange.to;
             
             const isInRange = isWithinInterval(opDate, { start: startDate, end: endDate });
             

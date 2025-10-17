@@ -142,7 +142,7 @@ export const useClientOperationsFilter = (
         }
       }
       
-      // Filter by date range only if not showing all dates, with time consideration
+      // Filter by date range only if not showing all dates
       if (!showAllDates && dateRange.from && dateRange.to) {
         try {
           const opDate = new Date(op.operation_date || op.date);
@@ -153,11 +153,12 @@ export const useClientOperationsFilter = (
             return false;
           }
           
-          // Use the exact date-time from the range picker (no startOfDay/endOfDay)
-          const startDate = new Date(dateRange.from);
-          const endDate = new Date(dateRange.to);
+          // The date picker already sets the correct time boundaries (00:00:00.000 to 23:59:59.999)
+          // so we can use the dates directly from the range picker
+          const startDate = dateRange.from;
+          const endDate = dateRange.to;
           
-          // Use isWithinInterval for more reliable date comparison
+          // Use isWithinInterval for inclusive date comparison
           const isInRange = isWithinInterval(opDate, { 
             start: startDate, 
             end: endDate 
