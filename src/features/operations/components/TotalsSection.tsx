@@ -31,6 +31,9 @@ export const TotalsSection = ({ operations, currency = "TND" }: TotalsSectionPro
     
   // Calculate net movement (deposits - withdrawals)
   const netMovement = totalDeposits - totalWithdrawals;
+  
+  // Calculate total number of operations
+  const totalOperations = operations.length;
 
   return (
     <div className="border-t px-4 py-3 bg-muted/20">
@@ -53,6 +56,10 @@ export const TotalsSection = ({ operations, currency = "TND" }: TotalsSectionPro
         </div>
         
         <div className="space-y-1">
+          <div className="flex justify-between">
+            <span className="text-sm text-muted-foreground">Nombre d'opérations:</span>
+            <span className="font-medium">{totalOperations}</span>
+          </div>
           <div className="flex justify-between pt-1 border-t">
             <span className="font-medium">Mouvement Net:</span>
             <span className={cn("font-bold", netMovement >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400")}>
