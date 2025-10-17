@@ -211,6 +211,80 @@ body, #root {
   max-width: 100vw;
 }
 
+/* Print styles - force desktop layout */
+@media print {
+  /* Reset mobile styles for printing */
+  .md\:hidden {
+    display: none !important;
+  }
+  
+  .hidden {
+    display: block !important;
+  }
+  
+  .md\:block {
+    display: block !important;
+  }
+  
+  .md\:table {
+    display: table !important;
+  }
+  
+  .md\:table-row {
+    display: table-row !important;
+  }
+  
+  .md\:table-cell {
+    display: table-cell !important;
+  }
+  
+  /* Force desktop containers */
+  .container {
+    max-width: 100% !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+  
+  /* Hide mobile-only elements */
+  [class*="md:hidden"] {
+    display: none !important;
+  }
+  
+  /* Ensure tables display properly */
+  table {
+    width: 100% !important;
+    display: table !important;
+  }
+  
+  tbody {
+    display: table-row-group !important;
+  }
+  
+  tr {
+    display: table-row !important;
+  }
+  
+  td, th {
+    display: table-cell !important;
+  }
+  
+  /* Remove shadows and unnecessary styling for print */
+  .shadow, .shadow-sm, .shadow-md, .shadow-lg {
+    box-shadow: none !important;
+  }
+  
+  /* Better page breaks */
+  .card, .mobile-card {
+    page-break-inside: avoid;
+  }
+  
+  /* Optimize colors for print */
+  body {
+    background: white !important;
+    color: black !important;
+  }
+}
+
 /* Better spacing for mobile */
 @media (max-width: 640px) {
   .space-y-mobile > * + * {
