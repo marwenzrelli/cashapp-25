@@ -35,31 +35,56 @@ export const ClientOperationsHistoryTabs = ({
           value="all"
           className="bg-gray-100 text-gray-800 data-[state=active]:bg-gray-200"
         >
-          Toutes
+          <span className="flex items-center gap-2">
+            Toutes
+            <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-gray-200 dark:bg-gray-700">
+              {filteredOperations.length}
+            </span>
+          </span>
         </TabsTrigger>
         <TabsTrigger 
           value="deposits"
           className="bg-green-100 text-green-800 data-[state=active]:bg-green-200"
         >
-          Dépôts
+          <span className="flex items-center gap-2">
+            Dépôts
+            <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-green-200 dark:bg-green-700">
+              {deposits.length}
+            </span>
+          </span>
         </TabsTrigger>
         <TabsTrigger 
           value="withdrawals"
           className="bg-red-100 text-red-800 data-[state=active]:bg-red-200"
         >
-          Retraits
+          <span className="flex items-center gap-2">
+            Retraits
+            <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-red-200 dark:bg-red-700">
+              {withdrawals.length}
+            </span>
+          </span>
         </TabsTrigger>
         <TabsTrigger 
           value="transfers"
           className="bg-blue-100 text-blue-800 data-[state=active]:bg-blue-200"
         >
-          Transferts
+          <span className="flex items-center gap-2">
+            Transferts
+            <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-blue-200 dark:bg-blue-700">
+              {transfers.length}
+            </span>
+          </span>
         </TabsTrigger>
         <TabsTrigger 
           value="direct"
           className="bg-purple-100 text-purple-800 data-[state=active]:bg-purple-200"
         >
-          Directes
+          <span className="flex items-center gap-2">
+            Directes
+            <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-purple-200 dark:bg-purple-700">
+              {directOperations.length}
+            </span>
+          </span>
         </TabsTrigger>
       </TabsList>
       
