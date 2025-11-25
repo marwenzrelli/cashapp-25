@@ -51,20 +51,22 @@ export const ClientListItem = ({
           {/* Client Info */}
           <div className="flex items-center space-x-3 flex-1 min-w-0">
             <div className="flex flex-col space-y-1 min-w-0 flex-1">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                 <h3 
-                  className="font-medium truncate cursor-pointer hover:text-primary transition-colors"
+                  className="font-semibold text-base sm:text-sm cursor-pointer hover:text-primary transition-colors break-words"
                   onClick={() => onView(clientId)}
                 >
                   {clientName}
                 </h3>
-                <ClientIdBadge clientId={clientId} />
-                <ClientStatusBadge status={client.status}>
-                  {client.status === 'active' ? 'Actif' : 
-                   client.status === 'inactive' ? 'Inactif' : 
-                   client.status === 'pending' ? 'En attente' : 
-                   client.status}
-                </ClientStatusBadge>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <ClientIdBadge clientId={clientId} />
+                  <ClientStatusBadge status={client.status}>
+                    {client.status === 'active' ? 'Actif' : 
+                     client.status === 'inactive' ? 'Inactif' : 
+                     client.status === 'pending' ? 'En attente' : 
+                     client.status}
+                  </ClientStatusBadge>
+                </div>
               </div>
               <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-sm text-muted-foreground">
                 <span className="truncate">{client.telephone}</span>
