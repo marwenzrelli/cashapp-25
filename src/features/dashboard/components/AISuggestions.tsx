@@ -91,5 +91,35 @@ export const AISuggestions = ({
     return suggestions.slice(0, 3); // Limiter à 3 suggestions
   };
   const suggestions = generateSuggestions();
-  return;
+  
+  if (suggestions.length === 0) {
+    return null;
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Sparkles className="h-5 w-5" />
+          Suggestions IA
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          {suggestions.map((suggestion) => (
+            <div
+              key={suggestion.id}
+              className={`flex gap-3 p-4 rounded-lg border ${suggestion.color}`}
+            >
+              <div className="flex-shrink-0 mt-0.5">{suggestion.icon}</div>
+              <div className="flex-1 min-w-0">
+                <h4 className="font-semibold text-sm mb-1">{suggestion.title}</h4>
+                <p className="text-sm text-muted-foreground">{suggestion.message}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
 };
