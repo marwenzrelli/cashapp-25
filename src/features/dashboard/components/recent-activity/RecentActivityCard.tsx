@@ -23,11 +23,11 @@ export const RecentActivityCard = ({ activities, currency }: RecentActivityProps
   } = useActivityFilters(activities);
 
   return (
-    <Card className="w-full">
-      <CardHeader>
+    <Card className="w-full max-w-none">
+      <CardHeader className="pb-3">
         <CardTitle>Activité Récente</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-6">
         <div className="space-y-4">
           {/* Search and filters section */}
           <FilterBar 
