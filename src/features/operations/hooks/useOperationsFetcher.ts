@@ -14,11 +14,11 @@ export const useOperationsFetcher = () => {
     // Ajout d'un paramètre aléatoire pour éviter tout problème de cache
     const timestamp = Date.now();
     
-    // Utiliser Promise.all pour paralléliser les requêtes
+    // Utiliser Promise.all pour paralléliser les requêtes avec limite pour optimiser le chargement
     const [depositsResult, withdrawalsResult, transfersResult] = await Promise.all([
-      supabase.from('deposits').select('*').order('created_at', { ascending: false }),
-      supabase.from('withdrawals').select('*').order('created_at', { ascending: false }),
-      supabase.from('transfers').select('*').order('created_at', { ascending: false })
+      supabase.from('deposits').select('*').order('created_at', { ascending: false }).limit(300),
+      supabase.from('withdrawals').select('*').order('created_at', { ascending: false }).limit(300),
+      supabase.from('transfers').select('*').order('created_at', { ascending: false }).limit(200)
     ]);
     
     // Vérifier les erreurs pour chaque requête
