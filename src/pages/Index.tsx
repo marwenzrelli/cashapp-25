@@ -5,7 +5,6 @@ import { StatsCardGrid } from "@/features/dashboard/components/StatsCardGrid";
 import { OperationTypeCards } from "@/features/dashboard/components/OperationTypeCards";
 import { RecentActivityCard } from "@/features/dashboard/components/RecentActivity";
 import { TransactionTrends } from "@/features/dashboard/components/TransactionTrends";
-import { AISuggestions } from "@/features/dashboard/components/AISuggestions";
 import { useDashboardData } from "@/features/dashboard/hooks/useDashboardData";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { LoadingIndicator } from "@/components/ui/loading-indicator";
@@ -61,12 +60,7 @@ const Index = () => {
         <OperationTypeCards stats={stats} currency={currency} />
       </div>
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
-          <RecentActivityCard activities={recentActivity} currency={currency} />
-        </div>
-        <AISuggestions stats={stats} />
-      </div>
+      <RecentActivityCard activities={recentActivity} currency={currency} />
       
       <TransactionTrends data={stats.monthly_stats} currency={currency} />
       
