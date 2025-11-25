@@ -125,8 +125,7 @@ export const EditOperationDialog = ({
                 <Clock className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
                 <Input
                   type="time"
-                  step="60"
-                  value={editedOperation.time || ""}
+                  value={editedOperation.time ? editedOperation.time.substring(0, 5) : ""}
                   onChange={(e) => handleChange('time', e.target.value)}
                   className="pl-10"
                 />
