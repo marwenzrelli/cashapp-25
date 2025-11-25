@@ -30,16 +30,16 @@ export const ClientListItem = ({
   const clientId = typeof client.id === 'string' ? parseInt(client.id, 10) : client.id;
 
   return (
-    <div className="p-4 hover:bg-muted/50 transition-colors">
+    <div className="p-3 sm:p-4 hover:bg-muted/50 transition-colors">
       {/* Main row */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4 flex-1 min-w-0">
+      <div className="flex items-start sm:items-center justify-between gap-3">
+        <div className="flex items-start sm:items-center gap-2 sm:gap-4 flex-1 min-w-0">
           {/* Expand/Collapse Button */}
           <Button
             variant="ghost"
             size="sm"
             onClick={() => onToggleExpand(clientId)}
-            className="p-1 h-8 w-8 shrink-0"
+            className="p-1 h-8 w-8 shrink-0 mt-0.5 sm:mt-0"
           >
             {isExpanded ? (
               <ChevronDown className="h-4 w-4" />
@@ -48,40 +48,65 @@ export const ClientListItem = ({
             )}
           </Button>
 
-          {/* Client Info */}
-          <div className="flex items-center space-x-3 flex-1 min-w-0">
-            <div className="flex flex-col space-y-1 min-w-0 flex-1">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                <h3 
-                  className="font-semibold text-base sm:text-sm cursor-pointer hover:text-primary transition-colors break-words"
-                  onClick={() => onView(clientId)}
-                >
-                  {clientName}
-                </h3>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <ClientIdBadge clientId={clientId} />
-                  <ClientStatusBadge status={client.status}>
-                    {client.status === 'active' ? 'Actif' : 
-                     client.status === 'inactive' ? 'Inactif' : 
-                     client.status === 'pending' ? 'En attente' : 
-                     client.status}
-                  </ClientStatusBadge>
-                </div>
-              </div>
-              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-sm text-muted-foreground">
-                <span className="truncate">{client.telephone}</span>
-                <span className="truncate">{client.email || "Pas d'email"}</span>
-              </div>
+          {/* Client Info - Mobile Optimized */}
+          <div className="flex-1 min-w-0">
+            {/* ID and Name - Mobile First */}
+            <div className="flex items-start gap-2 mb-2">
+              <span className="text-xs font-mono text-muted-foreground bg-muted/50 px-2 py-0.5 rounded shrink-0">
+                #{clientId}
+              </span>
+              <h3 
+                className="font-semibold text-base leading-tight cursor-pointer hover:text-primary transition-colors flex-1"
+                onClick={() => onView(clientId)}
+              >
+                {clientName}
+              </h3>
+            </div>
+            
+            {/* Status Badge - Mobile */}
+            <div className="mb-2 sm:hidden">
+              <ClientStatusBadge status={client.status}>
+                {client.status === 'active' ? 'Actif' : 
+                 client.status === 'inactive' ? 'Inactif' : 
+                 client.status === 'pending' ? 'En attente' : 
+                 client.status}
+              </ClientStatusBadge>
             </div>
 
-            {/* Balance - Hidden on small screens when expanded */}
-            <div className={`${isExpanded ? 'hidden sm:block' : 'block'} shrink-0`}>
+            {/* Balance - Mobile Prominent */}
+            <div className="mb-2 sm:hidden">
               <ClientBalanceDisplay 
                 solde={client.solde} 
                 clientId={clientId}
                 clientName={clientName}
               />
             </div>
+
+            {/* Contact Info */}
+            <div className="flex flex-col gap-0.5 text-xs sm:text-sm text-muted-foreground">
+              <span className="truncate">{client.telephone}</span>
+              {client.email && <span className="truncate">{client.email}</span>}
+            </div>
+
+            {/* Desktop View - ID, Status */}
+            <div className="hidden sm:flex sm:items-center sm:gap-2 sm:mt-1">
+              <ClientIdBadge clientId={clientId} />
+              <ClientStatusBadge status={client.status}>
+                {client.status === 'active' ? 'Actif' : 
+                 client.status === 'inactive' ? 'Inactif' : 
+                 client.status === 'pending' ? 'En attente' : 
+                 client.status}
+              </ClientStatusBadge>
+            </div>
+          </div>
+
+          {/* Balance - Desktop Only */}
+          <div className="hidden sm:block shrink-0">
+            <ClientBalanceDisplay 
+              solde={client.solde} 
+              clientId={clientId}
+              clientName={clientName}
+            />
           </div>
         </div>
 
