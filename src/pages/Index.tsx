@@ -4,7 +4,6 @@ import { DashboardHeader } from "@/features/dashboard/components/DashboardHeader
 import { StatsCardGrid } from "@/features/dashboard/components/StatsCardGrid";
 import { OperationTypeCards } from "@/features/dashboard/components/OperationTypeCards";
 import { RecentActivityCard } from "@/features/dashboard/components/RecentActivity";
-import { TransactionTrends } from "@/features/dashboard/components/TransactionTrends";
 import { useDashboardData } from "@/features/dashboard/hooks/useDashboardData";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { LoadingIndicator } from "@/components/ui/loading-indicator";
@@ -61,8 +60,6 @@ const Index = () => {
       </div>
       
       <RecentActivityCard activities={recentActivity} currency={currency} />
-      
-      <TransactionTrends data={stats.monthly_stats} currency={currency} />
       
       <ScrollToTop />
     </div>
