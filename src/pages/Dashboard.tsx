@@ -10,7 +10,6 @@ import { DashboardHeader } from "@/features/dashboard/components/DashboardHeader
 import { StatsCardGrid } from "@/features/dashboard/components/StatsCardGrid";
 import { OperationTypeCards } from "@/features/dashboard/components/OperationTypeCards";
 import { TransactionTrends } from "@/features/dashboard/components/TransactionTrends";
-import { AISuggestions } from "@/features/dashboard/components/AISuggestions";
 import { RecentActivityCard } from "@/features/dashboard/components/RecentActivity";
 import { useDashboardData } from "@/features/dashboard/hooks/useDashboardData";
 import { recalculateAllClientBalances } from "@/features/statistics/utils/balanceCalculator";
@@ -83,12 +82,7 @@ const Dashboard = () => {
         <OperationTypeCards stats={stats} currency={currency} />
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3 w-full">
-        <div className="md:col-span-2">
-          <TransactionTrends data={stats.monthly_stats} currency={currency} />
-        </div>
-        <AISuggestions stats={stats} />
-      </div>
+      <TransactionTrends data={stats.monthly_stats} currency={currency} />
 
       <div className="space-y-2">
         <RecentActivityCard activities={recentActivity} currency={currency} />
