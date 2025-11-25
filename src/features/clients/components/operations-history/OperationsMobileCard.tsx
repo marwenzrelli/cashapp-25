@@ -202,35 +202,35 @@ export const OperationsMobileCard = ({
         
         {/* Action buttons only show if not public view */}
         {!isPublicView && (
-          <div className="flex gap-2 mt-3 pt-3 border-t">
+          <div className="flex gap-1.5 mt-3 pt-3 border-t">
             <Button
               variant="outline"
               size="sm"
               onClick={handleEditClick}
-              className="flex-1"
+              className="flex-1 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 dark:hover:bg-blue-950/20 dark:hover:text-blue-400"
             >
-              <Pencil className="h-4 w-4 mr-2" />
-              Modifier
+              <Pencil className="h-3.5 w-3.5 mr-1.5" />
+              <span className="text-xs">Modifier</span>
             </Button>
             {(operation.type === 'deposit' || operation.type === 'withdrawal') && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleTransferClick}
-                className="flex-1 text-blue-600 hover:text-blue-700"
+                className="flex-1 hover:bg-purple-50 hover:text-purple-700 hover:border-purple-300 dark:hover:bg-purple-950/20 dark:hover:text-purple-400"
               >
-                <ArrowRightLeft className="h-4 w-4 mr-2" />
-                Transférer
+                <ArrowRightLeft className="h-3.5 w-3.5 mr-1.5" />
+                <span className="text-xs">Transférer</span>
               </Button>
             )}
             <Button
               variant="outline"
               size="sm"
               onClick={handleDeleteClick}
-              className="flex-1 text-red-600 hover:text-red-700"
+              className="flex-1 hover:bg-red-50 hover:text-red-700 hover:border-red-300 dark:hover:bg-red-950/20 dark:hover:text-red-400"
             >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Supprimer
+              <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+              <span className="text-xs">Supprimer</span>
             </Button>
           </div>
         )}
