@@ -488,6 +488,7 @@ export type Database = {
       }
     }
     Functions: {
+      generate_short_token: { Args: never; Returns: string }
       is_valid_public_client_access: {
         Args: { client_id: number; token: string }
         Returns: boolean
