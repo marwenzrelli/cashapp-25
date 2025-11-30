@@ -80,8 +80,7 @@ export const ClientShortLink = ({ clientId }: ClientShortLinkProps) => {
 
   if (isLoading) {
     return (
-      <div className="bg-white dark:bg-gray-800/60 rounded-lg p-3">
-        <p className="text-muted-foreground text-xs">Lien d'accès</p>
+      <div className="bg-white dark:bg-gray-800/60 rounded px-2 py-1">
         <p className="text-xs text-muted-foreground">Chargement...</p>
       </div>
     );
@@ -92,16 +91,16 @@ export const ClientShortLink = ({ clientId }: ClientShortLinkProps) => {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800/60 rounded-lg p-3">
-      <p className="text-muted-foreground text-xs mb-2">Lien d'accès client</p>
-      <div className="flex items-center gap-2">
-        <code className="flex-1 text-xs font-mono bg-muted px-2 py-1 rounded truncate">
+    <div className="bg-white dark:bg-gray-800/60 rounded px-2 py-1">
+      <div className="flex items-center gap-1.5">
+        <span className="text-[10px] text-muted-foreground mr-1">Accès:</span>
+        <code className="text-[11px] font-mono bg-muted px-1.5 py-0.5 rounded">
           {token}
         </code>
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 w-7 p-0"
+          className="h-5 w-5 p-0 hover:bg-muted"
           onClick={handleCopyLink}
           title="Copier le lien"
         >
@@ -110,7 +109,7 @@ export const ClientShortLink = ({ clientId }: ClientShortLinkProps) => {
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 w-7 p-0"
+          className="h-5 w-5 p-0 hover:bg-muted"
           onClick={handleOpenLink}
           title="Ouvrir le lien"
         >
