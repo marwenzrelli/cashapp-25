@@ -101,12 +101,13 @@ const PublicClientProfile = () => {
         return;
       }
       
-      // Basic UUID format validation
+      // Validate token format - accept both UUID (36 chars) and short tokens (10 chars)
       const isValidUUID = token?.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+      const isValidShortToken = token?.match(/^[A-Z0-9]{10}$/);
       
-      if (!isValidUUID) {
+      if (!isValidUUID && !isValidShortToken) {
         console.error("Invalid token format:", token);
-        showErrorToast("Format de token invalide", "Le format du token ne correspond pas à un UUID valide");
+        showErrorToast("Format de token invalide", "Le format du token ne correspond pas à un format valide");
         navigate("/"); // Redirect to home on invalid token format
         return;
       }
