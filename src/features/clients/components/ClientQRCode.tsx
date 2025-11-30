@@ -97,7 +97,18 @@ export const ClientQRCode = ({
         setAccessToken(tokenToUse);
       } else {
         console.log("Creating new access token for client:", clientId);
-        const newToken = crypto.randomUUID();
+        
+        // Generate a short 10-character token
+        const generateShortToken = () => {
+          const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+          let token = '';
+          for (let i = 0; i < 10; i++) {
+            token += chars.charAt(Math.floor(Math.random() * chars.length));
+          }
+          return token;
+        };
+        
+        const newToken = generateShortToken();
         const {
           data,
           error
