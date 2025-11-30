@@ -51,30 +51,31 @@ export const ClientListItem = ({
 
           {/* Client Info - Mobile Optimized */}
           <div className="flex-1 min-w-0">
-            {/* Main Line: Short ID + Name */}
-            <div className="mb-1">
+            {/* Main Line: Name */}
+            <div className="mb-1.5">
               <h3 
                 className="font-semibold text-base leading-tight cursor-pointer hover:text-primary transition-colors"
                 onClick={() => onView(clientId)}
               >
-                <span className="text-muted-foreground">#{clientId}</span> {clientName}
+                {clientName}
               </h3>
             </div>
 
-            {/* ID Line with leading zeros */}
-            <div className="mb-1">
+            {/* Info Line: ID + Access Code */}
+            <div className="flex items-center gap-3 mb-1.5 flex-wrap">
               <span className="text-xs text-muted-foreground">
-                ID: {String(clientId).padStart(6, '0')}
+                <span className="font-medium">#{clientId}</span> • ID: {String(clientId).padStart(6, '0')}
               </span>
-            </div>
-
-            {/* Access Code Line */}
-            <div className="mb-2">
               <ClientShortLink clientId={clientId} />
             </div>
-            
-            {/* Status Badge - Mobile */}
-            <div className="mb-2 sm:hidden">
+
+            {/* Balance & Status - Mobile */}
+            <div className="flex items-center gap-2 mb-2 sm:hidden flex-wrap">
+              <ClientBalanceDisplay 
+                solde={client.solde} 
+                clientId={clientId}
+                clientName={clientName}
+              />
               <ClientStatusBadge status={client.status}>
                 {client.status === 'active' ? 'Actif' : 
                  client.status === 'inactive' ? 'Inactif' : 
@@ -83,24 +84,14 @@ export const ClientListItem = ({
               </ClientStatusBadge>
             </div>
 
-            {/* Balance - Mobile Prominent */}
-            <div className="mb-2 sm:hidden">
-              <ClientBalanceDisplay 
-                solde={client.solde} 
-                clientId={clientId}
-                clientName={clientName}
-              />
-            </div>
-
             {/* Contact Info */}
-            <div className="flex flex-col gap-0.5 text-xs sm:text-sm text-muted-foreground">
+            <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
               <span className="truncate">{client.telephone}</span>
               {client.email && <span className="truncate">{client.email}</span>}
             </div>
 
-            {/* Desktop View - ID, Status */}
-            <div className="hidden sm:flex sm:items-center sm:gap-2 sm:mt-1">
-              <ClientIdBadge clientId={clientId} />
+            {/* Desktop View - Status */}
+            <div className="hidden sm:flex sm:items-center sm:gap-2 sm:mt-1.5">
               <ClientStatusBadge status={client.status}>
                 {client.status === 'active' ? 'Actif' : 
                  client.status === 'inactive' ? 'Inactif' : 
