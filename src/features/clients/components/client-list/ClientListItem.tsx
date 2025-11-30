@@ -31,7 +31,7 @@ export const ClientListItem = ({
   const clientId = typeof client.id === 'string' ? parseInt(client.id, 10) : client.id;
 
   return (
-    <div className="p-3 sm:p-4 hover:bg-muted/50 transition-colors">
+    <div className="mb-3 bg-card/50 backdrop-blur-sm border border-border/50 rounded-lg p-3 sm:p-4 hover:bg-card/70 hover:border-border transition-all duration-200 shadow-sm hover:shadow-md">
       {/* Main row */}
       <div className="flex items-start sm:items-center justify-between gap-3">
         <div className="flex items-start sm:items-center gap-2 sm:gap-4 flex-1 min-w-0">
