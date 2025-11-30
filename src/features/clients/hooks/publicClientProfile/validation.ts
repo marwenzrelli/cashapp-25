@@ -7,9 +7,14 @@ export const validateToken = (token: string | undefined): { isValid: boolean; er
     return { isValid: false, error: "Token d'accès manquant" };
   }
 
-  // More thorough UUID format validation with more detailed error
+  // Accept both UUID format (36 chars) and short token format (10 chars)
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  if (!uuidRegex.test(token)) {
+  const shortTokenRegex = /^[A-Z0-9]{10}$/;
+  
+  const isValidUUID = uuidRegex.test(token);
+  const isValidShortToken = shortTokenRegex.test(token);
+  
+  if (!isValidUUID && !isValidShortToken) {
     console.error("Invalid token format:", token);
     return { isValid: false, error: "Format de token invalide ou token corrompu" };
   }
