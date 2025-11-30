@@ -8,6 +8,7 @@ import { ClientBalanceDisplay } from "./ClientBalanceDisplay";
 import { ClientExpandedView } from "./ClientExpandedView";
 import { ClientStatusBadge } from "./ClientStatusBadge";
 import { ClientIdBadge } from "../ClientIdBadge";
+import { ClientShortLink } from "./ClientShortLink";
 
 interface ClientListItemProps {
   client: Client;
@@ -86,6 +87,11 @@ export const ClientListItem = ({
             <div className="flex flex-col gap-0.5 text-xs sm:text-sm text-muted-foreground">
               <span className="truncate">{client.telephone}</span>
               {client.email && <span className="truncate">{client.email}</span>}
+            </div>
+
+            {/* Short Link */}
+            <div className="mt-2">
+              <ClientShortLink clientId={clientId} />
             </div>
 
             {/* Desktop View - ID, Status */}
