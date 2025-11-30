@@ -80,9 +80,7 @@ export const ClientShortLink = ({ clientId }: ClientShortLinkProps) => {
 
   if (isLoading) {
     return (
-      <div className="bg-white dark:bg-gray-800/60 rounded px-2 py-1">
-        <p className="text-xs text-muted-foreground">Chargement...</p>
-      </div>
+      <span className="text-xs text-muted-foreground">Accès: Chargement...</span>
     );
   }
 
@@ -91,31 +89,26 @@ export const ClientShortLink = ({ clientId }: ClientShortLinkProps) => {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800/60 rounded px-2 py-1">
-      <div className="flex items-center gap-1.5">
-        <span className="text-[10px] text-muted-foreground mr-1">Accès:</span>
-        <code className="text-[11px] font-mono bg-muted px-1.5 py-0.5 rounded">
-          {token}
-        </code>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-5 w-5 p-0 hover:bg-muted"
-          onClick={handleCopyLink}
-          title="Copier le lien"
-        >
-          <Copy className="h-3 w-3" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-5 w-5 p-0 hover:bg-muted"
-          onClick={handleOpenLink}
-          title="Ouvrir le lien"
-        >
-          <ExternalLink className="h-3 w-3" />
-        </Button>
-      </div>
-    </div>
+    <span className="text-xs text-muted-foreground">
+      Accès: <code className="font-mono bg-muted px-1.5 py-0.5 rounded">{token}</code>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-5 w-5 p-0 hover:bg-muted ml-1 inline-flex"
+        onClick={handleCopyLink}
+        title="Copier le lien"
+      >
+        <Copy className="h-3 w-3" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-5 w-5 p-0 hover:bg-muted ml-0.5 inline-flex"
+        onClick={handleOpenLink}
+        title="Ouvrir le lien"
+      >
+        <ExternalLink className="h-3 w-3" />
+      </Button>
+    </span>
   );
 };
