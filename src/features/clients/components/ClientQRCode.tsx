@@ -175,8 +175,39 @@ export const ClientQRCode = ({
       toast.error("Le lien n'est pas encore disponible.");
     }
   };
-  const handleRegenerateQR = () => {
-    generateQRAccess();
+  const handleRegenerateQR = async () => {
+    if (!session || !hasAccess) return;
+    
+    try {
+      setIsLoading(true);
+      
+      // Delete existing tokens for this client
+      const { error: deleteError } = await supabase
+        .from('qr_access')
+        .delete()
+        .eq('client_id', clientId);
+      
+      if (deleteError) {
+        console.error("Error deleting old tokens:", deleteError);
+        toast.error("Erreur lors de la suppression de l'ancien token");
+        setIsLoading(false);
+        return;
+      }
+      
+      // Reset state
+      setAccessToken(null);
+      setQrUrl('');
+      
+      // Generate new short token
+      await generateQRAccess();
+      
+      toast.success("Nouveau code court généré!", { duration: 3000 });
+    } catch (error) {
+      console.error("Error regenerating QR:", error);
+      toast.error("Erreur lors de la régénération");
+    } finally {
+      setIsLoading(false);
+    }
   };
   if (!session) {
     return null;
