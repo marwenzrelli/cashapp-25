@@ -51,6 +51,11 @@ export const ClientListItem = ({
 
           {/* Client Info - Mobile Optimized */}
           <div className="flex-1 min-w-0">
+            {/* Short Link First */}
+            <div className="mb-2">
+              <ClientShortLink clientId={clientId} />
+            </div>
+
             {/* ID and Name - Mobile First */}
             <div className="flex items-start gap-2 mb-2">
               <span className="text-xs font-mono text-muted-foreground bg-muted/50 px-2 py-0.5 rounded shrink-0">
@@ -87,11 +92,6 @@ export const ClientListItem = ({
             <div className="flex flex-col gap-0.5 text-xs sm:text-sm text-muted-foreground">
               <span className="truncate">{client.telephone}</span>
               {client.email && <span className="truncate">{client.email}</span>}
-            </div>
-
-            {/* Short Link */}
-            <div className="mt-2">
-              <ClientShortLink clientId={clientId} />
             </div>
 
             {/* Desktop View - ID, Status */}
