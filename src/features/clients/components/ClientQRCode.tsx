@@ -201,10 +201,35 @@ export const ClientQRCode = ({
           </div>
         </div>
         
-        <div className="flex items-center justify-center mt-2">
+        <div className="flex flex-col items-center justify-center mt-2 space-y-2">
           <p className="text-sm text-center text-violet-700 font-medium">
             Code QR pour {clientName}
           </p>
+          {accessToken && (
+            <div className="flex flex-col items-center gap-1">
+              <p className="text-xs text-violet-500/70">Code d'accès:</p>
+              <div className="flex items-center gap-2 bg-white/80 px-3 py-1.5 rounded-lg border border-violet-200">
+                <code className="text-lg font-mono font-bold text-violet-700 tracking-wider">
+                  {accessToken}
+                </code>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0 hover:bg-violet-100"
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(accessToken);
+                      toast.success("Code copié!", { duration: 2000 });
+                    } catch {
+                      toast.error("Impossible de copier");
+                    }
+                  }}
+                >
+                  <span className="text-xs">📋</span>
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </Card>
       
