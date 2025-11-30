@@ -5,7 +5,6 @@ import { format } from "date-fns";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useOperations } from "@/features/operations/hooks/useOperations";
 import { useMemo } from "react";
-import { ClientShortLink } from "./ClientShortLink";
 
 interface ClientExpandedViewProps {
   client: Client;
@@ -100,7 +99,6 @@ export const ClientExpandedView = ({ client, onView }: ClientExpandedViewProps) 
           <p className="text-muted-foreground text-xs">Dernière mise à jour</p>
           <p className="font-medium">{format(new Date(), "dd/MM/yyyy")}</p>
         </div>
-        <ClientShortLink clientId={clientId} />
       </div>
       <div className="mt-2 flex justify-end">
         <Button 
