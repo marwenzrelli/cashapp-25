@@ -51,22 +51,26 @@ export const ClientListItem = ({
 
           {/* Client Info - Mobile Optimized */}
           <div className="flex-1 min-w-0">
-            {/* Short Link First */}
-            <div className="mb-2">
-              <ClientShortLink clientId={clientId} />
-            </div>
-
-            {/* ID and Name - Mobile First */}
-            <div className="flex items-start gap-2 mb-2">
-              <span className="text-xs font-mono text-muted-foreground bg-muted/50 px-2 py-0.5 rounded shrink-0">
-                #{clientId}
-              </span>
+            {/* Main Line: Short ID + Name */}
+            <div className="mb-1">
               <h3 
-                className="font-semibold text-base leading-tight cursor-pointer hover:text-primary transition-colors flex-1"
+                className="font-semibold text-base leading-tight cursor-pointer hover:text-primary transition-colors"
                 onClick={() => onView(clientId)}
               >
-                {clientName}
+                <span className="text-muted-foreground">#{clientId}</span> {clientName}
               </h3>
+            </div>
+
+            {/* ID Line with leading zeros */}
+            <div className="mb-1">
+              <span className="text-xs text-muted-foreground">
+                ID: {String(clientId).padStart(6, '0')}
+              </span>
+            </div>
+
+            {/* Access Code Line */}
+            <div className="mb-2">
+              <ClientShortLink clientId={clientId} />
             </div>
             
             {/* Status Badge - Mobile */}
