@@ -7,6 +7,7 @@ import { Client } from "../types";
 
 export const useClientsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState<"name" | "id" | "balance">("name");
   const [retryAttempt, setRetryAttempt] = useState(0);
   
   const { 
@@ -125,6 +126,8 @@ export const useClientsPage = () => {
     error,
     searchTerm,
     setSearchTerm,
+    sortBy,
+    setSortBy,
     
     // Dialog state
     isDialogOpen,

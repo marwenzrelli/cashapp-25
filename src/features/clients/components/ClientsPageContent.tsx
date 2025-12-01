@@ -13,6 +13,8 @@ interface ClientsPageContentProps {
   error: string | null;
   searchTerm: string;
   setSearchTerm: (term: string) => void;
+  sortBy: "name" | "id" | "balance";
+  setSortBy: (sort: "name" | "id" | "balance") => void;
   handleEdit: (client: Client) => void;
   handleDelete: (client: Client) => void;
   handleRetry: () => void;
@@ -26,6 +28,8 @@ export const ClientsPageContent = ({
   error,
   searchTerm,
   setSearchTerm,
+  sortBy,
+  setSortBy,
   handleEdit,
   handleDelete,
   handleRetry,
@@ -98,7 +102,7 @@ export const ClientsPageContent = ({
             </div>
           </div>
         )}
-        <ClientList clients={filteredClients} onEdit={handleEdit} onDelete={handleDelete} />
+        <ClientList clients={filteredClients} sortBy={sortBy} onEdit={handleEdit} onDelete={handleDelete} />
       </div>
     );
   };
@@ -113,7 +117,13 @@ export const ClientsPageContent = ({
       </div>
 
       <div className={`transition-opacity duration-300 ${initialContentShown ? 'opacity-100' : 'opacity-0'}`}>
-        <ClientSearch searchTerm={searchTerm} onSearchChange={setSearchTerm} onNewClient={openNewClientDialog} />
+        <ClientSearch 
+          searchTerm={searchTerm} 
+          onSearchChange={setSearchTerm} 
+          onNewClient={openNewClientDialog}
+          sortBy={sortBy}
+          onSortChange={setSortBy}
+        />
       </div>
 
       {renderContent()}

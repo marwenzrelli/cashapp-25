@@ -26,6 +26,8 @@ const Clients = () => {
     error,
     searchTerm,
     setSearchTerm,
+    sortBy,
+    setSortBy,
     
     // Dialog state
     isDialogOpen,
@@ -151,6 +153,8 @@ const Clients = () => {
           error={error}
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
           handleEdit={handleEdit}
           handleDelete={handleDelete}
           handleRetry={handleRetry}
