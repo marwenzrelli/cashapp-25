@@ -1,7 +1,7 @@
 
 import { useRef, useCallback, useMemo, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useOperations } from "@/features/operations/hooks/useOperations";
+import { useClientSpecificOperations } from "./useClientSpecificOperations";
 import { useClientData } from "./clientProfile/useClientData";
 import { useClientOperationsFilter } from "./clientProfile/useClientOperationsFilter";
 import { useClientProfileExport } from "./clientProfile/useClientProfileExport";
@@ -15,7 +15,6 @@ import { supabase } from "@/integrations/supabase/client";
 export const useClientProfile = () => {
   const { id: clientIdParam } = useParams();
   const navigate = useNavigate();
-  const { operations, refreshOperations } = useOperations();
   const qrCodeRef = useRef<HTMLDivElement>(null);
   
   // Améliorer la validation de l'ID client
@@ -62,6 +61,14 @@ export const useClientProfile = () => {
       console.error("Cannot refetch: No client ID available");
     }
   }, [parsedClientId, fetchClient]);
+  
+  // Use client-specific operations hook to load ALL operations for this client (no limits)
+  const clientName = client ? `${client.prenom} ${client.nom}` : '';
+  const { 
+    operations, 
+    refreshOperations,
+    isLoading: isLoadingOperations 
+  } = useClientSpecificOperations(parsedClientId || 0, clientName);
   
   const { realTimeBalance, setRealTimeBalance } = useRealTimeBalance(parsedClientId);
   
@@ -168,7 +175,7 @@ export const useClientProfile = () => {
   const refreshClientOperations = useCallback(async (): Promise<void> => {
     console.log("Refreshing operations for client:", client?.id);
     try {
-      await refreshOperations(true);
+      await refreshOperations();
       
       await new Promise(resolve => setTimeout(resolve, 300));
       
@@ -196,7 +203,7 @@ export const useClientProfile = () => {
     clientId: parsedClientId,
     clientOperations,
     filteredOperations,
-    isLoading,
+    isLoading: isLoading || isLoadingOperations,
     error,
     navigate,
     qrCodeRef,
