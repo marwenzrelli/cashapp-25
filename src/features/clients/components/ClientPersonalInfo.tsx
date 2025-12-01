@@ -16,14 +16,36 @@ export const ClientPersonalInfo = ({
   formatAmount, 
   clientOperations 
 }: ClientPersonalInfoProps) => {
-  // Calculer les statistiques des opérations
-  const totalDeposits = clientOperations
+  // Calculer les statistiques des opérations (incluant virements et opérations directes)
+  const deposits = clientOperations
     .filter(op => op.type === 'deposit')
     .reduce((sum, op) => sum + op.amount, 0);
   
-  const totalWithdrawals = clientOperations
+  const withdrawals = clientOperations
     .filter(op => op.type === 'withdrawal')
     .reduce((sum, op) => sum + op.amount, 0);
+  
+  const transfersReceived = clientOperations
+    .filter(op => op.type === 'transfer' && (op.to_client_id === client.id || op.toClient === `${client.prenom} ${client.nom}`))
+    .reduce((sum, op) => sum + op.amount, 0);
+  
+  const transfersSent = clientOperations
+    .filter(op => op.type === 'transfer' && (op.from_client_id === client.id || op.fromClient === `${client.prenom} ${client.nom}`))
+    .reduce((sum, op) => sum + op.amount, 0);
+  
+  const directOperationsReceived = clientOperations
+    .filter(op => op.type === 'direct_transfer' && (op.to_client_id === client.id || op.toClient === `${client.prenom} ${client.nom}`))
+    .reduce((sum, op) => sum + op.amount, 0);
+  
+  const directOperationsSent = clientOperations
+    .filter(op => op.type === 'direct_transfer' && (op.from_client_id === client.id || op.fromClient === `${client.prenom} ${client.nom}`))
+    .reduce((sum, op) => sum + op.amount, 0);
+  
+  // Total versements = versements + virements reçus + opérations directes reçues
+  const totalDeposits = deposits + transfersReceived + directOperationsReceived;
+  
+  // Total retraits = retraits + virements émis + opérations directes émises
+  const totalWithdrawals = withdrawals + transfersSent + directOperationsSent;
 
   return (
     <div className="space-y-6">
