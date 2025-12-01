@@ -3,8 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Client } from "../../types";
 import { format } from "date-fns";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { useOperations } from "@/features/operations/hooks/useOperations";
-import { useMemo } from "react";
 
 interface ClientExpandedViewProps {
   client: Client;
@@ -13,61 +11,12 @@ interface ClientExpandedViewProps {
 
 export const ClientExpandedView = ({ client, onView }: ClientExpandedViewProps) => {
   const { currency } = useCurrency();
-  const { operations } = useOperations();
   
   const clientId = typeof client.id === 'string' ? parseInt(client.id, 10) : client.id;
   const clientName = `${client.prenom} ${client.nom}`;
   
-  // Calculate net balance from operations
-  const netBalance = useMemo(() => {
-    if (!operations || operations.length === 0) {
-      return client.solde; // Fallback to database balance
-    }
-
-    const clientFullName = clientName.trim();
-    
-    // Calculate totals by operation type
-    const totalDeposits = operations
-      .filter(op => op.type === "deposit" && (op.client_id === clientId || op.fromClient === clientFullName))
-      .reduce((total, op) => total + op.amount, 0);
-      
-    const totalWithdrawals = operations
-      .filter(op => op.type === "withdrawal" && (op.client_id === clientId || op.fromClient === clientFullName))
-      .reduce((total, op) => total + op.amount, 0);
-      
-    // Separate transfers received and sent
-    const transfersReceived = operations
-      .filter(op => op.type === "transfer" && (op.to_client_id === clientId || op.toClient === clientFullName))
-      .reduce((total, op) => total + op.amount, 0);
-      
-    const transfersSent = operations
-      .filter(op => op.type === "transfer" && (op.from_client_id === clientId || op.fromClient === clientFullName))
-      .reduce((total, op) => total + op.amount, 0);
-
-    // Calculate direct operations received and sent
-    const directOperationsReceived = operations
-      .filter(op => op.type === "direct_transfer" && (op.to_client_id === clientId || op.toClient === clientFullName))
-      .reduce((total, op) => total + op.amount, 0);
-      
-    const directOperationsSent = operations
-      .filter(op => op.type === "direct_transfer" && (op.from_client_id === clientId || op.fromClient === clientFullName))
-      .reduce((total, op) => total + op.amount, 0);
-      
-    // Calculate net balance: deposits + transfers received + direct operations received - withdrawals - transfers sent - direct operations sent
-    return totalDeposits + transfersReceived + directOperationsReceived - totalWithdrawals - transfersSent - directOperationsSent;
-  }, [operations, clientId, clientName, client.solde]);
-  
-  // Format the balance without explicit sign and proper rounding
-  const roundedBalance = Math.round(netBalance * 100) / 100; // Round to 2 decimal places
-  
-  console.log("ClientExpandedView balance calculation:", {
-    clientName,
-    clientId,
-    clientSolde: client.solde,
-    netBalance,
-    roundedBalance,
-    isPositive: roundedBalance >= 0
-  });
+  // Use database balance directly (calculated server-side via triggers)
+  const roundedBalance = Math.round(client.solde * 100) / 100; // Round to 2 decimal places
   
   return (
     <div className="mt-4 md:pl-14 text-sm grid gap-2">

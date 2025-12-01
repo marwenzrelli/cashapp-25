@@ -1,8 +1,6 @@
 
 import { Wallet } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { useOperations } from "@/features/operations/hooks/useOperations";
-import { useMemo } from "react";
 
 interface ClientBalanceDisplayProps {
   solde: number;
@@ -12,64 +10,15 @@ interface ClientBalanceDisplayProps {
 
 export const ClientBalanceDisplay = ({ solde, clientId, clientName }: ClientBalanceDisplayProps) => {
   const { currency } = useCurrency();
-  const { operations } = useOperations();
   
-  // Calculate net balance from operations
-  const netBalance = useMemo(() => {
-    if (!operations || operations.length === 0) {
-      return solde; // Fallback to database balance
-    }
-
-    const clientFullName = clientName.trim();
-    
-    // Calculate totals by operation type
-    const totalDeposits = operations
-      .filter(op => op.type === "deposit" && (op.client_id === clientId || op.fromClient === clientFullName))
-      .reduce((total, op) => total + op.amount, 0);
-      
-    const totalWithdrawals = operations
-      .filter(op => op.type === "withdrawal" && (op.client_id === clientId || op.fromClient === clientFullName))
-      .reduce((total, op) => total + op.amount, 0);
-      
-    // Separate transfers received and sent
-    const transfersReceived = operations
-      .filter(op => op.type === "transfer" && (op.to_client_id === clientId || op.toClient === clientFullName))
-      .reduce((total, op) => total + op.amount, 0);
-      
-    const transfersSent = operations
-      .filter(op => op.type === "transfer" && (op.from_client_id === clientId || op.fromClient === clientFullName))
-      .reduce((total, op) => total + op.amount, 0);
-
-    // Calculate direct operations received and sent
-    const directOperationsReceived = operations
-      .filter(op => op.type === "direct_transfer" && (op.to_client_id === clientId || op.toClient === clientFullName))
-      .reduce((total, op) => total + op.amount, 0);
-      
-    const directOperationsSent = operations
-      .filter(op => op.type === "direct_transfer" && (op.from_client_id === clientId || op.fromClient === clientFullName))
-      .reduce((total, op) => total + op.amount, 0);
-      
-    // Calculate net balance: deposits + transfers received + direct operations received - withdrawals - transfers sent - direct operations sent
-    return totalDeposits + transfersReceived + directOperationsReceived - totalWithdrawals - transfersSent - directOperationsSent;
-  }, [operations, clientId, clientName, solde]);
-  
-  // Format the balance without explicit sign and proper rounding
-  const roundedBalance = Math.round(netBalance * 100) / 100; // Round to 2 decimal places
+  // Use database balance directly (calculated server-side via triggers)
+  const roundedBalance = Math.round(solde * 100) / 100; // Round to 2 decimal places
   
   // Use the formatAmount function for consistent currency formatting
   const formattedBalance = `${Math.abs(roundedBalance).toLocaleString('fr-FR', { 
     minimumFractionDigits: 0,
     maximumFractionDigits: 2 
   })} ${currency}`;
-  
-  console.log("ClientBalanceDisplay balance calculation:", {
-    clientName,
-    clientId,
-    solde,
-    netBalance,
-    roundedBalance,
-    isPositive: roundedBalance >= 0
-  });
   
   return (
     <div className="flex flex-col gap-1 pr-0 md:pr-6 md:border-r md:border-transparent">
