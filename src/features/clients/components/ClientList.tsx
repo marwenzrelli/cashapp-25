@@ -9,11 +9,12 @@ import { TransferPagination } from "@/features/transfers/components/TransferPagi
 
 interface ClientListProps {
   clients: Client[];
+  sortBy: "name" | "id" | "balance";
   onEdit: (client: Client) => void;
   onDelete: (client: Client) => void;
 }
 
-export const ClientList = ({ clients, onEdit, onDelete }: ClientListProps) => {
+export const ClientList = ({ clients, sortBy, onEdit, onDelete }: ClientListProps) => {
   const navigate = useNavigate();
   const [expandedClientId, setExpandedClientId] = useState<number | null>(null);
   
@@ -40,10 +41,26 @@ export const ClientList = ({ clients, onEdit, onDelete }: ClientListProps) => {
     navigate(`/clients/${clientId}`);
   };
 
+  // Sort clients
+  const sortedClients = [...clients].sort((a, b) => {
+    switch (sortBy) {
+      case "name":
+        const nameA = `${a.nom} ${a.prenom}`.toLowerCase();
+        const nameB = `${b.nom} ${b.prenom}`.toLowerCase();
+        return nameA.localeCompare(nameB);
+      case "id":
+        return a.id - b.id;
+      case "balance":
+        return (b.solde || 0) - (a.solde || 0);
+      default:
+        return 0;
+    }
+  });
+
   // Calculate pagination
   const indexOfLastClient = currentPage * parseInt(itemsPerPage);
   const indexOfFirstClient = indexOfLastClient - parseInt(itemsPerPage);
-  const currentClients = clients.slice(indexOfFirstClient, indexOfLastClient);
+  const currentClients = sortedClients.slice(indexOfFirstClient, indexOfLastClient);
 
   return (
     <Card className="w-full">
@@ -64,19 +81,19 @@ export const ClientList = ({ clients, onEdit, onDelete }: ClientListProps) => {
             />
           ))}
           
-          {clients.length === 0 && (
+          {sortedClients.length === 0 && (
             <div className="py-8 text-center text-muted-foreground">
               Aucun client à afficher
             </div>
           )}
         </div>
         
-        {clients.length > 0 && (
+        {sortedClients.length > 0 && (
           <div className="p-4">
             <TransferPagination
               itemsPerPage={itemsPerPage}
               setItemsPerPage={setItemsPerPage}
-              totalItems={clients.length}
+              totalItems={sortedClients.length}
               currentPage={currentPage}
               setCurrentPage={setCurrentPage}
               label="clients"
