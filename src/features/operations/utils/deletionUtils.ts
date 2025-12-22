@@ -150,10 +150,10 @@ export const handleDepositDeletion = async (depositId: number, userId: string | 
     }
     
     // Préparer les données à insérer dans deleted_deposits
+    // Note: client_id n'existe pas dans deleted_deposits selon le schéma
     const logEntry = {
       original_id: depositData.id,
       client_name: depositData.client_name,
-      client_id: depositData.client_id,
       amount: Number(depositData.amount),
       operation_date: depositData.operation_date || depositData.created_at,
       notes: depositData.notes || null,
