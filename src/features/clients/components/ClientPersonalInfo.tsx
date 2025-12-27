@@ -93,7 +93,7 @@ export const ClientPersonalInfo = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-gray-500">Solde actuel</label>
-              <p className="text-2xl font-bold text-primary">{formatAmount(client.solde)}</p>
+              <p className={`text-2xl font-bold ${client.solde >= 0 ? 'text-green-600' : 'text-red-600'}`}>{formatAmount(client.solde)}</p>
               <p className="text-xs text-gray-400 mt-1">
                 Mis à jour le {new Date().toLocaleDateString('fr-FR')} à {new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
               </p>
