@@ -34,7 +34,7 @@ export const TreasuryTable = ({
       console.log("Synchronisation de TOUTES les opérations...");
 
       // Récupérer TOUTES les données depuis la base (sans limite de date)
-      const [depositsResult, withdrawalsResult, transfersResult] = await Promise.all([
+      const [depositsResult, withdrawalsResult, transfersResult, directOpsResult] = await Promise.all([
         supabase
           .from('deposits')
           .select('*')
@@ -46,12 +46,17 @@ export const TreasuryTable = ({
         supabase
           .from('transfers')
           .select('*')
+          .order('operation_date', { ascending: true }),
+        supabase
+          .from('direct_operations')
+          .select('*')
           .order('operation_date', { ascending: true })
       ]);
 
       if (depositsResult.error) throw depositsResult.error;
       if (withdrawalsResult.error) throw withdrawalsResult.error;
       if (transfersResult.error) throw transfersResult.error;
+      if (directOpsResult.error) throw directOpsResult.error;
 
       // Transformer les données en format Operation
       const transformedDeposits: Operation[] = depositsResult.data.map(deposit => ({
@@ -88,8 +93,20 @@ export const TreasuryTable = ({
         status: transfer.status || 'completed'
       }));
 
+      const transformedDirectOps: Operation[] = (directOpsResult.data || []).map(directOp => ({
+        id: `direct-${directOp.id}`,
+        type: 'direct_transfer' as const,
+        amount: directOp.amount,
+        date: directOp.operation_date || directOp.created_at,
+        operation_date: directOp.operation_date || directOp.created_at,
+        description: directOp.notes || `Opération directe: ${directOp.from_client_name} → ${directOp.to_client_name}`,
+        fromClient: directOp.from_client_name,
+        toClient: directOp.to_client_name,
+        status: directOp.status || 'completed'
+      }));
+
       // Combiner et trier toutes les opérations par date chronologique
-      const allOperations = [...transformedDeposits, ...transformedWithdrawals, ...transformedTransfers];
+      const allOperations = [...transformedDeposits, ...transformedWithdrawals, ...transformedTransfers, ...transformedDirectOps];
       const sortedByDate = allOperations.sort((a, b) => {
         const dateA = new Date(a.operation_date || a.date);
         const dateB = new Date(b.operation_date || b.date);
@@ -100,6 +117,7 @@ export const TreasuryTable = ({
       console.log(`- Versements: ${transformedDeposits.length}`);
       console.log(`- Retraits: ${transformedWithdrawals.length}`);
       console.log(`- Virements: ${transformedTransfers.length}`);
+      console.log(`- Opérations directes: ${transformedDirectOps.length}`);
       
       // Notifier le parent des nouvelles données
       if (onDataRefresh) {
@@ -122,14 +140,14 @@ export const TreasuryTable = ({
     return sortedOperations.map((op, index): TreasuryOperation => {
       const balanceBefore = runningBalance;
       
-      // Calcul correct: seuls les dépôts et retraits affectent la trésorerie
+      // Calcul correct: dépôts et retraits affectent la trésorerie, opérations directes aussi
       let balanceChange = 0;
       if (op.type === "deposit") {
         balanceChange = op.amount; // Entrée d'argent
       } else if (op.type === "withdrawal") {
         balanceChange = -op.amount; // Sortie d'argent
       }
-      // Les virements sont neutres pour la trésorerie (op.type === "transfer")
+      // Les virements et opérations directes sont neutres pour la trésorerie globale
       
       runningBalance += balanceChange;
       
@@ -158,6 +176,8 @@ export const TreasuryTable = ({
         return <Badge variant="outline" className="bg-red-50 text-red-700">Retrait</Badge>;
       case 'transfer':
         return <Badge variant="outline" className="bg-blue-50 text-blue-700">Virement</Badge>;
+      case 'direct_transfer':
+        return <Badge variant="outline" className="bg-purple-50 text-purple-700">Op. Directe</Badge>;
       default:
         return <Badge variant="outline">Inconnu</Badge>;
     }
@@ -193,6 +213,8 @@ export const TreasuryTable = ({
         return "text-green-600 font-semibold font-mono";
       case "transfer":
         return "text-blue-600 font-semibold font-mono";
+      case "direct_transfer":
+        return "text-purple-600 font-semibold font-mono";
       default:
         return "font-semibold font-mono";
     }
@@ -224,7 +246,7 @@ export const TreasuryTable = ({
   const formatOperationAmount = (operation: TreasuryOperation) => {
     if (operation.type === "withdrawal") {
       return formatCurrency(-operation.amount);
-    } else if (operation.type === "transfer") {
+    } else if (operation.type === "transfer" || operation.type === "direct_transfer") {
       return formatCurrency(0); // Neutre pour la trésorerie
     } else {
       return formatCurrency(operation.amount);
@@ -277,7 +299,7 @@ export const TreasuryTable = ({
                 <TableCell>{operation.id}</TableCell>
                 <TableCell>{getOperationNatureBadge(operation.type)}</TableCell>
                 <TableCell>
-                  {operation.type === "transfer" ? `${operation.fromClient} → ${operation.toClient}` : operation.fromClient}
+                  {(operation.type === "transfer" || operation.type === "direct_transfer") ? `${operation.fromClient} → ${operation.toClient}` : operation.fromClient}
                 </TableCell>
                 <TableCell>
                   {operation.description || ""}
