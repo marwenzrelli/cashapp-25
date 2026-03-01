@@ -11,6 +11,7 @@ import { useTreasurySorting, SortField } from "../../hooks/useTreasurySorting";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { fetchAllRows } from "../../utils/fetchAllRows";
 
 interface TreasuryTableProps {
   operations: Operation[];
@@ -36,33 +37,16 @@ export const TreasuryTable = ({
     try {
       console.log("Synchronisation de TOUTES les opérations...");
 
-      // Récupérer TOUTES les données depuis la base (sans limite de date)
-      const [depositsResult, withdrawalsResult, transfersResult, directOpsResult] = await Promise.all([
-        supabase
-          .from('deposits')
-          .select('*')
-          .order('operation_date', { ascending: true }),
-        supabase
-          .from('withdrawals')
-          .select('*')
-          .order('operation_date', { ascending: true }),
-        supabase
-          .from('transfers')
-          .select('*')
-          .order('operation_date', { ascending: true }),
-        supabase
-          .from('direct_operations')
-          .select('*')
-          .order('operation_date', { ascending: true })
+      // Récupérer TOUTES les données depuis la base (sans limite)
+      const [depositsData, withdrawalsData, transfersData, directOpsData] = await Promise.all([
+        fetchAllRows('deposits', { orderBy: 'operation_date', ascending: true }),
+        fetchAllRows('withdrawals', { orderBy: 'operation_date', ascending: true }),
+        fetchAllRows('transfers', { orderBy: 'operation_date', ascending: true }),
+        fetchAllRows('direct_operations', { orderBy: 'operation_date', ascending: true })
       ]);
 
-      if (depositsResult.error) throw depositsResult.error;
-      if (withdrawalsResult.error) throw withdrawalsResult.error;
-      if (transfersResult.error) throw transfersResult.error;
-      if (directOpsResult.error) throw directOpsResult.error;
-
       // Transformer les données en format Operation
-      const transformedDeposits: Operation[] = depositsResult.data.map(deposit => ({
+      const transformedDeposits: Operation[] = (depositsData || []).map((deposit: any) => ({
         id: `dep-${deposit.id}`,
         type: 'deposit' as const,
         amount: deposit.amount,
@@ -73,7 +57,7 @@ export const TreasuryTable = ({
         status: deposit.status || 'completed'
       }));
 
-      const transformedWithdrawals: Operation[] = withdrawalsResult.data.map(withdrawal => ({
+      const transformedWithdrawals: Operation[] = (withdrawalsData || []).map((withdrawal: any) => ({
         id: `wit-${withdrawal.id}`,
         type: 'withdrawal' as const,
         amount: withdrawal.amount,
@@ -84,7 +68,7 @@ export const TreasuryTable = ({
         status: withdrawal.status || 'completed'
       }));
 
-      const transformedTransfers: Operation[] = transfersResult.data.map(transfer => ({
+      const transformedTransfers: Operation[] = (transfersData || []).map((transfer: any) => ({
         id: `tra-${transfer.id}`,
         type: 'transfer' as const,
         amount: transfer.amount,
@@ -96,7 +80,7 @@ export const TreasuryTable = ({
         status: transfer.status || 'completed'
       }));
 
-      const transformedDirectOps: Operation[] = (directOpsResult.data || []).map(directOp => ({
+      const transformedDirectOps: Operation[] = (directOpsData || []).map((directOp: any) => ({
         id: `direct-${directOp.id}`,
         type: 'direct_transfer' as const,
         amount: directOp.amount,

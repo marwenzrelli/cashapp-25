@@ -43,8 +43,7 @@ export const useFetchWithdrawals = () => {
       const { data, error: fetchError } = await supabase
         .from('withdrawals')
         .select('*')
-        .order('created_at', { ascending: false })
-        .limit(200);
+        .order('created_at', { ascending: false });
 
 
       if (fetchError) {
