@@ -1,6 +1,7 @@
 
 import { useState, useCallback } from "react";
 import { Withdrawal } from "../types";
+import { fetchAllRows } from "@/features/statistics/utils/fetchAllRows";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatDate } from "./utils/formatUtils";
@@ -40,20 +41,15 @@ export const useFetchWithdrawals = () => {
       
       console.log("Fetching withdrawals with authenticated session:", session.user.id);
       
-      const { data, error: fetchError } = await supabase
-        .from('withdrawals')
-        .select('*')
-        .order('created_at', { ascending: false });
+      // Fetch ALL withdrawals using batch pagination (bypasses 1000-row limit)
+      const allData = await fetchAllRows('withdrawals', { 
+        orderBy: 'created_at', 
+        ascending: false 
+      });
 
+      const data = allData as any[];
 
-      if (fetchError) {
-        console.error("Erreur lors de la récupération des retraits:", fetchError);
-        setError(handleSupabaseError(fetchError));
-        setLoading(false);
-        return;
-      }
-
-      if (!data) {
+      if (!data || data.length === 0) {
         console.log("Aucun retrait trouvé.");
         setWithdrawals([]);
         setLoading(false);

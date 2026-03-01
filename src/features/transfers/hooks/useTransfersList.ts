@@ -4,19 +4,14 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Transfer } from "../types";
 import { formatDateTime } from "@/features/operations/types";
+import { fetchAllRows } from "@/features/statistics/utils/fetchAllRows";
 
 const fetchTransfersData = async (): Promise<Transfer[]> => {
   try {
-    const { data, error } = await supabase
-      .from('transfers')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error("Error fetching transfers:", error);
-      toast.error("Erreur lors du chargement des virements");
-      throw error;
-    }
+    const data = await fetchAllRows('transfers', { 
+      orderBy: 'created_at', 
+      ascending: false 
+    }) as any[];
 
     if (data) {
       const formattedTransfers: Transfer[] = data.map(transfer => ({

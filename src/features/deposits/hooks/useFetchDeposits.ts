@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Deposit } from "@/features/deposits/types";
 import { formatDateTime } from "@/features/deposits/hooks/utils/dateUtils";
 import { useCallback } from "react";
+import { fetchAllRows } from "@/features/statistics/utils/fetchAllRows";
 
 export const useFetchDeposits = (
   setDeposits: React.Dispatch<React.SetStateAction<Deposit[]>>,
@@ -25,17 +26,14 @@ export const useFetchDeposits = (
         console.log("Fetching deposits with authenticated session:", session.user.id);
       }
       
-      // Get deposits data with client_id and client balance included through a join
-      const { data, error } = await supabase
-        .from('deposits')
-        .select('*, clients(solde)')
-        .order('created_at', { ascending: false });
+      // Fetch ALL deposits using batch pagination (bypasses 1000-row limit)
+      const data = await fetchAllRows('deposits', { 
+        orderBy: 'created_at', 
+        ascending: false 
+      }) as any[];
 
-      if (error) {
-        console.error("Error fetching deposits:", error);
-        toast.error("Erreur lors du chargement des versements", {
-          description: error.message
-        });
+      if (!data || data.length === 0) {
+        console.log("No deposits found.");
         setDeposits([]);
         return;
       }
