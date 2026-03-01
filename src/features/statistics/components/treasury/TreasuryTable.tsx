@@ -6,10 +6,11 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronUp, ChevronDown, RefreshCw } from "lucide-react";
+import { ChevronUp, ChevronDown, RefreshCw, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { useTreasurySorting, SortField } from "../../hooks/useTreasurySorting";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface TreasuryTableProps {
   operations: Operation[];
@@ -27,6 +28,8 @@ export const TreasuryTable = ({
 }: TreasuryTableProps) => {
   const { sortedOperations, sortConfig, handleSort } = useTreasurySorting(operations);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
 
   const syncAllOperations = async () => {
     setIsSyncing(true);
@@ -253,24 +256,50 @@ export const TreasuryTable = ({
     }
   };
 
+  // Pagination
+  const totalPages = Math.ceil(operationsWithBalance.length / pageSize);
+  const paginatedOperations = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return operationsWithBalance.slice(start, start + pageSize);
+  }, [operationsWithBalance, currentPage, pageSize]);
+
+  // Reset page when operations change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [operations.length, pageSize]);
+
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center flex-wrap gap-2">
         <div>
           <h3 className="text-lg font-semibold">Livre de trésorerie</h3>
           <p className="text-sm text-muted-foreground">
-            {operationsWithBalance.length} opération{operationsWithBalance.length > 1 ? 's' : ''} affichée{operationsWithBalance.length > 1 ? 's' : ''}
+            {operationsWithBalance.length} opération{operationsWithBalance.length > 1 ? 's' : ''} au total
           </p>
         </div>
-        <Button
-          onClick={syncAllOperations}
-          disabled={isSyncing}
-          variant="outline"
-          className="flex items-center gap-2"
-        >
-          <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
-          {isSyncing ? 'Synchronisation...' : 'Synchroniser toutes les opérations'}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Select value={pageSize.toString()} onValueChange={(v) => setPageSize(Number(v))}>
+            <SelectTrigger className="w-[130px] h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="25">25 par page</SelectItem>
+              <SelectItem value="50">50 par page</SelectItem>
+              <SelectItem value="100">100 par page</SelectItem>
+              <SelectItem value="200">200 par page</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button
+            onClick={syncAllOperations}
+            disabled={isSyncing}
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
+            {isSyncing ? 'Sync...' : 'Synchroniser'}
+          </Button>
+        </div>
       </div>
 
       <div className="relative w-full overflow-auto">
@@ -289,7 +318,7 @@ export const TreasuryTable = ({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {operationsWithBalance.length > 0 ? operationsWithBalance.map(operation => (
+            {paginatedOperations.length > 0 ? paginatedOperations.map(operation => (
               <TableRow key={operation.id}>
                 <TableCell>
                   {format(new Date(operation.operation_date || operation.date), "dd/MM/yyyy HH:mm", {
@@ -327,6 +356,54 @@ export const TreasuryTable = ({
           </TableBody>
         </Table>
       </div>
+
+      {/* Pagination controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between flex-wrap gap-2 pt-2">
+          <p className="text-sm text-muted-foreground">
+            Page {currentPage} sur {totalPages} — Opérations {((currentPage - 1) * pageSize) + 1} à {Math.min(currentPage * pageSize, operationsWithBalance.length)} sur {operationsWithBalance.length}
+          </p>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1}
+            >
+              <ChevronsLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="px-3 text-sm font-medium">{currentPage} / {totalPages}</span>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages}
+            >
+              <ChevronsRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
