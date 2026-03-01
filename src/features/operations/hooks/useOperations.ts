@@ -18,12 +18,12 @@ export const useOperations = () => {
       setIsLoading(true);
       setError(null);
 
-      // Fetch all operation types in parallel with limits for better performance
+      // Fetch all operation types in parallel
       const [depositsResult, withdrawalsResult, transfersResult, directOperationsResult] = await Promise.all([
-        supabase.from('deposits').select('*').order('created_at', { ascending: false }).limit(300),
-        supabase.from('withdrawals').select('*').order('created_at', { ascending: false }).limit(300),
-        supabase.from('transfers').select('*').order('created_at', { ascending: false }).limit(200),
-        supabase.from('direct_operations').select('*').order('operation_date', { ascending: false }).limit(200)
+        supabase.from('deposits').select('*').order('created_at', { ascending: false }),
+        supabase.from('withdrawals').select('*').order('created_at', { ascending: false }),
+        supabase.from('transfers').select('*').order('created_at', { ascending: false }),
+        supabase.from('direct_operations').select('*').order('operation_date', { ascending: false })
       ]);
 
       // Check for errors

@@ -10,8 +10,7 @@ const fetchTransfersData = async (): Promise<Transfer[]> => {
     const { data, error } = await supabase
       .from('transfers')
       .select('*')
-      .order('created_at', { ascending: false })
-      .limit(150);
+      .order('created_at', { ascending: false });
 
     if (error) {
       console.error("Error fetching transfers:", error);

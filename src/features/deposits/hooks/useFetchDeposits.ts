@@ -29,8 +29,7 @@ export const useFetchDeposits = (
       const { data, error } = await supabase
         .from('deposits')
         .select('*, clients(solde)')
-        .order('created_at', { ascending: false })
-        .limit(200);
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error("Error fetching deposits:", error);
