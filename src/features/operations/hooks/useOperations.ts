@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Operation } from "@/features/operations/types";
 import { transformToOperations, deduplicateOperations, sortOperationsByDate } from "./utils/operationTransformers";
 import { toast } from "sonner";
+import { fetchAllRows } from "@/features/statistics/utils/fetchAllRows";
 
 export const useOperations = () => {
   const [operations, setOperations] = useState<Operation[]>([]);
@@ -18,13 +19,18 @@ export const useOperations = () => {
       setIsLoading(true);
       setError(null);
 
-      // Fetch all operation types in parallel
-      const [depositsResult, withdrawalsResult, transfersResult, directOperationsResult] = await Promise.all([
-        supabase.from('deposits').select('*').order('created_at', { ascending: false }),
-        supabase.from('withdrawals').select('*').order('created_at', { ascending: false }),
-        supabase.from('transfers').select('*').order('created_at', { ascending: false }),
-        supabase.from('direct_operations').select('*').order('operation_date', { ascending: false })
+      // Fetch all operation types in parallel using batch pagination
+      const [depositsData, withdrawalsData, transfersData, directOpsData] = await Promise.all([
+        fetchAllRows('deposits', { orderBy: 'created_at', ascending: false }),
+        fetchAllRows('withdrawals', { orderBy: 'created_at', ascending: false }),
+        fetchAllRows('transfers', { orderBy: 'created_at', ascending: false }),
+        fetchAllRows('direct_operations', { orderBy: 'operation_date', ascending: false })
       ]);
+
+      const depositsResult = { data: depositsData, error: null };
+      const withdrawalsResult = { data: withdrawalsData, error: null };
+      const transfersResult = { data: transfersData, error: null };
+      const directOperationsResult = { data: directOpsData, error: null };
 
       // Check for errors
       if (depositsResult.error) {

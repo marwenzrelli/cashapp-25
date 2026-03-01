@@ -2,7 +2,8 @@
 import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Operation } from '../types';
-import { mockOperations } from '../data/mock-operations';  // Corrigé le chemin et le nom
+import { mockOperations } from '../data/mock-operations';
+import { fetchAllRows } from '@/features/statistics/utils/fetchAllRows';
 
 export const useOperationsFetcher = () => {
   // Fonction pour récupérer toutes les opérations
@@ -14,12 +15,16 @@ export const useOperationsFetcher = () => {
     // Ajout d'un paramètre aléatoire pour éviter tout problème de cache
     const timestamp = Date.now();
     
-    // Utiliser Promise.all pour paralléliser les requêtes
-    const [depositsResult, withdrawalsResult, transfersResult] = await Promise.all([
-      supabase.from('deposits').select('*').order('created_at', { ascending: false }),
-      supabase.from('withdrawals').select('*').order('created_at', { ascending: false }),
-      supabase.from('transfers').select('*').order('created_at', { ascending: false })
+    // Utiliser fetchAllRows pour récupérer toutes les opérations sans limite
+    const [depositsData, withdrawalsData, transfersData] = await Promise.all([
+      fetchAllRows('deposits', { orderBy: 'created_at', ascending: false }),
+      fetchAllRows('withdrawals', { orderBy: 'created_at', ascending: false }),
+      fetchAllRows('transfers', { orderBy: 'created_at', ascending: false })
     ]);
+
+    const depositsResult = { data: depositsData, error: null };
+    const withdrawalsResult = { data: withdrawalsData, error: null };
+    const transfersResult = { data: transfersData, error: null };
     
     // Vérifier les erreurs pour chaque requête
     if (depositsResult.error) {
