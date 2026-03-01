@@ -1,10 +1,11 @@
 
-import React from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { TreasuryTable } from "./TreasuryTable";
 import { TreasurySummary } from "./TreasurySummary";
 import { TreasuryAnalysis } from "./TreasuryAnalysis";
 import { Operation } from "@/features/operations/types";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface TreasuryTabProps {
   operations: Operation[];
@@ -12,19 +13,129 @@ interface TreasuryTabProps {
 }
 
 export const TreasuryTab = ({ operations, isLoading }: TreasuryTabProps) => {
-  const [localOperations, setLocalOperations] = React.useState<Operation[]>(operations);
-  const [systemBalance, setSystemBalance] = React.useState<number>(0);
+  const [localOperations, setLocalOperations] = useState<Operation[]>([]);
+  const [systemBalance, setSystemBalance] = useState<number>(0);
+  const [isFetchingAll, setIsFetchingAll] = useState(true);
 
-  // Mettre à jour les opérations locales quand les props changent
-  React.useEffect(() => {
-    setLocalOperations(operations);
+  // Fetch ALL operations directly from DB (no limits)
+  const fetchAllOperations = useCallback(async () => {
+    setIsFetchingAll(true);
+    try {
+      console.log("TreasuryTab: Fetching ALL operations from DB...");
+
+      const [depositsResult, withdrawalsResult, transfersResult, directOpsResult] = await Promise.all([
+        supabase
+          .from('deposits')
+          .select('*')
+          .order('operation_date', { ascending: true }),
+        supabase
+          .from('withdrawals')
+          .select('*')
+          .order('operation_date', { ascending: true }),
+        supabase
+          .from('transfers')
+          .select('*')
+          .order('operation_date', { ascending: true }),
+        supabase
+          .from('direct_operations')
+          .select('*')
+          .order('operation_date', { ascending: true })
+      ]);
+
+      if (depositsResult.error) throw depositsResult.error;
+      if (withdrawalsResult.error) throw withdrawalsResult.error;
+      if (transfersResult.error) throw transfersResult.error;
+      if (directOpsResult.error) throw directOpsResult.error;
+
+      const transformedDeposits: Operation[] = (depositsResult.data || []).map(deposit => ({
+        id: `dep-${deposit.id}`,
+        type: 'deposit' as const,
+        amount: deposit.amount,
+        date: deposit.operation_date || deposit.created_at || new Date().toISOString(),
+        operation_date: deposit.operation_date || deposit.created_at || new Date().toISOString(),
+        description: deposit.notes || 'Versement',
+        fromClient: deposit.client_name,
+        client_id: deposit.client_id,
+        status: deposit.status || 'completed'
+      }));
+
+      const transformedWithdrawals: Operation[] = (withdrawalsResult.data || []).map(withdrawal => ({
+        id: `wit-${withdrawal.id}`,
+        type: 'withdrawal' as const,
+        amount: withdrawal.amount,
+        date: withdrawal.operation_date || withdrawal.created_at || new Date().toISOString(),
+        operation_date: withdrawal.operation_date || withdrawal.created_at || new Date().toISOString(),
+        description: withdrawal.notes || 'Retrait',
+        fromClient: withdrawal.client_name,
+        client_id: withdrawal.client_id,
+        status: withdrawal.status || 'completed'
+      }));
+
+      const transformedTransfers: Operation[] = (transfersResult.data || []).map(transfer => ({
+        id: `tra-${transfer.id}`,
+        type: 'transfer' as const,
+        amount: transfer.amount,
+        date: transfer.operation_date || transfer.created_at || new Date().toISOString(),
+        operation_date: transfer.operation_date || transfer.created_at || new Date().toISOString(),
+        description: transfer.reason || 'Virement',
+        fromClient: transfer.from_client,
+        toClient: transfer.to_client,
+        status: transfer.status || 'completed'
+      }));
+
+      const transformedDirectOps: Operation[] = (directOpsResult.data || []).map(directOp => ({
+        id: `direct-${directOp.id}`,
+        type: 'direct_transfer' as const,
+        amount: directOp.amount,
+        date: directOp.operation_date || directOp.created_at || new Date().toISOString(),
+        operation_date: directOp.operation_date || directOp.created_at || new Date().toISOString(),
+        description: directOp.notes || `Opération directe: ${directOp.from_client_name} → ${directOp.to_client_name}`,
+        fromClient: directOp.from_client_name,
+        toClient: directOp.to_client_name,
+        from_client_id: directOp.from_client_id,
+        to_client_id: directOp.to_client_id,
+        client_id: directOp.from_client_id,
+        status: directOp.status || 'completed'
+      }));
+
+      const allOperations = [
+        ...transformedDeposits,
+        ...transformedWithdrawals,
+        ...transformedTransfers,
+        ...transformedDirectOps
+      ].sort((a, b) => {
+        const dateA = new Date(a.operation_date || a.date).getTime();
+        const dateB = new Date(b.operation_date || b.date).getTime();
+        return dateA - dateB;
+      });
+
+      console.log(`TreasuryTab: Fetched ALL operations:
+        - Versements: ${transformedDeposits.length}
+        - Retraits: ${transformedWithdrawals.length}
+        - Virements: ${transformedTransfers.length}
+        - Opérations directes: ${transformedDirectOps.length}
+        - Total: ${allOperations.length}`);
+
+      setLocalOperations(allOperations);
+    } catch (error) {
+      console.error('Erreur lors du chargement des opérations:', error);
+      toast.error('Erreur lors du chargement des opérations de trésorerie');
+      // Fallback to props operations
+      setLocalOperations(operations);
+    } finally {
+      setIsFetchingAll(false);
+    }
   }, [operations]);
 
+  // Fetch all on mount
+  useEffect(() => {
+    fetchAllOperations();
+  }, []);
+
   // Calculer le solde système réel
-  React.useEffect(() => {
+  useEffect(() => {
     const calculateSystemBalance = async () => {
       try {
-        // Récupérer le total des soldes de tous les clients
         const { data: clients, error } = await supabase
           .from('clients')
           .select('solde');
@@ -58,7 +169,7 @@ export const TreasuryTab = ({ operations, isLoading }: TreasuryTabProps) => {
     return treasuryBalance;
   }, [localOperations]);
 
-  if (isLoading) {
+  if (isLoading && isFetchingAll) {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="text-muted-foreground">Chargement des données de trésorerie...</div>
