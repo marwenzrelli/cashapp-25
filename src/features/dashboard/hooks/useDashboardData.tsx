@@ -26,29 +26,17 @@ export const useDashboardData = () => {
       setIsLoading(true);
       setError(null);
       
-      // Calcul du solde général basé sur les opérations réelles
-      // Au lieu d'utiliser la somme des soldes clients qui peut être incorrecte,
-      // on calcule le solde théorique: versements - retraits
-      const { data: depositsForBalance } = await supabase
-        .from('deposits')
-        .select('amount')
-        .eq('status', 'completed');
+      // Calcul du solde général: somme des soldes clients (maintenue par les triggers DB)
+      // Ceci est la source de vérité car les triggers mettent à jour les soldes à chaque opération
+      const { data: clientsForBalance, error: balanceError } = await supabase
+        .from('clients')
+        .select('solde');
       
-      const { data: withdrawalsForBalance } = await supabase
-        .from('withdrawals')
-        .select('amount')
-        .eq('status', 'completed');
-
-      const totalDepositsForBalance = depositsForBalance?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
-      const totalWithdrawalsForBalance = withdrawalsForBalance?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
+      if (balanceError) throw balanceError;
       
-      // Solde théorique = versements - retraits
-      const total_balance = totalDepositsForBalance - totalWithdrawalsForBalance;
+      const total_balance = clientsForBalance?.reduce((sum, c) => sum + Number(c.solde || 0), 0) || 0;
 
-      console.log(`Calcul du solde général:
-        - Total versements: ${totalDepositsForBalance.toLocaleString()} TND
-        - Total retraits: ${totalWithdrawalsForBalance.toLocaleString()} TND  
-        - Solde théorique: ${total_balance.toLocaleString()} TND`);
+      console.log(`Calcul du solde général (somme soldes clients): ${total_balance.toLocaleString()} TND`);
 
       // Requêtes parallèles pour les autres statistiques
       const [
