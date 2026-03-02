@@ -26,43 +26,14 @@ export const useDashboardData = () => {
       setIsLoading(true);
       setError(null);
       
-      // Calcul du solde général: somme des soldes clients (maintenue par les triggers DB)
-      // Ceci est la source de vérité car les triggers mettent à jour les soldes à chaque opération
-      const { data: clientsForBalance, error: balanceError } = await supabase
-        .from('clients')
-        .select('solde');
+      // Utiliser la RPC pour obtenir les stats agrégées directement depuis la DB
+      // Ceci évite la limite de 1000 lignes de Supabase
+      const { data: dbStats, error: rpcError } = await supabase.rpc('get_dashboard_stats');
       
-      if (balanceError) throw balanceError;
-      
-      const total_balance = clientsForBalance?.reduce((sum, c) => sum + Number(c.solde || 0), 0) || 0;
+      if (rpcError) throw rpcError;
 
-      console.log(`Calcul du solde général (somme soldes clients): ${total_balance.toLocaleString()} TND`);
-
-      // Requêtes parallèles pour les autres statistiques
-      const [
-        depositsResult,
-        withdrawalsResult,
-        clientsResult,
-        transfersResult
-      ] = await Promise.all([
-        supabase.from('deposits').select('amount').eq('status', 'completed'),
-        supabase.from('withdrawals').select('amount').eq('status', 'completed'),
-        supabase.from('clients').select('*', { count: 'exact' }).eq('status', 'active'),
-        supabase.from('transfers').select('amount').eq('status', 'completed')
-      ]);
-
-      // Vérification des erreurs
-      if (depositsResult.error) throw depositsResult.error;
-      if (withdrawalsResult.error) throw withdrawalsResult.error;
-      if (clientsResult.error) throw clientsResult.error;
-      if (transfersResult.error) throw transfersResult.error;
-
-      // Calculs des montants et nombres
-      const deposits_count = depositsResult.data?.length || 0;
-      const withdrawals_count = withdrawalsResult.data?.length || 0;
-      const total_deposits_amount = depositsResult.data?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
-      const total_withdrawals_amount = withdrawalsResult.data?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
-      const sent_transfers = transfersResult.data?.reduce((sum, t) => sum + Number(t.amount), 0) || 0;
+      const s = dbStats as any;
+      console.log(`Dashboard stats via RPC:`, s);
 
       // Génération simplifiée des statistiques mensuelles
       const monthlyStats = [];
@@ -74,26 +45,26 @@ export const useDashboardData = () => {
         
         monthlyStats.push({
           day: monthLabel,
-          total_deposits: Math.round(total_deposits_amount / 6),
-          total_withdrawals: Math.round(total_withdrawals_amount / 6),
-          deposits_count: Math.round(deposits_count / 6),
-          withdrawals_count: Math.round(withdrawals_count / 6)
+          total_deposits: Math.round(Number(s.deposit_total) / 6),
+          total_withdrawals: Math.round(Number(s.withdrawal_total) / 6),
+          deposits_count: Math.round(Number(s.deposit_count) / 6),
+          withdrawals_count: Math.round(Number(s.withdrawal_count) / 6)
         });
       }
 
-      // Mise à jour avec les valeurs calculées
       setStats({
-        total_deposits: deposits_count, // Nombre de dépôts
-        total_withdrawals: withdrawals_count, // Nombre de retraits
-        total_deposits_amount, // Montant total des dépôts
-        total_withdrawals_amount, // Montant total des retraits
-        client_count: clientsResult.count || 0,
-        transfer_count: transfersResult.data?.length || 0,
+        total_deposits: Number(s.deposit_count),
+        total_withdrawals: Number(s.withdrawal_count),
+        total_deposits_amount: Number(s.deposit_total),
+        total_withdrawals_amount: Number(s.withdrawal_total),
+        client_count: Number(s.client_count),
+        transfer_count: Number(s.transfer_count),
         monthly_stats: monthlyStats,
-        total_balance, // Utilise directement la somme des soldes clients
-        sent_transfers,
-        received_transfers: sent_transfers
+        total_balance: Number(s.total_balance),
+        sent_transfers: Number(s.transfer_total),
+        received_transfers: Number(s.transfer_total)
       });
+      
       
     } catch (error: any) {
       console.error('Error fetching stats:', error);
