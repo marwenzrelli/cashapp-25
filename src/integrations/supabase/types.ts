@@ -495,6 +495,7 @@ export type Database = {
         Args: { client_id: number; token: string }
         Returns: boolean
       }
+      recalculate_all_client_balances: { Args: never; Returns: Json }
     }
     Enums: {
       [_ in never]: never
