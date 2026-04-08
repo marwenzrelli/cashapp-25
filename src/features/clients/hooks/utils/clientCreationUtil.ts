@@ -1,13 +1,14 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { logger } from "@/utils/logger";
 
 /**
  * Creates a test client with the specified ID if it doesn't exist already
  */
 export const createClientIfNotExists = async (id: number = 1): Promise<boolean> => {
   try {
-    console.log(`Checking if client with ID ${id} exists...`);
+    logger.log(`Checking if client with ID ${id} exists...`);
     
     // Check if client exists
     const { count, error: countError } = await supabase
@@ -21,11 +22,11 @@ export const createClientIfNotExists = async (id: number = 1): Promise<boolean> 
     }
     
     if (count && count > 0) {
-      console.log(`Client with ID ${id} already exists`);
+      logger.log(`Client with ID ${id} already exists`);
       return true;
     }
     
-    console.log(`Creating client with ID ${id}...`);
+    logger.log(`Creating client with ID ${id}...`);
     
     // Create test client
     const { error } = await supabase
@@ -52,7 +53,7 @@ export const createClientIfNotExists = async (id: number = 1): Promise<boolean> 
       description: `Le client avec l'ID ${id} a été créé avec succès`
     });
     
-    console.log(`Client with ID ${id} created successfully`);
+    logger.log(`Client with ID ${id} created successfully`);
     return true;
   } catch (error: any) {
     console.error("Error in createClientIfNotExists:", error);

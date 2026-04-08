@@ -7,6 +7,7 @@ import { useUsersList } from './useUsersList';
 import { useUserActions } from './useUserActions';
 import { makeUserSupervisor } from '../api';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from "@/utils/logger";
 
 export function useUsers() {
   const { currentUser, isLoading: isCurrentUserLoading, error: currentUserError, fetchCurrentUser } = useCurrentUser();
@@ -38,14 +39,14 @@ export function useUsers() {
         return;
       }
       
-      console.log("Session valide, utilisateur:", session.user.email);
+      logger.log("Session valide, utilisateur:", session.user.email);
       
       // Continuer avec le chargement des données
       const currentUserData = await fetchCurrentUser();
-      console.log("Données utilisateur chargées:", currentUserData);
+      logger.log("Données utilisateur chargées:", currentUserData);
       
       const usersData = await fetchUsers();
-      console.log("Utilisateurs chargés:", usersData?.length || 0);
+      logger.log("Utilisateurs chargés:", usersData?.length || 0);
       
       toast.success("Données chargées avec succès");
     } catch (error) {
@@ -85,7 +86,7 @@ export function useUsers() {
     
     setIsMakingSupervisor(true);
     try {
-      console.log("Tentative d'attribution du rôle superviseur à:", email);
+      logger.log("Tentative d'attribution du rôle superviseur à:", email);
       
       // Récupérer l'utilisateur actuel pour vérifier
       const { data: { user } } = await supabase.auth.getUser();
@@ -95,7 +96,7 @@ export function useUsers() {
         return;
       }
       
-      console.log("Utilisateur actuel:", user.email);
+      logger.log("Utilisateur actuel:", user.email);
       
       // Si l'email fourni ne correspond pas à l'utilisateur connecté, afficher un avertissement
       if (user.email !== email) {

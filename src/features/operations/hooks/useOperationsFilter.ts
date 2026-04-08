@@ -4,6 +4,7 @@ import { Operation } from "../types";
 import { DateRange } from "react-day-picker";
 import { isWithinInterval } from "date-fns";
 import { operationMatchesSearch } from "../utils/display-helpers";
+import { logger } from "@/utils/logger";
 
 interface FilterOptions {
   filterType?: string | null;
@@ -28,7 +29,7 @@ export const useOperationsFilter = (operations: Operation[], externalFilters?: F
   };
 
   const filteredOperations = useMemo(() => {
-    console.log(`Filtering ${operations.length} operations with criteria:`, { 
+    logger.log(`Filtering ${operations.length} operations with criteria:`, { 
       type: activeFilterType, 
       client: activeFilterClient, 
       dateRange: activeDateRange ? `${activeDateRange.from?.toISOString()} - ${activeDateRange.to?.toISOString()}` : 'none' 
@@ -63,7 +64,7 @@ export const useOperationsFilter = (operations: Operation[], externalFilters?: F
             const isInRange = isWithinInterval(opDate, { start: startDate, end: endDate });
             
             if (!isInRange) {
-              console.log(`Excluding operation ${op.id} with date ${opDate.toISOString()} - outside range ${startDate.toISOString()} to ${endDate.toISOString()}`);
+              logger.log(`Excluding operation ${op.id} with date ${opDate.toISOString()} - outside range ${startDate.toISOString()} to ${endDate.toISOString()}`);
             }
             
             return isInRange;
@@ -82,7 +83,7 @@ export const useOperationsFilter = (operations: Operation[], externalFilters?: F
     });
   }, [operations, activeFilterType, activeFilterClient, activeDateRange]);
   
-  console.log(`Filtered operations: ${filteredOperations.length} (from ${operations.length} total)`);
+  logger.log(`Filtered operations: ${filteredOperations.length} (from ${operations.length} total)`);
 
   return {
     filterType: activeFilterType,

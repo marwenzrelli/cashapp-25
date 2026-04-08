@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Transfer, EditFormData } from "../types";
 import { useClients } from "@/features/clients/hooks/useClients";
+import { logger } from "@/utils/logger";
 
 export const useTransferActions = (onSuccess: () => void) => {
   const [selectedTransfer, setSelectedTransfer] = useState<Transfer | null>(null);
@@ -35,7 +36,7 @@ export const useTransferActions = (onSuccess: () => void) => {
   };
 
   const findClientByFullName = async (fullName: string) => {
-    console.log("Recherche du client:", fullName);
+    logger.log("Recherche du client:", fullName);
     
     try {
       // Méthode 1: Recherche exacte du nom complet comme concaténation de prénom et nom
@@ -52,7 +53,7 @@ export const useTransferActions = (onSuccess: () => void) => {
           .single();
           
         if (!exactError && exactMatch) {
-          console.log("Client trouvé avec correspondance exacte:", exactMatch);
+          logger.log("Client trouvé avec correspondance exacte:", exactMatch);
           return exactMatch;
         }
       }
@@ -74,12 +75,12 @@ export const useTransferActions = (onSuccess: () => void) => {
       });
       
       if (matchedClient) {
-        console.log("Client trouvé par nom complet:", matchedClient);
+        logger.log("Client trouvé par nom complet:", matchedClient);
         return matchedClient;
       }
       
       // Méthode 3: Recherche partielle pour les cas où le format pourrait être différent
-      console.log("Tentative de recherche partielle...");
+      logger.log("Tentative de recherche partielle...");
       const normalizedFullName = fullName.toLowerCase().trim();
       
       const partialMatch = clients.find(client => {
@@ -88,11 +89,11 @@ export const useTransferActions = (onSuccess: () => void) => {
       });
       
       if (partialMatch) {
-        console.log("Client trouvé par correspondance partielle:", partialMatch);
+        logger.log("Client trouvé par correspondance partielle:", partialMatch);
         return partialMatch;
       }
       
-      console.log("Aucun client correspondant trouvé pour:", fullName);
+      logger.log("Aucun client correspondant trouvé pour:", fullName);
       return null;
     } catch (error) {
       console.error("Erreur lors de la recherche du client:", error);
@@ -133,14 +134,14 @@ export const useTransferActions = (onSuccess: () => void) => {
     if (!selectedTransfer) return;
 
     try {
-      console.log("Début de la suppression du virement:", selectedTransfer);
+      logger.log("Début de la suppression du virement:", selectedTransfer);
 
       // Récupérer la session utilisateur pour tracer qui supprime le virement
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id;
       
-      console.log("Session utilisateur:", session);
-      console.log("User ID pour la suppression:", userId);
+      logger.log("Session utilisateur:", session);
+      logger.log("User ID pour la suppression:", userId);
       
       // Récupérer les détails complets du virement avant suppression
       const { data: transferData, error: fetchError } = await supabase
@@ -165,7 +166,7 @@ export const useTransferActions = (onSuccess: () => void) => {
         throw new Error("Virement introuvable");
       }
       
-      console.log("Récupération des détails du virement réussie:", transferData);
+      logger.log("Récupération des détails du virement réussie:", transferData);
       
       // Préparer les données à insérer dans deleted_transfers
       const logEntry = {
@@ -179,7 +180,7 @@ export const useTransferActions = (onSuccess: () => void) => {
         status: transferData.status
       };
 
-      console.log("Données à insérer dans deleted_transfers:", JSON.stringify(logEntry));
+      logger.log("Données à insérer dans deleted_transfers:", JSON.stringify(logEntry));
       
       // Insérer dans la table des virements supprimés
       const { data: logData, error: logError } = await supabase
@@ -193,7 +194,7 @@ export const useTransferActions = (onSuccess: () => void) => {
         throw logError;
       } 
       
-      console.log("Virement enregistré avec succès dans deleted_transfers");
+      logger.log("Virement enregistré avec succès dans deleted_transfers");
 
       // Rechercher les IDs des clients pour mettre à jour les soldes après suppression
       const fromClient = await findClientByFullName(selectedTransfer.fromClient);
@@ -213,7 +214,7 @@ export const useTransferActions = (onSuccess: () => void) => {
 
       // Mise à jour des soldes si les clients ont été trouvés
       if (fromClient && toClient) {
-        console.log("Clients trouvés - De:", fromClient.id, "À:", toClient.id);
+        logger.log("Clients trouvés - De:", fromClient.id, "À:", toClient.id);
 
         // Mise à jour des soldes avec un délai pour laisser le temps aux triggers de s'exécuter
         setTimeout(async () => {
@@ -223,7 +224,7 @@ export const useTransferActions = (onSuccess: () => void) => {
           ]);
 
           await fetchClients();
-          console.log("Soldes mis à jour");
+          logger.log("Soldes mis à jour");
         }, 1000);
       }
 

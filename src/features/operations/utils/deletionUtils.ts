@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Operation } from "../types";
+import { logger } from "@/utils/logger";
 
 /**
  * Fonction utilitaire qui extrait l'ID numérique d'une opération
@@ -13,13 +14,13 @@ export const parseOperationId = (operationId: string | number): number => {
   
   // Convertir en chaîne pour le traitement
   const idString = String(operationId);
-  console.log(`Parsing operation ID: ${idString}, type: ${typeof idString}`);
+  logger.log(`Parsing operation ID: ${idString}, type: ${typeof idString}`);
   
   // Pour les IDs de format "withdrawal-123" ou "wit-123"
   if (idString.includes('-')) {
     const parts = idString.split('-');
     const idPart = parts[parts.length - 1];
-    console.log(`ID après split: ${idPart}`);
+    logger.log(`ID après split: ${idPart}`);
     
     const numericId = parseInt(idPart, 10);
     
@@ -28,14 +29,14 @@ export const parseOperationId = (operationId: string | number): number => {
       throw new Error(`Format d'ID invalide: ${idString}`);
     }
     
-    console.log(`ID numérique extrait: ${numericId}`);
+    logger.log(`ID numérique extrait: ${numericId}`);
     return numericId;
   } 
   // Pour les IDs de format "wit123" (sans tiret)
   else if (idString.match(/^[a-z]+\d+$/i)) {
     // Suppression de tous les caractères non-numériques
     const idPart = idString.replace(/\D/g, '');
-    console.log(`ID après extraction numérique: ${idPart}`);
+    logger.log(`ID après extraction numérique: ${idPart}`);
     
     const numericId = parseInt(idPart, 10);
     
@@ -44,7 +45,7 @@ export const parseOperationId = (operationId: string | number): number => {
       throw new Error(`Format d'ID invalide: ${idString}`);
     }
     
-    console.log(`ID numérique extrait: ${numericId}`);
+    logger.log(`ID numérique extrait: ${numericId}`);
     return numericId;
   } 
   // Pour les IDs purement numériques en string
@@ -56,7 +57,7 @@ export const parseOperationId = (operationId: string | number): number => {
       throw new Error(`Format d'ID invalide: ${idString}`);
     }
     
-    console.log(`ID numérique extrait: ${numericId}`);
+    logger.log(`ID numérique extrait: ${numericId}`);
     return numericId;
   }
 };
@@ -92,7 +93,7 @@ export const deleteOperation = async (operation: Operation): Promise<boolean> =>
       return false;
     }
     
-    console.log(`Suppression d'opération - ID parsé: ${operationId}, type: ${operationType}`);
+    logger.log(`Suppression d'opération - ID parsé: ${operationId}, type: ${operationType}`);
     
     switch (operationType) {
       case 'withdrawal': 
@@ -122,7 +123,7 @@ export const deleteOperation = async (operation: Operation): Promise<boolean> =>
  */
 export const handleDepositDeletion = async (depositId: number, userId: string | undefined): Promise<boolean> => {
   try {
-    console.log(`Suppression du dépôt avec ID: ${depositId}`);
+    logger.log(`Suppression du dépôt avec ID: ${depositId}`);
     
     if (!depositId || isNaN(depositId) || depositId <= 0) {
       console.error("ID de dépôt invalide:", depositId);
@@ -185,7 +186,7 @@ export const handleDepositDeletion = async (depositId: number, userId: string | 
       throw deleteError;
     }
     
-    console.log("Dépôt supprimé avec succès:", depositId);
+    logger.log("Dépôt supprimé avec succès:", depositId);
     toast.success("Dépôt supprimé avec succès");
     return true;
   } catch (error: any) {
@@ -202,7 +203,7 @@ export const handleDepositDeletion = async (depositId: number, userId: string | 
  */
 export const handleWithdrawalDeletion = async (withdrawalId: number, userId: string | undefined): Promise<boolean> => {
   try {
-    console.log(`Suppression du retrait avec ID: ${withdrawalId}`);
+    logger.log(`Suppression du retrait avec ID: ${withdrawalId}`);
     
     if (!withdrawalId || isNaN(withdrawalId) || withdrawalId <= 0) {
       console.error("ID de retrait invalide:", withdrawalId);
@@ -265,7 +266,7 @@ export const handleWithdrawalDeletion = async (withdrawalId: number, userId: str
       throw deleteError;
     }
     
-    console.log("Retrait supprimé avec succès:", withdrawalId);
+    logger.log("Retrait supprimé avec succès:", withdrawalId);
     toast.success("Retrait supprimé avec succès");
     return true;
   } catch (error: any) {
@@ -282,7 +283,7 @@ export const handleWithdrawalDeletion = async (withdrawalId: number, userId: str
  */
 export const handleTransferDeletion = async (transferId: number, userId: string | undefined): Promise<boolean> => {
   try {
-    console.log(`Suppression du transfert avec ID: ${transferId}`);
+    logger.log(`Suppression du transfert avec ID: ${transferId}`);
     
     if (!transferId || isNaN(transferId) || transferId <= 0) {
       console.error("ID de transfert invalide:", transferId);
@@ -291,7 +292,7 @@ export const handleTransferDeletion = async (transferId: number, userId: string 
     }
     
     // Étape 1: Vérifier si le transfert existe dans la base
-    console.log(`Vérification de l'existence du transfert ID: ${transferId}`);
+    logger.log(`Vérification de l'existence du transfert ID: ${transferId}`);
     const { data: transferData, error: fetchError } = await supabase
       .from('transfers')
       .select('*')
@@ -306,7 +307,7 @@ export const handleTransferDeletion = async (transferId: number, userId: string 
     
     // Si le transfert n'existe pas, chercher dans les transferts supprimés
     if (!transferData) {
-      console.log(`Transfert ID ${transferId} non trouvé dans la table transfers, vérification dans deleted_transfers...`);
+      logger.log(`Transfert ID ${transferId} non trouvé dans la table transfers, vérification dans deleted_transfers...`);
       
       const { data: deletedTransferData } = await supabase
         .from('deleted_transfers')
@@ -315,7 +316,7 @@ export const handleTransferDeletion = async (transferId: number, userId: string 
         .maybeSingle();
       
       if (deletedTransferData) {
-        console.log(`Transfert trouvé dans deleted_transfers, tentative de restauration de l'opération originale...`);
+        logger.log(`Transfert trouvé dans deleted_transfers, tentative de restauration de l'opération originale...`);
         // Essayer de restaurer l'opération originale même si le transfert est déjà supprimé
         const restored = await attemptOriginalOperationRestoration(deletedTransferData.from_client, deletedTransferData.amount, userId);
         if (restored) {
@@ -325,16 +326,16 @@ export const handleTransferDeletion = async (transferId: number, userId: string 
         }
         return true;
       } else {
-        console.log("Transfert non trouvé nulle part, considéré comme déjà supprimé");
+        logger.log("Transfert non trouvé nulle part, considéré comme déjà supprimé");
         toast.success("Transfert déjà supprimé ou introuvable");
         return true;
       }
     }
     
-    console.log(`Transfert trouvé: ${transferData.from_client} → ${transferData.to_client}, montant: ${transferData.amount}`);
+    logger.log(`Transfert trouvé: ${transferData.from_client} → ${transferData.to_client}, montant: ${transferData.amount}`);
     
     // Étape 2: Chercher l'opération originale avant suppression du transfert
-    console.log(`Recherche de l'opération originale pour ${transferData.from_client}, montant: ${transferData.amount}`);
+    logger.log(`Recherche de l'opération originale pour ${transferData.from_client}, montant: ${transferData.amount}`);
     const originalOperation = await findOriginalOperation(transferData.from_client, transferData.amount);
     
     // Étape 3: Enregistrer dans deleted_transfers AVANT suppression
@@ -354,11 +355,11 @@ export const handleTransferDeletion = async (transferId: number, userId: string 
       return false;
     }
     
-    console.log(`Transfert supprimé avec succès de la table transfers`);
+    logger.log(`Transfert supprimé avec succès de la table transfers`);
     
     // Étape 5: Restaurer l'opération originale si trouvée
     if (originalOperation) {
-      console.log(`Tentative de restauration de l'opération originale: ${originalOperation.type}`);
+      logger.log(`Tentative de restauration de l'opération originale: ${originalOperation.type}`);
       const restored = await restoreOriginalOperation(originalOperation, userId);
       if (restored) {
         toast.success("Transfert supprimé et opération originale restaurée avec succès");
@@ -369,7 +370,7 @@ export const handleTransferDeletion = async (transferId: number, userId: string 
         return true;
       }
     } else {
-      console.log("Aucune opération originale trouvée à restaurer");
+      logger.log("Aucune opération originale trouvée à restaurer");
       toast.success("Transfert supprimé avec succès");
       return true;
     }
@@ -388,7 +389,7 @@ export const handleTransferDeletion = async (transferId: number, userId: string 
  */
 export const handleDirectOperationDeletion = async (operationId: number, userId: string | undefined): Promise<boolean> => {
   try {
-    console.log(`Suppression de l'opération directe avec ID: ${operationId}`);
+    logger.log(`Suppression de l'opération directe avec ID: ${operationId}`);
     
     if (!operationId || isNaN(operationId) || operationId <= 0) {
       console.error("ID d'opération directe invalide:", operationId);
@@ -453,7 +454,7 @@ export const handleDirectOperationDeletion = async (operationId: number, userId:
       throw deleteError;
     }
     
-    console.log("Opération directe supprimée avec succès:", operationId);
+    logger.log("Opération directe supprimée avec succès:", operationId);
     toast.success("Opération directe supprimée avec succès");
     return true;
   } catch (error: any) {
@@ -469,7 +470,7 @@ export const handleDirectOperationDeletion = async (operationId: number, userId:
  * Cherche l'opération originale (dépôt ou retrait) qui a été transférée
  */
 const findOriginalOperation = async (clientName: string, amount: number) => {
-  console.log(`Recherche de l'opération originale pour ${clientName}, montant: ${amount}`);
+  logger.log(`Recherche de l'opération originale pour ${clientName}, montant: ${amount}`);
   
   // Chercher dans deleted_deposits (étendre la recherche à 7 jours)
   const { data: deletedDeposit } = await supabase
@@ -483,7 +484,7 @@ const findOriginalOperation = async (clientName: string, amount: number) => {
     .maybeSingle();
   
   if (deletedDeposit) {
-    console.log("Opération originale trouvée: dépôt supprimé", deletedDeposit);
+    logger.log("Opération originale trouvée: dépôt supprimé", deletedDeposit);
     return { ...deletedDeposit, type: 'deposit' };
   }
   
@@ -499,11 +500,11 @@ const findOriginalOperation = async (clientName: string, amount: number) => {
     .maybeSingle();
   
   if (deletedWithdrawal) {
-    console.log("Opération originale trouvée: retrait supprimé", deletedWithdrawal);
+    logger.log("Opération originale trouvée: retrait supprimé", deletedWithdrawal);
     return { ...deletedWithdrawal, type: 'withdrawal' };
   }
   
-  console.log("Aucune opération originale trouvée");
+  logger.log("Aucune opération originale trouvée");
   return null;
 };
 
@@ -528,7 +529,7 @@ const recordDeletedTransfer = async (transferData: any, userId: string | undefin
     if (logError) {
       console.error("Erreur lors de l'enregistrement dans deleted_transfers:", logError);
     } else {
-      console.log("Transfert enregistré dans deleted_transfers");
+      logger.log("Transfert enregistré dans deleted_transfers");
     }
   } catch (error) {
     console.error("Erreur lors de l'enregistrement du transfert supprimé:", error);
@@ -540,7 +541,7 @@ const recordDeletedTransfer = async (transferData: any, userId: string | undefin
  */
 const restoreOriginalOperation = async (originalOperation: any, userId: string | undefined): Promise<boolean> => {
   try {
-    console.log(`Restauration de l'opération ${originalOperation.type} pour ${originalOperation.client_name}`);
+    logger.log(`Restauration de l'opération ${originalOperation.type} pour ${originalOperation.client_name}`);
     
     if (originalOperation.type === 'deposit') {
       // Restaurer le dépôt
@@ -562,7 +563,7 @@ const restoreOriginalOperation = async (originalOperation: any, userId: string |
         console.error("Erreur lors de la restauration du dépôt:", restoreError);
         return false;
       } else {
-        console.log("Dépôt restauré avec succès:", restoredDeposit);
+        logger.log("Dépôt restauré avec succès:", restoredDeposit);
         
         // Supprimer l'entrée de deleted_deposits
         const { error: deleteLogError } = await supabase
@@ -596,7 +597,7 @@ const restoreOriginalOperation = async (originalOperation: any, userId: string |
         console.error("Erreur lors de la restauration du retrait:", restoreError);
         return false;
       } else {
-        console.log("Retrait restauré avec succès:", restoredWithdrawal);
+        logger.log("Retrait restauré avec succès:", restoredWithdrawal);
         
         // Supprimer l'entrée de deleted_withdrawals
         const { error: deleteLogError } = await supabase

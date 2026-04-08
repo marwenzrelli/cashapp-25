@@ -1,5 +1,6 @@
 
 import { ClientStats } from "@/features/operations/types";
+import { logger } from "@/utils/logger";
 
 /**
  * Returns the top clients based on total amount
@@ -17,12 +18,12 @@ export const getTopClients = (clientStats: Record<string, ClientStats>, limit: n
     return [];
   }
   
-  console.log(`Found ${clientKeys.length} clients in stats data`);
+  logger.log(`Found ${clientKeys.length} clients in stats data`);
   
   const sorted = Object.entries(clientStats)
     .sort((a, b) => b[1].totalAmount - a[1].totalAmount)
     .slice(0, limit);
     
-  console.log("Top clients sorted:", sorted.map(([name, stats]) => `${name}: ${stats.totalAmount}`));
+  logger.log("Top clients sorted:", sorted.map(([name, stats]) => `${name}: ${stats.totalAmount}`));
   return sorted;
 };

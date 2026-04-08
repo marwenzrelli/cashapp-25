@@ -5,6 +5,7 @@ import { useDeposits } from "@/features/deposits/hooks/useDeposits";
 import { useWithdrawals } from "@/features/withdrawals/hooks/useWithdrawals";
 import { useTransfersList } from "@/features/transfers/hooks/useTransfersList";
 import { useDashboardData } from "@/features/dashboard/hooks/useDashboardData";
+import { logger } from "@/utils/logger";
 
 export const useStatisticsDataLoading = () => {
   // Initialize these hooks separately to avoid React queue errors
@@ -35,7 +36,7 @@ export const useStatisticsDataLoading = () => {
   
   // Force refresh deposits when statistics data is loaded
   useEffect(() => {
-    console.log("Initial loading of deposits in statistics data loading");
+    logger.log("Initial loading of deposits in statistics data loading");
     refreshDeposits?.();
   }, [refreshDeposits]);
   
@@ -70,7 +71,7 @@ export const useStatisticsDataLoading = () => {
       });
       
       // Log what we're caching
-      console.log("Caching statistics data:", {
+      logger.log("Caching statistics data:", {
         depositsCount: Array.isArray(deposits) ? deposits.length : 0,
         withdrawalsCount: Array.isArray(withdrawals) ? withdrawals.length : 0,
         transfersCount: transfersArray.length
@@ -90,7 +91,7 @@ export const useStatisticsDataLoading = () => {
           
           // Let user know we're using cached data
           if (cachedData && !hasValidData()) {
-            console.log("Using cached statistics data from", new Date(cachedData.timestamp).toLocaleTimeString());
+            logger.log("Using cached statistics data from", new Date(cachedData.timestamp).toLocaleTimeString());
             // No toast here - we'll handle it in the component
           }
         }
@@ -146,7 +147,7 @@ export const useStatisticsDataLoading = () => {
   const dataToUse = getDataToUse();
 
   // Add debug logging to diagnose the issue
-  console.log("Statistics data loading:", {
+  logger.log("Statistics data loading:", {
     depositsCount: Array.isArray(dataToUse.deposits) ? dataToUse.deposits.length : 0,
     withdrawalsCount: Array.isArray(dataToUse.withdrawals) ? dataToUse.withdrawals.length : 0,
     transfersCount: Array.isArray(dataToUse.transfersArray) ? dataToUse.transfersArray.length : 0,

@@ -3,6 +3,7 @@ import { useCallback, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Client } from "@/features/clients/types";
+import { logger } from "@/utils/logger";
 
 export const useClientBalanceRefresh = (
   clientId: number | null, 
@@ -17,7 +18,7 @@ export const useClientBalanceRefresh = (
     
     try {
       setIsRefreshing(true);
-      console.log("Manual balance refresh for client:", clientId);
+      logger.log("Manual balance refresh for client:", clientId);
       
       const clientFullName = `${client.prenom} ${client.nom}`;
       
@@ -105,7 +106,7 @@ export const useClientBalanceRefresh = (
       // New balance calculation: deposits + transfers received - withdrawals - transfers sent
       const balance = parseFloat((totalDeposits + totalTransfersReceived - totalWithdrawals - totalTransfersSent).toFixed(2));
       
-      console.log(`Balance calculated for ${clientFullName}: 
+      logger.log(`Balance calculated for ${clientFullName}: 
         Deposits: ${totalDeposits}, 
         Withdrawals: ${totalWithdrawals}, 
         Transfers Received: ${totalTransfersReceived},

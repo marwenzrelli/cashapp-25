@@ -1,5 +1,6 @@
 
 import { toast } from "sonner";
+import { logger } from "@/utils/logger";
 
 export const validateToken = (token: string | undefined): { isValid: boolean; error: string | null } => {
   if (!token) {
@@ -19,14 +20,14 @@ export const validateToken = (token: string | undefined): { isValid: boolean; er
     return { isValid: false, error: "Format de token invalide ou token corrompu" };
   }
 
-  console.log("Token format validation passed:", token);
+  logger.log("Token format validation passed:", token);
   return { isValid: true, error: null };
 };
 
 export const validateTokenExpiration = (expires_at: string | null, created_at: string): { isValid: boolean; error: string | null } => {
   // If expires_at is null, it's a permanent token (no expiration)
   if (!expires_at) {
-    console.log("Token has no expiration date (permanent token)");
+    logger.log("Token has no expiration date (permanent token)");
     return { isValid: true, error: null };
   }
 
@@ -51,7 +52,7 @@ export const validateTokenExpiration = (expires_at: string | null, created_at: s
       // We don't return an error here, just a warning
     }
 
-    console.log("Token expiration validation passed");
+    logger.log("Token expiration validation passed");
     return { isValid: true, error: null };
   } catch (error) {
     console.error("Error validating token expiration:", error);
@@ -70,6 +71,6 @@ export const validateClientStatus = (status: string): { isValid: boolean; error:
     return { isValid: false, error: "Ce compte client est désactivé ou suspendu" };
   }
   
-  console.log("Client status validation passed:", status);
+  logger.log("Client status validation passed:", status);
   return { isValid: true, error: null };
 };

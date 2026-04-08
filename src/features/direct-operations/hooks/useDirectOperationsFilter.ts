@@ -3,6 +3,7 @@ import { useState, useMemo } from "react";
 import { DirectOperation } from "../types";
 import { DateRange } from "react-day-picker";
 import { isWithinInterval } from "date-fns";
+import { logger } from "@/utils/logger";
 
 export const useDirectOperationsFilter = (operations: DirectOperation[]) => {
   const [filterClient, setFilterClient] = useState("");
@@ -16,7 +17,7 @@ export const useDirectOperationsFilter = (operations: DirectOperation[]) => {
   
   // Filtrage optimisé
   const filteredOperations = useMemo(() => {
-    console.log(`Filtering ${operations.length} direct operations with criteria:`, { 
+    logger.log(`Filtering ${operations.length} direct operations with criteria:`, { 
       client: filterClient, 
       dateRange: dateRange ? `${dateRange.from?.toISOString()} - ${dateRange.to?.toISOString()}` : 'none' 
     });
@@ -53,7 +54,7 @@ export const useDirectOperationsFilter = (operations: DirectOperation[]) => {
             const isInRange = isWithinInterval(opDate, { start: startDate, end: endDate });
             
             if (!isInRange) {
-              console.log(`Excluding operation ${op.id} with date ${opDate.toISOString()} - outside range ${startDate.toISOString()} to ${endDate.toISOString()}`);
+              logger.log(`Excluding operation ${op.id} with date ${opDate.toISOString()} - outside range ${startDate.toISOString()} to ${endDate.toISOString()}`);
             }
             
             return isInRange;
@@ -72,7 +73,7 @@ export const useDirectOperationsFilter = (operations: DirectOperation[]) => {
     });
   }, [operations, filterClient, dateRange]);
   
-  console.log(`Filtered direct operations: ${filteredOperations.length} (from ${operations.length} total)`);
+  logger.log(`Filtered direct operations: ${filteredOperations.length} (from ${operations.length} total)`);
 
   return {
     filterClient,

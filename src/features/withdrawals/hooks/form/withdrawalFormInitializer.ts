@@ -2,6 +2,7 @@
 import { WithdrawalFormState, ExtendedClient } from "./withdrawalFormTypes";
 import { Withdrawal } from "@/features/withdrawals/types";
 import { ensureValidISODate } from "../utils/formatUtils";
+import { logger } from "@/utils/logger";
 
 export const initializeNewForm = (): WithdrawalFormState => {
   return {
@@ -17,7 +18,7 @@ export const initializeFormFromWithdrawal = (
   clients: ExtendedClient[]
 ): WithdrawalFormState | null => {
   try {
-    console.log("Initializing form from withdrawal:", selectedWithdrawal);
+    logger.log("Initializing form from withdrawal:", selectedWithdrawal);
     
     // Find client by name when editing
     const clientFullName = selectedWithdrawal.client_name;
@@ -73,7 +74,7 @@ export const initializeFormFromWithdrawal = (
             
             if (!isNaN(date.getTime())) {
               dateValue = date.toISOString();
-              console.log("Converted formatted date to ISO:", dateValue);
+              logger.log("Converted formatted date to ISO:", dateValue);
             }
           }
         }
@@ -85,7 +86,7 @@ export const initializeFormFromWithdrawal = (
     // Ensure we have a valid ISO date string
     dateValue = ensureValidISODate(dateValue);
     
-    console.log("Form initialized with date:", dateValue);
+    logger.log("Form initialized with date:", dateValue);
     
     return {
       clientId,

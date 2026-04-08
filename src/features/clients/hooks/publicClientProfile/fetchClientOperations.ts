@@ -1,13 +1,14 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { ClientOperation } from "./types";
+import { logger } from "@/utils/logger";
 
 export const fetchClientOperations = async (
   clientName: string,
   token: string
 ): Promise<ClientOperation[]> => {
   try {
-    console.log(`Récupération des opérations pour le client: ${clientName}`);
+    logger.log(`Récupération des opérations pour le client: ${clientName}`);
     
     // Utiliser une promesse avec timeout au lieu de AbortController
     const timeoutPromise = new Promise<never>((_, reject) => {
@@ -16,14 +17,14 @@ export const fetchClientOperations = async (
     
     // Récupérer les dépôts du client - FILTRER PAR CLIENT NAME
     const fetchDepositsPromise = async () => {
-      console.log(`Recherche de dépôts pour: "${clientName}"`);
+      logger.log(`Recherche de dépôts pour: "${clientName}"`);
       const response = await supabase
         .from('deposits')
         .select('*')
         .eq('client_name', clientName)
         .order('created_at', { ascending: false });
       
-      console.log(`Dépôts trouvés pour ${clientName}:`, response.data?.length || 0);
+      logger.log(`Dépôts trouvés pour ${clientName}:`, response.data?.length || 0);
       return response;
     };
     
@@ -40,14 +41,14 @@ export const fetchClientOperations = async (
 
     // Récupérer les retraits du client - FILTRER PAR CLIENT NAME
     const fetchWithdrawalsPromise = async () => {
-      console.log(`Recherche de retraits pour: "${clientName}"`);
+      logger.log(`Recherche de retraits pour: "${clientName}"`);
       const response = await supabase
         .from('withdrawals')
         .select('*')
         .eq('client_name', clientName)
         .order('created_at', { ascending: false });
       
-      console.log(`Retraits trouvés pour ${clientName}:`, response.data?.length || 0);
+      logger.log(`Retraits trouvés pour ${clientName}:`, response.data?.length || 0);
       return response;
     };
     
@@ -64,7 +65,7 @@ export const fetchClientOperations = async (
 
     // Récupérer les transferts du client - FILTRER PAR CLIENT NAME (à la fois comme expéditeur et destinataire)
     const fetchTransfersPromise = async () => {
-      console.log(`Recherche de transferts pour: "${clientName}"`);
+      logger.log(`Recherche de transferts pour: "${clientName}"`);
       const [fromTransfers, toTransfers] = await Promise.all([
         supabase
           .from('transfers')
@@ -78,8 +79,8 @@ export const fetchClientOperations = async (
           .order('created_at', { ascending: false })
       ]);
       
-      console.log(`Transferts FROM trouvés pour ${clientName}:`, fromTransfers.data?.length || 0);
-      console.log(`Transferts TO trouvés pour ${clientName}:`, toTransfers.data?.length || 0);
+      logger.log(`Transferts FROM trouvés pour ${clientName}:`, fromTransfers.data?.length || 0);
+      logger.log(`Transferts TO trouvés pour ${clientName}:`, toTransfers.data?.length || 0);
       return { fromTransfers, toTransfers };
     };
 
@@ -95,7 +96,7 @@ export const fetchClientOperations = async (
 
     // Récupérer les opérations directes du client - FILTRER PAR CLIENT NAME
     const fetchDirectOperationsPromise = async () => {
-      console.log(`Recherche d'opérations directes pour: "${clientName}"`);
+      logger.log(`Recherche d'opérations directes pour: "${clientName}"`);
       const [fromOperations, toOperations] = await Promise.all([
         supabase
           .from('direct_operations')
@@ -109,10 +110,10 @@ export const fetchClientOperations = async (
           .order('created_at', { ascending: false })
       ]);
       
-      console.log(`Opérations directes FROM trouvées pour ${clientName}:`, fromOperations.data?.length || 0);
-      console.log(`Opérations directes TO trouvées pour ${clientName}:`, toOperations.data?.length || 0);
-      console.log(`Sample FROM operation:`, fromOperations.data?.[0]);
-      console.log(`Sample TO operation:`, toOperations.data?.[0]);
+      logger.log(`Opérations directes FROM trouvées pour ${clientName}:`, fromOperations.data?.length || 0);
+      logger.log(`Opérations directes TO trouvées pour ${clientName}:`, toOperations.data?.length || 0);
+      logger.log(`Sample FROM operation:`, fromOperations.data?.[0]);
+      logger.log(`Sample TO operation:`, toOperations.data?.[0]);
       return { fromOperations, toOperations };
     };
 
@@ -127,12 +128,12 @@ export const fetchClientOperations = async (
     }
 
     // Log pour déboguer les résultats
-    console.log("PublicClientOperations - Deposits found:", depositsResult.data?.length || 0);
-    console.log("PublicClientOperations - Withdrawals found:", withdrawalsResult.data?.length || 0);
-    console.log("PublicClientOperations - From transfers found:", transfersResult.fromTransfers.data?.length || 0);
-    console.log("PublicClientOperations - To transfers found:", transfersResult.toTransfers.data?.length || 0);
-    console.log("PublicClientOperations - From direct ops found:", directOperationsResult.fromOperations?.data?.length || 0);
-    console.log("PublicClientOperations - To direct ops found:", directOperationsResult.toOperations?.data?.length || 0);
+    logger.log("PublicClientOperations - Deposits found:", depositsResult.data?.length || 0);
+    logger.log("PublicClientOperations - Withdrawals found:", withdrawalsResult.data?.length || 0);
+    logger.log("PublicClientOperations - From transfers found:", transfersResult.fromTransfers.data?.length || 0);
+    logger.log("PublicClientOperations - To transfers found:", transfersResult.toTransfers.data?.length || 0);
+    logger.log("PublicClientOperations - From direct ops found:", directOperationsResult.fromOperations?.data?.length || 0);
+    logger.log("PublicClientOperations - To direct ops found:", directOperationsResult.toOperations?.data?.length || 0);
 
     // Combiner et formater les opérations
     const operations: ClientOperation[] = [
@@ -214,8 +215,8 @@ export const fetchClientOperations = async (
     // Trier par date (plus récentes en premier)
     uniqueOperations.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-    console.log(`PublicClientOperations - Récupéré ${uniqueOperations.length} opérations uniques pour le client ${clientName}`);
-    console.log("PublicClientOperations - Types d'opérations:", {
+    logger.log(`PublicClientOperations - Récupéré ${uniqueOperations.length} opérations uniques pour le client ${clientName}`);
+    logger.log("PublicClientOperations - Types d'opérations:", {
       deposits: uniqueOperations.filter(op => op.type === 'deposit').length,
       withdrawals: uniqueOperations.filter(op => op.type === 'withdrawal').length,
       transfers: uniqueOperations.filter(op => op.type === 'transfer').length,
@@ -224,7 +225,7 @@ export const fetchClientOperations = async (
     
     // Log détaillé des opérations trouvées
     uniqueOperations.forEach(op => {
-      console.log(`Operation: ${op.type} - ${op.amount} - ${op.description}`);
+      logger.log(`Operation: ${op.type} - ${op.amount} - ${op.description}`);
     });
     
     return uniqueOperations;

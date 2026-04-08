@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { logger } from "@/utils/logger";
 
 export const useRealTimeBalance = (clientId: number | null) => {
   const [realTimeBalance, setRealTimeBalance] = useState<number | null>(null);
@@ -24,12 +25,12 @@ export const useRealTimeBalance = (clientId: number | null) => {
     
     // Limit connection attempts to prevent excessive connections
     if (connectionAttemptRef.current >= 2) {
-      console.log("Max connection attempts reached for balance updates");
+      logger.log("Max connection attempts reached for balance updates");
       return;
     }
     
     connectionAttemptRef.current++;
-    console.log("Setting up real-time subscription for client balance ID:", clientId);
+    logger.log("Setting up real-time subscription for client balance ID:", clientId);
     
     const channel = supabase
       .channel(`client-balance-${clientId}`)
@@ -44,14 +45,14 @@ export const useRealTimeBalance = (clientId: number | null) => {
           
           // Only update state if the balance has actually changed
           if (previousBalanceRef.current !== newBalance) {
-            console.log("Real-time balance update received:", newBalance);
+            logger.log("Real-time balance update received:", newBalance);
             setRealTimeBalance(newBalance);
             previousBalanceRef.current = newBalance;
           }
         }
       })
       .subscribe((status) => {
-        console.log(`Real-time subscription status for client ${clientId}:`, status);
+        logger.log(`Real-time subscription status for client ${clientId}:`, status);
         if (status === 'CHANNEL_ERROR') {
           console.error("Error subscribing to balance updates");
         }
@@ -67,7 +68,7 @@ export const useRealTimeBalance = (clientId: number | null) => {
         schema: 'public',
         table: 'deposits'
       }, (payload) => {
-        console.log("Deposit operation detected:", payload);
+        logger.log("Deposit operation detected:", payload);
         toast.info("Un nouveau versement a été détecté");
         refreshOperations();
       })
@@ -76,7 +77,7 @@ export const useRealTimeBalance = (clientId: number | null) => {
         schema: 'public',
         table: 'withdrawals'
       }, (payload) => {
-        console.log("Withdrawal operation detected:", payload);
+        logger.log("Withdrawal operation detected:", payload);
         toast.info("Un nouveau retrait a été détecté");
         refreshOperations();
       })
@@ -85,7 +86,7 @@ export const useRealTimeBalance = (clientId: number | null) => {
         schema: 'public',
         table: 'transfers'
       }, (payload) => {
-        console.log("Transfer operation detected:", payload);
+        logger.log("Transfer operation detected:", payload);
         toast.info("Un nouveau transfert a été détecté");
         refreshOperations();
       })
@@ -94,7 +95,7 @@ export const useRealTimeBalance = (clientId: number | null) => {
     operationsChannelRef.current = operationsChannel;
       
     return () => {
-      console.log("Cleaning up real-time subscriptions");
+      logger.log("Cleaning up real-time subscriptions");
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;

@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Transfer } from "../types";
 import { formatDateTime } from "@/features/operations/types";
 import { fetchAllRows } from "@/features/statistics/utils/fetchAllRows";
+import { logger } from "@/utils/logger";
 
 const fetchTransfersData = async (): Promise<Transfer[]> => {
   try {
@@ -22,7 +23,7 @@ const fetchTransfersData = async (): Promise<Transfer[]> => {
         date: formatDateTime(transfer.created_at),
         reason: transfer.reason
       }));
-      console.log("Virements récupérés:", formattedTransfers);
+      logger.log("Virements récupérés:", formattedTransfers);
       return formattedTransfers;
     }
     

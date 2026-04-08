@@ -1,10 +1,11 @@
 
 import { TokenData } from "./types";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/utils/logger";
 
 export const fetchAccessData = async (token: string): Promise<TokenData> => {
   try {
-    console.log(`Vérification du token d'accès: ${token.substring(0, 8)}...`);
+    logger.log(`Vérification du token d'accès: ${token.substring(0, 8)}...`);
     
     // Utiliser une promesse avec timeout au lieu de AbortController
     const timeoutPromise = new Promise<never>((_, reject) => {

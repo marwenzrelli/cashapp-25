@@ -4,6 +4,7 @@ import { Withdrawal } from "../types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatId } from "@/utils/formatId";
+import { logger } from "@/utils/logger";
 
 export const useDeleteWithdrawal = (fetchWithdrawals: () => Promise<void>) => {
   const [withdrawalToDelete, setWithdrawalToDelete] = useState<Withdrawal | null>(null);
@@ -11,7 +12,7 @@ export const useDeleteWithdrawal = (fetchWithdrawals: () => Promise<void>) => {
   const [loading, setLoading] = useState(false);
 
   const deleteWithdrawal = (withdrawal: Withdrawal) => {
-    console.log("Préparation de la suppression du retrait:", withdrawal);
+    logger.log("Préparation de la suppression du retrait:", withdrawal);
     // Créer une copie profonde pour éviter les problèmes de référence
     setWithdrawalToDelete(JSON.parse(JSON.stringify(withdrawal)));
     setShowDeleteDialog(true);
@@ -26,7 +27,7 @@ export const useDeleteWithdrawal = (fetchWithdrawals: () => Promise<void>) => {
     setLoading(true);
     
     try {
-      console.log("Début de la suppression du retrait avec ID:", 
+      logger.log("Début de la suppression du retrait avec ID:", 
                   typeof withdrawalToDelete.id === 'string' ? 
                   withdrawalToDelete.id : 
                   formatId(withdrawalToDelete.id, 4));
@@ -65,7 +66,7 @@ export const useDeleteWithdrawal = (fetchWithdrawals: () => Promise<void>) => {
         throw new Error("ID de retrait invalide");
       }
       
-      console.log("ID de retrait extrait pour suppression:", withdrawalId);
+      logger.log("ID de retrait extrait pour suppression:", withdrawalId);
         
       const { data: withdrawalData, error: fetchError } = await supabase
         .from('withdrawals')

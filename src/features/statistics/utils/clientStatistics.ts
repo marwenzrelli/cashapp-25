@@ -1,5 +1,6 @@
 
 import { ClientStats } from "@/features/operations/types";
+import { logger } from "@/utils/logger";
 
 /**
  * Generates statistics for each client based on operation data
@@ -25,7 +26,7 @@ export const generateClientStats = (operations: any[]) => {
     return clientStats;
   }
   
-  console.log(`Processing ${operations.length} operations for client statistics`);
+  logger.log(`Processing ${operations.length} operations for client statistics`);
   
   operations.forEach(op => {
     // Skip invalid operations
@@ -51,6 +52,6 @@ export const generateClientStats = (operations: any[]) => {
       clientStats[clientName].totalAmount / clientStats[clientName].transactionCount;
   });
 
-  console.log("Generated client stats for", Object.keys(clientStats).length, "clients");
+  logger.log("Generated client stats for", Object.keys(clientStats).length, "clients");
   return clientStats;
 };

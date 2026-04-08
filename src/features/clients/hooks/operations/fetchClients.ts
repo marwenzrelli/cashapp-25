@@ -4,6 +4,7 @@ import { Client } from "../../types";
 import { supabase } from "@/integrations/supabase/client";
 import { showErrorToast } from "../utils/errorUtils";
 import { handleSupabaseError } from "../utils/errorUtils";
+import { logger } from "@/utils/logger";
 
 export const useFetchClients = (
   setClients: React.Dispatch<React.SetStateAction<Client[]>>,
@@ -67,7 +68,7 @@ export const useFetchClients = (
             // New balance calculation: deposits + transfers received - withdrawals - transfers sent
             const balance = depositsTotal + transfersReceivedTotal - withdrawalsTotal - transfersSentTotal;
 
-            console.log(`Balance calculated for ${clientName}: 
+            logger.log(`Balance calculated for ${clientName}: 
               Deposits: ${depositsTotal}, 
               Withdrawals: ${withdrawalsTotal}, 
               Transfers Received: ${transfersReceivedTotal},
@@ -119,7 +120,7 @@ export const useFetchClients = (
     
     // If a fetch is already in progress, don't start another one
     if (fetchingRef.current) {
-      console.log("A fetch operation is already in progress, skipping...");
+      logger.log("A fetch operation is already in progress, skipping...");
       return;
     }
     
@@ -134,7 +135,7 @@ export const useFetchClients = (
         errorNotifiedRef.current = false;
       }
       
-      console.log(`Chargement des clients... (tentative ${retry + 1}/${MAX_RETRIES + 1})`);
+      logger.log(`Chargement des clients... (tentative ${retry + 1}/${MAX_RETRIES + 1})`);
       
       // Check that the Supabase connection is established
       if (!supabase) {
@@ -144,7 +145,7 @@ export const useFetchClients = (
       // Set a safety timeout to ensure loading state doesn't get stuck
       // Reduced from 20s to 8s for faster feedback
       timeoutRef.current = setTimeout(() => {
-        console.log("Fetch clients timeout reached, resetting loading state");
+        logger.log("Fetch clients timeout reached, resetting loading state");
         setLoading(false);
         fetchingRef.current = false;
         timeoutRef.current = null;
@@ -190,7 +191,7 @@ export const useFetchClients = (
         
         // If we haven't reached the maximum number of retries, try again
         if (retry < MAX_RETRIES) {
-          console.log(`Nouvelle tentative dans ${RETRY_DELAY/1000} secondes...`);
+          logger.log(`Nouvelle tentative dans ${RETRY_DELAY/1000} secondes...`);
           setTimeout(() => fetchClients(retry + 1, false), RETRY_DELAY);
           return;
         }
@@ -200,14 +201,14 @@ export const useFetchClients = (
       }
 
       if (!clientsData) {
-        console.log("Aucune donnée reçue de la base de données");
+        logger.log("Aucune donnée reçue de la base de données");
         setClients([]);
         setLoading(false);
         fetchingRef.current = false;
         return;
       }
 
-      console.log(`${clientsData.length} clients récupérés avec succès:`, clientsData);
+      logger.log(`${clientsData.length} clients récupérés avec succès:`, clientsData);
       
       // Update the state with retrieved clients
       setClients(clientsData);
@@ -230,7 +231,7 @@ export const useFetchClients = (
       console.error("Erreur critique lors du chargement des clients:", error);
       
       if (retry < MAX_RETRIES) {
-        console.log(`Nouvelle tentative dans ${RETRY_DELAY/1000} secondes...`);
+        logger.log(`Nouvelle tentative dans ${RETRY_DELAY/1000} secondes...`);
         setTimeout(() => fetchClients(retry + 1, false), RETRY_DELAY);
         return;
       }

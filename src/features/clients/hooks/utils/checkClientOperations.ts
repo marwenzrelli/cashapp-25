@@ -1,10 +1,11 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/utils/logger";
 
 // This utility function checks different operation tables to see if any operations
 // exist for a given client name or ID
 export const checkClientOperations = async (clientName: string, clientId: number, token?: string) => {
-  console.log(`Checking operations for client: "${clientName}" (ID: ${clientId})${token ? ' with token' : ''}`);
+  logger.log(`Checking operations for client: "${clientName}" (ID: ${clientId})${token ? ' with token' : ''}`);
   
   try {
     // Set auth token if provided (for public client access)
@@ -59,7 +60,7 @@ export const checkClientOperations = async (clientName: string, clientId: number
       totalCount: (depositCount || 0) + (withdrawalCount || 0) + (transferSenderCount || 0) + (transferReceiverCount || 0)
     };
     
-    console.log(`Operations check for client "${clientName}" (ID: ${clientId}):`, results);
+    logger.log(`Operations check for client "${clientName}" (ID: ${clientId}):`, results);
     
     return results;
   } catch (error) {

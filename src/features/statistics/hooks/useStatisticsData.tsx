@@ -5,6 +5,7 @@ import { generateClientStats, getTopClients } from "../utils/clientStats";
 import { useStatisticsDataLoading } from "./useStatisticsDataLoading";
 import { useStatisticsFilters } from "./useStatisticsFilters";
 import { 
+import { logger } from "@/utils/logger";
   calculateTotals, 
   calculateMonthlyComparison,
   calculateDailyTransactions,
@@ -129,7 +130,7 @@ export const useStatisticsData = () => {
 
   const topClients = useMemo(() => {
     try {
-      console.log("Calculating top clients from all operations");
+      logger.log("Calculating top clients from all operations");
       
       // Combine all operations into a single array for client statistics
       const allOperations = [
@@ -143,7 +144,7 @@ export const useStatisticsData = () => {
         return [];
       }
       
-      console.log(`Found ${allOperations.length} total operations for client statistics`);
+      logger.log(`Found ${allOperations.length} total operations for client statistics`);
       const clientStats = generateClientStats(allOperations);
       return getTopClients(clientStats);
     } catch (err) {

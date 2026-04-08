@@ -1,6 +1,7 @@
 
 import { isWithinInterval } from "date-fns";
 import { DateRange } from "react-day-picker";
+import { logger } from "@/utils/logger";
 
 interface FilteredData {
   client_name?: string;
@@ -25,7 +26,7 @@ export const filterData = (
   transactionType: "all" | "deposits" | "withdrawals" | "transfers"
 ) => {
   if (!data || !Array.isArray(data)) {
-    console.log("No data to filter or data is not an array");
+    logger.log("No data to filter or data is not an array");
     return [];
   }
   
@@ -34,7 +35,7 @@ export const filterData = (
     return data;
   }
   
-  console.log(`Filtering data with type=${type}, clientFilter=${clientFilter}, dateRange=${dateRange?.from?.toISOString()} - ${dateRange?.to?.toISOString()}`);
+  logger.log(`Filtering data with type=${type}, clientFilter=${clientFilter}, dateRange=${dateRange?.from?.toISOString()} - ${dateRange?.to?.toISOString()}`);
   
   return data.filter(item => {
     if (!item) return false;
@@ -43,7 +44,7 @@ export const filterData = (
       const dateStr = item.operation_date || item.created_at;
       
       if (!isValidDate(dateStr)) {
-        console.log(`Invalid date: ${dateStr}`);
+        logger.log(`Invalid date: ${dateStr}`);
         return false;
       }
       
@@ -60,7 +61,7 @@ export const filterData = (
           dateMatch = isWithinInterval(itemDate, { start: startDate, end: endDate });
           
           if (!dateMatch) {
-            console.log(`Item excluded - date ${itemDate.toISOString()} outside range ${startDate.toISOString()} to ${endDate.toISOString()}`);
+            logger.log(`Item excluded - date ${itemDate.toISOString()} outside range ${startDate.toISOString()} to ${endDate.toISOString()}`);
           }
         } catch (error) {
           console.error("Date interval error:", error);

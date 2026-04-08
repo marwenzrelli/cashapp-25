@@ -1,5 +1,6 @@
 
 import { format, subDays, startOfMonth, endOfMonth, isWithinInterval, startOfDay, endOfDay } from "date-fns";
+import { logger } from "@/utils/logger";
 
 export const getMonthBoundaries = () => {
   const currentMonth = new Date();
@@ -41,7 +42,7 @@ export const filterByDateRange = (items: any[], startDate: Date, endDate: Date, 
   const start = startOfDay(startDate);
   const end = endOfDay(endDate);
   
-  console.log(`Filtering items by date range: ${start.toISOString()} to ${end.toISOString()}`);
+  logger.log(`Filtering items by date range: ${start.toISOString()} to ${end.toISOString()}`);
   
   return items.filter(item => {
     if (!item) return false;
@@ -55,14 +56,14 @@ export const filterByDateRange = (items: any[], startDate: Date, endDate: Date, 
       
       // Skip invalid dates
       if (isNaN(itemDate.getTime())) {
-        console.log(`Skipping item with invalid date: ${dateStr}`);
+        logger.log(`Skipping item with invalid date: ${dateStr}`);
         return false;
       }
       
       const isInRange = isWithinInterval(itemDate, { start, end });
       
       if (!isInRange) {
-        // console.log(`Item with date ${itemDate.toISOString()} excluded - outside range`);
+        // logger.log(`Item with date ${itemDate.toISOString()} excluded - outside range`);
       }
       
       return isInRange;

@@ -1,6 +1,7 @@
 
 import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/utils/logger";
 
 export const useRealtimeSubscriptions = (
   clientId: number | undefined,
@@ -13,7 +14,7 @@ export const useRealtimeSubscriptions = (
     // Skip subscription setup if no client ID or already subscribed
     if (!clientId || isSubscribedRef.current) return;
     
-    console.log("Setting up realtime subscription for client ID:", clientId);
+    logger.log("Setting up realtime subscription for client ID:", clientId);
     isSubscribedRef.current = true;
     
     // Use a single channel for all client-related changes
@@ -30,18 +31,18 @@ export const useRealtimeSubscriptions = (
         // Implement debouncing to prevent rapid updates
         const now = Date.now();
         if (now - lastUpdateTimeRef.current < 500) {
-          console.log("Skipping too frequent client update");
+          logger.log("Skipping too frequent client update");
           return;
         }
         
         lastUpdateTimeRef.current = now;
-        console.log("Client data changed:", payload);
+        logger.log("Client data changed:", payload);
         // Only refresh data when there's an actual database change
         refreshData();
       })
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
-          console.log(`Subscribed to client-${clientId} changes`);
+          logger.log(`Subscribed to client-${clientId} changes`);
         }
         if (status === 'CHANNEL_ERROR') {
           console.error(`Error subscribing to client-${clientId} changes`);
@@ -50,7 +51,7 @@ export const useRealtimeSubscriptions = (
     
     // Clean up subscription on unmount
     return () => {
-      console.log("Cleaning up realtime subscriptions");
+      logger.log("Cleaning up realtime subscriptions");
       isSubscribedRef.current = false;
       channel.unsubscribe();
     };

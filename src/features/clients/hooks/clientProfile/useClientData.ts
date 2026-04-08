@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Client } from "@/features/clients/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { logger } from "@/utils/logger";
 
 export const useClientData = (clientId: number | null) => {
   const [client, setClient] = useState<Client | null>(null);
@@ -16,7 +17,7 @@ export const useClientData = (clientId: number | null) => {
     setError(null);
     
     try {
-      console.log(`Fetching client data for ID: ${id} (${typeof id})`);
+      logger.log(`Fetching client data for ID: ${id} (${typeof id})`);
       
       // First, check if ID is valid
       if (isNaN(id) || id <= 0) {
@@ -24,7 +25,7 @@ export const useClientData = (clientId: number | null) => {
       }
       
       // Check if the client exists before trying to fetch it
-      console.log("Checking if client exists...");
+      logger.log("Checking if client exists...");
       const { count, error: countError } = await supabase
         .from('clients')
         .select('*', { count: 'exact', head: true })
@@ -40,7 +41,7 @@ export const useClientData = (clientId: number | null) => {
         throw new Error(`Le client avec l'identifiant ${id} n'existe pas dans notre système.`);
       }
       
-      console.log(`Client with ID ${id} exists, count: ${count}`);
+      logger.log(`Client with ID ${id} exists, count: ${count}`);
       
       // Now fetch the client data
       const { data, error } = await supabase
@@ -61,7 +62,7 @@ export const useClientData = (clientId: number | null) => {
         setError(`Le client avec l'identifiant ${id} n'existe pas ou a été supprimé.`);
         setClient(null);
       } else {
-        console.log("Client data retrieved:", data);
+        logger.log("Client data retrieved:", data);
         setClient(data as Client);
         setError(null);
       }

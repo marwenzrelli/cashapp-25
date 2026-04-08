@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { logger } from "@/utils/logger";
 
 export const useAuthenticationCheck = () => {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ export const useAuthenticationCheck = () => {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session) {
-          console.log("No active session, redirecting to login");
+          logger.log("No active session, redirecting to login");
           toast.error("Veuillez vous connecter");
           navigate("/login");
           return;
