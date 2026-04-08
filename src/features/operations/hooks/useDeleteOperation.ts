@@ -3,6 +3,7 @@ import { Operation } from "../types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { 
+import { logger } from "@/utils/logger";
   handleDepositDeletion, 
   handleWithdrawalDeletion, 
   handleTransferDeletion 
@@ -13,12 +14,12 @@ export const useDeleteOperation = (
   setIsLoading: (isLoading: boolean) => void
 ) => {
   const deleteOperation = async (operation: Operation): Promise<Operation> => {
-    console.log("deleteOperation called with:", operation);
+    logger.log("deleteOperation called with:", operation);
     return operation;
   };
 
   const confirmDeleteOperation = async (operationToDelete: Operation | undefined): Promise<boolean> => {
-    console.log("confirmDeleteOperation called with:", operationToDelete);
+    logger.log("confirmDeleteOperation called with:", operationToDelete);
     
     if (!operationToDelete) {
       console.error("No operation selected for deletion");
@@ -28,13 +29,13 @@ export const useDeleteOperation = (
     
     try {
       setIsLoading(true);
-      console.log("Setting isLoading to true");
+      logger.log("Setting isLoading to true");
       
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id;
-      console.log("User ID from session:", userId);
+      logger.log("User ID from session:", userId);
       
-      console.log(`Starting deletion process for operation type: ${operationToDelete.type} with ID: ${operationToDelete.id}`);
+      logger.log(`Starting deletion process for operation type: ${operationToDelete.type} with ID: ${operationToDelete.id}`);
       
       let success = false;
       
@@ -47,21 +48,21 @@ export const useDeleteOperation = (
         throw new Error(`ID d'opération invalide: ${operationToDelete.id}`);
       }
       
-      console.log(`Parsed operation ID: ${operationId}`);
+      logger.log(`Parsed operation ID: ${operationId}`);
       
       switch (operationToDelete.type) {
         case "deposit":
-          console.log("Handling deposit deletion");
+          logger.log("Handling deposit deletion");
           success = await handleDepositDeletion(operationId, userId);
           break;
           
         case "withdrawal":
-          console.log("Handling withdrawal deletion");
+          logger.log("Handling withdrawal deletion");
           success = await handleWithdrawalDeletion(operationId, userId);
           break;
           
         case "transfer":
-          console.log("Handling transfer deletion");
+          logger.log("Handling transfer deletion");
           success = await handleTransferDeletion(operationId, userId);
           break;
           
@@ -70,10 +71,10 @@ export const useDeleteOperation = (
           throw new Error(`Type d'opération inconnu: ${operationToDelete.type}`);
       }
       
-      console.log("Deletion success:", success);
+      logger.log("Deletion success:", success);
       
       if (success) {
-        console.log("Operation deleted successfully, refreshing operations list");
+        logger.log("Operation deleted successfully, refreshing operations list");
         toast.success("Opération supprimée avec succès");
         
         // Attendre un court instant pour s'assurer que la suppression est terminée côté serveur
@@ -93,7 +94,7 @@ export const useDeleteOperation = (
       });
       return false;
     } finally {
-      console.log("Setting isLoading to false");
+      logger.log("Setting isLoading to false");
       setIsLoading(false);
     }
   };

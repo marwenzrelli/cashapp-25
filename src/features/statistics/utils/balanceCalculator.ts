@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { logger } from "@/utils/logger";
 
 /**
  * Recalcule et met à jour le solde pour tous les clients
@@ -8,7 +9,7 @@ import { toast } from "sonner";
  */
 export const recalculateAllClientBalances = async (): Promise<boolean> => {
   try {
-    console.log("Starting recalculation of all client balances");
+    logger.log("Starting recalculation of all client balances");
     
     // Récupérer tous les clients
     const { data: clients, error: clientsError } = await supabase
@@ -21,11 +22,11 @@ export const recalculateAllClientBalances = async (): Promise<boolean> => {
     }
     
     if (!clients || clients.length === 0) {
-      console.log("No clients found");
+      logger.log("No clients found");
       return true;
     }
     
-    console.log(`Found ${clients.length} clients to update`);
+    logger.log(`Found ${clients.length} clients to update`);
     
     // Traiter les clients par lots
     const batchSize = 5;
@@ -83,7 +84,7 @@ export const recalculateAllClientBalances = async (): Promise<boolean> => {
         const balance = parseFloat((totalDeposits - totalWithdrawals).toFixed(2));
         
         // Log le calcul pour debugging
-        console.log(`${clientFullName}: Deposits=${totalDeposits}, Withdrawals=${totalWithdrawals}, Balance=${balance}`);
+        logger.log(`${clientFullName}: Deposits=${totalDeposits}, Withdrawals=${totalWithdrawals}, Balance=${balance}`);
         
         // Mettre à jour le solde du client
         const { error: updateError } = await supabase
@@ -96,7 +97,7 @@ export const recalculateAllClientBalances = async (): Promise<boolean> => {
           return;
         }
         
-        console.log(`Updated balance for ${clientFullName}: ${balance}`);
+        logger.log(`Updated balance for ${clientFullName}: ${balance}`);
         successCount++;
       }));
       
@@ -106,7 +107,7 @@ export const recalculateAllClientBalances = async (): Promise<boolean> => {
       }
     }
     
-    console.log(`Successfully updated ${successCount}/${clients.length} client balances`);
+    logger.log(`Successfully updated ${successCount}/${clients.length} client balances`);
     return true;
   } catch (error) {
     console.error("Error recalculating client balances:", error);

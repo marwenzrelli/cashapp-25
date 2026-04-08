@@ -3,6 +3,7 @@ import { useState, useCallback } from "react";
 import { ExtendedClient } from "@/features/withdrawals/hooks/form/withdrawalFormTypes";
 import { Deposit } from "@/features/deposits/types";
 import { format } from "date-fns";
+import { logger } from "@/utils/logger";
 
 interface UseDepositFormProps {
   clients: ExtendedClient[];
@@ -64,7 +65,7 @@ export const useDepositForm = ({
         created_by: null // Add the created_by property that was missing
       };
 
-      console.log("Submitting deposit:", newDeposit);
+      logger.log("Submitting deposit:", newDeposit);
       const result = await onConfirm(newDeposit);
       
       if (result !== false) {

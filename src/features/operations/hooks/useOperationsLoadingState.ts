@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Operation } from "../types";
 import { toast } from "sonner";
+import { logger } from "@/utils/logger";
 
 interface UseOperationsLoadingStateProps {
   isLoading: boolean;
@@ -82,7 +83,7 @@ export const useOperationsLoadingState = ({
 
   const handleManualRefresh = () => {
     // Allow immediate refresh
-    console.log("Manual refresh triggered");
+    logger.log("Manual refresh triggered");
     lastRefreshTimeRef.current = Date.now();
     setLoadingTimeout(false);
     setShowNetworkError(false);
@@ -90,7 +91,7 @@ export const useOperationsLoadingState = ({
   };
 
   const handleForceRefresh = () => {
-    console.log("Force refresh triggered");
+    logger.log("Force refresh triggered");
     lastRefreshTimeRef.current = Date.now();
     setLoadingTimeout(false);
     setShowNetworkError(false);

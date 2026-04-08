@@ -1,5 +1,6 @@
 
 import { ClientStats } from "@/features/operations/types";
+import { logger } from "@/utils/logger";
 
 /**
  * Generates statistics for each client based on operation data
@@ -9,7 +10,7 @@ export const generateClientStats = (operations: any[]) => {
   
   // Check if we have valid operations data
   if (!Array.isArray(operations) || operations.length === 0) {
-    console.warn("No valid operations data available for client stats");
+    logger.warn("No valid operations data available for client stats");
     
     // Demo data for testing when no real data is available
     if (process.env.NODE_ENV === 'development') {
@@ -25,7 +26,7 @@ export const generateClientStats = (operations: any[]) => {
     return clientStats;
   }
   
-  console.log(`Processing ${operations.length} operations for client statistics`);
+  logger.log(`Processing ${operations.length} operations for client statistics`);
   
   operations.forEach(op => {
     // Skip invalid operations
@@ -51,6 +52,6 @@ export const generateClientStats = (operations: any[]) => {
       clientStats[clientName].totalAmount / clientStats[clientName].transactionCount;
   });
 
-  console.log("Generated client stats for", Object.keys(clientStats).length, "clients");
+  logger.log("Generated client stats for", Object.keys(clientStats).length, "clients");
   return clientStats;
 };

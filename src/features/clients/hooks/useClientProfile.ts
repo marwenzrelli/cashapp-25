@@ -11,6 +11,7 @@ import { useOperationsVerification } from "./clientProfile/useOperationsVerifica
 import { Operation } from "@/features/operations/types";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/utils/logger";
 
 export const useClientProfile = () => {
   const { id: clientIdParam } = useParams();
@@ -19,7 +20,7 @@ export const useClientProfile = () => {
   
   // Améliorer la validation de l'ID client
   const parsedClientId = useMemo(() => {
-    console.log("Raw clientIdParam from useParams:", clientIdParam);
+    logger.log("Raw clientIdParam from useParams:", clientIdParam);
     
     if (!clientIdParam || clientIdParam === ':id' || clientIdParam === 'undefined') {
       console.error("ID client invalide ou manquant:", clientIdParam);
@@ -32,13 +33,13 @@ export const useClientProfile = () => {
       return null;
     }
     
-    console.log("Valid client ID parsed:", parsed);
+    logger.log("Valid client ID parsed:", parsed);
     return parsed;
   }, [clientIdParam]);
   
   const isPepsiMen = useMemo(() => parsedClientId === 4, [parsedClientId]);
   
-  console.log("useClientProfile - Raw ID from params:", clientIdParam, "Parsed client ID:", parsedClientId);
+  logger.log("useClientProfile - Raw ID from params:", clientIdParam, "Parsed client ID:", parsedClientId);
   
   // Redirection si l'ID est invalide
   useEffect(() => {
@@ -55,7 +56,7 @@ export const useClientProfile = () => {
   
   const refetchClient = useCallback(() => {
     if (parsedClientId) {
-      console.log("Manual refetch of client data for ID:", parsedClientId);
+      logger.log("Manual refetch of client data for ID:", parsedClientId);
       fetchClient(parsedClientId);
     } else {
       console.error("Cannot refetch: No client ID available");
@@ -105,7 +106,7 @@ export const useClientProfile = () => {
 
   const updateOperation = async (updatedOperation: Operation): Promise<void> => {
     try {
-      console.log("Updating operation in profile page:", updatedOperation);
+      logger.log("Updating operation in profile page:", updatedOperation);
       
       const operationType = updatedOperation.type;
       const operationIdParts = updatedOperation.id.toString().split('-');
@@ -173,14 +174,14 @@ export const useClientProfile = () => {
   const effectiveBalance = realTimeBalance !== null ? realTimeBalance : client?.solde;
 
   const refreshClientOperations = useCallback(async (): Promise<void> => {
-    console.log("Refreshing operations for client:", client?.id);
+    logger.log("Refreshing operations for client:", client?.id);
     try {
       await refreshOperations();
       
       await new Promise(resolve => setTimeout(resolve, 300));
       
       if (parsedClientId) {
-        console.log("Actualisation du solde du client après rafraîchissement des opérations");
+        logger.log("Actualisation du solde du client après rafraîchissement des opérations");
         await refreshClientBalance();
       }
     } catch (error) {

@@ -10,6 +10,7 @@ import {
   sortOperationsByDate 
 } from './operationTransformers';
 import { calculateRetryDelay } from './retryLogic';
+import { logger } from "@/utils/logger";
 
 type FetchOperationsParams = {
   fetchAllOperations: () => Promise<{
@@ -46,14 +47,14 @@ export const fetchOperationsCore = async ({
   
   // Skip if already fetching and not forced
   if (fetchingRef.current && !force) {
-    console.log("Une requête est déjà en cours, ignorant cette requête");
+    logger.log("Une requête est déjà en cours, ignorant cette requête");
     return;
   }
   
   // Rate limiting to prevent excessive fetching
   const now = Date.now();
   if (!force && now - lastFetchTime < 2000) {
-    console.log(`Dernier fetch il y a ${now - lastFetchTime}ms, ignorant cette requête`);
+    logger.log(`Dernier fetch il y a ${now - lastFetchTime}ms, ignorant cette requête`);
     return;
   }
   
@@ -72,7 +73,7 @@ export const fetchOperationsCore = async ({
     setLastFetchTime(now);
     incrementFetchAttempts();
     
-    console.log("Fetching operations, attempt #", fetchAttempts + 1);
+    logger.log("Fetching operations, attempt #", fetchAttempts + 1);
     
     // Set a timeout to prevent fetching from hanging indefinitely
     setupFetchTimeout(controls, setIsLoading);
@@ -84,7 +85,7 @@ export const fetchOperationsCore = async ({
     
     if (!isMountedRef.current) return;
 
-    console.log(`Raw data - deposits: ${deposits?.length || 0}, withdrawals: ${withdrawals?.length || 0}, transfers: ${transfers?.length || 0}`);
+    logger.log(`Raw data - deposits: ${deposits?.length || 0}, withdrawals: ${withdrawals?.length || 0}, transfers: ${transfers?.length || 0}`);
 
     // Transform the data
     const allOperations = transformToOperations(deposits, withdrawals, transfers);
@@ -92,7 +93,7 @@ export const fetchOperationsCore = async ({
     // Sort operations by date
     const sortedOperations = sortOperationsByDate(allOperations);
     
-    console.log(`Fetched ${allOperations.length} operations (${deposits?.length || 0} deposits, ${withdrawals?.length || 0} withdrawals, ${transfers?.length || 0} transfers)`);
+    logger.log(`Fetched ${allOperations.length} operations (${deposits?.length || 0} deposits, ${withdrawals?.length || 0} withdrawals, ${transfers?.length || 0} transfers)`);
     
     // Deduplicate operations
     const uniqueOperations = deduplicateOperations(sortedOperations);
@@ -129,7 +130,7 @@ export const fetchOperationsCore = async ({
     // Retry logic
     if (maxRetries.current > 0 && isMountedRef.current) {
       const retryDelay = calculateRetryDelay(3, maxRetries.current);
-      console.log(`Will retry in ${retryDelay}ms, ${maxRetries.current} retries left`);
+      logger.log(`Will retry in ${retryDelay}ms, ${maxRetries.current} retries left`);
       maxRetries.current--;
       
       // Schedule retry

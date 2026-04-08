@@ -2,6 +2,7 @@
 import { Client } from "../../types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { logger } from "@/utils/logger";
 
 export const useRefreshClientBalance = (
   setClients: React.Dispatch<React.SetStateAction<Client[]>>
@@ -12,7 +13,7 @@ export const useRefreshClientBalance = (
       // Ensure the ID is a number
       const clientId = typeof id === 'string' ? parseInt(id, 10) : id;
       
-      console.log("Refreshing balance for client ID:", clientId);
+      logger.log("Refreshing balance for client ID:", clientId);
       
       // Check Supabase connection
       if (!supabase) {
@@ -37,7 +38,7 @@ export const useRefreshClientBalance = (
       }
       
       const clientFullName = `${clientData.prenom} ${clientData.nom}`;
-      console.log("Client full name:", clientFullName);
+      logger.log("Client full name:", clientFullName);
       
       // Get total deposits for this client
       const { data: deposits, error: depositsError } = await supabase
@@ -92,7 +93,7 @@ export const useRefreshClientBalance = (
       // New balance calculation: deposits + transfers received - withdrawals - transfers sent
       const balance = totalDeposits + totalTransfersReceived - totalWithdrawals - totalTransfersSent;
       
-      console.log(`Balance calculated for ${clientFullName}: 
+      logger.log(`Balance calculated for ${clientFullName}: 
         Deposits: ${totalDeposits}, 
         Withdrawals: ${totalWithdrawals}, 
         Transfers Received: ${totalTransfersReceived},
@@ -120,7 +121,7 @@ export const useRefreshClientBalance = (
         )
       );
       
-      console.log(`Client ${clientFullName} balance successfully updated: ${balance}`);
+      logger.log(`Client ${clientFullName} balance successfully updated: ${balance}`);
       return true;
     } catch (error) {
       console.error("Error refreshing balance:", error);

@@ -5,6 +5,7 @@ import {
   WithdrawalFormState 
 } from "./form/withdrawalFormTypes";
 import { 
+import { logger } from "@/utils/logger";
   initializeNewForm, 
   initializeFormFromWithdrawal 
 } from "./form/withdrawalFormInitializer";
@@ -43,7 +44,7 @@ export const useWithdrawalFormState = ({
 
   const initializeForm = () => {
     try {
-      console.log("Initializing withdrawal form with:", { 
+      logger.log("Initializing withdrawal form with:", { 
         isEditing, 
         selectedWithdrawal, 
         selectedClient 
@@ -54,7 +55,7 @@ export const useWithdrawalFormState = ({
         const formData = initializeFormFromWithdrawal(selectedWithdrawal, clients);
         
         if (formData) {
-          console.log("Setting withdrawal form data:", formData);
+          logger.log("Setting withdrawal form data:", formData);
           setFormState(formData);
           
           // Update selected client in parent

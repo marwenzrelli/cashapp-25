@@ -4,6 +4,7 @@ import { usePublicClientData } from "./publicClientProfile/usePublicClientData";
 import { useRealtimeSubscriptions } from "./publicClientProfile/useRealtimeSubscriptions";
 import { validateToken } from "./publicClientProfile/validation";
 import { checkClientOperations } from "./utils/checkClientOperations";
+import { logger } from "@/utils/logger";
 
 export const usePublicClientProfile = (token: string | undefined) => {
   // Validate token format before proceeding
@@ -26,7 +27,7 @@ export const usePublicClientProfile = (token: string | undefined) => {
 
   // Set up realtime subscriptions - but limit refreshes
   const refreshData = useCallback(() => {
-    console.log("Refreshing client data due to realtime update");
+    logger.log("Refreshing client data due to realtime update");
     if (token && !isLoading) {
       fetchClientData();
     }
@@ -40,7 +41,7 @@ export const usePublicClientProfile = (token: string | undefined) => {
     const verifyOperationsExist = async () => {
       if (client && operations.length === 0 && !isLoading && !error && token && 
           !verificationCompletedRef.current && !operationsCheckedRef.current) {
-        console.log("Client loaded but no operations found. Running verification check...");
+        logger.log("Client loaded but no operations found. Running verification check...");
         verificationCompletedRef.current = true;
         operationsCheckedRef.current = true;
         
@@ -50,11 +51,11 @@ export const usePublicClientProfile = (token: string | undefined) => {
         const opsCheck = await checkClientOperations(clientFullName, client.id, token);
         
         if (opsCheck.totalCount > 0) {
-          console.log(`Found ${opsCheck.totalCount} operations in database, but none retrieved. Retrying fetch...`);
+          logger.log(`Found ${opsCheck.totalCount} operations in database, but none retrieved. Retrying fetch...`);
           // If operations exist but weren't retrieved, retry the fetch
           retryFetch();
         } else {
-          console.log("No operations found for this client in the database.");
+          logger.log("No operations found for this client in the database.");
         }
       }
     };
@@ -67,7 +68,7 @@ export const usePublicClientProfile = (token: string | undefined) => {
   
   // Log detailed information for debugging - only when state changes
   useEffect(() => {
-    console.log("PublicClientProfile hook state:", {
+    logger.log("PublicClientProfile hook state:", {
       token: token ? `${token.substring(0, 8)}...` : undefined,
       tokenValid: tokenValidation.isValid,
       tokenError: tokenValidation.error,

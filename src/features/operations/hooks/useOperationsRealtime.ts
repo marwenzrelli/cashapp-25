@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logger } from "@/utils/logger";
 
 export const useOperationsRealtime = (refreshOperations: (force: boolean) => void) => {
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
@@ -14,18 +15,18 @@ export const useOperationsRealtime = (refreshOperations: (force: boolean) => voi
   const setupRealtimeSubscription = useCallback(() => {
     if (!isMountedRef.current) return;
     
-    console.log('Setting up realtime subscription for operations...');
+    logger.log('Setting up realtime subscription for operations...');
     try {
       // Cleanup any existing channel before creating a new one
       if (channelRef.current) {
-        console.log('Cleaning up existing channel before creating a new one');
+        logger.log('Cleaning up existing channel before creating a new one');
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }
 
       // Create a new channel for listening to database changes
       const channelName = `operations-changes-${Date.now()}`;
-      console.log(`Creating new channel: ${channelName}`);
+      logger.log(`Creating new channel: ${channelName}`);
       const channel = supabase.channel(channelName);
       channelRef.current = channel;
 
@@ -40,7 +41,7 @@ export const useOperationsRealtime = (refreshOperations: (force: boolean) => voi
           },
           (payload) => {
             if (!isMountedRef.current) return;
-            console.log('Realtime event received for deposits:', payload.eventType);
+            logger.log('Realtime event received for deposits:', payload.eventType);
             refreshOperations(true);
           }
         )
@@ -53,7 +54,7 @@ export const useOperationsRealtime = (refreshOperations: (force: boolean) => voi
           },
           (payload) => {
             if (!isMountedRef.current) return;
-            console.log('Realtime event received for withdrawals:', payload.eventType);
+            logger.log('Realtime event received for withdrawals:', payload.eventType);
             refreshOperations(true);
           }
         )
@@ -66,18 +67,18 @@ export const useOperationsRealtime = (refreshOperations: (force: boolean) => voi
           },
           (payload) => {
             if (!isMountedRef.current) return;
-            console.log('Realtime event received for transfers:', payload.eventType);
+            logger.log('Realtime event received for transfers:', payload.eventType);
             refreshOperations(true);
           }
         )
         .subscribe((status) => {
           if (!isMountedRef.current) return;
           
-          console.log(`Realtime subscription status: ${status}`);
+          logger.log(`Realtime subscription status: ${status}`);
           isSubscribedRef.current = status === 'SUBSCRIBED';
           
           if (status === 'SUBSCRIBED') {
-            console.log('Successfully subscribed to realtime updates for operations');
+            logger.log('Successfully subscribed to realtime updates for operations');
             setReconnectAttempts(0); // Reset attempts on success
           } else if (status === 'CHANNEL_ERROR') {
             console.error('Error subscribing to realtime updates');
@@ -89,7 +90,7 @@ export const useOperationsRealtime = (refreshOperations: (force: boolean) => voi
               }
               
               const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000); // Exponential backoff
-              console.log(`Will attempt to reconnect in ${delay}ms (attempt ${reconnectAttempts + 1})`);
+              logger.log(`Will attempt to reconnect in ${delay}ms (attempt ${reconnectAttempts + 1})`);
               
               reconnectTimerRef.current = setTimeout(() => {
                 if (isMountedRef.current) {
@@ -114,7 +115,7 @@ export const useOperationsRealtime = (refreshOperations: (force: boolean) => voi
 
   const cleanupRealtime = useCallback(() => {
     if (channelRef.current) {
-      console.log('Cleaning up realtime subscription');
+      logger.log('Cleaning up realtime subscription');
       try {
         supabase.removeChannel(channelRef.current);
       } catch (error) {
@@ -144,7 +145,7 @@ export const useOperationsRealtime = (refreshOperations: (force: boolean) => voi
   useEffect(() => {
     if (!isMountedRef.current) return;
     
-    console.log('useOperationsRealtime effect running');
+    logger.log('useOperationsRealtime effect running');
     setupRealtimeSubscription();
     
     // Clean up subscription when component unmounts

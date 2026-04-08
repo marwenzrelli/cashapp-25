@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { SystemUser, mapProfileToSystemUser } from '@/types/admin';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchUserProfile, fetchUserPermissions } from '../api';
+import { logger } from "@/utils/logger";
 
 export function useCurrentUser() {
   const [currentUser, setCurrentUser] = useState<SystemUser | null>(null);
@@ -14,15 +15,15 @@ export function useCurrentUser() {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        console.log("No active session");
+        logger.log("No active session");
         return null;
       }
 
-      console.log("Fetching profile for user:", session.user.id);
+      logger.log("Fetching profile for user:", session.user.id);
       const profile = await fetchUserProfile(session.user.id);
 
       if (!profile) {
-        console.log("No profile found");
+        logger.log("No profile found");
         return null;
       }
 
@@ -33,7 +34,7 @@ export function useCurrentUser() {
         console.error("Error loading permissions, continuing with empty permissions:", permError);
       }
       
-      console.log("Profile loaded successfully:", profile);
+      logger.log("Profile loaded successfully:", profile);
       return mapProfileToSystemUser({ ...profile, user_permissions: permissions });
     } catch (error) {
       console.error("Error loading profile:", error);

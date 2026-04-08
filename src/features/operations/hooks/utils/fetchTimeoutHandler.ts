@@ -1,6 +1,7 @@
 
 import { toast } from 'sonner';
 import { FetchControls } from './fetchStateManager';
+import { logger } from "@/utils/logger";
 
 /**
  * Creates and manages a fetch timeout
@@ -20,7 +21,7 @@ export const setupFetchTimeout = (
   // Set a new timeout
   fetchTimeoutRef.current = setTimeout(() => {
     if (fetchingRef.current && isMountedRef.current) {
-      console.warn("Fetch operation timeout - resetting loading state");
+      logger.warn("Fetch operation timeout - resetting loading state");
       fetchingRef.current = false;
       setIsLoading(false);
       

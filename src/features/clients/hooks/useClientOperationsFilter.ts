@@ -4,6 +4,7 @@ import { Client } from '@/features/clients/types';
 import { Operation } from '@/features/operations/types';
 import { addDays, subDays, isWithinInterval } from 'date-fns';
 import { DateRange } from 'react-day-picker';
+import { logger } from "@/utils/logger";
 
 export const useClientOperationsFilter = (
   operations: Operation[],
@@ -63,11 +64,11 @@ export const useClientOperationsFilter = (
     // Prepare client name in different formats for matching
     const clientFullName = `${client.prenom} ${client.nom}`.trim();
     
-    console.log(`Filtering operations for client: ${clientFullName} (ID: ${clientId})`);
+    logger.log(`Filtering operations for client: ${clientFullName} (ID: ${clientId})`);
     
     // Special case for client ID 4 (pepsi men) - more aggressive matching
     if (isPepsiMen) {
-      console.log("Special filtering for pepsi men client");
+      logger.log("Special filtering for pepsi men client");
       
       return operations.filter(op => {
         // Match by client_id
@@ -122,7 +123,7 @@ export const useClientOperationsFilter = (
   const filteredOperations = useMemo(() => {
     if (!clientOperations.length) return [];
     
-    console.log(`Filtering ${clientOperations.length} operations by type=${selectedType}, searchTerm=${searchTerm}, showAllDates=${showAllDates}`);
+    logger.log(`Filtering ${clientOperations.length} operations by type=${selectedType}, searchTerm=${searchTerm}, showAllDates=${showAllDates}`);
     
     return clientOperations.filter(op => {
       // Filter by type - include direct_transfer in "all"
@@ -157,10 +158,10 @@ export const useClientOperationsFilter = (
           const startDate = dateRange.from;
           const endDate = dateRange.to;
           
-          console.log(`Checking operation ${op.id}:`);
-          console.log(`  Operation date: ${opDate.toISOString()}`);
-          console.log(`  Range start: ${startDate.toISOString()}`);
-          console.log(`  Range end: ${endDate.toISOString()}`);
+          logger.log(`Checking operation ${op.id}:`);
+          logger.log(`  Operation date: ${opDate.toISOString()}`);
+          logger.log(`  Range start: ${startDate.toISOString()}`);
+          logger.log(`  Range end: ${endDate.toISOString()}`);
           
           // Use isWithinInterval for inclusive date comparison
           const isInRange = isWithinInterval(opDate, { 
@@ -169,9 +170,9 @@ export const useClientOperationsFilter = (
           });
           
           if (isInRange) {
-            console.log(`Operation ${op.id} INCLUDED - date ${opDate.toISOString()} within range`);
+            logger.log(`Operation ${op.id} INCLUDED - date ${opDate.toISOString()} within range`);
           } else {
-            console.log(`Operation ${op.id} EXCLUDED - date ${opDate.toISOString()} outside range`);
+            logger.log(`Operation ${op.id} EXCLUDED - date ${opDate.toISOString()} outside range`);
           }
           
           return isInRange;

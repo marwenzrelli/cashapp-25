@@ -1,10 +1,11 @@
 
 import { Client } from "@/features/clients/types";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/utils/logger";
 
 export const fetchClientDetails = async (clientId: number): Promise<Client> => {
   try {
-    console.log(`Récupération des détails du client avec l'ID: ${clientId}`);
+    logger.log(`Récupération des détails du client avec l'ID: ${clientId}`);
     
     // Utiliser une promesse avec timeout au lieu de AbortController
     const timeoutPromise = new Promise<never>((_, reject) => {

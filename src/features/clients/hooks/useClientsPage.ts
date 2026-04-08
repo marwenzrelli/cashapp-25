@@ -4,6 +4,7 @@ import { useClients } from "./useClients";
 import { useClientDialogs } from "./useClientDialogs";
 import { toast } from "sonner";
 import { Client } from "../types";
+import { logger } from "@/utils/logger";
 
 export const useClientsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -40,7 +41,7 @@ export const useClientsPage = () => {
 
   // Initial fetch with limited automatic retry - executed ONLY once on first component mount
   useEffect(() => {
-    console.log("Chargement initial des clients...");
+    logger.log("Chargement initial des clients...");
     // Only load data once when component mounts - no additional parameters
     fetchClients();
     
@@ -57,7 +58,7 @@ export const useClientsPage = () => {
   }, [clients, searchTerm]);
 
   const handleRetry = useCallback(() => {
-    console.log("Tentative de rechargement des clients...");
+    logger.log("Tentative de rechargement des clients...");
     toast.info("Renouvellement de la connexion", {
       description: "Tentative de connexion à la base de données..."
     });
@@ -92,7 +93,7 @@ export const useClientsPage = () => {
   };
 
   const handleCreateClient = async () => {
-    console.log("Création d'un nouveau client:", newClient);
+    logger.log("Création d'un nouveau client:", newClient);
     // Validation des champs requis - téléphone n'est plus obligatoire
     if (!newClient.prenom.trim() || !newClient.nom.trim()) {
       toast.error("Informations incomplètes", {

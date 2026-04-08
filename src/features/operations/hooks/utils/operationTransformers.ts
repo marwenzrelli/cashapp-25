@@ -3,6 +3,7 @@ import { format, parseISO } from "date-fns";
 import { Operation } from "@/features/operations/types";
 import { DirectOperation } from "@/features/direct-operations/types";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/utils/logger";
 
 /**
  * Transforms raw data from different tables into a unified Operation format
@@ -13,11 +14,11 @@ export const transformToOperations = (
   transfers: any[] = [],
   directOperations: any[] = []
 ): Operation[] => {
-  console.log(`Starting transformation with: ${deposits?.length || 0} deposits, ${withdrawals?.length || 0} withdrawals, ${transfers?.length || 0} transfers, ${directOperations?.length || 0} direct operations`);
+  logger.log(`Starting transformation with: ${deposits?.length || 0} deposits, ${withdrawals?.length || 0} withdrawals, ${transfers?.length || 0} transfers, ${directOperations?.length || 0} direct operations`);
   
   // Log a sample deposit to verify structure
   if (deposits && deposits.length > 0) {
-    console.log("Sample deposit for transformation:", deposits[0]);
+    logger.log("Sample deposit for transformation:", deposits[0]);
   }
   
   const transformedDeposits: Operation[] = deposits && Array.isArray(deposits) ? deposits.map(deposit => {
@@ -30,7 +31,7 @@ export const transformToOperations = (
                         null;
       
       if (depositId === null) {
-        console.warn("Invalid deposit ID:", deposit.id);
+        logger.warn("Invalid deposit ID:", deposit.id);
       }
       
       return {
@@ -121,7 +122,7 @@ export const transformToOperations = (
     }
   }).filter(Boolean) : [];
 
-  console.log(`Transformed counts: ${transformedDeposits.length} deposits, ${transformedWithdrawals.length} withdrawals, ${transformedTransfers.length} transfers, ${transformedDirectOperations.length} direct operations`);
+  logger.log(`Transformed counts: ${transformedDeposits.length} deposits, ${transformedWithdrawals.length} withdrawals, ${transformedTransfers.length} transfers, ${transformedDirectOperations.length} direct operations`);
   
   return [...transformedDeposits, ...transformedWithdrawals, ...transformedTransfers, ...transformedDirectOperations];
 };

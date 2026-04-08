@@ -4,6 +4,7 @@ import { Client } from '@/features/clients/types';
 import { Operation } from '@/features/operations/types';
 import { addDays, subDays, isWithinInterval } from 'date-fns';
 import { DateRange } from 'react-day-picker';
+import { logger } from "@/utils/logger";
 
 export const useClientOperationsFilter = (
   operations: Operation[],
@@ -30,7 +31,7 @@ export const useClientOperationsFilter = (
   // Debug logging for pepsi men operations
   useEffect(() => {
     if (isPepsiMen) {
-      console.log(`Pepsi Men Client - Total operations available: ${operations.length}`);
+      logger.log(`Pepsi Men Client - Total operations available: ${operations.length}`);
       
       // Count by type
       const byType = {
@@ -40,7 +41,7 @@ export const useClientOperationsFilter = (
         directOperations: operations.filter(op => op.type === 'direct_transfer').length
       };
       
-      console.log('Operations by type:', byType);
+      logger.log('Operations by type:', byType);
     }
   }, [operations, isPepsiMen]);
   
@@ -52,11 +53,11 @@ export const useClientOperationsFilter = (
     
     const clientFullName = `${client.prenom} ${client.nom}`.trim().toLowerCase();
     
-    console.log(`Filtering operations for client: ${clientFullName} (ID: ${clientId})`);
+    logger.log(`Filtering operations for client: ${clientFullName} (ID: ${clientId})`);
     
     // Special case for client ID 4 (pepsi men)
     if (isPepsiMen) {
-      console.log("Using strict pepsi men filtering logic");
+      logger.log("Using strict pepsi men filtering logic");
       
       return operations.filter(op => {
         // Direct client ID match (most reliable)
@@ -114,7 +115,7 @@ export const useClientOperationsFilter = (
   const filteredOperations = useMemo(() => {
     if (!clientOperations.length) return [];
     
-    console.log(`Filtering ${clientOperations.length} operations by type=${selectedType}, searchTerm=${searchTerm}, showAllDates=${showAllDates}`);
+    logger.log(`Filtering ${clientOperations.length} operations by type=${selectedType}, searchTerm=${searchTerm}, showAllDates=${showAllDates}`);
     
     return clientOperations.filter(op => {
       // Filter by type - include direct_transfer in "all"
@@ -149,18 +150,18 @@ export const useClientOperationsFilter = (
           const startDate = new Date(dateRange.from);
           const endDate = new Date(dateRange.to);
           
-          console.log(`Checking operation ${op.id}:`);
-          console.log(`  Operation date: ${opDate.toISOString()}`);
-          console.log(`  Range start: ${startDate.toISOString()}`);
-          console.log(`  Range end: ${endDate.toISOString()}`);
+          logger.log(`Checking operation ${op.id}:`);
+          logger.log(`  Operation date: ${opDate.toISOString()}`);
+          logger.log(`  Range start: ${startDate.toISOString()}`);
+          logger.log(`  Range end: ${endDate.toISOString()}`);
           
           const isInRange = isWithinInterval(opDate, { start: startDate, end: endDate });
           
           // Debug log for date filtering
           if (!isInRange) {
-            console.log(`Operation ${op.id} EXCLUDED - date ${opDate.toISOString()} outside range ${startDate.toISOString()} to ${endDate.toISOString()}`);
+            logger.log(`Operation ${op.id} EXCLUDED - date ${opDate.toISOString()} outside range ${startDate.toISOString()} to ${endDate.toISOString()}`);
           } else {
-            console.log(`Operation ${op.id} INCLUDED - date ${opDate.toISOString()} within range`);
+            logger.log(`Operation ${op.id} INCLUDED - date ${opDate.toISOString()} within range`);
           }
           
           return isInRange;

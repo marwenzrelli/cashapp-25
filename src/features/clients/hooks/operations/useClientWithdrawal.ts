@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { ensureValidISODate } from "@/features/withdrawals/hooks/utils/formatUtils";
+import { logger } from "@/utils/logger";
 
 export function useClientWithdrawal(clientId?: number, refetchClient?: () => void) {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -25,13 +26,13 @@ export function useClientWithdrawal(clientId?: number, refetchClient?: () => voi
         // Ensure we're using a proper ISO string for the date
         operationDate = ensureValidISODate(withdrawal.date);
         
-        console.log("Using withdrawal date:", {
+        logger.log("Using withdrawal date:", {
           input: withdrawal.date,
           processed: operationDate
         });
       } else {
         operationDate = new Date().toISOString();
-        console.log("No date provided, using current date");
+        logger.log("No date provided, using current date");
       }
       
       // Parse amount to ensure it's a number

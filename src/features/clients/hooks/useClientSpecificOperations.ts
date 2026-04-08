@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Operation } from "@/features/operations/types";
+import { logger } from "@/utils/logger";
 
 export const useClientSpecificOperations = (clientId: number, clientName: string) => {
   const [operations, setOperations] = useState<Operation[]>([]);
@@ -10,14 +11,14 @@ export const useClientSpecificOperations = (clientId: number, clientName: string
 
   const fetchClientOperations = useCallback(async () => {
     if (!clientId || !clientName) {
-      console.log("ClientSpecificOperations - Missing clientId or clientName");
+      logger.log("ClientSpecificOperations - Missing clientId or clientName");
       setOperations([]);
       setIsLoading(false);
       return;
     }
 
     try {
-      console.log(`ClientSpecificOperations - Fetching operations for client: ${clientName} (ID: ${clientId})`);
+      logger.log(`ClientSpecificOperations - Fetching operations for client: ${clientName} (ID: ${clientId})`);
       setIsLoading(true);
       setError(null);
 
@@ -90,9 +91,9 @@ export const useClientSpecificOperations = (clientId: number, clientName: string
         throw new Error("Erreur opérations directes");
       }
 
-      console.log(`ClientSpecificOperations - Found: ${depositsResult.data?.length || 0} deposits, ${withdrawalsResult.data?.length || 0} withdrawals`);
-      console.log(`ClientSpecificOperations - Found: ${fromTransfersResult.data?.length || 0} outgoing transfers, ${toTransfersResult.data?.length || 0} incoming transfers`);
-      console.log(`ClientSpecificOperations - Found: ${fromDirectOpsResult.data?.length || 0} outgoing direct ops, ${toDirectOpsResult.data?.length || 0} incoming direct ops`);
+      logger.log(`ClientSpecificOperations - Found: ${depositsResult.data?.length || 0} deposits, ${withdrawalsResult.data?.length || 0} withdrawals`);
+      logger.log(`ClientSpecificOperations - Found: ${fromTransfersResult.data?.length || 0} outgoing transfers, ${toTransfersResult.data?.length || 0} incoming transfers`);
+      logger.log(`ClientSpecificOperations - Found: ${fromDirectOpsResult.data?.length || 0} outgoing direct ops, ${toDirectOpsResult.data?.length || 0} incoming direct ops`);
 
       // Transform to unified Operation format
       const allOperations: Operation[] = [
@@ -185,8 +186,8 @@ export const useClientSpecificOperations = (clientId: number, clientName: string
       // Sort by date (newest first)
       uniqueOperations.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-      console.log(`ClientSpecificOperations - Total unique operations for ${clientName}: ${uniqueOperations.length}`);
-      console.log("ClientSpecificOperations - Operation types breakdown:", {
+      logger.log(`ClientSpecificOperations - Total unique operations for ${clientName}: ${uniqueOperations.length}`);
+      logger.log("ClientSpecificOperations - Operation types breakdown:", {
         deposits: uniqueOperations.filter(op => op.type === 'deposit').length,
         withdrawals: uniqueOperations.filter(op => op.type === 'withdrawal').length,
         transfers: uniqueOperations.filter(op => op.type === 'transfer').length,

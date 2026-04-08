@@ -4,6 +4,7 @@ import { Client } from "@/features/clients/types";
 import { ClientOperation, PublicClientData, TokenData } from "./types";
 import { fetchAccessData, fetchClientDetails, fetchClientOperations } from "./fetchClientData";
 import { showErrorToast } from "../utils/errorUtils";
+import { logger } from "@/utils/logger";
 
 export const usePublicClientData = (token: string | undefined): PublicClientData => {
   const [client, setClient] = useState<Client | null>(null);
@@ -43,7 +44,7 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
     fetchingRef.current = true;
     const attemptCount = fetchCount + 1;
     setFetchCount(attemptCount);
-    console.log(`Récupération des données client (Tentative #${attemptCount}) avec le token: ${token.substring(0, 8)}...`);
+    logger.log(`Récupération des données client (Tentative #${attemptCount}) avec le token: ${token.substring(0, 8)}...`);
     
     setIsLoading(true);
     setError(null);
@@ -60,7 +61,7 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
 
     try {
       // Step 1: Get client ID from token
-      console.log(`Étape 1: Récupération des données d'accès avec le token: ${token.substring(0, 8)}...`);
+      logger.log(`Étape 1: Récupération des données d'accès avec le token: ${token.substring(0, 8)}...`);
       const accessData: TokenData = await fetchAccessData(token);
       
       if (!accessData || !accessData.client_id) {
@@ -69,27 +70,27 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
         throw new Error(errorMsg);
       }
       
-      console.log(`Étape 2: ID client ${accessData.client_id} récupéré depuis le token`);
+      logger.log(`Étape 2: ID client ${accessData.client_id} récupéré depuis le token`);
       
       // Step 2: Get client details
       const clientData = await fetchClientDetails(accessData.client_id);
-      console.log(`Étape 3: Données client récupérées:`, clientData);
+      logger.log(`Étape 3: Données client récupérées:`, clientData);
       
       setClient(clientData);
       
       // Step 3: Get client operations using the token for authentication
       const fullName = `${clientData.prenom} ${clientData.nom}`;
-      console.log(`Étape 4: Récupération des opérations pour ${fullName} avec le token pour authentification`);
+      logger.log(`Étape 4: Récupération des opérations pour ${fullName} avec le token pour authentification`);
       
       // Wrap operations fetch in a separate try/catch to still show client data if operations fail
       try {
         const operationsData = await fetchClientOperations(fullName, token);
         
         setOperations(operationsData);
-        console.log(`Étape 5: ${operationsData.length} opérations client récupérées`);
+        logger.log(`Étape 5: ${operationsData.length} opérations client récupérées`);
       } catch (operationsErr: any) {
         // Log the error but still consider client data fetch successful
-        console.warn("Erreur lors de la récupération des opérations:", operationsErr);
+        logger.warn("Erreur lors de la récupération des opérations:", operationsErr);
         setOperations([]);
       }
       
@@ -111,7 +112,7 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
   }, [token, fetchCount, client]);
 
   const retryFetch = useCallback(() => {
-    console.log("Nouvelle tentative de récupération des données client avec le token:", token?.substring(0, 8));
+    logger.log("Nouvelle tentative de récupération des données client avec le token:", token?.substring(0, 8));
     dataFetchedRef.current = false; // Reset the data fetched flag to allow a new fetch
     fetchClientData();
   }, [fetchClientData, token]);
@@ -119,7 +120,7 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
   // Initial fetch on mount or token change - only run once
   useEffect(() => {
     if (token && !initialLoadCompletedRef.current) {
-      console.log("Chargement initial des données avec le token:", token.substring(0, 8));
+      logger.log("Chargement initial des données avec le token:", token.substring(0, 8));
       fetchClientData();
     }
   }, [token, fetchClientData]);

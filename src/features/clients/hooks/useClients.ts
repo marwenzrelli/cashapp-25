@@ -9,6 +9,7 @@ import { useUpdateClient } from "./operations/updateClient";
 import { useDeleteClient } from "./operations/deleteClient";
 import { useRefreshClientBalance } from "./operations/refreshBalance";
 import { toast } from "sonner";
+import { logger } from "@/utils/logger";
 
 export const useClients = () => {
   const [clients, setClients] = useState<Client[]>([]);
@@ -60,7 +61,7 @@ export const useClients = () => {
             (Date.now() - parsedCache.timestamp < 30 * 60 * 1000)) {
           setCachedClients(parsedCache);
           setClients(parsedCache.data);
-          console.log("Loaded clients from cache");
+          logger.log("Loaded clients from cache");
         }
       }
     } catch (err) {
@@ -81,7 +82,7 @@ export const useClients = () => {
       try {
         // If already refreshing, don't start another refresh
         if (isRefreshingRef.current) {
-          console.log("Already refreshing clients, skipping duplicate request");
+          logger.log("Already refreshing clients, skipping duplicate request");
           return Promise.resolve();
         }
         
@@ -89,7 +90,7 @@ export const useClients = () => {
         
         // If we're loading and have cached data, use the cache first to prevent blank screen
         if (loading && cachedClients && cachedClients.data.length > 0) {
-          console.log("Using cached clients while loading fresh data");
+          logger.log("Using cached clients while loading fresh data");
           setClients(cachedClients.data);
         }
         

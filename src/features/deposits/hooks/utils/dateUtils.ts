@@ -1,3 +1,4 @@
+import { logger } from "@/utils/logger";
 
 /**
  * Formats a date string into a localized date-time string
@@ -64,7 +65,7 @@ export const formatISODateTime = (dateString: string, isMobile = false) => {
     const seconds = String(date.getSeconds()).padStart(2, '0');
     const formattedTime = `${hours}:${minutes}:${seconds}`;
     
-    console.log("Formatted to local time:", {
+    logger.log("Formatted to local time:", {
       original: dateString,
       formatted: { date: formattedDate, time: formattedTime },
       localDate: date.toString(),
@@ -104,7 +105,7 @@ export const createISOString = (dateString: string, timeString: string) => {
     localDate.setFullYear(year, month - 1, day);
     localDate.setHours(hours, minutes, seconds, 0);
     
-    console.log("Created date from local inputs:", {
+    logger.log("Created date from local inputs:", {
       dateInput: dateString,
       timeInput: timeString,
       timeParts: { hours, minutes, seconds },

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Client } from "../../types";
+import { logger } from "@/utils/logger";
 
 export function useClientBalanceRefresh() {
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -19,7 +20,7 @@ export function useClientBalanceRefresh() {
       // Ensure the ID is a number for database operations
       const clientId = typeof id === 'string' ? parseInt(id, 10) : id;
       
-      console.log("Refreshing balance for client ID:", clientId);
+      logger.log("Refreshing balance for client ID:", clientId);
       
       // Get client information
       const { data: clientData, error: clientError } = await supabase
@@ -120,7 +121,7 @@ export function useClientBalanceRefresh() {
       // New balance calculation: deposits + transfers received - withdrawals - transfers sent
       const balance = parseFloat((totalDeposits + totalTransfersReceived - totalWithdrawals - totalTransfersSent).toFixed(2));
       
-      console.log(`Balance calculated for ${clientFullName}: 
+      logger.log(`Balance calculated for ${clientFullName}: 
         Deposits: ${totalDeposits}, 
         Withdrawals: ${totalWithdrawals}, 
         Transfers Received: ${totalTransfersReceived},

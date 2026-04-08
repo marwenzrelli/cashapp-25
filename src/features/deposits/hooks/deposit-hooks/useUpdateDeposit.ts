@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { createISOString } from "../utils/dateUtils";
+import { logger } from "@/utils/logger";
 
 export const useUpdateDeposit = (
   fetchDeposits: () => Promise<void>,
@@ -24,7 +25,7 @@ export const useUpdateDeposit = (
         // Always append seconds if they're missing from time input
         const timeValue = updates.time || '00:00:00';
         operation_date = createISOString(updates.date, timeValue);
-        console.log("Using provided date/time for operation_date:", {
+        logger.log("Using provided date/time for operation_date:", {
           date: updates.date,
           time: timeValue,
           result: operation_date
@@ -32,10 +33,10 @@ export const useUpdateDeposit = (
       } else {
         // Fallback to current date-time if no date is provided
         operation_date = new Date().toISOString();
-        console.log("No date provided, using current date:", operation_date);
+        logger.log("No date provided, using current date:", operation_date);
       }
       
-      console.log("Updating deposit with data:", {
+      logger.log("Updating deposit with data:", {
         depositId,
         updates,
         operation_date

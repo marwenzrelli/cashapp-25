@@ -4,6 +4,7 @@ import { useFetchWithdrawals } from "./useFetchWithdrawals";
 import { useDeleteWithdrawal } from "./useDeleteWithdrawal";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { logger } from "@/utils/logger";
 
 export const useWithdrawals = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -43,12 +44,12 @@ export const useWithdrawals = () => {
       }
       
       if (session) {
-        console.log("Active session found for user:", session.user.id);
+        logger.log("Active session found for user:", session.user.id);
         setIsAuthenticated(true);
         setAuthRetries(0);
         return true;
       } else {
-        console.warn("No active session found in useWithdrawals");
+        logger.warn("No active session found in useWithdrawals");
         setIsAuthenticated(false);
         setAuthRetries(prev => prev + 1);
         return false;
@@ -110,7 +111,7 @@ export const useWithdrawals = () => {
       const isAuthed = await checkAuth();
       
       if (!isAuthed) {
-        console.warn("Not authenticated, skipping data fetch");
+        logger.warn("Not authenticated, skipping data fetch");
         return;
       }
       
@@ -127,7 +128,7 @@ export const useWithdrawals = () => {
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed in withdrawals:", event, session?.user?.id);
+      logger.log("Auth state changed in withdrawals:", event, session?.user?.id);
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         setIsAuthenticated(true);
         fetchData();

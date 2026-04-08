@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Deposit, EditFormData } from "@/features/deposits/types";
 import { formatISODateTime } from "../utils/dateUtils";
 import { toast } from "sonner";
+import { logger } from "@/utils/logger";
 
 export const useDepositDialogs = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -17,7 +18,7 @@ export const useDepositDialogs = () => {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleEdit = (deposit: Deposit) => {
-    console.log("Ouverture du modal d'édition pour:", deposit);
+    logger.log("Ouverture du modal d'édition pour:", deposit);
     setSelectedDeposit(deposit);
     
     const formattedDateTime = formatISODateTime(deposit.created_at);
@@ -37,7 +38,7 @@ export const useDepositDialogs = () => {
   };
 
   const handleEditFormChange = (field: keyof EditFormData, value: string) => {
-    console.log(`Mise à jour du champ ${field} avec la valeur:`, value);
+    logger.log(`Mise à jour du champ ${field} avec la valeur:`, value);
     setEditForm(prev => ({
       ...prev,
       [field]: value
