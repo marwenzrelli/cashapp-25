@@ -9,6 +9,7 @@ import { Calendar, Clock, User, ScrollText } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatISODateTime } from "@/features/deposits/hooks/utils/dateUtils";
 import { toast } from "sonner";
+import { logger } from "@/utils/logger";
 
 interface EditOperationDialogProps {
   open: boolean;
@@ -69,7 +70,7 @@ export const EditOperationDialog = ({
         timeValue = `${timeValue}:00`;
       }
       
-      console.log("Saving operation with:", {
+      logger.log("Saving operation with:", {
         date: editedOperation.date,
         time: timeValue,
         combinedDate: new Date(editedOperation.date + "T" + timeValue)

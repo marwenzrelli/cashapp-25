@@ -15,6 +15,7 @@ import { formatDateTime } from "../types";
 import { Loader2, Trash2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { logger } from "@/utils/logger";
 
 interface DeleteOperationDialogProps {
   isOpen: boolean;
@@ -89,18 +90,18 @@ export function DeleteOperationDialog({
     }
     
     try {
-      console.log("Confirmation de suppression pour l'opération:", operation);
-      console.log("ID de l'opération:", operation.id, "Type:", operation.type);
-      console.log("Type de l'ID:", typeof operation.id);
+      logger.log("Confirmation de suppression pour l'opération:", operation);
+      logger.log("ID de l'opération:", operation.id, "Type:", operation.type);
+      logger.log("Type de l'ID:", typeof operation.id);
       
       setInternalLoading(true);
       
       const result = await onDelete();
       
-      console.log("Résultat de la suppression:", result);
+      logger.log("Résultat de la suppression:", result);
       
       if (result) {
-        console.log("Suppression réussie, fermeture de la boite de dialogue");
+        logger.log("Suppression réussie, fermeture de la boite de dialogue");
         return true;
       } else {
         console.error("Échec de la suppression");

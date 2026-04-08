@@ -7,6 +7,7 @@ import { Operation } from "@/features/operations/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { fetchAllRows } from "../../utils/fetchAllRows";
+import { logger } from "@/utils/logger";
 
 interface TreasuryTabProps {
   operations: Operation[];
@@ -22,7 +23,7 @@ export const TreasuryTab = ({ operations, isLoading }: TreasuryTabProps) => {
   const fetchAllOperations = useCallback(async () => {
     setIsFetchingAll(true);
     try {
-      console.log("TreasuryTab: Fetching ALL operations from DB...");
+      logger.log("TreasuryTab: Fetching ALL operations from DB...");
 
       const [depositsData, withdrawalsData, transfersData, directOpsData] = await Promise.all([
         fetchAllRows('deposits', { orderBy: 'operation_date', ascending: true }),
@@ -93,7 +94,7 @@ export const TreasuryTab = ({ operations, isLoading }: TreasuryTabProps) => {
         return dateA - dateB;
       });
 
-      console.log(`TreasuryTab: Fetched ALL operations:
+      logger.log(`TreasuryTab: Fetched ALL operations:
         - Versements: ${transformedDeposits.length}
         - Retraits: ${transformedWithdrawals.length}
         - Virements: ${transformedTransfers.length}
@@ -129,7 +130,7 @@ export const TreasuryTab = ({ operations, isLoading }: TreasuryTabProps) => {
         const totalClientBalance = clients?.reduce((sum, client) => sum + (client.solde || 0), 0) || 0;
         setSystemBalance(totalClientBalance);
         
-        console.log(`Solde système calculé: ${totalClientBalance} TND`);
+        logger.log(`Solde système calculé: ${totalClientBalance} TND`);
       } catch (error) {
         console.error('Erreur lors du calcul du solde système:', error);
       }
@@ -139,7 +140,7 @@ export const TreasuryTab = ({ operations, isLoading }: TreasuryTabProps) => {
   }, [localOperations]);
 
   const handleDataRefresh = (newOperations: Operation[]) => {
-    console.log(`TreasuryTab: Mise à jour avec ${newOperations.length} opérations`);
+    logger.log(`TreasuryTab: Mise à jour avec ${newOperations.length} opérations`);
     setLocalOperations(newOperations);
   };
 
@@ -149,7 +150,7 @@ export const TreasuryTab = ({ operations, isLoading }: TreasuryTabProps) => {
     const withdrawals = localOperations.filter(op => op.type === 'withdrawal').reduce((sum, op) => sum + op.amount, 0);
     const treasuryBalance = deposits - withdrawals;
     
-    console.log(`Calcul final - Versements: ${deposits}, Retraits: ${withdrawals}, Balance: ${treasuryBalance}`);
+    logger.log(`Calcul final - Versements: ${deposits}, Retraits: ${withdrawals}, Balance: ${treasuryBalance}`);
     return treasuryBalance;
   }, [localOperations]);
 

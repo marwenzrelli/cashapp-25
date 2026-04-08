@@ -2,13 +2,14 @@
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { logger } from "@/utils/logger";
 
 export const useLogout = () => {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
-      console.log("Démarrage de la procédure de déconnexion");
+      logger.log("Démarrage de la procédure de déconnexion");
       
       // Déconnexion de Supabase
       const { error } = await supabase.auth.signOut({
@@ -20,7 +21,7 @@ export const useLogout = () => {
         throw error;
       }
       
-      console.log("Déconnexion Supabase réussie");
+      logger.log("Déconnexion Supabase réussie");
       
       // Supprimer tous les tokens stockés localement
       localStorage.removeItem('sb-jyqtmpbdicwofkhtvjyy-auth-token');
@@ -35,7 +36,7 @@ export const useLogout = () => {
       }
       
       keysToRemove.forEach(key => localStorage.removeItem(key));
-      console.log(`${keysToRemove.length} clés supprimées du localStorage`);
+      logger.log(`${keysToRemove.length} clés supprimées du localStorage`);
       
       // Redirection et notification
       navigate("/login", { replace: true });

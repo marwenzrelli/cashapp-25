@@ -8,6 +8,7 @@ import { ArrowDownRight, ArrowUpRight, ArrowLeftRight } from "lucide-react";
 import { EditOperationDialog } from "@/features/operations/components/EditOperationDialog";
 import { useState } from "react";
 import { toast } from "sonner";
+import { logger } from "@/utils/logger";
 
 interface OperationDetailsModalProps {
   isOpen: boolean;
@@ -81,7 +82,7 @@ export function OperationDetailsModal({
   const handleEditComplete = async (updatedOperation: Operation) => {
     try {
       setIsEditing(true);
-      console.log("Editing operation:", updatedOperation);
+      logger.log("Editing operation:", updatedOperation);
       
       await onEdit(updatedOperation);
       

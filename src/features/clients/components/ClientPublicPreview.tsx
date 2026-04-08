@@ -4,6 +4,7 @@ import { PublicClientOperationsHistory } from "./PublicClientOperationsHistory";
 import { PublicClientPersonalInfo } from "./PublicClientPersonalInfo";
 import { Client } from "@/features/clients/types";
 import { Operation } from "@/features/operations/types";
+import { logger } from "@/utils/logger";
 interface ClientPublicPreviewProps {
   client: Client;
   operations: Operation[];
@@ -14,9 +15,9 @@ export const ClientPublicPreview: React.FC<ClientPublicPreviewProps> = ({
   operations,
   isMobilePreview = false
 }) => {
-  console.log("ClientPublicPreview - Client:", client.prenom, client.nom);
-  console.log("ClientPublicPreview - Operations received:", operations?.length || 0);
-  console.log("ClientPublicPreview - Operations details:", operations);
+  logger.log("ClientPublicPreview - Client:", client.prenom, client.nom);
+  logger.log("ClientPublicPreview - Operations received:", operations?.length || 0);
+  logger.log("ClientPublicPreview - Operations details:", operations);
   return <div className="space-y-6 w-full">
       <Card className="shadow-sm w-full">
         <CardHeader>

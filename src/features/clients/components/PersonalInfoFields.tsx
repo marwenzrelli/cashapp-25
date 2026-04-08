@@ -5,6 +5,7 @@ import { Client } from "../types";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { Operation } from "@/features/operations/types";
+import { logger } from "@/utils/logger";
 
 interface PersonalInfoFieldsProps {
   client: Client;
@@ -77,7 +78,7 @@ export const PersonalInfoFields = ({
 
   const effectiveBalance = calculateNetBalance();
   
-  console.log("PersonalInfoFields displaying balance:", {
+  logger.log("PersonalInfoFields displaying balance:", {
     realTimeBalance,
     clientSolde: client.solde,
     effectiveBalance,

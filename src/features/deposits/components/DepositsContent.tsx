@@ -12,6 +12,7 @@ import { EditDepositDialog } from "./dialog/EditDepositDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ExtendedClient } from "@/features/withdrawals/hooks/form/withdrawalFormTypes";
 import { DateRange } from "react-day-picker";
+import { logger } from "@/utils/logger";
 
 interface DepositsContentProps {
   deposits: Deposit[];
@@ -87,7 +88,7 @@ export const DepositsContent = memo(({
 
   // Moved logging to an effect to prevent continuous re-renders
   useEffect(() => {
-    console.log("DepositsContent render with:", {
+    logger.log("DepositsContent render with:", {
       depositsLength: deposits?.length,
       filteredDepositsLength: filteredDeposits?.length,
       paginatedDepositsLength: paginatedDeposits?.length,

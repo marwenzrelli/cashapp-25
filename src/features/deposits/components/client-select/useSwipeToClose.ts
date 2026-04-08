@@ -1,6 +1,7 @@
 
 import { useEffect, useRef, RefObject } from "react";
 import * as Hammer from "hammerjs";
+import { logger } from "@/utils/logger";
 
 export const useSwipeToClose = (
   elementRef: RefObject<HTMLElement>,
@@ -29,7 +30,7 @@ export const useSwipeToClose = (
         
         // Only detect intentional horizontal swipes
         if (e.direction === Hammer.DIRECTION_LEFT && e.distance > 80 && Math.abs(e.velocityX) > 0.8) {
-          console.log('Swipe horizontal gauche intentionnel détecté', {
+          logger.log('Swipe horizontal gauche intentionnel détecté', {
             distance: e.distance,
             velocity: e.velocityX,
             direction: e.direction

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ExtendedClient } from "../hooks/form/withdrawalFormTypes";
 import { ensureValidISODate } from "../hooks/utils/formatUtils";
+import { logger } from "@/utils/logger";
 
 interface WithdrawalDialogContainerProps {
   showDialog: boolean;
@@ -52,8 +53,8 @@ export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps>
         await refreshClientBalance(clientIdNum.toString());
       }
       
-      console.log("Processing withdrawal with data:", data);
-      console.log("Is editing mode:", isEditing);
+      logger.log("Processing withdrawal with data:", data);
+      logger.log("Is editing mode:", isEditing);
       
       // Convert string amount to number
       const amountString = data.amount.replace(',', '.');
@@ -68,14 +69,14 @@ export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps>
       let operationDate = data.operation_date;
       if (!operationDate) {
         operationDate = new Date().toISOString();
-        console.log("No operation_date provided, using current date:", operationDate);
+        logger.log("No operation_date provided, using current date:", operationDate);
       } else {
         operationDate = ensureValidISODate(operationDate);
       }
       
       // Handle editing vs creating
       if (isEditing && selectedWithdrawal) {
-        console.log("Updating withdrawal with ID:", selectedWithdrawal.id);
+        logger.log("Updating withdrawal with ID:", selectedWithdrawal.id);
         
         // Validate the ID before using it
         if (!selectedWithdrawal.id) {
@@ -110,9 +111,9 @@ export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps>
           throw error;
         }
         
-        console.log("Withdrawal updated successfully");
+        logger.log("Withdrawal updated successfully");
       } else {
-        console.log("Creating new withdrawal");
+        logger.log("Creating new withdrawal");
         
         // Create new withdrawal
         const { data: insertedData, error } = await supabase
@@ -130,7 +131,7 @@ export const WithdrawalDialogContainer: React.FC<WithdrawalDialogContainerProps>
           throw error;
         }
         
-        console.log("New withdrawal created successfully:", insertedData);
+        logger.log("New withdrawal created successfully:", insertedData);
       }
       
       await fetchWithdrawals();

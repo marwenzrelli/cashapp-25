@@ -6,6 +6,7 @@ import { ClientIdBadge } from "./ClientIdBadge";
 import { User, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { logger } from "@/utils/logger";
 
 interface PublicClientPersonalInfoProps {
   client: Client;
@@ -20,17 +21,17 @@ export const PublicClientPersonalInfo = ({
 
   // Calculate the effective balance using the SAME logic as all other pages
   const calculateEffectiveBalance = () => {
-    console.log("PublicClientPersonalInfo - Calculating balance for:", client.prenom, client.nom);
-    console.log("PublicClientPersonalInfo - Operations received:", operations);
-    console.log("PublicClientPersonalInfo - Operations count:", operations.length);
+    logger.log("PublicClientPersonalInfo - Calculating balance for:", client.prenom, client.nom);
+    logger.log("PublicClientPersonalInfo - Operations received:", operations);
+    logger.log("PublicClientPersonalInfo - Operations count:", operations.length);
     
     if (!operations || operations.length === 0) {
-      console.log("PublicClientPersonalInfo - No operations, returning 0");
+      logger.log("PublicClientPersonalInfo - No operations, returning 0");
       return 0;
     }
 
     const clientFullName = `${client.prenom} ${client.nom}`.trim();
-    console.log("PublicClientPersonalInfo - Looking for operations for:", clientFullName);
+    logger.log("PublicClientPersonalInfo - Looking for operations for:", clientFullName);
     
     // Filtrer les opérations qui concernent ce client
     const clientOperations = operations.filter(op => {
@@ -44,21 +45,21 @@ export const PublicClientPersonalInfo = ({
       return isDeposit || isWithdrawal || isTransferReceived || isTransferSent || isDirectReceived || isDirectSent;
     });
     
-    console.log("PublicClientPersonalInfo - Filtered client operations:", clientOperations.length);
-    console.log("PublicClientPersonalInfo - Client operations details:", clientOperations);
+    logger.log("PublicClientPersonalInfo - Filtered client operations:", clientOperations.length);
+    logger.log("PublicClientPersonalInfo - Client operations details:", clientOperations);
     
     // Calculate totals by operation type - MÊME LOGIQUE QUE PARTOUT AILLEURS
     const totalDeposits = clientOperations
       .filter(op => op.type === "deposit")
       .reduce((total, op) => {
-        console.log("PublicClientPersonalInfo - Adding deposit:", op.amount);
+        logger.log("PublicClientPersonalInfo - Adding deposit:", op.amount);
         return total + Number(op.amount);
       }, 0);
       
     const totalWithdrawals = clientOperations
       .filter(op => op.type === "withdrawal")
       .reduce((total, op) => {
-        console.log("PublicClientPersonalInfo - Adding withdrawal:", op.amount);
+        logger.log("PublicClientPersonalInfo - Adding withdrawal:", op.amount);
         return total + Number(op.amount);
       }, 0);
       
@@ -66,14 +67,14 @@ export const PublicClientPersonalInfo = ({
     const transfersReceived = clientOperations
       .filter(op => op.type === "transfer" && op.toClient === clientFullName)
       .reduce((total, op) => {
-        console.log("PublicClientPersonalInfo - Adding received transfer:", op.amount, "from", op.fromClient);
+        logger.log("PublicClientPersonalInfo - Adding received transfer:", op.amount, "from", op.fromClient);
         return total + Number(op.amount);
       }, 0);
       
     const transfersSent = clientOperations
       .filter(op => op.type === "transfer" && op.fromClient === clientFullName)
       .reduce((total, op) => {
-        console.log("PublicClientPersonalInfo - Adding sent transfer:", op.amount, "to", op.toClient);
+        logger.log("PublicClientPersonalInfo - Adding sent transfer:", op.amount, "to", op.toClient);
         return total + Number(op.amount);
       }, 0);
 
@@ -81,22 +82,22 @@ export const PublicClientPersonalInfo = ({
     const directOperationsReceived = clientOperations
       .filter(op => op.type === "direct_transfer" && op.toClient === clientFullName)
       .reduce((total, op) => {
-        console.log("PublicClientPersonalInfo - Adding received direct transfer:", op.amount, "from", op.fromClient);
+        logger.log("PublicClientPersonalInfo - Adding received direct transfer:", op.amount, "from", op.fromClient);
         return total + Number(op.amount);
       }, 0);
       
     const directOperationsSent = clientOperations
       .filter(op => op.type === "direct_transfer" && op.fromClient === clientFullName)
       .reduce((total, op) => {
-        console.log("PublicClientPersonalInfo - Adding sent direct transfer:", op.amount, "to", op.toClient);
+        logger.log("PublicClientPersonalInfo - Adding sent direct transfer:", op.amount, "to", op.toClient);
         return total + Number(op.amount);
       }, 0);
       
     // LOGIQUE UNIFIÉE: total versements - total retraits + total virements reçus - total virements émis + total opérations directes reçues - total opérations directes émises
     const effectiveBalance = totalDeposits - totalWithdrawals + transfersReceived - transfersSent + directOperationsReceived - directOperationsSent;
     
-    console.log("PublicClientPersonalInfo - Final calculated balance:", effectiveBalance);
-    console.log("PublicClientPersonalInfo - Breakdown:", {
+    logger.log("PublicClientPersonalInfo - Final calculated balance:", effectiveBalance);
+    logger.log("PublicClientPersonalInfo - Breakdown:", {
       totalDeposits,
       totalWithdrawals,
       transfersReceived,

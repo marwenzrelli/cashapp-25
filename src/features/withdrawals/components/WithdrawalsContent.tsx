@@ -14,6 +14,7 @@ import { WithdrawalTotals } from "./WithdrawalTotals";
 import { useWithdrawalState } from "../hooks/useWithdrawalState";
 import { toast } from "sonner";
 import { StandaloneWithdrawalForm } from "./standalone/StandaloneWithdrawalForm";
+import { logger } from "@/utils/logger";
 
 interface WithdrawalsContentProps {
   withdrawals: Withdrawal[];
@@ -134,7 +135,7 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
               clients={extendedClients}
               onConfirm={async (withdrawal) => {
                 // Handle withdrawal creation logic here
-                console.log("Creating withdrawal:", withdrawal);
+                logger.log("Creating withdrawal:", withdrawal);
                 return true;
               }}
               refreshClientBalance={refreshClientBalance}

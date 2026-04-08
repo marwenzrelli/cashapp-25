@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle, Database, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { logger } from "@/utils/logger";
 
 interface AnalysisData {
   type: string;
@@ -21,7 +22,7 @@ export const TreasuryAnalysis = () => {
   const runAnalysis = async () => {
     setIsLoading(true);
     try {
-      console.log("Démarrage de l'analyse de trésorerie...");
+      logger.log("Démarrage de l'analyse de trésorerie...");
 
       // Requêtes directes pour récupérer les données
       const [depositsResult, withdrawalsResult, transfersResult, clientsResult] = await Promise.all([
@@ -79,19 +80,19 @@ export const TreasuryAnalysis = () => {
       const treasuryBalance = depositsTotal - withdrawalsTotal;
       const difference = Math.abs(treasuryBalance - clientsTotal);
 
-      console.log("=== ANALYSE DE TRÉSORERIE ===");
-      console.log(`Versements: ${depositsCount} opérations, ${depositsTotal} TND`);
-      console.log(`Retraits: ${withdrawalsCount} opérations, ${withdrawalsTotal} TND`);
-      console.log(`Solde trésorerie calculé: ${treasuryBalance} TND`);
-      console.log(`Solde total clients: ${clientsTotal} TND`);
-      console.log(`Différence: ${difference} TND`);
+      logger.log("=== ANALYSE DE TRÉSORERIE ===");
+      logger.log(`Versements: ${depositsCount} opérations, ${depositsTotal} TND`);
+      logger.log(`Retraits: ${withdrawalsCount} opérations, ${withdrawalsTotal} TND`);
+      logger.log(`Solde trésorerie calculé: ${treasuryBalance} TND`);
+      logger.log(`Solde total clients: ${clientsTotal} TND`);
+      logger.log(`Différence: ${difference} TND`);
       
       if (pendingDepositsTotal > 0 || pendingWithdrawalsTotal > 0) {
-        console.log(`Opérations en attente - Versements: ${pendingDepositsTotal} TND, Retraits: ${pendingWithdrawalsTotal} TND`);
+        logger.log(`Opérations en attente - Versements: ${pendingDepositsTotal} TND, Retraits: ${pendingWithdrawalsTotal} TND`);
       }
       
       if (deletedDepositsTotal > 0 || deletedWithdrawalsTotal > 0) {
-        console.log(`Opérations supprimées - Versements: ${deletedDepositsTotal} TND, Retraits: ${deletedWithdrawalsTotal} TND`);
+        logger.log(`Opérations supprimées - Versements: ${deletedDepositsTotal} TND, Retraits: ${deletedWithdrawalsTotal} TND`);
       }
 
       toast.success("Analyse de trésorerie terminée - Vérifiez la console pour les détails");

@@ -10,6 +10,7 @@ import { EditClientSection } from "./edit-deposit/EditClientSection";
 import { EditAmountSection } from "./edit-deposit/EditAmountSection";
 import { EditDescriptionSection } from "./edit-deposit/EditDescriptionSection";
 import { DialogFooterButtons } from "./edit-deposit/DialogFooterButtons";
+import { logger } from "@/utils/logger";
 
 export interface EditDepositDialogProps {
   isOpen: boolean;
@@ -36,7 +37,7 @@ export const EditDepositDialog: React.FC<EditDepositDialogProps> = ({
   useEffect(() => {
     if (!selectedDeposit) return;
     
-    console.log("Setting date/time for deposit editing:", selectedDeposit);
+    logger.log("Setting date/time for deposit editing:", selectedDeposit);
     
     // Prioritize operation_date if it exists
     if (selectedDeposit.operation_date) {

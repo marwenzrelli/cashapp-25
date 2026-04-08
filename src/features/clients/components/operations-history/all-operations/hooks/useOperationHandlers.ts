@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Operation } from "@/features/operations/types";
 import { toast } from "sonner";
 import { deleteOperation } from "@/features/operations/utils/deletionUtils";
+import { logger } from "@/utils/logger";
 
 interface UseOperationHandlersProps {
   updateOperation?: (operation: Operation) => Promise<void>;
@@ -53,7 +54,7 @@ export const useOperationHandlers = ({
         toast.error("Erreur lors de la modification");
       }
     } else {
-      console.warn("Fonction updateOperation non disponible");
+      logger.warn("Fonction updateOperation non disponible");
       toast.error("Fonction de modification non disponible");
     }
   };

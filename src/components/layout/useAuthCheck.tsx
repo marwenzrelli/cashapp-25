@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { UserRole } from "@/types/admin";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { logger } from "@/utils/logger";
 
 // Email spécifique pour le superviseur qui doit toujours avoir accès
 const SUPERVISOR_EMAIL = "marwen.zrelli.pro@icloud.com";
@@ -27,17 +28,17 @@ export const useAuthCheck = () => {
         }
 
         if (!session) {
-          console.log("Pas de session active");
+          logger.log("Pas de session active");
           navigate("/login", { replace: true });
           return;
         }
 
-        console.log("Session active pour l'utilisateur:", session.user.id);
-        console.log("Email de l'utilisateur:", session.user.email);
+        logger.log("Session active pour l'utilisateur:", session.user.id);
+        logger.log("Email de l'utilisateur:", session.user.email);
 
         // Check if email matches the supervisor's email directly
         if (session.user.email === SUPERVISOR_EMAIL) {
-          console.log("Email de superviseur reconnu directement:", SUPERVISOR_EMAIL);
+          logger.log("Email de superviseur reconnu directement:", SUPERVISOR_EMAIL);
           setUserRole("supervisor");
           
           // Ensure the profile in database is updated with supervisor role
@@ -48,7 +49,7 @@ export const useAuthCheck = () => {
             .maybeSingle();
             
           if (!profile || (profile && profile.role !== 'supervisor')) {
-            console.log("Mise à jour ou création du profil avec le rôle de superviseur");
+            logger.log("Mise à jour ou création du profil avec le rôle de superviseur");
             const { error: upsertError } = await supabase
               .from('profiles')
               .upsert({
@@ -64,7 +65,7 @@ export const useAuthCheck = () => {
             if (upsertError) {
               console.error("Erreur lors de la mise à jour du profil:", upsertError);
             } else {
-              console.log("Profil de superviseur mis à jour avec succès");
+              logger.log("Profil de superviseur mis à jour avec succès");
             }
           }
           
@@ -91,7 +92,7 @@ export const useAuthCheck = () => {
           
           // If no profile, but email matches supervisor, create one automatically
           if (session.user.email === SUPERVISOR_EMAIL) {
-            console.log("Création automatique d'un profil pour le superviseur");
+            logger.log("Création automatique d'un profil pour le superviseur");
             const { error: insertError } = await supabase
               .from('profiles')
               .insert({
@@ -108,7 +109,7 @@ export const useAuthCheck = () => {
               console.error("Erreur lors de la création du profil:", insertError);
               toast.error("Erreur lors de la création du profil");
             } else {
-              console.log("Profil de superviseur créé avec succès");
+              logger.log("Profil de superviseur créé avec succès");
               setUserRole("supervisor");
             }
             return;
@@ -120,9 +121,9 @@ export const useAuthCheck = () => {
           return;
         }
 
-        console.log("Profil récupéré:", profile);
-        console.log("Rôle de l'utilisateur:", profile.role);
-        console.log("Profile Role de l'utilisateur:", profile.profile_role);
+        logger.log("Profil récupéré:", profile);
+        logger.log("Rôle de l'utilisateur:", profile.role);
+        logger.log("Profile Role de l'utilisateur:", profile.profile_role);
 
         // Utiliser profile_role s'il est défini, sinon utiliser role
         const effectiveRole = profile.profile_role || profile.role;
