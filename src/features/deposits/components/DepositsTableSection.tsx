@@ -2,7 +2,7 @@
 import { ArrowRight } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { DepositsTable } from "@/features/deposits/components/DepositsTable";
-import { type Deposit } from "@/components/deposits/types";
+import { type Deposit } from "@/features/deposits/types";
 
 interface DepositsTableSectionProps {
   filteredDeposits: Deposit[];

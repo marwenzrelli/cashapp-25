@@ -8,7 +8,6 @@ import { useCreateClient } from "./operations/createClient";
 import { useUpdateClient } from "./operations/updateClient";
 import { useDeleteClient } from "./operations/deleteClient";
 import { useRefreshClientBalance } from "./operations/refreshBalance";
-import { useRealtimeSubscription } from "./operations/realtime";
 import { toast } from "sonner";
 
 export const useClients = () => {
@@ -134,8 +133,6 @@ export const useClients = () => {
   // Refresh client balance functionality
   const { refreshClientBalance } = useRefreshClientBalance(setClients);
   
-  // Set up realtime subscription
-  useRealtimeSubscription(fetchClients);
 
   return {
     clients,

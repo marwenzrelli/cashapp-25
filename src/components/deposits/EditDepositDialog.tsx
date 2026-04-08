@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Pencil } from "lucide-react";
-import { type Deposit, type EditFormData } from "./types";
+import { type Deposit, type EditFormData } from "@/features/deposits/types";
 
 interface EditDepositDialogProps {
   isOpen: boolean;

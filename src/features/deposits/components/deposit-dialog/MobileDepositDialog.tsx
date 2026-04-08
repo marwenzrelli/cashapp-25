@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DatePickerField } from "../DatePickerField";
 import { Client } from "@/features/clients/types";
-import { Deposit } from "@/components/deposits/types";
+import { Deposit } from "@/features/deposits/types";
 import { Loader2 } from "lucide-react";
 import { SuccessMessage } from "./SuccessMessage";
 import { useIsMobile } from "@/hooks/use-mobile";

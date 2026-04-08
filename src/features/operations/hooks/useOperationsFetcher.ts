@@ -1,53 +1,22 @@
 
 import { useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { Operation } from '../types';
-import { mockOperations } from '../data/mock-operations';
 import { fetchAllRows } from '@/features/statistics/utils/fetchAllRows';
+import { logger } from '@/utils/logger';
 
 export const useOperationsFetcher = () => {
-  // Fonction pour récupérer toutes les opérations
-  const getOperations = useCallback(async (cacheBuster = '') => {
+  const getOperations = useCallback(async (_cacheBuster = '') => {
     const operations: Operation[] = [];
     
-    console.log("Récupération des opérations avec cacheBuster:", cacheBuster);
-    
-    // Ajout d'un paramètre aléatoire pour éviter tout problème de cache
-    const timestamp = Date.now();
-    
-    // Utiliser fetchAllRows pour récupérer toutes les opérations sans limite
     const [depositsData, withdrawalsData, transfersData] = await Promise.all([
       fetchAllRows('deposits', { orderBy: 'created_at', ascending: false }),
       fetchAllRows('withdrawals', { orderBy: 'created_at', ascending: false }),
       fetchAllRows('transfers', { orderBy: 'created_at', ascending: false })
     ]);
 
-    const depositsResult = { data: depositsData, error: null };
-    const withdrawalsResult = { data: withdrawalsData, error: null };
-    const transfersResult = { data: transfersData, error: null };
-    
-    // Vérifier les erreurs pour chaque requête
-    if (depositsResult.error) {
-      console.error('Error fetching deposits:', depositsResult.error);
-      throw new Error(`Erreur lors du chargement des dépôts: ${depositsResult.error.message}`);
-    }
-    
-    if (withdrawalsResult.error) {
-      console.error('Error fetching withdrawals:', withdrawalsResult.error);
-      throw new Error(`Erreur lors du chargement des retraits: ${withdrawalsResult.error.message}`);
-    }
-    
-    if (transfersResult.error) {
-      console.error('Error fetching transfers:', transfersResult.error);
-      throw new Error(`Erreur lors du chargement des transferts: ${transfersResult.error.message}`);
-    }
-    
-    // Debuggons les résultats
-    console.log(`Données récupérées - Dépôts: ${depositsResult.data?.length}, Retraits: ${withdrawalsResult.data?.length}, Transferts: ${transfersResult.data?.length}`);
-    
-    // Traiter les dépôts
-    if (depositsResult.data) {
-      const deposits = depositsResult.data.map(deposit => ({
+    // Process deposits
+    if (depositsData) {
+      operations.push(...depositsData.map((deposit: any) => ({
         id: `dep-${deposit.id}`,
         type: 'deposit' as const,
         date: deposit.operation_date ? new Date(deposit.operation_date).toISOString() : new Date(deposit.created_at).toISOString(),
@@ -57,13 +26,12 @@ export const useOperationsFetcher = () => {
         description: deposit.notes || '',
         status: deposit.status || 'completed',
         createdAt: deposit.created_at
-      }));
-      operations.push(...deposits);
+      })));
     }
     
-    // Traiter les retraits
-    if (withdrawalsResult.data) {
-      const withdrawals = withdrawalsResult.data.map(withdrawal => ({
+    // Process withdrawals
+    if (withdrawalsData) {
+      operations.push(...withdrawalsData.map((withdrawal: any) => ({
         id: `wit-${withdrawal.id}`,
         type: 'withdrawal' as const,
         date: withdrawal.operation_date ? new Date(withdrawal.operation_date).toISOString() : new Date(withdrawal.created_at).toISOString(),
@@ -73,13 +41,12 @@ export const useOperationsFetcher = () => {
         description: withdrawal.notes || '',
         status: withdrawal.status || 'completed',
         createdAt: withdrawal.created_at
-      }));
-      operations.push(...withdrawals);
+      })));
     }
     
-    // Traiter les transferts
-    if (transfersResult.data) {
-      const transfers = transfersResult.data.map(transfer => ({
+    // Process transfers
+    if (transfersData) {
+      operations.push(...transfersData.map((transfer: any) => ({
         id: `tra-${transfer.id}`,
         type: 'transfer' as const,
         date: transfer.operation_date ? new Date(transfer.operation_date).toISOString() : new Date(transfer.created_at).toISOString(),
@@ -90,24 +57,13 @@ export const useOperationsFetcher = () => {
         description: transfer.reason || '',
         status: transfer.status || 'completed',
         createdAt: transfer.created_at
-      }));
-      operations.push(...transfers);
+      })));
     }
     
-    console.log(`Loaded ${operations.length} operations`);
+    logger.log(`Loaded ${operations.length} operations`);
     
-    // Trier toutes les opérations par date (du plus récent au plus ancien)
-    return operations.sort((a, b) => {
-      const dateA = new Date(a.date);
-      const dateB = new Date(b.date);
-      return dateB.getTime() - dateA.getTime();
-    });
+    return operations.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, []);
   
-  // Fonction pour obtenir des données mock en cas d'erreur
-  const getMockOperations = useCallback(() => {
-    return mockOperations;
-  }, []);
-  
-  return { getOperations, getMockOperations };
+  return { getOperations };
 };

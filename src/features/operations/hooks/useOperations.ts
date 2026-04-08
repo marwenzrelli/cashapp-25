@@ -5,6 +5,7 @@ import { Operation } from "@/features/operations/types";
 import { transformToOperations, deduplicateOperations, sortOperationsByDate } from "./utils/operationTransformers";
 import { toast } from "sonner";
 import { fetchAllRows } from "@/features/statistics/utils/fetchAllRows";
+import { logger } from "@/utils/logger";
 
 export const useOperations = () => {
   const [operations, setOperations] = useState<Operation[]>([]);
@@ -15,11 +16,9 @@ export const useOperations = () => {
 
   const fetchOperations = useCallback(async (showToast = false) => {
     try {
-      console.log("Fetching operations from all tables...");
       setIsLoading(true);
       setError(null);
 
-      // Fetch all operation types in parallel using batch pagination
       const [depositsData, withdrawalsData, transfersData, directOpsData] = await Promise.all([
         fetchAllRows('deposits', { orderBy: 'created_at', ascending: false }),
         fetchAllRows('withdrawals', { orderBy: 'created_at', ascending: false }),
@@ -27,44 +26,19 @@ export const useOperations = () => {
         fetchAllRows('direct_operations', { orderBy: 'operation_date', ascending: false })
       ]);
 
-      const depositsResult = { data: depositsData, error: null };
-      const withdrawalsResult = { data: withdrawalsData, error: null };
-      const transfersResult = { data: transfersData, error: null };
-      const directOperationsResult = { data: directOpsData, error: null };
+      logger.log(`Fetched: ${depositsData?.length || 0} deposits, ${withdrawalsData?.length || 0} withdrawals, ${transfersData?.length || 0} transfers, ${directOpsData?.length || 0} direct operations`);
 
-      // Check for errors
-      if (depositsResult.error) {
-        console.error("Error fetching deposits:", depositsResult.error);
-        throw new Error(`Erreur dépôts: ${depositsResult.error.message}`);
-      }
-      if (withdrawalsResult.error) {
-        console.error("Error fetching withdrawals:", withdrawalsResult.error);
-        throw new Error(`Erreur retraits: ${withdrawalsResult.error.message}`);
-      }
-      if (transfersResult.error) {
-        console.error("Error fetching transfers:", transfersResult.error);
-        throw new Error(`Erreur virements: ${transfersResult.error.message}`);
-      }
-      if (directOperationsResult.error) {
-        console.error("Error fetching direct operations:", directOperationsResult.error);
-        throw new Error(`Erreur opérations directes: ${directOperationsResult.error.message}`);
-      }
-
-      console.log(`Fetched: ${depositsResult.data?.length || 0} deposits, ${withdrawalsResult.data?.length || 0} withdrawals, ${transfersResult.data?.length || 0} transfers, ${directOperationsResult.data?.length || 0} direct operations`);
-
-      // Transform all operations to unified format
       const allOperations = transformToOperations(
-        depositsResult.data || [],
-        withdrawalsResult.data || [],
-        transfersResult.data || [],
-        directOperationsResult.data || []
+        depositsData || [],
+        withdrawalsData || [],
+        transfersData || [],
+        directOpsData || []
       );
 
-      // Deduplicate and sort
       const uniqueOperations = deduplicateOperations(allOperations);
       const sortedOperations = sortOperationsByDate(uniqueOperations);
 
-      console.log(`Final operations count: ${sortedOperations.length}`);
+      logger.log(`Final operations count: ${sortedOperations.length}`);
       setOperations(sortedOperations);
 
       if (showToast) {
@@ -81,7 +55,6 @@ export const useOperations = () => {
   }, []);
 
   const refreshOperations = useCallback(async (showToast = false) => {
-    console.log("Refreshing operations...");
     await fetchOperations(showToast);
   }, [fetchOperations]);
 
@@ -96,7 +69,6 @@ export const useOperations = () => {
     try {
       setIsLoading(true);
       
-      // Extract operation ID and type
       const operationIdParts = operationToDelete.id.toString().split('-');
       const operationIdString = operationIdParts.length > 1 ? operationIdParts[1] : operationIdParts[0];
       const operationId = parseInt(operationIdString, 10);
@@ -107,31 +79,18 @@ export const useOperations = () => {
       
       let deleteResult;
       
-      // Delete from appropriate table based on operation type
       switch (operationToDelete.type) {
         case "deposit":
-          deleteResult = await supabase
-            .from('deposits')
-            .delete()
-            .eq('id', operationId);
+          deleteResult = await supabase.from('deposits').delete().eq('id', operationId);
           break;
         case "withdrawal":
-          deleteResult = await supabase
-            .from('withdrawals')
-            .delete()
-            .eq('id', operationId);
+          deleteResult = await supabase.from('withdrawals').delete().eq('id', operationId);
           break;
         case "transfer":
-          deleteResult = await supabase
-            .from('transfers')
-            .delete()
-            .eq('id', operationId);
+          deleteResult = await supabase.from('transfers').delete().eq('id', operationId);
           break;
         case "direct_transfer":
-          deleteResult = await supabase
-            .from('direct_operations')
-            .delete()
-            .eq('id', operationId);
+          deleteResult = await supabase.from('direct_operations').delete().eq('id', operationId);
           break;
         default:
           throw new Error(`Type d'opération inconnu: ${operationToDelete.type}`);
@@ -144,10 +103,7 @@ export const useOperations = () => {
       toast.success("Opération supprimée avec succès");
       setShowDeleteDialog(false);
       setOperationToDelete(undefined);
-      
-      // Refresh operations
       await fetchOperations();
-      
       return true;
       
     } catch (error: any) {
@@ -159,7 +115,6 @@ export const useOperations = () => {
     }
   }, [operationToDelete, fetchOperations]);
 
-  // Initial fetch
   useEffect(() => {
     fetchOperations();
   }, [fetchOperations]);

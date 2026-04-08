@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from "react";
 import { Client } from "@/features/clients/types";
-import { Deposit } from "@/components/deposits/types";
+import { Deposit } from "@/features/deposits/types";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 
