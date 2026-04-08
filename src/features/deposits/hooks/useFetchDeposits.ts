@@ -5,6 +5,7 @@ import { Deposit } from "@/features/deposits/types";
 import { formatDateTime } from "@/features/deposits/hooks/utils/dateUtils";
 import { useCallback } from "react";
 import { fetchAllRows } from "@/features/statistics/utils/fetchAllRows";
+import { logger } from "@/utils/logger";
 
 export const useFetchDeposits = (
   setDeposits: React.Dispatch<React.SetStateAction<Deposit[]>>,
@@ -12,45 +13,21 @@ export const useFetchDeposits = (
 ) => {
   const fetchDeposits = useCallback(async () => {
     try {
-      console.log("Starting to fetch deposits from Supabase...");
       setIsLoading(true);
       
-      // First check if the user is authenticated
-      const { data: sessionData } = await supabase.auth.getSession();
-      const session = sessionData.session;
-      
-      if (!session) {
-        console.warn("No active session found when fetching deposits");
-        // We continue anyway for now as RLS might be disabled during testing
-      } else {
-        console.log("Fetching deposits with authenticated session:", session.user.id);
-      }
-      
-      // Fetch ALL deposits using batch pagination (bypasses 1000-row limit)
       const data = await fetchAllRows('deposits', { 
         orderBy: 'created_at', 
         ascending: false 
       }) as any[];
 
       if (!data || data.length === 0) {
-        console.log("No deposits found.");
         setDeposits([]);
         return;
       }
 
-      // Log the raw data for debugging
-      console.log("Raw deposits data from Supabase:", data);
-
-      if (!data || data.length === 0) {
-        console.log("No deposits found in the database");
-        setDeposits([]);
-        return;
-      }
-
-      console.log(`Retrieved ${data.length} deposits from Supabase`);
+      logger.log(`Retrieved ${data.length} deposits`);
 
       const formattedDeposits: Deposit[] = data.map(d => {
-        // Always use operation_date for the main display date if available
         const displayDate = d.operation_date ? formatDateTime(d.operation_date) : formatDateTime(d.created_at);
         
         return {
@@ -69,12 +46,10 @@ export const useFetchDeposits = (
         };
       });
 
-      console.log("Deposits loaded and formatted:", formattedDeposits);
       setDeposits(formattedDeposits);
     } catch (error) {
       console.error("Error loading deposits:", error);
       toast.error("Erreur lors du chargement des versements");
-      // Set empty array to avoid undefined issues
       setDeposits([]);
     } finally {
       setIsLoading(false);

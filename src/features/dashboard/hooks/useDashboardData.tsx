@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { DashboardStats, RecentActivity } from "../types";
-import { format, subMonths } from "date-fns";
+import { logger } from "@/utils/logger";
 
 export const useDashboardData = () => {
   const [stats, setStats] = useState<DashboardStats>({
@@ -26,31 +26,26 @@ export const useDashboardData = () => {
       setIsLoading(true);
       setError(null);
       
-      // Utiliser la RPC pour obtenir les stats agrégées directement depuis la DB
-      // Ceci évite la limite de 1000 lignes de Supabase
-      const { data: dbStats, error: rpcError } = await supabase.rpc('get_dashboard_stats');
+      // Fetch global stats and monthly stats in parallel
+      const [{ data: dbStats, error: rpcError }, { data: monthlyData, error: monthlyError }] = await Promise.all([
+        supabase.rpc('get_dashboard_stats'),
+        supabase.rpc('get_monthly_stats')
+      ]);
       
       if (rpcError) throw rpcError;
+      if (monthlyError) throw monthlyError;
 
       const s = dbStats as any;
-      console.log(`Dashboard stats via RPC:`, s);
+      logger.log(`Dashboard stats via RPC:`, s);
 
-      // Génération simplifiée des statistiques mensuelles
-      const monthlyStats = [];
-      const today = new Date();
-      
-      for (let i = 5; i >= 0; i--) {
-        const month = subMonths(today, i);
-        const monthLabel = format(month, 'MMM');
-        
-        monthlyStats.push({
-          day: monthLabel,
-          total_deposits: Math.round(Number(s.deposit_total) / 6),
-          total_withdrawals: Math.round(Number(s.withdrawal_total) / 6),
-          deposits_count: Math.round(Number(s.deposit_count) / 6),
-          withdrawals_count: Math.round(Number(s.withdrawal_count) / 6)
-        });
-      }
+      // Use real monthly stats from the database
+      const monthlyStats = (monthlyData as any[] || []).map((m: any) => ({
+        day: m.month_label,
+        total_deposits: Number(m.deposit_total),
+        total_withdrawals: Number(m.withdrawal_total),
+        deposits_count: Number(m.deposit_count),
+        withdrawals_count: Number(m.withdrawal_count)
+      }));
 
       setStats({
         total_deposits: Number(s.deposit_count),
@@ -65,7 +60,6 @@ export const useDashboardData = () => {
         received_transfers: Number(s.transfer_total)
       });
       
-      
     } catch (error: any) {
       console.error('Error fetching stats:', error);
       setError(error.message || "Erreur lors du chargement des statistiques");
@@ -77,7 +71,6 @@ export const useDashboardData = () => {
 
   const fetchRecentActivity = useCallback(async () => {
     try {
-      // Requêtes parallèles limitées pour l'activité récente
       const [depositsResult, withdrawalsResult, transfersResult] = await Promise.all([
         supabase
           .from('deposits')
@@ -152,7 +145,6 @@ export const useDashboardData = () => {
     fetchStats();
     fetchRecentActivity();
     
-    // Actualisation automatique toutes les 10 minutes (réduit la fréquence)
     const interval = setInterval(() => {
       fetchStats();
       fetchRecentActivity();
