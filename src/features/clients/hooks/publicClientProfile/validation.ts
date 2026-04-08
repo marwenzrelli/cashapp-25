@@ -48,7 +48,7 @@ export const validateTokenExpiration = (expires_at: string | null, created_at: s
     
     if (tokenCreationDate < ninetyDaysAgo && !expires_at) {
       // For permanent tokens, we still recommend renewal after 90 days
-      console.warn("Token is older than 90 days");
+      logger.warn("Token is older than 90 days");
       // We don't return an error here, just a warning
     }
 

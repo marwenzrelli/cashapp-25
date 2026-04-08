@@ -100,7 +100,7 @@ export function useUsers() {
       
       // Si l'email fourni ne correspond pas à l'utilisateur connecté, afficher un avertissement
       if (user.email !== email) {
-        console.warn("L'email fourni ne correspond pas à l'utilisateur connecté");
+        logger.warn("L'email fourni ne correspond pas à l'utilisateur connecté");
         toast.warning("L'email fourni ne correspond pas à votre compte actuel", {
           description: "Pour plus de sécurité, utilisez l'email de votre compte actuel"
         });

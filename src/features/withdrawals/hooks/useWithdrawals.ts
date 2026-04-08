@@ -49,7 +49,7 @@ export const useWithdrawals = () => {
         setAuthRetries(0);
         return true;
       } else {
-        console.warn("No active session found in useWithdrawals");
+        logger.warn("No active session found in useWithdrawals");
         setIsAuthenticated(false);
         setAuthRetries(prev => prev + 1);
         return false;
@@ -111,7 +111,7 @@ export const useWithdrawals = () => {
       const isAuthed = await checkAuth();
       
       if (!isAuthed) {
-        console.warn("Not authenticated, skipping data fetch");
+        logger.warn("Not authenticated, skipping data fetch");
         return;
       }
       

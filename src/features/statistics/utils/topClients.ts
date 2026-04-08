@@ -7,14 +7,14 @@ import { logger } from "@/utils/logger";
  */
 export const getTopClients = (clientStats: Record<string, ClientStats>, limit: number = 5) => {
   if (!clientStats || typeof clientStats !== 'object') {
-    console.warn("No client stats object provided for top clients");
+    logger.warn("No client stats object provided for top clients");
     return [];
   }
   
   const clientKeys = Object.keys(clientStats);
   
   if (clientKeys.length === 0) {
-    console.warn("Client stats object is empty, no clients to display");
+    logger.warn("Client stats object is empty, no clients to display");
     return [];
   }
   

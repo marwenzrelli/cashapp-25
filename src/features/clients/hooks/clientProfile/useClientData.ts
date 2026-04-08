@@ -58,7 +58,7 @@ export const useClientData = (clientId: number | null) => {
         });
         setClient(null);
       } else if (!data) {
-        console.warn("No client found with ID:", id);
+        logger.warn("No client found with ID:", id);
         setError(`Le client avec l'identifiant ${id} n'existe pas ou a été supprimé.`);
         setClient(null);
       } else {

@@ -2,6 +2,7 @@
 import { Client } from "../../types";
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccessToast, showErrorToast, handleSupabaseError } from "../utils/errorUtils";
+import { logger } from "@/utils/logger";
 
 export const useCreateClient = (
   setClients: React.Dispatch<React.SetStateAction<Client[]>>,
@@ -25,12 +26,12 @@ export const useCreateClient = (
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
-          console.warn("Erreur de session:", sessionError);
+          logger.warn("Erreur de session:", sessionError);
         } else if (sessionData?.session?.user?.id) {
           userId = sessionData.session.user.id;
         }
       } catch (sessionError) {
-        console.warn("Impossible de récupérer la session:", sessionError);
+        logger.warn("Impossible de récupérer la session:", sessionError);
       }
       
       // Créer le client

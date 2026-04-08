@@ -365,7 +365,7 @@ export const handleTransferDeletion = async (transferId: number, userId: string 
         toast.success("Transfert supprimé et opération originale restaurée avec succès");
         return true;
       } else {
-        console.warn("Échec de la restauration de l'opération originale");
+        logger.warn("Échec de la restauration de l'opération originale");
         toast.success("Transfert supprimé (restauration partielle)");
         return true;
       }
@@ -572,7 +572,7 @@ const restoreOriginalOperation = async (originalOperation: any, userId: string |
           .eq('id', originalOperation.id);
         
         if (deleteLogError) {
-          console.warn("Erreur lors de la suppression de l'entrée deleted_deposits:", deleteLogError);
+          logger.warn("Erreur lors de la suppression de l'entrée deleted_deposits:", deleteLogError);
         }
         
         return true;
@@ -606,7 +606,7 @@ const restoreOriginalOperation = async (originalOperation: any, userId: string |
           .eq('id', originalOperation.id);
         
         if (deleteLogError) {
-          console.warn("Erreur lors de la suppression de l'entrée deleted_withdrawals:", deleteLogError);
+          logger.warn("Erreur lors de la suppression de l'entrée deleted_withdrawals:", deleteLogError);
         }
         
         return true;

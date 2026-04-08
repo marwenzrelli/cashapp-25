@@ -31,7 +31,7 @@ export const transformToOperations = (
                         null;
       
       if (depositId === null) {
-        console.warn("Invalid deposit ID:", deposit.id);
+        logger.warn("Invalid deposit ID:", deposit.id);
       }
       
       return {

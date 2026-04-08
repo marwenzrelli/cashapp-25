@@ -140,7 +140,7 @@ export const useStatisticsData = () => {
       ];
       
       if (allOperations.length === 0) {
-        console.warn("No operations available for top clients calculation");
+        logger.warn("No operations available for top clients calculation");
         return [];
       }
       

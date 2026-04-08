@@ -10,7 +10,7 @@ export const generateClientStats = (operations: any[]) => {
   
   // Check if we have valid operations data
   if (!Array.isArray(operations) || operations.length === 0) {
-    console.warn("No valid operations data available for client stats");
+    logger.warn("No valid operations data available for client stats");
     
     // Demo data for testing when no real data is available
     if (process.env.NODE_ENV === 'development') {

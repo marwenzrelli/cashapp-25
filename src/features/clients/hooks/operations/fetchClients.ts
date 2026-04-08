@@ -84,7 +84,7 @@ export const useFetchClients = (
                 .eq('id', client.id);
 
               if (updateError) {
-                console.warn(`Impossible de mettre à jour le solde pour ${clientName}:`, updateError);
+                logger.warn(`Impossible de mettre à jour le solde pour ${clientName}:`, updateError);
                 return;
               }
 

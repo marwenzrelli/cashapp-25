@@ -90,7 +90,7 @@ export const usePublicClientData = (token: string | undefined): PublicClientData
         logger.log(`Étape 5: ${operationsData.length} opérations client récupérées`);
       } catch (operationsErr: any) {
         // Log the error but still consider client data fetch successful
-        console.warn("Erreur lors de la récupération des opérations:", operationsErr);
+        logger.warn("Erreur lors de la récupération des opérations:", operationsErr);
         setOperations([]);
       }
       

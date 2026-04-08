@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccessToast, showErrorToast, handleSupabaseError } from "../utils/errorUtils";
+import { logger } from "@/utils/logger";
 
 export const useDeleteClient = (
   setClients: React.Dispatch<React.SetStateAction<any[]>>,
@@ -58,7 +59,7 @@ export const useDeleteClient = (
       // Vérifier s'il y a des erreurs dans les opérations
       const errors = results.filter(result => result.error);
       if (errors.length > 0) {
-        console.warn("Certaines opérations de suppression ont échoué:", errors);
+        logger.warn("Certaines opérations de suppression ont échoué:", errors);
         // Continuer quand même car des données peuvent avoir été supprimées
       }
       
