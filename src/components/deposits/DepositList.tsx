@@ -2,7 +2,7 @@
 import { Table } from "@/components/ui/table";
 import { UserCircle, ArrowUpCircle, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { type Deposit } from "./types";
+import { type Deposit } from "@/features/deposits/types";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
 

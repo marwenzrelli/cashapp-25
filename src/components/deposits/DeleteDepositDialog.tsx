@@ -10,7 +10,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Trash2 } from "lucide-react";
-import { type Deposit } from "./types";
+import { type Deposit } from "@/features/deposits/types";
 
 interface DeleteDepositDialogProps {
   isOpen: boolean;

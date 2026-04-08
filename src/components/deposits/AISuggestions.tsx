@@ -1,7 +1,7 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Sparkles } from "lucide-react";
-import { type AISuggestion } from "./types";
+import { type AISuggestion } from "@/features/deposits/types";
 
 interface AISuggestionsProps {
   suggestions: AISuggestion[];
