@@ -133,8 +133,6 @@ export const useClients = () => {
   // Refresh client balance functionality
   const { refreshClientBalance } = useRefreshClientBalance(setClients);
   
-  // Set up realtime subscription
-  useRealtimeSubscription(fetchClients);
 
   return {
     clients,
