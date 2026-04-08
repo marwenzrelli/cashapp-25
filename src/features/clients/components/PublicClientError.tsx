@@ -4,6 +4,7 @@ import { AlertCircle, RefreshCcw, Home, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { logger } from "@/utils/logger";
 
 interface PublicClientErrorProps {
   error: string | null;
@@ -29,7 +30,7 @@ export const PublicClientError = ({ error, onRetry }: PublicClientErrorProps) =>
       setIsRetrying(true);
       setRetryCount(prev => prev + 1);
       
-      console.log("Nouvelle tentative de récupération des données client...");
+      logger.log("Nouvelle tentative de récupération des données client...");
       
       // Petit délai pour montrer que quelque chose se passe
       setTimeout(() => {

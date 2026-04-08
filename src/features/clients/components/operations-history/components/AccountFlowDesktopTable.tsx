@@ -6,6 +6,7 @@ import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import { getTypeStyle, getTypeIcon, getTypeLabel } from "@/features/operations/utils/operation-helpers";
 import { CardContent } from "@/components/ui/card";
+import { logger } from "@/utils/logger";
 
 interface ProcessedOperation {
   id: string | number;
@@ -46,8 +47,8 @@ export const AccountFlowDesktopTable = ({
   clientFullName,
   isPublicView = false
 }: AccountFlowDesktopTableProps) => {
-  console.log("AccountFlowDesktopTable - Rendering", processedOperations?.length || 0, "operations");
-  console.log("AccountFlowDesktopTable - IsPublicView:", isPublicView);
+  logger.log("AccountFlowDesktopTable - Rendering", processedOperations?.length || 0, "operations");
+  logger.log("AccountFlowDesktopTable - IsPublicView:", isPublicView);
 
   const formatDateTime = (dateString: string) => {
     try {

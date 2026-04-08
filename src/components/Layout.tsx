@@ -6,6 +6,7 @@ import { useAuthCheck } from "./layout/useAuthCheck";
 import { useLogout } from "./layout/useLogout";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { logger } from "@/utils/logger";
 
 const Layout = () => {
   const location = useLocation();
@@ -20,13 +21,13 @@ const Layout = () => {
       if (!session) {
         toast.error("Veuillez vous connecter pour accéder à cette section");
       } else {
-        console.log("Utilisateur connecté dans Layout:", session.user.email);
+        logger.log("Utilisateur connecté dans Layout:", session.user.email);
       }
     };
     checkAuth();
   }, []);
 
-  console.log("Layout - userRole:", userRole);
+  logger.log("Layout - userRole:", userRole);
 
   return (
     <div className="min-h-screen bg-background">

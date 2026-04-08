@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { logger } from "@/utils/logger";
 interface ClientQRCodeProps {
   clientId: number;
   clientName: string;
@@ -78,7 +79,7 @@ export const ClientQRCode = ({
     if (!session || !hasAccess) return;
     try {
       setIsLoading(true);
-      console.log("Starting QR code generation for client ID:", clientId);
+      logger.log("Starting QR code generation for client ID:", clientId);
       const {
         data: existingTokens,
         error: fetchError
@@ -90,13 +91,13 @@ export const ClientQRCode = ({
         setIsLoading(false);
         return;
       }
-      console.log("Existing tokens found:", existingTokens?.length || 0);
+      logger.log("Existing tokens found:", existingTokens?.length || 0);
       if (existingTokens && existingTokens.length > 0) {
         tokenToUse = existingTokens[0].access_token;
-        console.log("Using existing token:", tokenToUse);
+        logger.log("Using existing token:", tokenToUse);
         setAccessToken(tokenToUse);
       } else {
-        console.log("Creating new access token for client:", clientId);
+        logger.log("Creating new access token for client:", clientId);
         
         // Generate a short 10-character token
         const generateShortToken = () => {
@@ -124,13 +125,13 @@ export const ClientQRCode = ({
           return;
         }
         tokenToUse = data.access_token;
-        console.log("New token created:", tokenToUse);
+        logger.log("New token created:", tokenToUse);
         setAccessToken(tokenToUse);
       }
       if (canvasRef.current && tokenToUse) {
         const url = `${window.location.origin}/public/client/${tokenToUse}`;
         setQrUrl(url);
-        console.log("Generated QR code URL:", url);
+        logger.log("Generated QR code URL:", url);
         try {
           await QRCode.toCanvas(canvasRef.current, url, {
             width: size,
@@ -140,7 +141,7 @@ export const ClientQRCode = ({
               light: '#FFFFFF'
             }
           });
-          console.log("QR Code generated successfully");
+          logger.log("QR Code generated successfully");
         } catch (qrError) {
           console.error("Error generating QR canvas:", qrError);
           toast.error("Erreur lors de la génération de l'image QR.");

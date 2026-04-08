@@ -10,6 +10,7 @@ import { Client } from "@/features/clients/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, ArrowRightLeft } from "lucide-react";
+import { logger } from "@/utils/logger";
 
 interface TransferOperationDialogProps {
   isOpen: boolean;
@@ -70,7 +71,7 @@ export const TransferOperationDialog = ({
 
     setIsLoading(true);
     try {
-      console.log('Début du transfert pour l\'opération:', operation.id, 'type:', operation.type);
+      logger.log('Début du transfert pour l\'opération:', operation.id, 'type:', operation.type);
       
       // Create the transfer record first
       const { error: transferError } = await supabase
@@ -88,7 +89,7 @@ export const TransferOperationDialog = ({
         throw transferError;
       }
 
-      console.log('Transfert créé avec succès, suppression de l\'opération originale...');
+      logger.log('Transfert créé avec succès, suppression de l\'opération originale...');
 
       // Parse the operation ID to get the numeric part
       const operationType = operation.type;
@@ -111,7 +112,7 @@ export const TransferOperationDialog = ({
         return;
       }
 
-      console.log(`Suppression de l'opération ${operationType} avec ID: ${operationId}`);
+      logger.log(`Suppression de l'opération ${operationType} avec ID: ${operationId}`);
 
       // Try to delete the original operation, but don't fail if it doesn't exist
       let deleteSuccess = false;
@@ -131,14 +132,14 @@ export const TransferOperationDialog = ({
             .eq('id', operationId);
           
           if (deleteError) {
-            console.warn('Erreur lors de la suppression du dépôt:', deleteError);
+            logger.warn('Erreur lors de la suppression du dépôt:', deleteError);
             // Don't throw error, just warn
           } else {
             deleteSuccess = true;
-            console.log('Dépôt supprimé avec succès');
+            logger.log('Dépôt supprimé avec succès');
           }
         } else {
-          console.warn('Dépôt non trouvé pour suppression, probablement déjà supprimé');
+          logger.warn('Dépôt non trouvé pour suppression, probablement déjà supprimé');
         }
       } else if (operationType === 'withdrawal') {
         // First check if the withdrawal exists
@@ -155,14 +156,14 @@ export const TransferOperationDialog = ({
             .eq('id', operationId);
           
           if (deleteError) {
-            console.warn('Erreur lors de la suppression du retrait:', deleteError);
+            logger.warn('Erreur lors de la suppression du retrait:', deleteError);
             // Don't throw error, just warn
           } else {
             deleteSuccess = true;
-            console.log('Retrait supprimé avec succès');
+            logger.log('Retrait supprimé avec succès');
           }
         } else {
-          console.warn('Retrait non trouvé pour suppression, probablement déjà supprimé');
+          logger.warn('Retrait non trouvé pour suppression, probablement déjà supprimé');
         }
       }
 

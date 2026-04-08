@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { fetchAllRows } from "../../utils/fetchAllRows";
+import { logger } from "@/utils/logger";
 
 interface TreasuryTableProps {
   operations: Operation[];
@@ -35,7 +36,7 @@ export const TreasuryTable = ({
   const syncAllOperations = async () => {
     setIsSyncing(true);
     try {
-      console.log("Synchronisation de TOUTES les opérations...");
+      logger.log("Synchronisation de TOUTES les opérations...");
 
       // Récupérer TOUTES les données depuis la base (sans limite)
       const [depositsData, withdrawalsData, transfersData, directOpsData] = await Promise.all([
@@ -100,11 +101,11 @@ export const TreasuryTable = ({
         return dateA.getTime() - dateB.getTime();
       });
 
-      console.log(`Synchronisation terminée: ${sortedByDate.length} opérations récupérées`);
-      console.log(`- Versements: ${transformedDeposits.length}`);
-      console.log(`- Retraits: ${transformedWithdrawals.length}`);
-      console.log(`- Virements: ${transformedTransfers.length}`);
-      console.log(`- Opérations directes: ${transformedDirectOps.length}`);
+      logger.log(`Synchronisation terminée: ${sortedByDate.length} opérations récupérées`);
+      logger.log(`- Versements: ${transformedDeposits.length}`);
+      logger.log(`- Retraits: ${transformedWithdrawals.length}`);
+      logger.log(`- Virements: ${transformedTransfers.length}`);
+      logger.log(`- Opérations directes: ${transformedDirectOps.length}`);
       
       // Notifier le parent des nouvelles données
       if (onDataRefresh) {
@@ -121,7 +122,7 @@ export const TreasuryTable = ({
   };
 
   const operationsWithBalance = useMemo(() => {
-    console.log(`TreasuryTable: Calcul des soldes pour ${operations.length} opérations`);
+    logger.log(`TreasuryTable: Calcul des soldes pour ${operations.length} opérations`);
     
     let runningBalance = 0;
     return sortedOperations.map((op, index): TreasuryOperation => {
@@ -138,7 +139,7 @@ export const TreasuryTable = ({
       
       runningBalance += balanceChange;
       
-      console.log(`Opération ${index + 1}: ${op.type} ${op.amount} -> Solde: ${balanceBefore} -> ${runningBalance}`);
+      logger.log(`Opération ${index + 1}: ${op.type} ${op.amount} -> Solde: ${balanceBefore} -> ${runningBalance}`);
       
       return {
         ...op,

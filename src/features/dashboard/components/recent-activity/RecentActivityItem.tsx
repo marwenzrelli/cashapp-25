@@ -11,6 +11,7 @@ import { Operation } from "@/features/operations/types";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { logger } from "@/utils/logger";
 
 interface RecentActivityItemProps {
   activity: RecentActivity;
@@ -53,7 +54,7 @@ export const RecentActivityItem = ({ activity, currency, index }: RecentActivity
         searchName = clientName.split('→')[0].trim();
       }
 
-      console.log("Searching for client:", searchName);
+      logger.log("Searching for client:", searchName);
 
       // Approche simple et efficace - recherche par fragments
       const searchTerms = searchName.toLowerCase().split(' ').filter(term => term.length > 0);
@@ -70,7 +71,7 @@ export const RecentActivityItem = ({ activity, currency, index }: RecentActivity
         return;
       }
 
-      console.log("All clients fetched:", allClients?.length);
+      logger.log("All clients fetched:", allClients?.length);
 
       // Filtrage côté client pour plus de contrôle
       const matchingClients = allClients?.filter(client => {
@@ -85,7 +86,7 @@ export const RecentActivityItem = ({ activity, currency, index }: RecentActivity
         return matchesAll;
       }) || [];
 
-      console.log("Matching clients:", matchingClients);
+      logger.log("Matching clients:", matchingClients);
 
       if (matchingClients && matchingClients.length > 0) {
         // Prendre le premier client trouvé
@@ -103,7 +104,7 @@ export const RecentActivityItem = ({ activity, currency, index }: RecentActivity
 
   const handleEditOperation = async (updatedOperation: Operation) => {
     try {
-      console.log("Saving edited operation:", updatedOperation);
+      logger.log("Saving edited operation:", updatedOperation);
       
       const operationType = updatedOperation.type;
       const operationIdParts = updatedOperation.id.toString().split('-');

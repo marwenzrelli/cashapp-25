@@ -7,6 +7,7 @@ import { useWithdrawalFormState } from "../../hooks/useWithdrawalFormState";
 import { Withdrawal } from "@/features/withdrawals/types";
 import { ExtendedClient } from "../../hooks/form/withdrawalFormTypes";
 import { ensureValidISODate } from "../../hooks/utils/formatUtils";
+import { logger } from "@/utils/logger";
 
 export interface WithdrawalFormDialogProps {
   isOpen: boolean;
@@ -70,7 +71,7 @@ export const WithdrawalFormDialog: React.FC<WithdrawalFormDialogProps> = ({
       // Ensure we have a valid date
       const operationDate = ensureValidISODate(formState.date);
       
-      console.log("Submitting withdrawal form with:", {
+      logger.log("Submitting withdrawal form with:", {
         clientName,
         amount: formState.amount,
         notes: formState.notes,

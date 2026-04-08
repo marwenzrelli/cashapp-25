@@ -3,6 +3,7 @@ import { UserCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { formatId } from "@/utils/formatId";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { logger } from "@/utils/logger";
 
 interface DepositClientInfoProps {
   clientName: string;
@@ -30,7 +31,7 @@ export const DepositClientInfo = ({
     ) {
       navigate(`/clients/${clientId}`);
     } else {
-      console.log("Aucun ID client valide pour la navigation:", clientName, clientId);
+      logger.log("Aucun ID client valide pour la navigation:", clientName, clientId);
     }
   };
 

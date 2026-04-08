@@ -13,6 +13,7 @@ import {
   Legend, 
   ResponsiveContainer 
 } from "recharts";
+import { logger } from "@/utils/logger";
 
 interface ChartSectionProps {
   last30DaysData: {
@@ -34,7 +35,7 @@ export const ChartSection = ({ last30DaysData, topClients }: ChartSectionProps) 
     virements: parseFloat((stats.totalAmount * 0.2).toFixed(2)) // Mock data
   }));
 
-  console.log("Top Clients Data for chart:", topClientsData);
+  logger.log("Top Clients Data for chart:", topClientsData);
 
   return (
     <div className="grid gap-6 md:grid-cols-2">

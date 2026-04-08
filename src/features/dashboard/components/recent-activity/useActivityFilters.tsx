@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import { DateRange } from "react-day-picker";
 import { isWithinInterval, parseISO } from "date-fns";
 import { RecentActivity } from "../../types";
+import { logger } from "@/utils/logger";
 
 export const useActivityFilters = (activities: RecentActivity[]) => {
   // Search and filter states
@@ -35,7 +36,7 @@ export const useActivityFilters = (activities: RecentActivity[]) => {
       return [];
     }
 
-    console.log(`Filtering ${activities.length} activities with searchTerm=${searchTerm}, operationType=${operationType}, dateRange present: ${!!dateRange?.from && !!dateRange?.to}`);
+    logger.log(`Filtering ${activities.length} activities with searchTerm=${searchTerm}, operationType=${operationType}, dateRange present: ${!!dateRange?.from && !!dateRange?.to}`);
 
     return activities.filter(activity => {
       // Filter by search term
@@ -68,7 +69,7 @@ export const useActivityFilters = (activities: RecentActivity[]) => {
           });
           
           if (!dateMatch) {
-            console.log(`Activity excluded - date ${activityDate.toISOString()} outside range ${startDate.toISOString()} to ${endDate.toISOString()}`);
+            logger.log(`Activity excluded - date ${activityDate.toISOString()} outside range ${startDate.toISOString()} to ${endDate.toISOString()}`);
           }
         } catch (error) {
           console.error("Error parsing date:", error);

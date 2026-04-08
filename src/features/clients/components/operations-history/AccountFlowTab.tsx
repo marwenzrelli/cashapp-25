@@ -14,6 +14,7 @@ import { useOperationsRefresh } from "@/features/operations/hooks/useOperationsR
 import { useClientSpecificOperations } from "@/features/clients/hooks/useClientSpecificOperations";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RefreshCcw } from "lucide-react";
+import { logger } from "@/utils/logger";
 
 interface AccountFlowTabProps {
   operations: Operation[];
@@ -29,7 +30,7 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId, refreshO
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  console.log(`AccountFlowTab - Processing ${operations.length} operations for client ${clientId}`);
+  logger.log(`AccountFlowTab - Processing ${operations.length} operations for client ${clientId}`);
 
   // Get current client
   const currentClient = clients?.find(c => c.id === clientId);
@@ -64,7 +65,7 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId, refreshO
   // Use client-specific operations if available, otherwise fall back to provided operations
   const operationsToProcess = clientName ? clientSpecificOperations : operations;
 
-  console.log(`AccountFlowTab - Using ${clientName ? 'client-specific' : 'provided'} operations: ${operationsToProcess.length}`);
+  logger.log(`AccountFlowTab - Using ${clientName ? 'client-specific' : 'provided'} operations: ${operationsToProcess.length}`);
 
   // Use the unified calculation logic
   const processedOperations = useAccountFlowCalculations({ 
@@ -75,9 +76,9 @@ export const AccountFlowTab = ({ operations, updateOperation, clientId, refreshO
   // Show loading if clients are still loading or if we have operations but no processed operations yet
   const isLoading = clientsLoading || (operations.length > 0 && processedOperations.length === 0 && currentClient);
 
-  console.log(`AccountFlowTab - Operations received: ${operations.length}`);
-  console.log(`AccountFlowTab - Processed operations: ${processedOperations.length}`);
-  console.log(`AccountFlowTab - Loading: ${isLoading}`);
+  logger.log(`AccountFlowTab - Operations received: ${operations.length}`);
+  logger.log(`AccountFlowTab - Processed operations: ${processedOperations.length}`);
+  logger.log(`AccountFlowTab - Loading: ${isLoading}`);
 
   const formatDateTime = (dateString: string) => {
     try {

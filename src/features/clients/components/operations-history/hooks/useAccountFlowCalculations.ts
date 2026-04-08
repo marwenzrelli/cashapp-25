@@ -1,6 +1,7 @@
 
 import { useMemo } from "react";
 import { Operation } from "@/features/operations/types";
+import { logger } from "@/utils/logger";
 
 interface ProcessedOperation extends Operation {
   balanceBefore: number;
@@ -17,21 +18,21 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
   const processedOperations = useMemo(() => {
     // Early returns to prevent unnecessary calculations
     if (!operations || operations.length === 0) {
-      console.log("AccountFlowCalculations - No operations available");
+      logger.log("AccountFlowCalculations - No operations available");
       return [];
     }
     
     if (!client || !client.id) {
-      console.log("AccountFlowCalculations - No valid client available");
+      logger.log("AccountFlowCalculations - No valid client available");
       return [];
     }
     
     const clientFullName = `${client.prenom} ${client.nom}`.trim();
     const clientId = typeof client.id === 'string' ? parseInt(client.id) : client.id;
     
-    console.log("=== FLUX DE COMPTE COMPLET ===");
-    console.log(`Client: ${clientFullName} (ID: ${clientId})`);
-    console.log(`Total opérations reçues: ${operations.length}`);
+    logger.log("=== FLUX DE COMPTE COMPLET ===");
+    logger.log(`Client: ${clientFullName} (ID: ${clientId})`);
+    logger.log(`Total opérations reçues: ${operations.length}`);
     
     // Filtrer TOUTES les opérations qui concernent ce client
     const clientOperations = operations.filter(op => {
@@ -49,10 +50,10 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
       return (matchesClientId || matchesFromClient || matchesToClient) && isRelevantOperation;
     });
     
-    console.log(`Opérations filtrées pour ce client: ${clientOperations.length}`);
+    logger.log(`Opérations filtrées pour ce client: ${clientOperations.length}`);
     
     if (clientOperations.length === 0) {
-      console.log("Aucune opération trouvée pour ce client");
+      logger.log("Aucune opération trouvée pour ce client");
       return [];
     }
     
@@ -67,8 +68,8 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
     let runningBalance = 0;
     const processedOps: ProcessedOperation[] = [];
     
-    console.log("=== CALCUL DU FLUX PROGRESSIF ===");
-    console.log(`Solde de départ: 0 TND`);
+    logger.log("=== CALCUL DU FLUX PROGRESSIF ===");
+    logger.log(`Solde de départ: 0 TND`);
     
     sortedOperations.forEach((operation, index) => {
       const balanceBefore = runningBalance;
@@ -112,16 +113,16 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
     const finalCalculatedBalance = processedOps.length > 0 ? processedOps[processedOps.length - 1].balanceAfter : 0;
     const currentDbBalance = parseFloat(client.solde?.toString() || '0');
     
-    console.log(`=== VÉRIFICATION FINALE ===`);
-    console.log(`Nombre total d'opérations traitées: ${processedOps.length}`);
-    console.log(`Solde final calculé: ${finalCalculatedBalance.toFixed(3)} TND`);
-    console.log(`Solde DB actuel: ${currentDbBalance.toFixed(3)} TND`);
+    logger.log(`=== VÉRIFICATION FINALE ===`);
+    logger.log(`Nombre total d'opérations traitées: ${processedOps.length}`);
+    logger.log(`Solde final calculé: ${finalCalculatedBalance.toFixed(3)} TND`);
+    logger.log(`Solde DB actuel: ${currentDbBalance.toFixed(3)} TND`);
     
     const difference = Math.abs(finalCalculatedBalance - currentDbBalance);
     if (difference > 0.001) {
-      console.log(`⚠️  Différence de ${difference.toFixed(3)} TND entre le calcul et la DB`);
+      logger.log(`⚠️  Différence de ${difference.toFixed(3)} TND entre le calcul et la DB`);
     } else {
-      console.log(`✅ SYNCHRONISATION PARFAITE`);
+      logger.log(`✅ SYNCHRONISATION PARFAITE`);
     }
     
     // Retourner les opérations triées par date décroissante pour l'affichage (plus récentes en premier)
@@ -131,8 +132,8 @@ export const useAccountFlowCalculations = ({ operations, client }: UseAccountFlo
       return dateB - dateA;
     });
     
-    console.log("=== CALCUL TERMINÉ ===");
-    console.log(`Retour de ${finalProcessedOps.length} opérations traitées`);
+    logger.log("=== CALCUL TERMINÉ ===");
+    logger.log(`Retour de ${finalProcessedOps.length} opérations traitées`);
     
     return finalProcessedOps;
   }, [operations, client?.id, client?.prenom, client?.nom, client?.solde]); // Ajout des dépendances spécifiques

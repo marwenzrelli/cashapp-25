@@ -14,6 +14,7 @@ import { Trash2 } from "lucide-react";
 import { DeleteDepositDialogProps } from "@/features/deposits/types";
 import { toast } from "sonner";
 import { formatId } from "@/utils/formatId";
+import { logger } from "@/utils/logger";
 
 export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
   isOpen,
@@ -24,7 +25,7 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
   const [isDeleting, setIsDeleting] = React.useState(false);
 
   const handleConfirm = async () => {
-    console.log("Confirmation dialog - début");
+    logger.log("Confirmation dialog - début");
     
     if (!onConfirm) {
       console.error("Aucune fonction onConfirm fournie");
@@ -44,7 +45,7 @@ export const DeleteDepositDialog: React.FC<DeleteDepositDialogProps> = ({
       const success = await onConfirm();
       
       if (success === true) {
-        console.log("Suppression réussie - fermeture du dialog");
+        logger.log("Suppression réussie - fermeture du dialog");
         onOpenChange(false);
       } else {
         console.error("La suppression a échoué");

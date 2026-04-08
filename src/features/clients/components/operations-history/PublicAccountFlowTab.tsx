@@ -5,6 +5,7 @@ import { AccountFlowMobileView } from "./AccountFlowMobileView";
 import { AccountFlowDesktopTable } from "./components/AccountFlowDesktopTable";
 import { useAccountFlowCalculations } from "./hooks/useAccountFlowCalculations";
 import { Skeleton } from "@/components/ui/skeleton";
+import { logger } from "@/utils/logger";
 
 interface PublicAccountFlowTabProps {
   operations: Operation[];
@@ -15,13 +16,13 @@ export const PublicAccountFlowTab = ({
   operations,
   client
 }: PublicAccountFlowTabProps) => {
-  console.log("PublicAccountFlowTab - Processing operations for client:", client?.prenom, client?.nom);
-  console.log("PublicAccountFlowTab - Total operations received:", operations?.length || 0);
+  logger.log("PublicAccountFlowTab - Processing operations for client:", client?.prenom, client?.nom);
+  logger.log("PublicAccountFlowTab - Total operations received:", operations?.length || 0);
 
   // Use the same unified calculation logic as the main AccountFlowTab
   const processedOperations = useAccountFlowCalculations({ operations, client });
   
-  console.log("PublicAccountFlowTab - Processed operations with balances:", processedOperations?.length || 0);
+  logger.log("PublicAccountFlowTab - Processed operations with balances:", processedOperations?.length || 0);
   
   const clientFullName = client ? `${client.prenom} ${client.nom}`.trim() : '';
 

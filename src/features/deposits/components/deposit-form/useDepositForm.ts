@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { ExtendedClient } from "@/features/withdrawals/hooks/form/withdrawalFormTypes";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { createISOString } from "../../hooks/utils/dateUtils";
+import { logger } from "@/utils/logger";
 
 interface UseDepositFormProps {
   clients: ExtendedClient[];
@@ -57,7 +58,7 @@ export const useDepositForm = ({ clients, onConfirm, refreshClientBalance, onSuc
         description
       };
 
-      console.log("Envoi du dépôt avec date:", {
+      logger.log("Envoi du dépôt avec date:", {
         dateObject: date,
         timeString: time,
         resultIso: operationDate,
@@ -69,7 +70,7 @@ export const useDepositForm = ({ clients, onConfirm, refreshClientBalance, onSuc
       
       // Si le dépôt a réussi, on rafraîchit le solde du client
       if (result !== false && selectedClient) {
-        console.log("Rafraîchissement du solde après dépôt pour le client:", selectedClient);
+        logger.log("Rafraîchissement du solde après dépôt pour le client:", selectedClient);
         await refreshClientBalance(selectedClient);
       }
 

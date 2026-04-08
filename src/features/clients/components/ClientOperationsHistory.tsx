@@ -9,6 +9,7 @@ import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { RefreshCw, Search, XCircle, Calendar, Check } from "lucide-react";
 import { ClientOperationsHistoryTabs } from "./operations-history/ClientOperationsHistoryTabs";
 import { Switch } from "@/components/ui/switch";
+import { logger } from "@/utils/logger";
 
 interface ClientOperationsHistoryProps {
   operations: Operation[];
@@ -55,17 +56,17 @@ export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = (
   // Log operations data for pepsi men for debugging
   React.useEffect(() => {
     if (isPepsiMen) {
-      console.log(`ClientOperationsHistory - Total operations for client ID ${clientId}: ${operations.length}`);
-      console.log(`ClientOperationsHistory - Filtered operations: ${filteredOperations.length}`);
+      logger.log(`ClientOperationsHistory - Total operations for client ID ${clientId}: ${operations.length}`);
+      logger.log(`ClientOperationsHistory - Filtered operations: ${filteredOperations.length}`);
       const withdrawals = operations.filter(op => op.type === "withdrawal");
-      console.log(`ClientOperationsHistory - Total withdrawals: ${withdrawals.length}`);
-      console.log(`Withdrawal IDs: ${withdrawals.map(w => w.id).join(', ')}`);
+      logger.log(`ClientOperationsHistory - Total withdrawals: ${withdrawals.length}`);
+      logger.log(`Withdrawal IDs: ${withdrawals.map(w => w.id).join(', ')}`);
     }
     
     // Debug date range filtering
     if (dateRange?.from && dateRange?.to && !showAllDates) {
-      console.log(`ClientOperationsHistory - Date range: ${dateRange.from.toISOString()} to ${dateRange.to.toISOString()}`);
-      console.log(`ClientOperationsHistory - ShowAllDates: ${showAllDates}`);
+      logger.log(`ClientOperationsHistory - Date range: ${dateRange.from.toISOString()} to ${dateRange.to.toISOString()}`);
+      logger.log(`ClientOperationsHistory - ShowAllDates: ${showAllDates}`);
       
       // Check if any operations might be outside the date range
       const fromDate = dateRange.from;
@@ -76,12 +77,12 @@ export const ClientOperationsHistory: React.FC<ClientOperationsHistoryProps> = (
         const opDate = new Date(op.operation_date || op.date);
         if (opDate < fromDate || opDate > toDate) {
           outsideRangeCount++;
-          console.log(`Operation outside range: ${op.id}, date: ${opDate.toISOString()}`);
+          logger.log(`Operation outside range: ${op.id}, date: ${opDate.toISOString()}`);
         }
       });
       
       if (outsideRangeCount > 0) {
-        console.warn(`Found ${outsideRangeCount} operations potentially outside date range!`);
+        logger.warn(`Found ${outsideRangeCount} operations potentially outside date range!`);
       }
     }
   }, [operations, filteredOperations, clientId, isPepsiMen, dateRange, showAllDates]);
