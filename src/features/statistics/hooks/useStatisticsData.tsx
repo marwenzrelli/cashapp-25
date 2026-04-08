@@ -4,8 +4,8 @@ import { getMonthBoundaries, generateLast30DaysData } from "../utils/dateHelpers
 import { generateClientStats, getTopClients } from "../utils/clientStats";
 import { useStatisticsDataLoading } from "./useStatisticsDataLoading";
 import { useStatisticsFilters } from "./useStatisticsFilters";
-import { 
 import { logger } from "@/utils/logger";
+import {
   calculateTotals, 
   calculateMonthlyComparison,
   calculateDailyTransactions,
