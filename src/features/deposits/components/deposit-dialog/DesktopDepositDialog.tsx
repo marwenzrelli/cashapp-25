@@ -9,7 +9,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Client } from "@/features/clients/types";
-import { Deposit } from "@/components/deposits/types";
+import { Deposit } from "@/features/deposits/types";
 import { Loader2 } from "lucide-react";
 import { SuccessMessage } from "./SuccessMessage";
 

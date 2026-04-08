@@ -1,7 +1,7 @@
 
 import React, { useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { EditFormData } from "@/components/deposits/types";
+import { EditFormData } from "@/features/deposits/types";
 import { formatDateTime, formatISODateTime } from "@/features/deposits/hooks/utils/dateUtils";
 import { Client } from "@/features/clients/types";
 import { DialogHeader } from "./edit-deposit/DialogHeader";

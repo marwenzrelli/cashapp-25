@@ -1,5 +1,5 @@
 
-import { type Deposit } from "@/components/deposits/types";
+import { type Deposit } from "@/features/deposits/types";
 import { DepositClientInfo } from "./DepositClientInfo";
 import { DepositAmount } from "./DepositAmount";
 import { DepositDateInfo } from "./DepositDateInfo";

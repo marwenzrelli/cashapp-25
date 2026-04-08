@@ -1,5 +1,5 @@
 
-import { type Deposit } from "@/components/deposits/types";
+import { type Deposit } from "@/features/deposits/types";
 import { DesktopDepositsTable } from "./table/DesktopDepositsTable";
 import { MobileDepositsTable } from "./table/MobileDepositsTable";
 import { DateRange } from "react-day-picker";

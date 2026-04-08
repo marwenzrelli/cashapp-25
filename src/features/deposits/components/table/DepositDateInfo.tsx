@@ -7,7 +7,7 @@ import {
   TooltipTrigger 
 } from "@/components/ui/tooltip";
 import { formatDateTime } from "@/features/deposits/hooks/utils/dateUtils";
-import { type Deposit } from "@/components/deposits/types";
+import { type Deposit } from "@/features/deposits/types";
 
 interface DepositDateInfoProps {
   deposit: Deposit;
