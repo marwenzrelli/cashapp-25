@@ -1,5 +1,6 @@
 
 import { Outlet, useLocation } from "react-router-dom";
+import { AIChatWidget } from "@/features/ai/AIChatWidget";
 import { useState, useEffect } from "react";
 import { Navbar } from "./layout/Navbar";
 import { useAuthCheck } from "./layout/useAuthCheck";
@@ -43,6 +44,7 @@ const Layout = () => {
           <Outlet />
         </div>
       </main>
+      <AIChatWidget />
     </div>
   );
 };
