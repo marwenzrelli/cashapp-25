@@ -10,7 +10,8 @@ import {
   TrendingUp,
   TrendingDown,
   Search,
-  LayoutDashboard
+  LayoutDashboard,
+  Sparkles
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLocation } from "react-router-dom";
@@ -84,6 +85,13 @@ export const NavigationLinks = ({ onItemClick }: NavigationLinksProps) => {
       icon: Search,
       label: "Recherche",
       color: "#6B7280",
+      count: null
+    },
+    {
+      to: "/ai-assistant",
+      icon: Sparkles,
+      label: "Assistant IA",
+      color: "#F59E0B",
       count: null
     },
     {

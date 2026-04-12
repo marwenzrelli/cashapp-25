@@ -21,6 +21,7 @@ import Statistics from "./pages/Statistics";
 import Administration from "./pages/Administration";
 import Login from "./pages/Login";
 import Search from "./pages/Search";
+import AIAssistant from "./pages/AIAssistant";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,7 @@ function App() {
                   <Route path="operations-history" element={<Operations />} />
                   <Route path="direct-operations" element={<DirectOperations />} />
                   <Route path="statistics" element={<Statistics />} />
+                  <Route path="ai-assistant" element={<AIAssistant />} />
                   <Route path="administration" element={<Administration />} />
                 </Route>
               </Routes>
