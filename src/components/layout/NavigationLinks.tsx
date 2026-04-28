@@ -95,6 +95,13 @@ export const NavigationLinks = ({ onItemClick }: NavigationLinksProps) => {
       count: null
     },
     {
+      to: "/insights",
+      icon: Sparkles,
+      label: "Insights IA",
+      color: "#EAB308",
+      count: null
+    },
+    {
       to: "/administration",
       icon: Settings,
       label: "Administration",
