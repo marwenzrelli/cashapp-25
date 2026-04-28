@@ -1,6 +1,7 @@
 
 import { Outlet, useLocation } from "react-router-dom";
 import { AIChatWidget } from "@/features/ai/AIChatWidget";
+import { CommandPalette } from "@/components/CommandPalette";
 import { useState, useEffect } from "react";
 import { Navbar } from "./layout/Navbar";
 import { useAuthCheck } from "./layout/useAuthCheck";
@@ -45,6 +46,7 @@ const Layout = () => {
         </div>
       </main>
       <AIChatWidget />
+      <CommandPalette />
     </div>
   );
 };

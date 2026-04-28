@@ -22,6 +22,7 @@ import Administration from "./pages/Administration";
 import Login from "./pages/Login";
 import Search from "./pages/Search";
 import AIAssistant from "./pages/AIAssistant";
+import Insights from "./pages/Insights";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,7 @@ function App() {
                   <Route path="direct-operations" element={<DirectOperations />} />
                   <Route path="statistics" element={<Statistics />} />
                   <Route path="ai-assistant" element={<AIAssistant />} />
+                  <Route path="insights" element={<Insights />} />
                   <Route path="administration" element={<Administration />} />
                 </Route>
               </Routes>

@@ -11,6 +11,8 @@ import { StatsCardGrid } from "@/features/dashboard/components/StatsCardGrid";
 import { OperationTypeCards } from "@/features/dashboard/components/OperationTypeCards";
 import { RecentActivityCard } from "@/features/dashboard/components/RecentActivity";
 import { useDashboardData } from "@/features/dashboard/hooks/useDashboardData";
+import { useDashboardWidgets } from "@/features/dashboard/hooks/useDashboardWidgets";
+import { DashboardCustomizer } from "@/features/dashboard/components/DashboardCustomizer";
 import { recalculateAllClientBalances } from "@/features/statistics/utils/balanceCalculator";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
 
@@ -20,6 +22,7 @@ const Dashboard = () => {
   const { currency } = useCurrency();
   const [currentUser, setCurrentUser] = useState<SystemUser | null>(null);
   const { stats, isLoading, recentActivity, handleRefresh } = useDashboardData();
+  const { widgets, toggleWidget, isVisible, resetWidgets } = useDashboardWidgets();
   const [isRecalculating, setIsRecalculating] = useState(false);
 
   const handleUpdateProfile = async (updatedUser: Partial<SystemUser>) => {
@@ -67,23 +70,32 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-8 animate-in w-full px-0 sm:px-0">
-      <DashboardHeader isLoading={isLoading} onRefresh={handleRefresh} />
-
-      <StatsCardGrid 
-        stats={stats} 
-        currency={currency}
-        onRecalculate={handleRecalculateBalances}
-        isRecalculating={isRecalculating}
-      />
-
-      <div className="space-y-6">
-        <h3 className="text-lg font-semibold">Types d'opérations</h3>
-        <OperationTypeCards stats={stats} currency={currency} />
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <DashboardHeader isLoading={isLoading} onRefresh={handleRefresh} />
+        <DashboardCustomizer widgets={widgets} onToggle={toggleWidget} onReset={resetWidgets} />
       </div>
 
-      <div className="space-y-2">
-        <RecentActivityCard activities={recentActivity} currency={currency} />
-      </div>
+      {isVisible("stats") && (
+        <StatsCardGrid 
+          stats={stats} 
+          currency={currency}
+          onRecalculate={handleRecalculateBalances}
+          isRecalculating={isRecalculating}
+        />
+      )}
+
+      {isVisible("operationTypes") && (
+        <div className="space-y-6">
+          <h3 className="text-lg font-semibold">Types d'opérations</h3>
+          <OperationTypeCards stats={stats} currency={currency} />
+        </div>
+      )}
+
+      {isVisible("recentActivity") && (
+        <div className="space-y-2">
+          <RecentActivityCard activities={recentActivity} currency={currency} />
+        </div>
+      )}
 
       <EditProfileDialog
         isOpen={isEditProfileOpen}
