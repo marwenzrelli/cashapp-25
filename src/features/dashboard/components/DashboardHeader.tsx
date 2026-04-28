@@ -51,7 +51,7 @@ export const DashboardHeader = ({ isLoading, onRefresh }: DashboardHeaderProps) 
   }, []);
 
   return (
-    <div className="flex justify-between items-start">
+    <div className="flex items-center gap-4 flex-wrap">
       <div>
         <h1 className="text-3xl font-bold">Tableau de bord</h1>
         <p className="text-muted-foreground">
