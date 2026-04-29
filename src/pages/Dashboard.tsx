@@ -71,7 +71,9 @@ const Dashboard = () => {
   return (
     <div className="space-y-8 animate-in w-full px-0 sm:px-0">
       <div className="flex items-start justify-between gap-4 flex-wrap">
-        <DashboardHeader isLoading={isLoading} onRefresh={handleRefresh} />
+        <div className="flex-1 min-w-0">
+          <DashboardHeader isLoading={isLoading} onRefresh={handleRefresh} />
+        </div>
         <DashboardCustomizer widgets={widgets} onToggle={toggleWidget} onReset={resetWidgets} />
       </div>
 
