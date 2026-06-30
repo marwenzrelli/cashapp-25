@@ -114,7 +114,7 @@ const Deposits = () => {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-8">
+    <div className="container mx-auto p-3 md:p-4 space-y-4">
       <NewDepositButton 
         onClick={() => setShowDepositForm(true)}
         isVisible={!showDepositForm}
