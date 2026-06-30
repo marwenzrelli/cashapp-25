@@ -15,21 +15,13 @@ export const DepositsHeader = ({
   isLoading = false
 }: DepositsHeaderProps) => {
   return (
-    <>
-      <div>
-        <h1 className="text-3xl font-bold">Gestion des versements</h1>
-        <p className="text-muted-foreground">
-          Gérez les versements de vos clients
-        </p>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-1">
-        {isLoading ? (
-          <Skeleton className="h-32 w-full" />
-        ) : (
-          <StatsCard deposits={deposits} />
-        )}
-      </div>
-    </>
+    <div className="space-y-3">
+      <h1 className="text-xl font-bold">Versements</h1>
+      {isLoading ? (
+        <Skeleton className="h-24 w-full" />
+      ) : (
+        <StatsCard deposits={deposits} />
+      )}
+    </div>
   );
 };
