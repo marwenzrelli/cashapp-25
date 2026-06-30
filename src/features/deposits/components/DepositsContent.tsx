@@ -106,7 +106,7 @@ export const DepositsContent = memo(({
   ]);
 
   return (
-    <div className="space-y-8 animate-in px-2 sm:px-4 md:px-6 w-full">
+    <div className="space-y-4 animate-in px-2 sm:px-4 md:px-6 w-full">
       <DepositsHeader 
         deposits={deposits}
         filteredDeposits={filteredDeposits}
