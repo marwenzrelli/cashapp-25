@@ -120,7 +120,7 @@ export const WithdrawalsContent: React.FC<WithdrawalsContentProps> = ({
   }));
 
   return (
-    <div className="container mx-auto p-6 space-y-8 animate-in w-full">
+    <div className="container mx-auto p-3 md:p-4 space-y-4 animate-in w-full">
       <WithdrawalHeader withdrawals={withdrawals} />
 
       <NewWithdrawalButton 
